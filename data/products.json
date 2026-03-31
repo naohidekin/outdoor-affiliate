@@ -109,7 +109,7 @@
     "name": "コールマン ツーリングドームST",
     "brand": "Coleman",
     "price": 19800,
-    "imageUrl": "",
+    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000038141/2000038141.jpg",
     "affiliateUrl": "",
     "categoryId": "tent",
     "specs": {
@@ -351,7 +351,7 @@
     "name": "スノーピーク ギガパワーランタン 天 オート GL-100AR",
     "brand": "Snow Peak",
     "price": 15400,
-    "imageUrl": "",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0117A0063/SNP0117A0063_x_c101.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/52685eb0.e12e3e02.52685eb1.5811eaa9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fclapper%2Fsp-gl-100ar%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": [
@@ -912,7 +912,7 @@
     "brand": "Iwatani",
     "price": 3850,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fec760cf420d666ac2a740c8238b720a6%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "burner",
     "tags": [
       "single-burner"
