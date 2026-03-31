@@ -44,6 +44,14 @@
 - 新しく製品をproducts.jsonに追加する際は、同時に imageUrl も調査・設定する
 - 既存の imageUrl 空欄製品も、記事に掲載する際は必ず画像を付ける
 
+## アフィリエイト設定
+
+- **楽天アフィリエイト**: products.jsonの `affiliateUrl` フィールドに `hb.afl.rakuten.co.jp` 形式のURLを設定
+- **Amazonアソシエイト**: アソシエイトID `nao78-22`
+  - リンク形式: `https://www.amazon.co.jp/dp/[ASIN]/?tag=nao78-22-22`
+  - products.jsonの `amazonUrl` フィールドに設定する
+  - ASINはAmazon商品ページURLの `/dp/` 以降の10桁英数字
+
 ## 比較表・デザインフォーマット
 
 - **比較表は `{{comparison:id1,id2,...}}` コンポーネントを使う**（Markdownテーブルは使わない）
