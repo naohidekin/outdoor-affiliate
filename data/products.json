@@ -1091,5 +1091,203 @@
       "防水": "生活防水",
       "使用方法": "吊り下げ・手持ち2WAY"
     }
+  },
+  {
+    "id": "sb-kids-001",
+    "name": "コールマン キッズマミーアジャスタブル/C4",
+    "brand": "Coleman",
+    "price": 4944,
+    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000027271/2000027271.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fniche-express%2Fclm-2000027271%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["kids", "マミー型"],
+    "specs": {
+      "対象": "子供用（身長調整可能）",
+      "使用可能温度": "4℃以上",
+      "形状": "マミー型（アジャスタブル）",
+      "素材": "ポリエステル",
+      "重量": "約1.25kg",
+      "収納サイズ": "約φ18×38cm"
+    },
+    "description": "成長に合わせて長さを調節できるキッズ専用マミー型シュラフ。C4は使用可能温度4℃以上で春〜秋の3シーズンに対応。コールマンの安心感と5,000円以下の価格が魅力。初めてのキッズシュラフならまずこれ。",
+    "rating": 4,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-kids-002",
+    "name": "NANGA KIDS SQUARE FOOT 300",
+    "brand": "NANGA",
+    "price": 27500,
+    "imageUrl": "https://store.nanga.jp/cdn/shop/files/kids-square-foot-300.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnanga-onlineshop%2F8656515399854%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["kids", "ダウン"],
+    "specs": {
+      "対象": "子供用（身長110〜160cm対応・3段階調整）",
+      "中綿": "リサイクルダウン300g（ダウン90%・フェザー10%）",
+      "形状": "封筒型（足元ワイド）",
+      "表地・裏地": "ナイロン100%",
+      "対応シーズン": "春・秋・冬（3シーズン）",
+      "特徴": "3段階サイズ調整・大人用への移行サポート"
+    },
+    "description": "NANGAが本気で作った子供用ダウンシュラフ。リサイクルダウン300gで保温性は申し分なし。身長110〜160cmまで3段階で長さ調整でき、成長しても買い替え不要。ダウンの品質と永久保証を考えれば、長く使える投資として悪くない。",
+    "rating": 5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-kids-003",
+    "name": "ロゴス 丸洗いスランバーシュラフ・2",
+    "brand": "LOGOS",
+    "price": 4480,
+    "imageUrl": "https://www.logos.ne.jp/assets/img/product/72602010/72602010_main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwins-shop%2Flogos72602010%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["kids", "封筒型", "丸洗い"],
+    "specs": {
+      "適正温度": "2℃まで",
+      "形状": "封筒型",
+      "素材": "モイスポリ（吸汗性素材）",
+      "サイズ": "約190×75cm",
+      "重量": "約1.4kg",
+      "特徴": "丸洗い可・連結可・収納袋付き"
+    },
+    "description": "洗濯機で丸洗いできるロゴスの定番封筒型シュラフ。子供が汚しても気にならない。2つを連結すれば親子で一緒に寝られる。適正温度2℃まで対応でコスパ抜群の入門モデル。",
+    "rating": 4,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-kids-004",
+    "name": "ロゴス 丸洗い寝袋ウォーマー0",
+    "brand": "LOGOS",
+    "price": 5480,
+    "imageUrl": "https://www.logos.ne.jp/assets/img/product/72600830/72600830_main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fe-prism%2Flogs1356%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["kids", "封筒型", "丸洗い"],
+    "specs": {
+      "適正温度": "0℃まで",
+      "形状": "封筒型（ワイド）",
+      "素材": "モイスポリ",
+      "サイズ": "約190×75cm",
+      "重量": "約1.7kg",
+      "特徴": "丸洗い可・連結可・親子添い寝対応"
+    },
+    "description": "スランバーシュラフの上位モデル。適正温度0℃対応で秋冬キャンプでも安心。ワイド設計で子供と添い寝しやすく、2枚連結も可能。丸洗いできるので子供の寝汗や汚れも怖くない。",
+    "rating": 4.5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-nanga-001",
+    "name": "NANGA オーロラテックスライト 450DX",
+    "brand": "NANGA",
+    "price": 52800,
+    "imageUrl": "https://nanga.jp/wp-content/uploads/2024/09/aurora-light-450dx-main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmoonloid%2Fal450%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["NANGA", "ダウン", "3シーズン", "マミー型"],
+    "specs": {
+      "ダウン量": "450g（760FP スパニッシュダックダウン90-10%）",
+      "総重量": "約865g（レギュラー）",
+      "収納サイズ": "φ14×30cm",
+      "快適使用温度": "0℃",
+      "下限温度": "-5℃",
+      "表地": "15dn オーロラテックス（防水透湿）"
+    },
+    "description": "NANGAの大定番。9割のキャンパーにはこれで十分。防水透湿素材「オーロラテックス」採用でシュラフカバー不要。865gの軽さで0℃対応、3シーズンのキャンプ・登山に死角なし。迷ったらこれを買え。",
+    "rating": 5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-nanga-002",
+    "name": "NANGA オーロラテックスライト 600DX",
+    "brand": "NANGA",
+    "price": 64900,
+    "imageUrl": "https://nanga.jp/wp-content/uploads/2024/09/aurora-light-600dx-main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/2b8fdabb.d6e96389.2b8fdabc.ff516e10/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fa-price%2F4938101129329%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["NANGA", "ダウン", "4シーズン", "マミー型"],
+    "specs": {
+      "ダウン量": "600g（760FP スパニッシュダックダウン90-10%）",
+      "総重量": "約1,100g（レギュラー）",
+      "収納サイズ": "φ17×31cm",
+      "快適使用温度": "-4℃",
+      "下限温度": "-11℃",
+      "表地": "15dn オーロラテックス（防水透湿）"
+    },
+    "description": "冬キャンプの入口はここから。-4℃快適・-11℃下限で真冬の低地キャンプを余裕でカバー。600g以上のモデルにはアルミスパッタリング材を採用し、輻射熱で保温力が一段上がる。冬もキャンプするなら450DXではなくこちら。",
+    "rating": 5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-nanga-003",
+    "name": "NANGA オーロラテックスライト 750DX",
+    "brand": "NANGA",
+    "price": 71500,
+    "imageUrl": "https://nanga.jp/wp-content/uploads/2024/09/aurora-light-750dx-main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/2b8fdabb.d6e96389.2b8fdabc.ff516e10/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fa-price%2F4938101129329%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["NANGA", "ダウン", "冬用", "マミー型"],
+    "specs": {
+      "ダウン量": "750g（760FP スパニッシュダックダウン90-10%）",
+      "総重量": "約1,280g（レギュラー）",
+      "収納サイズ": "φ19×31cm",
+      "快適使用温度": "-8℃",
+      "下限温度": "-16℃",
+      "表地": "15dn オーロラテックス（防水透湿）"
+    },
+    "description": "厳冬期キャンプ・冬山登山を視野に入れるならこのモデル。-8℃快適・-16℃下限は雪中キャンプでも安心のスペック。1,280gでこの保温力は驚異的。年越しキャンプや標高の高いキャンプ場を攻めるなら一択。",
+    "rating": 5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-nanga-004",
+    "name": "NANGA UDD BAG 450DX",
+    "brand": "NANGA",
+    "price": 49500,
+    "imageUrl": "https://nanga.jp/wp-content/uploads/2024/09/udd-bag-450dx-main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmoonloid%2Fudd450%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["NANGA", "ダウン", "3シーズン", "マミー型", "超撥水"],
+    "specs": {
+      "ダウン量": "450g（770FP 超撥水加工ダウン）",
+      "総重量": "約825g（レギュラー）",
+      "収納サイズ": "φ14×30cm",
+      "快適使用温度": "1℃",
+      "下限温度": "-4℃",
+      "表地": "15dn ナイロンシレ撥水加工"
+    },
+    "description": "オーロラテックスライトより軽く、ダウン自体が撥水する。770FPの超撥水ダウンは内側からの湿気にも強い。シュラフカバーとの併用が必要だが、軽量・コンパクトを追求するならこちらが正解。登山メインのユーザー向け。",
+    "rating": 4.5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "sb-nanga-005",
+    "name": "NANGA UDD BAG 630DX",
+    "brand": "NANGA",
+    "price": 60500,
+    "imageUrl": "https://nanga.jp/wp-content/uploads/2024/09/udd-bag-630dx-main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmoonloid%2Fudd630%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "categoryId": "sleeping-bag",
+    "tags": ["NANGA", "ダウン", "4シーズン", "マミー型", "超撥水"],
+    "specs": {
+      "ダウン量": "630g（770FP 超撥水加工ダウン）",
+      "総重量": "約1,045g（レギュラー）",
+      "収納サイズ": "φ17×31cm",
+      "快適使用温度": "-5℃",
+      "下限温度": "-10℃",
+      "表地": "15dn ナイロンシレ撥水加工"
+    },
+    "description": "UDDシリーズの4シーズンモデル。オーロラテックスライト600DXより55g軽く、超撥水ダウンで結露や湿気に強い。ショルダーウォーマーとドラフトチューブで冷気の侵入を徹底ブロック。登山もキャンプもこれ1本で年間通せる。",
+    "rating": 4.5,
+    "createdAt": "2026-03-31T00:00:00.000Z",
+    "updatedAt": "2026-03-31T00:00:00.000Z"
   }
 ]
