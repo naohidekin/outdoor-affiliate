@@ -56,22 +56,34 @@ export default function RankingList({ products }: { products: Product[] }) {
           </div>
 
           {/* Price + CTA */}
-          <div className="flex-shrink-0 flex flex-col items-end justify-between">
+          <div className="flex-shrink-0 flex flex-col items-end justify-between gap-2">
             {product.price > 0 && (
               <span className="text-lg font-bold text-red-600">
                 ¥{product.price.toLocaleString()}
               </span>
             )}
-            {product.affiliateUrl && (
-              <a
-                href={product.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition whitespace-nowrap"
-              >
-                詳細を見る
-              </a>
-            )}
+            <div className="flex flex-col gap-1.5">
+              {product.affiliateUrl && (
+                <a
+                  href={product.affiliateUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow sponsored"
+                  className="bg-[#BF0000] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
+                >
+                  楽天で見る →
+                </a>
+              )}
+              {product.amazonUrl && (
+                <a
+                  href={product.amazonUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow sponsored"
+                  className="bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
+                >
+                  Amazonで見る →
+                </a>
+              )}
+            </div>
           </div>
         </div>
       ))}
