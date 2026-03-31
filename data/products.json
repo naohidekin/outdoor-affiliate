@@ -1074,5 +1074,22 @@
     "rating": 4,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z"
+  },
+  {
+    "id": "led-tent-009",
+    "name": "キャプテンスタッグ リムーブ LEDランタンDX UK-4004",
+    "brand": "キャプテンスタッグ",
+    "price": 2480,
+    "rating": 3.8,
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/5268fb41.d32dacce.5268fb42.5c726bd4/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsenichi%2F10003759%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "imageUrl": "",
+    "description": "取り外して懐中電灯としても使えるキャプテンスタッグのLEDランタン。テント内吊り下げ・手持ちの2WAY使用が可能。",
+    "specs": {
+      "明るさ": "約100lm",
+      "電源": "単3電池×3本",
+      "点灯時間": "約8時間",
+      "防水": "生活防水",
+      "使用方法": "吊り下げ・手持ち2WAY"
+    }
   }
 ]
