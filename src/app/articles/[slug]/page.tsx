@@ -58,7 +58,7 @@ export default async function ArticlePage({
             {article.title}
           </h1>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400 mb-8">
+          <div className="flex items-center gap-4 text-sm text-amber-700 mb-8">
             {article.publishedAt && (
               <time>
                 {new Date(article.publishedAt).toLocaleDateString("ja-JP", {
@@ -71,7 +71,7 @@ export default async function ArticlePage({
             {category && (
               <Link
                 href={`/category/${category.slug}`}
-                className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs"
+                className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium"
               >
                 {category.name}
               </Link>
@@ -85,7 +85,7 @@ export default async function ArticlePage({
         {/* Related articles */}
         {relatedArticles.length > 0 && (
           <section className="max-w-4xl mx-auto px-4 pb-12">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">
+            <h2 className="text-xl font-bold text-amber-900 mb-6">
               関連する記事
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -93,7 +93,7 @@ export default async function ArticlePage({
                 <Link
                   key={a.id}
                   href={`/articles/${a.slug}`}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-4 border border-gray-100"
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 border border-amber-100 hover:border-amber-300"
                 >
                   <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
                     {a.title}

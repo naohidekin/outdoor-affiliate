@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #171717;
+  --background: #fdf8f2;
+  --foreground: #2d2416;
 }
 
 @theme inline {
@@ -24,8 +24,9 @@ body {
   margin-bottom: 0.75em;
   font-size: 1.5rem;
   font-weight: 700;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #f0d9b5;
   padding-bottom: 0.5em;
+  color: #3d2b1f;
 }
 
 .prose h3 {
