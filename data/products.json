@@ -25,7 +25,7 @@
     "name": "コールマン LED ランタン クアッドマルチパネルランタン",
     "brand": "Coleman",
     "price": 7800,
-    "imageUrl": "",
+    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2218364/2218364.jpg",
     "affiliateUrl": "",
     "categoryId": "light",
     "specs": {
@@ -46,7 +46,7 @@
     "name": "ルーメナー2 LUMENA2",
     "brand": "LUMENA",
     "price": 11000,
-    "imageUrl": "",
+    "imageUrl": "https://lumena.co.jp/cdn/shop/products/lumena2_metal-gray_main.png",
     "affiliateUrl": "",
     "categoryId": "light",
     "specs": {
@@ -884,11 +884,11 @@
   },
   {
     "id": "burner-s-008",
-    "name": "ユニフレーム コンパクトバーナー US-D",
+    "name": "ユニフレーム テーブルトップバーナー US-D II",
     "brand": "Uniflame",
     "price": 6600,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2F17ec01c642b1c5ddcf15b4f3124ee590%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "burner",
     "tags": [
       "single-burner"
