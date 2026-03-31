@@ -19,7 +19,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01N7WKLUZ/?tag=nao78-22-22"
   },
   {
     "id": "light-002",
@@ -41,7 +41,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B079NTXHSD/?tag=nao78-22-22"
   },
   {
     "id": "light-003",
@@ -63,7 +63,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07YS527KF/?tag=nao78-22-22"
   },
   {
     "id": "light-004",
@@ -85,7 +85,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09Y8RG66X/?tag=nao78-22-22"
   },
   {
     "id": "light-005",
@@ -107,7 +107,7 @@
     "rating": 4,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BLM59WSZ/?tag=nao78-22-22"
   },
   {
     "id": "tent-001",
@@ -129,7 +129,7 @@
     "rating": 4,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07NQQTCS1/?tag=nao78-22-22"
   },
   {
     "id": "tent-002",
@@ -154,7 +154,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DFG51JMQ/?tag=nao78-22-22"
   },
   {
     "id": "tent-003",
@@ -176,7 +176,7 @@
     "rating": 4,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B078VHLW5K/?tag=nao78-22-22"
   },
   {
     "id": "tent-004",
@@ -201,7 +201,7 @@
     "rating": 5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00C0TE622/?tag=nao78-22-22"
   },
   {
     "id": "tent-005",
@@ -223,7 +223,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00J1Z4BT6/?tag=nao78-22-22"
   },
   {
     "id": "tent-f01",
@@ -249,7 +249,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CYBKMWGS/?tag=nao78-22-22"
   },
   {
     "id": "tent-f02",
@@ -275,7 +275,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CPLD4LNN/?tag=nao78-22-22"
   },
   {
     "id": "tent-f03",
@@ -303,7 +303,7 @@
     "rating": 5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01N5FYL0K/?tag=nao78-22-22"
   },
   {
     "id": "tent-f04",
@@ -329,7 +329,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B06XPRTK55/?tag=nao78-22-22"
   },
   {
     "id": "tent-f06",
@@ -359,7 +359,7 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DTNVP3KN/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-001",
@@ -384,7 +384,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR2P92/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-004",
@@ -409,7 +409,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AQXZD8/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-006",
@@ -434,7 +434,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08MXLN5VS/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-008",
@@ -459,7 +459,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B001QV4GP2/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-012",
@@ -484,7 +484,7 @@
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR4VZ8/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-013",
@@ -509,7 +509,7 @@
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B004IWR45A/?tag=nao78-22-22"
   },
   {
     "id": "gas-lantern-014",
@@ -534,7 +534,7 @@
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B001C9Y8PG/?tag=nao78-22-22"
   },
   {
     "id": "led-tent-001",
@@ -560,7 +560,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BVLJ85D2/?tag=nao78-22-22"
   },
   {
     "id": "led-tent-002",
@@ -586,7 +586,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07BHRH5WC/?tag=nao78-22-22"
   },
   {
     "id": "led-tent-003",
@@ -638,7 +638,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BP6YQ8P5/?tag=nao78-22-22"
   },
   {
     "id": "led-tent-005",
@@ -715,7 +715,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B007VLFI6W/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-002",
@@ -741,7 +741,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08CCNRKBK/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-003",
@@ -767,7 +767,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07N9B96L2/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-004",
@@ -792,7 +792,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AQXZME/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-005",
@@ -817,7 +817,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B085M4YQYJ/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-006",
@@ -842,7 +842,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07B2ST913/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-007",
@@ -867,7 +867,7 @@
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09PVHTDQ4/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-008",
@@ -892,7 +892,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B085Y1CY5H/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-009",
@@ -917,7 +917,7 @@
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=nao78-22-22"
   },
   {
     "id": "burner-s-010",
@@ -942,7 +942,7 @@
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0846XD39K/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-001",
@@ -967,7 +967,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08P6FQ72M/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-002",
@@ -992,7 +992,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07V6HXHHD/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-003",
@@ -1017,7 +1017,7 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00VT0UKD2/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-004",
@@ -1042,7 +1042,7 @@
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B017973NPK/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-005",
@@ -1067,7 +1067,7 @@
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00352KRDU/?tag=nao78-22-22"
   },
   {
     "id": "burner-m-007",
@@ -1092,7 +1092,7 @@
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B093CR21VB/?tag=nao78-22-22"
   },
   {
     "id": "tent-f05",
@@ -1136,6 +1136,6 @@
       "防水": "生活防水",
       "使用方法": "吊り下げ・手持ち2WAY"
     },
-    "amazonUrl": ""
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00HHMTWIA/?tag=nao78-22-22"
   }
 ]
