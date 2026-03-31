@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     price: body.price || 0,
     imageUrl: body.imageUrl || "",
     affiliateUrl: body.affiliateUrl || "",
+    amazonUrl: body.amazonUrl || "",
     categoryId: body.categoryId || "",
     specs: body.specs || {},
     description: body.description || "",

@@ -16,6 +16,7 @@ export default function AdminProducts() {
     price: 0,
     imageUrl: "",
     affiliateUrl: "",
+    amazonUrl: "",
     categoryId: "",
     specs: {},
     description: "",
