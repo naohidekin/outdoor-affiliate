@@ -315,28 +315,30 @@
     "categoryId": "tent",
     "tags": ["family"],
     "specs": {
-      "展開サイズ": "620×360×210cm",
+      "展開サイズ": "630×360×210cm",
       "インナーサイズ": "338×220cm",
       "定員": "4人",
-      "前室の広さ": "やや狭め",
+      "重量": "約16.5kg",
+      "前室の広さ": "やや狭め（ランドロックより小）",
       "スカート": "あり（全周）",
-      "遮光": "天井に遮光ピグメント",
-      "設営難易度": "対称構造で簡単",
+      "遮光": "天井部に遮光コーティング",
+      "フライシート": "別売り（¥11,000）",
+      "設営難易度": "対称構造で簡単（1人15分）",
       "耐水圧": "非公開",
       "発売": "2025年新作"
     },
-    "description": "2025年発売のスノーピーク新作2ルーム。ランドロックとほぼ同サイズながら約4万円安い。対称構造で設営しやすく、全周スカート付きでオールシーズン対応。スノーピーク入門の現実的な選択肢。",
+    "description": "2025年発売のスノーピーク新作2ルーム。コスパ最強ではなく「初心者ファミリー向けプロダクト最強」のテント。対称構造・アシストクリップ・ストームロープ標準装備で設営が圧倒的に簡単。天井遮光コーティング・全周スカート・永久保証付きで、はじめてのファミリーテントとして2025年最強候補。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00.000Z",
     "updatedAt": "2026-03-31T00:00:00.000Z"
   },
   {
     "id": "gas-lantern-001",
-    "name": "スノーピーク ギガパワーランタン 天 オート GS-100AR",
+    "name": "スノーピーク ギガパワーランタン 天 オート GL-100AR",
     "brand": "Snow Peak",
     "price": 15400,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/52685eb0.e12e3e02.52685eb1.5811eaa9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fclapper%2Fsp-gl-100ar%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": ["gas-lantern"],
     "specs": {
@@ -402,7 +404,7 @@
     "brand": "Primus",
     "price": 13200,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2F66afdd66f36f4a8da28bf52ee0c29fee%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": ["gas-lantern"],
     "specs": {
@@ -446,7 +448,7 @@
     "brand": "SOTO",
     "price": 5980,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2F8ca22e345c07a3051d15eb0bba998b49%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": ["gas-lantern"],
     "specs": {
@@ -490,7 +492,7 @@
     "brand": "Uniflame",
     "price": 12100,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fe3d3f1d25254604d95f6456e98f1ae41%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": ["gas-lantern"],
     "specs": {
@@ -600,7 +602,7 @@
     "brand": "Coleman",
     "price": 5500,
     "imageUrl": "",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fda41b6a678868ded8192c7b6ffcd5dda%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "categoryId": "light",
     "tags": ["gas-lantern"],
     "specs": {
