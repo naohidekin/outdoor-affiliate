@@ -78,7 +78,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                   href={product.amazonUrl}
                   target="_blank"
                   rel="noopener noreferrer nofollow sponsored"
-                  className="bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
+                  className="bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center block"
                 >
                   Amazonで見る →
                 </a>

@@ -128,9 +128,9 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       楽天で見る →
                     </a>
                   ) : (
-                    <span className="text-gray-500 text-xs">楽天：準備中</span>
+                    <span className="text-gray-500 text-xs">準備中</span>
                   )}
-                  {p.amazonUrl ? (
+                  {p.amazonUrl && (
                     <a
                       href={p.amazonUrl}
                       target="_blank"
@@ -139,8 +139,6 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     >
                       Amazonで見る →
                     </a>
-                  ) : (
-                    <span className="text-gray-500 text-xs">Amazon：準備中</span>
                   )}
                 </div>
               </td>
