@@ -55,7 +55,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 href={product.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer nofollow sponsored"
-                className="block bg-[#BF0000] hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition text-center"
+                className="block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-5 py-2 rounded-lg text-sm font-bold transition text-center"
               >
                 楽天で見る →
               </a>

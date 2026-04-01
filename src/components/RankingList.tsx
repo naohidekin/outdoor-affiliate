@@ -68,7 +68,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                   href={product.affiliateUrl}
                   target="_blank"
                   rel="noopener noreferrer nofollow sponsored"
-                  className="bg-[#BF0000] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
+                  className="bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
                 >
                   楽天で見る →
                 </a>
