@@ -19,11 +19,15 @@ export async function generateMetadata({
   return {
     title: `${category.name}のおすすめ比較・レビュー`,
     description: `${category.description}おすすめ製品の比較・口コミ・ランキング情報をまとめて紹介。`,
+    alternates: {
+      canonical: `/category/${category.slug}`,
+    },
     openGraph: {
       title: `${category.name}のおすすめ比較・レビュー`,
       description: `${category.description}おすすめ製品の比較・口コミ・ランキング情報をまとめて紹介。`,
       siteName: "Outdoor Gear Lab",
       locale: "ja_JP",
+      url: `/category/${category.slug}`,
     },
   };
 }

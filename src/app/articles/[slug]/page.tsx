@@ -27,6 +27,9 @@ export async function generateMetadata({
   return {
     title: article.title,
     description: article.excerpt,
+    alternates: {
+      canonical: `/articles/${article.slug}`,
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt,
@@ -35,6 +38,7 @@ export async function generateMetadata({
       modifiedTime: article.updatedAt,
       siteName: "Outdoor Gear Lab",
       locale: "ja_JP",
+      url: `/articles/${article.slug}`,
     },
     twitter: {
       card: "summary_large_image",
