@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     siteName: "Outdoor Gear Lab",
   },
+verification: {
+    google: "zAQk515bMuad6zmJvPSPmwfOVogJ394b9wqDTKlurGI",
+  },
 };
 
 export default function RootLayout({
