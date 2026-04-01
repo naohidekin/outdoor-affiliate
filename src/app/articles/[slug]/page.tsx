@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getCategories,
+  getArticles,
   getArticleBySlug,
   getProductsByIds,
   getCategoryById,
@@ -60,6 +61,14 @@ export default async function ArticlePage({
         .filter((a) => a.id !== article.id)
         .slice(0, 3)
     : [];
+
+  const allPublished = getArticles().filter(
+    (a) =>
+      a.status === "published" &&
+      a.id !== article.id &&
+      a.categoryId !== article.categoryId
+  );
+  const otherCategoryArticles = allPublished.slice(0, 3);
 
   const baseUrl = "https://camp-gear-lab.com";
 
@@ -221,6 +230,38 @@ export default async function ArticlePage({
                   </p>
                 </Link>
               ))}
+            </div>
+          </section>
+        )}
+        {/* Other category articles */}
+        {otherCategoryArticles.length > 0 && (
+          <section className="max-w-4xl mx-auto px-4 pb-12">
+            <h2 className="text-xl font-bold text-amber-900 mb-6">
+              他のカテゴリの人気記事
+            </h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {otherCategoryArticles.map((a) => {
+                const cat = getCategoryById(a.categoryId);
+                return (
+                  <Link
+                    key={a.id}
+                    href={`/articles/${a.slug}`}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 border border-amber-100 hover:border-amber-300"
+                  >
+                    {cat && (
+                      <span className="inline-block text-xs text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded-full mb-2">
+                        {cat.name}
+                      </span>
+                    )}
+                    <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+                      {a.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 line-clamp-2">
+                      {a.excerpt}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}

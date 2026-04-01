@@ -78,15 +78,22 @@ export default function ArticleContent({ content, products }: Props) {
               key={i}
               remarkPlugins={[remarkGfm]}
               components={{
-                a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="nofollow sponsored noopener noreferrer"
-                  >
-                    {children}
-                  </a>
-                ),
+                a: ({ href, children }) => {
+                  const isInternal =
+                    href?.startsWith("/") ||
+                    href?.includes("camp-gear-lab.com");
+                  return (
+                    <a
+                      href={href}
+                      {...(!isInternal && {
+                        target: "_blank",
+                        rel: "nofollow sponsored noopener noreferrer",
+                      })}
+                    >
+                      {children}
+                    </a>
+                  );
+                },
               }}
             >
               {part}
