@@ -74,6 +74,7 @@ export default async function ArticlePage({
   );
   const otherCategoryArticles = allPublished.slice(0, 3);
 
+  const faqs = article.faqs ?? [];
   const baseUrl = "https://camp-gear-lab.com";
 
   const articleJsonLd = {
@@ -141,6 +142,22 @@ export default async function ArticlePage({
       },
     }));
 
+  const faqJsonLd =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: faq.answer,
+            },
+          })),
+        }
+      : null;
+
   return (
     <>
       <script
@@ -155,6 +172,14 @@ export default async function ArticlePage({
           __html: JSON.stringify(breadcrumbJsonLd),
         }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(faqJsonLd),
+          }}
+        />
+      )}
       {productJsonLd.map((pld, i) => (
         <script
           key={i}
@@ -212,6 +237,33 @@ export default async function ArticlePage({
           {/* Article body */}
           <ArticleContent content={article.content} products={products} />
         </article>
+
+        {/* FAQ section */}
+        {faqs.length > 0 && (
+          <section className="max-w-4xl mx-auto px-4 pb-12">
+            <h2 className="text-2xl font-bold text-amber-900 mb-6">
+              よくある質問
+            </h2>
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="bg-white rounded-xl border border-amber-200 overflow-hidden group"
+                >
+                  <summary className="cursor-pointer px-6 py-4 font-semibold text-gray-800 hover:bg-amber-50 transition flex items-center justify-between">
+                    <span>Q. {faq.question}</span>
+                    <span className="text-amber-600 group-open:rotate-180 transition-transform ml-2">
+                      ▼
+                    </span>
+                  </summary>
+                  <div className="px-6 pb-4 text-gray-700 leading-relaxed border-t border-amber-100 pt-4">
+                    {faq.answer}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Related articles */}
         {relatedArticles.length > 0 && (
