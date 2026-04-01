@@ -54,7 +54,7 @@ export default function ProductCard({ product }: { product: Product }) {
               href={product.affiliateUrl}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-semibold transition"
+              className="bg-[#BF0000] hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition"
             >
               詳細を見る
             </a>

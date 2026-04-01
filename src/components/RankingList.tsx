@@ -67,7 +67,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                 href={product.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition whitespace-nowrap"
+                className="bg-[#BF0000] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition whitespace-nowrap"
               >
                 詳細を見る
               </a>
