@@ -105,10 +105,10 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
             </tr>
           ))}
 
-          {/* リンク行 */}
+          {/* 購入リンク行 */}
           <tr className="bg-gray-800 rounded-b-2xl">
             <td className="px-5 py-4 text-sm font-bold text-gray-300 rounded-bl-2xl">
-              楽天で購入
+              購入する
             </td>
             {products.map((p, i) => (
               <td
@@ -117,18 +117,30 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                   i === products.length - 1 ? "rounded-br-2xl" : ""
                 }`}
               >
-                {p.affiliateUrl ? (
-                  <a
-                    href={p.affiliateUrl}
-                    target="_blank"
-                    rel="noopener noreferrer nofollow sponsored"
-                    className="inline-block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-5 py-2.5 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg"
-                  >
-                    楽天で見る →
-                  </a>
-                ) : (
-                  <span className="text-gray-500 text-xs">準備中</span>
-                )}
+                <div className="flex flex-col gap-2 items-center">
+                  {p.affiliateUrl ? (
+                    <a
+                      href={p.affiliateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow sponsored"
+                      className="inline-block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-4 py-2 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg w-full text-center"
+                    >
+                      楽天で見る →
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 text-xs">準備中</span>
+                  )}
+                  {p.amazonUrl && (
+                    <a
+                      href={p.amazonUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow sponsored"
+                      className="inline-block bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg w-full text-center"
+                    >
+                      Amazonで見る →
+                    </a>
+                  )}
+                </div>
               </td>
             ))}
           </tr>

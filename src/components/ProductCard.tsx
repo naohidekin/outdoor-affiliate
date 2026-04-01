@@ -43,22 +43,34 @@ export default function ProductCard({ product }: { product: Product }) {
               ))}
           </div>
         )}
-        <div className="flex items-center justify-between mt-4">
+        <div className="mt-4">
           {product.price > 0 && (
-            <span className="text-lg font-bold text-red-600">
+            <span className="text-lg font-bold text-red-600 block mb-2">
               ¥{product.price.toLocaleString()}
             </span>
           )}
-          {product.affiliateUrl && (
-            <a
-              href={product.affiliateUrl}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              className="bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-5 py-2 rounded-lg text-sm font-semibold transition"
-            >
-              詳細を見る
-            </a>
-          )}
+          <div className="flex flex-col gap-2">
+            {product.affiliateUrl && (
+              <a
+                href={product.affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                className="block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-5 py-2 rounded-lg text-sm font-bold transition text-center"
+              >
+                楽天で見る →
+              </a>
+            )}
+            {product.amazonUrl && (
+              <a
+                href={product.amazonUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                className="block bg-[#FF9900] hover:bg-amber-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition text-center"
+              >
+                Amazonで見る →
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>

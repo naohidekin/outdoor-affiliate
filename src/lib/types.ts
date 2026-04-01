@@ -13,6 +13,7 @@ export interface Product {
   price: number;
   imageUrl: string;
   affiliateUrl: string;
+  amazonUrl: string;
   categoryId: string;
   specs: Record<string, string>;
   description: string;
