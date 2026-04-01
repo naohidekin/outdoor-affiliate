@@ -1,72 +1,33 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
+import { getArticles, getCategories } from "@/lib/db";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+  const baseUrl = "https://camp-gear-lab.com";
+  const articles = getArticles().filter((a) => a.status === "published");
+  const categories = getCategories();
+
+  const staticPages: MetadataRoute.Sitemap = [
     {
-      url: 'https://camp-gear-lab.com',
+      url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: "daily",
       priority: 1,
     },
-    {
-      url: 'https://camp-gear-lab.com/articles',
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/category',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/landlock-vs-landnest-shelter',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/family-tent-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/gas-lantern-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/led-tent-light-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/kids-sleeping-bag-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/nanga-sleeping-bag-comparison',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/single-burner-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://camp-gear-lab.com/articles/multi-burner-ranking',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-  ]
+  ];
+
+  const categoryPages: MetadataRoute.Sitemap = categories.map((cat) => ({
+    url: `${baseUrl}/category/${cat.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  const articlePages: MetadataRoute.Sitemap = articles.map((article) => ({
+    url: `${baseUrl}/articles/${article.slug}`,
+    lastModified: new Date(article.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...categoryPages, ...articlePages];
 }

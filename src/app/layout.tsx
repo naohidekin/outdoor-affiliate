@@ -23,10 +23,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ja_JP",
     siteName: "Outdoor Gear Lab",
+    url: "https://camp-gear-lab.com",
   },
-verification: {
+  twitter: {
+    card: "summary_large_image",
+  },
+  verification: {
     google: "zAQk515bMuad6zmJvPSPmwfOVogJ394b9wqDTKlurGI",
   },
+  metadataBase: new URL("https://camp-gear-lab.com"),
 };
 
 export default function RootLayout({

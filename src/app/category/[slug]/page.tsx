@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCategories, getCategoryBySlug, getArticlesByCategory } from "@/lib/db";
@@ -5,6 +6,31 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const category = getCategoryBySlug(slug);
+  if (!category) return {};
+
+  return {
+    title: `${category.name}のおすすめ比較・レビュー`,
+    description: `${category.description}おすすめ製品の比較・口コミ・ランキング情報をまとめて紹介。`,
+    alternates: {
+      canonical: `/category/${category.slug}`,
+    },
+    openGraph: {
+      title: `${category.name}のおすすめ比較・レビュー`,
+      description: `${category.description}おすすめ製品の比較・口コミ・ランキング情報をまとめて紹介。`,
+      siteName: "Outdoor Gear Lab",
+      locale: "ja_JP",
+      url: `/category/${category.slug}`,
+    },
+  };
+}
 
 export default async function CategoryPage({
   params,
