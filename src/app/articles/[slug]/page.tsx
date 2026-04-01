@@ -61,8 +61,96 @@ export default async function ArticlePage({
         .slice(0, 3)
     : [];
 
+  const baseUrl = "https://camp-gear-lab.com";
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt,
+    datePublished: article.publishedAt,
+    dateModified: article.updatedAt,
+    author: { "@type": "Organization", name: "Outdoor Gear Lab" },
+    publisher: {
+      "@type": "Organization",
+      name: "Outdoor Gear Lab",
+      url: baseUrl,
+    },
+    mainEntityOfPage: `${baseUrl}/articles/${article.slug}`,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "ホーム", item: baseUrl },
+      ...(category
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: category.name,
+              item: `${baseUrl}/category/${category.slug}`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: article.title,
+            },
+          ]
+        : [{ "@type": "ListItem", position: 2, name: article.title }]),
+    ],
+  };
+
+  const productJsonLd = products
+    .filter((p) => p.price > 0)
+    .map((p) => ({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.name,
+      brand: { "@type": "Brand", name: p.brand },
+      description: p.description,
+      image: p.imageUrl || undefined,
+      ...(p.rating > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: p.rating,
+          bestRating: 5,
+          ratingCount: 1,
+        },
+      }),
+      offers: {
+        "@type": "Offer",
+        price: p.price,
+        priceCurrency: "JPY",
+        availability: "https://schema.org/InStock",
+        url: p.affiliateUrl || p.amazonUrl || undefined,
+      },
+    }));
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleJsonLd),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd),
+        }}
+      />
+      {productJsonLd.map((pld, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(pld),
+          }}
+        />
+      ))}
       <Header categories={categories} />
       <main className="flex-1">
         <article className="max-w-4xl mx-auto px-4 py-12">
