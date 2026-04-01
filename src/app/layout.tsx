@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  verification: {
+    google: "zAQk515bMuad6zmJvPSPmwfOVogJ394b9wqDTKlurGI",
+  },
   metadataBase: new URL("https://camp-gear-lab.com"),
 };
 
