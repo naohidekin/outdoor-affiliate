@@ -122,7 +122,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     href={p.affiliateUrl}
                     target="_blank"
                     rel="noopener noreferrer nofollow sponsored"
-                    className="inline-block bg-[#BF0000] hover:bg-red-700 text-white px-5 py-2.5 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg"
+                    className="inline-block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-5 py-2.5 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg"
                   >
                     楽天で見る →
                   </a>
