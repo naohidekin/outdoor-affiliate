@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getCategories, getPublishedArticles } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "キャンプ・登山ギアおすすめ比較・レビュー | Outdoor Gear Lab",
+  description:
+    "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。スペック比較表・口コミ・ランキングで「どれ買えばいい？」を即解決。",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "キャンプ・登山ギアおすすめ比較・レビュー | Outdoor Gear Lab",
+    description:
+      "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。",
+    url: "/",
+  },
+};
 
 const CATEGORY_EMOJI: Record<string, string> = {
   tent: "⛺",
@@ -16,14 +32,56 @@ const CATEGORY_EMOJI: Record<string, string> = {
   table: "🪵",
   cooler: "🧊",
   apparel: "👕",
+  firepit: "🔥",
 };
 
 export default function Home() {
   const categories = getCategories();
   const articles = getPublishedArticles();
 
+  const baseUrl = "https://camp-gear-lab.com";
+
+  const webSiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Outdoor Gear Lab",
+    alternateName: "キャンプギアラボ",
+    url: baseUrl,
+    description:
+      "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。",
+    publisher: {
+      "@type": "Organization",
+      name: "Outdoor Gear Lab",
+      url: baseUrl,
+    },
+  };
+
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "キャンプ・登山ギアおすすめ比較・レビュー",
+    url: baseUrl,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: articles.slice(0, 6).map((a, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${baseUrl}/articles/${a.slug}`,
+        name: a.title,
+      })),
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
       <Header categories={categories} />
       <main className="flex-1">
         {/* Hero */}
@@ -95,7 +153,7 @@ export default function Home() {
             </h2>
             <p className="text-sm text-amber-700 mb-8">まずはこの記事から読んでみて！</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {articles.slice(0, 6).map((article) => {
+              {articles.map((article) => {
                 const cat = categories.find(
                   (c) => c.id === article.categoryId
                 );

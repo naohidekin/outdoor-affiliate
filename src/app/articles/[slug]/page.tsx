@@ -24,15 +24,17 @@ export async function generateMetadata({
   const article = getArticleBySlug(slug);
   if (!article) return {};
 
+  const description = article.metaDescription || article.excerpt;
+
   return {
     title: article.title,
-    description: article.excerpt,
+    description,
     alternates: {
       canonical: `/articles/${article.slug}`,
     },
     openGraph: {
       title: article.title,
-      description: article.excerpt,
+      description,
       type: "article",
       publishedTime: article.publishedAt ?? undefined,
       modifiedTime: article.updatedAt,

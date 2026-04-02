@@ -37,6 +37,7 @@ export interface Article {
   productIds: string[];
   status: "draft" | "published";
   faqs?: FAQ[];
+  metaDescription?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;

@@ -1815,5 +1815,211 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z"
+  },
+  {
+    "id": "fp-001",
+    "name": "ピコグリル 398",
+    "brand": "ピコグリル",
+    "price": 14000,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-odyamakei/cabinet/picogrill/picogrill398_01.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-odyamakei%2Fpicogrill398%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07ZQB4TWJ?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約442g",
+      "収納サイズ": "33.5×23.5×1cm",
+      "素材": "ステンレス",
+      "付属品": "スピット(串)×2"
+    },
+    "description": "ヒロシも愛用する超軽量焚き火台。A4サイズに折りたため、重さわずか442g。ソロキャンプ・バックパックキャンプの定番。",
+    "rating": 4.5,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "fp-002",
+    "name": "ユニフレーム ファイアグリル",
+    "brand": "ユニフレーム",
+    "price": 7700,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/naturum/cabinet/goods/02956/02956544_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2F683040%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00B4C00YI?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約2.7kg",
+      "サイズ": "43×43×33cm",
+      "素材": "ステンレス",
+      "耐荷重": "約20kg"
+    },
+    "description": "圧倒的コスパの定番焚き火台。ダッチオーブンも載せられる頑丈さで7,700円。ファミリーからソロまで対応。",
+    "rating": 4.6,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "fp-003",
+    "name": "スノーピーク 焚火台 M",
+    "brand": "スノーピーク",
+    "price": 17160,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/snb-shop/cabinet/sp/st-033r.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnb-shop%2Fst-033r%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR4TJQ?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約3.5kg",
+      "サイズ": "35×35×24.8cm",
+      "素材": "ステンレス（1.5mm厚）",
+      "付属品": "収納ケース"
+    },
+    "description": "スノーピークの永久保証付き焚き火台。1.5mm厚ステンレスで一生使える堅牢さ。開くだけの簡単設営。",
+    "rating": 4.7,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "fp-004",
+    "name": "Tokyo Camp 焚き火台",
+    "brand": "Tokyo Camp",
+    "price": 4980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/tokyocamp/cabinet/07816277/firestand_main01.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftokyocamp%2Ffirestand%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08SWGN3BW?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約965g",
+      "収納サイズ": "32×22×2.5cm",
+      "素材": "ステンレス",
+      "組立": "約15秒"
+    },
+    "description": "5千円以下で買えるコスパ最強のソロ焚き火台。ピコグリルに似た構造で約965g。組立15秒。",
+    "rating": 4.4,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "fp-005",
+    "name": "ソロストーブ レンジャー 2.0",
+    "brand": "ソロストーブ",
+    "price": 34100,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/solostove/cabinet/ranger2/ranger2_main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsolostove%2Franger2%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BTBMGRFQ?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約6.8kg",
+      "直径": "38cm",
+      "高さ": "32cm",
+      "素材": "ステンレス（二重壁）",
+      "特徴": "二次燃焼"
+    },
+    "description": "二次燃焼で煙が極めて少ない。キャンプ場だけでなく庭でも使える。美しい炎が楽しめるプレミアム焚き火台。",
+    "rating": 4.6,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "tent-duo-001",
+    "name": "コールマン ツーリングドーム LX",
+    "brand": "コールマン",
+    "price": 22800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/naturum/cabinet/goods/02956/02956247_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2Fcoleman_2000038142%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07NQQTCS1?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "重量": "約5.6kg",
+      "サイズ": "210×180×110cm",
+      "耐水圧": "1,500mm",
+      "収容人数": "2〜3人",
+      "前室": "あり（広め）"
+    },
+    "description": "ツーリングドームSTの2〜3人用バージョン。カップルや親子2人キャンプにちょうどいいサイズ。前室も広い。",
+    "rating": 4.5,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "tent-duo-002",
+    "name": "スノーピーク アメニティドーム S",
+    "brand": "スノーピーク",
+    "price": 44000,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/snb-shop/cabinet/sp/sde-002rh.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnb-shop%2Fsde-002rh%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00GZHNHTW?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "重量": "約5kg",
+      "サイズ": "230×150×120cm",
+      "耐水圧": "1,800mm（フライ）",
+      "収容人数": "2人",
+      "前室": "あり"
+    },
+    "description": "スノーピークの入門テント。低いシルエットで風に強く、耐水圧1,800mmで雨にも安心。永久保証付き。",
+    "rating": 4.6,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "tent-duo-003",
+    "name": "DOD ライダーズワンタッチテント",
+    "brand": "DOD",
+    "price": 19800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/naturum/cabinet/goods/02956/02956380_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2Fdod_t2820tn%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07D74FZ7K?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "重量": "約4.3kg",
+      "サイズ": "243×235×133cm",
+      "耐水圧": "3,000mm",
+      "収容人数": "2人",
+      "設営": "ワンタッチ"
+    },
+    "description": "紐を引くだけで設営完了のワンタッチテント。バイクツーリングにも対応する2人用。耐水圧3,000mm。",
+    "rating": 4.3,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "tent-duo-004",
+    "name": "モンベル クロノスドーム 2型",
+    "brand": "モンベル",
+    "price": 30800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/montbell/cabinet/tent/1122491_main.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmontbell%2F1122491%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00GKO37U6?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "重量": "約2.43kg",
+      "サイズ": "230×130×105cm",
+      "耐水圧": "2,000mm",
+      "収容人数": "2人",
+      "前室": "あり"
+    },
+    "description": "バーティカル・クロス・システムで広い居住空間を実現。2.43kgと軽量で登山にも対応する万能2人用テント。",
+    "rating": 4.5,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
+  },
+  {
+    "id": "tent-duo-005",
+    "name": "ogawa ステイシーST-II",
+    "brand": "ogawa",
+    "price": 52800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/naturum/cabinet/goods/02956/02956298_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2F2616607%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08G56TC8Q?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "重量": "約3.9kg",
+      "サイズ": "300×230×130cm",
+      "耐水圧": "1,800mm",
+      "収容人数": "2〜3人",
+      "前室": "あり（超広い）"
+    },
+    "description": "前室の広さが圧倒的。2人+荷物で余裕の居住空間。老舗ogawaの品質と設計の良さが光る2人用テントの最高峰。",
+    "rating": 4.7,
+    "createdAt": "2026-04-02T00:00:00.000Z",
+    "updatedAt": "2026-04-02T00:00:00.000Z"
   }
 ]

@@ -5,5 +5,6 @@
   { "id": "burner", "name": "バーナー・コンロ", "slug": "burner", "description": "アウトドア料理に必須のバーナー", "order": 4 },
   { "id": "backpack", "name": "バックパック", "slug": "backpack", "description": "登山・ハイキング用バックパック", "order": 5 },
   { "id": "wear", "name": "ウェア・レインウェア", "slug": "wear", "description": "アウトドアウェアの選び方", "order": 6 },
-  { "id": "shoes", "name": "登山靴・トレッキングシューズ", "slug": "shoes", "description": "足元を守る登山靴", "order": 7 }
+  { "id": "shoes", "name": "登山靴・トレッキングシューズ", "slug": "shoes", "description": "足元を守る登山靴", "order": 7 },
+  { "id": "firepit", "name": "焚き火台", "slug": "firepit", "description": "キャンプの夜を彩る焚き火台", "order": 8 }
 ]
