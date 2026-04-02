@@ -22,6 +22,11 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface FAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -31,6 +36,7 @@ export interface Article {
   excerpt: string;
   productIds: string[];
   status: "draft" | "published";
+  faqs?: FAQ[];
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
