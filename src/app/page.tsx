@@ -33,6 +33,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   cooler: "🧊",
   apparel: "👕",
   firepit: "🔥",
+  tarp: "⛱️",
 };
 
 export default function Home() {
