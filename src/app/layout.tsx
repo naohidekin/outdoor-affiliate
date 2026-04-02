@@ -45,6 +45,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Outdoor Gear Lab"
+          href="https://camp-gear-lab.com/feed"
+        />
         <script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-0F2R4RX636"
