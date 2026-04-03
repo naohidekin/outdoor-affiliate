@@ -72,6 +72,22 @@ export default function XPostsPage() {
     }
   }
 
+  async function queueNow(id: string) {
+    if (!confirm("この投稿をすぐにXに送信しますか？\nIFTTTが検知次第（5〜10分）投稿されます。")) return;
+    const res = await fetch("/api/x-posts/queue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } else {
+      const err = await res.json();
+      alert(err.error || "エラーが発生しました");
+    }
+  }
+
   async function updateStatus(id: string, status: XPost["status"]) {
     const res = await fetch("/api/x-posts", {
       method: "PATCH",
@@ -265,6 +281,14 @@ export default function XPostsPage() {
                         className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200"
                       >
                         取消
+                      </button>
+                    )}
+                    {(post.status === "draft" || post.status === "approved") && (
+                      <button
+                        onClick={() => queueNow(post.id)}
+                        className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs hover:bg-purple-200 font-medium"
+                      >
+                        すぐに投稿
                       </button>
                     )}
                     {post.status !== "posted" && (
