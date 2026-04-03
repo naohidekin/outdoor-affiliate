@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { isAuthenticated } from "@/lib/auth";
 import { getArticles, saveArticle, deleteArticle, getArticleById } from "@/lib/db";
 import { Article } from "@/lib/types";
+import { notifyGoogleIndex } from "@/lib/indexing";
 
 export async function GET() {
   return NextResponse.json(getArticles());
@@ -31,6 +32,11 @@ export async function POST(request: NextRequest) {
   };
 
   saveArticle(article);
+
+  if (article.status === "published" && article.slug) {
+    notifyGoogleIndex(article.slug).catch(() => {});
+  }
+
   return NextResponse.json(article, { status: 201 });
 }
 
@@ -55,6 +61,11 @@ export async function PUT(request: NextRequest) {
   };
 
   saveArticle(updated);
+
+  if (updated.status === "published" && updated.slug) {
+    notifyGoogleIndex(updated.slug).catch(() => {});
+  }
+
   return NextResponse.json(updated);
 }
 
