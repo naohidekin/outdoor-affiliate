@@ -27,6 +27,18 @@ export interface FAQ {
   answer: string;
 }
 
+export interface XPost {
+  id: string;
+  text: string;
+  type: "comparison" | "question" | "failure" | "summary" | "cospa" | "family" | "site-link";
+  articleSlug?: string;
+  status: "draft" | "approved" | "posted";
+  scheduledDay?: string; // e.g. "月", "火", ...
+  scheduledTime?: string; // e.g. "07:00", "20:00"
+  createdAt: string;
+  postedAt?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
