@@ -1,51 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getXPosts, getXPostById, saveXPost, deleteXPost } from "@/lib/db";
+import { isAuthenticated } from "@/lib/auth";
+import {
+  getSheetsXPosts,
+  getSheetsXPostById,
+  saveSheetsXPost,
+  deleteSheetsXPost,
+} from "@/lib/sheets-xposts";
 import { XPost } from "@/lib/types";
 
 export async function GET() {
-  const posts = getXPosts();
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+  const posts = await getSheetsXPosts();
   return NextResponse.json(posts);
 }
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const now = new Date().toISOString();
-  const posts = getXPosts();
-  const nextId = `xpost-${String(posts.length + 1).padStart(3, "0")}`;
-
-  const post: XPost = {
-    id: body.id || nextId,
-    text: body.text,
-    type: body.type || "comparison",
-    articleSlug: body.articleSlug || undefined,
-    status: body.status || "draft",
-    scheduledDay: body.scheduledDay || undefined,
-    scheduledTime: body.scheduledTime || undefined,
-    createdAt: now,
-  };
-
-  saveXPost(post);
-  return NextResponse.json(post, { status: 201 });
-}
-
 export async function PATCH(req: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
   const body = await req.json();
-  const existing = getXPostById(body.id);
-  if (!existing) {
+  const result = await getSheetsXPostById(body.id);
+  if (!result) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const updated: XPost = { ...existing, ...body };
-  saveXPost(updated);
+  const updated: XPost = { ...result.post, ...body };
+  await saveSheetsXPost(updated);
   return NextResponse.json(updated);
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "id required" }, { status: 400 });
   }
-  deleteXPost(id);
+  await deleteSheetsXPost(id);
   return NextResponse.json({ ok: true });
 }

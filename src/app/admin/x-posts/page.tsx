@@ -4,43 +4,60 @@ import { useEffect, useState } from "react";
 
 interface XPost {
   id: string;
+  type: "article_promo" | "outdoor_tip";
   text: string;
-  type: string;
-  articleSlug?: string;
-  status: "draft" | "approved" | "posted";
-  scheduledDay?: string;
-  scheduledTime?: string;
-  createdAt: string;
-  postedAt?: string;
+  articleSlug: string | null;
+  url: string | null;
+  hashtags: string;
+  status: "draft" | "approved" | "queued" | "posted";
+  scheduledDate: string;
+  generatedAt: string;
+  postedAt: string | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  comparison: "比較・結論",
-  question: "問いかけ",
-  failure: "失敗談",
-  summary: "まとめ",
-  cospa: "コスパ",
-  family: "家族ネタ",
-  "site-link": "サイト誘導",
+  article_promo: "記事紹介",
+  outdoor_tip: "豆知識",
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   draft: { label: "下書き", color: "bg-gray-100 text-gray-600" },
   approved: { label: "承認済", color: "bg-green-100 text-green-700" },
+  queued: { label: "投稿待ち", color: "bg-yellow-100 text-yellow-700" },
   posted: { label: "投稿済", color: "bg-blue-100 text-blue-700" },
 };
 
 export default function XPostsPage() {
   const [posts, setPosts] = useState<XPost[]>([]);
+  const [filter, setFilter] = useState<string>("all");
   const [copied, setCopied] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     fetch("/api/x-posts")
       .then((r) => r.json())
-      .then(setPosts);
+      .then(setPosts)
+      .catch(() => {});
   }, []);
+
+  async function handleGenerate() {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/x-posts/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ autoApprove: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts((prev) => [...data.posts, ...prev]);
+      }
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function copyToClipboard(post: XPost) {
     await navigator.clipboard.writeText(post.text);
@@ -52,7 +69,11 @@ export default function XPostsPage() {
     const res = await fetch("/api/x-posts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status, ...(status === "posted" ? { postedAt: new Date().toISOString() } : {}) }),
+      body: JSON.stringify({
+        id,
+        status,
+        ...(status === "posted" ? { postedAt: new Date().toISOString() } : {}),
+      }),
     });
     const updated = await res.json();
     setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
@@ -79,29 +100,63 @@ export default function XPostsPage() {
     setEditText(post.text);
   }
 
-  const drafts = posts.filter((p) => p.status === "draft");
-  const approved = posts.filter((p) => p.status === "approved");
-  const posted = posts.filter((p) => p.status === "posted");
+  const filtered =
+    filter === "all" ? posts : posts.filter((p) => p.status === filter);
+
+  const counts = {
+    all: posts.length,
+    draft: posts.filter((p) => p.status === "draft").length,
+    approved: posts.filter((p) => p.status === "approved").length,
+    queued: posts.filter((p) => p.status === "queued").length,
+    posted: posts.filter((p) => p.status === "posted").length,
+  };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">X 投稿管理</h1>
           <p className="text-sm text-gray-500 mt-1">
-            ギア男 @camp_gear_lab のツイート下書き・管理
+            ギア男 @camp_gear_lab のツイート管理
           </p>
         </div>
-        <div className="flex gap-3 text-sm">
-          <span className="px-3 py-1 bg-gray-100 rounded-full">下書き {drafts.length}</span>
-          <span className="px-3 py-1 bg-green-100 rounded-full">承認済 {approved.length}</span>
-          <span className="px-3 py-1 bg-blue-100 rounded-full">投稿済 {posted.length}</span>
-        </div>
+        <button
+          onClick={handleGenerate}
+          disabled={generating}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+        >
+          {generating ? "生成中..." : "今すぐ生成"}
+        </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-6">
+        {(
+          [
+            ["all", "すべて"],
+            ["draft", "下書き"],
+            ["approved", "承認済"],
+            ["queued", "投稿待ち"],
+            ["posted", "投稿済"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`px-3 py-1.5 rounded-full text-sm ${
+              filter === key
+                ? "bg-green-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {label} ({counts[key]})
+          </button>
+        ))}
       </div>
 
       {/* Posts list */}
       <div className="space-y-4">
-        {posts.map((post) => {
+        {filtered.map((post) => {
           const statusInfo = STATUS_LABELS[post.status];
           const isEditing = editing === post.id;
 
@@ -114,24 +169,24 @@ export default function XPostsPage() {
                 <div className="flex-1 min-w-0">
                   {/* Header */}
                   <div className="flex items-center gap-2 mb-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}
+                    >
                       {statusInfo.label}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
                       {TYPE_LABELS[post.type] || post.type}
                     </span>
-                    {post.scheduledDay && (
-                      <span className="text-xs text-gray-400">
-                        {post.scheduledDay}曜 {post.scheduledTime}
-                      </span>
-                    )}
-                    {post.articleSlug && (
+                    <span className="text-xs text-gray-400">
+                      {post.scheduledDate}
+                    </span>
+                    {post.url && (
                       <a
-                        href={`/articles/${post.articleSlug}`}
+                        href={post.url}
                         target="_blank"
                         className="text-xs text-green-600 hover:underline"
                       >
-                        記事リンク付き
+                        記事リンク
                       </a>
                     )}
                   </div>
@@ -199,18 +254,20 @@ export default function XPostsPage() {
                     )}
                     {post.status === "approved" && (
                       <button
-                        onClick={() => updateStatus(post.id, "posted")}
-                        className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200"
+                        onClick={() => updateStatus(post.id, "draft")}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200"
                       >
-                        投稿済
+                        取消
                       </button>
                     )}
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs hover:bg-red-100"
-                    >
-                      削除
-                    </button>
+                    {post.status !== "posted" && (
+                      <button
+                        onClick={() => deletePost(post.id)}
+                        className="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs hover:bg-red-100"
+                      >
+                        削除
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -219,10 +276,10 @@ export default function XPostsPage() {
         })}
       </div>
 
-      {posts.length === 0 && (
+      {filtered.length === 0 && (
         <div className="text-center py-16 text-gray-400">
-          <p className="text-lg mb-2">まだ投稿がありません</p>
-          <p className="text-sm">ツイート案を追加してください</p>
+          <p className="text-lg mb-2">該当する投稿がありません</p>
+          <p className="text-sm">「今すぐ生成」でポストを作成してください</p>
         </div>
       )}
     </div>

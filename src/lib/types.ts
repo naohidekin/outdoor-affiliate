@@ -29,14 +29,15 @@ export interface FAQ {
 
 export interface XPost {
   id: string;
+  type: "article_promo" | "outdoor_tip";
   text: string;
-  type: "comparison" | "question" | "failure" | "summary" | "cospa" | "family" | "site-link";
-  articleSlug?: string;
-  status: "draft" | "approved" | "posted";
-  scheduledDay?: string; // e.g. "月", "火", ...
-  scheduledTime?: string; // e.g. "07:00", "20:00"
-  createdAt: string;
-  postedAt?: string;
+  articleSlug: string | null;
+  url: string | null;
+  hashtags: string;
+  status: "draft" | "approved" | "queued" | "posted";
+  scheduledDate: string;
+  generatedAt: string;
+  postedAt: string | null;
 }
 
 export interface Article {
