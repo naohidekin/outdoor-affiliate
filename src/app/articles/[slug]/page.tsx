@@ -182,6 +182,39 @@ export default async function ArticlePage({
         }
       : null;
 
+  const isHowToArticle = /選び方|ガイド|完全/.test(article.title);
+  const howToJsonLd = isHowToArticle
+    ? (() => {
+        const headingRegex = /^##\s+(.+)$/gm;
+        const steps: { "@type": string; name: string; text: string }[] = [];
+        let match;
+        while ((match = headingRegex.exec(article.content)) !== null) {
+          const heading = match[1].replace(/[#*]/g, "").trim();
+          if (
+            heading &&
+            !heading.startsWith("合わせて読みたい") &&
+            !heading.startsWith("まとめ") &&
+            !heading.startsWith("よくある質問")
+          ) {
+            steps.push({
+              "@type": "HowToStep",
+              name: heading,
+              text: heading,
+            });
+          }
+        }
+        return steps.length >= 2
+          ? {
+              "@context": "https://schema.org",
+              "@type": "HowTo",
+              name: article.title,
+              description: article.metaDescription || article.excerpt,
+              step: steps.slice(0, 8),
+            }
+          : null;
+      })()
+    : null;
+
   return (
     <>
       <script
@@ -201,6 +234,14 @@ export default async function ArticlePage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(faqJsonLd),
+          }}
+        />
+      )}
+      {howToJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(howToJsonLd),
           }}
         />
       )}

@@ -22,11 +22,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  const isGuideArticle = (title: string) =>
+    /ガイド|guide|完全|選び方/.test(title.toLowerCase());
+
   const articlePages: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${baseUrl}/articles/${article.slug}`,
     lastModified: new Date(article.updatedAt),
     changeFrequency: "monthly" as const,
-    priority: 0.7,
+    priority: isGuideArticle(article.title) ? 0.9 : 0.7,
   }));
 
   return [...staticPages, ...categoryPages, ...articlePages];
