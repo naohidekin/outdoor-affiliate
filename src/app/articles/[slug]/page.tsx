@@ -141,6 +141,28 @@ export default async function ArticlePage({
         priceCurrency: "JPY",
         availability: "https://schema.org/InStock",
         url: p.affiliateUrl || p.amazonUrl || undefined,
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: "JP",
+          },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "d" },
+            transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 5, unitCode: "d" },
+          },
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: 0,
+            currency: "JPY",
+          },
+        },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "JP",
+          returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+        },
       },
     }));
 
