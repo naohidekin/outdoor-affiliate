@@ -8,6 +8,20 @@ import {
 } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {
+  Tent,
+  Lamp,
+  Flame,
+  Backpack,
+  Snowflake,
+  Mountain,
+  Armchair,
+  Table,
+  ThermometerSnowflake,
+  Shirt,
+  Footprints,
+  Cloudy,
+} from "lucide-react";
 
 const CATEGORY_INTRO: Record<string, string> = {
   tent: "テント選びはキャンプの快適さを左右する最も重要なポイントだ。ファミリー向けの大型テントからソロキャンプ用の軽量モデルまで、用途と人数に合った最適な一張りを見つけよう。設営のしやすさ・耐水圧・重量・価格を徹底比較し、後悔しないテント選びをサポートする。",
@@ -31,6 +45,21 @@ const CATEGORY_INTRO: Record<string, string> = {
     "キャンプテーブルは調理・食事・団らんの中心になるギア。ハイテーブル・ローテーブル・焚き火テーブルなど用途別の選び方、素材（アルミ・木・ステンレス）の違い、人数に合ったサイズの目安を解説する。",
   cooler:
     "クーラーボックスは夏キャンプの生命線。ハードクーラー・ソフトクーラーの違い、保冷力の目安、容量の選び方を解説。1泊2日なら何リットル必要か、保冷力を最大化するコツまで、食材を安全に保つための知識をまとめた。",
+};
+
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  tent: <Tent className="w-8 h-8" />,
+  lantern: <Lamp className="w-8 h-8" />,
+  burner: <Flame className="w-8 h-8" />,
+  backpack: <Backpack className="w-8 h-8" />,
+  "sleeping-bag": <Snowflake className="w-8 h-8" />,
+  shoes: <Footprints className="w-8 h-8" />,
+  chair: <Armchair className="w-8 h-8" />,
+  table: <Table className="w-8 h-8" />,
+  cooler: <ThermometerSnowflake className="w-8 h-8" />,
+  wear: <Shirt className="w-8 h-8" />,
+  firepit: <Flame className="w-8 h-8" />,
+  tarp: <Cloudy className="w-8 h-8" />,
 };
 
 export const dynamic = "force-dynamic";
@@ -117,38 +146,46 @@ export default async function CategoryPage({
       />
       <Header categories={categories} />
       <main className="flex-1">
-        <section className="bg-green-700 text-white py-12">
+        <section className="bg-[#2a2320] text-white py-14">
           <div className="max-w-6xl mx-auto px-4">
-            <nav className="text-green-200 text-sm mb-2">
-              <Link href="/" className="hover:text-white">
+            <nav className="text-gray-500 text-sm mb-4">
+              <Link href="/" className="hover:text-gray-300 transition">
                 ホーム
-              </Link>{" "}
-              / {category.name}
+              </Link>
+              <span className="mx-2">/</span>
+              <span className="text-gray-300">{category.name}</span>
             </nav>
-            <h1 className="text-3xl font-bold">{category.name}</h1>
-            <p className="text-green-200 mt-2">{category.description}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-[#7a9a6d]">
+                {CATEGORY_ICON[category.slug] ?? <Mountain className="w-8 h-8" />}
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">{category.name}</h1>
+                <p className="text-gray-400 mt-1">{category.description}</p>
+              </div>
+            </div>
           </div>
         </section>
 
         {introText && (
           <section className="max-w-6xl mx-auto px-4 pt-10 pb-2">
-            <p className="text-gray-700 leading-relaxed">{introText}</p>
+            <p className="text-gray-600 leading-relaxed">{introText}</p>
           </section>
         )}
 
         <section className="max-w-6xl mx-auto px-4 py-12">
           {articles.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.map((article) => (
                 <Link
                   key={article.id}
                   href={`/articles/${article.slug}`}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 border border-gray-100"
+                  className="bg-white rounded-xl hover:shadow-md transition-all p-5 border border-gray-100 hover:border-gray-200 group"
                 >
-                  <h3 className="font-bold text-gray-800 mb-2 line-clamp-2">
+                  <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-[#4a6741] transition">
                     {article.title}
                   </h3>
-                  <p className="text-sm text-gray-500 line-clamp-3">
+                  <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">
                     {article.excerpt}
                   </p>
                   <p className="text-xs text-gray-400 mt-3">

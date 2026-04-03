@@ -1,21 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdf8f2;
-  --foreground: #2d2416;
+  --background: #FAFAF7;
+  --foreground: #1a1a1a;
+  --brand-green: #4a6741;
+  --brand-brown: #3d2b1f;
+  --accent-sage: #7a9a6d;
+  --accent-warm: #c4956a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-heading: var(--font-dm-sans), var(--font-noto-sans-jp), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Prose styles for article content */
@@ -24,9 +28,10 @@ body {
   margin-bottom: 0.75em;
   font-size: 1.5rem;
   font-weight: 700;
-  border-bottom: 2px solid #f0d9b5;
-  padding-bottom: 0.5em;
-  color: #3d2b1f;
+  border-left: 4px solid var(--brand-green);
+  padding-left: 0.75em;
+  padding-bottom: 0.25em;
+  color: var(--brand-brown);
 }
 
 .prose h3 {
@@ -34,11 +39,13 @@ body {
   margin-bottom: 0.5em;
   font-size: 1.25rem;
   font-weight: 600;
+  color: #2d2416;
 }
 
 .prose p {
   margin-bottom: 1em;
-  line-height: 1.8;
+  line-height: 1.9;
+  color: #444;
 }
 
 .prose ul, .prose ol {
@@ -48,15 +55,17 @@ body {
 
 .prose li {
   margin-bottom: 0.25em;
+  line-height: 1.8;
 }
 
 .prose a {
-  color: #16a34a;
+  color: var(--brand-green);
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .prose a:hover {
-  color: #15803d;
+  color: var(--accent-sage);
 }
 
 /* Table styles */
@@ -70,7 +79,7 @@ body {
 }
 
 .prose thead tr {
-  background-color: #3d2b1f;
+  background-color: var(--brand-brown);
   color: #fff;
 }
 
@@ -83,12 +92,12 @@ body {
 
 .prose td {
   padding: 0.65em 1em;
-  border: 1px solid #e5d5c0;
-  color: #3d2b1f;
+  border: 1px solid #e5e0d8;
+  color: #333;
 }
 
 .prose tbody tr:nth-child(even) {
-  background-color: #fdf0e0;
+  background-color: #f5f3ef;
 }
 
 .prose tbody tr:nth-child(odd) {
@@ -96,14 +105,17 @@ body {
 }
 
 .prose tbody tr:hover {
-  background-color: #fde8c8;
+  background-color: #eceae4;
 }
 
 .prose blockquote {
-  border-left: 4px solid #d1d5db;
+  border-left: 4px solid var(--accent-warm);
   padding-left: 1em;
-  color: #6b7280;
+  color: #666;
   font-style: italic;
+  background: #faf8f5;
+  padding: 1em 1.25em;
+  border-radius: 0 8px 8px 0;
 }
 
 .line-clamp-2 {
