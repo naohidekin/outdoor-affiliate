@@ -1,0 +1,202 @@
+{
+  "checkedAt": "2026-04-03T16:31:20.263Z",
+  "total": 111,
+  "checked": 107,
+  "ok": 72,
+  "broken": [
+    {
+      "id": "light-003",
+      "name": "ルーメナー2 LUMENA2",
+      "url": "https://www.amazon.co.jp/dp/B07YS527KF/?tag=nao78-22-22"
+    },
+    {
+      "id": "burner-s-010",
+      "name": "コールマン フェザーストーブ",
+      "url": "https://www.amazon.co.jp/dp/B0846XD39K/?tag=nao78-22-22"
+    },
+    {
+      "id": "fp-001",
+      "name": "ピコグリル 398",
+      "url": "https://www.amazon.co.jp/dp/B07ZQB4TWJ?tag=nao78-22-22"
+    },
+    {
+      "id": "fp-002",
+      "name": "ユニフレーム ファイアグリル",
+      "url": "https://www.amazon.co.jp/dp/B00B4C00YI?tag=nao78-22-22"
+    },
+    {
+      "id": "fp-004",
+      "name": "Tokyo Camp 焚き火台",
+      "url": "https://www.amazon.co.jp/dp/B08SWGN3BW?tag=nao78-22-22"
+    },
+    {
+      "id": "fp-005",
+      "name": "ソロストーブ レンジャー 2.0",
+      "url": "https://www.amazon.co.jp/dp/B0BTBMGRFQ?tag=nao78-22-22"
+    },
+    {
+      "id": "tent-duo-002",
+      "name": "スノーピーク アメニティドーム S",
+      "url": "https://www.amazon.co.jp/dp/B00GZHNHTW?tag=nao78-22-22"
+    },
+    {
+      "id": "tent-duo-003",
+      "name": "DOD ライダーズワンタッチテント",
+      "url": "https://www.amazon.co.jp/dp/B07D74FZ7K?tag=nao78-22-22"
+    },
+    {
+      "id": "tent-duo-004",
+      "name": "モンベル クロノスドーム 2型",
+      "url": "https://www.amazon.co.jp/dp/B00GKO37U6?tag=nao78-22-22"
+    },
+    {
+      "id": "tent-duo-005",
+      "name": "ogawa ステイシーST-II",
+      "url": "https://www.amazon.co.jp/dp/B08G56TC8Q?tag=nao78-22-22"
+    },
+    {
+      "id": "tarp-001",
+      "name": "スノーピーク HDタープ シールド ヘキサ M",
+      "url": "https://www.amazon.co.jp/dp/B000AR2VR4?tag=nao78-22-22"
+    },
+    {
+      "id": "tarp-002",
+      "name": "コールマン XPヘキサタープ MDX+",
+      "url": "https://www.amazon.co.jp/dp/B084Q2LHBM?tag=nao78-22-22"
+    },
+    {
+      "id": "tarp-003",
+      "name": "DOD いつかのタープ",
+      "url": "https://www.amazon.co.jp/dp/B07V6ZYBJB?tag=nao78-22-22"
+    },
+    {
+      "id": "tarp-004",
+      "name": "テンマクデザイン ムササビウイング 13ft TC",
+      "url": "https://www.amazon.co.jp/dp/B09MFGLVT1?tag=nao78-22-22"
+    },
+    {
+      "id": "tarp-005",
+      "name": "ユニフレーム REVOタープ II M",
+      "url": "https://www.amazon.co.jp/dp/B00Y7ZDZZG?tag=nao78-22-22"
+    },
+    {
+      "id": "chair-001",
+      "name": "ヘリノックス チェアワン",
+      "url": "https://www.amazon.co.jp/dp/B00JAIHAVQ?tag=nao78-22-22"
+    },
+    {
+      "id": "chair-002",
+      "name": "コールマン インフィニティチェア",
+      "url": "https://www.amazon.co.jp/dp/B07BGTYZ7L?tag=nao78-22-22"
+    },
+    {
+      "id": "chair-003",
+      "name": "キャプテンスタッグ ロースタイルイージーチェア",
+      "url": "https://www.amazon.co.jp/dp/B00FGAQ42M?tag=nao78-22-22"
+    },
+    {
+      "id": "chair-004",
+      "name": "スノーピーク ローチェア30",
+      "url": "https://www.amazon.co.jp/dp/B00B4C00MI?tag=nao78-22-22"
+    },
+    {
+      "id": "chair-005",
+      "name": "DOD スゴイッス",
+      "url": "https://www.amazon.co.jp/dp/B09F6FNG37?tag=nao78-22-22"
+    },
+    {
+      "id": "table-001",
+      "name": "ユニフレーム 焚き火テーブル",
+      "url": "https://www.amazon.co.jp/dp/B003EJ1JBM?tag=nao78-22-22"
+    },
+    {
+      "id": "table-002",
+      "name": "コールマン ナチュラルモザイクリビングテーブル 120プラス",
+      "url": "https://www.amazon.co.jp/dp/B00BNR26HM?tag=nao78-22-22"
+    },
+    {
+      "id": "table-003",
+      "name": "スノーピーク エントリーIGT",
+      "url": "https://www.amazon.co.jp/dp/B08FH67YRR?tag=nao78-22-22"
+    },
+    {
+      "id": "table-004",
+      "name": "キャプテンスタッグ アルミロールテーブル",
+      "url": "https://www.amazon.co.jp/dp/B0026GQWPK?tag=nao78-22-22"
+    },
+    {
+      "id": "table-005",
+      "name": "DOD テキーラテーブル",
+      "url": "https://www.amazon.co.jp/dp/B08J476DNB?tag=nao78-22-22"
+    },
+    {
+      "id": "cooler-001",
+      "name": "コールマン 54QT スチールベルトクーラー",
+      "url": "https://www.amazon.co.jp/dp/B0009PURSE?tag=nao78-22-22"
+    },
+    {
+      "id": "cooler-002",
+      "name": "ダイワ クールラインα ライトソルト S1500X",
+      "url": "https://www.amazon.co.jp/dp/B07TV7QLPB?tag=nao78-22-22"
+    },
+    {
+      "id": "cooler-003",
+      "name": "YETI タンドラ 45",
+      "url": "https://www.amazon.co.jp/dp/B002UXKM2K?tag=nao78-22-22"
+    },
+    {
+      "id": "cooler-004",
+      "name": "シマノ スペーザ ライト 250",
+      "url": "https://www.amazon.co.jp/dp/B0948X8WP6?tag=nao78-22-22"
+    },
+    {
+      "id": "cooler-005",
+      "name": "サーモス ソフトクーラー REF-025",
+      "url": "https://www.amazon.co.jp/dp/B01DFSDGS0?tag=nao78-22-22"
+    },
+    {
+      "id": "sb-budget-001",
+      "name": "コールマン パフォーマーIII C10",
+      "url": "https://www.amazon.co.jp/dp/B07N6DBHV5?tag=nao78-22-22"
+    },
+    {
+      "id": "sb-budget-002",
+      "name": "ロゴス 丸洗いスランバーシュラフ・2",
+      "url": "https://www.amazon.co.jp/dp/B01M68O2LK?tag=nao78-22-22"
+    },
+    {
+      "id": "sb-budget-003",
+      "name": "Bears Rock -6℃ 封筒型シュラフ",
+      "url": "https://www.amazon.co.jp/dp/B01N5CHYTO?tag=nao78-22-22"
+    },
+    {
+      "id": "sb-budget-004",
+      "name": "ネイチャーハイク CW280 ダウンシュラフ",
+      "url": "https://www.amazon.co.jp/dp/B0B1DK2MWH?tag=nao78-22-22"
+    },
+    {
+      "id": "sb-budget-005",
+      "name": "モンベル バロウバッグ #3",
+      "url": "https://www.amazon.co.jp/dp/B00JH0QO3G?tag=nao78-22-22"
+    }
+  ],
+  "errors": [],
+  "noUrl": [
+    {
+      "id": "led-tent-003",
+      "name": "コールマン アウトドアクリップライトファン 2236305"
+    },
+    {
+      "id": "led-tent-005",
+      "name": "ブラックダイヤモンド オービター650 BD81042"
+    },
+    {
+      "id": "led-tent-006",
+      "name": "キャプテンスタッグ CS ストリングライト 充電式"
+    },
+    {
+      "id": "tent-f05",
+      "name": "キャプテンスタッグ CSクラシックス ワンポールテント DXオクタゴン460UV"
+    }
+  ]
+}

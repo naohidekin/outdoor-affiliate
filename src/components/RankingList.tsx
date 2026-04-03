@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { Product } from "@/lib/types";
+import AffiliateLink from "./AffiliateLink";
 
 const medalColors = ["bg-yellow-400", "bg-gray-300", "bg-amber-600"];
 const medalLabels = ["1位", "2位", "3位"];
@@ -26,11 +28,14 @@ export default function RankingList({ products }: { products: Product[] }) {
 
           {/* Image */}
           {product.imageUrl && (
-            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
-              <img
+            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 relative">
+              <Image
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="96px"
+                className="object-cover"
+                loading="lazy"
               />
             </div>
           )}
@@ -64,24 +69,24 @@ export default function RankingList({ products }: { products: Product[] }) {
             )}
             <div className="flex flex-col gap-1.5">
               {product.affiliateUrl && (
-                <a
+                <AffiliateLink
                   href={product.affiliateUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow sponsored"
+                  productId={product.id}
+                  store="rakuten"
                   className="bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
                 >
                   楽天で見る →
-                </a>
+                </AffiliateLink>
               )}
               {product.amazonUrl && (
-                <a
+                <AffiliateLink
                   href={product.amazonUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow sponsored"
+                  productId={product.id}
+                  store="amazon"
                   className="bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center block"
                 >
                   Amazonで見る →
-                </a>
+                </AffiliateLink>
               )}
             </div>
           </div>

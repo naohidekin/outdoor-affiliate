@@ -1,4 +1,5 @@
 import { Product } from "@/lib/types";
+import AffiliateLink from "./AffiliateLink";
 
 // 勝り負けを強調したいフィールド（値が低い方が良い場合はtrue）
 const LOWER_IS_BETTER: Record<string, boolean> = {};
@@ -119,26 +120,26 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
               >
                 <div className="flex flex-col gap-2 items-center">
                   {p.affiliateUrl ? (
-                    <a
+                    <AffiliateLink
                       href={p.affiliateUrl}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow sponsored"
+                      productId={p.id}
+                      store="rakuten"
                       className="inline-block bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-4 py-2 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg w-full text-center"
                     >
                       楽天で見る →
-                    </a>
+                    </AffiliateLink>
                   ) : (
                     <span className="text-gray-500 text-xs">準備中</span>
                   )}
                   {p.amazonUrl && (
-                    <a
+                    <AffiliateLink
                       href={p.amazonUrl}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow sponsored"
+                      productId={p.id}
+                      store="amazon"
                       className="inline-block bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg w-full text-center"
                     >
                       Amazonで見る →
-                    </a>
+                    </AffiliateLink>
                   )}
                 </div>
               </td>

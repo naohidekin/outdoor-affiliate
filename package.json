@@ -10,7 +10,13 @@
     "x:generate": "node scripts/generate-x-posts.js",
     "x:generate:auto": "node scripts/generate-x-posts.js --auto-approve",
     "x:queue": "node scripts/queue-to-sheets.js",
-    "x:sync": "node scripts/sync-posted-status.js"
+    "x:sync": "node scripts/sync-posted-status.js",
+    "check:links": "node scripts/check-amazon-links.js",
+    "check:prices": "node scripts/price-monitor.js",
+    "repost:popular": "node scripts/popular-repost.js",
+    "report:weekly": "node scripts/weekly-report.js",
+    "seo:links": "node scripts/internal-links.js",
+    "seo:links:apply": "node scripts/internal-links.js --apply"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
