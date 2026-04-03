@@ -6,9 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "x:generate": "node scripts/generate-x-posts.js",
+    "x:generate:auto": "node scripts/generate-x-posts.js --auto-approve",
+    "x:queue": "node scripts/queue-to-sheets.js",
+    "x:sync": "node scripts/sync-posted-status.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "googleapis": "^171.4.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "react": "19.2.4",

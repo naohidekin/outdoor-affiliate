@@ -54,3 +54,16 @@ export interface Article {
   updatedAt: string;
   publishedAt: string | null;
 }
+
+export interface XPost {
+  id: string;
+  type: "article_promo" | "outdoor_tip";
+  text: string;
+  articleSlug: string | null;
+  url: string | null;
+  hashtags: string;
+  status: "draft" | "approved" | "queued" | "posted";
+  scheduledDate: string;
+  generatedAt: string;
+  postedAt: string | null;
+}
