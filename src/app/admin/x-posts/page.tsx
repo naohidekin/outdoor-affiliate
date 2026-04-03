@@ -63,6 +63,13 @@ export default function XPostsPage() {
     await navigator.clipboard.writeText(post.text);
     setCopied(post.id);
     setTimeout(() => setCopied(null), 2000);
+    if (post.status !== "posted") {
+      setTimeout(() => {
+        if (confirm("Xに手動投稿しましたか？\n「投稿済」に変更しますか？")) {
+          updateStatus(post.id, "posted");
+        }
+      }, 500);
+    }
   }
 
   async function updateStatus(id: string, status: XPost["status"]) {
@@ -258,6 +265,14 @@ export default function XPostsPage() {
                         className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200"
                       >
                         取消
+                      </button>
+                    )}
+                    {post.status !== "posted" && (
+                      <button
+                        onClick={() => updateStatus(post.id, "posted")}
+                        className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200"
+                      >
+                        投稿済にする
                       </button>
                     )}
                     {post.status !== "posted" && (
