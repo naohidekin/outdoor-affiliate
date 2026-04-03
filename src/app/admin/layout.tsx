@@ -8,6 +8,7 @@ const navItems = [
   { href: "/admin/articles", label: "記事管理", icon: "📝" },
   { href: "/admin/products", label: "商品管理", icon: "📦" },
   { href: "/admin/categories", label: "カテゴリ管理", icon: "🏷️" },
+  { href: "/admin/x-posts", label: "X投稿管理", icon: "𝕏" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

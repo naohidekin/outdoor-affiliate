@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { Category, Product, Article } from "./types";
+import { Category, Product, Article, XPost } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -108,4 +108,42 @@ export function saveArticle(article: Article): void {
 export function deleteArticle(id: string): void {
   const articles = getArticles().filter((a) => a.id !== id);
   writeJson("articles.json", articles);
+}
+
+// X Posts
+export function getXPosts(): XPost[] {
+  return readJson<XPost>("x-posts.json").sort(
+    (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()
+  );
+}
+
+export function getXPostById(id: string): XPost | undefined {
+  return getXPosts().find((p) => p.id === id);
+}
+
+export function getXPostsByStatus(status: XPost["status"]): XPost[] {
+  return getXPosts().filter((p) => p.status === status);
+}
+
+export function saveXPost(post: XPost): void {
+  const posts = getXPosts();
+  const idx = posts.findIndex((p) => p.id === post.id);
+  if (idx >= 0) posts[idx] = post;
+  else posts.push(post);
+  writeJson("x-posts.json", posts);
+}
+
+export function saveXPosts(newPosts: XPost[]): void {
+  const posts = getXPosts();
+  for (const np of newPosts) {
+    const idx = posts.findIndex((p) => p.id === np.id);
+    if (idx >= 0) posts[idx] = np;
+    else posts.push(np);
+  }
+  writeJson("x-posts.json", posts);
+}
+
+export function deleteXPost(id: string): void {
+  const posts = getXPosts().filter((p) => p.id !== id);
+  writeJson("x-posts.json", posts);
 }

@@ -136,6 +136,36 @@ export default function AdminArticles() {
   const getCategoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name || "未分類";
 
+  const CATEGORY_HASHTAGS: Record<string, string> = {
+    tent: "#テント #ファミキャン",
+    light: "#ランタン #キャンプギア",
+    "sleeping-bag": "#シュラフ #寝袋",
+    burner: "#バーナー #キャンプ飯",
+    backpack: "#登山 #バックパック",
+    wear: "#アウトドアウェア #レインウェア",
+    shoes: "#トレッキングシューズ #登山靴",
+  };
+
+  async function copyXPostText(article: Article) {
+    const cat = categories.find((c) => c.id === article.categoryId);
+    const catTags = CATEGORY_HASHTAGS[article.categoryId] || "";
+    const excerpt = article.excerpt.length > 100
+      ? article.excerpt.slice(0, 100) + "..."
+      : article.excerpt;
+
+    const text = `${article.title}
+
+${excerpt}
+
+詳しくはこちら
+https://camp-gear-lab.com/articles/${article.slug}
+
+#アウトドア #キャンプ ${catTags}`.trim();
+
+    await navigator.clipboard.writeText(text);
+    alert("X投稿テキストをコピーしました！");
+  }
+
   if (showEditor) {
     return (
       <div>
@@ -442,6 +472,14 @@ export default function AdminArticles() {
                     >
                       編集
                     </button>
+                    {a.status === "published" && (
+                      <button
+                        onClick={() => copyXPostText(a)}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        X投稿
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(a.id)}
                       className="text-red-600 hover:text-red-800 text-sm"
