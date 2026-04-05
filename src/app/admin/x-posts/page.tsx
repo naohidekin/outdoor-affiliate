@@ -34,14 +34,24 @@ export default function XPostsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/x-posts")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const data = await r.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${r.status}`);
+        }
+        return r.json();
+      })
       .then((data) => {
         if (Array.isArray(data)) setPosts(data);
+        setError(null);
       })
-      .catch(() => {});
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleGenerate() {
@@ -178,6 +188,17 @@ export default function XPostsPage() {
           </button>
         ))}
       </div>
+
+      {/* Error / Loading */}
+      {loading && (
+        <p className="text-center text-gray-400 py-8">読み込み中...</p>
+      )}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600 text-sm font-medium">エラー: {error}</p>
+          <p className="text-red-400 text-xs mt-1">ログインし直してください</p>
+        </div>
+      )}
 
       {/* Posts list */}
       <div className="space-y-4">

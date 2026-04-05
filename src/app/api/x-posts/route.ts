@@ -12,8 +12,14 @@ export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
-  const posts = await getSheetsXPosts();
-  return NextResponse.json(posts);
+  try {
+    const posts = await getSheetsXPosts();
+    return NextResponse.json(posts);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("X投稿取得エラー:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {
