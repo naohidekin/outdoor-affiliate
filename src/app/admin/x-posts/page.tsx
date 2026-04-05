@@ -38,7 +38,9 @@ export default function XPostsPage() {
   useEffect(() => {
     fetch("/api/x-posts")
       .then((r) => r.json())
-      .then(setPosts)
+      .then((data) => {
+        if (Array.isArray(data)) setPosts(data);
+      })
       .catch(() => {});
   }, []);
 
