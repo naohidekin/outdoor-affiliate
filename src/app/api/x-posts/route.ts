@@ -12,8 +12,13 @@ export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
-  const posts = await getSheetsXPosts();
-  return NextResponse.json(posts);
+  try {
+    const posts = await getSheetsXPosts();
+    return NextResponse.json(posts);
+  } catch (e) {
+    console.error("X posts GET error:", e);
+    return NextResponse.json({ error: "データ取得に失敗しました" }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {

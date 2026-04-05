@@ -34,12 +34,21 @@ export default function XPostsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/x-posts")
       .then((r) => r.json())
-      .then(setPosts)
-      .catch(() => {});
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPosts(data);
+        } else {
+          setError(data.error || "データの取得に失敗しました");
+        }
+      })
+      .catch(() => setError("APIに接続できません"))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleGenerate() {
@@ -315,7 +324,20 @@ export default function XPostsPage() {
         })}
       </div>
 
-      {filtered.length === 0 && (
+      {loading && (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-lg">読み込み中...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-16">
+          <p className="text-lg text-red-500 mb-2">エラー: {error}</p>
+          <p className="text-sm text-gray-400">ログイン状態を確認してください</p>
+        </div>
+      )}
+
+      {!loading && !error && filtered.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <p className="text-lg mb-2">該当する投稿がありません</p>
           <p className="text-sm">「今すぐ生成」でポストを作成してください</p>
