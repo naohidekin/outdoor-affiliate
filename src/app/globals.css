@@ -1,51 +1,172 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Lake & Sky リブランディング — カラートークン
+   3 階層: プリミティブ → セマンティック → Tailwind 公開
+   詳細: docs/superpowers/specs/2026-04-06-redesign-design.md
+   ============================================================ */
+
 :root {
-  --background: #FAFAF7;
-  --foreground: #1a1a1a;
+  /* ---------- Primitive: Neutral ---------- */
+  --color-white: #FFFFFF;
+  --color-snow: #FAFBFC;
+  --color-mist: #F4F7FB;
+  --color-line: #E2E8F0;
+  --color-line-soft: #EDF2F7;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-ink: #1A1F2E;
+  --color-ink-strong: #0F1420;
+
+  /* ---------- Primitive: Lake (Blue) ---------- */
+  --color-lake-50:  #EBF4FF;
+  --color-lake-100: #DBEAFE;
+  --color-lake-200: #BFDBFE;
+  --color-lake-400: #60A5FA;
+  --color-lake-500: #3B82F6;
+  --color-lake-600: #2B6CB0;  /* メインアクセント */
+  --color-lake-700: #1E40AF;
+  --color-lake-800: #1E3A8A;
+
+  /* ---------- Semantic ---------- */
+  --bg-base: var(--color-snow);
+  --bg-card: var(--color-white);
+  --bg-muted: var(--color-mist);
+  --bg-highlight: var(--color-lake-50);
+
+  --text-base: var(--color-ink);
+  --text-strong: var(--color-ink-strong);
+  --text-muted: var(--color-slate-600);
+  --text-faint: var(--color-slate-500);
+  --text-caption: var(--color-slate-400);
+  --text-link: var(--color-lake-600);
+  --text-link-hover: var(--color-lake-800);
+
+  --border-base: var(--color-line);
+  --border-soft: var(--color-line-soft);
+  --border-accent: var(--color-lake-600);
+  --border-quote: var(--color-lake-800);
+
+  --accent: var(--color-lake-600);
+  --accent-hover: var(--color-lake-700);
+  --accent-soft: var(--color-lake-50);
+
+  /* ---------- Legacy (移行期間中のみ。チェックポイント E で削除) ---------- */
+  --background: var(--color-snow);
+  --foreground: var(--color-ink);
   --brand-green: #4a6741;
   --brand-brown: #3d2b1f;
   --accent-sage: #7a9a6d;
   --accent-warm: #c4956a;
 }
 
+/* ============================================================
+   Tailwind 公開トークン (@theme inline)
+   className で bg-snow / text-ink / border-lake-600 等が使える
+   ============================================================ */
+
 @theme inline {
+  /* Neutral */
+  --color-snow: var(--color-snow);
+  --color-mist: var(--color-mist);
+  --color-line: var(--color-line);
+  --color-line-soft: var(--color-line-soft);
+  --color-slate-400: var(--color-slate-400);
+  --color-slate-500: var(--color-slate-500);
+  --color-slate-600: var(--color-slate-600);
+  --color-ink: var(--color-ink);
+  --color-ink-strong: var(--color-ink-strong);
+
+  /* Lake */
+  --color-lake-50:  var(--color-lake-50);
+  --color-lake-100: var(--color-lake-100);
+  --color-lake-200: var(--color-lake-200);
+  --color-lake-400: var(--color-lake-400);
+  --color-lake-500: var(--color-lake-500);
+  --color-lake-600: var(--color-lake-600);
+  --color-lake-700: var(--color-lake-700);
+  --color-lake-800: var(--color-lake-800);
+
+  /* Legacy alias (チェックポイント E で削除) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
-  --font-heading: var(--font-dm-sans), var(--font-noto-sans-jp), sans-serif;
+
+  /* Font */
+  --font-sans: var(--font-noto-sans-jp), var(--font-inter),
+               "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+               -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: var(--font-inter), var(--font-noto-sans-jp), sans-serif;
+  /* serif/明朝は意図的に定義しない */
 }
+
+/* ============================================================
+   Body
+   ============================================================ */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-base);
+  color: var(--text-base);
   font-family: var(--font-sans);
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prose styles for article content */
+/* ============================================================
+   Prose (記事本文)
+   旧緑/茶/ベージュ系を全て Lake トークンに置換
+   ============================================================ */
+
+.prose {
+  font-size: 1.0625rem;       /* 17px */
+  line-height: 1.85;
+  letter-spacing: 0.005em;
+  color: var(--text-base);
+}
+
 .prose h2 {
-  margin-top: 2em;
+  margin-top: 2.5em;
   margin-bottom: 0.75em;
-  font-size: 1.5rem;
-  font-weight: 700;
-  border-left: 4px solid var(--brand-green);
-  padding-left: 0.75em;
-  padding-bottom: 0.25em;
-  color: var(--brand-brown);
+  font-size: 1.625rem;        /* 26px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-strong);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.85em;
+  letter-spacing: 0.005em;
 }
 
 .prose h3 {
-  margin-top: 1.5em;
+  margin-top: 1.75em;
   margin-bottom: 0.5em;
-  font-size: 1.25rem;
+  font-size: 1.25rem;         /* 20px */
   font-weight: 600;
-  color: #2d2416;
+  line-height: 1.5;
+  color: var(--text-strong);
 }
 
 .prose p {
-  margin-bottom: 1em;
-  line-height: 1.9;
-  color: #444;
+  margin-bottom: 1.15em;
+  color: var(--text-base);
+}
+
+.prose strong {
+  font-weight: 500;            /* Bold(700) を使わない */
+  color: var(--color-lake-700);
+}
+
+.prose a {
+  color: var(--text-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+
+.prose a:hover {
+  color: var(--text-link-hover);
+  text-decoration-thickness: 2px;
 }
 
 .prose ul, .prose ol {
@@ -54,69 +175,71 @@ body {
 }
 
 .prose li {
-  margin-bottom: 0.25em;
-  line-height: 1.8;
+  margin-bottom: 0.4em;
+  line-height: 1.85;
 }
 
-.prose a {
-  color: var(--brand-green);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.prose a:hover {
-  color: var(--accent-sage);
-}
-
-/* Table styles */
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5em 0;
-  font-size: 0.95rem;
-  overflow-x: auto;
-  display: block;
-}
-
-.prose thead tr {
-  background-color: var(--brand-brown);
-  color: #fff;
-}
-
-.prose th {
-  padding: 0.75em 1em;
-  text-align: left;
-  font-weight: 700;
-  border: 1px solid #5a3e2b;
-}
-
-.prose td {
-  padding: 0.65em 1em;
-  border: 1px solid #e5e0d8;
-  color: #333;
-}
-
-.prose tbody tr:nth-child(even) {
-  background-color: #f5f3ef;
-}
-
-.prose tbody tr:nth-child(odd) {
-  background-color: #fff;
-}
-
-.prose tbody tr:hover {
-  background-color: #eceae4;
+.prose li::marker {
+  color: var(--text-faint);
 }
 
 .prose blockquote {
-  border-left: 4px solid var(--accent-warm);
-  padding-left: 1em;
-  color: #666;
-  font-style: italic;
-  background: #faf8f5;
+  border-left: 4px solid var(--border-quote);
+  background: var(--accent-soft);
   padding: 1em 1.25em;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: var(--text-muted);
+  font-style: normal;
+  font-size: 0.9375rem;
 }
+
+/* Tables */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.75em 0;
+  font-size: 0.9375rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.prose thead tr {
+  background: var(--color-mist);
+  color: var(--text-strong);
+}
+
+.prose th {
+  padding: 0.85em 1em;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-base);
+}
+
+.prose td {
+  padding: 0.75em 1em;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-base);
+}
+
+.prose tbody tr:hover {
+  background: var(--accent-soft);
+}
+
+/* Figure / Caption */
+.prose figure {
+  margin: 2em 0;
+}
+
+.prose figcaption {
+  font-size: 0.8125rem;
+  color: var(--text-caption);
+  text-align: center;
+  margin-top: 0.5em;
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
 
 .line-clamp-2 {
   display: -webkit-box;

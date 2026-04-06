@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, DM_Sans } from "next/font/google";
+import { Noto_Sans_JP, Inter } from "next/font/google";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600"],
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${notoSansJP.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${notoSansJP.variable} ${inter.variable} h-full antialiased`}
     >
       <head>
         <link
@@ -63,7 +63,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#FAFAF7]">{children}</body>
+      <body className="min-h-full flex flex-col bg-snow text-ink">{children}</body>
     </html>
   );
 }
