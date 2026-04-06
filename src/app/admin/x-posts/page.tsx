@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from "react";
 
+type XPostType =
+  | "article_promo"
+  | "outdoor_tip"
+  | "article_repost"
+  | "seasonal"
+  | "rakuten_sale"
+  | "amazon_deal"
+  | "news_comment"
+  | "gear_story";
+
 interface XPost {
   id: string;
-  type: "article_promo" | "outdoor_tip";
+  type: XPostType;
   text: string;
   articleSlug: string | null;
   url: string | null;
@@ -13,11 +23,21 @@ interface XPost {
   scheduledDate: string;
   generatedAt: string;
   postedAt: string | null;
+  scheduledTime?: string;
+  imageUrl?: string;
+  prLabel?: boolean;
+  validationErrors?: string;
 }
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<XPostType, string> = {
   article_promo: "記事紹介",
   outdoor_tip: "豆知識",
+  article_repost: "記事リポスト",
+  seasonal: "季節",
+  rakuten_sale: "楽天セール",
+  amazon_deal: "Amazonセール",
+  news_comment: "ニュース",
+  gear_story: "ギア小話",
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
