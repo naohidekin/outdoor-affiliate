@@ -29,6 +29,7 @@ import {
   buildRakutenSalePrompt,
   buildAmazonDealPrompt,
 } from "../src/lib/x-post-prompts.mjs";
+import { applyChecksAndLabels } from "../src/lib/x-content-checks.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -262,22 +263,29 @@ async function generatePosts({
 
   const generated = JSON.parse(jsonMatch[0]);
   const scheduledDates = getScheduledDates(generated.length);
-  const status = autoApprove ? "approved" : "draft";
 
-  const newPosts = generated.map((g, i) => ({
+  // NGワード/誇大表現/PRラベル チェック
+  const checked = applyChecksAndLabels(generated);
+
+  const newPosts = checked.map((g, i) => ({
     id: generateId(),
     type: g.type,
     text: g.text,
     articleSlug: g.articleSlug,
     url: g.url,
     hashtags: "",
-    status,
+    // 違反検出時は --auto-approve でも draft 強制
+    status: g._checkOk && autoApprove ? "approved" : "draft",
     scheduledDate: scheduledDates[i],
     generatedAt: new Date().toISOString(),
     postedAt: null,
+    scheduledTime: "",
+    imageUrl: "",
+    prLabel: g.prLabel ? "true" : "",
+    validationErrors: g.validationErrors || "",
   }));
 
-  // Google Sheetsに保存
+  // Google Sheetsに保存（A〜N列、後方互換）
   const sheets = await getSheets();
   const rows = newPosts.map((p) => [
     p.id,
@@ -290,20 +298,27 @@ async function generatePosts({
     p.scheduledDate,
     p.generatedAt,
     p.postedAt || "",
+    p.scheduledTime,
+    p.imageUrl,
+    p.prLabel,
+    p.validationErrors,
   ]);
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.X_SHEET_ID,
-    range: `${DRAFT_SHEET}!A:J`,
+    range: `${DRAFT_SHEET}!A:N`,
     valueInputOption: "RAW",
     requestBody: { values: rows },
   });
 
+  const blocked = newPosts.filter((p) => p.validationErrors).length;
   console.log(
-    `\n${newPosts.length}件のポストを生成しました（status: ${status}）:\n`
+    `\n${newPosts.length}件生成（type=${type}, blocked=${blocked}）:\n`
   );
   for (const p of newPosts) {
-    console.log(`[${p.scheduledDate}] ${p.type}`);
+    console.log(
+      `[${p.scheduledDate}] ${p.type}${p.validationErrors ? " ⚠ " + p.validationErrors : ""}`
+    );
     console.log(p.text);
     console.log("---");
   }

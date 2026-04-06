@@ -3,9 +3,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isAuthenticated } from "@/lib/auth";
 import { getPublishedArticles, getCategories } from "@/lib/db";
 import { getSheetsXPosts, saveSheetsXPosts } from "@/lib/sheets-xposts";
-import { XPost } from "@/lib/types";
+import { XPost, XPostType } from "@/lib/types";
 // 共通プロンプトlib（Lake & Sky トーン明文化）
 import { buildLegacyBatchPrompt } from "@/lib/x-post-prompts.mjs";
+import { applyChecksAndLabels } from "@/lib/x-content-checks.mjs";
 
 function generateId() {
   const now = new Date();
@@ -104,32 +105,40 @@ export async function POST(request: NextRequest) {
 
   const generated = JSON.parse(jsonMatch[0]);
   const scheduledDates = getScheduledDates(generated.length);
-  const status = autoApprove ? "approved" : "draft";
 
-  const newPosts: XPost[] = generated.map(
-    (
-      g: {
-        type: "article_promo" | "outdoor_tip";
-        text: string;
-        articleSlug: string | null;
-        url: string | null;
-      },
-      i: number
-    ) => ({
-      id: generateId(),
-      type: g.type,
-      text: g.text,
-      articleSlug: g.articleSlug,
-      url: g.url,
-      hashtags: "",
-      status,
-      scheduledDate: scheduledDates[i],
-      generatedAt: new Date().toISOString(),
-      postedAt: null,
-    })
-  );
+  // NGワード/誇大表現/PRラベル チェック適用
+  const checked = applyChecksAndLabels(generated) as Array<{
+    type: XPostType;
+    text: string;
+    articleSlug: string | null;
+    url: string | null;
+    prLabel: boolean;
+    validationErrors?: string;
+    _checkOk: boolean;
+  }>;
+
+  const newPosts: XPost[] = checked.map((g, i) => ({
+    id: generateId(),
+    type: g.type,
+    text: g.text,
+    articleSlug: g.articleSlug,
+    url: g.url,
+    hashtags: "",
+    // 違反検出時は autoApprove でも draft に強制
+    status: g._checkOk && autoApprove ? "approved" : "draft",
+    scheduledDate: scheduledDates[i],
+    generatedAt: new Date().toISOString(),
+    postedAt: null,
+    prLabel: g.prLabel || undefined,
+    validationErrors: g.validationErrors,
+  }));
 
   await saveSheetsXPosts(newPosts);
 
-  return NextResponse.json({ generated: newPosts.length, posts: newPosts });
+  const blocked = newPosts.filter((p) => p.validationErrors).length;
+  return NextResponse.json({
+    generated: newPosts.length,
+    blocked,
+    posts: newPosts,
+  });
 }
