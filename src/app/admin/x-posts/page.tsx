@@ -50,24 +50,46 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function XPostsPage() {
   const [posts, setPosts] = useState<XPost[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<XPostType | "all">("all");
   const [copied, setCopied] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Phase1-B: 0件表示バグ診断用
+  const [debug, setDebug] = useState<{
+    fetchedAt: string;
+    rawType: string;
+    count: number | null;
+    sampleId: string | null;
+  } | null>(null);
 
   useEffect(() => {
+    const startedAt = new Date().toISOString();
     fetch("/api/x-posts")
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json();
+        // 診断: 取れたものの shape を必ず記録
+        const rawType = Array.isArray(data)
+          ? "array"
+          : typeof data === "object" && data
+            ? "object"
+            : typeof data;
+        setDebug({
+          fetchedAt: startedAt,
+          rawType,
+          count: Array.isArray(data) ? data.length : null,
+          sampleId: Array.isArray(data) && data[0] ? data[0].id : null,
+        });
         if (Array.isArray(data)) {
           setPosts(data);
         } else {
-          setError(data.error || "データの取得に失敗しました");
+          setError(data?.error || `想定外レスポンス (${rawType})`);
         }
       })
-      .catch(() => setError("APIに接続できません"))
+      .catch((e) => setError(`APIに接続できません: ${e.message || e}`))
       .finally(() => setLoading(false));
   }, []);
 
@@ -135,7 +157,11 @@ export default function XPostsPage() {
     const res = await fetch("/api/x-posts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, text: editText }),
+      body: JSON.stringify({
+        id,
+        text: editText,
+        imageUrl: editImageUrl || undefined,
+      }),
     });
     const updated = await res.json();
     setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
@@ -150,10 +176,16 @@ export default function XPostsPage() {
   function startEdit(post: XPost) {
     setEditing(post.id);
     setEditText(post.text);
+    setEditImageUrl(post.imageUrl || "");
   }
 
-  const filtered =
-    filter === "all" ? posts : posts.filter((p) => p.status === filter);
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const filtered = posts.filter((p) => {
+    if (filter !== "all" && p.status !== filter) return false;
+    if (typeFilter !== "all" && p.type !== typeFilter) return false;
+    return true;
+  });
 
   const counts = {
     all: posts.length,
@@ -162,6 +194,19 @@ export default function XPostsPage() {
     queued: posts.filter((p) => p.status === "queued").length,
     posted: posts.filter((p) => p.status === "posted").length,
   };
+
+  // Phase1-B: 失敗検知 — 予定日を過ぎたのに posted/queued になっていない投稿
+  const overdue = posts.filter(
+    (p) =>
+      p.scheduledDate &&
+      p.scheduledDate < todayStr &&
+      p.status !== "posted"
+  );
+
+  const typeCounts = posts.reduce<Record<string, number>>((acc, p) => {
+    acc[p.type] = (acc[p.type] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div>
@@ -181,8 +226,29 @@ export default function XPostsPage() {
         </button>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
+      {/* 失敗検知バナー */}
+      {overdue.length > 0 && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+          ⚠ 予定日を過ぎても投稿されていない投稿が {overdue.length} 件あります。
+          IFTTTの動作 / queue状態 / Sheets「X投稿管理」シートを確認してください。
+        </div>
+      )}
+
+      {/* 0件診断パネル */}
+      {!loading && posts.length === 0 && debug && (
+        <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-800 font-mono">
+          診断: API応答 type={debug.rawType} / count={debug.count ?? "n/a"} /
+          fetchedAt={debug.fetchedAt}
+          <br />
+          ⇒ Sheets「下書き管理」が空、もしくは認証/権限エラーの可能性。
+          <br />
+          確認: GOOGLE_CREDENTIALS / X_SHEET_ID / シート名「下書き管理」存在 /
+          サービスアカウントの編集者権限
+        </div>
+      )}
+
+      {/* Status filter tabs */}
+      <div className="flex gap-2 mb-3">
         {(
           [
             ["all", "すべて"],
@@ -206,36 +272,87 @@ export default function XPostsPage() {
         ))}
       </div>
 
+      {/* Type filter tabs */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => setTypeFilter("all")}
+          className={`px-3 py-1 rounded-full text-xs ${
+            typeFilter === "all"
+              ? "bg-sky-600 text-white"
+              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          全タイプ ({posts.length})
+        </button>
+        {(Object.keys(TYPE_LABELS) as XPostType[]).map((t) => {
+          const c = typeCounts[t] || 0;
+          if (c === 0 && typeFilter !== t) return null;
+          return (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`px-3 py-1 rounded-full text-xs ${
+                typeFilter === t
+                  ? "bg-sky-600 text-white"
+                  : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+              }`}
+            >
+              {TYPE_LABELS[t]} ({c})
+            </button>
+          );
+        })}
+      </div>
+
       {/* Posts list */}
       <div className="space-y-4">
         {filtered.map((post) => {
           const statusInfo = STATUS_LABELS[post.status];
           const isEditing = editing === post.id;
+          const isOverdue =
+            post.scheduledDate &&
+            post.scheduledDate < todayStr &&
+            post.status !== "posted";
 
           return (
             <div
               key={post.id}
-              className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition"
+              className={`rounded-xl border p-5 transition ${
+                isOverdue
+                  ? "bg-red-50/30 border-red-200"
+                  : "bg-white border-gray-200 hover:border-gray-300"
+              }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   {/* Header */}
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}
                     >
                       {statusInfo.label}
                     </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">
                       {TYPE_LABELS[post.type] || post.type}
                     </span>
                     <span className="text-xs text-gray-400">
                       {post.scheduledDate}
+                      {post.scheduledTime ? ` ${post.scheduledTime}` : ""}
                     </span>
+                    {isOverdue && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">
+                        ⚠ 予定超過
+                      </span>
+                    )}
+                    {post.prLabel && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
+                        PR
+                      </span>
+                    )}
                     {post.url && (
                       <a
                         href={post.url}
                         target="_blank"
+                        rel="noreferrer"
                         className="text-xs text-green-600 hover:underline"
                       >
                         記事リンク
@@ -243,19 +360,33 @@ export default function XPostsPage() {
                     )}
                   </div>
 
+                  {/* validationErrors バナー */}
+                  {post.validationErrors && (
+                    <div className="mb-2 px-2 py-1 rounded bg-yellow-50 border border-yellow-200 text-xs text-yellow-800">
+                      ⚠ {post.validationErrors}
+                    </div>
+                  )}
+
                   {/* Content */}
                   {isEditing ? (
                     <div>
                       <textarea
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full border border-gray-300 rounded-lg p-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-sky-500"
                         rows={6}
                       />
-                      <div className="flex gap-2 mt-2">
+                      <input
+                        type="url"
+                        value={editImageUrl}
+                        onChange={(e) => setEditImageUrl(e.target.value)}
+                        placeholder="画像URL (任意): https://..."
+                        className="mt-2 w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                      <div className="flex gap-2 mt-2 items-center">
                         <button
                           onClick={() => saveEdit(post.id)}
-                          className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                          className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700"
                         >
                           保存
                         </button>
@@ -265,15 +396,48 @@ export default function XPostsPage() {
                         >
                           キャンセル
                         </button>
-                        <span className="text-xs text-gray-400 self-center ml-2">
-                          {editText.length}/280文字
+                        <span
+                          className={`text-xs self-center ml-2 ${
+                            [...editText].length > 280
+                              ? "text-red-500 font-medium"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {[...editText].length}/280文字
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                      {post.text}
-                    </p>
+                    <>
+                      {/* X風プレビューカード */}
+                      <div className="border border-gray-100 rounded-lg p-3 bg-white">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">
+                            G
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">
+                            ギア男
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            @camp_gear_lab
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+                          {post.text}
+                        </p>
+                        {post.imageUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={post.imageUrl}
+                            alt=""
+                            className="mt-2 rounded-lg max-h-60 object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {[...post.text].length}/280文字
+                      </div>
+                    </>
                   )}
                 </div>
 
