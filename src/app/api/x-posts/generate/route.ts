@@ -15,27 +15,27 @@ function generateId() {
   return `xp-${date}-${rand}`;
 }
 
-function getScheduledDates(count: number): string[] {
-  const dates: string[] = [];
-  const today = new Date();
-  const d = new Date(today);
+// 平日3スロット(朝07:30/昼12:15/夜20:00)、休日1スロット(昼12:15)
+function getScheduledSlots(
+  count: number
+): Array<{ date: string; time: string }> {
+  const SLOTS_WEEKDAY = ["07:30", "12:15", "20:00"];
+  const SLOTS_WEEKEND = ["12:15"];
+  const out: Array<{ date: string; time: string }> = [];
+  const d = new Date();
   d.setDate(d.getDate() + 1);
-
-  while (dates.length < count) {
+  while (out.length < count) {
     const day = d.getDay();
     const isWeekend = day === 0 || day === 6;
+    const slots = isWeekend ? SLOTS_WEEKEND : SLOTS_WEEKDAY;
     const dateStr = d.toISOString().slice(0, 10);
-    if (isWeekend) {
-      dates.push(dateStr);
-    } else {
-      dates.push(dateStr);
-      if (dates.length < count) {
-        dates.push(dateStr);
-      }
+    for (const t of slots) {
+      if (out.length >= count) break;
+      out.push({ date: dateStr, time: t });
     }
     d.setDate(d.getDate() + 1);
   }
-  return dates;
+  return out;
 }
 
 export async function POST(request: NextRequest) {
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
   }
 
   const generated = JSON.parse(jsonMatch[0]);
-  const scheduledDates = getScheduledDates(generated.length);
+  const slots = getScheduledSlots(generated.length);
 
   // NGワード/誇大表現/PRラベル チェック適用
   const checked = applyChecksAndLabels(generated) as Array<{
@@ -126,7 +126,8 @@ export async function POST(request: NextRequest) {
     hashtags: "",
     // 違反検出時は autoApprove でも draft に強制
     status: g._checkOk && autoApprove ? "approved" : "draft",
-    scheduledDate: scheduledDates[i],
+    scheduledDate: slots[i].date,
+    scheduledTime: slots[i].time,
     generatedAt: new Date().toISOString(),
     postedAt: null,
     prLabel: g.prLabel || undefined,

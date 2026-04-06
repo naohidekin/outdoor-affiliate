@@ -65,10 +65,10 @@ async function queueToSheets() {
   const sheets = await getSheets();
   const today = new Date().toISOString().slice(0, 10);
 
-  // 「下書き管理」シートから全データを読み取り
+  // 「下書き管理」シートから全データを読み取り（K=scheduledTime, L=imageUrl 含む）
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${DRAFT_SHEET}!A2:J`,
+    range: `${DRAFT_SHEET}!A2:N`,
   });
   const rows = res.data.values || [];
 
@@ -86,6 +86,8 @@ async function queueToSheets() {
         text: row[2],
         url: row[4] || "",
         scheduledDate: row[7],
+        scheduledTime: row[10] || "", // K列
+        imageUrl: row[11] || "",      // L列
       });
     }
   }
@@ -173,13 +175,15 @@ async function queueToSheets() {
   }
 
   // 「X投稿管理」に行を追加
+  // scheduled_at は scheduledTime があれば "YYYY-MM-DD HH:MM"、なければ日付のみ
+  // → 当面 IFTTT は date のみ運用、cron発火(Phase5)で時刻スロット対応
   const queueRows = toQueue2.map((p) => [
     "ready",
     p.type,
     p.text,
-    "",
+    p.imageUrl || "",
     p.url,
-    p.scheduledDate,
+    p.scheduledTime ? `${p.scheduledDate} ${p.scheduledTime}` : p.scheduledDate,
     "",
     "",
   ]);

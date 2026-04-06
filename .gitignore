@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning-with-files working memory (session-local)
+/task_plan.md
+/findings.md
+/progress.md
+/data/backups/

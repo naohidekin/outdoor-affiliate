@@ -61,28 +61,36 @@ function generateId() {
   return `xp-${date}-${rand}`;
 }
 
-function getScheduledDates(count) {
-  const dates = [];
+/**
+ * 投稿スロットを返す: {date, time} の配列
+ * 平日は朝07:30/昼12:15/夜20:00 の3スロット、休日は昼12:15のみ
+ * 上限スロット数 count に達するまで日付を進める
+ */
+function getScheduledSlots(count) {
+  const SLOTS_WEEKDAY = ["07:30", "12:15", "20:00"];
+  const SLOTS_WEEKEND = ["12:15"];
+  const out = [];
   const today = new Date();
-  let d = new Date(today);
+  const d = new Date(today);
   d.setDate(d.getDate() + 1);
 
-  // 毎日投稿: 平日は2件(朝・夜)、休日は1件
-  while (dates.length < count) {
+  while (out.length < count) {
     const day = d.getDay();
     const isWeekend = day === 0 || day === 6;
+    const slots = isWeekend ? SLOTS_WEEKEND : SLOTS_WEEKDAY;
     const dateStr = d.toISOString().slice(0, 10);
-    if (isWeekend) {
-      dates.push(dateStr); // 休日1件
-    } else {
-      dates.push(dateStr); // 平日1件目
-      if (dates.length < count) {
-        dates.push(dateStr); // 平日2件目
-      }
+    for (const t of slots) {
+      if (out.length >= count) break;
+      out.push({ date: dateStr, time: t });
     }
     d.setDate(d.getDate() + 1);
   }
-  return dates;
+  return out;
+}
+
+// 後方互換: 既存呼び出しが date 配列を期待しているケースのため
+function getScheduledDates(count) {
+  return getScheduledSlots(count).map((s) => s.date);
 }
 
 async function getSheets() {
@@ -262,7 +270,7 @@ async function generatePosts({
   }
 
   const generated = JSON.parse(jsonMatch[0]);
-  const scheduledDates = getScheduledDates(generated.length);
+  const slots = getScheduledSlots(generated.length);
 
   // NGワード/誇大表現/PRラベル チェック
   const checked = applyChecksAndLabels(generated);
@@ -276,10 +284,10 @@ async function generatePosts({
     hashtags: "",
     // 違反検出時は --auto-approve でも draft 強制
     status: g._checkOk && autoApprove ? "approved" : "draft",
-    scheduledDate: scheduledDates[i],
+    scheduledDate: slots[i].date,
     generatedAt: new Date().toISOString(),
     postedAt: null,
-    scheduledTime: "",
+    scheduledTime: slots[i].time,
     imageUrl: "",
     prLabel: g.prLabel ? "true" : "",
     validationErrors: g.validationErrors || "",
