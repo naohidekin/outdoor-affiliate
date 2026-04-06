@@ -2,12 +2,18 @@
 
 /**
  * X投稿自動生成スクリプト
- * Claude APIを使って記事紹介とアウトドアTipsのポストを生成する
- * 生成結果はGoogle Sheets「下書き管理」シートに保存される
+ * Claude APIを使ってX投稿をタイプ別に生成し、Sheets「下書き管理」に保存する
  *
  * 使い方:
- *   node scripts/generate-x-posts.js
+ *   node scripts/generate-x-posts.js                       # legacy: article_promo+outdoor_tip 同時
  *   node scripts/generate-x-posts.js --auto-approve
+ *   node scripts/generate-x-posts.js --type=seasonal --count=3
+ *   node scripts/generate-x-posts.js --type=outdoor_tip --count=3
+ *   node scripts/generate-x-posts.js --type=article_promo --count=3
+ *   node scripts/generate-x-posts.js --type=rakuten_sale --count=2 --sale-event=hb-2026-04
+ *   node scripts/generate-x-posts.js --type=amazon_deal --count=2 --deal-event=spring-2026
+ *
+ * gear_story タイプは docs/author-gear.md 完成後に有効化されます。
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -15,10 +21,17 @@ import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  buildLegacyBatchPrompt,
+  buildSeasonalPrompt,
+  buildOutdoorTipPrompt,
+  buildArticlePromoPrompt,
+  buildRakutenSalePrompt,
+  buildAmazonDealPrompt,
+} from "../src/lib/x-post-prompts.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
-const SITE_URL = "https://camp-gear-lab.com";
 
 // .env.local を手動読み込み
 const envPath = path.join(__dirname, "..", ".env.local");
@@ -31,31 +44,6 @@ if (fs.existsSync(envPath)) {
     }
   }
 }
-
-const CATEGORY_HASHTAGS = {
-  tent: "#テント #ファミキャン",
-  light: "#ランタン #キャンプギア",
-  "sleeping-bag": "#シュラフ #寝袋",
-  burner: "#バーナー #キャンプ飯",
-  backpack: "#登山 #バックパック",
-  wear: "#アウトドアウェア #レインウェア",
-  shoes: "#トレッキングシューズ #登山靴",
-};
-
-const SEASON_CONTEXT = {
-  1: "冬キャンプシーズン。防寒対策、冬用シュラフ、薪ストーブが話題",
-  2: "冬キャンプ後半。春キャンプの準備が始まる時期",
-  3: "春キャンプシーズン開始。花見キャンプ、新生活でキャンプデビュー",
-  4: "春キャンプ本番。GWキャンプの計画時期。朝晩の寒暖差に注意",
-  5: "GWキャンプ。新緑の季節。虫対策が必要になり始める",
-  6: "梅雨シーズン。雨キャンプの準備、レインウェア選び",
-  7: "夏キャンプ開始。暑さ対策、水遊び、虫除け必須",
-  8: "夏キャンプ本番。高原キャンプ、川遊び、お盆キャンプ",
-  9: "秋キャンプ開始。涼しくなり始め、焚き火が気持ちいい季節",
-  10: "秋キャンプ本番。紅葉キャンプ、焚き火、温かい料理",
-  11: "秋冬の境目。防寒ギアの見直し、冬キャンプ準備",
-  12: "冬キャンプシーズン突入。年末キャンプ、冬装備の確認",
-};
 
 const DRAFT_SHEET = "下書き管理";
 
@@ -133,7 +121,82 @@ async function getExistingPosts() {
   }
 }
 
-async function generatePosts(autoApprove = false) {
+function findCalendarEvent(filename, eventId) {
+  const filePath = path.join(DATA_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`${filename} が見つかりません`);
+  }
+  const list = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  if (eventId) {
+    const found = list.find((e) => e.id === eventId);
+    if (!found) throw new Error(`${filename} に id=${eventId} のイベントなし`);
+    return found;
+  }
+  // 直近の未来イベントを優先
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    list.find((e) => e.startDate >= today) || list[list.length - 1] || null
+  );
+}
+
+function buildPromptForType({
+  type,
+  articles,
+  categories,
+  month,
+  count,
+  saleEventId,
+  dealEventId,
+}) {
+  switch (type) {
+    case "legacy":
+      return buildLegacyBatchPrompt({ articles, categories, month });
+    case "article_promo":
+      return buildArticlePromoPrompt({
+        articles: articles.slice(0, count),
+        categories,
+        month,
+      });
+    case "outdoor_tip":
+      return buildOutdoorTipPrompt({ count, month });
+    case "seasonal":
+      return buildSeasonalPrompt({ count, month });
+    case "rakuten_sale": {
+      const ev = findCalendarEvent("rakuten-sale-calendar.json", saleEventId);
+      if (!ev) throw new Error("rakuten-sale-calendar.json にイベントなし");
+      return buildRakutenSalePrompt({
+        saleEvent: ev,
+        articles: articles.slice(0, count),
+        categories,
+        count,
+      });
+    }
+    case "amazon_deal": {
+      const ev = findCalendarEvent("amazon-deal-calendar.json", dealEventId);
+      if (!ev) throw new Error("amazon-deal-calendar.json にイベントなし");
+      return buildAmazonDealPrompt({
+        dealEvent: ev,
+        articles: articles.slice(0, count),
+        categories,
+        count,
+      });
+    }
+    case "gear_story":
+      throw new Error(
+        "gear_story タイプは docs/author-gear.md 完成まで無効です"
+      );
+    default:
+      throw new Error(`未知のタイプ: ${type}`);
+  }
+}
+
+async function generatePosts({
+  autoApprove = false,
+  type = "legacy",
+  count = 6,
+  saleEventId,
+  dealEventId,
+}) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.error("ANTHROPIC_API_KEY が設定されていません");
@@ -165,69 +228,22 @@ async function generatePosts(autoApprove = false) {
   );
 
   const candidates = articles.filter((a) => !recentSlugs.has(a.slug));
-  const selectCount = Math.min(6, articles.length);
+  const selectCount = Math.min(count, articles.length);
   const selected =
     candidates.length >= selectCount
       ? candidates.sort(() => Math.random() - 0.5).slice(0, selectCount)
       : articles.sort(() => Math.random() - 0.5).slice(0, selectCount);
 
   const month = new Date().getMonth() + 1;
-  const seasonContext = SEASON_CONTEXT[month];
-
-  const articleInfoList = selected
-    .map((a) => {
-      const cat = categories.find((c) => c.id === a.categoryId);
-      const tags = CATEGORY_HASHTAGS[a.categoryId] || "";
-      return `- タイトル: ${a.title}\n  スラッグ: ${a.slug}\n  カテゴリ: ${cat?.name || "不明"}\n  概要: ${a.excerpt}\n  ハッシュタグ: #アウトドア #キャンプ ${tags}`;
-    })
-    .join("\n\n");
-
-  const prompt = `あなたはキャンプ歴10年の個人ブロガーです。自分のブログ「camp-gear-lab.com」の記事を紹介したり、キャンプの豆知識をXに投稿しています。
-
-## 絶対に守ること
-- **AIが書いたとバレない文体にする**。テンプレ感・まとめ記事感を排除する
-- 「〜してみてはいかがでしょうか」「〜をご紹介します」「〜についてまとめました」は絶対に使わない
-- 「おすすめ○選」「徹底比較」「完全ガイド」のような定型表現も使わない
-- 一人称は使わず、体験談や実感ベースで書く（「先週使ってみたけど」「去年これで失敗した」など）
-- 句読点を多用しない。体言止め、倒置法、口語的な省略を使う
-- 絵文字は0〜1個。使わなくてもいい。顔文字は使わない
-- 各投稿は280文字以内（URLとハッシュタグ含む）
-- ハッシュタグは2〜3個、本文末尾に改行して配置
-
-## 文体の例（こういう感じで書いて）
-- 「このテント、設営5分は盛ってると思ったけどマジだった。ワンタッチ系で一番まともかも」
-- 「夜露でテーブル濡れるの地味にストレス。アルミ天板にしてから全く気にならなくなった」
-- 「春キャンプ、昼は暑いのに夜は5度とかザラ。フリース忘れて凍えた去年の自分に教えたい」
-
-## 現在の季節
-${month}月: ${seasonContext}
-
-## タスク1: 記事紹介（${selected.length}件）
-以下の記事を自然に紹介するポストを1件ずつ。記事URLは https://camp-gear-lab.com/articles/{スラッグ}
-宣伝っぽくなく、実体験や感想を交えて「ブログに書いた」感じで。
-
-${articleInfoList}
-
-## タスク2: キャンプ豆知識（${selected.length}件）
-季節に合ったキャンプの実用的な豆知識。URLは不要。
-教科書的にならず、自分の体験や失敗談ベースで。
-
-## 出力形式
-以下のJSON配列で出力してください。他のテキストは不要です。
-[
-  {
-    "type": "article_promo",
-    "text": "投稿本文（ハッシュタグ含む）",
-    "articleSlug": "記事のスラッグ",
-    "url": "記事のURL"
-  },
-  {
-    "type": "outdoor_tip",
-    "text": "投稿本文（ハッシュタグ含む）",
-    "articleSlug": null,
-    "url": null
-  }
-]`;
+  const prompt = buildPromptForType({
+    type,
+    articles: selected,
+    categories,
+    month,
+    count,
+    saleEventId,
+    dealEventId,
+  });
 
   console.log("Claude APIでポストを生成中...");
 
@@ -293,8 +309,20 @@ ${articleInfoList}
   }
 }
 
+function parseFlag(name, fallback) {
+  const arg = process.argv.find((a) => a.startsWith(`${name}=`));
+  return arg ? arg.split("=")[1] : fallback;
+}
+
 const autoApprove = process.argv.includes("--auto-approve");
-generatePosts(autoApprove).catch((err) => {
-  console.error("エラー:", err.message);
-  process.exit(1);
-});
+const type = parseFlag("--type", "legacy");
+const count = parseInt(parseFlag("--count", "6"), 10);
+const saleEventId = parseFlag("--sale-event");
+const dealEventId = parseFlag("--deal-event");
+
+generatePosts({ autoApprove, type, count, saleEventId, dealEventId }).catch(
+  (err) => {
+    console.error("エラー:", err.message);
+    process.exit(1);
+  }
+);

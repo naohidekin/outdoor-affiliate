@@ -1,0 +1,16 @@
+[
+  {
+    "id": "spring-2026",
+    "name": "Amazon春のタイムセール祭り",
+    "startDate": "2026-04-18",
+    "endDate": "2026-04-21",
+    "note": "日程はAmazonの発表に応じて手動更新する"
+  },
+  {
+    "id": "prime-day-2026",
+    "name": "Amazonプライムデー",
+    "startDate": "2026-07-15",
+    "endDate": "2026-07-16",
+    "note": "通常7月開催。確定したら手動更新"
+  }
+]
