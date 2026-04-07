@@ -21,7 +21,7 @@ export default function ArticleContent({ content, products }: Props) {
   );
 
   return (
-    <div className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-p:text-gray-600 prose-a:text-green-600">
+    <div className="prose max-w-none">
       {parts.map((part, i) => {
         // Product card
         const productMatch = part.match(/\{\{product:([^}]+)\}\}/);

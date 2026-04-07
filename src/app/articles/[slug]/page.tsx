@@ -306,22 +306,22 @@ export default async function ArticlePage({
         {/* FAQ section */}
         {faqs.length > 0 && (
           <section className="max-w-4xl mx-auto px-4 pb-12">
-            <h2 className="text-2xl font-bold text-amber-900 mb-6">
+            <h2 className="text-2xl font-semibold text-ink-strong tracking-tight mb-6">
               よくある質問
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {faqs.map((faq, i) => (
                 <details
                   key={i}
-                  className="bg-white rounded-xl border border-amber-200 overflow-hidden group"
+                  className="bg-white rounded-xl border border-line overflow-hidden group hover:border-lake-200 transition"
                 >
-                  <summary className="cursor-pointer px-6 py-4 font-semibold text-gray-800 hover:bg-amber-50 transition flex items-center justify-between">
+                  <summary className="cursor-pointer px-5 py-4 font-medium text-ink-strong hover:bg-lake-50/40 transition flex items-center justify-between list-none">
                     <span>Q. {faq.question}</span>
-                    <span className="text-amber-600 group-open:rotate-180 transition-transform ml-2">
+                    <span className="text-lake-600 group-open:rotate-180 transition-transform ml-2 text-sm">
                       ▼
                     </span>
                   </summary>
-                  <div className="px-6 pb-4 text-gray-700 leading-relaxed border-t border-amber-100 pt-4">
+                  <div className="px-5 pb-5 text-slate-700 leading-relaxed border-t border-line-soft pt-4">
                     {faq.answer}
                   </div>
                 </details>
@@ -333,7 +333,7 @@ export default async function ArticlePage({
         {/* Related articles */}
         {relatedArticles.length > 0 && (
           <section className="max-w-4xl mx-auto px-4 pb-12">
-            <h2 className="text-xl font-bold text-amber-900 mb-6">
+            <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
               関連する記事
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -341,12 +341,12 @@ export default async function ArticlePage({
                 <Link
                   key={a.id}
                   href={`/articles/${a.slug}`}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 border border-amber-100 hover:border-amber-300"
+                  className="bg-white rounded-xl transition p-4 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
                 >
-                  <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+                  <h3 className="font-semibold text-ink-strong text-sm mb-1 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
                     {a.title}
                   </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                     {a.excerpt}
                   </p>
                 </Link>
@@ -357,7 +357,7 @@ export default async function ArticlePage({
         {/* Other category articles */}
         {otherCategoryArticles.length > 0 && (
           <section className="max-w-4xl mx-auto px-4 pb-12">
-            <h2 className="text-xl font-bold text-amber-900 mb-6">
+            <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
               他のカテゴリの人気記事
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -367,17 +367,17 @@ export default async function ArticlePage({
                   <Link
                     key={a.id}
                     href={`/articles/${a.slug}`}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 border border-amber-100 hover:border-amber-300"
+                    className="bg-white rounded-xl transition p-4 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
                   >
                     {cat && (
-                      <span className="inline-block text-xs text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded-full mb-2">
+                      <span className="inline-block text-xs text-lake-700 font-medium bg-lake-50 border border-lake-100 px-2 py-0.5 rounded-full mb-2">
                         {cat.name}
                       </span>
                     )}
-                    <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+                    <h3 className="font-semibold text-ink-strong text-sm mb-1 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
                       {a.title}
                     </h3>
-                    <p className="text-xs text-gray-500 line-clamp-2">
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                       {a.excerpt}
                     </p>
                   </Link>
