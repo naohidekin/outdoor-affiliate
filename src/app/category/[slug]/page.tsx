@@ -8,6 +8,7 @@ import {
 } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArticleCard from "@/components/ArticleCard";
 import {
   Tent,
   Lamp,
@@ -179,24 +180,13 @@ export default async function CategoryPage({
 
         <section className="max-w-6xl mx-auto px-4 py-12">
           {articles.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {articles.map((article) => (
-                <Link
+                <ArticleCard
                   key={article.id}
-                  href={`/articles/${article.slug}`}
-                  className="bg-white rounded-xl transition-all p-5 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
-                >
-                  <h3 className="font-semibold text-ink-strong mb-2 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
-                    {article.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed">
-                    {article.excerpt}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-3">
-                    {article.publishedAt &&
-                      new Date(article.publishedAt).toLocaleDateString("ja-JP")}
-                  </p>
-                </Link>
+                  article={article}
+                  category={category}
+                />
               ))}
             </div>
           ) : (

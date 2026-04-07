@@ -20,6 +20,11 @@ export default function ArticleContent({ content, products }: Props) {
     /(\{\{(?:product|comparison|ranking):[^}]+\}\})/g
   );
 
+  // フォールバック: productIds がありながら本文に商品タグが無い記事には
+  // 末尾に RankingList を自動挿入する (画像が一切出ない問題の対策)
+  const hasProductTag = /\{\{(?:product|comparison|ranking):/.test(content);
+  const showFallbackRanking = !hasProductTag && products.length > 0;
+
   return (
     <div className="prose max-w-none">
       {parts.map((part, i) => {
@@ -103,6 +108,15 @@ export default function ArticleContent({ content, products }: Props) {
 
         return null;
       })}
+
+      {showFallbackRanking && (
+        <div className="not-prose mt-12">
+          <h2 className="text-2xl font-semibold text-ink-strong tracking-tight mb-6 pb-2 border-b border-lake-100">
+            この記事で紹介した製品
+          </h2>
+          <RankingList products={products} />
+        </div>
+      )}
     </div>
   );
 }

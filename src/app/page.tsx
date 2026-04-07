@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCategories, getPublishedArticles } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArticleCard from "@/components/ArticleCard";
 import {
   Tent,
   Lamp,
@@ -186,44 +187,17 @@ export default function Home() {
                 <p className="text-sm text-slate-500 mt-1">スペック比較・レビュー・選び方ガイド</p>
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {articles.map((article) => {
                 const cat = categories.find(
                   (c) => c.id === article.categoryId
                 );
                 return (
-                  <Link
+                  <ArticleCard
                     key={article.id}
-                    href={`/articles/${article.slug}`}
-                    className="bg-white rounded-xl transition-all overflow-hidden border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
-                  >
-                    {/* Top accent line */}
-                    <div className="h-0.5 bg-lake-600/70" />
-                    <div className="p-5">
-                      {cat && (
-                        <div className="flex items-center gap-1.5 mb-3">
-                          <span className="text-lake-600">
-                            {CATEGORY_ICON[cat.slug] ?? <Mountain className="w-3.5 h-3.5" />}
-                          </span>
-                          <span className="text-xs font-medium text-slate-500 tracking-wide">
-                            {cat.name}
-                          </span>
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-ink-strong text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-lake-700 transition">
-                        {article.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
-                        {article.excerpt}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-3">
-                        {article.publishedAt &&
-                          new Date(article.publishedAt).toLocaleDateString(
-                            "ja-JP"
-                          )}
-                      </p>
-                    </div>
-                  </Link>
+                    article={article}
+                    category={cat}
+                  />
                 );
               })}
             </div>
