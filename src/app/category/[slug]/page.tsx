@@ -184,15 +184,15 @@ export default async function CategoryPage({
                 <Link
                   key={article.id}
                   href={`/articles/${article.slug}`}
-                  className="bg-white rounded-xl hover:shadow-md transition-all p-5 border border-gray-100 hover:border-gray-200 group"
+                  className="bg-white rounded-xl transition-all p-5 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
                 >
-                  <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-[#4a6741] transition">
+                  <h3 className="font-semibold text-ink-strong mb-2 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
                     {article.title}
                   </h3>
-                  <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">
+                  <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed">
                     {article.excerpt}
                   </p>
-                  <p className="text-xs text-gray-400 mt-3">
+                  <p className="text-xs text-slate-400 mt-3">
                     {article.publishedAt &&
                       new Date(article.publishedAt).toLocaleDateString("ja-JP")}
                   </p>
@@ -201,7 +201,7 @@ export default async function CategoryPage({
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-gray-400 text-lg">
+              <p className="text-slate-400 text-lg">
                 このカテゴリにはまだ記事がありません
               </p>
             </div>

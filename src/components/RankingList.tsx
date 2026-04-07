@@ -2,9 +2,6 @@ import Image from "next/image";
 import { Product } from "@/lib/types";
 import AffiliateLink from "./AffiliateLink";
 
-const medalColors = ["bg-yellow-400", "bg-gray-300", "bg-amber-600"];
-const medalLabels = ["1位", "2位", "3位"];
-
 export default function RankingList({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
 
@@ -13,82 +10,78 @@ export default function RankingList({ products }: { products: Product[] }) {
       {products.map((product, i) => (
         <div
           key={product.id}
-          className="flex gap-4 bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition"
+          className="bg-white rounded-xl border border-line p-5"
         >
-          {/* Rank badge */}
-          <div className="flex-shrink-0">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                i < 3 ? medalColors[i] : "bg-gray-400"
-              }`}
-            >
-              {i < 3 ? medalLabels[i] : `${i + 1}位`}
+          {/* Header row: rank + image + (name on desktop) */}
+          <div className="flex gap-4 items-start">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-lake-50 text-lake-700 border border-lake-100 font-semibold text-xs">
+                {i + 1}位
+              </div>
             </div>
-          </div>
 
-          {/* Image */}
-          {product.imageUrl && (
-            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 relative">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                sizes="96px"
-                className="object-cover"
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {product.brand && (
-              <p className="text-xs text-gray-400">{product.brand}</p>
-            )}
-            <h3 className="font-bold text-gray-800 mb-1">{product.name}</h3>
-            {product.rating > 0 && (
-              <div className="text-yellow-400 text-sm mb-1">
-                {"★".repeat(Math.floor(product.rating))}
-                {product.rating % 1 >= 0.5 ? "☆" : ""}
-                <span className="text-gray-500 ml-1">{product.rating}</span>
+            {product.imageUrl && (
+              <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-mist relative">
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                  loading="lazy"
+                />
               </div>
             )}
-            {product.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {product.description}
-              </p>
-            )}
-          </div>
 
-          {/* Price + CTA */}
-          <div className="flex-shrink-0 flex flex-col items-end justify-between gap-2">
-            {product.price > 0 && (
-              <span className="text-lg font-bold text-red-600">
-                ¥{product.price.toLocaleString()}
-              </span>
-            )}
-            <div className="flex flex-col gap-1.5">
-              {product.affiliateUrl && (
-                <AffiliateLink
-                  href={product.affiliateUrl}
-                  productId={product.id}
-                  store="rakuten"
-                  className="bg-[#F5F0E8] hover:bg-[#EBE4D8] text-[#BF0000] border border-[#BF0000] px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center"
-                >
-                  楽天で見る →
-                </AffiliateLink>
+            <div className="flex-1 min-w-0">
+              {product.brand && (
+                <p className="text-xs text-slate-500 tracking-wide">{product.brand}</p>
               )}
-              {product.amazonUrl && (
-                <AffiliateLink
-                  href={product.amazonUrl}
-                  productId={product.id}
-                  store="amazon"
-                  className="bg-[#FF9900] hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-center block"
-                >
-                  Amazonで見る →
-                </AffiliateLink>
+              <h3 className="font-semibold text-ink-strong mb-1 leading-snug">{product.name}</h3>
+              {product.rating > 0 && (
+                <div className="text-amber-400 text-sm">
+                  {"★".repeat(Math.floor(product.rating))}
+                  {product.rating % 1 >= 0.5 ? "☆" : ""}
+                  <span className="text-slate-500 ml-1">{product.rating}</span>
+                </div>
+              )}
+              {product.price > 0 && (
+                <span className="text-lg font-semibold text-lake-700 tracking-tight block mt-1">
+                  ¥{product.price.toLocaleString()}
+                </span>
               )}
             </div>
+          </div>
+
+          {/* Description */}
+          {product.description && (
+            <p className="text-sm text-slate-600 line-clamp-3 sm:line-clamp-2 leading-relaxed mt-3">
+              {product.description}
+            </p>
+          )}
+
+          {/* CTA row */}
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            {product.affiliateUrl && (
+              <AffiliateLink
+                href={product.affiliateUrl}
+                productId={product.id}
+                store="rakuten"
+                className="flex-1 bg-white hover:bg-lake-50 text-lake-700 border border-lake-600 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap text-center"
+              >
+                楽天で見る →
+              </AffiliateLink>
+            )}
+            {product.amazonUrl && (
+              <AffiliateLink
+                href={product.amazonUrl}
+                productId={product.id}
+                store="amazon"
+                className="flex-1 bg-white hover:bg-mist text-slate-700 border border-line px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap text-center block"
+              >
+                Amazonで見る →
+              </AffiliateLink>
+            )}
           </div>
         </div>
       ))}
