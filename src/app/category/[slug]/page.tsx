@@ -146,22 +146,26 @@ export default async function CategoryPage({
       />
       <Header categories={categories} />
       <main className="flex-1">
-        <section className="bg-[#2a2320] text-white py-14">
-          <div className="max-w-6xl mx-auto px-4">
-            <nav className="text-gray-500 text-sm mb-4">
-              <Link href="/" className="hover:text-gray-300 transition">
+        <section className="bg-white border-b border-line">
+          <div className="max-w-6xl mx-auto px-4 py-10 md:py-14">
+            <nav className="text-sm text-slate-500 mb-5" aria-label="パンくず">
+              <Link href="/" className="hover:text-lake-600 transition">
                 ホーム
               </Link>
-              <span className="mx-2">/</span>
-              <span className="text-gray-300">{category.name}</span>
+              <span className="mx-2 text-slate-400">/</span>
+              <span className="text-slate-600">{category.name}</span>
             </nav>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-[#7a9a6d]">
+              <div className="w-14 h-14 rounded-xl bg-lake-50 border border-lake-100 flex items-center justify-center text-lake-600">
                 {CATEGORY_ICON[category.slug] ?? <Mountain className="w-8 h-8" />}
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">{category.name}</h1>
-                <p className="text-gray-400 mt-1">{category.description}</p>
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong">
+                  {category.name}
+                </h1>
+                <p className="text-slate-600 mt-1.5 text-sm md:text-base">
+                  {category.description}
+                </p>
               </div>
             </div>
           </div>

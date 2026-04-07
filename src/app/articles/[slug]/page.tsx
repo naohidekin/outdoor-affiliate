@@ -258,16 +258,16 @@ export default async function ArticlePage({
       <main className="flex-1">
         <article className="max-w-4xl mx-auto px-4 py-12">
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-400 mb-6">
-            <Link href="/" className="hover:text-green-600">
+          <nav className="text-sm text-slate-500 mb-6" aria-label="パンくず">
+            <Link href="/" className="hover:text-lake-600 transition">
               ホーム
             </Link>
             {category && (
               <>
-                {" / "}
+                <span className="mx-2 text-slate-400">/</span>
                 <Link
                   href={`/category/${category.slug}`}
-                  className="hover:text-green-600"
+                  className="hover:text-lake-600 transition"
                 >
                   {category.name}
                 </Link>
@@ -275,13 +275,13 @@ export default async function ArticlePage({
             )}
           </nav>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong leading-tight mb-5">
             {article.title}
           </h1>
 
-          <div className="flex items-center gap-4 text-sm text-amber-700 mb-8">
+          <div className="flex items-center gap-3 text-sm mb-10">
             {article.publishedAt && (
-              <time>
+              <time className="text-slate-500">
                 {new Date(article.publishedAt).toLocaleDateString("ja-JP", {
                   year: "numeric",
                   month: "long",
@@ -292,7 +292,7 @@ export default async function ArticlePage({
             {category && (
               <Link
                 href={`/category/${category.slug}`}
-                className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium"
+                className="bg-lake-50 text-lake-700 hover:bg-lake-100 border border-lake-100 px-3 py-1 rounded-full text-xs font-medium transition"
               >
                 {category.name}
               </Link>
