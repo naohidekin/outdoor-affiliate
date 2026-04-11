@@ -15,10 +15,9 @@ export async function GET() {
   try {
     const posts = await getSheetsXPosts();
     return NextResponse.json(posts);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("X投稿取得エラー:", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (e) {
+    console.error("X posts GET error:", e);
+    return NextResponse.json({ error: "データ取得に失敗しました" }, { status: 500 });
   }
 }
 

@@ -2,6 +2,9 @@ import { google } from "googleapis";
 import { XPost } from "./types";
 
 const SHEET_NAME = "下書き管理";
+// 後方互換: 既存A〜J列は維持し、K〜N列にPhase1拡張フィールドを追加
+// K=scheduledTime, L=imageUrl, M=prLabel, N=validationErrors
+const COLUMN_RANGE = "A2:N";
 
 function getAuth() {
   const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || "{}");
@@ -22,6 +25,11 @@ function getSpreadsheetId(): string {
 }
 
 function rowToXPost(row: string[]): XPost {
+  // K〜N列は既存行では undefined のことが多い → 後方互換
+  const scheduledTime = row[10];
+  const imageUrl = row[11];
+  const prLabelRaw = row[12];
+  const validationErrors = row[13];
   return {
     id: row[0] || "",
     type: (row[1] as XPost["type"]) || "outdoor_tip",
@@ -33,6 +41,10 @@ function rowToXPost(row: string[]): XPost {
     scheduledDate: row[7] || "",
     generatedAt: row[8] || "",
     postedAt: row[9] || null,
+    scheduledTime: scheduledTime || undefined,
+    imageUrl: imageUrl || undefined,
+    prLabel: prLabelRaw === "true" || prLabelRaw === "TRUE" ? true : undefined,
+    validationErrors: validationErrors || undefined,
   };
 }
 
@@ -48,6 +60,10 @@ function xpostToRow(post: XPost): string[] {
     post.scheduledDate,
     post.generatedAt,
     post.postedAt || "",
+    post.scheduledTime || "",
+    post.imageUrl || "",
+    post.prLabel ? "true" : "",
+    post.validationErrors || "",
   ];
 }
 
@@ -55,7 +71,7 @@ export async function getSheetsXPosts(): Promise<XPost[]> {
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `${SHEET_NAME}!A2:J`,
+    range: `${SHEET_NAME}!${COLUMN_RANGE}`,
   });
   const rows = res.data.values || [];
   return rows
@@ -73,7 +89,7 @@ export async function getSheetsXPostById(
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `${SHEET_NAME}!A2:J`,
+    range: `${SHEET_NAME}!${COLUMN_RANGE}`,
   });
   const rows = res.data.values || [];
   for (let i = 0; i < rows.length; i++) {
@@ -99,14 +115,14 @@ export async function saveSheetsXPost(post: XPost): Promise<void> {
   if (existing) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${SHEET_NAME}!A${existing.rowIndex}:J${existing.rowIndex}`,
+      range: `${SHEET_NAME}!A${existing.rowIndex}:N${existing.rowIndex}`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
   } else {
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${SHEET_NAME}!A:J`,
+      range: `${SHEET_NAME}!A:N`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
@@ -120,7 +136,7 @@ export async function saveSheetsXPosts(posts: XPost[]): Promise<void> {
   const rows = posts.map(xpostToRow);
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${SHEET_NAME}!A:J`,
+    range: `${SHEET_NAME}!A:N`,
     valueInputOption: "RAW",
     requestBody: { values: rows },
   });
