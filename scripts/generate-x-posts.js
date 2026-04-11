@@ -49,7 +49,7 @@ if (fs.existsSync(envPath)) {
   for (const line of envContent.split("\n")) {
     const match = line.match(/^([^#=]+)=(.*)$/);
     if (match && !process.env[match[1].trim()]) {
-      process.env[match[1].trim()] = match[2].trim();
+      process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
     }
   }
 }
