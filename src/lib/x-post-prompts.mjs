@@ -238,6 +238,278 @@ ${jsonOutputSpec()}`;
  * gear_story: 愛用ギアの小話。
  * GEAR_STORY_ENABLED が true になるまで使わない（author-gear.md 完成後に有効化）
  */
+// === 10タイプ定義・承認ルール ===
+
+export const POST_TYPES = {
+  article_promo:     { axis: "camp",      weeklyCount: 2,   approval: "batch" },
+  outdoor_tip:       { axis: "camp",      weeklyCount: 1,   approval: "auto"  },
+  poll_question:     { axis: "rotate",    weeklyCount: 2,   approval: "auto"  },
+  failure_story:     { axis: "camp",      weeklyCount: 1,   approval: "auto"  },
+  gear_thread:       { axis: "camp",      weeklyCount: 1,   approval: "batch", isThread: true },
+  ai_dev_log:        { axis: "ai",        weeklyCount: 1.5, approval: "auto"  },
+  parenting_outdoor: { axis: "parenting", weeklyCount: 1,   approval: "auto"  },
+  doc_health_tip:    { axis: "doctor",    weeklyCount: 1,   approval: "manual" },
+  seasonal_hook:     { axis: "all",       weeklyCount: 1,   approval: "batch" },
+  repost_rewrite:    { axis: "all",       weeklyCount: 0.5, approval: "batch" },
+};
+
+export const APPROVAL_RULES = {
+  auto:   ["outdoor_tip", "poll_question", "failure_story", "ai_dev_log", "parenting_outdoor"],
+  batch:  ["article_promo", "gear_thread", "seasonal_hook", "repost_rewrite"],
+  manual: ["doc_health_tip"],
+};
+
+export function getApprovalLevel(type) {
+  if (APPROVAL_RULES.manual.includes(type)) return "manual";
+  if (APPROVAL_RULES.auto.includes(type)) return "auto";
+  return "batch";
+}
+
+// === 新タイプ別プロンプト（4軸10タイプ対応） ===
+
+function seedBlock(seed) {
+  if (!seed) return "";
+  return `\n## ネタシード
+- テーマ: ${seed.theme}
+- 角度: ${seed.angle}
+- ヒント: ${seed.hint}\n\nこのヒントを参考に（そのまま使わなくてもよい）、投稿を作ってください。`;
+}
+
+function threadOutputSpec() {
+  return `## 出力形式
+以下のJSON配列で出力してください。他のテキストは一切不要です。
+[
+  {
+    "type": "gear_thread",
+    "tweets": ["1ツイート目（🧵マーク付き）", "2ツイート目", "3ツイート目", ...],
+    "articleSlug": "関連記事のスラッグ または null",
+    "url": "最終ツイートに含めるURL または null"
+  }
+]
+
+各ツイートは280文字以内。tweets[0]が親ツイート。`;
+}
+
+export function buildPollQuestionPrompt({ count, month, seed }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+
+## タスク
+フォロワーに問いかける投票・アンケート形式の投稿を${count}件。
+
+- type は全て "poll_question"
+- 二択〜四択の選択肢を本文内に番号（①②③④）で記載
+- 対立軸を明確にする（「○○ vs △△」など）
+- 最後に自分の意見を1行添える（「個人的には②。理由は〜」）
+- URLは不要
+- ハッシュタグは1〜2個
+
+${jsonOutputSpec()}`;
+}
+
+export function buildFailureStoryPrompt({ count, month, seed }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+
+## タスク
+キャンプや子育て×アウトドアの失敗談を${count}件。
+
+- type は全て "failure_story"
+- オチのある短い失敗談。自虐OK
+- 最後に教訓を1行添える
+- URLは不要
+- ハッシュタグは2〜3個
+
+${jsonOutputSpec()}`;
+}
+
+export function buildGearThreadPrompt({ count, month, seed, articles, categories }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  const articleInfo = articles?.length
+    ? `\n## 関連記事（最終ツイートのリンク候補）\n${articleListBlock(articles, categories)}`
+    : "";
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+${articleInfo}
+
+## タスク
+ギアを深掘りするスレッド形式の投稿を${count}件。
+
+- type は全て "gear_thread"
+- 3〜5ツイートで構成するスレッド
+- 構成:
+  1. 掴み（「○○を△年使った結論」）+ 🧵マーク
+  2. 良い点（具体的スペックで）
+  3. 悪い点・注意点（正直に）
+  4. どんな人に向くか
+  5. まとめ＋サイトリンク（関連記事があれば）
+- 各ツイートは280文字以内
+- ハッシュタグは親ツイートに2〜3個
+
+${threadOutputSpec()}`;
+}
+
+export function buildAiDevLogPrompt({ count, month, seed }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+
+## タスク
+Claude CodeやAI開発のリアルな体験を${count}件。
+
+- type は全て "ai_dev_log"
+- 「非エンジニアの医者がAIでサイト作ってる」面白さを前面に
+- 驚き・ハマりポイント・Before/After など具体的なエピソード
+- テック寄りだが専門用語を詰め込みすぎない
+- Claude Code / Anthropic の料金・内部仕様の推測は書かない
+- API Key等の機密情報は絶対に含めない
+- URLは不要
+- ハッシュタグ: #ClaudeCode #AI など1〜2個
+
+${jsonOutputSpec()}`;
+}
+
+export function buildParentingOutdoorPrompt({ count, month, seed, articles, categories }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  const articleInfo = articles?.length
+    ? `\n## 関連記事（リンク候補）\n${articleListBlock(articles, categories)}`
+    : "";
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+${articleInfo}
+
+## タスク
+子育て×アウトドアの体験を${count}件。
+
+- type は全て "parenting_outdoor"
+- 子供とのアウトドア体験。ほっこり〜笑える話
+- 子供の実名・学校名は出さない（「小学生の息子」「幼稚園の娘」程度）
+- 配偶者へのネガティブな話題は避ける
+- URLは関連記事がある場合のみ
+- ハッシュタグ: #ファミリーキャンプ など2〜3個
+
+${jsonOutputSpec()}`;
+}
+
+export function buildDocHealthTipPrompt({ count, month, seed }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+
+## タスク
+アウトドア×健康の実用情報を${count}件。
+
+- type は全て "doc_health_tip"
+- 「本職柄〜」で医師を匂わせる（「小児科医」とは明言しない）
+- URLは不要
+
+## 追加NGルール（厳守）
+以下の表現は薬機法・医療法に抵触するため絶対に使わない:
+- 「治る」「効く」「改善する」「改善できる」「予防できます」
+- 「診断」「処方」「投薬」「〜すべき」
+- 特定の薬品名・治療法の推奨
+- 個別の医療相談への回答
+- 必要に応じて「症状が続く場合はかかりつけ医に相談を」を添える
+
+- ハッシュタグは2〜3個
+
+${jsonOutputSpec()}`;
+}
+
+export function buildSeasonalHookPrompt({ count, month, seed, articles, categories }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  const articleInfo = articles?.length
+    ? `\n## 関連記事（リンク候補）\n${articleListBlock(articles, categories)}`
+    : "";
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+${articleInfo}
+
+## タスク
+今の季節・イベント・トレンドに連動した投稿を${count}件。
+
+- type は全て "seasonal_hook"
+- GW・梅雨・セール・天気・花見・紅葉など、タイムリーなネタ
+- 季節の体感を具体化（朝霜・夕立・虫・湿気・気温差など）
+- URLは関連記事がある場合のみ
+- ハッシュタグは2〜3個（季節タグ必須）
+
+${jsonOutputSpec()}`;
+}
+
+export function buildRepostRewritePrompt({ count, month, existingPosts }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  const pastPostsBlock = existingPosts
+    .map((p, i) => `${i + 1}. [${p.type}] ${p.text}`)
+    .join("\n\n");
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+
+## 過去の投稿（リライト候補）
+${pastPostsBlock}
+
+## タスク
+上記の過去投稿から${count}件を選び、表現を変えてリライト再投稿してください。
+
+- type は全て "repost_rewrite"
+- コピペ厳禁。同じ内容でも文体・切り口を変える
+- 元投稿よりも良くする意識で
+- URLは元投稿にあれば引き継ぐ
+- ハッシュタグは2〜3個
+
+${jsonOutputSpec("各オブジェクトに \"originalIndex\": 元投稿の番号（1始まり）を追加してください。")}`;
+}
+
+/**
+ * タイプ名からプロンプトを生成するディスパッチャー
+ * @param {string} type - 10タイプのいずれか
+ * @param {object} context - { month, count, seed, articles, categories, existingPosts }
+ * @returns {string} プロンプト文字列
+ */
+export function getPromptForType(type, context) {
+  switch (type) {
+    case "article_promo":     return buildArticlePromoPrompt(context);
+    case "outdoor_tip":       return buildOutdoorTipPrompt(context);
+    case "poll_question":     return buildPollQuestionPrompt(context);
+    case "failure_story":     return buildFailureStoryPrompt(context);
+    case "gear_thread":       return buildGearThreadPrompt(context);
+    case "ai_dev_log":        return buildAiDevLogPrompt(context);
+    case "parenting_outdoor": return buildParentingOutdoorPrompt(context);
+    case "doc_health_tip":    return buildDocHealthTipPrompt(context);
+    case "seasonal_hook":     return buildSeasonalHookPrompt(context);
+    case "repost_rewrite":    return buildRepostRewritePrompt(context);
+    default:
+      throw new Error(`未知の投稿タイプ: ${type}`);
+  }
+}
+
+// === 既存タイプ（互換維持） ===
+
 export function buildGearStoryPrompt({ gear, count }) {
   if (!GEAR_STORY_ENABLED) {
     throw new Error(

@@ -52,6 +52,15 @@ const NG_HYPE = [
   "神ギア",
 ];
 
+/** 薬機法・医療法 厳格チェック用（doc_health_tip では block、他タイプでは warn） */
+const NG_MEDICAL_STRICT = [
+  "改善する", "改善できる", "予防できます",
+  "診断", "処方", "投薬",
+  "すべき",
+  "飲んでください", "服用して",
+  "治療法", "療法として",
+];
+
 /** AI臭い定型表現 */
 const NG_TEMPLATE = [
   "してみてはいかがでしょうか",
@@ -75,9 +84,11 @@ const CATEGORIES = [
 /**
  * 投稿テキストをチェック
  * @param {string} text
+ * @param {{ type?: string }} options - タイプ情報（doc_health_tip で厳格チェック）
  * @returns {{ ok: boolean, errors: string[], warnings: string[] }}
  */
-export function checkXPostContent(text) {
+export function checkXPostContent(text, options = {}) {
+  const { type } = options;
   const errors = [];
   const warnings = [];
   if (!text || typeof text !== "string") {
@@ -94,6 +105,17 @@ export function checkXPostContent(text) {
     }
   }
 
+  // 薬機法・医療法 厳格チェック
+  for (const word of NG_MEDICAL_STRICT) {
+    if (text.includes(word)) {
+      if (type === "doc_health_tip") {
+        errors.push(`[薬機法/医療法(厳格)] "${word}" を検出`);
+      } else {
+        warnings.push(`[医療表現注意] "${word}" を検出`);
+      }
+    }
+  }
+
   // 文字数チェック (X 280字制限)
   // ※ 厳密な weighted character count ではないが概算
   const len = [...text].length;
@@ -102,6 +124,23 @@ export function checkXPostContent(text) {
   }
 
   return { ok: errors.length === 0, errors, warnings };
+}
+
+/**
+ * gear_thread のスレッド全体をチェック
+ * @param {string[]} tweets - ツイート配列
+ * @param {{ type?: string }} options
+ * @returns {{ ok: boolean, errors: string[], warnings: string[] }}
+ */
+export function checkThreadContent(tweets, options = {}) {
+  const allErrors = [];
+  const allWarnings = [];
+  tweets.forEach((text, i) => {
+    const check = checkXPostContent(text, options);
+    for (const e of check.errors) allErrors.push(`[${i + 1}/${tweets.length}] ${e}`);
+    for (const w of check.warnings) allWarnings.push(`[${i + 1}/${tweets.length}] ${w}`);
+  });
+  return { ok: allErrors.length === 0, errors: allErrors, warnings: allWarnings };
 }
 
 /**
@@ -149,8 +188,8 @@ export function applyChecksAndLabels(posts) {
           ? true
           : undefined,
     });
-    // バリデーション
-    const check = checkXPostContent(labeled.text);
+    // バリデーション（タイプ情報を渡して厳格チェック対応）
+    const check = checkXPostContent(labeled.text, { type: p.type });
     const errs = [...check.errors, ...check.warnings];
     return {
       ...p,
