@@ -1,5 +1,6 @@
 {
   "enabled": false,
+  "articleEnabled": false,
   "reason": "",
   "enabledAt": null,
   "enabledBy": "manual"
