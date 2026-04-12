@@ -19,10 +19,11 @@
 
 ## 投稿頻度
 
-- **週10-12件**を目標
-- 平日: 1日2スロット（朝07:30 / 夜20:00）
-- 休日: 1日1スロット（昼12:15）
+- **1日2件** × 7日 = **週14件**を目標
+- 平日（祝日除く）: 朝08:00〜08:59 / 夜19:00〜19:59（ランダム遅延）
+- 土日・祝日: 朝10:00〜10:59 / 夜19:00〜19:59（ランダム遅延）
 - IFTTT 経由の物理的な投稿上限は **1日3投稿**。超過分は翌日繰越
+- 自動化: `scripts/cron-queue.sh` が launchd 経由で1日3回起動（08:00/10:00/19:00）、曜日+祝日判定で該当スロットのみ実行
 
 ## 投稿タイプと配分
 
@@ -96,10 +97,24 @@
 
 - /admin/x-posts に「予定超過バナー」(scheduledDate < 今日 && status !== posted) を表示
 - バナー出現時の確認手順:
-  1. Sheets「X投稿管理」シートで該当行があるか
-  2. IFTTT のレシピが有効か / 直近の実行履歴
-  3. 該当行の status (ready/posted/error)
-  4. ANTHROPIC_API_KEY / GOOGLE_CREDENTIALS の有効性
+  1. `npm run x:sync` でステータス同期（IFTTT投稿済みなのにstatus未更新の可能性）
+  2. Sheets「X投稿管理」シートで該当行があるか
+  3. IFTTT のレシピが有効か / 直近の実行履歴
+  4. 該当行の status (ready/posted/error)
+  5. ANTHROPIC_API_KEY / GOOGLE_CREDENTIALS の有効性
+- 1週間以上前の滞留: `npm run x:reset-stale` でdraftに戻す（`--days=N` `--dry-run` オプション有）
+
+## 自動化（launchd）
+
+| エージェント | スケジュール | 内容 |
+|-------------|-------------|------|
+| `com.outdoor-affiliate.queue-to-sheets` | 毎日 08:00/10:00/19:00 | キュー投入（曜日+祝日判定あり） |
+| `com.outdoor-affiliate.sync-posted-status` | 毎日 22:00 | 投稿ステータス同期 |
+
+- 祝日リスト: `data/jp-holidays.json`（年1回更新）
+- ログ: `logs/cron-queue-YYYYMMDD.log`, `logs/launchd-*.log`
+- 手動確認: `launchctl list | grep outdoor-affiliate`
+- 再登録: `launchctl unload ~/Library/LaunchAgents/com.outdoor-affiliate.*.plist && launchctl load ...`
 
 ## バックアップ
 
@@ -147,6 +162,9 @@
 - src/app/admin/x-posts/page.tsx: 管理画面
 - scripts/generate-x-posts.js: CLI生成（10タイプ対応）
 - scripts/queue-to-sheets.js: キュー投入
+- scripts/cron-queue.sh: キュー投入ラッパー（曜日+祝日判定、launchd用）
+- scripts/reset-stale-posts.js: 古い滞留投稿のリセット
+- scripts/sync-posted-status.js: 投稿ステータス同期
 - scripts/popular-repost.js: GA4 起点リポスト
 - scripts/backup-sheets.js: バックアップ
 - data/x-content-seeds.json: ネタシード（250件）
