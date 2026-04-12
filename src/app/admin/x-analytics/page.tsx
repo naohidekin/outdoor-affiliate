@@ -208,7 +208,7 @@ export default function XAnalyticsPage() {
                     >
                       <span
                         className={`w-24 shrink-0 font-medium ${
-                          s.source === "x" || s.source === "twitter"
+                          s.source === "x" || s.source === "twitter" || s.source === "t.co"
                             ? "text-green-700"
                             : "text-gray-500"
                         }`}
@@ -218,7 +218,7 @@ export default function XAnalyticsPage() {
                       <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
-                            s.source === "x" || s.source === "twitter"
+                            s.source === "x" || s.source === "twitter" || s.source === "t.co"
                               ? "bg-green-500"
                               : "bg-gray-300"
                           }`}

@@ -51,6 +51,16 @@ async function queryGA4(days: number) {
 
     type GA4Row = { dimensionValues: Array<{ value: string }>; metricValues: Array<{ value: string }> };
 
+    // X経由ソースフィルタ (x, t.co, twitter をまとめて扱う)
+    const xSourceFilter = {
+      filter: {
+        fieldName: "sessionSource",
+        inListFilter: {
+          values: ["x", "t.co", "twitter"],
+        },
+      },
+    };
+
     // 1. X経由日別トラフィック
     const byDayRes = await analyticsData.properties.runReport({
       property: `properties/${propertyId}`,
@@ -61,12 +71,7 @@ async function queryGA4(days: number) {
           { name: "screenPageViews" },
           { name: "sessions" },
         ],
-        dimensionFilter: {
-          filter: {
-            fieldName: "sessionSource",
-            stringFilter: { matchType: "EXACT", value: "x" },
-          },
-        },
+        dimensionFilter: xSourceFilter,
         orderBys: [{ dimension: { dimensionName: "date" } }],
       },
     });
@@ -84,12 +89,7 @@ async function queryGA4(days: number) {
         dimensionFilter: {
           andGroup: {
             expressions: [
-              {
-                filter: {
-                  fieldName: "sessionSource",
-                  stringFilter: { matchType: "EXACT", value: "x" },
-                },
-              },
+              xSourceFilter,
               {
                 filter: {
                   fieldName: "pagePath",
