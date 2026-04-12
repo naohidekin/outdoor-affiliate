@@ -24,7 +24,13 @@
     "x:orchestrate:weekly:dry": "node scripts/orchestrate.js --pipeline weekly --dry-run",
     "x:orchestrate:daily:dry": "node scripts/orchestrate.js --pipeline daily --dry-run",
     "x:kill": "node scripts/supervisor-agent.js --kill",
-    "x:resume": "node scripts/supervisor-agent.js --resume"
+    "x:resume": "node scripts/supervisor-agent.js --resume",
+    "article:weekly": "node scripts/article-orchestrate.js --pipeline weekly",
+    "article:daily": "node scripts/article-orchestrate.js --pipeline daily",
+    "article:weekly:dry": "node scripts/article-orchestrate.js --pipeline weekly --dry-run",
+    "article:daily:dry": "node scripts/article-orchestrate.js --pipeline daily --dry-run",
+    "article:kill": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('data/kill-switch.json'));d.articleEnabled=true;fs.writeFileSync('data/kill-switch.json',JSON.stringify(d,null,2))\"",
+    "article:resume": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('data/kill-switch.json'));d.articleEnabled=false;fs.writeFileSync('data/kill-switch.json',JSON.stringify(d,null,2))\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
