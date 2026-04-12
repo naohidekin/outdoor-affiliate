@@ -1,0 +1,14 @@
+{
+  "1":  ["sleeping-bag", "wear"],
+  "2":  ["sleeping-bag", "wear"],
+  "3":  ["tent", "tarp", "backpack"],
+  "4":  ["tent", "tarp", "chair", "table"],
+  "5":  ["tent", "tarp", "chair", "table", "burner"],
+  "6":  ["wear", "shoes", "backpack"],
+  "7":  ["cooler", "light", "chair"],
+  "8":  ["cooler", "light", "tarp"],
+  "9":  ["tent", "firepit", "sleeping-bag"],
+  "10": ["firepit", "sleeping-bag", "light"],
+  "11": ["firepit", "sleeping-bag", "wear"],
+  "12": ["sleeping-bag", "wear", "light"]
+}
