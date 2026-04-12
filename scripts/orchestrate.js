@@ -140,6 +140,17 @@ async function weeklyPipeline(dryRun) {
   // 7. Supervisor 週次レポート生成
   await runAgent("supervisor-agent.js", ["--weekly-report"]);
 
+  // 8. ログローテーション（30日超のログ・バックアップを削除）
+  try {
+    const { execFileSync } = await import("child_process");
+    execFileSync("bash", [path.join(__dirname, "rotate-logs.sh")], {
+      cwd: PROJECT_ROOT,
+      stdio: "inherit",
+    });
+  } catch (err) {
+    console.warn(`[orchestrate] ログローテーション失敗（継続）: ${err.message}`);
+  }
+
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║        週次パイプライン 完了              ║");
   console.log("╚══════════════════════════════════════════╝\n");

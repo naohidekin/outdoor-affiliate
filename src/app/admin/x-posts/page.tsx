@@ -98,6 +98,7 @@ interface AgentStatus {
     writerHints: string[];
   } | null;
   postHistoryCount: number;
+  recentErrors: Array<{ timestamp: string; label: string; exitCode: number }>;
 }
 
 export default function XPostsPage() {
@@ -351,6 +352,19 @@ export default function XPostsPage() {
             <div className="text-gray-400">
               Post History: {agentStatus.postHistoryCount}件
             </div>
+
+            {agentStatus.recentErrors && agentStatus.recentErrors.length > 0 && (
+              <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                <div className="font-semibold text-red-700 text-xs mb-1">直近エラー</div>
+                <ul className="text-xs text-red-600 space-y-0.5">
+                  {agentStatus.recentErrors.slice(0, 5).map((e, i) => (
+                    <li key={i}>
+                      {e.timestamp.replace("T", " ").replace("Z", "")} — {e.label} (exit {e.exitCode})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>

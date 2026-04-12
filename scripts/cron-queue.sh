@@ -93,6 +93,16 @@ NODE_PATH="${NODE_PATH:-$(which node)}"
 
 cd "$PROJECT_DIR"
 
+# Kill switch チェック
+KILL_SWITCH_FILE="$PROJECT_DIR/data/kill-switch.json"
+if [ -f "$KILL_SWITCH_FILE" ]; then
+  KILL_ENABLED=$(grep -o '"enabled"[[:space:]]*:[[:space:]]*true' "$KILL_SWITCH_FILE" || true)
+  if [ -n "$KILL_ENABLED" ]; then
+    log "KILL SWITCH 有効。投稿をスキップします。"
+    exit 0
+  fi
+fi
+
 # Step 1: 承認済み投稿をキューに投入
 log "queue-to-sheets.js 実行開始（--max=1 --random-delay=59）"
 "$NODE_PATH" scripts/queue-to-sheets.js --max=1 --random-delay=59 2>&1 | tee -a "$LOG_FILE"

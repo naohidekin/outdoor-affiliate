@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 
 const DATA_DIR = path.join(process.cwd(), "data");
+const LOG_DIR = path.join(process.cwd(), "logs");
 
 function readDataJson(filename: string) {
   try {
@@ -11,6 +12,16 @@ function readDataJson(filename: string) {
     return JSON.parse(raw);
   } catch {
     return null;
+  }
+}
+
+function readRecentErrors(maxLines = 10): Array<{ timestamp: string; label: string; exitCode: number }> {
+  try {
+    const raw = fs.readFileSync(path.join(LOG_DIR, "error-history.jsonl"), "utf-8");
+    const lines = raw.trim().split("\n").filter(Boolean);
+    return lines.slice(-maxLines).map((line) => JSON.parse(line)).reverse();
+  } catch {
+    return [];
   }
 }
 
@@ -54,5 +65,6 @@ export async function GET() {
         }
       : null,
     postHistoryCount: entryCount,
+    recentErrors: readRecentErrors(),
   });
 }

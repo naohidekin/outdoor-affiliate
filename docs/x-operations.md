@@ -106,15 +106,21 @@
 
 ## 自動化（launchd）
 
-| エージェント | スケジュール | 内容 |
-|-------------|-------------|------|
-| `com.outdoor-affiliate.queue-to-sheets` | 毎日 08:00/10:00/19:00 | キュー投入（曜日+祝日判定あり） |
+| ジョブ | スケジュール | 内容 |
+|--------|-------------|------|
+| `com.outdoor-affiliate.queue-to-sheets` | 毎日 08:00/10:00/19:00 | キュー投入+X投稿（��日+祝日判定・kill switch チェックあり） |
 | `com.outdoor-affiliate.sync-posted-status` | 毎日 22:00 | 投稿ステータス同期 |
+| `com.outdoor-affiliate.nightly-analyst` | 毎日 23:00 | Analyst 直近7日分析（sync後に実行） |
+| `com.outdoor-affiliate.weekly-pipeline` | 毎週月曜 09:00 | 週次��イプライン全体（Researcher→Analyst→Writer→Supervisor→ログロー��ーション） |
 
+- 全ジョブに `notify-on-error.sh` ラッパーを適用（失敗時 macOS 通知 + `logs/error-history.jsonl` 記録）
+- plist ソース: `launchd/` ディレクトリ（リポジトリ管理）
+- セットアップ: `./scripts/setup-launchd.sh`（全 plist を `~/Library/LaunchAgents/` にコピー・登録）
+- 解除: `./scripts/setup-launchd.sh --unload`
 - 祝日リスト: `data/jp-holidays.json`（年1回更新）
-- ログ: `logs/cron-queue-YYYYMMDD.log`, `logs/launchd-*.log`
+- ログ: `logs/cron-queue-YYYYMMDD.log`, `logs/launchd-*.log`, `logs/error-history.jsonl`
+- ログローテーション: 週次パイプラインで30日超のログ・バックアップを自動削除（`scripts/rotate-logs.sh`）
 - 手動確認: `launchctl list | grep outdoor-affiliate`
-- 再登録: `launchctl unload ~/Library/LaunchAgents/com.outdoor-affiliate.*.plist && launchctl load ...`
 
 ## バックアップ
 
