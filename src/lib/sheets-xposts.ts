@@ -2,9 +2,12 @@ import { google } from "googleapis";
 import { XPost } from "./types";
 
 const SHEET_NAME = "下書き管理";
-// 後方互換: 既存A〜J列は維持し、K〜N列にPhase1拡張フィールドを追加
-// K=scheduledTime, L=imageUrl, M=prLabel, N=validationErrors
-const COLUMN_RANGE = "A2:N";
+// カラムマッピング（generate-x-posts.js の書き込み順に準拠）:
+// A=id, B=type, C=text, D=articleSlug, E=url, F=hashtags, G=status,
+// H=scheduledDate, I=generatedAt, J=postedAt, K=axis, L=seedId,
+// M=validationErrors, N=autoApproved, O=selfScore, P=firstLinePattern,
+// Q=similarityScore, R=retryCount
+const COLUMN_RANGE = "A2:R";
 
 function getAuth() {
   const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || "{}");
@@ -25,11 +28,7 @@ function getSpreadsheetId(): string {
 }
 
 function rowToXPost(row: string[]): XPost {
-  // K〜N列は既存行では undefined のことが多い → 後方互換
-  const scheduledTime = row[10];
-  const imageUrl = row[11];
-  const prLabelRaw = row[12];
-  const validationErrors = row[13];
+  // K〜R列は既存行では undefined のことが多い → 後方互換
   return {
     id: row[0] || "",
     type: (row[1] as XPost["type"]) || "outdoor_tip",
@@ -41,10 +40,14 @@ function rowToXPost(row: string[]): XPost {
     scheduledDate: row[7] || "",
     generatedAt: row[8] || "",
     postedAt: row[9] || null,
-    scheduledTime: scheduledTime || undefined,
-    imageUrl: imageUrl || undefined,
-    prLabel: prLabelRaw === "true" || prLabelRaw === "TRUE" ? true : undefined,
-    validationErrors: validationErrors || undefined,
+    axis: row[10] || undefined,
+    seedId: row[11] || undefined,
+    validationErrors: row[12] || undefined,
+    autoApproved: row[13] || undefined,
+    selfScore: row[14] ? parseFloat(row[14]) : undefined,
+    firstLinePattern: row[15] || undefined,
+    similarityScore: row[16] ? parseFloat(row[16]) : undefined,
+    retryCount: row[17] ? parseInt(row[17], 10) : undefined,
   };
 }
 
@@ -60,10 +63,14 @@ function xpostToRow(post: XPost): string[] {
     post.scheduledDate,
     post.generatedAt,
     post.postedAt || "",
-    post.scheduledTime || "",
-    post.imageUrl || "",
-    post.prLabel ? "true" : "",
+    post.axis || "",
+    post.seedId || "",
     post.validationErrors || "",
+    post.autoApproved || "",
+    post.selfScore != null ? String(post.selfScore) : "",
+    post.firstLinePattern || "",
+    post.similarityScore != null ? String(post.similarityScore) : "",
+    post.retryCount != null ? String(post.retryCount) : "",
   ];
 }
 
@@ -115,14 +122,14 @@ export async function saveSheetsXPost(post: XPost): Promise<void> {
   if (existing) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${SHEET_NAME}!A${existing.rowIndex}:N${existing.rowIndex}`,
+      range: `${SHEET_NAME}!A${existing.rowIndex}:R${existing.rowIndex}`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
   } else {
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${SHEET_NAME}!A:N`,
+      range: `${SHEET_NAME}!A:R`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
@@ -136,7 +143,7 @@ export async function saveSheetsXPosts(posts: XPost[]): Promise<void> {
   const rows = posts.map(xpostToRow);
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${SHEET_NAME}!A:N`,
+    range: `${SHEET_NAME}!A:R`,
     valueInputOption: "RAW",
     requestBody: { values: rows },
   });

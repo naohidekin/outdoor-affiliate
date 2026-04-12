@@ -36,23 +36,21 @@ import {
   applyChecksAndLabels,
 } from "../src/lib/x-content-checks.mjs";
 
+import {
+  loadEnv,
+  bigramJaccard,
+  loadPostHistory,
+  appendToPostHistory,
+  classifyFirstLinePattern,
+  readJson as readDataJson,
+} from "../src/lib/x-agent-utils.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
 
 const DRAFT_SHEET = "下書き管理";
 
-// === .env.local 読み込み ===
-
-const envPath = path.join(__dirname, "..", ".env.local");
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match) {
-      process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
-    }
-  }
-}
+loadEnv();
 
 // === CLI オプション ===
 
@@ -64,6 +62,7 @@ function parseArgs() {
     type: null,
     count: null,
     axis: null,
+    planFile: null,
   };
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -72,6 +71,7 @@ function parseArgs() {
       case "--type":         opts.type = args[++i]; break;
       case "--count":        opts.count = parseInt(args[++i], 10); break;
       case "--axis":         opts.axis = args[++i]; break;
+      case "--plan-file":    opts.planFile = args[++i]; break;
     }
   }
   // バリデーション
@@ -143,7 +143,7 @@ async function getExistingPosts() {
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${DRAFT_SHEET}!A2:N`,
+      range: `${DRAFT_SHEET}!A2:R`,
     });
     const rows = res.data.values || [];
     return rows
@@ -163,6 +163,10 @@ async function getExistingPosts() {
         seedId: r[11] || null,
         validationErrors: r[12] || null,
         autoApproved: r[13] || null,
+        selfScore: r[14] ? parseFloat(r[14]) : null,
+        firstLinePattern: r[15] || null,
+        similarityScore: r[16] ? parseFloat(r[16]) : null,
+        retryCount: r[17] ? parseInt(r[17], 10) : null,
       }));
   } catch {
     return [];
@@ -252,6 +256,101 @@ function formatThreadForSheets(tweets) {
   return `[THREAD] ${JSON.stringify(tweets)}`;
 }
 
+// === 自己採点 ===
+
+async function selfScorePost(client, { type, axis, text }) {
+  const prompt = `あなたは X 投稿の品質審査員です。
+以下の投稿を10基準で採点してください（各0〜10点）。
+
+## 投稿
+タイプ: ${type}
+軸: ${axis}
+テキスト:
+${text}
+
+## 採点基準
+1. Lake & Sky トーン: 淡々・知的・非煽り
+2. 体験ベース: 一人称体験感があるか
+3. 具体性: 数値・製品名・状況の具体性
+4. 文字数適正: 200〜280文字の範囲
+5. ハッシュタグ適正: 2〜3個で本文と整合
+6. タイプ適合: 投稿タイプの目的に合致
+7. 軸適合: 発信軸のトーンに合致
+8. オリジナリティ: 既視感がないか
+9. フック強度: 1行目の引きつけ力
+10. アクション明確: 読後行動が促されるか
+
+## 出力形式（JSONのみ）
+{ "scores": [8, 7, 9, 8, 7, 8, 9, 6, 7, 8], "total": 7.7, "comment": "..." }`;
+
+  try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 500,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const jsonMatch = response.content[0].text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { total: 0, scores: [], comment: "JSON parse failed" };
+    return JSON.parse(jsonMatch[0]);
+  } catch (err) {
+    console.warn(`[self-score] 採点失敗: ${err.message}`);
+    return { total: 7.0, scores: [], comment: "scoring failed, default pass" };
+  }
+}
+
+// === 類似チェック ===
+
+function checkSimilarity(newText) {
+  const history = loadPostHistory();
+  let maxSimilarity = 0;
+  for (const entry of history.entries) {
+    const sim = bigramJaccard(newText, entry.text);
+    if (sim > maxSimilarity) maxSimilarity = sim;
+  }
+  return maxSimilarity;
+}
+
+// === パターンローテーション ===
+
+function buildPatternRotationBlock() {
+  const history = loadPostHistory();
+  const patternsData = readDataJson("first-line-patterns.json");
+  if (!patternsData || !patternsData.categories) return "";
+
+  const recentPatterns = history.entries
+    .slice(-3)
+    .map((e) => e.firstLinePattern)
+    .filter(Boolean);
+
+  if (recentPatterns.length === 0) return "";
+
+  // 直近パターン以外のカテゴリから例を選出
+  const availableCategories = patternsData.categories.filter(
+    (c) => !recentPatterns.includes(c.id)
+  );
+  if (availableCategories.length === 0) return "";
+
+  const examples = availableCategories
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3)
+    .map((c) => c.examples[Math.floor(Math.random() * c.examples.length)]);
+
+  return `\n## 書き出しパターン指示
+以下のパターンは直近で使用済みのため避けてください: ${recentPatterns.join(", ")}
+代わりに以下の書き出しスタイルを参考にしてください:
+${examples.map((e) => `- 「${e}」`).join("\n")}`;
+}
+
+// === Analyst ヒント注入 ===
+
+function buildAnalystHintsBlock() {
+  const feedback = readDataJson("analyst-feedback.json");
+  if (!feedback || !feedback.writerHints || feedback.writerHints.length === 0) return "";
+
+  return `\n## 直近の分析フィードバック
+${feedback.writerHints.map((h) => `- ${h}`).join("\n")}`;
+}
+
 // === 生成プラン ===
 
 function determineGenerationPlan(opts) {
@@ -318,8 +417,24 @@ async function generatePosts(opts) {
       ? articleCandidates.sort(() => Math.random() - 0.5).slice(0, selectCount)
       : articles.sort(() => Math.random() - 0.5).slice(0, selectCount);
 
-  const plan = determineGenerationPlan(opts);
+  // プラン決定: --plan-file があれば Researcher の出力を使用
+  let plan;
+  if (opts.planFile) {
+    const planPath = path.join(__dirname, "..", opts.planFile);
+    if (fs.existsSync(planPath)) {
+      const weeklyPlan = JSON.parse(fs.readFileSync(planPath, "utf-8"));
+      plan = weeklyPlan.plan || [];
+      console.log(`[plan-file] ${opts.planFile} から ${plan.length} タイプのプランを読み込み`);
+    } else {
+      console.warn(`[plan-file] ${opts.planFile} が見つかりません。通常プランで続行`);
+      plan = determineGenerationPlan(opts);
+    }
+  } else {
+    plan = determineGenerationPlan(opts);
+  }
+
   const allPosts = [];
+  const patternsData = readDataJson("first-line-patterns.json");
 
   console.log(`\n生成プラン: ${plan.map((p) => `${p.type}(${p.count}件)`).join(", ")}`);
   console.log(`季節: ${month}月 - ${SEASON_CONTEXT[month]}\n`);
@@ -361,88 +476,146 @@ async function generatePosts(opts) {
 
     console.log(`[${item.type}] ${item.count}件を生成中...${seed ? ` (seed: ${seed.id})` : ""}`);
 
-    // プロンプト生成
-    const prompt = getPromptForType(item.type, context);
+    // プロンプト生成（パターンローテーション + Analyst ヒント追加）
+    let prompt = getPromptForType(item.type, context);
+    prompt += buildPatternRotationBlock();
+    prompt += buildAnalystHintsBlock();
 
-    // Claude API 呼び出し
-    let response;
-    try {
-      response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
-        messages: [{ role: "user", content: prompt }],
-      });
-    } catch (err) {
-      console.error(`[${item.type}] API呼び出し失敗: ${err.message}`);
-      continue;
-    }
-
-    const content = response.content[0].text;
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.error(`[${item.type}] JSON解析に失敗:\n${content.slice(0, 200)}`);
-      continue;
-    }
-
-    let generated;
-    try {
-      generated = JSON.parse(jsonMatch[0]);
-    } catch (err) {
-      console.error(`[${item.type}] JSONパースエラー: ${err.message}`);
-      continue;
-    }
-
-    // UTM パラメータ付与
-    generated = generated.map((g) => addUtmIfNeeded(g, item.type));
-
-    // NG チェック
     const isThread = item.type === "gear_thread";
-    generated = generated.map((g) => {
-      let check;
-      if (isThread && g.tweets) {
-        check = checkThreadContent(g.tweets, { type: item.type });
-      } else {
-        check = checkXPostContent(g.text, { type: item.type });
-      }
-      const errs = [...check.errors, ...check.warnings];
-      return {
-        ...g,
-        validationErrors: errs.length > 0 ? errs.join(" / ") : "",
-        _checkOk: check.ok,
-      };
-    });
-
-    // ステータス判定
     const approvalLevel = getApprovalLevel(item.type);
-    const posts = generated.map((g) => {
-      let status;
-      if (!g._checkOk) {
-        status = "draft";
-      } else if (opts.autoApprove || approvalLevel === "auto") {
-        status = "approved";
-      } else {
-        status = "draft";
+    const postAxis = seed?.axis || POST_TYPES[item.type].axis;
+
+    // リトライループ（最大3回: 初回 + 2リトライ）
+    for (let attempt = 0; attempt <= 2; attempt++) {
+      if (attempt > 0) {
+        console.log(`[${item.type}] リトライ ${attempt}/2...`);
       }
 
-      return {
-        id: generateId(),
-        type: item.type,
-        text: isThread && g.tweets ? formatThreadForSheets(g.tweets) : g.text,
-        articleSlug: g.articleSlug || "",
-        url: g.url || "",
-        hashtags: "",
-        status,
-        scheduledDate: "",
-        generatedAt: new Date().toISOString(),
-        postedAt: "",
-        axis: seed?.axis || POST_TYPES[item.type].axis,
-        seedId: seed?.id || "",
-        validationErrors: g.validationErrors || "",
-        autoApproved: status === "approved" ? "true" : "false",
-      };
-    });
+      // Claude API 呼び出し
+      let response;
+      try {
+        response = await client.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4000,
+          messages: [{ role: "user", content: prompt }],
+        });
+      } catch (err) {
+        console.error(`[${item.type}] API呼び出し失敗: ${err.message}`);
+        break;
+      }
 
-    allPosts.push(...posts);
+      const content = response.content[0].text;
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        console.error(`[${item.type}] JSON解析に失敗:\n${content.slice(0, 200)}`);
+        break;
+      }
+
+      let generated;
+      try {
+        generated = JSON.parse(jsonMatch[0]);
+      } catch (err) {
+        console.error(`[${item.type}] JSONパースエラー: ${err.message}`);
+        break;
+      }
+
+      // UTM パラメータ付与
+      generated = generated.map((g) => addUtmIfNeeded(g, item.type));
+
+      // NG チェック
+      generated = generated.map((g) => {
+        let check;
+        if (isThread && g.tweets) {
+          check = checkThreadContent(g.tweets, { type: item.type });
+        } else {
+          check = checkXPostContent(g.text, { type: item.type });
+        }
+        const errs = [...check.errors, ...check.warnings];
+        return {
+          ...g,
+          validationErrors: errs.length > 0 ? errs.join(" / ") : "",
+          _checkOk: check.ok,
+        };
+      });
+
+      // 類似チェック + 自己採点
+      let needsRetry = false;
+      const posts = [];
+
+      for (const g of generated) {
+        const postText = isThread && g.tweets ? formatThreadForSheets(g.tweets) : g.text;
+        const plainText = isThread && g.tweets ? g.tweets.join(" ") : g.text;
+
+        // 類似チェック
+        const similarityScore = checkSimilarity(plainText);
+        if (similarityScore > 0.6 && attempt < 2) {
+          console.log(`[${item.type}] 類似度 ${similarityScore.toFixed(2)} > 0.6 → 再生成`);
+          needsRetry = true;
+          continue;
+        }
+
+        // 自己採点
+        const scoreResult = await selfScorePost(client, {
+          type: item.type,
+          axis: postAxis,
+          text: plainText,
+        });
+        console.log(`[${item.type}] selfScore: ${scoreResult.total}`);
+
+        if (scoreResult.total < 7.0 && attempt < 2) {
+          console.log(`[${item.type}] スコア ${scoreResult.total} < 7.0 → 再生成`);
+          needsRetry = true;
+          continue;
+        }
+
+        // 書き出しパターン分類
+        const firstLinePattern = classifyFirstLinePattern(plainText, patternsData);
+
+        // ステータス判定
+        let status;
+        if (scoreResult.total < 7.0 && attempt >= 2) {
+          status = "discarded";
+        } else if (!g._checkOk) {
+          status = "draft";
+        } else if (opts.autoApprove || approvalLevel === "auto") {
+          status = "approved";
+        } else {
+          status = "draft";
+        }
+
+        if (similarityScore > 0.6) {
+          g.validationErrors = [g.validationErrors, "類似投稿あり"].filter(Boolean).join(" / ");
+          if (status !== "discarded") status = "draft";
+        }
+
+        posts.push({
+          id: generateId(),
+          type: item.type,
+          text: postText,
+          articleSlug: g.articleSlug || "",
+          url: g.url || "",
+          hashtags: "",
+          status,
+          scheduledDate: "",
+          generatedAt: new Date().toISOString(),
+          postedAt: "",
+          axis: postAxis,
+          seedId: seed?.id || "",
+          validationErrors: g.validationErrors || "",
+          autoApproved: status === "approved" ? "true" : "false",
+          selfScore: scoreResult.total,
+          firstLinePattern,
+          similarityScore,
+          retryCount: attempt,
+        });
+      }
+
+      if (posts.length > 0) {
+        allPosts.push(...posts);
+        break; // 成功、リトライ不要
+      }
+      if (!needsRetry) break; // リトライ対象がない
+    }
 
     // シード使用記録
     if (seed) markSeedUsed(seedData, seed.id);
@@ -457,7 +630,7 @@ async function generatePosts(opts) {
   // 結果出力
   console.log(`\n========== 生成結果: ${allPosts.length}件 ==========\n`);
   for (const p of allPosts) {
-    const statusIcon = p.status === "approved" ? "v" : "x";
+    const statusIcon = p.status === "approved" ? "v" : p.status === "discarded" ? "D" : "x";
     console.log(`[${statusIcon}] [${p.type}] (${p.axis}) status=${p.status}`);
     if (p.text.startsWith("[THREAD]")) {
       const tweets = JSON.parse(p.text.replace("[THREAD] ", ""));
@@ -466,6 +639,7 @@ async function generatePosts(opts) {
       console.log(`  ${p.text}`);
     }
     if (p.seedId) console.log(`  seed: ${p.seedId}`);
+    if (p.selfScore != null) console.log(`  score: ${p.selfScore} | pattern: ${p.firstLinePattern} | sim: ${(p.similarityScore || 0).toFixed(2)} | retry: ${p.retryCount || 0}`);
     if (p.validationErrors) console.log(`  NG: ${p.validationErrors}`);
     console.log("---");
   }
@@ -474,34 +648,57 @@ async function generatePosts(opts) {
   if (opts.dryRun) {
     console.log("\n[DRY RUN] Sheets書き込み・seeds.json更新をスキップしました");
   } else {
-    // Google Sheets 書き込み
+    // Google Sheets 書き込み（A:R 18列）
     const sheets = await getSheets();
     const rows = allPosts.map((p) => [
-      p.id,              // A
-      p.type,            // B
-      p.text,            // C
-      p.articleSlug,     // D
-      p.url,             // E
-      p.hashtags,        // F
-      p.status,          // G
-      p.scheduledDate,   // H
-      p.generatedAt,     // I
-      p.postedAt,        // J
-      p.axis,            // K
-      p.seedId,          // L
-      p.validationErrors,// M
-      p.autoApproved,    // N
+      p.id,                                                // A
+      p.type,                                              // B
+      p.text,                                              // C
+      p.articleSlug,                                       // D
+      p.url,                                               // E
+      p.hashtags,                                          // F
+      p.status,                                            // G
+      p.scheduledDate,                                     // H
+      p.generatedAt,                                       // I
+      p.postedAt,                                          // J
+      p.axis,                                              // K
+      p.seedId,                                            // L
+      p.validationErrors,                                  // M
+      p.autoApproved,                                      // N
+      p.selfScore != null ? String(p.selfScore) : "",      // O
+      p.firstLinePattern || "",                            // P
+      p.similarityScore != null ? String(p.similarityScore) : "", // Q
+      String(p.retryCount || 0),                           // R
     ]);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.X_SHEET_ID,
-      range: `${DRAFT_SHEET}!A:N`,
+      range: `${DRAFT_SHEET}!A:R`,
       valueInputOption: "RAW",
       requestBody: { values: rows },
     });
 
     // seeds.json 書き戻し
     saveSeeds(seedData);
+
+    // post-history.json に追記
+    for (const p of allPosts) {
+      if (p.status !== "discarded") {
+        appendToPostHistory({
+          id: p.id,
+          type: p.type,
+          axis: p.axis,
+          text: p.text,
+          articleSlug: p.articleSlug || null,
+          firstLinePattern: p.firstLinePattern || null,
+          selfScore: p.selfScore != null ? p.selfScore : null,
+          postedAt: null,
+          seedId: p.seedId || null,
+          engagements: null,
+        });
+      }
+    }
+
     console.log(`\nSheets に ${allPosts.length}件を保存しました`);
   }
 }

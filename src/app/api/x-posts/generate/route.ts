@@ -125,13 +125,13 @@ export async function POST(request: NextRequest) {
     url: g.url,
     hashtags: "",
     // 違反検出時は autoApprove でも draft に強制
-    status: g._checkOk && autoApprove ? "approved" : "draft",
+    status: (g._checkOk && autoApprove ? "approved" : "draft") as XPost["status"],
     scheduledDate: slots[i].date,
-    scheduledTime: slots[i].time,
     generatedAt: new Date().toISOString(),
     postedAt: null,
-    prLabel: g.prLabel || undefined,
+    axis: "camp",
     validationErrors: g.validationErrors,
+    autoApproved: g._checkOk && autoApprove ? "true" : "false",
   }));
 
   await saveSheetsXPosts(newPosts);
