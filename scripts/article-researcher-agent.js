@@ -203,12 +203,11 @@ ${analystInfo}
     console.log(`  ${a.scheduledPublishDate} | ${a.title} (${a.categoryId})`);
   }
 
+  // plan ファイルは後続エージェントが参照する中間データのため、dry-run でも書き出す
+  writeJson("article-weekly-plan.json", plan);
+  console.log("\n[article-researcher] article-weekly-plan.json を保存しました");
   if (opts.dryRun) {
-    console.log("\n[DRY RUN] article-weekly-plan.json の書き込みをスキップ");
     console.log(JSON.stringify(plan, null, 2));
-  } else {
-    writeJson("article-weekly-plan.json", plan);
-    console.log("\n[article-researcher] article-weekly-plan.json を保存しました");
   }
 }
 
