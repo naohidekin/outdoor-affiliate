@@ -137,6 +137,9 @@ async function weeklyPipeline(dryRun) {
   // 6. Supervisor 品質チェック
   await runAgent("supervisor-agent.js", ["--quality-check"]);
 
+  // 7. Supervisor 週次レポート生成
+  await runAgent("supervisor-agent.js", ["--weekly-report"]);
+
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║        週次パイプライン 完了              ║");
   console.log("╚══════════════════════════════════════════╝\n");

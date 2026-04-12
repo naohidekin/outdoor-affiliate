@@ -1,0 +1,18 @@
+{
+  "week": "2026-W15",
+  "generatedAt": "2026-04-12T14:43:52.772Z",
+  "summary": {
+    "totalGenerated": 21,
+    "approved": 5,
+    "posted": 10,
+    "discarded": 0,
+    "avgSelfScore": null,
+    "ngRate": 0
+  },
+  "scoresTrend": [],
+  "patternDistribution": {},
+  "axisSplit": {},
+  "topPerformingTypes": [],
+  "warnings": [],
+  "killSwitchEvents": []
+}

@@ -52,6 +52,9 @@ function parseArgs() {
       case "--quality-check":
         opts.action = "quality-check";
         break;
+      case "--weekly-report":
+        opts.action = "weekly-report";
+        break;
     }
   }
   return opts;
@@ -273,12 +276,109 @@ function runQualityCheck() {
   }
 }
 
+// ─── 週次レポート生成 ───────────────────────────────
+
+function getWeekLabel() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((utc - yearStart) / 86400000 + 1) / 7);
+  return `${year}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+async function generateWeeklyReport() {
+  const history = loadPostHistory();
+  const feedback = readJson("analyst-feedback.json");
+  const ks = readJson("kill-switch.json") || { enabled: false };
+
+  // Sheets からステータス集計
+  let sheetsSummary = { total: 0, draft: 0, approved: 0, queued: 0, posted: 0, discarded: 0, ngCount: 0 };
+  try {
+    const sheets = getSheets();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.X_SHEET_ID,
+      range: `${DRAFT_SHEET}!A2:R`,
+    });
+    const rows = res.data.values || [];
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const cutoff = oneWeekAgo.toISOString().split("T")[0];
+
+    for (const r of rows) {
+      if (!r[0]) continue;
+      const generatedAt = r[8] || "";
+      if (generatedAt < cutoff) continue;
+      sheetsSummary.total++;
+      const status = r[6] || "draft";
+      if (status in sheetsSummary) sheetsSummary[status]++;
+      if (r[12] && r[12].trim()) sheetsSummary.ngCount++;
+    }
+  } catch (err) {
+    console.warn(`[supervisor] Sheets取得エラー（スキップ）: ${err.message}`);
+  }
+
+  // post-history からスコア・パターン集計
+  const entries = history.entries || [];
+  const scores = entries.filter((e) => e.selfScore != null).map((e) => e.selfScore);
+  const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+
+  const patternDist = {};
+  const axisSplit = {};
+  for (const e of entries) {
+    if (e.firstLinePattern) {
+      patternDist[e.firstLinePattern] = (patternDist[e.firstLinePattern] || 0) + 1;
+    }
+    const ax = e.axis || "unknown";
+    axisSplit[ax] = (axisSplit[ax] || 0) + 1;
+  }
+
+  // 警告収集
+  const warnings = [];
+  if (sheetsSummary.total > 0 && sheetsSummary.ngCount / sheetsSummary.total > 0.2) {
+    warnings.push(`NG率: ${((sheetsSummary.ngCount / sheetsSummary.total) * 100).toFixed(0)}%`);
+  }
+  if (avgScore != null && avgScore < 7.0) {
+    warnings.push(`平均スコア低下: ${avgScore.toFixed(1)}`);
+  }
+
+  const report = {
+    week: getWeekLabel(),
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalGenerated: sheetsSummary.total,
+      approved: sheetsSummary.approved,
+      posted: sheetsSummary.posted,
+      discarded: sheetsSummary.discarded,
+      avgSelfScore: avgScore != null ? Number(avgScore.toFixed(1)) : null,
+      ngRate: sheetsSummary.total > 0
+        ? Number((sheetsSummary.ngCount / sheetsSummary.total).toFixed(2))
+        : 0,
+    },
+    scoresTrend: scores.slice(-20),
+    patternDistribution: patternDist,
+    axisSplit,
+    topPerformingTypes: feedback?.topPerformingTypes || [],
+    warnings,
+    killSwitchEvents: ks.enabled ? [{ reason: ks.reason, enabledAt: ks.enabledAt }] : [],
+  };
+
+  writeJson("weekly-report.json", report);
+  console.log(`[supervisor] 週次レポート生成: ${report.week}`);
+  console.log(`  生成: ${report.summary.totalGenerated} / 投稿済: ${report.summary.posted} / 平均スコア: ${report.summary.avgSelfScore ?? "N/A"}`);
+  if (warnings.length > 0) {
+    console.log(`  警告: ${warnings.join(", ")}`);
+  }
+}
+
 // ─── エントリポイント ────────────────────────────────
 
 const opts = parseArgs();
 
 if (!opts.action) {
-  console.log("使い方: --check | --kill <reason> | --resume | --backup | --quality-check");
+  console.log("使い方: --check | --kill <reason> | --resume | --backup | --quality-check | --weekly-report");
   process.exit(0);
 }
 
@@ -297,5 +397,8 @@ switch (opts.action) {
     break;
   case "quality-check":
     runQualityCheck();
+    break;
+  case "weekly-report":
+    await generateWeeklyReport();
     break;
 }
