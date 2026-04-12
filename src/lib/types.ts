@@ -35,9 +35,17 @@ export type XPostType =
   | "rakuten_sale"
   | "amazon_deal"
   | "news_comment"
-  | "gear_story";
+  | "gear_story"
+  | "poll_question"
+  | "failure_story"
+  | "gear_thread"
+  | "ai_dev_log"
+  | "parenting_outdoor"
+  | "doc_health_tip"
+  | "seasonal_hook"
+  | "repost_rewrite";
 
-export type XPostStatus = "draft" | "approved" | "queued" | "posted";
+export type XPostStatus = "draft" | "approved" | "queued" | "posted" | "discarded";
 
 export type XPostSlot = "morning" | "noon" | "night";
 
@@ -52,15 +60,24 @@ export interface XPost {
   scheduledDate: string;
   generatedAt: string;
   postedAt: string | null;
-  // --- Phase1 拡張（後方互換: 既存A〜J列はそのまま、K〜N列を追加） ---
-  /** "HH:MM" 形式の投稿時刻スロット (任意)。IFTTTが対応していなければスケジューラ側で使用 */
-  scheduledTime?: string;
-  /** 添付画像URL (Sheets「X投稿管理」のimage_url列に渡される) */
-  imageUrl?: string;
-  /** PRラベル (アフィリンク含む投稿に "*広告を含みます" を自動付与) */
-  prLabel?: boolean;
+  // --- K〜N列: generate-x-posts.js が書き込む実カラムに準拠 ---
+  /** 発信4軸 (camp/ai/parenting/doctor) */
+  axis?: string;
+  /** 使用したシードID (seed-XXX) */
+  seedId?: string;
   /** NGワード/誇大表現チェッカーが返した検出メッセージ */
   validationErrors?: string;
+  /** 自動承認フラグ ("true"/"false") */
+  autoApproved?: string;
+  // --- O〜R列: エージェント化拡張 ---
+  /** 自己採点スコア (0.0〜10.0) */
+  selfScore?: number;
+  /** 書き出しパターン分類 (15カテゴリ) */
+  firstLinePattern?: string;
+  /** 直近100件との最大類似度スコア */
+  similarityScore?: number;
+  /** リトライ回数 (0/1/2) */
+  retryCount?: number;
 }
 
 export interface Article {

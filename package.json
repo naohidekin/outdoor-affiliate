@@ -11,12 +11,20 @@
     "x:generate:auto": "node scripts/generate-x-posts.js --auto-approve",
     "x:queue": "node scripts/queue-to-sheets.js",
     "x:sync": "node scripts/sync-posted-status.js",
+    "x:reset-stale": "node scripts/reset-stale-posts.js",
+    "x:post": "node scripts/post-to-x.js",
     "check:links": "node scripts/check-amazon-links.js",
     "check:prices": "node scripts/price-monitor.js",
     "repost:popular": "node scripts/popular-repost.js",
     "report:weekly": "node scripts/weekly-report.js",
     "seo:links": "node scripts/internal-links.js",
-    "seo:links:apply": "node scripts/internal-links.js --apply"
+    "seo:links:apply": "node scripts/internal-links.js --apply",
+    "x:orchestrate:weekly": "node scripts/orchestrate.js --pipeline weekly",
+    "x:orchestrate:daily": "node scripts/orchestrate.js --pipeline daily",
+    "x:orchestrate:weekly:dry": "node scripts/orchestrate.js --pipeline weekly --dry-run",
+    "x:orchestrate:daily:dry": "node scripts/orchestrate.js --pipeline daily --dry-run",
+    "x:kill": "node scripts/supervisor-agent.js --kill",
+    "x:resume": "node scripts/supervisor-agent.js --resume"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
@@ -28,6 +36,7 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "twitter-api-v2": "^1.29.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

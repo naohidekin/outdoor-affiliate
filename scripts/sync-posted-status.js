@@ -13,20 +13,11 @@ import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadEnv, loadPostHistory, writeJson } from "../src/lib/x-agent-utils.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// .env.local を手動読み込み
-const envPath = path.join(__dirname, "..", ".env.local");
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match && !process.env[match[1].trim()]) {
-      process.env[match[1].trim()] = match[2].trim();
-    }
-  }
-}
+loadEnv();
 
 const DRAFT_SHEET = "下書き管理";
 const QUEUE_SHEET = "X投稿管理";
@@ -71,8 +62,11 @@ async function syncPostedStatus() {
   const draftRows = draftRes.data.values || [];
 
   let updated = 0;
+  const updatedIds = [];
+
   for (let i = 0; i < draftRows.length; i++) {
     const row = draftRows[i];
+    const postId = row[0];
     const status = row[6];
     const text = row[2]?.trim();
 
@@ -87,7 +81,25 @@ async function syncPostedStatus() {
         },
       });
       updated++;
+      if (postId) updatedIds.push(postId);
       console.log(`  更新: ${text.slice(0, 40)}...`);
+    }
+  }
+
+  // post-history.json の postedAt を更新
+  if (updatedIds.length > 0) {
+    const history = loadPostHistory();
+    const now = new Date().toISOString();
+    let historyUpdated = 0;
+    for (const entry of history.entries) {
+      if (updatedIds.includes(entry.id) && !entry.postedAt) {
+        entry.postedAt = now;
+        historyUpdated++;
+      }
+    }
+    if (historyUpdated > 0) {
+      writeJson("post-history.json", history);
+      console.log(`post-history.json: ${historyUpdated}件の postedAt を更新`);
     }
   }
 

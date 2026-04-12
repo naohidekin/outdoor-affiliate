@@ -43,3 +43,8 @@ next-env.d.ts
 # local dev artifacts
 /screenshots/
 /.playwright-mcp/
+/logs/
+
+# X automation agent data
+/data/backups/
+/data/weekly-plan.json
