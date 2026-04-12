@@ -114,6 +114,8 @@ export default function XPostsPage() {
   const [loading, setLoading] = useState(true);
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
   // Phase1-B: 0件表示バグ診断用
   const [debug, setDebug] = useState<{
     fetchedAt: string;
@@ -233,6 +235,59 @@ export default function XPostsPage() {
   function startEdit(post: XPost) {
     setEditing(post.id);
     setEditText(post.text);
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAllFiltered() {
+    setSelectedIds(new Set(filtered.map((p) => p.id)));
+  }
+
+  function deselectAll() {
+    setSelectedIds(new Set());
+  }
+
+  async function batchAction(action: "approve" | "discard" | "delete") {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const labels = { approve: "承認", discard: "破棄", delete: "削除" };
+    if (!confirm(`${ids.length}件を一括${labels[action]}しますか？`)) return;
+
+    setBatchLoading(true);
+    try {
+      const res = await fetch("/api/x-posts/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      if (res.ok) {
+        if (action === "delete") {
+          setPosts((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+        } else {
+          const newStatus = action === "approve" ? "approved" : "discarded";
+          setPosts((prev) =>
+            prev.map((p) =>
+              selectedIds.has(p.id)
+                ? { ...p, status: newStatus as XPostStatus }
+                : p
+            )
+          );
+        }
+        setSelectedIds(new Set());
+      } else {
+        const err = await res.json();
+        alert(err.error || "バッチ操作に失敗しました");
+      }
+    } finally {
+      setBatchLoading(false);
+    }
   }
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -472,6 +527,49 @@ export default function XPostsPage() {
         ))}
       </div>
 
+      {/* Batch action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-gray-100 border border-gray-200">
+          <span className="text-sm font-medium text-gray-700">
+            {selectedIds.size}件選択中
+          </span>
+          <button
+            onClick={selectAllFiltered}
+            className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50"
+          >
+            全選択 ({filtered.length})
+          </button>
+          <button
+            onClick={deselectAll}
+            className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50"
+          >
+            選択解除
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={() => batchAction("approve")}
+            disabled={batchLoading}
+            className="px-3 py-1.5 text-xs font-medium bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
+          >
+            一括承認
+          </button>
+          <button
+            onClick={() => batchAction("discard")}
+            disabled={batchLoading}
+            className="px-3 py-1.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 disabled:opacity-50"
+          >
+            一括破棄
+          </button>
+          <button
+            onClick={() => batchAction("delete")}
+            disabled={batchLoading}
+            className="px-3 py-1.5 text-xs font-medium bg-red-100 text-red-600 rounded-lg hover:bg-red-200 disabled:opacity-50"
+          >
+            一括削除
+          </button>
+        </div>
+      )}
+
       {/* Posts list */}
       <div className="space-y-4">
         {filtered.map((post) => {
@@ -491,7 +589,14 @@ export default function XPostsPage() {
                   : "bg-white border-gray-200 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(post.id)}
+                  onChange={() => toggleSelect(post.id)}
+                  className="mt-1 w-4 h-4 accent-green-600 shrink-0 cursor-pointer"
+                />
+                <div className="flex items-start justify-between gap-4 flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                   {/* Header */}
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -665,6 +770,7 @@ export default function XPostsPage() {
                     )}
                   </div>
                 )}
+              </div>
               </div>
             </div>
           );

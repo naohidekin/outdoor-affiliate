@@ -149,6 +149,82 @@ export async function saveSheetsXPosts(posts: XPost[]): Promise<void> {
   });
 }
 
+export async function batchUpdateSheetsXPostStatus(
+  ids: string[],
+  status: XPost["status"]
+): Promise<number> {
+  const sheets = getSheets();
+  const spreadsheetId = getSpreadsheetId();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${SHEET_NAME}!${COLUMN_RANGE}`,
+  });
+  const rows = res.data.values || [];
+  const idSet = new Set(ids);
+  let count = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    if (idSet.has(rows[i][0])) {
+      const rowIndex = i + 2;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${SHEET_NAME}!G${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[status]] },
+      });
+      count++;
+    }
+  }
+  return count;
+}
+
+export async function batchDeleteSheetsXPosts(ids: string[]): Promise<number> {
+  const sheets = getSheets();
+  const spreadsheetId = getSpreadsheetId();
+
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheet = meta.data.sheets?.find(
+    (s) => s.properties?.title === SHEET_NAME
+  );
+  if (!sheet) return 0;
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${SHEET_NAME}!${COLUMN_RANGE}`,
+  });
+  const rows = res.data.values || [];
+  const idSet = new Set(ids);
+
+  // 対象行のインデ��クスを収集し、降順ソート（下から削除してインデックスずれ防止）
+  const rowIndices: number[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    if (idSet.has(rows[i][0])) {
+      rowIndices.push(i + 1); // 0-indexed (ヘッダー行分は sheetId ベースなので +1)
+    }
+  }
+  if (rowIndices.length === 0) return 0;
+
+  rowIndices.sort((a, b) => b - a);
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: rowIndices.map((idx) => ({
+        deleteDimension: {
+          range: {
+            sheetId: sheet.properties?.sheetId,
+            dimension: "ROWS",
+            startIndex: idx,
+            endIndex: idx + 1,
+          },
+        },
+      })),
+    },
+  });
+
+  return rowIndices.length;
+}
+
 export async function deleteSheetsXPost(id: string): Promise<void> {
   const sheets = getSheets();
   const spreadsheetId = getSpreadsheetId();
