@@ -5,47 +5,134 @@
       "children": {
         "gear": {
           "children": {
-            "tent": { "used_count": 0, "last_used": null },
-            "burner": { "used_count": 0, "last_used": null },
-            "sleeping_bag": { "used_count": 0, "last_used": null },
-            "lantern": { "used_count": 0, "last_used": null },
-            "table_chair": { "used_count": 0, "last_used": null },
-            "tarp": { "used_count": 0, "last_used": null },
-            "cookware": { "used_count": 0, "last_used": null },
-            "peg": { "used_count": 0, "last_used": null },
-            "backpack": { "used_count": 0, "last_used": null },
-            "mat": { "used_count": 0, "last_used": null }
+            "tent": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "burner": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "sleeping_bag": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "lantern": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "table_chair": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "tarp": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "cookware": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "peg": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "backpack": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "mat": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "technique": {
           "children": {
-            "setup": { "used_count": 0, "last_used": null },
-            "fire": { "used_count": 0, "last_used": null },
-            "cooking": { "used_count": 0, "last_used": null },
-            "rain_camp": { "used_count": 0, "last_used": null },
-            "winter_camp": { "used_count": 0, "last_used": null },
-            "solo_camp": { "used_count": 0, "last_used": null },
-            "storage": { "used_count": 0, "last_used": null },
-            "maintenance": { "used_count": 0, "last_used": null }
+            "setup": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "fire": {
+              "used_count": 1,
+              "last_used": "2026-04-13"
+            },
+            "cooking": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "rain_camp": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "winter_camp": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "solo_camp": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "storage": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "maintenance": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "location": {
           "children": {
-            "nagano": { "used_count": 0, "last_used": null },
-            "highland": { "used_count": 0, "last_used": null },
-            "lakeside": { "used_count": 0, "last_used": null },
-            "forest": { "used_count": 0, "last_used": null },
-            "seaside": { "used_count": 0, "last_used": null }
+            "nagano": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "highland": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "lakeside": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "forest": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "seaside": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "style": {
           "children": {
-            "family": { "used_count": 0, "last_used": null },
-            "solo": { "used_count": 0, "last_used": null },
-            "duo": { "used_count": 0, "last_used": null },
-            "group": { "used_count": 0, "last_used": null },
-            "car_camp": { "used_count": 0, "last_used": null },
-            "minimalist": { "used_count": 0, "last_used": null }
+            "family": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "solo": {
+              "used_count": 3,
+              "last_used": "2026-04-13"
+            },
+            "duo": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "group": {
+              "used_count": 1,
+              "last_used": "2026-04-13"
+            },
+            "car_camp": {
+              "used_count": 2,
+              "last_used": "2026-04-13"
+            },
+            "minimalist": {
+              "used_count": 1,
+              "last_used": "2026-04-13"
+            }
           }
         }
       }
@@ -54,26 +141,62 @@
       "children": {
         "claude_code": {
           "children": {
-            "site_building": { "used_count": 0, "last_used": null },
-            "automation": { "used_count": 0, "last_used": null },
-            "prompt_tips": { "used_count": 0, "last_used": null },
-            "debugging": { "used_count": 0, "last_used": null },
-            "workflow": { "used_count": 0, "last_used": null }
+            "site_building": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "automation": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "prompt_tips": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "debugging": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "workflow": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "tools": {
           "children": {
-            "cursor": { "used_count": 0, "last_used": null },
-            "github_copilot": { "used_count": 0, "last_used": null },
-            "v0": { "used_count": 0, "last_used": null },
-            "other_ai_tools": { "used_count": 0, "last_used": null }
+            "cursor": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "github_copilot": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "v0": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "other_ai_tools": {
+              "used_count": 2,
+              "last_used": "2026-04-13"
+            }
           }
         },
         "learning": {
           "children": {
-            "coding_journey": { "used_count": 0, "last_used": null },
-            "non_engineer_perspective": { "used_count": 0, "last_used": null },
-            "productivity": { "used_count": 0, "last_used": null }
+            "coding_journey": {
+              "used_count": 1,
+              "last_used": "2026-04-13"
+            },
+            "non_engineer_perspective": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "productivity": {
+              "used_count": 2,
+              "last_used": "2026-04-13"
+            }
           }
         }
       }
@@ -82,24 +205,54 @@
       "children": {
         "family_camp": {
           "children": {
-            "kids_gear": { "used_count": 0, "last_used": null },
-            "kids_reaction": { "used_count": 0, "last_used": null },
-            "kids_cooking": { "used_count": 0, "last_used": null },
-            "campfire_time": { "used_count": 0, "last_used": null }
+            "kids_gear": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "kids_reaction": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "kids_cooking": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "campfire_time": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "daily": {
           "children": {
-            "school_event": { "used_count": 0, "last_used": null },
-            "weekend_outdoor": { "used_count": 0, "last_used": null },
-            "seasonal_activity": { "used_count": 0, "last_used": null }
+            "school_event": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "weekend_outdoor": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "seasonal_activity": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "growth": {
           "children": {
-            "first_experience": { "used_count": 0, "last_used": null },
-            "independence": { "used_count": 0, "last_used": null },
-            "nature_education": { "used_count": 0, "last_used": null }
+            "first_experience": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "independence": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "nature_education": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         }
       }
@@ -108,27 +261,66 @@
       "children": {
         "outdoor_health": {
           "children": {
-            "heat_stroke": { "used_count": 0, "last_used": null },
-            "insect_bite": { "used_count": 0, "last_used": null },
-            "first_aid": { "used_count": 0, "last_used": null },
-            "hydration": { "used_count": 0, "last_used": null },
-            "hypothermia": { "used_count": 0, "last_used": null },
-            "sun_protection": { "used_count": 0, "last_used": null }
+            "heat_stroke": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "insect_bite": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "first_aid": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "hydration": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "hypothermia": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "sun_protection": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         },
         "kids_health": {
           "children": {
-            "allergy": { "used_count": 0, "last_used": null },
-            "skin_care": { "used_count": 0, "last_used": null },
-            "sleep_outdoor": { "used_count": 0, "last_used": null },
-            "nutrition": { "used_count": 0, "last_used": null }
+            "allergy": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "skin_care": {
+              "used_count": 0,
+              "last_used": null
+            },
+            "sleep_outdoor": {
+              "used_count": 4,
+              "last_used": "2026-04-13"
+            },
+            "nutrition": {
+              "used_count": 5,
+              "last_used": "2026-04-13"
+            }
           }
         },
         "general": {
           "children": {
-            "exercise": { "used_count": 0, "last_used": null },
-            "mental_health": { "used_count": 0, "last_used": null },
-            "seasonal_illness": { "used_count": 0, "last_used": null }
+            "exercise": {
+              "used_count": 5,
+              "last_used": "2026-04-13"
+            },
+            "mental_health": {
+              "used_count": 5,
+              "last_used": "2026-04-13"
+            },
+            "seasonal_illness": {
+              "used_count": 0,
+              "last_used": null
+            }
           }
         }
       }

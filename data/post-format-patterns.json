@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "formats": [
+    {
+      "id": "short_complete",
+      "name": "短文完結型",
+      "description": "1投稿で完結。インパクトある導入→本題→結論の流れ",
+      "subCategories": [
+        {
+          "id": "expose",
+          "name": "暴露系",
+          "description": "「実は○○は△△だった」式。意外な事実や誤解を正す",
+          "promptHint": "意外性のある事実・誤解を冒頭で暴露し、正しい情報を簡潔に伝える。「実は」「ほとんどの人が知らない」「勘違いしてた」系の切り出し。"
+        },
+        {
+          "id": "conclusion_first",
+          "name": "結論先出し系",
+          "description": "冒頭で答えを出してから理由を述べる",
+          "promptHint": "最初の1文で結論を断言。その後に理由を2〜3点。読者が「なるほど」で終われる構成。"
+        },
+        {
+          "id": "number_impact",
+          "name": "数値インパクト系",
+          "description": "具体的な数字で興味を引く",
+          "promptHint": "冒頭に印象的な数字を配置（年数・回数・金額・温度差など）。数字が説得力を生む構成。"
+        }
+      ]
+    },
+    {
+      "id": "comment_bait",
+      "name": "コメント誘導型",
+      "description": "読者の反応・リプライを誘発する構成。selfReply必須",
+      "subCategories": [
+        {
+          "id": "demand_check",
+          "name": "需要確認型",
+          "description": "「これ需要ある？」「知りたい人いる？」式で反応を測る",
+          "promptHint": "テーマの予告→「需要あれば詳しく書く」「知りたい人いる？」で締める。反応数でコンテンツ方向を測る構成。selfReply で「反応あったら来週スレッドにする」等。"
+        },
+        {
+          "id": "poll_type",
+          "name": "アンケート型",
+          "description": "選択肢を提示して回答を募る",
+          "promptHint": "①②③④の選択肢を提示。正解がないテーマが最強。末尾に自分の意見を1行。selfReply で「理由も教えて！」系。"
+        },
+        {
+          "id": "debate",
+          "name": "論争型",
+          "description": "意見が分かれるテーマで議論を誘発",
+          "promptHint": "賛否が分かれるテーマを投げる。自分の立場を明示しつつ「反対派の意見も分かる」で中立寄り。selfReply で「みんなはどっち？」系。"
+        }
+      ]
+    },
+    {
+      "id": "thread_expand",
+      "name": "ツリー展開型",
+      "description": "1投稿目で興味を引き、続きはスレッドで展開。gear_thread以外でも使える",
+      "subCategories": [
+        {
+          "id": "list_type",
+          "name": "リスト系",
+          "description": "番号付きリストで情報を整理。保存版向き",
+          "promptHint": "冒頭で「○○の選び方、3つの基準」等のリスト宣言。本文に番号リストを収める。情報密度が高いので【保存版】推奨。"
+        },
+        {
+          "id": "comparison_expand",
+          "name": "比較展開系",
+          "description": "2つ以上を比較して深掘り",
+          "promptHint": "○○ vs △△の比較を主題に。メリット・デメリットを対比的に書く。「結局どっち？」の結論を明示。"
+        },
+        {
+          "id": "story_type",
+          "name": "ストーリー系",
+          "description": "時系列や体験を物語的に展開",
+          "promptHint": "体験や経過を時系列で語る。「買って→使って→○ヶ月後→結論」の流れ。オチまたは教訓で締める。"
+        }
+      ]
+    }
+  ]
+}

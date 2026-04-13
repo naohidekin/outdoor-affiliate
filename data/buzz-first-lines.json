@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-04-13T19:27:05.310Z",
+  "lines": [
+    {
+      "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "doctor_view"
+    },
+    {
+      "text": "ウォーキングマシン選びの決定版：静音45dB以下（図書館レベル）のYPO vs 5年保証・150kg耐荷重のCAO vs 2つ折り特許技術で隙間収納のウォーキングパッドG1。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "product_compare"
+    },
+    {
+      "text": "スマートトレーナー vs 3本ローラー論争に終止符。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "室内トレーニングの騒音問題：3本ローラーは強度上げるほど爆音、ウォーキングマシンは45dB以下なら図書館レベルで深夜OK。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "contrast"
+    },
+    {
+      "text": "栄養剤は目的で選ぶのが正解。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "Amazonのホエイプロテイン比較。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "product_compare"
+    },
+    {
+      "text": "リンゴ酢は「マザー入り」を選ぶべき理由。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "キャンプで朝起きたら体バキバキ問題、実は「地面から浮く」だけで解決する件。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "コット選びで見るべき3ポイント：①2WAY対応（ハイ・ロー切替）②フレーム素材（7075アルミ推奨）③静音性（ギシギシ音で台無し防止）。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "hack"
+    },
+    {
+      "text": "インフレーターマットの厚み選び：5cm=軽量重視、8cm=バランス型、10cm=車中泊特化。",
+      "source": "youtube_title",
+      "axis": "doctor",
+      "collectedAt": "2026-04-13",
+      "pattern": "hack"
+    },
+    {
+      "text": "コメリの真空断熱クーラーボックス、15L→9,800円、47L→19,800円。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "number_hook"
+    },
+    {
+      "text": "ダイソー鍛造ペグに新サイズ登場。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "product_compare"
+    },
+    {
+      "text": "キャンプあるある解決：保冷剤凍らせ忘れ・溶けて食材ビチャビチャ・2泊目で買い出し。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "hack"
+    },
+    {
+      "text": "「初心者だから安いもので」が一番ダメなパターン。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "「ポータブル冷蔵庫は冬いらない」は大間違い。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "SOTOのトレックマスター ST-331は液出し式でCB缶なのに冬に強い唯一無二のバーナー。",
+      "source": "youtube_title",
+      "axis": "camp",
+      "collectedAt": "2026-04-13",
+      "pattern": "product_compare"
+    },
+    {
+      "text": "個人開発ハッカソン115人参加→多数の相談「作れるようになったけどユーザー0人」「マネタイズ1円もできない」。",
+      "source": "youtube_title",
+      "axis": "ai",
+      "collectedAt": "2026-04-13",
+      "pattern": "experience_share"
+    },
+    {
+      "text": "個人開発で迷わない技術選択：Next.js一択、Vercelでデプロイ、ReactはAIが最も学習済み。",
+      "source": "youtube_title",
+      "axis": "ai",
+      "collectedAt": "2026-04-13",
+      "pattern": "hack"
+    },
+    {
+      "text": "Claude Codeのサブエージェント機能でコードレビュー・動作確認を自動化。",
+      "source": "youtube_title",
+      "axis": "ai",
+      "collectedAt": "2026-04-13",
+      "pattern": "ai_dev"
+    },
+    {
+      "text": "GoogleのGemma 4がローカルで実用レベルに。",
+      "source": "youtube_title",
+      "axis": "ai",
+      "collectedAt": "2026-04-13",
+      "pattern": "ai_dev"
+    }
+  ]
+}
