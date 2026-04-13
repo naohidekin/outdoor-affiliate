@@ -1,0 +1,72 @@
+{
+  "week": "2026-W16",
+  "generatedAt": "2026-04-13T04:05:41.972Z",
+  "articles": [
+    {
+      "themeId": "theme-2026-W16-01",
+      "categoryId": "tent",
+      "title": "コンパクトテントおすすめ9選！収納サイズと設営のしやすさで選ぶ【2026年版】",
+      "slug": "compact-tent-ranking",
+      "angle": "ファミリー・ソロ・デュオと既存のラインナップを補完する「携帯性×設営簡単さ」軸でテントを比較する。",
+      "targetKeywords": [
+        "コンパクトテント おすすめ",
+        "テント 軽量 設営簡単",
+        "持ち運びやすい テント"
+      ],
+      "seasonRelevance": "4月は春キャンプデビュー層が急増するタイミングで、手軽に始められるコンパクトテントへの需要が高まる。",
+      "priority": "high",
+      "reason": "tentカテゴリはPV・検索セッションともにサイト最高値でトレンドもactiveだが、既存記事にない「コンパクト・携帯性」視点の記事が空白になっており即効性が高い。",
+      "scheduledPublishDate": "2026-04-15",
+      "productCount": 3,
+      "productIds": [
+        "tent-001",
+        "tent-002",
+        "tent-003"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W16-02",
+      "categoryId": "tarp",
+      "title": "タープの種類と選び方完全ガイド！形状・素材・サイズ別に徹底解説【2026年版】",
+      "slug": "tarp-buying-guide",
+      "angle": "ランキングや張り方ではなく「どのタープを買えばいいか迷う初心者」向けに形状・素材・人数別の選び方を体系的に解説する。",
+      "targetKeywords": [
+        "タープ 選び方",
+        "タープ 種類 違い",
+        "タープ 初心者 おすすめ"
+      ],
+      "seasonRelevance": "4月の季節カテゴリであり、GW直前に「タープが欲しいがどれを選べばいいかわからない」層の検索が増える時期に合致する。",
+      "priority": "high",
+      "reason": "tarpはランキング・張り方パターンの記事はあるが選び方ガイドが空白で、初心者検索クエリを取りこぼしている穴を埋められる。",
+      "scheduledPublishDate": "2026-04-17",
+      "productCount": 3,
+      "productIds": [
+        "tarp-001",
+        "tarp-002",
+        "tarp-003"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W16-03",
+      "categoryId": "table",
+      "title": "ローテーブルおすすめ8選！ロースタイルキャンプに最適な高さと素材で比較【2026年版】",
+      "slug": "low-table-ranking",
+      "angle": "既存の総合ランキングとは異なり「ロースタイル特化」に絞り、チェアとの高さ相性・天板素材・耐荷重を軸に選ぶ。",
+      "targetKeywords": [
+        "キャンプ ローテーブル おすすめ",
+        "ロースタイル テーブル",
+        "キャンプ テーブル 高さ 選び方"
+      ],
+      "seasonRelevance": "4月の季節カテゴリであり、春の行楽シーズンにロースタイルでゆったり過ごしたいニーズが高まる。",
+      "priority": "medium",
+      "reason": "tableカテゴリは既存が総合ランキング1本のみで記事が薄く、来月の季節カテゴリ継続も見込んで「ロースタイル」切り口でカテゴリを厚くする。",
+      "scheduledPublishDate": "2026-04-19",
+      "productCount": 3,
+      "productIds": [
+        "table-001",
+        "table-002",
+        "table-003"
+      ]
+    }
+  ]
+}
