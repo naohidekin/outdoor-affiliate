@@ -25,7 +25,7 @@ import {
 
 loadEnv();
 
-const RAKUTEN_API_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
+const RAKUTEN_API_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
 const AMAZON_ASSOCIATE_TAG = "nao78-22";
 
 // ─── CLI ─────────────────────────────────────────────
@@ -46,13 +46,15 @@ function parseArgs() {
 
 async function searchRakuten(keyword, hits = 10) {
   const appId = process.env.RAKUTEN_APP_ID;
-  if (!appId) {
-    console.error("[article-product] RAKUTEN_APP_ID が未設定です");
+  const accessKey = process.env.RAKUTEN_ACCESS_KEY;
+  if (!appId || !accessKey) {
+    console.error("[article-product] RAKUTEN_APP_ID または RAKUTEN_ACCESS_KEY が未設定です");
     return [];
   }
 
   const params = new URLSearchParams({
     applicationId: appId,
+    accessKey,
     keyword,
     hits: String(hits),
     sort: "-reviewAverage",
@@ -61,9 +63,15 @@ async function searchRakuten(keyword, hits = 10) {
   });
 
   try {
-    const res = await fetch(`${RAKUTEN_API_URL}?${params}`);
+    const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
+      headers: {
+        "Origin": "https://camp-gear-lab.com",
+        "Referer": "https://camp-gear-lab.com/",
+      },
+    });
     if (!res.ok) {
-      console.warn(`[article-product] 楽天API エラー: ${res.status}`);
+      const errBody = await res.text().catch(() => "");
+      console.warn(`[article-product] 楽天API エラー: ${res.status} ${errBody.slice(0, 200)}`);
       return [];
     }
     const data = await res.json();

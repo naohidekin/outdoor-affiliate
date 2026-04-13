@@ -70,18 +70,25 @@ export default function AdminArticles() {
   async function handleSave(status?: "draft" | "published") {
     const data = { ...form, status: status || form.status };
 
-    if (editing) {
-      await fetch("/api/articles", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, id: editing.id }),
-      });
-    } else {
-      await fetch("/api/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    const res = editing
+      ? await fetch("/api/articles", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...data, id: editing.id }),
+        })
+      : await fetch("/api/articles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "保存に失敗しました");
+      if (res.status === 401) {
+        window.location.href = "/admin/login";
+      }
+      return;
     }
 
     setShowEditor(false);
@@ -90,7 +97,15 @@ export default function AdminArticles() {
 
   async function handleDelete(id: string) {
     if (!confirm("この記事を削除しますか？")) return;
-    await fetch(`/api/articles?id=${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/articles?id=${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "削除に失敗しました");
+      if (res.status === 401) {
+        window.location.href = "/admin/login";
+      }
+      return;
+    }
     fetchData();
   }
 
@@ -149,11 +164,19 @@ export default function AdminArticles() {
   };
 
   async function publishArticle(article: Article) {
-    await fetch("/api/articles", {
+    const res = await fetch("/api/articles", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...article, status: "published" }),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "公開に失敗しました");
+      if (res.status === 401) {
+        window.location.href = "/admin/login";
+      }
+      return;
+    }
     fetchData();
   }
 
