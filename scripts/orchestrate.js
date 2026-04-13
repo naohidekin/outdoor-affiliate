@@ -44,6 +44,46 @@ function parseArgs() {
   return opts;
 }
 
+// ─── Git 同期 ───────────────────────────────────────
+
+async function gitPull() {
+  console.log("[orchestrate] git pull --ff-only ...");
+  try {
+    const { stdout } = await execFileAsync("git", ["pull", "--ff-only"], {
+      cwd: PROJECT_ROOT,
+      timeout: 30_000,
+    });
+    console.log(`[orchestrate] ${stdout.trim() || "Already up to date."}`);
+    return true;
+  } catch (err) {
+    console.error(`[orchestrate] git pull 失敗: ${err.message}`);
+    return false;
+  }
+}
+
+async function gitCommitAndPush(message) {
+  try {
+    const { stdout: status } = await execFileAsync("git", ["status", "--porcelain"], {
+      cwd: PROJECT_ROOT,
+    });
+    if (!status.trim()) {
+      console.log("[orchestrate] 変更なし。コミットスキップ。");
+      return true;
+    }
+
+    await execFileAsync("git", ["add", "data/"], { cwd: PROJECT_ROOT });
+    await execFileAsync("git", [
+      "commit", "-m", `${message}\n\nCo-Authored-By: X Pipeline <noreply@anthropic.com>`,
+    ], { cwd: PROJECT_ROOT, timeout: 15_000 });
+    await execFileAsync("git", ["push"], { cwd: PROJECT_ROOT, timeout: 30_000 });
+    console.log(`[orchestrate] git push 完了`);
+    return true;
+  } catch (err) {
+    console.error(`[orchestrate] git commit/push 失敗: ${err.message}`);
+    return false;
+  }
+}
+
 // ─── エージェント起動 ────────────────────────────────
 
 async function runAgent(script, args = [], { timeout = 300_000, captureStdout = false } = {}) {
@@ -86,6 +126,15 @@ async function weeklyPipeline(dryRun) {
   console.log("║        週次パイプライン 開始              ║");
   console.log(`║        ${new Date().toISOString().slice(0, 19)}       ║`);
   console.log("╚══════════════════════════════════════════╝\n");
+
+  // 0. Git pull（最新取得）
+  if (!dryRun) {
+    const pulled = await gitPull();
+    if (!pulled) {
+      console.error("[orchestrate] git pull 失敗。手動で解決してください。");
+      return false;
+    }
+  }
 
   // 1. Kill switch チェック
   const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
@@ -151,6 +200,11 @@ async function weeklyPipeline(dryRun) {
     console.warn(`[orchestrate] ログローテーション失敗（継続）: ${err.message}`);
   }
 
+  // 9. Git commit & push
+  if (!dryRun) {
+    await gitCommitAndPush("data: X投稿パイプライン週次実行");
+  }
+
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║        週次パイプライン 完了              ║");
   console.log("╚══════════════════════════════════════════╝\n");
@@ -165,9 +219,18 @@ async function dailyPipeline(dryRun) {
   console.log(`│        ${new Date().toISOString().slice(0, 19)}       │`);
   console.log("└──────────────────────────────────────────┘\n");
 
+  // 0. Git pull（最新取得）
+  if (!dryRun) {
+    const pulled = await gitPull();
+    if (!pulled) {
+      console.error("[orchestrate] git pull 失敗。手動で解決してください。");
+      return false;
+    }
+  }
+
   // 1. Kill switch チェック
-  const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
-  if (!checkResult.success) {
+  const dailyCheckResult = await runAgent("supervisor-agent.js", ["--check"]);
+  if (!dailyCheckResult.success) {
     console.error("[orchestrate] KILL SWITCH 有効。パイプライン中止。");
     return false;
   }
@@ -190,6 +253,11 @@ async function dailyPipeline(dryRun) {
   const analystArgs = ["--days", "7"];
   if (dryRun) analystArgs.push("--dry-run");
   await runAgent("analyst-agent.js", analystArgs);
+
+  // 5. Git commit & push
+  if (!dryRun) {
+    await gitCommitAndPush("data: X投稿パイプライン日次実行");
+  }
 
   console.log("\n┌──────────────────────────────────────────┐");
   console.log("│        日次パイプライン 完了              │");
