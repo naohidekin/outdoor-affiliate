@@ -118,6 +118,18 @@ async function postToX() {
       const postUrl = `https://x.com/camp_gear_lab/status/${tweetId}`;
       const postedAt = new Date().toISOString();
 
+      // リプライにURLを投稿（source_url がある場合）
+      if (sourceUrl && sourceUrl.trim()) {
+        try {
+          await xClient.v2.tweet(`${sourceUrl}`, {
+            reply: { in_reply_to_tweet_id: tweetId },
+          });
+          console.log(`    → リプライにURL投稿: ${sourceUrl}`);
+        } catch (replyErr) {
+          console.warn(`    → リプライ投稿失敗（メイン投稿は成功）: ${replyErr.message}`);
+        }
+      }
+
       // 「X投稿管理」シートを更新: status=posted, posted_at, post_url
       await sheets.spreadsheets.values.update({
         spreadsheetId,

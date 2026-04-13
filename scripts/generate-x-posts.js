@@ -223,27 +223,19 @@ function addUtmIfNeeded(post, type) {
 
   const utmSuffix = `utm_source=x&utm_medium=social&utm_campaign=${type}`;
 
-  // gear_thread: 最終ツイートの URL のみ
-  if (type === "gear_thread" && post.tweets) {
-    const lastIdx = post.tweets.length - 1;
-    post.tweets[lastIdx] = post.tweets[lastIdx].replace(
-      /(https?:\/\/camp-gear-lab\.com\/articles\/[^\s?]+)/,
-      (match) => `${match}?${utmSuffix}`
-    );
-    if (post.url) {
-      const sep = post.url.includes("?") ? "&" : "?";
-      post.url = `${post.url}${sep}${utmSuffix}`;
-    }
-    return post;
-  }
-
+  // url フィールドにのみ UTM を付与（本文には含めない）
   if (post.url) {
     const sep = post.url.includes("?") ? "&" : "?";
     post.url = `${post.url}${sep}${utmSuffix}`;
-    // text 内の URL にも UTM を付与
-    post.text = post.text.replace(
-      /(https?:\/\/camp-gear-lab\.com\/articles\/[^\s?]+)/,
-      (match) => `${match}?${utmSuffix}`
+  }
+
+  // 本文に残っている URL があれば除去（安全策）
+  if (post.text) {
+    post.text = post.text.replace(/https?:\/\/camp-gear-lab\.com\/[^\s]*/g, "").replace(/\n\n\n+/g, "\n\n").trim();
+  }
+  if (post.tweets) {
+    post.tweets = post.tweets.map((t) =>
+      t.replace(/https?:\/\/camp-gear-lab\.com\/[^\s]*/g, "").replace(/\n\n\n+/g, "\n\n").trim()
     );
   }
 
