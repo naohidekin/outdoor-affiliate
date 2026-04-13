@@ -171,7 +171,13 @@ async function processTheme(theme, existingProducts, categorySpecs) {
   const items = await searchRakuten(keyword, 15);
 
   if (items.length === 0) {
-    console.warn("[article-product] 楽天APIから商品が取得できませんでした");
+    console.warn("[article-product] 楽天APIから商品が取得できませんでした。既存商品にフォールバック。");
+    const catProducts = existingProducts.filter((p) => p.categoryId === theme.categoryId);
+    if (catProducts.length > 0) {
+      const fallbackIds = catProducts.slice(0, 3).map((p) => p.id);
+      console.log(`[article-product] 既存商品を使用: ${fallbackIds.join(", ")}`);
+      return { products: [], productIds: fallbackIds };
+    }
     return { products: [], productIds: [] };
   }
 
