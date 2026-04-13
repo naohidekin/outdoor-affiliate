@@ -99,8 +99,10 @@ JSONのみで返してください:
     });
 
     const text = response.content[0].text.trim();
-    const jsonStr = text.replace(/^```json?\s*/, "").replace(/\s*```$/, "");
-    const result = JSON.parse(jsonStr);
+    // JSON部分を抽出（前後にテキストが付く場合に対応）
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("JSONが見つかりません");
+    const result = JSON.parse(jsonMatch[0]);
     return {
       scores: result.scores || [],
       total: Number(result.total) || 0,
@@ -172,14 +174,16 @@ ${productInfo}
 
   const fullText = response.content[0].text.trim();
 
-  // 本文とメタ情報を分離
-  const parts = fullText.split(/\n---\n/);
-  const content = parts[0].trim();
+  // 本文とメタ情報を分離（記事本文にも --- が含まれるため、最後の --- のみで分割）
+  let content = fullText;
   let meta = { excerpt: "", metaDescription: "", tags: [] };
 
-  if (parts.length > 1) {
+  // 末尾のJSON部分を検出（最後の { から } まで）
+  const lastJsonMatch = fullText.match(/\n---\s*\n([\s\S]*?\{[\s\S]*\})\s*$/);
+  if (lastJsonMatch) {
+    content = fullText.slice(0, fullText.lastIndexOf("\n---")).trim();
     try {
-      const metaStr = parts[parts.length - 1].trim()
+      const metaStr = lastJsonMatch[1].trim()
         .replace(/^```json?\s*/, "").replace(/\s*```$/, "");
       meta = JSON.parse(metaStr);
     } catch {
