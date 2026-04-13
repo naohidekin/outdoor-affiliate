@@ -103,7 +103,7 @@ JSONのみで返してください:
     const result = JSON.parse(jsonStr);
     return {
       scores: result.scores || [],
-      total: result.total || 0,
+      total: Number(result.total) || 0,
       notes: result.notes || "",
     };
   } catch (err) {
