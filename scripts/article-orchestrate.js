@@ -36,6 +36,47 @@ function parseArgs() {
   return opts;
 }
 
+// ─── Git 同期 ───────────────────────────────────────
+
+async function gitPull() {
+  console.log("[article-orchestrate] git pull --ff-only ...");
+  try {
+    const { stdout } = await execFileAsync("git", ["pull", "--ff-only"], {
+      cwd: PROJECT_ROOT,
+      timeout: 30_000,
+    });
+    console.log(`[article-orchestrate] ${stdout.trim() || "Already up to date."}`);
+    return true;
+  } catch (err) {
+    console.error(`[article-orchestrate] git pull 失敗: ${err.message}`);
+    return false;
+  }
+}
+
+async function gitCommitAndPush(message) {
+  try {
+    // 変更があるか確認
+    const { stdout: status } = await execFileAsync("git", ["status", "--porcelain"], {
+      cwd: PROJECT_ROOT,
+    });
+    if (!status.trim()) {
+      console.log("[article-orchestrate] 変更なし。コミットスキップ。");
+      return true;
+    }
+
+    await execFileAsync("git", ["add", "data/"], { cwd: PROJECT_ROOT });
+    await execFileAsync("git", [
+      "commit", "-m", `${message}\n\nCo-Authored-By: Article Pipeline <noreply@anthropic.com>`,
+    ], { cwd: PROJECT_ROOT, timeout: 15_000 });
+    await execFileAsync("git", ["push"], { cwd: PROJECT_ROOT, timeout: 30_000 });
+    console.log(`[article-orchestrate] git push 完了`);
+    return true;
+  } catch (err) {
+    console.error(`[article-orchestrate] git commit/push 失敗: ${err.message}`);
+    return false;
+  }
+}
+
 // ─── エージェント起動（orchestrate.js と同じパターン） ──
 
 async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
@@ -78,7 +119,16 @@ async function weeklyPipeline(dryRun) {
   console.log(`║     ${new Date().toISOString().slice(0, 19)}           ║`);
   console.log("╚══════════════════════════════════════════════╝\n");
 
-  // 0. Kill Switch チェック
+  // 0. Git pull（最新取得）
+  if (!dryRun) {
+    const pulled = await gitPull();
+    if (!pulled) {
+      console.error("[article-orchestrate] git pull 失敗。手動で解決してください。");
+      return false;
+    }
+  }
+
+  // 1. Kill Switch チェック
   const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
   if (!checkResult.success) {
     console.error("[article-orchestrate] KILL SWITCH 有効。中止。");
@@ -90,16 +140,16 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
-  // 1. バックアップ
+  // 2. バックアップ
   if (!dryRun) {
     await runAgent("supervisor-agent.js", ["--backup"]);
   }
 
-  // 2. Analyst → フィードバック更新
+  // 3. Analyst → フィードバック更新
   const analystArgs = dryRun ? ["--dry-run"] : [];
   await runAgent("article-analyst-agent.js", analystArgs);
 
-  // 3. Researcher → テーマ選定
+  // 4. Researcher → テーマ選定
   const researcherArgs = dryRun ? ["--dry-run"] : [];
   const researchResult = await runAgent("article-researcher-agent.js", researcherArgs);
   if (!researchResult.success) {
@@ -107,7 +157,7 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
-  // 4. Product Agent → 商品調査
+  // 5. Product Agent → 商品調査
   const productArgs = dryRun ? ["--dry-run"] : [];
   const productResult = await runAgent("article-product-agent.js", productArgs);
   if (!productResult.success) {
@@ -115,17 +165,22 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
-  // 5. Writer → 記事生成（長時間かかる可能性）
+  // 6. Writer → 記事生成（長時間かかる可能性）
   const writerArgs = dryRun ? ["--dry-run"] : [];
   await runAgent("article-writer-agent.js", writerArgs, { timeout: 600_000 });
 
-  // 6. Publisher → 即日公開分を処理
+  // 7. Publisher → 即日公開分を処理
   if (!dryRun) {
     await runAgent("article-publisher-agent.js", []);
   }
 
-  // 7. 品質チェック
+  // 8. 品質チェック
   await runAgent("supervisor-agent.js", ["--quality-check"]);
+
+  // 9. Git commit & push
+  if (!dryRun) {
+    await gitCommitAndPush("data: 記事パイプライン週次実行");
+  }
 
   console.log("\n╔══════════════════════════════════════════════╗");
   console.log("║     記事パイプライン（週次）完了              ║");
@@ -141,29 +196,43 @@ async function dailyPipeline(dryRun) {
   console.log(`│     ${new Date().toISOString().slice(0, 19)}           │`);
   console.log("└──────────────────────────────────────────────┘\n");
 
-  // 0. Kill Switch チェック
+  // 0. Git pull（最新取得）
+  if (!dryRun) {
+    const pulled = await gitPull();
+    if (!pulled) {
+      console.error("[article-orchestrate] git pull 失敗。手動で解決してください。");
+      return false;
+    }
+  }
+
+  // 1. Kill Switch チェック
   const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
   if (!checkResult.success) {
     console.error("[article-orchestrate] KILL SWITCH 有効。中止。");
     return false;
   }
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
+  const ksData2 = readJson("kill-switch.json");
+  if (ksData2?.articleEnabled) {
     console.error("[article-orchestrate] 記事パイプライン Kill Switch 有効。中止。");
     return false;
   }
 
-  // 1. Publisher → 本日公開予定の記事を公開
+  // 2. Publisher → 本日公開予定の記事を公開
   if (!dryRun) {
     await runAgent("article-publisher-agent.js", []);
   } else {
     await runAgent("article-publisher-agent.js", ["--dry-run"]);
   }
 
-  // 2. Analyst → 直近7日の記事PV更新
-  const analystArgs = ["--days", "7"];
-  if (dryRun) analystArgs.push("--dry-run");
-  await runAgent("article-analyst-agent.js", analystArgs);
+  // 3. Analyst → 直近7日の記事PV更新
+  const analystArgs2 = ["--days", "7"];
+  if (dryRun) analystArgs2.push("--dry-run");
+  await runAgent("article-analyst-agent.js", analystArgs2);
+
+  // 4. Git commit & push
+  if (!dryRun) {
+    await gitCommitAndPush("data: 記事パイプライン日次実行");
+  }
 
   console.log("\n┌──────────────────────────────────────────────┐");
   console.log("│     記事パイプライン（日次）完了              │");
