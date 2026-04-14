@@ -209,17 +209,52 @@ async function main() {
   const guidelines = loadWritingGuidelines();
   const analystFeedback = readJson("article-analyst-feedback.json");
 
-  // リトライモード
+  // リトライモード: 既存記事を再生成して上書き
   if (opts.retryArticleId) {
-    const articles = readJson("articles.json") || [];
-    const target = articles.find((a) => a.id === opts.retryArticleId);
-    if (!target) {
+    let articles = readJson("articles.json") || [];
+    const targetIdx = articles.findIndex((a) => a.id === opts.retryArticleId);
+    if (targetIdx === -1) {
       console.error(`[article-writer] 記事 ${opts.retryArticleId} が見つかりません`);
       process.exit(1);
     }
+    const target = articles[targetIdx];
     console.log(`[article-writer] リトライ: ${target.title}`);
-    // リトライロジックは通常生成と同じフローで再生成
-    // ここでは省略（フルパイプラインで使用）
+
+    const allProducts = readJson("products.json") || [];
+    const products = (target.productIds || [])
+      .map((id) => allProducts.find((p) => p.id === id))
+      .filter(Boolean);
+
+    if (products.length === 0) {
+      console.error("[article-writer] リトライ対象の商品データがありません");
+      process.exit(1);
+    }
+
+    const { content, meta } = await generateArticle(
+      anthropic, target, products, analystFeedback, guidelines
+    );
+    const scoring = await scoreArticle(anthropic, content, target);
+    console.log(`[article-writer] リトライスコア: ${scoring.total.toFixed(1)}`);
+
+    if (!opts.dryRun) {
+      articles[targetIdx] = {
+        ...target,
+        content,
+        excerpt: meta?.excerpt || target.excerpt,
+        metaDescription: meta?.metaDescription || target.metaDescription,
+        qualityScore: scoring.total,
+        updatedAt: new Date().toISOString(),
+        generationMeta: {
+          ...target.generationMeta,
+          retryCount: (target.generationMeta?.retryCount || 0) + 1,
+          generatedAt: new Date().toISOString(),
+        },
+      };
+      writeJson("articles.json", articles);
+      console.log("[article-writer] articles.json を更新しました");
+    } else {
+      console.log(`[DRY RUN] スコア: ${scoring.total.toFixed(1)}\n${content.slice(0, 300)}...`);
+    }
     return;
   }
 

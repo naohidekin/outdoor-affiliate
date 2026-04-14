@@ -26,8 +26,8 @@ import {
 loadEnv();
 
 const RAKUTEN_API_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
-const RAKUTEN_AFFILIATE_ID = "18eb3228.621d8df3.18eb3229.ec5f8d49";
-const AMAZON_ASSOCIATE_TAG = "nao78-22";
+const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
+const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "nao78-22";
 
 // ─── CLI ─────────────────────────────────────────────
 

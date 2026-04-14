@@ -107,19 +107,16 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
     console.error(`  ${err.message}`);
     if (err.stdout) console.log(err.stdout);
     if (err.stderr) console.error(err.stderr);
-    // 連続エラーをkill-switch.jsonに記録
-    const ks = readJson("kill-switch.json") || {};
-    const errors = ks.consecutiveErrors || [];
-    errors.push({ type: `article-agent-fail:${script}`, at: new Date().toISOString() });
-    ks.consecutiveErrors = errors.slice(-5);
-    writeJson("kill-switch.json", ks);
+    // 同一パイプライン実行内の連続失敗を記録
+    articleConsecutiveFailures++;
+    console.error(`[article-orchestrate] 連続失敗: ${articleConsecutiveFailures}回目`);
 
     // 3連続で自動KILL（記事パイプラインのみ停止）
-    const articleErrors = ks.consecutiveErrors.filter((e) => e.type.startsWith("article-agent-fail:"));
-    if (articleErrors.length >= 3) {
-      console.error(`[article-orchestrate] 連続エラー${articleErrors.length}回。記事パイプライン自動停止。`);
+    if (articleConsecutiveFailures >= 3) {
+      console.error(`[article-orchestrate] 連続エラー${articleConsecutiveFailures}回。記事パイプライン自動停止。`);
+      const ks = readJson("kill-switch.json") || {};
       ks.articleEnabled = true;
-      ks.reason = `記事パイプライン連続エラー: ${articleErrors.slice(-3).map((e) => e.type).join(", ")}`;
+      ks.reason = `記事パイプライン連続エラー${articleConsecutiveFailures}回（最後: ${script}）`;
       ks.enabledAt = new Date().toISOString();
       ks.enabledBy = "auto-article-orchestrate";
       writeJson("kill-switch.json", ks);
@@ -129,15 +126,12 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
   }
 }
 
-// エージェント成功時にエラーカウントをリセット
-function clearArticleErrors() {
-  const ks = readJson("kill-switch.json") || {};
-  const errors = ks.consecutiveErrors || [];
-  const filtered = errors.filter((e) => !e.type.startsWith("article-agent-fail:"));
-  if (filtered.length !== errors.length) {
-    ks.consecutiveErrors = filtered;
-    writeJson("kill-switch.json", ks);
-  }
+// パイプライン実行内の連続失敗カウンタ
+let articleConsecutiveFailures = 0;
+
+// エージェント成功時にカウンタリセット
+function resetArticleFailures() {
+  articleConsecutiveFailures = 0;
 }
 
 // ─── 週次パイプライン ────────────────────────────────
@@ -207,7 +201,7 @@ async function weeklyPipeline(dryRun) {
   }
 
   // パイプライン正常完了 → エラーカウントリセット
-  clearArticleErrors();
+  resetArticleFailures();
 
   console.log("\n╔══════════════════════════════════════════════╗");
   console.log("║     記事パイプライン（週次）完了              ║");
@@ -257,7 +251,7 @@ async function dailyPipeline(dryRun) {
   }
 
   // パイプライン正常完了 → エラーカウントリセット
-  clearArticleErrors();
+  resetArticleFailures();
 
   console.log("\n┌──────────────────────────────────────────────┐");
   console.log("│     記事パイプライン（日次）完了              │");

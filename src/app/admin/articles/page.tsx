@@ -313,24 +313,17 @@ https://camp-gear-lab.com/articles/${article.slug}
 
               {previewMode ? (
                 <div className="prose max-w-none bg-gray-50 p-6 rounded-lg min-h-[400px]">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: form.content
-                        .replace(
-                          /\{\{product:([^}]+)\}\}/g,
-                          '<div class="bg-blue-50 p-4 rounded border border-blue-200 my-4">[商品カード: $1]</div>'
-                        )
-                        .replace(
-                          /\{\{comparison:([^}]+)\}\}/g,
-                          '<div class="bg-green-50 p-4 rounded border border-green-200 my-4">[比較表: $1]</div>'
-                        )
-                        .replace(
-                          /\{\{ranking:([^}]+)\}\}/g,
-                          '<div class="bg-yellow-50 p-4 rounded border border-yellow-200 my-4">[ランキング: $1]</div>'
-                        )
-                        .replace(/\n/g, "<br/>"),
-                    }}
-                  />
+                  <div>
+                    {form.content.split("\n").map((line, i) => {
+                      const productMatch = line.match(/\{\{product:([^}]+)\}\}/);
+                      if (productMatch) return <div key={i} className="bg-blue-50 p-4 rounded border border-blue-200 my-4">[商品カード: {productMatch[1]}]</div>;
+                      const compMatch = line.match(/\{\{comparison:([^}]+)\}\}/);
+                      if (compMatch) return <div key={i} className="bg-green-50 p-4 rounded border border-green-200 my-4">[比較表: {compMatch[1]}]</div>;
+                      const rankMatch = line.match(/\{\{ranking:([^}]+)\}\}/);
+                      if (rankMatch) return <div key={i} className="bg-yellow-50 p-4 rounded border border-yellow-200 my-4">[ランキング: {rankMatch[1]}]</div>;
+                      return <p key={i} className="my-1">{line || "\u00A0"}</p>;
+                    })}
+                  </div>
                 </div>
               ) : (
                 <textarea

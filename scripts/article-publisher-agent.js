@@ -85,11 +85,14 @@ async function createArticlePromo(article) {
     const id = `xp-${now.toISOString().slice(0, 10).replace(/-/g, "")}-art-${Math.random().toString(36).slice(2, 6)}`;
     const url = `${SITE_URL}/articles/${article.slug}?utm_source=x&utm_medium=social&utm_campaign=article_promo`;
 
-    const excerpt = article.excerpt.length > 100
-      ? article.excerpt.slice(0, 100) + "..."
-      : article.excerpt;
+    const rawExcerpt = article.excerpt || article.content?.slice(0, 120) || "";
+    const excerpt = rawExcerpt.length > 100
+      ? rawExcerpt.slice(0, 100) + "..."
+      : rawExcerpt;
 
-    const text = `${article.title}\n\n${excerpt}\n\n詳しくはこちら\n${url}\n\n#アウトドア #キャンプ`;
+    const text = excerpt
+      ? `${article.title}\n\n${excerpt}\n\n詳しくはこちら\n${url}\n\n#アウトドア #キャンプ`
+      : `${article.title}\n\n詳しくはこちら\n${url}\n\n#アウトドア #キャンプ`;
 
     // 翌日をスケジュール日に設定
     const scheduledDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)

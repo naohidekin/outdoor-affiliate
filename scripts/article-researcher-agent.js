@@ -55,10 +55,9 @@ function getPublishDates(count) {
   const today = new Date();
   // 水曜(3)、金曜(5)、日曜(0) の順で次の該当日を取得
   const targetDays = [3, 5, 0]; // Wed, Fri, Sun
-  let d = new Date(today);
 
-  for (let i = 0; dates.length < count; i++) {
-    d.setDate(today.getDate() + i);
+  for (let i = 1; dates.length < count; i++) {
+    const d = new Date(today.getTime() + i * 86400000); // 毎回新規Date生成で月跨ぎ安全
     if (targetDays.includes(d.getDay())) {
       dates.push(d.toISOString().slice(0, 10));
     }
@@ -197,11 +196,12 @@ ${analystInfo}
     console.log(`  ${a.scheduledPublishDate} | ${a.title} (${a.categoryId})`);
   }
 
-  // plan ファイルは後続エージェントが参照する中間データのため、dry-run でも書き出す
-  writeJson("article-weekly-plan.json", plan);
-  console.log("\n[article-researcher] article-weekly-plan.json を保存しました");
   if (opts.dryRun) {
+    console.log("[DRY RUN] article-weekly-plan.json への書き込みをスキップ");
     console.log(JSON.stringify(plan, null, 2));
+  } else {
+    writeJson("article-weekly-plan.json", plan);
+    console.log("\n[article-researcher] article-weekly-plan.json を保存しました");
   }
 }
 

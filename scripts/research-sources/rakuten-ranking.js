@@ -24,7 +24,7 @@ import {
 loadEnv();
 
 // 楽天アフィリエイトID（既存products.jsonと統一）
-const RAKUTEN_AFFILIATE_ID = "18eb3228.621d8df3.18eb3229.ec5f8d49";
+const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
 // キャンプギアカテゴリ別の検索キーワード（ランキングより検索APIの方が精度高い）
 const GEAR_CATEGORIES = [
