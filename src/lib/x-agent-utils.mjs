@@ -8,6 +8,8 @@
 
 import fs from "fs";
 import path from "path";
+import dns from "dns";
+import https from "https";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +22,13 @@ const DATA_DIR = path.join(__dirname, "..", "..", "data");
  * 既存スクリプト全体で重複していた15行を共通化。
  */
 export function loadEnv() {
+  // IPv4優先: Node.js undiciがIPv6を先に試みてタイムアウトする問題を回避
+  dns.setDefaultResultOrder("ipv4first");
+  // 子プロセス（orchestrator → agent）にも伝搬させる
+  if (!process.env.NODE_OPTIONS?.includes("--dns-result-order")) {
+    process.env.NODE_OPTIONS = [process.env.NODE_OPTIONS, "--dns-result-order=ipv4first"].filter(Boolean).join(" ");
+  }
+
   const envPath = path.join(__dirname, "..", "..", ".env.local");
   if (!fs.existsSync(envPath)) return;
   const content = fs.readFileSync(envPath, "utf-8");
@@ -140,6 +149,63 @@ export function bigramJaccard(textA, textB) {
   }
   const union = new Set([...a, ...b]).size;
   return union === 0 ? 0 : intersection / union;
+}
+
+// ─── IPv4強制 fetch（undici フォールバック）────────────
+
+/**
+ * Node.js native https で IPv4 を強制する fetch 関数。
+ * undici (native fetch) が IPv6 タイムアウトで失敗する環境用。
+ * Anthropic SDK の `fetch` オプションに渡して使う。
+ */
+export function ipv4Fetch(url, init = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const body = init.body || null;
+    const options = {
+      hostname: parsed.hostname,
+      port: parsed.port || 443,
+      path: parsed.pathname + parsed.search,
+      method: init.method || "GET",
+      family: 4, // IPv4 強制
+      headers: {},
+    };
+
+    // Headers を plain object に変換
+    if (init.headers) {
+      if (typeof init.headers.forEach === "function") {
+        init.headers.forEach((v, k) => { options.headers[k] = v; });
+      } else if (typeof init.headers.entries === "function") {
+        for (const [k, v] of init.headers.entries()) { options.headers[k] = v; }
+      } else {
+        Object.assign(options.headers, init.headers);
+      }
+    }
+
+    const req = https.request(options, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => {
+        const buffer = Buffer.concat(chunks);
+        const responseHeaders = new Headers();
+        for (const [k, v] of Object.entries(res.headers)) {
+          if (v) responseHeaders.set(k, Array.isArray(v) ? v.join(", ") : v);
+        }
+        resolve(new Response(buffer, {
+          status: res.statusCode,
+          statusText: res.statusMessage,
+          headers: responseHeaders,
+        }));
+      });
+    });
+
+    req.on("error", reject);
+    if (init.signal) {
+      init.signal.addEventListener("abort", () => req.destroy());
+    }
+    if (body) req.write(body);
+    req.end();
+  });
 }
 
 // ─── 書き出しパターン分類 ─────────────────────────────

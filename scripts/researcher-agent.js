@@ -135,7 +135,20 @@ function selectSeedForType(type, { seeds, themeTree, month, postHistory }) {
     : null;
   const preferredTheme = lowUsageTheme ? lowUsageTheme.path[lowUsageTheme.path.length - 1] : null;
 
+  const today = new Date().toISOString().slice(0, 10);
+
   candidates.sort((a, b) => {
+    // 鮮度の高いYouTubeシードを優先（freshUntil が有効期間内）
+    const aFresh = a.source === "youtube" && a.freshUntil && a.freshUntil >= today ? -1 : 0;
+    const bFresh = b.source === "youtube" && b.freshUntil && b.freshUntil >= today ? -1 : 0;
+    if (aFresh !== bFresh) return aFresh - bFresh;
+
+    // ブクマポテンシャルが高いシードを優先
+    const potentialOrder = { high: 0, medium: 1, low: 2 };
+    const aPot = potentialOrder[a.bookmarkPotential] ?? 1;
+    const bPot = potentialOrder[b.bookmarkPotential] ?? 1;
+    if (aPot !== bPot) return aPot - bPot;
+
     // テーマツリーギャップに合致するシードを優先
     const aMatchesGap = preferredTheme && a.theme && a.theme.toLowerCase().includes(preferredTheme) ? -1 : 0;
     const bMatchesGap = preferredTheme && b.theme && b.theme.toLowerCase().includes(preferredTheme) ? -1 : 0;
@@ -214,6 +227,48 @@ function updateThemeTree(themeTree, usedSeeds) {
   }
 }
 
+// ─── エンゲージメント分析でテーマ優先度を判定 ──────────
+
+function loadEngagementInsights() {
+  const feedback = readJson("analyst-feedback.json");
+  const engagement = readJson("x-engagement.json");
+  const insights = {
+    highEngagementTypes: [],   // ブクマ・いいねが多いタイプ
+    lowEngagementTypes: [],    // 反応が薄いタイプ
+    replyTopics: [],           // 読者が質問/反応したトピック
+    topPostHints: [],          // トップ投稿のヒント
+  };
+
+  // analyst-feedback からタイプ別エンゲージメント
+  if (feedback?.engagementByType) {
+    for (const [type, stats] of Object.entries(feedback.engagementByType)) {
+      const avgScore = stats.count > 0 ? (stats.bookmarks + stats.likes) / stats.count : 0;
+      if (avgScore >= 3) {
+        insights.highEngagementTypes.push(type);
+      } else if (stats.count >= 3 && avgScore < 1) {
+        insights.lowEngagementTypes.push(type);
+      }
+    }
+  }
+
+  // x-engagement からリプライテーマ
+  if (engagement?.replyDigest) {
+    insights.replyTopics = engagement.replyDigest
+      .slice(0, 5)
+      .map((r) => r.text?.slice(0, 50))
+      .filter(Boolean);
+  }
+
+  // トップ投稿のヒント
+  if (feedback?.topEngagementPosts) {
+    insights.topPostHints = feedback.topEngagementPosts
+      .slice(0, 3)
+      .map((p) => `[${p.postType}] ${p.textPreview}`);
+  }
+
+  return insights;
+}
+
 // ─── メイン ──────────────────────────────────────────
 
 async function main() {
@@ -234,12 +289,25 @@ async function main() {
   const history = loadPostHistory();
   const month = new Date().getMonth() + 1;
 
+  // エンゲージメントインサイト読み込み
+  const engInsights = loadEngagementInsights();
+  if (engInsights.highEngagementTypes.length > 0) {
+    console.error(`[researcher] 高エンゲージメントタイプ: ${engInsights.highEngagementTypes.join(", ")}`);
+  }
+
   // 週次プラン構築
   const plan = [];
   const usedSeeds = [];
 
   for (const [type, meta] of Object.entries(POST_TYPES)) {
-    const count = Math.ceil(meta.weeklyCount);
+    let count = Math.ceil(meta.weeklyCount);
+
+    // エンゲージメントが高いタイプは件数を増やす（最大+1）
+    if (engInsights.highEngagementTypes.includes(type) && count < 3) {
+      count++;
+      console.error(`[researcher] ${type} は高エンゲージメント → ${count}件に増加`);
+    }
+
     const seed = selectSeedForType(type, {
       seeds: seedData.seeds,
       themeTree,
@@ -247,11 +315,20 @@ async function main() {
       postHistory: history.entries,
     });
 
+    // エンゲージメントヒント生成
+    let engagementHint = null;
+    if (engInsights.highEngagementTypes.includes(type)) {
+      engagementHint = "高エンゲージメント: ブクマ・いいねが多い。同じ切り口を維持。";
+    } else if (engInsights.lowEngagementTypes.includes(type)) {
+      engagementHint = "低エンゲージメント: 切り口を変えてみる。読者の反応を見て調整。";
+    }
+
     plan.push({
       type,
       count,
       axis: meta.axis,
       seedId: seed ? seed.id : null,
+      engagementHint,
     });
 
     if (seed) usedSeeds.push(seed);
@@ -268,6 +345,10 @@ async function main() {
     seasonContext: SEASON_CONTEXT[month] || "",
     plan,
     selectedArticles: selectedArticles.map((a) => a.slug),
+    engagementInsights: {
+      replyTopics: engInsights.replyTopics,
+      topPostHints: engInsights.topPostHints,
+    },
   };
 
   // stdout に JSON 出力（Orchestrator が受け取る）

@@ -4,38 +4,37 @@
  * Next.js API Route (src/app/api/x-posts/generate/route.ts) と
  * CLI script (scripts/generate-x-posts.js) の両方から参照する。
  *
- * Lake & Sky トーン（淡々として知的、煽らない）を全プロンプトに適用する。
- * 詳細は CLAUDE.md「X 投稿のトーン」セクション参照。
+ * ナレッジ（ペルソナ・トーン・NGワード等）は data/account-config.json に外部化。
+ * コードに人格をハードコードしない。ナレッジファイル差し替えでジャンル転用可能。
  */
 
-// === 定数 ===
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-export const SITE_URL = "https://camp-gear-lab.com";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const CATEGORY_HASHTAGS = {
-  tent: "#テント #ファミキャン",
-  light: "#ランタン #キャンプギア",
-  "sleeping-bag": "#シュラフ #寝袋",
-  burner: "#バーナー #キャンプ飯",
-  backpack: "#登山 #バックパック",
-  wear: "#アウトドアウェア #レインウェア",
-  shoes: "#トレッキングシューズ #登山靴",
-};
+// === ナレッジ読み込み（account-config.json）===
 
-export const SEASON_CONTEXT = {
-  1: "冬キャンプシーズン。防寒対策、冬用シュラフ、薪ストーブが話題",
-  2: "冬キャンプ後半。春キャンプの準備が始まる時期",
-  3: "春キャンプシーズン開始。花見キャンプ、新生活でキャンプデビュー",
-  4: "春キャンプ本番。GWキャンプの計画時期。朝晩の寒暖差に注意",
-  5: "GWキャンプ。新緑の季節。虫対策が必要になり始める",
-  6: "梅雨シーズン。雨キャンプの準備、レインウェア選び",
-  7: "夏キャンプ開始。暑さ対策、水遊び、虫除け必須",
-  8: "夏キャンプ本番。高原キャンプ、川遊び、お盆キャンプ",
-  9: "秋キャンプ開始。涼しくなり始め、焚き火が気持ちいい季節",
-  10: "秋キャンプ本番。紅葉キャンプ、焚き火、温かい料理",
-  11: "秋冬の境目。防寒ギアの見直し、冬キャンプ準備",
-  12: "冬キャンプシーズン突入。年末キャンプ、冬装備の確認",
-};
+function loadAccountConfig() {
+  const configPath = path.join(__dirname, "..", "..", "data", "account-config.json");
+  if (!fs.existsSync(configPath)) {
+    throw new Error("data/account-config.json が見つかりません。ナレッジファイルを作成してください。");
+  }
+  return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+}
+
+const _config = loadAccountConfig();
+
+/** account-config.json の全設定をエクスポート（他エージェントから参照用） */
+export const ACCOUNT_CONFIG = _config;
+
+// === 外部化された定数（account-config.json から読み込み）===
+
+export const SITE_URL = _config.siteUrl;
+export const CATEGORY_HASHTAGS = _config.categoryHashtags;
+
+export const SEASON_CONTEXT = _config.seasonContext;
 
 /**
  * gear_story タイプは docs/author-gear.md（デザインブランチで作成中）が
@@ -43,46 +42,47 @@ export const SEASON_CONTEXT = {
  */
 export const GEAR_STORY_ENABLED = false;
 
-/** Lake & Sky トーンとペルソナ。すべての生成プロンプトの先頭に挿入する */
-export const PERSONA_PREAMBLE = `あなたは「ギア男」というXアカウント(@camp_gear_lab) の運営者です。
-キャンプ歴10年、長野拠点、2児の父、37歳。ブログ camp-gear-lab.com も運営しています。
+/** ペルソナプリアンブル。account-config.json から動的生成。 */
+function buildPersonaPreamble(config) {
+  const p = config.persona;
+  const t = config.tone;
+  const ng = config.ngWords;
+  const link = config.linkRules;
+  const bk = config.bookmarkStrategy;
+  const fmt = config.formatting;
+
+  return `あなたは「${p.name}」というXアカウント(${config.account.handle}) の運営者です。
+${p.experience}、${p.location}拠点、${p.family.split("＋")[1] || ""}、${p.age}歳。ブログ ${config.siteUrl.replace("https://", "")} も運営しています。
 
 ## トーン（最重要・絶対遵守）
-このアカウントは「Lake & Sky」（白×青×清涼感）のデザイン方針と呼応した、
-**淡々として知的、煽らない**ポストをします。
-
-- 断定より「個人的には〜」「3年使った結論から言うと〜」「うちの環境では〜」型を優先
-- 体言止め・倒置・口語的省略を控えめに使う。句読点を多用しない
-- 絵文字は0〜1個。連打しない。顔文字は使わない
-- 一人称は控えめに
-- 教科書的にならず、自分の体験や失敗談をベースに
-- 本職が医師であることは基本伏せる（必要時のみ「本職柄、安全管理にはちょっとうるさい方なので」程度に匂わせる）
+${t.style}
+${t.rules.map((r) => `- ${r}`).join("\n")}
+- ${p.occupationDisclosure}
 
 ## NG表現（絶対に使わない）
-最高 / 最強 / 絶対 / 神 / 完全 / 100% / 必ず / 今すぐ / 間違いなく
-「〜してみてはいかがでしょうか」「〜をご紹介します」「〜についてまとめました」
-「おすすめ○選」「徹底比較」「完全ガイド」
+${ng.hype.join(" / ")}
+${ng.template.map((w) => `「${w}」`).join(" ")}
 
 ## 文体の例（こういう感じで）
-- 「このテント、設営5分は盛ってると思ったけど実際そうだった。ワンタッチ系で一番まともかも」
-- 「夜露でテーブル濡れるの地味にストレス。アルミ天板に変えてから気にならなくなった」
-- 「春キャンプ、昼は暑いのに夜は5度とかザラ。フリース忘れて凍えた去年の自分に教えたい」
-- 「個人的には、ペグだけは絶対に妥協しない方がいい。3年使ってきた結論」
+${t.examples.map((e) => `- 「${e}」`).join("\n")}
 
 ## 外部リンクのルール（最重要・絶対遵守）
-- **本文に外部URL（camp-gear-lab.com等）を絶対に含めない**。外部リンク付き投稿はXアルゴリズムにインプレッションを下げられる
-- サイトに誘導したい場合は本文末尾に「詳細はリプ欄へ。」と書く。実際のURLは別フィールド(url)に入れる
-- gear_thread のスレッドでも、ツイート本文にURLを含めない。最終ツイートに「詳細はリプ欄へ。」と書く
+- **本文に外部URL（${config.siteUrl.replace("https://", "")}等）を絶対に含めない**。外部リンク付き投稿はXアルゴリズムにインプレッションを下げられる
+- サイトに誘導したい場合は本文末尾に「${link.ctaText}」と書く。実際のURLは別フィールド(url)に入れる
+- gear_thread のスレッドでも、ツイート本文にURLを含めない。最終ツイートに「${link.ctaText}」と書く
 
 ## ブックマーク戦略（重要）
 - 「保存したくなる」投稿を意識する。ブックマーク数はXアルゴリズムで高評価
-- 【保存版】【ブクマ推奨】【まとめ】等のフックを冒頭に適宜使う（毎回ではなく、情報密度が高い投稿に）
-- 豆知識、比較、チェックリスト、tips、「○○の見分け方」など、あとで見返したくなる情報を重視
+- ${bk.hooks.join("")}等のフックを冒頭に適宜使う（${bk.note}）
+- ${bk.formats.join("、")}など、あとで見返したくなる情報を重視
 - 箇条書き・数字リストで整理すると保存されやすい
 
 ## 共通フォーマット
-- 各投稿は280文字以内（ハッシュタグ含む。URLは本文に入れないので文字数に含めない）
-- ハッシュタグは2〜3個、本文末尾に改行して配置`;
+- 各投稿は${fmt.maxChars}文字以内（ハッシュタグ含む。URLは本文に入れないので文字数に含めない）
+- ハッシュタグは${fmt.hashtagCount}、本文末尾に改行して配置`;
+}
+
+export const PERSONA_PREAMBLE = buildPersonaPreamble(_config);
 
 // === ヘルパ ===
 
@@ -104,11 +104,20 @@ function jsonOutputSpec(extra = "") {
     "type": "...",
     "text": "投稿本文（ハッシュタグ含む。URLは絶対に含めない）",
     "articleSlug": "記事のスラッグ または null",
-    "url": "リプライに貼るURL または null（本文には入れない）"
+    "url": "リプライに貼るURL または null（本文には入れない）",
+    "selfReply": "投稿直後にリプライ欄に自動投稿するテキスト（コメント誘導・会話のきっかけ用。不要なら null）",
+    "formatPattern": "使用した投稿フォーマットパターンID（例: short_complete/expose）"
   }
 ]
 
-**重要**: text フィールドにURLを含めないでください。サイトに誘導する場合は text の末尾に「詳細はリプ欄へ。」と書き、url フィールドにURLを入れてください。${extra ? "\n\n" + extra : ""}`;
+**重要**: text フィールドにURLを含めないでください。サイトに誘導する場合は text の末尾に「詳細はリプ欄へ。」と書き、url フィールドにURLを入れてください。
+
+**selfReply のコツ**:
+- 読者に「自分も答えたい」と思わせる問いかけ・共感の一言
+- 本文の補足情報や裏話を続けるとリプライ欄が豊かになる
+- 「みんなはどう？」「同じ経験ある？」系が効果的
+- 情報提供系（outdoor_tip等）なら「他にも良い方法あったら教えて」
+- null にしてもよい（article_promo, rakuten_sale, amazon_deal はURLリプライがあるのでnull推奨）${extra ? "\n\n" + extra : ""}`;
 }
 
 // === 既存互換プロンプト（article_promo + outdoor_tip 同時生成） ===
@@ -173,11 +182,19 @@ ${month}月: ${seasonContext}
 ## タスク
 キャンプの実用的な豆知識を${count}件。URLは不要。
 教科書的にならず、自分の体験や失敗談ベースで。
-**保存したくなる情報密度**を重視（チェックリスト、数字付きtips、比較、「○○の見分け方」など）。
+**保存したくなる情報密度**を最重視（チェックリスト、数字付きtips、比較、「○○の見分け方」など）。
 情報密度が高い投稿には冒頭に【保存版】【ブクマ推奨】を付ける。
 
 - type は全て "outdoor_tip"
 - ハッシュタグは2〜3個
+- **selfReply**: 「他にも良いtipsあったら教えて」系のリプライを生成（任意だが推奨）
+
+## ブクマを狙う構成パターン（いずれかを使う）
+- 「○○を選ぶ3つの基準」— 数字付きリスト
+- 「○○ vs ○○、違いはここ」— 比較型
+- 「初心者がやりがちな○○の間違い」— 注意喚起型
+- 「○○の見分け方」— ハウツー型
+- 「○○を10秒で○○する方法」— 時短型
 
 ${jsonOutputSpec()}`;
 }
@@ -258,24 +275,9 @@ ${jsonOutputSpec()}`;
  */
 // === 10タイプ定義・承認ルール ===
 
-export const POST_TYPES = {
-  article_promo:     { axis: "camp",      weeklyCount: 2,   approval: "batch" },
-  outdoor_tip:       { axis: "camp",      weeklyCount: 1,   approval: "auto"  },
-  poll_question:     { axis: "rotate",    weeklyCount: 2,   approval: "auto"  },
-  failure_story:     { axis: "camp",      weeklyCount: 1,   approval: "auto"  },
-  gear_thread:       { axis: "camp",      weeklyCount: 1,   approval: "batch", isThread: true },
-  ai_dev_log:        { axis: "ai",        weeklyCount: 1.5, approval: "auto"  },
-  parenting_outdoor: { axis: "parenting", weeklyCount: 1,   approval: "auto"  },
-  doc_health_tip:    { axis: "doctor",    weeklyCount: 1,   approval: "manual" },
-  seasonal_hook:     { axis: "all",       weeklyCount: 1,   approval: "batch" },
-  repost_rewrite:    { axis: "all",       weeklyCount: 0.5, approval: "batch" },
-};
+export const POST_TYPES = _config.postTypes;
 
-export const APPROVAL_RULES = {
-  auto:   ["outdoor_tip", "poll_question", "failure_story", "ai_dev_log", "parenting_outdoor"],
-  batch:  ["article_promo", "gear_thread", "seasonal_hook", "repost_rewrite"],
-  manual: ["doc_health_tip"],
-};
+export const APPROVAL_RULES = _config.approvalRules;
 
 export function getApprovalLevel(type) {
   if (APPROVAL_RULES.manual.includes(type)) return "manual";
@@ -301,12 +303,15 @@ function threadOutputSpec() {
     "type": "gear_thread",
     "tweets": ["1ツイート目（🧵マーク付き）", "2ツイート目", "3ツイート目", ...],
     "articleSlug": "関連記事のスラッグ または null",
-    "url": "リプライに貼るURL または null（ツイート本文にはURLを含めない）"
+    "url": "リプライに貼るURL または null（ツイート本文にはURLを含めない）",
+    "selfReply": null,
+    "formatPattern": "thread_expand/list_type"
   }
 ]
 
 各ツイートは280文字以内。tweets[0]が親ツイート。
-**重要**: ツイート本文にURLを含めないでください。最終ツイートに「詳細はリプ欄へ。」と書き、urlフィールドにURLを入れてください。`;
+**重要**: ツイート本文にURLを含めないでください。最終ツイートに「詳細はリプ欄へ。」と書き、urlフィールドにURLを入れてください。
+スレッド形式はスレッド自体がリプライ連鎖なので、selfReply は null でOK。`;
 }
 
 export function buildPollQuestionPrompt({ count, month, seed }) {
@@ -326,6 +331,12 @@ ${seedBlock(seed)}
 - 最後に自分の意見を1行添える（「個人的には②。理由は〜」）
 - URLは不要
 - ハッシュタグは1〜2個
+- **selfReply 必須**: 「理由も教えて！」「うちの場合は〜だけど、みんなは？」のような会話を誘うリプライを生成
+
+## エンゲージメントのコツ
+- 議論が起きやすいテーマを選ぶ（正解がない系が最強）
+- 選択肢は「あるある」感があるものに
+- 自分の意見を添えることで「自分も言いたい」を誘発
 
 ${jsonOutputSpec()}`;
 }
@@ -346,6 +357,12 @@ ${seedBlock(seed)}
 - 最後に教訓を1行添える
 - URLは不要
 - ハッシュタグは2〜3個
+- **selfReply 必須**: 「同じ失敗した人いる？笑」「これ、あるあるだよね？」のような共感を誘うリプライを生成
+
+## エンゲージメントのコツ
+- 失敗談は「自分も！」と言いたくなる共感型が最強
+- 教訓が実用的だと保存される（失敗→学び→tips）
+- 文体は少しくだけてOK（他タイプより口語的に）
 
 ${jsonOutputSpec()}`;
 }
@@ -399,6 +416,12 @@ Claude CodeやAI開発のリアルな体験を${count}件。
 - API Key等の機密情報は絶対に含めない
 - URLは不要
 - ハッシュタグ: #ClaudeCode #AI など1〜2個
+- **selfReply**: 「同じ体験ある？」「この解決法もっと良い方法ある？」系のリプライ（任意）
+
+## エンゲージメントのコツ
+- AI界隈は「自分もやってみた」系のRTが起きやすい
+- 具体的な数字（「3時間かかってた作業が5分」等）がバズりやすい
+- 文体は他タイプより砕けてOK。開発日記調で
 
 ${jsonOutputSpec()}`;
 }
@@ -424,6 +447,12 @@ ${articleInfo}
 - 配偶者へのネガティブな話題は避ける
 - **本文にURLを含めない**。関連記事がある場合は「詳細はリプ欄へ。」と書き、urlフィールドにURLを入れる
 - ハッシュタグ: #ファミリーキャンプ など2〜3個
+- **selfReply 必須**: 「うちもこうだよ！ってリプ待ってます」「みんなの子供キャンプあるあるも教えて」系
+
+## エンゲージメントのコツ
+- パパママ層は「あるある！」共感でリプライが来やすい
+- 子供の素朴な一言系はRTされやすい（「テント、おうちよりいい」等）
+- ほっこり系はブクマよりいいね・RT向き。文体はやや柔らかく
 
 ${jsonOutputSpec()}`;
 }

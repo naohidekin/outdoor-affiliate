@@ -73,16 +73,48 @@ function getSheets() {
 
 // ─── KILL SWITCH ────────────────────────────────────
 
-function enableKillSwitch(reason) {
+function enableKillSwitch(reason, triggeredBy = "manual") {
   const existing = readJson("kill-switch.json") || {};
   writeJson("kill-switch.json", {
     ...existing,
     enabled: true,
     reason,
     enabledAt: new Date().toISOString(),
-    enabledBy: "manual",
+    enabledBy: triggeredBy,
   });
-  console.log(`[supervisor] KILL SWITCH 有効化: ${reason}`);
+  console.log(`[supervisor] KILL SWITCH 有効化 (by ${triggeredBy}): ${reason}`);
+}
+
+/**
+ * 連続エラーカウントを記録・取得。3連続で自動KILL。
+ */
+function recordError(errorType) {
+  const ks = readJson("kill-switch.json") || {};
+  const errors = ks.consecutiveErrors || [];
+  errors.push({ type: errorType, at: new Date().toISOString() });
+
+  // 直近3件のみ保持
+  const recent = errors.slice(-3);
+  ks.consecutiveErrors = recent;
+  writeJson("kill-switch.json", ks);
+
+  // 3連続エラーで自動KILL
+  if (recent.length >= 3) {
+    enableKillSwitch(
+      `連続エラー3回検知: ${recent.map((e) => e.type).join(", ")}`,
+      "auto-supervisor"
+    );
+    return true; // killed
+  }
+  return false;
+}
+
+function clearErrorCount() {
+  const ks = readJson("kill-switch.json") || {};
+  if (ks.consecutiveErrors?.length > 0) {
+    ks.consecutiveErrors = [];
+    writeJson("kill-switch.json", ks);
+  }
 }
 
 function disableKillSwitch() {
@@ -186,11 +218,19 @@ async function runAnomalyCheck() {
       (w) => w.includes("selfScore < 5.0 が3件連続") || w.includes("NGチェック失敗率")
     );
     if (hasCritical) {
+      // 連続エラーとして記録。3回連続で自動KILL
+      const killed = recordError(warnings.find((w) => w.includes("selfScore") || w.includes("NG")) || "critical");
+      if (killed) {
+        console.error("[supervisor] 連続エラー3回。自動KILL SWITCH を有効化しました。");
+        process.exit(1);
+      }
       console.error("[supervisor] 深刻な異常を検知。パイプラインを停止します。");
       process.exit(1);
     }
   } else {
     console.log("[supervisor] 異常なし");
+    // 正常時はエラーカウントをリセット
+    clearErrorCount();
   }
 
   process.exit(0);

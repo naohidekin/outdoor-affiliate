@@ -13,43 +13,47 @@
  *   - 誇大表現: Lake & Sky トーンと矛盾
  */
 
-// === NGワード辞書 ===
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// === NGワード辞書（account-config.json から読み込み + ハードコード補完）===
+
+function loadNgWords() {
+  const configPath = path.join(__dirname, "..", "..", "data", "account-config.json");
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    return config.ngWords || {};
+  }
+  return {};
+}
+
+const _ng = loadNgWords();
 
 /** 政治・宗教・差別・センシティブ系 */
 const NG_POLITICAL = [
-  "自民党", "立憲", "共産党", "公明党", "維新", "選挙",
-  "韓国人", "中国人", "在日",
-  "天皇", "創価", "統一教会",
+  ...(_ng.political || []),
+  "選挙", "韓国人", "中国人", "在日", "天皇", "創価", "統一教会",
 ];
 
-/** 薬機法・医療法 系（健康効果・治療効果を匂わせる表現） */
+/** 薬機法・医療法 系 */
 const NG_MEDICAL = [
-  "効きます", "効く", "治る", "治す", "痩せる",
-  "ガンに", "病気が", "病気を", "アレルギーが治",
-  "副作用なし", "医師推奨",
+  ...(_ng.medical || []),
+  "ガンに", "病気が", "病気を", "アレルギーが治", "副作用なし", "医師推奨",
 ];
 
-/** 景表法 系（根拠のない優良誤認） */
+/** 景表法 系 */
 const NG_LANDMARK = [
-  "業界No.1", "日本一", "世界一", "圧倒的No.1",
-  "最安値保証", "返金保証", "効果保証",
+  ...(_ng.landmark || []),
+  "圧倒的No.1", "最安値保証", "返金保証", "効果保証",
 ];
 
-/** 誇大表現（Lake & Sky トーンと矛盾） */
+/** 誇大表現 */
 const NG_HYPE = [
-  "最高",
-  "最強",
-  "絶対",
-  "神",
-  "完全",
-  "100%",
-  "必ず",
-  "今すぐ",
-  "間違いなく",
-  "革命",
-  "奇跡",
-  "ヤバい",
-  "神ギア",
+  ...(_ng.hype || []),
+  "革命", "奇跡", "ヤバい", "神ギア",
 ];
 
 /** 薬機法・医療法 厳格チェック用（doc_health_tip では block、他タイプでは warn） */
@@ -63,12 +67,8 @@ const NG_MEDICAL_STRICT = [
 
 /** AI臭い定型表現 */
 const NG_TEMPLATE = [
-  "してみてはいかがでしょうか",
-  "をご紹介します",
-  "についてまとめました",
-  "おすすめ", // 「おすすめ◯選」を弾くため厳しめ
-  "徹底比較",
-  "完全ガイド",
+  ...(_ng.template || []),
+  "おすすめ",
 ];
 
 const CATEGORIES = [

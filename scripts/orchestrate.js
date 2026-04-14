@@ -17,7 +17,7 @@ import { promisify } from "util";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+import { loadEnv, readJson, writeJson } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
 
@@ -115,7 +115,33 @@ async function runAgent(script, args = [], { timeout = 300_000, captureStdout = 
     console.error(`  ${err.message}`);
     if (err.stdout) console.log(err.stdout);
     if (err.stderr) console.error(err.stderr);
+    // 連続エラーをkill-switch.jsonに記録
+    const ks = readJson("kill-switch.json") || {};
+    const errors = ks.consecutiveErrors || [];
+    errors.push({ type: `agent-fail:${script}`, at: new Date().toISOString() });
+    ks.consecutiveErrors = errors.slice(-5); // 直近5件保持
+    writeJson("kill-switch.json", ks);
+
+    // 3連続で自動KILL
+    if (ks.consecutiveErrors.length >= 3) {
+      console.error(`[orchestrate] 連続エラー${ks.consecutiveErrors.length}回。自動KILL SWITCH 有効化。`);
+      ks.enabled = true;
+      ks.reason = `連続エラー${ks.consecutiveErrors.length}回: ${errors.slice(-3).map((e) => e.type).join(", ")}`;
+      ks.enabledAt = new Date().toISOString();
+      ks.enabledBy = "auto-orchestrate";
+      writeJson("kill-switch.json", ks);
+    }
+
     return { success: false, stdout: err.stdout || "", stderr: err.stderr || "", error: err.message };
+  }
+}
+
+// エージェント成功時にエラーカウントをリセット
+function clearOrchestrateErrors() {
+  const ks = readJson("kill-switch.json") || {};
+  if (ks.consecutiveErrors?.length > 0) {
+    ks.consecutiveErrors = [];
+    writeJson("kill-switch.json", ks);
   }
 }
 
@@ -150,7 +176,25 @@ async function weeklyPipeline(dryRun) {
     console.log("[DRY RUN] バックアップをスキップ");
   }
 
-  // 3. Researcher → 週次プラン生成
+  // 3a. リサーチソース（全ソースを順次実行、API未設定のソースは自動スキップ）
+  const researchSources = [
+    { script: "youtube-researcher.js", envKey: "YOUTUBE_API_KEY", label: "YouTube" },
+    { script: "research-sources/google-trends.js", envKey: "GOOGLE_CUSTOM_SEARCH_KEY", label: "Google検索" },
+    { script: "research-sources/rakuten-ranking.js", envKey: "RAKUTEN_APP_ID", label: "楽天ランキング" },
+    { script: "research-sources/amazon-reviews.js", envKey: "AMAZON_ACCESS_KEY", label: "Amazon" },
+  ];
+
+  for (const src of researchSources) {
+    if (process.env[src.envKey]) {
+      const srcArgs = dryRun ? ["--dry-run"] : [];
+      console.log(`[orchestrate] ${src.label} リサーチ開始`);
+      await runAgent(src.script, srcArgs, { timeout: 600_000 });
+    } else {
+      console.log(`[orchestrate] ${src.envKey} 未設定。${src.label} リサーチをスキップ`);
+    }
+  }
+
+  // 3b. Researcher → 週次プラン生成
   const researcherArgs = dryRun ? ["--dry-run"] : [];
   const researchResult = await runAgent("researcher-agent.js", researcherArgs, { captureStdout: true });
 
@@ -205,6 +249,9 @@ async function weeklyPipeline(dryRun) {
     await gitCommitAndPush("data: X投稿パイプライン週次実行");
   }
 
+  // パイプライン正常完了 → エラーカウントリセット
+  clearOrchestrateErrors();
+
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║        週次パイプライン 完了              ║");
   console.log("╚══════════════════════════════════════════╝\n");
@@ -258,6 +305,9 @@ async function dailyPipeline(dryRun) {
   if (!dryRun) {
     await gitCommitAndPush("data: X投稿パイプライン日次実行");
   }
+
+  // パイプライン正常完了 → エラーカウントリセット
+  clearOrchestrateErrors();
 
   console.log("\n┌──────────────────────────────────────────┐");
   console.log("│        日次パイプライン 完了              │");

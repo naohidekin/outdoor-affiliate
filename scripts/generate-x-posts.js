@@ -26,6 +26,7 @@ import {
   CATEGORY_HASHTAGS,
   SEASON_CONTEXT,
   POST_TYPES,
+  ACCOUNT_CONFIG,
   getApprovalLevel,
   getPromptForType,
 } from "../src/lib/x-post-prompts.mjs";
@@ -43,6 +44,7 @@ import {
   appendToPostHistory,
   classifyFirstLinePattern,
   readJson as readDataJson,
+  ipv4Fetch,
 } from "../src/lib/x-agent-utils.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -253,6 +255,7 @@ function formatThreadForSheets(tweets) {
 async function selfScorePost(client, { type, axis, text }) {
   const prompt = `あなたは X 投稿の品質審査員です。
 以下の投稿を10基準で採点してください（各0〜10点）。
+**平均7.0未満は不合格**。厳しめに採点すること。お世辞は不要。
 
 ## 投稿
 タイプ: ${type}
@@ -260,20 +263,20 @@ async function selfScorePost(client, { type, axis, text }) {
 テキスト:
 ${text}
 
-## 採点基準
-1. Lake & Sky トーン: 淡々・知的・非煽り
-2. 体験ベース: 一人称体験感があるか
-3. 具体性: 数値・製品名・状況の具体性
-4. 文字数適正: 200〜280文字の範囲
-5. ハッシュタグ適正: 2〜3個で本文と整合
-6. タイプ適合: 投稿タイプの目的に合致
-7. 軸適合: 発信軸のトーンに合致
-8. オリジナリティ: 既視感がないか
-9. フック強度: 1行目の引きつけ力
-10. アクション明確: 読後行動が促されるか
+## 採点基準（各0〜10点）
+1. フックの強さ: 1行目で「読み進めたい」と思わせる力。スクロールを止められるか
+2. 有益性: 読者にとって実用的な価値があるか。「知ってよかった」と思えるか
+3. 具体性: 数値・製品名・状況・体験の具体性。抽象的な一般論になっていないか
+4. テンポ感: 文のリズム・読みやすさ。句読点の間隔、改行のバランス
+5. ペルソナ一致度: 「ギア男」のキャラ（37歳・長野・キャンプ歴10年・2児の父）に合致しているか
+6. オリジナリティ: 既視感がないか。テンプレ的・どこかで見た投稿になっていないか
+7. ブクマ誘発力: 「あとで見返したい」「保存しておきたい」と思わせる情報密度
+8. アクション誘発: いいね・RT・リプライしたくなる衝動を生むか
+9. 軸適合: 発信軸（${axis}）のトーン・ターゲット層に合致しているか
+10. 文字数・構成: 280文字以内に収まり、導入→本題→締めの構成バランスが取れているか
 
 ## 出力形式（JSONのみ）
-{ "scores": [8, 7, 9, 8, 7, 8, 9, 6, 7, 8], "total": 7.7, "comment": "..." }`;
+{ "scores": [8, 7, 9, 8, 7, 8, 9, 6, 7, 8], "total": 7.7, "comment": "改善ポイントを1文で" }`;
 
   try {
     const response = await client.messages.create({
@@ -302,7 +305,7 @@ function checkSimilarity(newText) {
   return maxSimilarity;
 }
 
-// === パターンローテーション ===
+// === パターンローテーション（書き出し + フォーマット） ===
 
 function buildPatternRotationBlock() {
   const history = loadPostHistory();
@@ -333,14 +336,119 @@ function buildPatternRotationBlock() {
 ${examples.map((e) => `- 「${e}」`).join("\n")}`;
 }
 
-// === Analyst ヒント注入 ===
+// === 投稿フォーマットパターンローテーション ===
 
-function buildAnalystHintsBlock() {
+function buildFormatPatternBlock() {
+  const history = loadPostHistory();
+  const formatData = readDataJson("post-format-patterns.json");
+  if (!formatData || !formatData.formats) return "";
+
+  // 直近3件の formatPattern を取得
+  const recentFormats = history.entries
+    .slice(-3)
+    .map((e) => e.formatPattern)
+    .filter(Boolean);
+
+  // 全サブカテゴリをフラット化
+  const allPatterns = [];
+  for (const fmt of formatData.formats) {
+    for (const sub of fmt.subCategories) {
+      const fullId = `${fmt.id}/${sub.id}`;
+      allPatterns.push({
+        fullId,
+        parentName: fmt.name,
+        subName: sub.name,
+        description: sub.description,
+        promptHint: sub.promptHint,
+        parentDescription: fmt.description,
+      });
+    }
+  }
+
+  // 直近3件を除外
+  const available = allPatterns.filter((p) => !recentFormats.includes(p.fullId));
+  const pool = available.length > 0 ? available : allPatterns;
+
+  // ランダムに2〜3パターン選出（Claudeに選択肢を与える）
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 3);
+
+  const lines = selected.map(
+    (p) => `- **${p.fullId}** [${p.parentName} > ${p.subName}]: ${p.promptHint}`
+  );
+
+  const avoidList = recentFormats.length > 0
+    ? `\n⚠️ 直近使用済み（避けること）: ${recentFormats.join(", ")}`
+    : "";
+
+  return `\n## 投稿フォーマットパターン指示
+以下のフォーマットパターンから選んで投稿を構成してください。
+複数件生成する場合は、異なるパターンを使い分けること。
+${avoidList}
+
+### 推奨パターン:
+${lines.join("\n")}
+
+**formatPattern フィールドに使用したパターンID（例: short_complete/expose）を必ず記載すること。**`;
+}
+
+// === バズ1行目参照ブロック ===
+
+function buildBuzzFirstLinesBlock(currentType = null) {
+  const buzzData = readDataJson("buzz-first-lines.json");
+  if (!buzzData || !buzzData.lines || buzzData.lines.length === 0) return "";
+
+  // パターン別にグループ化し、高エンゲージメントのものを優先
+  const lines = buzzData.lines
+    .filter((l) => l.text && l.text.length >= 10)
+    .sort((a, b) => ((b.bookmarks || 0) + (b.likes || 0)) - ((a.bookmarks || 0) + (a.likes || 0)));
+
+  // ランダムに5件選出（同じものばかり参照しないように）
+  const shuffled = [...lines].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 5);
+
+  if (selected.length === 0) return "";
+
+  return `\n## バズった投稿の1行目（参考・構造だけ学んで自分のジャンルに変換すること）
+${selected.map((l) => `- 「${l.text}」 [${l.pattern || "未分類"}]${l.likes ? ` ♥${l.likes}` : ""}`).join("\n")}
+**注意**: これらをそのまま使わない。構造・リズム・フック感だけ参考にして、自分のネタで書く。`;
+}
+
+// === Analyst ディレクティブ注入 ===
+
+function buildAnalystHintsBlock(currentType = null) {
   const feedback = readDataJson("analyst-feedback.json");
-  if (!feedback || !feedback.writerHints || feedback.writerHints.length === 0) return "";
+  if (!feedback) return "";
 
-  return `\n## 直近の分析フィードバック
-${feedback.writerHints.map((h) => `- ${h}`).join("\n")}`;
+  const parts = [];
+
+  // ディレクティブ（優先表示）
+  if (feedback.writerDirectives && feedback.writerDirectives.length > 0) {
+    const relevant = feedback.writerDirectives.filter((d) =>
+      d.appliesTo.includes("all") || d.appliesTo.includes(currentType)
+    );
+    if (relevant.length > 0) {
+      parts.push("## アナリストからの指示（必ず従うこと）");
+      for (const d of relevant) {
+        const priority = d.priority === "high" ? "【必須】" : "";
+        parts.push(`- ${priority}${d.directive}（理由: ${d.reason}）`);
+      }
+    }
+  }
+
+  // 従来のヒント（補足情報）
+  if (feedback.writerHints && feedback.writerHints.length > 0) {
+    parts.push("\n## 直近の分析フィードバック");
+    // ディレクティブと重複しない分だけ追加（先頭5件）
+    const hintsWithoutDirectives = feedback.writerHints.filter(
+      (h) => !h.startsWith("【重要】")
+    );
+    for (const h of hintsWithoutDirectives.slice(0, 5)) {
+      parts.push(`- ${h}`);
+    }
+  }
+
+  return parts.length > 0 ? "\n" + parts.join("\n") : "";
 }
 
 // === 生成プラン ===
@@ -379,11 +487,17 @@ async function generatePosts(opts) {
     process.exit(1);
   }
 
-  const client = new Anthropic({ apiKey });
+  const client = new Anthropic({ apiKey, fetch: ipv4Fetch, maxRetries: 3 });
   const articles = readJson("articles.json").filter((a) => a.status === "published");
   const categories = readJson("categories.json");
   const seedData = loadSeeds();
   const month = new Date().getMonth() + 1;
+
+  // 安全装置の閾値（account-config.json から）
+  const safetyConfig = ACCOUNT_CONFIG.safety || {};
+  const QUALITY_THRESHOLD = safetyConfig.qualityThreshold || 7.0;
+  const SIMILARITY_THRESHOLD = safetyConfig.similarityThreshold || 0.85;
+  const MAX_RETRIES = safetyConfig.maxRetries || 2;
 
   // 既存投稿（repost_rewrite 用 + 重複回避用）
   let existingPosts = [];
@@ -468,17 +582,19 @@ async function generatePosts(opts) {
 
     console.log(`[${item.type}] ${item.count}件を生成中...${seed ? ` (seed: ${seed.id})` : ""}`);
 
-    // プロンプト生成（パターンローテーション + Analyst ヒント追加）
+    // プロンプト生成（フォーマットパターン + 書き出しローテーション + バズ1行目 + Analyst ディレクティブ）
     let prompt = getPromptForType(item.type, context);
+    prompt += buildFormatPatternBlock();
     prompt += buildPatternRotationBlock();
-    prompt += buildAnalystHintsBlock();
+    prompt += buildBuzzFirstLinesBlock(item.type);
+    prompt += buildAnalystHintsBlock(item.type);
 
     const isThread = item.type === "gear_thread";
     const approvalLevel = getApprovalLevel(item.type);
     const postAxis = seed?.axis || POST_TYPES[item.type].axis;
 
     // リトライループ（最大3回: 初回 + 2リトライ）
-    for (let attempt = 0; attempt <= 2; attempt++) {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       if (attempt > 0) {
         console.log(`[${item.type}] リトライ ${attempt}/2...`);
       }
@@ -540,7 +656,7 @@ async function generatePosts(opts) {
 
         // 類似チェック
         const similarityScore = checkSimilarity(plainText);
-        if (similarityScore > 0.6 && attempt < 2) {
+        if (similarityScore > SIMILARITY_THRESHOLD && attempt < MAX_RETRIES) {
           console.log(`[${item.type}] 類似度 ${similarityScore.toFixed(2)} > 0.6 → 再生成`);
           needsRetry = true;
           continue;
@@ -554,7 +670,7 @@ async function generatePosts(opts) {
         });
         console.log(`[${item.type}] selfScore: ${scoreResult.total}`);
 
-        if (scoreResult.total < 7.0 && attempt < 2) {
+        if (scoreResult.total < QUALITY_THRESHOLD && attempt < MAX_RETRIES) {
           console.log(`[${item.type}] スコア ${scoreResult.total} < 7.0 → 再生成`);
           needsRetry = true;
           continue;
@@ -565,7 +681,7 @@ async function generatePosts(opts) {
 
         // ステータス判定
         let status;
-        if (scoreResult.total < 7.0 && attempt >= 2) {
+        if (scoreResult.total < QUALITY_THRESHOLD && attempt >= MAX_RETRIES) {
           status = "discarded";
         } else if (!g._checkOk) {
           status = "draft";
@@ -575,7 +691,7 @@ async function generatePosts(opts) {
           status = "draft";
         }
 
-        if (similarityScore > 0.6) {
+        if (similarityScore > SIMILARITY_THRESHOLD) {
           g.validationErrors = [g.validationErrors, "類似投稿あり"].filter(Boolean).join(" / ");
           if (status !== "discarded") status = "draft";
         }
@@ -599,6 +715,8 @@ async function generatePosts(opts) {
           firstLinePattern,
           similarityScore,
           retryCount: attempt,
+          selfReply: g.selfReply || "",
+          formatPattern: g.formatPattern || "",
         });
       }
 
@@ -631,7 +749,7 @@ async function generatePosts(opts) {
       console.log(`  ${p.text}`);
     }
     if (p.seedId) console.log(`  seed: ${p.seedId}`);
-    if (p.selfScore != null) console.log(`  score: ${p.selfScore} | pattern: ${p.firstLinePattern} | sim: ${(p.similarityScore || 0).toFixed(2)} | retry: ${p.retryCount || 0}`);
+    if (p.selfScore != null) console.log(`  score: ${p.selfScore} | 1L: ${p.firstLinePattern} | fmt: ${p.formatPattern || "-"} | sim: ${(p.similarityScore || 0).toFixed(2)} | retry: ${p.retryCount || 0}`);
     if (p.validationErrors) console.log(`  NG: ${p.validationErrors}`);
     console.log("---");
   }
@@ -661,11 +779,13 @@ async function generatePosts(opts) {
       p.firstLinePattern || "",                            // P
       p.similarityScore != null ? String(p.similarityScore) : "", // Q
       String(p.retryCount || 0),                           // R
+      p.selfReply || "",                                   // S
+      p.formatPattern || "",                               // T
     ]);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.X_SHEET_ID,
-      range: `${DRAFT_SHEET}!A:R`,
+      range: `${DRAFT_SHEET}!A:T`,
       valueInputOption: "RAW",
       requestBody: { values: rows },
     });
@@ -683,6 +803,7 @@ async function generatePosts(opts) {
           text: p.text,
           articleSlug: p.articleSlug || null,
           firstLinePattern: p.firstLinePattern || null,
+          formatPattern: p.formatPattern || null,
           selfScore: p.selfScore != null ? p.selfScore : null,
           postedAt: null,
           seedId: p.seedId || null,

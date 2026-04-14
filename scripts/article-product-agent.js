@@ -26,6 +26,7 @@ import {
 loadEnv();
 
 const RAKUTEN_API_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const RAKUTEN_AFFILIATE_ID = "18eb3228.621d8df3.18eb3229.ec5f8d49";
 const AMAZON_ASSOCIATE_TAG = "nao78-22";
 
 // ─── CLI ─────────────────────────────────────────────
@@ -55,6 +56,7 @@ async function searchRakuten(keyword, hits = 10) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
+    affiliateId: RAKUTEN_AFFILIATE_ID,
     keyword,
     hits: String(hits),
     sort: "-reviewAverage",

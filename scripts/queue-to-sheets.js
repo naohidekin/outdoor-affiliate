@@ -18,16 +18,20 @@ import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadEnv, readJson, writeJson } from "../src/lib/x-agent-utils.mjs";
+
+loadEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// .env.local を手動読み込み
-const envPath = path.join(__dirname, "..", ".env.local");
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match && !process.env[match[1].trim()]) {
+// (loadEnv で .env.local 読み込み済み — 旧手動読み込みコード削除)
+if (false) {
+  // removed: old manual env loading
+  if (false) {
+    const envContent = "";
+    for (const line of envContent.split("\n")) {
+      const match = line.match(/^([^#=]+)=(.*)$/);
+      if (match && !process.env[match[1].trim()]) {
       process.env[match[1].trim()] = match[2].trim();
     }
   }
@@ -65,10 +69,10 @@ async function queueToSheets() {
   const sheets = await getSheets();
   const today = new Date().toISOString().slice(0, 10);
 
-  // 「下書き管理」シートから全データを読み取り
+  // 「下書き管理」シートから全データを読み取り（S列=selfReply まで）
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${DRAFT_SHEET}!A2:J`,
+    range: `${DRAFT_SHEET}!A2:S`,
   });
   const rows = res.data.values || [];
 
@@ -76,8 +80,8 @@ async function queueToSheets() {
   const toQueue = [];
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const status = row[6]; // status列
-    const scheduledDate = row[7]; // scheduledDate列
+    const status = row[6]; // G: status列
+    const scheduledDate = row[7]; // H: scheduledDate列
     if (status === "approved" && scheduledDate <= today) {
       toQueue.push({
         rowIndex: i + 2, // +2 for header + 1-indexed
@@ -86,6 +90,7 @@ async function queueToSheets() {
         text: row[2],
         url: row[4] || "",
         scheduledDate: row[7],
+        selfReply: row[18] || "", // S: selfReply列
       });
     }
   }
@@ -172,21 +177,22 @@ async function queueToSheets() {
     }
   }
 
-  // 「X投稿管理」に行を追加
+  // 「X投稿管理」に行を追加（I列=self_reply を含む）
   const queueRows = toQueue2.map((p) => [
-    "ready",
-    p.type,
-    p.text,
-    "",
-    p.url,
-    p.scheduledDate,
-    "",
-    "",
+    "ready",        // A: status
+    p.type,         // B: post_type
+    p.text,         // C: text
+    "",             // D: image_url
+    p.url,          // E: source_url
+    p.scheduledDate, // F: scheduled_at
+    "",             // G: posted_at
+    "",             // H: post_url
+    p.selfReply,    // I: self_reply
   ]);
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${QUEUE_SHEET}!A:H`,
+    range: `${QUEUE_SHEET}!A:I`,
     valueInputOption: "RAW",
     requestBody: { values: queueRows },
   });
@@ -200,6 +206,21 @@ async function queueToSheets() {
       requestBody: { values: [["queued"]] },
     });
   }
+
+  // JSONキューにも同時書き込み（Sheets障害時のフォールバック用）
+  const queueJson = readJson("post-queue.json") || { version: 1, queue: [] };
+  for (const p of toQueue2) {
+    queueJson.queue.push({
+      status: "ready",
+      type: p.type,
+      text: p.text,
+      url: p.url || "",
+      selfReply: p.selfReply || "",
+      scheduledDate: p.scheduledDate,
+      queuedAt: new Date().toISOString(),
+    });
+  }
+  writeJson("post-queue.json", queueJson);
 
   console.log(
     `${toQueue2.length}件をSheetsに投入し、ステータスをqueuedに更新しました`

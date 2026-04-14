@@ -4,10 +4,5 @@
   "reason": "",
   "enabledAt": null,
   "enabledBy": "manual",
-  "consecutiveErrors": [
-    {
-      "type": "agent-fail:supervisor-agent.js",
-      "at": "2026-04-13T19:24:22.172Z"
-    }
-  ]
+  "consecutiveErrors": []
 }
