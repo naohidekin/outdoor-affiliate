@@ -52,18 +52,46 @@ export function readJson(filename) {
 }
 
 /**
- * data/ 配下に JSON を書く。
+ * data/ 配下に JSON を書く（ロックファイルで排他制御）。
  */
 export function writeJson(filename, data) {
   const filePath = path.join(DATA_DIR, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  const lockPath = filePath + ".lock";
+  const maxWait = 10_000; // 最大10秒待機
+  const start = Date.now();
+
+  // ロック取得（スピンウェイト）
+  while (Date.now() - start < maxWait) {
+    try {
+      fs.writeFileSync(lockPath, String(process.pid), { flag: "wx" });
+      break; // ロック取得成功
+    } catch {
+      // ロック競合 — 古いロック（30秒超）は強制解除
+      try {
+        const lockStat = fs.statSync(lockPath);
+        if (Date.now() - lockStat.mtimeMs > 30_000) {
+          fs.unlinkSync(lockPath);
+          continue;
+        }
+      } catch { /* stat/unlink 失敗は無視 */ }
+      // 100ms待機してリトライ
+      const waitEnd = Date.now() + 100;
+      while (Date.now() < waitEnd) { /* busy wait */ }
+    }
+  }
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  } finally {
+    try { fs.unlinkSync(lockPath); } catch { /* cleanup */ }
+  }
 }
 
 // ─── KILL SWITCH ────────���─────────────────────────────
 
 /**
  * kill-switch.json を確認。
- * @returns {{ killed: boolean, reason: string }}
+ * @returns {{ killed: boolean, articleKilled: boolean, reason: string }}
  */
 export function checkKillSwitch() {
   const data = readJson("kill-switch.json");
@@ -71,17 +99,31 @@ export function checkKillSwitch() {
     // ファイルが無い場合は自動作成して正常返却
     writeJson("kill-switch.json", {
       enabled: false,
+      articleEnabled: false,
       reason: "",
       enabledAt: null,
       enabledBy: "manual",
     });
     console.warn("[kill-switch] ファイルが存在しなかったため自動作成しました");
-    return { killed: false, reason: "" };
+    return { killed: false, articleKilled: false, reason: "" };
   }
   return {
     killed: !!data.enabled,
+    articleKilled: !!data.articleEnabled,
     reason: data.reason || "",
   };
+}
+
+/**
+ * 記事パイプライン用 Kill Switch チェック。
+ * enabled（全体停止）または articleEnabled（記事のみ停止）のいずれかで停止。
+ * @returns {{ killed: boolean, reason: string }}
+ */
+export function checkArticleKillSwitch() {
+  const ks = checkKillSwitch();
+  if (ks.killed) return { killed: true, reason: ks.reason };
+  if (ks.articleKilled) return { killed: true, reason: "記事パイプライン Kill Switch 有効" };
+  return { killed: false, reason: "" };
 }
 
 // ─── 投稿��歴管理 ────────────────���───────────────────

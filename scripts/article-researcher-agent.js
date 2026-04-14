@@ -17,7 +17,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
@@ -72,15 +72,9 @@ function getPublishDates(count) {
 async function main() {
   const opts = parseArgs();
 
-  const ks = checkKillSwitch();
+  const ks = checkArticleKillSwitch();
   if (ks.killed) {
-    console.error(`[article-researcher] KILL SWITCH 有効: ${ks.reason}`);
-    process.exit(1);
-  }
-
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-researcher] 記事パイプライン Kill Switch 有効。中止。");
+    console.error(`[article-researcher] ${ks.reason}`);
     process.exit(1);
   }
 
@@ -158,7 +152,7 @@ ${analystInfo}
   console.log("[article-researcher] Claude API 呼び出し中...");
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: process.env.ARTICLE_WRITER_MODEL || "claude-sonnet-4-6",
     max_tokens: 2000,
     messages: [{ role: "user", content: userPrompt }],
     system: systemPrompt,

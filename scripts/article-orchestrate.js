@@ -13,7 +13,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadEnv, readJson } from "../src/lib/x-agent-utils.mjs";
+import { loadEnv, readJson, writeJson, checkArticleKillSwitch } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
 
@@ -107,7 +107,36 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
     console.error(`  ${err.message}`);
     if (err.stdout) console.log(err.stdout);
     if (err.stderr) console.error(err.stderr);
+    // 連続エラーをkill-switch.jsonに記録
+    const ks = readJson("kill-switch.json") || {};
+    const errors = ks.consecutiveErrors || [];
+    errors.push({ type: `article-agent-fail:${script}`, at: new Date().toISOString() });
+    ks.consecutiveErrors = errors.slice(-5);
+    writeJson("kill-switch.json", ks);
+
+    // 3連続で自動KILL（記事パイプラインのみ停止）
+    const articleErrors = ks.consecutiveErrors.filter((e) => e.type.startsWith("article-agent-fail:"));
+    if (articleErrors.length >= 3) {
+      console.error(`[article-orchestrate] 連続エラー${articleErrors.length}回。記事パイプライン自動停止。`);
+      ks.articleEnabled = true;
+      ks.reason = `記事パイプライン連続エラー: ${articleErrors.slice(-3).map((e) => e.type).join(", ")}`;
+      ks.enabledAt = new Date().toISOString();
+      ks.enabledBy = "auto-article-orchestrate";
+      writeJson("kill-switch.json", ks);
+    }
+
     return { success: false, error: err.message };
+  }
+}
+
+// エージェント成功時にエラーカウントをリセット
+function clearArticleErrors() {
+  const ks = readJson("kill-switch.json") || {};
+  const errors = ks.consecutiveErrors || [];
+  const filtered = errors.filter((e) => !e.type.startsWith("article-agent-fail:"));
+  if (filtered.length !== errors.length) {
+    ks.consecutiveErrors = filtered;
+    writeJson("kill-switch.json", ks);
   }
 }
 
@@ -128,15 +157,10 @@ async function weeklyPipeline(dryRun) {
     }
   }
 
-  // 1. Kill Switch チェック
-  const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
-  if (!checkResult.success) {
-    console.error("[article-orchestrate] KILL SWITCH 有効。中止。");
-    return false;
-  }
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-orchestrate] 記事パイプライン Kill Switch 有効。中止。");
+  // 1. Kill Switch チェック（統合チェック: enabled + articleEnabled）
+  const ks = checkArticleKillSwitch();
+  if (ks.killed) {
+    console.error(`[article-orchestrate] ${ks.reason || "KILL SWITCH 有効"}。中止。`);
     return false;
   }
 
@@ -182,6 +206,9 @@ async function weeklyPipeline(dryRun) {
     await gitCommitAndPush("data: 記事パイプライン週次実行");
   }
 
+  // パイプライン正常完了 → エラーカウントリセット
+  clearArticleErrors();
+
   console.log("\n╔══════════════════════════════════════════════╗");
   console.log("║     記事パイプライン（週次）完了              ║");
   console.log("╚══════════════════════════════════════════════╝\n");
@@ -205,15 +232,10 @@ async function dailyPipeline(dryRun) {
     }
   }
 
-  // 1. Kill Switch チェック
-  const checkResult = await runAgent("supervisor-agent.js", ["--check"]);
-  if (!checkResult.success) {
-    console.error("[article-orchestrate] KILL SWITCH 有効。中止。");
-    return false;
-  }
-  const ksData2 = readJson("kill-switch.json");
-  if (ksData2?.articleEnabled) {
-    console.error("[article-orchestrate] 記事パイプライン Kill Switch 有効。中止。");
+  // 1. Kill Switch チェック（統合チェック: enabled + articleEnabled）
+  const ks2 = checkArticleKillSwitch();
+  if (ks2.killed) {
+    console.error(`[article-orchestrate] ${ks2.reason || "KILL SWITCH 有効"}。中止。`);
     return false;
   }
 
@@ -233,6 +255,9 @@ async function dailyPipeline(dryRun) {
   if (!dryRun) {
     await gitCommitAndPush("data: 記事パイプライン日次実行");
   }
+
+  // パイプライン正常完了 → エラーカウントリセット
+  clearArticleErrors();
 
   console.log("\n┌──────────────────────────────────────────────┐");
   console.log("│     記事パイプライン（日次）完了              │");

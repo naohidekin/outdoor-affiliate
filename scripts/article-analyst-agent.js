@@ -17,7 +17,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
@@ -232,16 +232,9 @@ function analyze(articles, ga4Data, clicks, days) {
 async function main() {
   const opts = parseArgs();
 
-  const ks = checkKillSwitch();
+  const ks = checkArticleKillSwitch();
   if (ks.killed) {
-    console.error(`[article-analyst] KILL SWITCH 有効: ${ks.reason}`);
-    process.exit(1);
-  }
-
-  // articleEnabled チェック
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-analyst] 記事パイプライン Kill Switch 有効。中止。");
+    console.error(`[article-analyst] ${ks.reason}`);
     process.exit(1);
   }
 

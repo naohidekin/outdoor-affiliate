@@ -17,7 +17,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
@@ -130,14 +130,9 @@ async function createArticlePromo(article) {
 async function main() {
   const opts = parseArgs();
 
-  const ks = checkKillSwitch();
+  const ks = checkArticleKillSwitch();
   if (ks.killed) {
-    console.error(`[article-publisher] KILL SWITCH 有効: ${ks.reason}`);
-    process.exit(1);
-  }
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-publisher] 記事パイプライン Kill Switch 有効。中止。");
+    console.error(`[article-publisher] ${ks.reason}`);
     process.exit(1);
   }
 

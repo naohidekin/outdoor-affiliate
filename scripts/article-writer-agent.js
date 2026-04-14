@@ -20,7 +20,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 import fs from "fs";
 import path from "path";
@@ -31,7 +31,7 @@ loadEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = process.env.ARTICLE_WRITER_MODEL || "claude-sonnet-4-6";
 const MAX_RETRIES = 1;
 
 // ─── CLI ─────────────────────────────────────────────
@@ -80,7 +80,7 @@ const SCORING_CRITERIA = [
 async function scoreArticle(anthropic, content, theme) {
   try {
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: process.env.ARTICLE_SCORER_MODEL || "claude-haiku-4-5-20251001",
       max_tokens: 500,
       messages: [{
         role: "user",
@@ -199,14 +199,9 @@ ${productInfo}
 async function main() {
   const opts = parseArgs();
 
-  const ks = checkKillSwitch();
+  const ks = checkArticleKillSwitch();
   if (ks.killed) {
-    console.error(`[article-writer] KILL SWITCH 有効: ${ks.reason}`);
-    process.exit(1);
-  }
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-writer] 記事パイプライン Kill Switch 有効。中止。");
+    console.error(`[article-writer] ${ks.reason}`);
     process.exit(1);
   }
 

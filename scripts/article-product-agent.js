@@ -20,7 +20,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
@@ -96,20 +96,25 @@ async function searchRakuten(keyword, hits = 10) {
 
 // ─── スペック構造化（Claude API） ────────────────────
 
-async function extractSpecs(itemCaption, categoryId, specKeys) {
-  if (!itemCaption || itemCaption.length < 20) return {};
+async function extractSpecs(itemCaption, itemName, categoryId, specKeys) {
+  if (!itemCaption || itemCaption.length < 20) return { specs: {}, brand: "" };
 
   try {
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: process.env.ARTICLE_SCORER_MODEL || "claude-haiku-4-5-20251001",
       max_tokens: 500,
       messages: [{
         role: "user",
-        content: `以下の商品説明文から、指定されたスペック項目を抽出してJSONで返してください。
-該当する情報がない項目は空文字にしてください。JSONのみ返してください。
+        content: `以下の商品情報からブランド名とスペックを抽出してJSONで返してください。
+JSONのみ返してください。
 
-スペック項目: ${specKeys.join(", ")}
+商品名: ${itemName}
+
+出力形式:
+{"brand": "ブランド名（メーカー名）", ${specKeys.map(k => `"${k}": "値"`).join(", ")}}
+
+該当する情報がない項目は空文字に。shopName（販売店名）ではなくメーカー/ブランド名を返すこと。
 
 商品説明:
 ${itemCaption.slice(0, 2000)}`,
@@ -118,9 +123,12 @@ ${itemCaption.slice(0, 2000)}`,
 
     const text = response.content[0].text.trim();
     const jsonStr = text.replace(/^```json?\s*/, "").replace(/\s*```$/, "");
-    return JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonStr);
+    const brand = parsed.brand || "";
+    delete parsed.brand;
+    return { specs: parsed, brand };
   } catch {
-    return {};
+    return { specs: {}, brand: "" };
   }
 }
 
@@ -213,7 +221,7 @@ async function processTheme(theme, existingProducts, categorySpecs) {
   // 各商品をproducts.json形式に変換
   const newProducts = [];
   for (const item of selected) {
-    const specs = await extractSpecs(item.itemCaption, theme.categoryId, specKeys);
+    const { specs, brand } = await extractSpecs(item.itemCaption, item.itemName, theme.categoryId, specKeys);
 
     const productId = generateProductId(theme.categoryId, [...existingProducts, ...newProducts]);
     const amazonSearchUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(item.itemName)}&tag=${AMAZON_ASSOCIATE_TAG}`;
@@ -221,7 +229,7 @@ async function processTheme(theme, existingProducts, categorySpecs) {
     newProducts.push({
       id: productId,
       name: item.itemName.slice(0, 100), // 長すぎる名前を切り詰め
-      brand: item.shopName || "",
+      brand: brand || item.shopName || "",
       price: item.itemPrice,
       imageUrl: item.imageUrl,
       affiliateUrl: item.affiliateUrl,
@@ -252,14 +260,9 @@ async function processTheme(theme, existingProducts, categorySpecs) {
 async function main() {
   const opts = parseArgs();
 
-  const ks = checkKillSwitch();
+  const ks = checkArticleKillSwitch();
   if (ks.killed) {
-    console.error(`[article-product] KILL SWITCH 有効: ${ks.reason}`);
-    process.exit(1);
-  }
-  const ksData = readJson("kill-switch.json");
-  if (ksData?.articleEnabled) {
-    console.error("[article-product] 記事パイプライン Kill Switch 有効。中止。");
+    console.error(`[article-product] ${ks.reason}`);
     process.exit(1);
   }
 
