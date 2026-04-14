@@ -18,6 +18,8 @@ PLISTS=(
   "com.outdoor-affiliate.sync-posted-status.plist"
   "com.outdoor-affiliate.nightly-analyst.plist"
   "com.outdoor-affiliate.weekly-pipeline.plist"
+  "com.outdoor-affiliate.article-weekly.plist"
+  "com.outdoor-affiliate.article-daily.plist"
 )
 
 if [ "${1:-}" = "--unload" ]; then

@@ -7,10 +7,10 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/bash</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/notify-on-error.sh</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/notify-on-error.sh</string>
 		<string>夜間Analyst更新</string>
-		<string>/opt/homebrew/bin/node</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/analyst-agent.js</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin/node</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/analyst-agent.js</string>
 		<string>--days</string>
 		<string>7</string>
 	</array>
@@ -23,15 +23,15 @@
 		<integer>0</integer>
 	</dict>
 	<key>WorkingDirectory</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyst.log</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-analyst.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyst-error.log</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-analyst-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
 	</dict>
 </dict>
 </plist>

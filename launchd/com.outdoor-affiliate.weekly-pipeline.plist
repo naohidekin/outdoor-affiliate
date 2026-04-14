@@ -7,10 +7,10 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/bash</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/notify-on-error.sh</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/notify-on-error.sh</string>
 		<string>週次パイプライン</string>
-		<string>/opt/homebrew/bin/node</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/orchestrate.js</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin/node</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/orchestrate.js</string>
 		<string>--pipeline</string>
 		<string>weekly</string>
 	</array>
@@ -25,15 +25,15 @@
 		<integer>0</integer>
 	</dict>
 	<key>WorkingDirectory</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-weekly.log</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-weekly.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-weekly-error.log</string>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-weekly-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
 	</dict>
 </dict>
 </plist>
