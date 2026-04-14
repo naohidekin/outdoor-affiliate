@@ -200,6 +200,11 @@ async function weeklyPipeline(dryRun) {
     await gitCommitAndPush("data: 記事パイプライン週次実行");
   }
 
+  // 10. Supabase同期
+  if (!dryRun) {
+    await runAgent("sync-to-supabase.js", []);
+  }
+
   // パイプライン正常完了 → エラーカウントリセット
   resetArticleFailures();
 
@@ -248,6 +253,11 @@ async function dailyPipeline(dryRun) {
   // 4. Git commit & push
   if (!dryRun) {
     await gitCommitAndPush("data: 記事パイプライン日次実行");
+  }
+
+  // 5. Supabase同期
+  if (!dryRun) {
+    await runAgent("sync-to-supabase.js", ["--articles-only"]);
   }
 
   // パイプライン正常完了 → エラーカウントリセット

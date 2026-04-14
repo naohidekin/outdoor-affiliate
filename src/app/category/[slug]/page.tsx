@@ -5,6 +5,7 @@ import {
   getCategories,
   getCategoryBySlug,
   getArticlesByCategory,
+  getProductsByIds,
 } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -71,7 +72,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) return {};
 
   return {
@@ -96,11 +97,19 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const categories = getCategories();
-  const articles = getArticlesByCategory(category.id);
+  const [categories, articles] = await Promise.all([
+    getCategories(),
+    getArticlesByCategory(category.id),
+  ]);
+
+  const allProductIds = [...new Set(articles.flatMap((a) => a.productIds))];
+  const allProducts = allProductIds.length > 0
+    ? await getProductsByIds(allProductIds)
+    : [];
+  const productMap = new Map(allProducts.map((p) => [p.id, p]));
   const baseUrl = "https://camp-gear-lab.com";
   const introText = CATEGORY_INTRO[category.slug] ?? "";
 
@@ -186,6 +195,9 @@ export default async function CategoryPage({
                   key={article.id}
                   article={article}
                   category={category}
+                  thumbnailProduct={article.productIds
+                    .map((id) => productMap.get(id))
+                    .find((p) => p?.imageUrl)}
                 />
               ))}
             </div>

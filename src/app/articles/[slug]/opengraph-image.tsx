@@ -26,8 +26,8 @@ export default async function Image({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
-  const category = article ? getCategoryById(article.categoryId) : null;
+  const article = await getArticleBySlug(slug);
+  const category = article ? await getCategoryById(article.categoryId) : null;
 
   const title = article?.title ?? "Outdoor Gear Lab";
   const categoryName = category?.name ?? "";

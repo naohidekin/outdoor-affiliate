@@ -38,10 +38,15 @@
     "article:weekly:dry": "node --dns-result-order=ipv4first scripts/article-orchestrate.js --pipeline weekly --dry-run",
     "article:daily:dry": "node --dns-result-order=ipv4first scripts/article-orchestrate.js --pipeline daily --dry-run",
     "article:kill": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('data/kill-switch.json'));d.articleEnabled=true;fs.writeFileSync('data/kill-switch.json',JSON.stringify(d,null,2))\"",
-    "article:resume": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('data/kill-switch.json'));d.articleEnabled=false;fs.writeFileSync('data/kill-switch.json',JSON.stringify(d,null,2))\""
+    "article:resume": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('data/kill-switch.json'));d.articleEnabled=false;fs.writeFileSync('data/kill-switch.json',JSON.stringify(d,null,2))\"",
+    "db:migrate": "node --dns-result-order=ipv4first scripts/migrate-to-supabase.js",
+    "db:migrate:dry": "node --dns-result-order=ipv4first scripts/migrate-to-supabase.js --dry-run",
+    "db:sync": "node --dns-result-order=ipv4first scripts/sync-to-supabase.js",
+    "db:sync:dry": "node --dns-result-order=ipv4first scripts/sync-to-supabase.js --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@supabase/supabase-js": "^2.103.0",
     "googleapis": "^171.4.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",

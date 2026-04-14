@@ -21,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
   if (!article) return {};
 
   const description = article.metaDescription || article.excerpt;
@@ -56,25 +56,29 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
   if (!article || article.status !== "published") notFound();
 
-  const categories = getCategories();
-  const category = getCategoryById(article.categoryId);
-  const products = getProductsByIds(article.productIds);
-  const relatedArticles = category
-    ? getArticlesByCategory(category.id)
-        .filter((a) => a.id !== article.id)
-        .slice(0, 3)
-    : [];
+  const [categories, category, products, sameCategoryArticles, allArticles] =
+    await Promise.all([
+      getCategories(),
+      getCategoryById(article.categoryId),
+      getProductsByIds(article.productIds),
+      getArticlesByCategory(article.categoryId),
+      getArticles(),
+    ]);
+  const relatedArticles = sameCategoryArticles
+    .filter((a) => a.id !== article.id)
+    .slice(0, 3);
 
-  const allPublished = getArticles().filter(
-    (a) =>
-      a.status === "published" &&
-      a.id !== article.id &&
-      a.categoryId !== article.categoryId
-  );
-  const otherCategoryArticles = allPublished.slice(0, 3);
+  const otherCategoryArticles = allArticles
+    .filter(
+      (a) =>
+        a.status === "published" &&
+        a.id !== article.id &&
+        a.categoryId !== article.categoryId
+    )
+    .slice(0, 3);
 
   const faqs = article.faqs ?? [];
   const baseUrl = "https://camp-gear-lab.com";
@@ -362,7 +366,7 @@ export default async function ArticlePage({
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {otherCategoryArticles.map((a) => {
-                const cat = getCategoryById(a.categoryId);
+                const cat = categories.find((c) => c.id === a.categoryId);
                 return (
                   <Link
                     key={a.id}

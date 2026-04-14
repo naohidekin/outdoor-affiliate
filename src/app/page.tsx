@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCategories, getPublishedArticles } from "@/lib/db";
+import { getCategories, getPublishedArticles, getProductsByIds } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
@@ -51,9 +51,18 @@ const CATEGORY_ICON: Record<string, React.ReactNode> = {
   tarp: <Cloudy className="w-6 h-6" />,
 };
 
-export default function Home() {
-  const categories = getCategories();
-  const articles = getPublishedArticles();
+export default async function Home() {
+  const [categories, articles] = await Promise.all([
+    getCategories(),
+    getPublishedArticles(),
+  ]);
+
+  // ArticleCard用: 全記事の商品を一括取得してサムネイルを引き当て
+  const allProductIds = [...new Set(articles.flatMap((a) => a.productIds))];
+  const allProducts = allProductIds.length > 0
+    ? await getProductsByIds(allProductIds)
+    : [];
+  const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
   const baseUrl = "https://camp-gear-lab.com";
 
@@ -197,6 +206,9 @@ export default function Home() {
                     key={article.id}
                     article={article}
                     category={cat}
+                    thumbnailProduct={article.productIds
+                      .map((id) => productMap.get(id))
+                      .find((p) => p?.imageUrl)}
                   />
                 );
               })}

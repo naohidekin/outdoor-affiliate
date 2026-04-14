@@ -5,7 +5,7 @@ import { getCategories, saveCategory, deleteCategory } from "@/lib/db";
 import { Category } from "@/lib/types";
 
 export async function GET() {
-  return NextResponse.json(getCategories());
+  return NextResponse.json(await getCategories());
 }
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const categories = getCategories();
+  const categories = await getCategories();
 
   const category: Category = {
     id: uuidv4(),
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     order: body.order ?? categories.length + 1,
   };
 
-  saveCategory(category);
+  await saveCategory(category);
   return NextResponse.json(category, { status: 201 });
 }
 
@@ -34,14 +34,14 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  const categories = getCategories();
+  const categories = await getCategories();
   const existing = categories.find((c) => c.id === body.id);
   if (!existing) {
     return NextResponse.json({ error: "カテゴリが見つかりません" }, { status: 404 });
   }
 
   const updated: Category = { ...existing, ...body };
-  saveCategory(updated);
+  await saveCategory(updated);
   return NextResponse.json(updated);
 }
 
@@ -56,6 +56,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "IDが必要です" }, { status: 400 });
   }
 
-  deleteCategory(id);
+  await deleteCategory(id);
   return NextResponse.json({ success: true });
 }

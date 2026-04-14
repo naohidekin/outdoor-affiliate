@@ -1,10 +1,13 @@
-import { getPublishedArticles, getCategoryById } from "@/lib/db";
+import { getPublishedArticles, getCategories } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
   const baseUrl = "https://camp-gear-lab.com";
-  const articles = getPublishedArticles();
+  const [articles, categories] = await Promise.all([
+    getPublishedArticles(),
+    getCategories(),
+  ]);
 
   const items = articles
     .sort(
@@ -14,7 +17,7 @@ export function GET() {
     )
     .slice(0, 20)
     .map((article) => {
-      const category = getCategoryById(article.categoryId);
+      const category = categories.find((c) => c.id === article.categoryId);
       const pubDate = new Date(
         article.publishedAt ?? article.createdAt
       ).toUTCString();

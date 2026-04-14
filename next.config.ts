@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "store.nanga.jp" },
       { protocol: "https", hostname: "nanga.jp" },
       { protocol: "https", hostname: "www.logos.ne.jp" },
+      { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },
 };

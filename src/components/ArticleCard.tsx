@@ -15,7 +15,6 @@ import {
   Cloudy,
 } from "lucide-react";
 import { Article, Category, Product } from "@/lib/types";
-import { getProductsByIds } from "@/lib/db";
 
 const CATEGORY_ICON: Record<string, React.ReactNode> = {
   tent: <Tent className="w-10 h-10" strokeWidth={1.5} />,
@@ -50,16 +49,11 @@ const CATEGORY_ICON_SMALL: Record<string, React.ReactNode> = {
 interface Props {
   article: Article;
   category?: Category;
+  thumbnailProduct?: Product;
 }
 
-function pickThumbnail(productIds: string[]): Product | undefined {
-  if (!productIds || productIds.length === 0) return undefined;
-  const products = getProductsByIds(productIds);
-  return products.find((p) => p && p.imageUrl);
-}
-
-export default function ArticleCard({ article, category }: Props) {
-  const thumbProduct = pickThumbnail(article.productIds);
+export default function ArticleCard({ article, category, thumbnailProduct }: Props) {
+  const thumbProduct = thumbnailProduct;
   const categorySlug = category?.slug ?? "";
   const fallbackIcon = CATEGORY_ICON[categorySlug] ?? (
     <Mountain className="w-10 h-10" strokeWidth={1.5} />

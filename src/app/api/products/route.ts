@@ -5,7 +5,7 @@ import { getProducts, saveProduct, deleteProduct, getProductById } from "@/lib/d
 import { Product } from "@/lib/types";
 
 export async function GET() {
-  return NextResponse.json(getProducts());
+  return NextResponse.json(await getProducts());
 }
 
 export async function POST(request: NextRequest) {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     updatedAt: now,
   };
 
-  saveProduct(product);
+  await saveProduct(product);
   return NextResponse.json(product, { status: 201 });
 }
 
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  const existing = getProductById(body.id);
+  const existing = await getProductById(body.id);
   if (!existing) {
     return NextResponse.json({ error: "商品が見つかりません" }, { status: 404 });
   }
@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     updatedAt: new Date().toISOString(),
   };
 
-  saveProduct(updated);
+  await saveProduct(updated);
   return NextResponse.json(updated);
 }
 
@@ -68,6 +68,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "IDが必要です" }, { status: 400 });
   }
 
-  deleteProduct(id);
+  await deleteProduct(id);
   return NextResponse.json({ success: true });
 }

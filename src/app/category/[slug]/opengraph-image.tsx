@@ -26,7 +26,7 @@ export default async function Image({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
   const name = category?.name ?? slug;
   const emoji = CATEGORY_EMOJI[slug] ?? "🏕️";
 

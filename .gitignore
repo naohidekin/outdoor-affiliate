@@ -48,3 +48,6 @@ next-env.d.ts
 # X automation agent data
 /data/backups/
 /data/weekly-plan.json
+
+# Supabase sync state (local only)
+/data/_sync-state.json

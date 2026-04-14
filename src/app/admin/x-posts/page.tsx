@@ -313,7 +313,7 @@ export default function XPostsPage() {
     (p) =>
       p.scheduledDate &&
       p.scheduledDate < todayStr &&
-      p.status !== "posted"
+      (p.status === "approved" || p.status === "queued")
   );
 
   const typeCounts = posts.reduce<Record<string, number>>((acc, p) => {

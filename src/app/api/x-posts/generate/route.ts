@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
   const autoApprove = body.autoApprove === true;
 
   const client = new Anthropic({ apiKey });
-  const articles = getPublishedArticles();
-  const categories = getCategories();
+  const articles = await getPublishedArticles();
+  const categories = await getCategories();
   const existingPosts = await getSheetsXPosts();
 
   if (articles.length === 0) {

@@ -3,10 +3,12 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminDashboard() {
-  const articles = getArticles();
-  const products = getProducts();
-  const categories = getCategories();
+export default async function AdminDashboard() {
+  const [articles, products, categories] = await Promise.all([
+    getArticles(),
+    getProducts(),
+    getCategories(),
+  ]);
 
   const publishedCount = articles.filter((a) => a.status === "published").length;
   const draftCount = articles.filter((a) => a.status === "draft").length;

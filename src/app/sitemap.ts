@@ -1,10 +1,13 @@
 import type { MetadataRoute } from "next";
 import { getArticles, getCategories } from "@/lib/db";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://camp-gear-lab.com";
-  const articles = getArticles().filter((a) => a.status === "published");
-  const categories = getCategories();
+  const [allArticles, categories] = await Promise.all([
+    getArticles(),
+    getCategories(),
+  ]);
+  const articles = allArticles.filter((a) => a.status === "published");
 
   const staticPages: MetadataRoute.Sitemap = [
     {
