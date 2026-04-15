@@ -1,66 +1,56 @@
 {
-  "generatedAt": "2026-04-15T02:21:19.015Z",
+  "generatedAt": "2026-04-16T00:00:00.000Z",
   "articles": [
     {
-      "themeId": "gw-camp-checklist-2026",
-      "title": "GWキャンプ直前チェックリスト｜忘れ物ゼロで出発する15項目",
-      "slug": "gw-camp-checklist-2026",
-      "categoryId": "tent",
-      "angle": "GW直前の準備チェックリスト。初心者が忘れがちなアイテムを15項目で網羅",
-      "targetKeywords": [
-        "GW キャンプ 持ち物",
-        "キャンプ チェックリスト",
-        "キャンプ 忘れ物"
-      ],
-      "seasonRelevance": "GW直前（4月下旬）",
-      "scheduledPublishDate": "2026-04-16",
-      "priority": "high",
-      "productCount": 3,
-      "productIds": [
-        "tent-012",
-        "tent-013"
-      ]
-    },
-    {
-      "themeId": "rain-camp-gear-essentials",
-      "title": "雨キャンプを快適にする必須ギア7選｜経験者が本当に使うアイテム",
-      "slug": "rain-camp-gear-essentials",
+      "themeId": "solo-tarp-ranking",
+      "title": "ソロキャンプ向けタープおすすめ5選｜ウイング・ヘキサ・レクタ形状別の選び方",
+      "slug": "solo-tarp-ranking",
       "categoryId": "tarp",
-      "angle": "梅雨前の雨対策。タープ・レインウェア・防水グッズの実用的な選び方",
+      "angle": "ソロキャンプ視点でタープを形状別に比較。設営しやすさ・サイズ・重量の3軸で選ぶ",
       "targetKeywords": [
-        "雨キャンプ ギア",
-        "雨キャンプ 対策",
-        "キャンプ 雨 必需品"
+        "ソロキャンプ タープ",
+        "タープ 種類 選び方",
+        "ウイングタープ おすすめ"
       ],
-      "seasonRelevance": "梅雨前（5月〜6月）",
-      "scheduledPublishDate": "2026-04-16",
+      "seasonRelevance": "春〜秋（ソロキャンプシーズン）",
+      "scheduledPublishDate": "2026-04-18",
       "priority": "high",
-      "productCount": 3,
-      "productIds": [
-        "tarp-009",
-        "tarp-010"
-      ]
+      "productCount": 4,
+      "productIds": ["tarp-004", "tarp-005", "tarp-006", "tarp-008"]
     },
     {
-      "themeId": "family-camp-first-time-guide",
-      "title": "初めてのファミリーキャンプ完全ガイド｜子連れで失敗しない7つのコツ",
-      "slug": "family-camp-first-time-guide",
-      "categoryId": "tent",
-      "angle": "GW初キャンプのファミリー向け。子供の年齢別の注意点と必須装備",
+      "themeId": "compact-chair-ranking",
+      "title": "軽量・コンパクトアウトドアチェアおすすめ5選｜ソロキャン・登山兼用で選ぶ",
+      "slug": "compact-chair-ranking",
+      "categoryId": "chair",
+      "angle": "ヘリノックスを頂点とする軽量チェア市場を徹底比較。重量・収納サイズ・座り心地の3軸",
       "targetKeywords": [
-        "ファミリーキャンプ 初めて",
-        "子連れ キャンプ 初心者",
-        "ファミリーキャンプ 持ち物"
+        "アウトドアチェア 軽量",
+        "コンパクトチェア キャンプ",
+        "ヘリノックス 比較"
       ],
-      "seasonRelevance": "GW・春（ファミリーキャンプデビュー時期）",
-      "scheduledPublishDate": "2026-04-16",
+      "seasonRelevance": "春〜秋（アウトドアシーズン全般）",
+      "scheduledPublishDate": "2026-04-20",
       "priority": "high",
-      "productCount": 3,
-      "productIds": [
-        "tent-014",
-        "tent-015",
-        "tent-016"
-      ]
+      "productCount": 5,
+      "productIds": ["chair-001", "chair-011", "chair-009", "rakuten-poncotan-10000531", "rakuten-longlife-global-10000378"]
+    },
+    {
+      "themeId": "soft-cooler-ranking",
+      "title": "ソフトクーラーバッグおすすめ5選｜デイキャン・BBQに最適なコスパ重視の選び方",
+      "slug": "soft-cooler-ranking",
+      "categoryId": "cooler",
+      "angle": "重いハードクーラー不要のデイキャン・バーベキュー向けソフトクーラー。保冷力・容量・価格を比較",
+      "targetKeywords": [
+        "ソフトクーラー おすすめ",
+        "クーラーバッグ デイキャンプ",
+        "保冷バッグ キャンプ"
+      ],
+      "seasonRelevance": "春〜夏（バーベキュー・デイキャンシーズン）",
+      "scheduledPublishDate": "2026-04-22",
+      "priority": "high",
+      "productCount": 5,
+      "productIds": ["cooler-005", "rakuten-livewell-10002781", "rakuten-3s-kikaku-10005573", "rakuten-k-lalala-10102906"]
     }
   ]
 }
