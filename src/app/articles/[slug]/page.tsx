@@ -68,7 +68,7 @@ export default async function ArticlePage({
       getArticles(),
     ]);
   // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
-  const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string }) => {
+  const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string | null }) => {
     const shared = (a.productIds ?? []).filter((id) =>
       (article.productIds ?? []).includes(id)
     ).length;
