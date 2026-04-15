@@ -28,6 +28,7 @@ import {
   buildArticlePromoPrompt,
   buildRakutenSalePrompt,
   buildAmazonDealPrompt,
+  buildNewsCommentPrompt,
 } from "../src/lib/x-post-prompts.mjs";
 import { applyChecksAndLabels } from "../src/lib/x-content-checks.mjs";
 
@@ -148,6 +149,32 @@ function findCalendarEvent(filename, eventId) {
   );
 }
 
+function loadNewsFeed(count) {
+  const filePath = path.join(DATA_DIR, "news-feed.json");
+  if (!fs.existsSync(filePath)) {
+    throw new Error(
+      "data/news-feed.json が見つかりません。先に scripts/fetch-news.js を実行してください"
+    );
+  }
+  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const usable = all.filter((n) => !n.used && !n.sensitive);
+  if (usable.length === 0) {
+    throw new Error(
+      "使用可能なニュースがありません。scripts/fetch-news.js で取得してください"
+    );
+  }
+  // ランダムに count 件選ぶ
+  return usable.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function markNewsUsed(usedItems) {
+  const filePath = path.join(DATA_DIR, "news-feed.json");
+  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const usedIds = new Set(usedItems.map((n) => n.id));
+  const updated = all.map((n) => (usedIds.has(n.id) ? { ...n, used: true } : n));
+  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), "utf-8");
+}
+
 function buildPromptForType({
   type,
   articles,
@@ -156,6 +183,7 @@ function buildPromptForType({
   count,
   saleEventId,
   dealEventId,
+  newsItems,
 }) {
   switch (type) {
     case "legacy":
@@ -190,6 +218,8 @@ function buildPromptForType({
         count,
       });
     }
+    case "news_comment":
+      return buildNewsCommentPrompt({ newsItems, count });
     case "gear_story":
       throw new Error(
         "gear_story タイプは docs/author-gear.md 完成まで無効です"
@@ -244,6 +274,14 @@ async function generatePosts({
       : articles.sort(() => Math.random() - 0.5).slice(0, selectCount);
 
   const month = new Date().getMonth() + 1;
+
+  // news_comment タイプの場合はニュースフィードを読み込む
+  let newsItems = [];
+  if (type === "news_comment") {
+    newsItems = loadNewsFeed(count);
+    console.log(`ニュース ${newsItems.length}件を選択`);
+  }
+
   const prompt = buildPromptForType({
     type,
     articles: selected,
@@ -252,6 +290,7 @@ async function generatePosts({
     count,
     saleEventId,
     dealEventId,
+    newsItems,
   });
 
   console.log("Claude APIでポストを生成中...");
@@ -318,6 +357,12 @@ async function generatePosts({
     valueInputOption: "RAW",
     requestBody: { values: rows },
   });
+
+  // news_comment の場合、使用したニュースを used:true にマーク
+  if (type === "news_comment" && newsItems.length > 0) {
+    markNewsUsed(newsItems);
+    console.log(`news-feed.json: ${newsItems.length}件を使用済みにマーク`);
+  }
 
   const blocked = newPosts.filter((p) => p.validationErrors).length;
   console.log(

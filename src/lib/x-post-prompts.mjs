@@ -235,6 +235,37 @@ ${jsonOutputSpec()}`;
 }
 
 /**
+ * news_comment: ニュース・メディア記事へのコメント投稿。
+ * fetch-news.js で取得した data/news-feed.json から選んだ記事に対してコメントを生成。
+ * @param {{ title: string, url: string, source: string }[]} newsItems
+ * @param {number} count
+ */
+export function buildNewsCommentPrompt({ newsItems, count }) {
+  const newsBlock = newsItems
+    .map((n, i) => `${i + 1}. [${n.source}] ${n.title}\n   URL: ${n.url}`)
+    .join("\n");
+
+  return `${PERSONA_PREAMBLE}
+
+## タスク
+以下のキャンプ/アウトドア関連ニュースについて、「ギア男」としてのコメント投稿を${count}件。
+
+- type は全て "news_comment"
+- 各ニュースに対して自分の視点や経験を添えてコメントする
+- 記事のURLを url フィールドに入れる（リプライに貼るため）
+- articleSlug は null
+- ニュースを引用・要約しすぎない。自分の一言コメントが主体
+- 「この時期キャンプに行くなら注意したい」「3年前にこれ買って正解だった」など体験談を絡める
+- センシティブな内容（政治・事故・災害）には触れない
+- ハッシュタグは #キャンプ と季節タグを1〜2個
+
+対象ニュース:
+${newsBlock}
+
+${jsonOutputSpec()}`;
+}
+
+/**
  * gear_story: 愛用ギアの小話。
  * GEAR_STORY_ENABLED が true になるまで使わない（author-gear.md 完成後に有効化）
  */

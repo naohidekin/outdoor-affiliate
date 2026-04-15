@@ -22,6 +22,13 @@ const NG_POLITICAL = [
   "天皇", "創価", "統一教会",
 ];
 
+/** 災害・事故・センシティブニュース系（news_comment 生成時に混入防止） */
+const NG_NEWS_SENSITIVE = [
+  "地震", "津波", "台風", "噴火", "洪水", "土砂崩れ",
+  "死亡", "死者", "行方不明", "負傷", "重傷",
+  "逮捕", "事件", "炎上", "スキャンダル", "謝罪",
+];
+
 /** 薬機法・医療法 系（健康効果・治療効果を匂わせる表現） */
 const NG_MEDICAL = [
   "効きます", "効く", "治る", "治す", "痩せる",
@@ -68,6 +75,8 @@ const CATEGORIES = [
   { name: "景表法", list: NG_LANDMARK, level: "block" },
   // 誇大表現は Lake & Sky トーン徹底のため block 扱い（draft強制）
   { name: "誇大表現", list: NG_HYPE, level: "block" },
+  // ニュース系センシティブ（news_comment 生成時の混入防止）
+  { name: "災害・事故・炎上", list: NG_NEWS_SENSITIVE, level: "block" },
   // AI定型は warn のみ（一字一致だと拾いすぎる可能性があるため）
   { name: "AI定型", list: NG_TEMPLATE, level: "warn" },
 ];
