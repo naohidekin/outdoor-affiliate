@@ -125,8 +125,8 @@ function saveProgress(progress) {
 
   // 永続コンテキストでブラウザ起動（セッション保存）
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
-    headless: false,
-    slowMo: 600,
+    headless: !LOGIN_MODE,  // ログイン時のみ画面あり、通常は非表示
+    slowMo: LOGIN_MODE ? 600 : 300,
     viewport: { width: 1280, height: 900 },
   });
   const page = browser.pages()[0] || await browser.newPage();
