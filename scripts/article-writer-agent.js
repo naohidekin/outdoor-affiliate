@@ -333,8 +333,8 @@ async function main() {
         retryCount = attempt;
       }
 
-      // スコア >= 7.5 ならリトライ不要
-      if (scoring.total >= 7.5) break;
+      // スコア >= 7.0 ならリトライ不要
+      if (scoring.total >= 7.0) break;
 
       if (attempt < MAX_RETRIES) {
         console.log("[article-writer] スコア不足。リトライ...");

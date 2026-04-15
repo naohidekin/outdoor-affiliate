@@ -1,71 +1,65 @@
 {
-  "week": "2026-W16",
-  "generatedAt": "2026-04-15T01:48:01.967Z",
+  "generatedAt": "2026-04-15T02:21:19.015Z",
   "articles": [
     {
-      "themeId": "theme-2026-W16-01",
+      "themeId": "gw-camp-checklist-2026",
+      "title": "GWキャンプ直前チェックリスト｜忘れ物ゼロで出発する15項目",
+      "slug": "gw-camp-checklist-2026",
       "categoryId": "tent",
-      "title": "雨キャンプ対応テントおすすめ8選【2026年版】耐水圧・前室の広さで選ぶ",
-      "slug": "rain-proof-tent-ranking",
-      "angle": "耐水圧・縫い目処理・前室サイズに着目し、雨天でも快適に過ごせるテントを比較する",
+      "angle": "GW直前の準備チェックリスト。初心者が忘れがちなアイテムを15項目で網羅",
       "targetKeywords": [
-        "雨 キャンプ テント",
-        "耐水圧 テント おすすめ",
-        "キャンプ テント 雨対策"
+        "GW キャンプ 持ち物",
+        "キャンプ チェックリスト",
+        "キャンプ 忘れ物"
       ],
-      "seasonRelevance": "4〜5月は春雨・ゴールデンウィーク後半の悪天候が多く、雨対策テントの需要が高まる時期",
+      "seasonRelevance": "GW直前（4月下旬）",
+      "scheduledPublishDate": "2026-04-16",
       "priority": "high",
-      "reason": "tentカテゴリはPV・検索セッション共にトップで既存記事に雨特化の切り口がなく、季節ニーズとも合致するため",
-      "scheduledPublishDate": "2026-04-17",
       "productCount": 3,
       "productIds": [
-        "tent-009",
-        "tent-010",
-        "tent-011"
+        "tent-012",
+        "tent-013"
       ]
     },
     {
-      "themeId": "theme-2026-W16-02",
+      "themeId": "rain-camp-gear-essentials",
+      "title": "雨キャンプを快適にする必須ギア7選｜経験者が本当に使うアイテム",
+      "slug": "rain-camp-gear-essentials",
       "categoryId": "tarp",
-      "title": "タープとテントの連結レイアウト実例集【2026年版】サイト別おすすめ配置パターン",
-      "slug": "tarp-tent-layout-site-guide",
-      "angle": "区画サイト・フリーサイト・林間サイトなど場所別にタープ×テント連結レイアウトを図解で解説する",
+      "angle": "梅雨前の雨対策。タープ・レインウェア・防水グッズの実用的な選び方",
       "targetKeywords": [
-        "タープ テント 連結 レイアウト",
-        "タープ 張り方 サイト別",
-        "キャンプ レイアウト おすすめ"
+        "雨キャンプ ギア",
+        "雨キャンプ 対策",
+        "キャンプ 雨 必需品"
       ],
-      "seasonRelevance": "ゴールデンウィークに向けてサイト設営計画を立てるキャンパーが増え、レイアウト情報の需要が高まる",
+      "seasonRelevance": "梅雨前（5月〜6月）",
+      "scheduledPublishDate": "2026-04-16",
       "priority": "high",
-      "reason": "tarpは季節カテゴリでありながらPVが低い課題があるため、検索意図の広い「レイアウト」軸で新規流入を狙う",
-      "scheduledPublishDate": "2026-04-19",
       "productCount": 3,
       "productIds": [
-        "tarp-001",
-        "tarp-002",
-        "tarp-003"
+        "tarp-009",
+        "tarp-010"
       ]
     },
     {
-      "themeId": "theme-2026-W16-03",
-      "categoryId": "chair",
-      "title": "キャンプチェア コンパクト・軽量モデルおすすめ7選【2026年版】持ち運びやすさ徹底比較",
-      "slug": "compact-lightweight-chair-ranking",
-      "angle": "収納サイズ・重量・耐荷重を定量データで横断比較し、徒歩キャンプ〜ファミリーまで用途別に最適解を提示する",
+      "themeId": "family-camp-first-time-guide",
+      "title": "初めてのファミリーキャンプ完全ガイド｜子連れで失敗しない7つのコツ",
+      "slug": "family-camp-first-time-guide",
+      "categoryId": "tent",
+      "angle": "GW初キャンプのファミリー向け。子供の年齢別の注意点と必須装備",
       "targetKeywords": [
-        "キャンプチェア 軽量 コンパクト",
-        "アウトドアチェア おすすめ 持ち運び",
-        "ローチェア 軽い おすすめ"
+        "ファミリーキャンプ 初めて",
+        "子連れ キャンプ 初心者",
+        "ファミリーキャンプ 持ち物"
       ],
-      "seasonRelevance": "春の行楽シーズンに花見・デイキャンプ・登山など持ち運び重視の用途でチェア需要が急増する",
-      "priority": "medium",
-      "reason": "chairカテゴリは個人・ファミリー別ランキングが揃っているが軽量・コンパクト軸の記事が未作成で差別化できるため",
-      "scheduledPublishDate": "2026-04-22",
+      "seasonRelevance": "GW・春（ファミリーキャンプデビュー時期）",
+      "scheduledPublishDate": "2026-04-16",
+      "priority": "high",
       "productCount": 3,
       "productIds": [
-        "chair-009",
-        "chair-010",
-        "chair-011"
+        "tent-014",
+        "tent-015",
+        "tent-016"
       ]
     }
   ]
