@@ -4,7 +4,7 @@
     "title": "ファミリーテントおすすめ5選【2026年版】家族4〜6人で快適に過ごせる選び方と比較",
     "category": "tent",
     "existingLinks": 3,
-    "missingLinks": 8,
+    "missingLinks": 10,
     "topSuggestions": [
       {
         "slug": "gw-camping-gear-budget",
@@ -13,15 +13,6 @@
           "同カテゴリ(テント)",
           "共通商品2件",
           "共通KW: キャンプ, モデル, 失敗, 予算"
-        ]
-      },
-      {
-        "slug": "gw-camp-guide-2026",
-        "score": 60,
-        "reasons": [
-          "同カテゴリ(テント)",
-          "共通商品2件",
-          "共通KW: キャンプ, 年版"
         ]
       },
       {
@@ -43,11 +34,20 @@
         ]
       },
       {
-        "slug": "landlock-vs-landnest-shelter",
-        "score": 50,
+        "slug": "gw-camp-guide-2026",
+        "score": 55,
         "reasons": [
           "同カテゴリ(テント)",
-          "共通商品1件",
+          "共通商品2件",
+          "共通KW: キャンプ"
+        ]
+      },
+      {
+        "slug": "tent-setup-tips-spring",
+        "score": 55,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: キャンプ, テント, 年版",
           "本文内に関連語2語"
         ]
       }
@@ -58,7 +58,7 @@
     "title": "スノーピーク ランドロック vs ランドネストシェルター｜4万円の差は何か？正直比較",
     "category": "tent",
     "existingLinks": 2,
-    "missingLinks": 5,
+    "missingLinks": 7,
     "topSuggestions": [
       {
         "slug": "camping-beginner-gear-checklist",
@@ -158,13 +158,45 @@
     "title": "テント内用LEDランタンおすすめ7選【2026年】就寝・読書・雰囲気づくりに最適なモデル比較",
     "category": "light",
     "existingLinks": 2,
-    "missingLinks": 1,
+    "missingLinks": 5,
     "topSuggestions": [
       {
         "slug": "duo-tent-ranking",
         "score": 30,
         "reasons": [
           "共通KW: テント, モデル, 最適, 解説",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "single-burner-ranking",
+        "score": 25,
+        "reasons": [
+          "共通KW: モデル, スノーピーク, 解説",
+          "本文内に関連語3語"
+        ]
+      },
+      {
+        "slug": "rainwear-ranking",
+        "score": 25,
+        "reasons": [
+          "共通KW: モデル, 格安, 解説",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "firepit-solo-ranking",
+        "score": 20,
+        "reasons": [
+          "共通KW: モデル, 解説",
+          "本文内に関連語3語"
+        ]
+      },
+      {
+        "slug": "camp-table-ranking",
+        "score": 20,
+        "reasons": [
+          "共通KW: モデル, 解説",
           "本文内に関連語2語"
         ]
       }
@@ -207,8 +239,24 @@
     "title": "ガスバーナー（ツーバーナー以上）おすすめ6選【2026年】ファミリー・グループキャンプ用を徹底比較",
     "category": "burner",
     "existingLinks": 2,
-    "missingLinks": 5,
+    "missingLinks": 7,
     "topSuggestions": [
+      {
+        "slug": "camp-table-ranking",
+        "score": 30,
+        "reasons": [
+          "共通KW: モデル, 徹底比較, 解説, dod",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "rainwear-ranking",
+        "score": 25,
+        "reasons": [
+          "共通KW: モデル, 徹底比較, 解説",
+          "本文内に関連語2語"
+        ]
+      },
       {
         "slug": "solo-tent-ranking",
         "score": 25,
@@ -226,20 +274,6 @@
       },
       {
         "slug": "tarp-ranking",
-        "score": 20,
-        "reasons": [
-          "共通KW: モデル, 徹底比較, 解説, dod"
-        ]
-      },
-      {
-        "slug": "camp-chair-ranking",
-        "score": 20,
-        "reasons": [
-          "共通KW: モデル, 徹底比較, 解説, dod"
-        ]
-      },
-      {
-        "slug": "camp-table-ranking",
         "score": 20,
         "reasons": [
           "共通KW: モデル, 徹底比較, 解説, dod"
@@ -269,19 +303,9 @@
     "slug": "nanga-sleeping-bag-comparison",
     "title": "NANGA シュラフ型番比較 特集【2026年】オーロラテックスライト vs UDD BAG 全5モデル徹底解説",
     "category": "sleeping-bag",
-    "existingLinks": 0,
-    "missingLinks": 3,
+    "existingLinks": 2,
+    "missingLinks": 1,
     "topSuggestions": [
-      {
-        "slug": "spring-sleeping-bag-guide",
-        "score": 70,
-        "reasons": [
-          "同カテゴリ(シュラフ・寝袋)",
-          "共通商品2件",
-          "共通KW: シュラフ, 解説",
-          "本文内に関連語3語"
-        ]
-      },
       {
         "slug": "kids-sleeping-bag-ranking",
         "score": 60,
@@ -289,14 +313,6 @@
           "同カテゴリ(シュラフ・寝袋)",
           "共通KW: シュラフ, ダウン, スペック, nanga",
           "本文内に関連語2語"
-        ]
-      },
-      {
-        "slug": "budget-sleeping-bag-ranking",
-        "score": 40,
-        "reasons": [
-          "同カテゴリ(シュラフ・寝袋)",
-          "共通KW: シュラフ, モデル"
         ]
       }
     ]
@@ -427,7 +443,7 @@
     "title": "ソロキャンプ用テントおすすめ5選【2026年版】軽量・設営簡単モデル比較",
     "category": "tent",
     "existingLinks": 3,
-    "missingLinks": 13,
+    "missingLinks": 15,
     "topSuggestions": [
       {
         "slug": "duo-tent-ranking",
@@ -435,6 +451,15 @@
         "reasons": [
           "同カテゴリ(テント)",
           "共通KW: テント, モデル, 年版, 解説, 徹底比較",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "tent-setup-tips-spring",
+        "score": 50,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: テント, 年版",
           "本文内に関連語2語"
         ]
       },
@@ -456,14 +481,6 @@
         ]
       },
       {
-        "slug": "gw-camp-guide-2026",
-        "score": 35,
-        "reasons": [
-          "同カテゴリ(テント)",
-          "共通KW: 年版"
-        ]
-      },
-      {
         "slug": "gw-camping-gear-budget",
         "score": 35,
         "reasons": [
@@ -478,7 +495,7 @@
     "title": "焚き火台おすすめ5選【2026年】ソロキャンプ向け軽量モデルからファミリー定番まで徹底比較",
     "category": "firepit",
     "existingLinks": 2,
-    "missingLinks": 6,
+    "missingLinks": 7,
     "topSuggestions": [
       {
         "slug": "firepit-beginner-guide",
@@ -487,6 +504,16 @@
           "同カテゴリ(焚き火台)",
           "共通商品5件",
           "共通KW: ソロ, 火台"
+        ]
+      },
+      {
+        "slug": "firepit-3way-showdown",
+        "score": 65,
+        "reasons": [
+          "同カテゴリ(焚き火台)",
+          "共通商品2件",
+          "共通KW: 火台",
+          "本文内に関連語5語"
         ]
       },
       {
@@ -512,13 +539,6 @@
           "共通商品2件",
           "共通KW: モデル"
         ]
-      },
-      {
-        "slug": "solo-tent-ranking",
-        "score": 20,
-        "reasons": [
-          "共通KW: ソロキャンプ, モデル, 軽量, 徹底比較, 解説"
-        ]
       }
     ]
   },
@@ -527,7 +547,7 @@
     "title": "2人用テントおすすめ5選【2026年版】カップル・デュオキャンプに最適なモデル比較",
     "category": "tent",
     "existingLinks": 2,
-    "missingLinks": 14,
+    "missingLinks": 16,
     "topSuggestions": [
       {
         "slug": "solo-tent-ranking",
@@ -549,19 +569,20 @@
         ]
       },
       {
+        "slug": "tent-setup-tips-spring",
+        "score": 50,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: テント, 年版",
+          "本文内に関連語2語"
+        ]
+      },
+      {
         "slug": "family-tent-ranking",
         "score": 45,
         "reasons": [
           "同カテゴリ(テント)",
           "共通KW: テント, モデル, 年版"
-        ]
-      },
-      {
-        "slug": "gw-camp-guide-2026",
-        "score": 35,
-        "reasons": [
-          "同カテゴリ(テント)",
-          "共通KW: 年版"
         ]
       },
       {
@@ -579,7 +600,7 @@
     "title": "タープおすすめ5選【2026年版】ヘキサ・レクタ・ウイングの違いと選び方を徹底比較",
     "category": "tarp",
     "existingLinks": 2,
-    "missingLinks": 12,
+    "missingLinks": 13,
     "topSuggestions": [
       {
         "slug": "solo-tent-ranking",
@@ -676,8 +697,17 @@
     "title": "キャンプテーブルおすすめ5選【2026年版】ソロ用軽量からファミリー大型まで徹底比較",
     "category": "table",
     "existingLinks": 2,
-    "missingLinks": 8,
+    "missingLinks": 9,
     "topSuggestions": [
+      {
+        "slug": "low-table-ranking",
+        "score": 65,
+        "reasons": [
+          "同カテゴリ(キャンプテーブル)",
+          "共通商品3件",
+          "共通KW: 年版"
+        ]
+      },
       {
         "slug": "firepit-solo-ranking",
         "score": 30,
@@ -706,13 +736,6 @@
         "reasons": [
           "共通KW: モデル, 年版, 徹底比較, 解説"
         ]
-      },
-      {
-        "slug": "solo-tent-ranking",
-        "score": 20,
-        "reasons": [
-          "共通KW: モデル, 年版, 徹底比較, 解説"
-        ]
       }
     ]
   },
@@ -721,7 +744,7 @@
     "title": "クーラーボックスおすすめ5選【2026年版】保冷力・容量別に徹底比較｜ハード vs ソフト",
     "category": "cooler",
     "existingLinks": 2,
-    "missingLinks": 10,
+    "missingLinks": 11,
     "topSuggestions": [
       {
         "slug": "rainwear-ranking",
@@ -789,7 +812,7 @@
     "title": "キャンプ初心者が揃えるべきギア一覧【2026年完全版】必需品チェックリストと予算別おすすめ",
     "category": "tent",
     "existingLinks": 19,
-    "missingLinks": 3,
+    "missingLinks": 5,
     "topSuggestions": [
       {
         "slug": "gw-camping-gear-budget",
@@ -802,12 +825,20 @@
         ]
       },
       {
-        "slug": "gw-camp-guide-2026",
+        "slug": "tent-setup-tips-spring",
         "score": 45,
         "reasons": [
           "同カテゴリ(テント)",
           "共通KW: キャンプ",
           "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "gw-camp-guide-2026",
+        "score": 35,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: キャンプ"
         ]
       },
       {
@@ -818,22 +849,29 @@
           "共通KW: キャンプ, 解説",
           "本文内に関連語3語"
         ]
+      },
+      {
+        "slug": "compact-tent-ranking",
+        "score": 30,
+        "reasons": [
+          "同カテゴリ(テント)"
+        ]
       }
     ]
   },
   {
     "slug": "gw-camp-guide-2026",
-    "title": "GWキャンプ完全ガイド【2026年版】場所選び・持ち物・天気対策まで全部まとめた",
+    "title": "GWキャンプ2026｜初心者向け持ち物・場所・天気対策まとめ",
     "category": "tent",
     "existingLinks": 16,
-    "missingLinks": 2,
+    "missingLinks": 4,
     "topSuggestions": [
       {
-        "slug": "duo-tent-ranking",
+        "slug": "tent-setup-tips-spring",
         "score": 45,
         "reasons": [
           "同カテゴリ(テント)",
-          "共通KW: 年版",
+          "共通KW: キャンプ",
           "本文内に関連語2語"
         ]
       },
@@ -843,6 +881,21 @@
         "reasons": [
           "同カテゴリ(テント)",
           "共通商品1件"
+        ]
+      },
+      {
+        "slug": "duo-tent-ranking",
+        "score": 40,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "compact-tent-ranking",
+        "score": 30,
+        "reasons": [
+          "同カテゴリ(テント)"
         ]
       }
     ]
@@ -887,8 +940,18 @@
     "title": "焚き火台の選び方完全ガイド【初心者向け】サイズ・素材・用途で失敗しない",
     "category": "firepit",
     "existingLinks": 3,
-    "missingLinks": 3,
+    "missingLinks": 4,
     "topSuggestions": [
+      {
+        "slug": "firepit-3way-showdown",
+        "score": 65,
+        "reasons": [
+          "同カテゴリ(焚き火台)",
+          "共通商品2件",
+          "共通KW: 火台",
+          "本文内に関連語5語"
+        ]
+      },
       {
         "slug": "gw-camping-gear-budget",
         "score": 30,
@@ -921,7 +984,7 @@
     "title": "GWキャンプ道具セットおすすめ【2026年】予算5万・10万・15万円で揃える",
     "category": "tent",
     "existingLinks": 11,
-    "missingLinks": 5,
+    "missingLinks": 8,
     "topSuggestions": [
       {
         "slug": "solo-tent-ranking",
@@ -942,6 +1005,15 @@
         ]
       },
       {
+        "slug": "tent-setup-tips-spring",
+        "score": 45,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: キャンプ",
+          "本文内に関連語2語"
+        ]
+      },
+      {
         "slug": "spring-sleeping-bag-guide",
         "score": 35,
         "reasons": [
@@ -957,15 +1029,132 @@
           "共通商品2件",
           "共通KW: 予算, 失敗"
         ]
-      },
+      }
+    ]
+  },
+  {
+    "slug": "firepit-3way-showdown",
+    "title": "焚き火台3大定番ガチ比較｜スノーピーク焚火台L vs ユニフレーム ファイアグリル vs ピコグリル398",
+    "category": "firepit",
+    "existingLinks": 3,
+    "missingLinks": 1,
+    "topSuggestions": [
       {
-        "slug": "cooler-box-ranking",
+        "slug": "gw-camping-gear-budget",
         "score": 20,
         "reasons": [
-          "共通KW: キャンプ, モデル",
+          "共通商品1件",
           "本文内に関連語2語"
         ]
       }
     ]
+  },
+  {
+    "slug": "tent-setup-tips-spring",
+    "title": "春キャンプ向けテントの設営・撤収を時短するコツ10選【2026年版】",
+    "category": "tent",
+    "existingLinks": 3,
+    "missingLinks": 5,
+    "topSuggestions": [
+      {
+        "slug": "compact-tent-ranking",
+        "score": 70,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通商品3件",
+          "共通KW: 設営, 年版"
+        ]
+      },
+      {
+        "slug": "duo-tent-ranking",
+        "score": 50,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: テント, 年版",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "gw-camp-guide-2026",
+        "score": 35,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: キャンプ"
+        ]
+      },
+      {
+        "slug": "gw-camping-gear-budget",
+        "score": 35,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: キャンプ"
+        ]
+      },
+      {
+        "slug": "landlock-vs-landnest-shelter",
+        "score": 30,
+        "reasons": [
+          "同カテゴリ(テント)"
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "compact-tent-ranking",
+    "title": "コンパクトテントおすすめ9選！収納サイズと設営のしやすさで選ぶ【2026年版】",
+    "category": "tent",
+    "existingLinks": 3,
+    "missingLinks": 6,
+    "topSuggestions": [
+      {
+        "slug": "tent-setup-tips-spring",
+        "score": 80,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通商品3件",
+          "共通KW: 設営, 年版",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "duo-tent-ranking",
+        "score": 45,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "共通KW: 年版",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "camping-beginner-gear-checklist",
+        "score": 40,
+        "reasons": [
+          "同カテゴリ(テント)",
+          "本文内に関連語2語"
+        ]
+      },
+      {
+        "slug": "gw-camp-guide-2026",
+        "score": 30,
+        "reasons": [
+          "同カテゴリ(テント)"
+        ]
+      },
+      {
+        "slug": "gw-camping-gear-budget",
+        "score": 30,
+        "reasons": [
+          "同カテゴリ(テント)"
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "low-table-ranking",
+    "title": "ローテーブルおすすめ8選！ロースタイルキャンプに最適な高さと素材で比較【2026年版】",
+    "category": "table",
+    "existingLinks": 1,
+    "missingLinks": 0,
+    "topSuggestions": []
   }
 ]

@@ -67,8 +67,19 @@ export default async function ArticlePage({
       getArticlesByCategory(article.categoryId),
       getArticles(),
     ]);
+  // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
+  const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string }) => {
+    const shared = (a.productIds ?? []).filter((id) =>
+      (article.productIds ?? []).includes(id)
+    ).length;
+    const daysSince =
+      (Date.now() - new Date(a.publishedAt ?? 0).getTime()) / 86400000;
+    return shared * 10 - Math.min(daysSince, 365);
+  };
+
   const relatedArticles = sameCategoryArticles
     .filter((a) => a.id !== article.id)
+    .sort((a, b) => scoreRelevance(b) - scoreRelevance(a))
     .slice(0, 3);
 
   const otherCategoryArticles = allArticles
@@ -78,6 +89,7 @@ export default async function ArticlePage({
         a.id !== article.id &&
         a.categoryId !== article.categoryId
     )
+    .sort((a, b) => scoreRelevance(b) - scoreRelevance(a))
     .slice(0, 3);
 
   const faqs = article.faqs ?? [];

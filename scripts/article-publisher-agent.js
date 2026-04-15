@@ -142,7 +142,8 @@ async function main() {
   }
 
   const articles = readJson("articles.json") || [];
-  const today = new Date().toISOString().slice(0, 10);
+  // JST (UTC+9) で日付を取得（UTC基準だと日付がずれる）
+  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   let updated = false;
 
   // 強制公開モード
