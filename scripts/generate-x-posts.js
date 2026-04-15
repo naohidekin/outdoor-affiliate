@@ -29,6 +29,7 @@ import {
   ACCOUNT_CONFIG,
   getApprovalLevel,
   getPromptForType,
+  buildNewsCommentPrompt,
 } from "../src/lib/x-post-prompts.mjs";
 
 import {
@@ -67,13 +68,18 @@ function parseArgs() {
     planFile: null,
   };
   for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
+    const arg = args[i];
+    // --key=value 形式も受け付ける
+    const eqIdx = arg.indexOf("=");
+    const key = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg;
+    const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : args[i + 1];
+    switch (key) {
       case "--auto-approve": opts.autoApprove = true; break;
       case "--dry-run":      opts.dryRun = true; break;
-      case "--type":         opts.type = args[++i]; break;
-      case "--count":        opts.count = parseInt(args[++i], 10); break;
-      case "--axis":         opts.axis = args[++i]; break;
-      case "--plan-file":    opts.planFile = args[++i]; break;
+      case "--type":         opts.type = val; if (eqIdx === -1) i++; break;
+      case "--count":        opts.count = parseInt(val, 10); if (eqIdx === -1) i++; break;
+      case "--axis":         opts.axis = val; if (eqIdx === -1) i++; break;
+      case "--plan-file":    opts.planFile = val; if (eqIdx === -1) i++; break;
     }
   }
   // バリデーション
@@ -88,6 +94,33 @@ function parseArgs() {
     process.exit(1);
   }
   return opts;
+}
+
+// === ニュースフィード ===
+
+function loadNewsFeed(count) {
+  const filePath = path.join(DATA_DIR, "news-feed.json");
+  if (!fs.existsSync(filePath)) {
+    throw new Error(
+      "data/news-feed.json が見つかりません。先に scripts/fetch-news.js を実行してください"
+    );
+  }
+  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const usable = all.filter((n) => !n.used && !n.sensitive);
+  if (usable.length === 0) {
+    throw new Error(
+      "使用可能なニュースがありません。scripts/fetch-news.js で取得してください"
+    );
+  }
+  return usable.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function markNewsUsed(usedItems) {
+  const filePath = path.join(DATA_DIR, "news-feed.json");
+  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const usedIds = new Set(usedItems.map((n) => n.id));
+  const updated = all.map((n) => (usedIds.has(n.id) ? { ...n, used: true } : n));
+  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), "utf-8");
 }
 
 // === ユーティリティ ===
@@ -540,6 +573,7 @@ async function generatePosts(opts) {
   }
 
   const allPosts = [];
+  const usedNewsItems = [];
   const patternsData = readDataJson("first-line-patterns.json");
 
   console.log(`\n生成プラン: ${plan.map((p) => `${p.type}(${p.count}件)`).join(", ")}`);
@@ -578,6 +612,12 @@ async function generatePosts(opts) {
       context.existingPosts = existingPosts
         .filter((p) => p.status === "posted" && p.postedAt && new Date(p.postedAt) < thirtyDaysAgo)
         .slice(0, 10);
+    }
+
+    // news_comment: ニュースフィードをコンテキストに追加
+    if (item.type === "news_comment") {
+      context.newsItems = loadNewsFeed(item.count);
+      usedNewsItems.push(...context.newsItems);
     }
 
     console.log(`[${item.type}] ${item.count}件を生成中...${seed ? ` (seed: ${seed.id})` : ""}`);
@@ -811,6 +851,9 @@ async function generatePosts(opts) {
         });
       }
     }
+
+    // news_comment: 使用済みニュースをマーク
+    if (usedNewsItems.length > 0) markNewsUsed(usedNewsItems);
 
     console.log(`\nSheets に ${allPosts.length}件を保存しました`);
   }

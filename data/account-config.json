@@ -74,11 +74,12 @@
     "parenting_outdoor": { "axis": "parenting", "weeklyCount": 1,   "approval": "auto" },
     "doc_health_tip":    { "axis": "doctor",    "weeklyCount": 1,   "approval": "manual" },
     "seasonal_hook":     { "axis": "all",       "weeklyCount": 1,   "approval": "batch" },
-    "repost_rewrite":    { "axis": "all",       "weeklyCount": 0.5, "approval": "batch" }
+    "repost_rewrite":    { "axis": "all",       "weeklyCount": 0.5, "approval": "batch" },
+    "news_comment":      { "axis": "camp",      "weeklyCount": 1,   "approval": "auto" }
   },
 
   "approvalRules": {
-    "auto":   ["outdoor_tip", "poll_question", "failure_story", "ai_dev_log", "parenting_outdoor"],
+    "auto":   ["outdoor_tip", "poll_question", "failure_story", "ai_dev_log", "parenting_outdoor", "news_comment"],
     "batch":  ["article_promo", "seasonal_hook", "repost_rewrite"],
     "manual": ["doc_health_tip"]
   },
