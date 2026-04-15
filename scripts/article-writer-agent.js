@@ -212,6 +212,17 @@ ${productInfo}
     } catch {
       console.warn("[article-writer] メタ情報のパースに失敗（デフォルト使用）");
     }
+  } else {
+    // ---セパレータなしでコードフェンスJSONが末尾に来た場合
+    const fencedJsonMatch = fullText.match(/([\s\S]*?)\n```json\s*\n(\{[\s\S]*?\})\s*```\s*$/);
+    if (fencedJsonMatch) {
+      content = fencedJsonMatch[1].trim();
+      try {
+        meta = JSON.parse(fencedJsonMatch[2].trim());
+      } catch {
+        console.warn("[article-writer] メタ情報のパースに失敗（コードフェンス形式）");
+      }
+    }
   }
 
   return { content, meta };

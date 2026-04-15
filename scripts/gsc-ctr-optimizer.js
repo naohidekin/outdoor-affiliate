@@ -61,10 +61,18 @@ function parseGscCsv(csvPath) {
 // ─── 改善候補の特定 ────────────────────────────────────────
 
 function findLowCtrPages(rows, topN) {
-  return rows
-    .filter((r) => r.impressions >= 30 && r.ctr < 0.04)
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, topN);
+  // スコア式: 表示数 × (期待CTR - 実CTR) / 期待CTR
+  // 低表示でも順位が良いページ（改善余地大）を拾う
+  const scoredRows = rows
+    .filter((r) => r.impressions >= 10 && r.ctr < 0.04)
+    .map((r) => {
+      // 順位が高い（数値が低い）ほど期待CTRが高いとみなしてスコアを上げる
+      const expectedCtr = Math.max(0.01, 0.15 / Math.max(1, r.position));
+      const score = r.impressions * Math.max(0, expectedCtr - r.ctr) / expectedCtr;
+      return { ...r, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scoredRows.slice(0, topN);
 }
 
 // ─── 記事データとマッチング ────────────────────────────────
