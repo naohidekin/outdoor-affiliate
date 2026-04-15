@@ -74,7 +74,8 @@ function matchArticles(candidates, articles) {
     const slug = row.url
       .replace(SITE_URL, "")
       .replace(/\/$/, "")
-      .replace(/^\//, "");
+      .replace(/^\//, "")
+      .replace(/^articles\//, "");
     const article = articles.find((a) => a.slug === slug);
     return {
       url: row.url,
