@@ -1,224 +1,224 @@
 {
-  "updatedAt": "2026-04-15T00:00:07.949Z",
-  "period": "28d",
+  "updatedAt": "2026-04-15T01:00:07.318Z",
+  "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv28d": 22,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "family-tent-ranking",
-      "categoryId": "tent",
-      "pv28d": 11,
-      "clicks28d": 0,
+      "pv7d": 13,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "gw-camp-guide-2026",
       "categoryId": "tent",
-      "pv28d": 11,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gas-lantern-ranking",
-      "categoryId": "light",
-      "pv28d": 7,
-      "clicks28d": 0,
+      "pv7d": 6,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "spring-camp-clothing-guide",
       "categoryId": "wear",
-      "pv28d": 6,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-3way-showdown",
-      "categoryId": "firepit",
-      "pv28d": 6,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camping-beginner-gear-checklist",
-      "categoryId": "tent",
-      "pv28d": 5,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "backpack-ranking",
-      "categoryId": "backpack",
-      "pv28d": 3,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-solo-ranking",
-      "categoryId": "firepit",
-      "pv28d": 3,
-      "clicks28d": 0,
+      "pv7d": 4,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "low-table-ranking",
       "categoryId": "table",
-      "pv28d": 3,
-      "clicks28d": 0,
+      "pv7d": 3,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "trekking-shoes-ranking",
-      "categoryId": "shoes",
-      "pv28d": 2,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "duo-tent-ranking",
+      "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "pv7d": 2,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "slug": "backpack-ranking",
+      "categoryId": "backpack",
+      "pv7d": 2,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "camp-table-ranking",
-      "categoryId": "table",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "slug": "firepit-solo-ranking",
+      "categoryId": "firepit",
+      "pv7d": 2,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv28d": 2,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-beginner-guide",
-      "categoryId": "firepit",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "pv7d": 2,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "single-burner-ranking",
       "categoryId": "burner",
-      "pv28d": 1,
-      "clicks28d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "multi-burner-ranking",
-      "categoryId": "burner",
-      "pv28d": 1,
-      "clicks28d": 0,
+      "pv7d": 1,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "kids-sleeping-bag-ranking",
       "categoryId": "sleeping-bag",
-      "pv28d": 1,
-      "clicks28d": 0,
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "trekking-shoes-ranking",
+      "categoryId": "shoes",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-ranking",
+      "categoryId": "tarp",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "camp-table-ranking",
+      "categoryId": "table",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "firepit-3way-showdown",
+      "categoryId": "firepit",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "gas-lantern-ranking",
+      "categoryId": "light",
+      "pv7d": 0,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "led-tent-light-ranking",
+      "categoryId": "light",
+      "pv7d": 0,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "multi-burner-ranking",
+      "categoryId": "burner",
+      "pv7d": 0,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "nanga-sleeping-bag-comparison",
+      "categoryId": "sleeping-bag",
+      "pv7d": 0,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "rainwear-ranking",
+      "categoryId": "wear",
+      "pv7d": 0,
+      "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "solo-tent-ranking",
       "categoryId": "tent",
-      "pv28d": 1,
-      "clicks28d": 0,
+      "pv7d": 0,
+      "clicks7d": 0,
       "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv28d": 52,
-      "clicks28d": 0,
-      "searchSessions": 31,
+      "pv7d": 21,
+      "clicks7d": 0,
+      "searchSessions": 19,
       "trend": "active"
-    },
-    {
-      "categoryId": "firepit",
-      "pv28d": 11,
-      "clicks28d": 0,
-      "searchSessions": 3,
-      "trend": "active"
-    },
-    {
-      "categoryId": "light",
-      "pv28d": 7,
-      "clicks28d": 0,
-      "searchSessions": 0,
-      "trend": "low"
     },
     {
       "categoryId": "wear",
-      "pv28d": 6,
-      "clicks28d": 0,
+      "pv7d": 4,
+      "clicks7d": 0,
       "searchSessions": 1,
       "trend": "low"
     },
     {
       "categoryId": "table",
-      "pv28d": 5,
-      "clicks28d": 0,
+      "pv7d": 4,
+      "clicks7d": 0,
       "searchSessions": 0,
       "trend": "low"
     },
     {
+      "categoryId": "firepit",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "searchSessions": 3,
+      "trend": "low"
+    },
+    {
       "categoryId": "backpack",
-      "pv28d": 3,
-      "clicks28d": 0,
-      "searchSessions": 1,
-      "trend": "low"
-    },
-    {
-      "categoryId": "shoes",
-      "pv28d": 2,
-      "clicks28d": 0,
-      "searchSessions": 1,
-      "trend": "low"
-    },
-    {
-      "categoryId": "tarp",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "pv7d": 2,
+      "clicks7d": 0,
       "searchSessions": 0,
       "trend": "low"
     },
     {
       "categoryId": "cooler",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "pv7d": 2,
+      "clicks7d": 0,
       "searchSessions": 2,
       "trend": "low"
     },
     {
       "categoryId": "burner",
-      "pv28d": 2,
-      "clicks28d": 0,
+      "pv7d": 1,
+      "clicks7d": 0,
       "searchSessions": 0,
       "trend": "low"
     },
     {
       "categoryId": "sleeping-bag",
-      "pv28d": 1,
-      "clicks28d": 0,
+      "pv7d": 1,
+      "clicks7d": 0,
       "searchSessions": 1,
+      "trend": "low"
+    },
+    {
+      "categoryId": "shoes",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "searchSessions": 1,
+      "trend": "low"
+    },
+    {
+      "categoryId": "tarp",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "searchSessions": 0,
+      "trend": "low"
+    },
+    {
+      "categoryId": "light",
+      "pv7d": 0,
+      "clicks7d": 0,
+      "searchSessions": 0,
       "trend": "low"
     }
   ],
