@@ -66,15 +66,15 @@ function loadWritingGuidelines() {
 
 const SCORING_CRITERIA = [
   "ギア男ボイス（断言型・淡々・知的。NGワードなし）",
-  "構成完成度（リード→選び方→ランキング→比較表→まとめ）",
-  "SEO適合（タイトル・見出しにキーワード含有）",
+  "構成完成度（リード→選び方→ランキング→比較表→FAQ→まとめ）",
+  "SEO適合（タイトル・見出しにキーワード含有、metaDescription160文字以内）",
   "商品情報正確性（スペック・価格がデータと一致）",
   "比較の公平性（各商品の強み弱みを記述）",
   "読者価値（初心者〜中級者が選び方を理解できる）",
   "CTA適切さ（押しつけがましくない誘導）",
-  "文字数適正（2000〜4000文字）",
-  "オリジナリティ（既存記事と切り口が異なる）",
-  "メタ情報（excerpt・metaDescription・tagsが適切）",
+  "文字数適正（2000〜4000文字、最低2000文字必須）",
+  "内部リンク（同カテゴリ既存記事への自然なリンクが2〜3箇所）",
+  "FAQ充実度（読者が検索しそうな質問3〜5問と的確な回答）",
 ];
 
 async function scoreArticle(anthropic, content, theme) {
@@ -116,7 +116,14 @@ JSONのみで返してください:
 
 // ─── 記事生成 ────────────────────────────────────────
 
-async function generateArticle(anthropic, theme, products, analystFeedback, guidelines) {
+function getRelatedArticleSlugs(categoryId, allArticles) {
+  return allArticles
+    .filter((a) => a.status === "published" && a.categoryId === categoryId)
+    .map((a) => ({ slug: a.slug, title: a.title }))
+    .slice(0, 5);
+}
+
+async function generateArticle(anthropic, theme, products, analystFeedback, guidelines, allArticles) {
   const productInfo = products.map((p, i) => `
 ### 商品${i + 1}: ${p.name}
 - ブランド: ${p.brand}
@@ -130,6 +137,11 @@ async function generateArticle(anthropic, theme, products, analystFeedback, guid
     ? `\n過去の高パフォーマンス記事パターン:\n${analystFeedback.effectivePatterns.join("\n")}`
     : "";
 
+  const relatedArticles = getRelatedArticleSlugs(theme.categoryId, allArticles || []);
+  const internalLinkSection = relatedArticles.length > 0
+    ? `\n内部リンク候補（同カテゴリの既存記事）:\n${relatedArticles.map((a) => `- [${a.title}](/articles/${a.slug})`).join("\n")}\n記事内に2〜3箇所、自然な文脈で上記記事へのリンクを入れてください。`
+    : "";
+
   const systemPrompt = `あなたはアウトドア・キャンプ用品アフィリエイトサイト「camp-gear-lab.com」の記事ライターです。
 ペルソナ「ギア男」として記事を書きます。
 
@@ -140,7 +152,8 @@ ${feedbackSection}
 - 比較表は {{comparison:${products.map((p) => p.id).join(",")}}} タグを使う
 - 商品へのリンクは文中に自然に入れる（アフィリエイトURLは使わず、本文内では「気になる方はチェックを」程度）
 - Markdown形式で出力する
-- 2000〜4000文字を目安にする`;
+- 2000〜4000文字を目安にする（最低2000文字は必須）
+${internalLinkSection}`;
 
   const userPrompt = `以下のテーマで記事を生成してください。
 
@@ -158,10 +171,20 @@ ${productInfo}
 2. ${theme.categoryId}を選ぶポイント（2-3項目）
 3. おすすめランキング TOP3（各商品の特徴・良い点・注意点）
 4. スペック比較表（{{comparison:id1,id2,id3}} タグ）
-5. まとめ（結論の再掲 + CTA）
+5. よくある質問（FAQ 3〜5問。読者が検索しそうな疑問に回答）
+6. まとめ（結論の再掲 + CTA）
 
 併せて以下のメタ情報も JSON で返してください（記事本文の後に --- 区切りで）:
-{"excerpt": "...", "metaDescription": "...", "tags": ["...", "..."]}`;
+{
+  "excerpt": "120文字以内の記事要約",
+  "metaDescription": "160文字以内のSEOメタディスクリプション。テーマのキーワードを含め、クリックしたくなる説明文",
+  "tags": ["タグ1", "タグ2"],
+  "faqs": [
+    {"question": "質問1", "answer": "回答1"},
+    {"question": "質問2", "answer": "回答2"},
+    {"question": "質問3", "answer": "回答3"}
+  ]
+}`;
 
   console.log("[article-writer] Claude API 呼び出し中...");
 
@@ -176,7 +199,7 @@ ${productInfo}
 
   // 本文とメタ情報を分離（記事本文にも --- が含まれるため、最後の --- のみで分割）
   let content = fullText;
-  let meta = { excerpt: "", metaDescription: "", tags: [] };
+  let meta = { excerpt: "", metaDescription: "", tags: [], faqs: [] };
 
   // 末尾のJSON部分を検出（最後の { から } まで）
   const lastJsonMatch = fullText.match(/\n---\s*\n([\s\S]*?\{[\s\S]*\})\s*$/);
@@ -231,7 +254,7 @@ async function main() {
     }
 
     const { content, meta } = await generateArticle(
-      anthropic, target, products, analystFeedback, guidelines
+      anthropic, target, products, analystFeedback, guidelines, articles
     );
     const scoring = await scoreArticle(anthropic, content, target);
     console.log(`[article-writer] リトライスコア: ${scoring.total.toFixed(1)}`);
@@ -242,6 +265,7 @@ async function main() {
         content,
         excerpt: meta?.excerpt || target.excerpt,
         metaDescription: meta?.metaDescription || target.metaDescription,
+        faqs: meta?.faqs?.length > 0 ? meta.faqs : target.faqs,
         qualityScore: scoring.total,
         updatedAt: new Date().toISOString(),
         generationMeta: {
@@ -296,7 +320,7 @@ async function main() {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       const { content, meta } = await generateArticle(
-        anthropic, theme, products, analystFeedback, guidelines
+        anthropic, theme, products, analystFeedback, guidelines, articles
       );
 
       const scoring = await scoreArticle(anthropic, content, theme);
@@ -309,8 +333,8 @@ async function main() {
         retryCount = attempt;
       }
 
-      // スコア >= 7.0 ならリトライ不要
-      if (scoring.total >= 7.0) break;
+      // スコア >= 7.5 ならリトライ不要
+      if (scoring.total >= 7.5) break;
 
       if (attempt < MAX_RETRIES) {
         console.log("[article-writer] スコア不足。リトライ...");
@@ -329,7 +353,7 @@ async function main() {
       excerpt: bestMeta?.excerpt || "",
       productIds: productIds,
       status: "draft",
-      faqs: [],
+      faqs: bestMeta?.faqs || [],
       metaDescription: bestMeta?.metaDescription || "",
       tags: bestMeta?.tags || [],
       createdAt: now,

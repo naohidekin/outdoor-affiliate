@@ -166,7 +166,7 @@ async function main() {
       a.status !== "published" &&
       a.scheduledPublishDate &&
       a.scheduledPublishDate <= today &&
-      (a.qualityScore || 0) >= 7.0
+      (a.qualityScore || 0) >= 7.5
     );
 
     if (candidates.length === 0) {
