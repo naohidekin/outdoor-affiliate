@@ -25,18 +25,6 @@ loadEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // (loadEnv で .env.local 読み込み済み — 旧手動読み込みコード削除)
-if (false) {
-  // removed: old manual env loading
-  if (false) {
-    const envContent = "";
-    for (const line of envContent.split("\n")) {
-      const match = line.match(/^([^#=]+)=(.*)$/);
-      if (match && !process.env[match[1].trim()]) {
-      process.env[match[1].trim()] = match[2].trim();
-    }
-  }
-}
-
 const DRAFT_SHEET = "下書き管理";
 const QUEUE_SHEET = "X投稿管理";
 
