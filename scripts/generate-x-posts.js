@@ -218,7 +218,7 @@ function markSeedUsed(seedData, seedId) {
 
 // === UTM パラメータ ===
 
-const UTM_TYPES = new Set(["article_promo", "gear_thread", "seasonal_hook", "parenting_outdoor"]);
+const UTM_TYPES = new Set(["article_promo", "seasonal_hook", "parenting_outdoor", "news_comment"]);
 
 function addUtmIfNeeded(post, type) {
   if (!UTM_TYPES.has(type)) return post;

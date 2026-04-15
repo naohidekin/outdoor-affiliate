@@ -422,6 +422,37 @@ async function generateWeeklyReport() {
       : null,
   };
 
+  // X 経由アフィリエイトクリック集計（affiliate-clicks.json）
+  let xClickSummary = { total: 0, amazon: 0, rakuten: 0, topPages: [] };
+  try {
+    const clicksPath = path.join(DATA_DIR, "affiliate-clicks.json");
+    if (fs.existsSync(clicksPath)) {
+      const clicks = JSON.parse(fs.readFileSync(clicksPath, "utf-8"));
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const cutoff = oneWeekAgo.toISOString().slice(0, 10);
+      const recentClicks = clicks.filter(
+        (c) => (c.timestamp || c.clicked_at || "") >= cutoff &&
+                (c.source === "x" || (c.utm_source === "x"))
+      );
+      xClickSummary.total = recentClicks.length;
+      xClickSummary.amazon = recentClicks.filter((c) => c.store === "amazon").length;
+      xClickSummary.rakuten = recentClicks.filter((c) => c.store === "rakuten").length;
+      // ページ別集計 top5
+      const pageCount = {};
+      for (const c of recentClicks) {
+        const pg = c.path || c.page_path || "unknown";
+        pageCount[pg] = (pageCount[pg] || 0) + 1;
+      }
+      xClickSummary.topPages = Object.entries(pageCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([path, count]) => ({ path, count }));
+    }
+  } catch (err) {
+    console.warn(`[supervisor] affiliate-clicks.json 読み込みエラー（スキップ）: ${err.message}`);
+  }
+
   const report = {
     week: getWeekLabel(),
     generatedAt: new Date().toISOString(),
@@ -442,6 +473,7 @@ async function generateWeeklyReport() {
     warnings,
     killSwitchEvents: ks.enabled ? [{ reason: ks.reason, enabledAt: ks.enabledAt }] : [],
     articlePipeline: articleSummary,
+    xAffiliateClicks: xClickSummary,
   };
 
   writeJson("weekly-report.json", report);
