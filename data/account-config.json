@@ -69,7 +69,7 @@
     "outdoor_tip":       { "axis": "camp",      "weeklyCount": 1,   "approval": "auto" },
     "poll_question":     { "axis": "rotate",    "weeklyCount": 2,   "approval": "auto" },
     "failure_story":     { "axis": "camp",      "weeklyCount": 1,   "approval": "auto" },
-    "gear_thread":       { "axis": "camp",      "weeklyCount": 1,   "approval": "batch", "isThread": true },
+    "gear_thread":       { "axis": "camp",      "weeklyCount": 0,   "approval": "batch", "isThread": true },
     "ai_dev_log":        { "axis": "ai",        "weeklyCount": 1.5, "approval": "auto" },
     "parenting_outdoor": { "axis": "parenting", "weeklyCount": 1,   "approval": "auto" },
     "doc_health_tip":    { "axis": "doctor",    "weeklyCount": 1,   "approval": "manual" },
@@ -79,7 +79,7 @@
 
   "approvalRules": {
     "auto":   ["outdoor_tip", "poll_question", "failure_story", "ai_dev_log", "parenting_outdoor"],
-    "batch":  ["article_promo", "gear_thread", "seasonal_hook", "repost_rewrite"],
+    "batch":  ["article_promo", "seasonal_hook", "repost_rewrite"],
     "manual": ["doc_health_tip"]
   },
 
