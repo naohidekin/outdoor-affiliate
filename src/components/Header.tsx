@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Category } from "@/lib/types";
 import { Mountain } from "lucide-react";
+import MobileMenu from "./MobileMenu";
 
 export default function Header({ categories }: { categories: Category[] }) {
   return (
@@ -24,6 +25,7 @@ export default function Header({ categories }: { categories: Category[] }) {
               </Link>
             ))}
           </nav>
+          <MobileMenu categories={categories} />
         </div>
       </div>
     </header>

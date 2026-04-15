@@ -1,6 +1,6 @@
 import { getPublishedArticles, getCategories } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR: 1時間
 
 export async function GET() {
   const baseUrl = "https://camp-gear-lab.com";
@@ -15,7 +15,7 @@ export async function GET() {
         new Date(b.publishedAt ?? b.createdAt).getTime() -
         new Date(a.publishedAt ?? a.createdAt).getTime()
     )
-    .slice(0, 20)
+    .slice(0, 50)
     .map((article) => {
       const category = categories.find((c) => c.id === article.categoryId);
       const pubDate = new Date(

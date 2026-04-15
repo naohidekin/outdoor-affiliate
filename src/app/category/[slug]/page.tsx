@@ -10,20 +10,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
-import {
-  Tent,
-  Lamp,
-  Flame,
-  Backpack,
-  Snowflake,
-  Mountain,
-  Armchair,
-  Table,
-  ThermometerSnowflake,
-  Shirt,
-  Footprints,
-  Cloudy,
-} from "lucide-react";
+import { getCategoryIcon } from "@/lib/category-icons";
 
 const CATEGORY_INTRO: Record<string, string> = {
   tent: "テント選びはキャンプの快適さを左右する最も重要なポイントだ。ファミリー向けの大型テントからソロキャンプ用の軽量モデルまで、用途と人数に合った最適な一張りを見つけよう。設営のしやすさ・耐水圧・重量・価格を徹底比較し、後悔しないテント選びをサポートする。",
@@ -49,22 +36,8 @@ const CATEGORY_INTRO: Record<string, string> = {
     "クーラーボックスは夏キャンプの生命線。ハードクーラー・ソフトクーラーの違い、保冷力の目安、容量の選び方を解説。1泊2日なら何リットル必要か、保冷力を最大化するコツまで、食材を安全に保つための知識をまとめた。",
 };
 
-const CATEGORY_ICON: Record<string, React.ReactNode> = {
-  tent: <Tent className="w-8 h-8" />,
-  lantern: <Lamp className="w-8 h-8" />,
-  burner: <Flame className="w-8 h-8" />,
-  backpack: <Backpack className="w-8 h-8" />,
-  "sleeping-bag": <Snowflake className="w-8 h-8" />,
-  shoes: <Footprints className="w-8 h-8" />,
-  chair: <Armchair className="w-8 h-8" />,
-  table: <Table className="w-8 h-8" />,
-  cooler: <ThermometerSnowflake className="w-8 h-8" />,
-  wear: <Shirt className="w-8 h-8" />,
-  firepit: <Flame className="w-8 h-8" />,
-  tarp: <Cloudy className="w-8 h-8" />,
-};
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR: 1時間
 
 export async function generateMetadata({
   params,
@@ -167,7 +140,7 @@ export default async function CategoryPage({
             </nav>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-xl bg-lake-50 border border-lake-100 flex items-center justify-center text-lake-600">
-                {CATEGORY_ICON[category.slug] ?? <Mountain className="w-8 h-8" />}
+                {getCategoryIcon(category.slug, "lg")}
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong">
@@ -210,7 +183,7 @@ export default async function CategoryPage({
           )}
         </section>
       </main>
-      <Footer />
+      <Footer categories={categories} />
     </>
   );
 }

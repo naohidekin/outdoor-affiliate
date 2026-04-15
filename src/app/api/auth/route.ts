@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyPassword, SESSION_TOKEN } from "@/lib/auth";
+import { verifyPassword, createSessionToken, SESSION_TOKEN } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const { password } = await request.json();
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ success: true });
-  response.cookies.set(SESSION_TOKEN, "authenticated", {
+  response.cookies.set(SESSION_TOKEN, createSessionToken(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

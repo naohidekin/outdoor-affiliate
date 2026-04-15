@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Mountain } from "lucide-react";
+import { Category } from "@/lib/types";
 
-export default function Footer() {
+export default function Footer({ categories = [] }: { categories?: Category[] }) {
   return (
     <footer className="bg-white border-t border-line mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-14">
@@ -20,39 +21,30 @@ export default function Footer() {
             <h4 className="text-slate-500 font-medium mb-3 text-xs uppercase tracking-wider">
               カテゴリ
             </h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/category/tent"
-                  className="text-slate-600 hover:text-lake-600 transition"
-                >
-                  テント
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/category/sleeping-bag"
-                  className="text-slate-600 hover:text-lake-600 transition"
-                >
-                  シュラフ・寝袋
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/category/burner"
-                  className="text-slate-600 hover:text-lake-600 transition"
-                >
-                  バーナー・コンロ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/category/lantern"
-                  className="text-slate-600 hover:text-lake-600 transition"
-                >
-                  ランタン
-                </Link>
-              </li>
+            <ul className="space-y-2 text-sm columns-2">
+              {categories.length > 0
+                ? categories.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/category/${c.slug}`}
+                        className="text-slate-600 hover:text-lake-600 transition"
+                      >
+                        {c.name}
+                      </Link>
+                    </li>
+                  ))
+                : ["tent", "sleeping-bag", "burner", "light", "firepit", "tarp"].map(
+                    (slug) => (
+                      <li key={slug}>
+                        <Link
+                          href={`/category/${slug}`}
+                          className="text-slate-600 hover:text-lake-600 transition"
+                        >
+                          {slug}
+                        </Link>
+                      </li>
+                    )
+                  )}
             </ul>
           </div>
           <div>

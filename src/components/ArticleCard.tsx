@@ -1,50 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Tent,
-  Lamp,
-  Flame,
-  Backpack,
-  Snowflake,
-  Mountain,
-  Armchair,
-  Table,
-  ThermometerSnowflake,
-  Shirt,
-  Footprints,
-  Cloudy,
-} from "lucide-react";
+import { getCategoryIcon } from "@/lib/category-icons";
 import { Article, Category, Product } from "@/lib/types";
-
-const CATEGORY_ICON: Record<string, React.ReactNode> = {
-  tent: <Tent className="w-10 h-10" strokeWidth={1.5} />,
-  lantern: <Lamp className="w-10 h-10" strokeWidth={1.5} />,
-  burner: <Flame className="w-10 h-10" strokeWidth={1.5} />,
-  backpack: <Backpack className="w-10 h-10" strokeWidth={1.5} />,
-  "sleeping-bag": <Snowflake className="w-10 h-10" strokeWidth={1.5} />,
-  shoes: <Footprints className="w-10 h-10" strokeWidth={1.5} />,
-  chair: <Armchair className="w-10 h-10" strokeWidth={1.5} />,
-  table: <Table className="w-10 h-10" strokeWidth={1.5} />,
-  cooler: <ThermometerSnowflake className="w-10 h-10" strokeWidth={1.5} />,
-  wear: <Shirt className="w-10 h-10" strokeWidth={1.5} />,
-  firepit: <Flame className="w-10 h-10" strokeWidth={1.5} />,
-  tarp: <Cloudy className="w-10 h-10" strokeWidth={1.5} />,
-};
-
-const CATEGORY_ICON_SMALL: Record<string, React.ReactNode> = {
-  tent: <Tent className="w-3.5 h-3.5" />,
-  lantern: <Lamp className="w-3.5 h-3.5" />,
-  burner: <Flame className="w-3.5 h-3.5" />,
-  backpack: <Backpack className="w-3.5 h-3.5" />,
-  "sleeping-bag": <Snowflake className="w-3.5 h-3.5" />,
-  shoes: <Footprints className="w-3.5 h-3.5" />,
-  chair: <Armchair className="w-3.5 h-3.5" />,
-  table: <Table className="w-3.5 h-3.5" />,
-  cooler: <ThermometerSnowflake className="w-3.5 h-3.5" />,
-  wear: <Shirt className="w-3.5 h-3.5" />,
-  firepit: <Flame className="w-3.5 h-3.5" />,
-  tarp: <Cloudy className="w-3.5 h-3.5" />,
-};
 
 interface Props {
   article: Article;
@@ -55,9 +12,7 @@ interface Props {
 export default function ArticleCard({ article, category, thumbnailProduct }: Props) {
   const thumbProduct = thumbnailProduct;
   const categorySlug = category?.slug ?? "";
-  const fallbackIcon = CATEGORY_ICON[categorySlug] ?? (
-    <Mountain className="w-10 h-10" strokeWidth={1.5} />
-  );
+  const fallbackIcon = getCategoryIcon(categorySlug, "xl", 1.5);
 
   return (
     <Link
@@ -89,8 +44,7 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
         {category && (
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-lake-600">
-              {CATEGORY_ICON_SMALL[category.slug] ?? (
-                <Mountain className="w-3.5 h-3.5" />
+              {getCategoryIcon(category.slug, "sm"
               )}
             </span>
             <span className="text-xs font-medium text-slate-500 tracking-wide">

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.outdoor-affiliate.price-monitor</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/notify-on-error.sh</string>
+		<string>価格監視</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin/node</string>
+		<string>--dns-result-order=ipv4first</string>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/price-monitor.js</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<!-- 毎週日曜 6:00 -->
+		<key>Weekday</key>
+		<integer>0</integer>
+		<key>Hour</key>
+		<integer>6</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate</string>
+	<key>StandardOutPath</key>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-price-monitor.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-price-monitor-error.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+</dict>
+</plist>

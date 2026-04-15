@@ -13,7 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR: 1時間
 
 export async function generateMetadata({
   params,
@@ -391,7 +391,7 @@ export default async function ArticlePage({
           </section>
         )}
       </main>
-      <Footer />
+      <Footer categories={categories} />
     </>
   );
 }

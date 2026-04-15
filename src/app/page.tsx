@@ -4,22 +4,9 @@ import { getCategories, getPublishedArticles, getProductsByIds } from "@/lib/db"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
-import {
-  Tent,
-  Lamp,
-  Flame,
-  Backpack,
-  Snowflake,
-  Mountain,
-  Armchair,
-  Table,
-  ThermometerSnowflake,
-  Shirt,
-  Footprints,
-  Cloudy,
-} from "lucide-react";
+import { getCategoryIcon } from "@/lib/category-icons";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR: 1時間
 
 export const metadata: Metadata = {
   title: "キャンプ・登山ギアおすすめ比較・レビュー | Outdoor Gear Lab",
@@ -34,21 +21,6 @@ export const metadata: Metadata = {
       "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。",
     url: "/",
   },
-};
-
-const CATEGORY_ICON: Record<string, React.ReactNode> = {
-  tent: <Tent className="w-6 h-6" />,
-  lantern: <Lamp className="w-6 h-6" />,
-  burner: <Flame className="w-6 h-6" />,
-  backpack: <Backpack className="w-6 h-6" />,
-  "sleeping-bag": <Snowflake className="w-6 h-6" />,
-  shoes: <Footprints className="w-6 h-6" />,
-  chair: <Armchair className="w-6 h-6" />,
-  table: <Table className="w-6 h-6" />,
-  cooler: <ThermometerSnowflake className="w-6 h-6" />,
-  wear: <Shirt className="w-6 h-6" />,
-  firepit: <Flame className="w-6 h-6" />,
-  tarp: <Cloudy className="w-6 h-6" />,
 };
 
 export default async function Home() {
@@ -139,7 +111,7 @@ export default async function Home() {
                   href={`/category/${c.slug}`}
                   className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white px-4 py-2 rounded-full text-sm transition border border-white/15 hover:border-lake-200"
                 >
-                  <span className="text-lake-200">{CATEGORY_ICON[c.slug] ?? <Mountain className="w-4 h-4" />}</span>
+                  <span className="text-lake-200">{getCategoryIcon(c.slug, "sm")}</span>
                   {c.name}
                 </Link>
               ))}
@@ -169,7 +141,7 @@ export default async function Home() {
                   className="bg-white rounded-xl transition-all p-5 border border-line hover:border-lake-200 hover:bg-lake-50/30 group flex items-start gap-4"
                 >
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-lake-50 text-lake-600 border border-lake-100 transition-colors group-hover:bg-lake-100">
-                    {CATEGORY_ICON[c.slug] ?? <Mountain className="w-5 h-5" />}
+                    {getCategoryIcon(c.slug, "md")}
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-ink-strong text-sm group-hover:text-lake-700 transition">
@@ -233,7 +205,7 @@ export default async function Home() {
           </section>
         )}
       </main>
-      <Footer />
+      <Footer categories={categories} />
     </>
   );
 }

@@ -90,9 +90,11 @@ async function createArticlePromo(article) {
       ? rawExcerpt.slice(0, 100) + "..."
       : rawExcerpt;
 
+    // リンクは本文に入れない（インプレッション低下防止）
+    // URLはE列に設定し、IFTTTリプライで投稿する想定
     const text = excerpt
-      ? `${article.title}\n\n${excerpt}\n\n詳しくはこちら\n${url}\n\n#アウトドア #キャンプ`
-      : `${article.title}\n\n詳しくはこちら\n${url}\n\n#アウトドア #キャンプ`;
+      ? `${article.title}\n\n${excerpt}\n\n#アウトドア #キャンプ`
+      : `${article.title}\n\n#アウトドア #キャンプ`;
 
     // 翌日をスケジュール日に設定
     const scheduledDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)
@@ -179,6 +181,26 @@ async function main() {
     for (const article of candidates) {
       console.log(`\n[article-publisher] 公開: ${article.title}`);
       console.log(`  スコア: ${article.qualityScore} / 予定日: ${article.scheduledPublishDate}`);
+
+      // 外部指標チェック（AI採点に加えて機械的に検証）
+      const contentLen = (article.content || "").length;
+      const hasInternalLink = (article.content || "").includes("/articles/");
+      const hasProductTag = /\{\{(comparison|ranking|product):/.test(article.content || "");
+      const faqCount = (article.faqs || []).length;
+      const hasMeta = (article.metaDescription || "").length >= 50;
+
+      const checks = [];
+      if (contentLen < 2000) checks.push(`文字数不足(${contentLen})`);
+      if (!hasInternalLink) checks.push("内部リンクなし");
+      if (faqCount < 2) checks.push(`FAQ不足(${faqCount}問)`);
+      if (!hasMeta) checks.push("metaDescription短い");
+
+      if (checks.length > 0) {
+        console.warn(`  ⚠ 品質チェック不合格: ${checks.join(", ")}`);
+        console.warn("  → 公開スキップ（手動確認が必要）");
+        continue;
+      }
+      console.log(`  ✓ 品質チェック合格: ${contentLen}文字, FAQ${faqCount}問, 内部リンクあり`);
 
       article.status = "published";
       article.publishedAt = new Date().toISOString();
