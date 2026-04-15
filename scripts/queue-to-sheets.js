@@ -69,10 +69,10 @@ async function queueToSheets() {
   const sheets = await getSheets();
   const today = new Date().toISOString().slice(0, 10);
 
-  // 「下書き管理」シートから全データを読み取り（S列=selfReply まで）
+  // 「下書き管理」シートから全データを読み取り（U列=imageUrl まで）
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${DRAFT_SHEET}!A2:S`,
+    range: `${DRAFT_SHEET}!A2:U`,
   });
   const rows = res.data.values || [];
 
@@ -90,7 +90,8 @@ async function queueToSheets() {
         text: row[2],
         url: row[4] || "",
         scheduledDate: row[7],
-        selfReply: row[18] || "", // S: selfReply列
+        selfReply: row[18] || "",  // S: selfReply列
+        imageUrl: row[20] || "",   // U: imageUrl列
       });
     }
   }
@@ -182,7 +183,7 @@ async function queueToSheets() {
     "ready",        // A: status
     p.type,         // B: post_type
     p.text,         // C: text
-    "",             // D: image_url
+    p.imageUrl,     // D: image_url
     p.url,          // E: source_url
     p.scheduledDate, // F: scheduled_at
     "",             // G: posted_at

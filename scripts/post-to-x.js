@@ -24,6 +24,8 @@ import { TwitterApi } from "twitter-api-v2";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import https from "https";
+import http from "http";
 import {
   loadEnv,
   readJson,
@@ -166,6 +168,48 @@ function getXClient() {
     accessToken: X_ACCESS_TOKEN,
     accessSecret: X_ACCESS_SECRET,
   });
+}
+
+/**
+ * URL から画像を Buffer としてダウンロードする（リダイレクト1段対応）
+ */
+function downloadImageBuffer(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    client.get(url, (res) => {
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        return downloadImageBuffer(res.headers.location).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`画像取得失敗 HTTP ${res.statusCode}: ${url}`));
+      }
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    }).on("error", reject);
+  });
+}
+
+/**
+ * imageUrl を X にアップロードして mediaId を返す。
+ * 失敗した場合は null を返す（投稿自体は続行）。
+ */
+async function uploadImageToX(xClient, imageUrl) {
+  if (!imageUrl || !imageUrl.trim()) return null;
+  try {
+    const buf = await downloadImageBuffer(imageUrl.trim());
+    // MIME type を URL から推定
+    const mime = imageUrl.includes(".png") ? "image/png"
+      : imageUrl.includes(".gif") ? "image/gif"
+      : "image/jpeg";
+    const mediaId = await xClient.v1.uploadMedia(buf, { mimeType: mime });
+    console.log(`    → 画像アップロード完了: mediaId=${mediaId}`);
+    return mediaId;
+  } catch (err) {
+    console.warn(`    → 画像アップロード失敗（テキストのみで投稿）: ${err.message}`);
+    return null;
+  }
 }
 
 /**
@@ -332,7 +376,12 @@ async function postToX() {
 
       // ─── 通常投稿（シングルツイート） ──────────────────
       } else {
-        const result = await xClient.v2.tweet(text);
+        // 画像添付（imageUrl がある場合はアップロードして mediaId を取得）
+        const mediaId = await uploadImageToX(xClient, imageUrl);
+        const tweetPayload = mediaId
+          ? { media: { media_ids: [mediaId] } }
+          : {};
+        const result = await xClient.v2.tweet(text, tweetPayload);
         tweetId = result.data.id;
         postUrl = `https://x.com/camp_gear_lab/status/${tweetId}`;
 

@@ -523,6 +523,8 @@ async function generatePosts(opts) {
   const client = new Anthropic({ apiKey, fetch: ipv4Fetch, maxRetries: 3 });
   const articles = readJson("articles.json").filter((a) => a.status === "published");
   const categories = readJson("categories.json");
+  const productsData = readJson("products.json");
+  const products = productsData.products || productsData;
   const seedData = loadSeeds();
   const month = new Date().getMonth() + 1;
 
@@ -736,12 +738,26 @@ async function generatePosts(opts) {
           if (status !== "discarded") status = "draft";
         }
 
+        // article_promo: 記事に紐づく製品の imageUrl を自動取得
+        let postImageUrl = g.imageUrl || "";
+        if (!postImageUrl && item.type === "article_promo" && g.articleSlug) {
+          const article = articles.find((a) => a.slug === g.articleSlug);
+          if (article) {
+            const productIds = (article.products || article.productIds || []).slice(0, 3);
+            for (const pid of productIds) {
+              const prod = products.find((p) => p.id === pid);
+              if (prod?.imageUrl) { postImageUrl = prod.imageUrl; break; }
+            }
+          }
+        }
+
         posts.push({
           id: generateId(),
           type: item.type,
           text: postText,
           articleSlug: g.articleSlug || "",
           url: g.url || "",
+          imageUrl: postImageUrl,
           hashtags: "",
           status,
           scheduledDate: "",
@@ -790,6 +806,7 @@ async function generatePosts(opts) {
     }
     if (p.seedId) console.log(`  seed: ${p.seedId}`);
     if (p.selfScore != null) console.log(`  score: ${p.selfScore} | 1L: ${p.firstLinePattern} | fmt: ${p.formatPattern || "-"} | sim: ${(p.similarityScore || 0).toFixed(2)} | retry: ${p.retryCount || 0}`);
+    if (p.imageUrl) console.log(`  image: ${p.imageUrl.slice(0, 80)}`);
     if (p.validationErrors) console.log(`  NG: ${p.validationErrors}`);
     console.log("---");
   }
@@ -821,11 +838,12 @@ async function generatePosts(opts) {
       String(p.retryCount || 0),                           // R
       p.selfReply || "",                                   // S
       p.formatPattern || "",                               // T
+      p.imageUrl || "",                                    // U
     ]);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.X_SHEET_ID,
-      range: `${DRAFT_SHEET}!A:T`,
+      range: `${DRAFT_SHEET}!A:U`,
       valueInputOption: "RAW",
       requestBody: { values: rows },
     });
