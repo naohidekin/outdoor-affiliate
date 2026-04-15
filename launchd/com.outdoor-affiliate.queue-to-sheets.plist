@@ -6,29 +6,23 @@
 	<string>com.outdoor-affiliate.queue-to-sheets</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/bash</string>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/notify-on-error.sh</string>
-		<string>キュー投入+投稿</string>
-		<string>/bin/bash</string>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/cron-queue.sh</string>
+		<string>/opt/homebrew/bin/node</string>
+		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/cron-queue.mjs</string>
 	</array>
 	<key>StartCalendarInterval</key>
 	<array>
-		<!-- 朝 08:00（平日用 — 祝日はシェルスクリプトでスキップ） -->
 		<dict>
 			<key>Hour</key>
 			<integer>8</integer>
 			<key>Minute</key>
 			<integer>0</integer>
 		</dict>
-		<!-- 朝 10:00（土日祝用 — 平日非祝日はシェルスクリプトでスキップ） -->
 		<dict>
 			<key>Hour</key>
 			<integer>10</integer>
 			<key>Minute</key>
 			<integer>0</integer>
 		</dict>
-		<!-- 夜 19:00（毎日） -->
 		<dict>
 			<key>Hour</key>
 			<integer>19</integer>
@@ -37,15 +31,15 @@
 		</dict>
 	</array>
 	<key>WorkingDirectory</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-queue.log</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-queue.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-queue-error.log</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-queue-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
 	</dict>
 </dict>
 </plist>

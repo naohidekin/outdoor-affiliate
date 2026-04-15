@@ -6,17 +6,13 @@
 	<string>com.outdoor-affiliate.article-weekly</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/bash</string>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/notify-on-error.sh</string>
-		<string>記事週次パイプライン</string>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin/node</string>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/scripts/article-orchestrate.js</string>
+		<string>/opt/homebrew/bin/node</string>
+		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/article-orchestrate.js</string>
 		<string>--pipeline</string>
 		<string>weekly</string>
 	</array>
 	<key>StartCalendarInterval</key>
 	<dict>
-		<!-- 毎週水曜 09:00 -->
 		<key>Weekday</key>
 		<integer>3</integer>
 		<key>Hour</key>
@@ -25,15 +21,15 @@
 		<integer>0</integer>
 	</dict>
 	<key>WorkingDirectory</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-article-weekly.log</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-article-weekly.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/yuueikaiakabaneshounikakurinikku/dev/outdoor-affiliate/logs/launchd-article-weekly-error.log</string>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-article-weekly-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>/Users/yuueikaiakabaneshounikakurinikku/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
 	</dict>
 </dict>
 </plist>
