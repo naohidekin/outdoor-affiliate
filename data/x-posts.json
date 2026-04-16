@@ -1,19 +1,19 @@
 [
   {
     "id": "xpost-001",
-    "text": "SOTOのST-310とイワタニのジュニアCB。どっちがいいか聞かれたら3秒で答える。\n\n「ソロならST-310。ファミリーならジュニアCB。」\n\n理由はシンプルで、火力と五徳の安定感が全然違う。詳しく書いた👇\ncamp-gear-lab.com/articles/burner-comparison\n#キャンプギア",
+    "text": "SOTOのST-310とイワタニのジュニアCB。どっちがいいか聞かれたら3秒で答える。\n\n「ソロならST-310。ファミリーならジュニアCB。」\n\n理由はシンプルで、火力と五徳の安定感が全然違う。詳しく書いた👇\ncamp-gear-lab.com/articles/single-burner-ranking\n#キャンプギア",
     "type": "comparison",
-    "articleSlug": "burner-comparison",
-    "status": "draft",
+    "articleSlug": "single-burner-ranking",
+    "status": "approved",
     "scheduledDay": "月",
     "scheduledTime": "07:00",
     "createdAt": "2026-04-03T00:00:00Z"
   },
   {
     "id": "xpost-002",
-    "text": "テント選びで一番重視するのはどれ？\n\n① 軽さ（担いで歩くから）\n② 設営の速さ（雨の日に差が出る）\n③ 居住性（広さは正義）\n④ 価格（コスパ命）\n\n俺は②派。雨の中30分かかるテントは二度と使わない。",
+    "text": "テント選びで一番重視するのはどれ？\n\n① 軽さ（担いで歩くから）\n② 設営の速さ（雨の日に差が出る）\n③ 居住性（広さは正義）\n④ 価格（コスパ命）\n\n僕は②派。雨の中30分かかるテントは二度と使わない。",
     "type": "question",
-    "status": "draft",
+    "status": "approved",
     "scheduledDay": "火",
     "scheduledTime": "20:00",
     "createdAt": "2026-04-03T00:01:00Z"
@@ -22,7 +22,7 @@
     "id": "xpost-003",
     "text": "シュラフの「快適温度」と「限界温度」の違いを知らなかった頃の話。\n\n限界温度0℃のシュラフで11月のキャンプ場に突撃。夜中3時に寒さで目覚めて車で暖房つけて寝た。\n\n快適温度＝普通に寝られる温度\n限界温度＝ギリギリ死なない温度\n\nこの違い、マジで知っておいてほしい。",
     "type": "failure",
-    "status": "draft",
+    "status": "approved",
     "scheduledDay": "水",
     "scheduledTime": "08:00",
     "createdAt": "2026-04-03T00:02:00Z"
@@ -31,17 +31,17 @@
     "id": "xpost-004",
     "text": "【保存推奨】キャンプ始めるなら最低限この4つ。\n\n・テント → 2万円台の2ルームで十分\n・シュラフ → 快適温度5℃以下を選べ\n・バーナー → CB缶のシングルバーナー一択\n・チェア → 座面高30cm以上のローチェア\n\n全部で5万あれば揃う。高いギアは沼にハマってからでいい。",
     "type": "summary",
-    "status": "draft",
+    "status": "approved",
     "scheduledDay": "木",
     "scheduledTime": "21:00",
     "createdAt": "2026-04-03T00:03:00Z"
   },
   {
     "id": "xpost-005",
-    "text": "5000円以下のシュラフで春〜秋キャンプは余裕でいける。\n\n「安いシュラフはダメ」って誰が言った？3シーズンなら化繊の封筒型で十分だ。高い＝正義じゃない。\n\n5000円以下で使えるシュラフを5つ比較した👇\ncamp-gear-lab.com/articles/sleeping-bag-budget",
+    "text": "5000円以下のシュラフで春〜秋キャンプは余裕でいける。\n\n「安いシュラフはダメ」って誰が言った？3シーズンなら化繊の封筒型で十分だ。高い＝正義じゃない。\n\n5000円以下で使えるシュラフを5つ比較した👇\ncamp-gear-lab.com/articles/budget-sleeping-bag-ranking",
     "type": "cospa",
-    "articleSlug": "sleeping-bag-budget",
-    "status": "draft",
+    "articleSlug": "budget-sleeping-bag-ranking",
+    "status": "approved",
     "scheduledDay": "金",
     "scheduledTime": "07:00",
     "createdAt": "2026-04-03T00:04:00Z"
@@ -50,17 +50,17 @@
     "id": "xpost-006",
     "text": "子供に「今日のキャンプ何が楽しかった？」って聞いたら「マシュマロ焼いたやつ」。\n\n2万の焚き火台より100円のマシュマロが勝った。\n\nキャンプの満足度はギアの値段じゃなくて体験で決まる。…とか言いつつ焚き火台は3台持ってるけど。\n#ファミリーキャンプ",
     "type": "family",
-    "status": "draft",
+    "status": "approved",
     "scheduledDay": "土",
     "scheduledTime": "12:00",
     "createdAt": "2026-04-03T00:05:00Z"
   },
   {
     "id": "xpost-007",
-    "text": "キャンプ始めたいけど何買えばいいか分からない。\n\nその悩み、全部まとめた。テント・シュラフ・バーナー・チェア・テーブル、最低限の選び方から具体的なおすすめまで。\n\n買う前に死ぬほど調べる派の俺が書いたから、これ読めば迷わない👇\ncamp-gear-lab.com/articles/camping-beginner-guide",
+    "text": "キャンプ始めたいけど何買えばいいか分からない。\n\nその悩み、全部まとめた。テント・シュラフ・バーナー・チェア・テーブル、最低限の選び方から具体的なおすすめまで。\n\n買う前に死ぬほど調べる派の僕が書いたから、これ読めば迷わない👇\ncamp-gear-lab.com/articles/camping-beginner-gear-checklist",
     "type": "site-link",
-    "articleSlug": "camping-beginner-guide",
-    "status": "draft",
+    "articleSlug": "camping-beginner-gear-checklist",
+    "status": "approved",
     "scheduledDay": "日",
     "scheduledTime": "20:00",
     "createdAt": "2026-04-03T00:06:00Z"
