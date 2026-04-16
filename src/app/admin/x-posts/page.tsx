@@ -573,7 +573,7 @@ export default function XPostsPage() {
       {/* Posts list */}
       <div className="space-y-4">
         {filtered.map((post) => {
-          const statusInfo = STATUS_LABELS[post.status];
+          const statusInfo = STATUS_LABELS[post.status] ?? { label: post.status, color: "bg-gray-100 text-gray-600" };
           const isEditing = editing === post.id;
           const isOverdue =
             post.scheduledDate &&
