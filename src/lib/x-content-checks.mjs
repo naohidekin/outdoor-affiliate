@@ -15,14 +15,11 @@
 
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // === NGワード辞書（account-config.json から読み込み + ハードコード補完）===
 
 function loadNgWords() {
-  const configPath = path.join(__dirname, "..", "..", "data", "account-config.json");
+  const configPath = path.join(process.cwd(), "data", "account-config.json");
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     return config.ngWords || {};

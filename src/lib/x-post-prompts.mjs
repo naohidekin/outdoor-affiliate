@@ -10,14 +10,11 @@
 
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // === ナレッジ読み込み（account-config.json）===
 
 function loadAccountConfig() {
-  const configPath = path.join(__dirname, "..", "..", "data", "account-config.json");
+  const configPath = path.join(process.cwd(), "data", "account-config.json");
   if (!fs.existsSync(configPath)) {
     throw new Error("data/account-config.json が見つかりません。ナレッジファイルを作成してください。");
   }
