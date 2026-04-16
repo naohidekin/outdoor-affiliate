@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # launchd plist のインストール / 再登録
+# plist内のパスを現在のマシンに自動置換してからコピーする
 #
 # 使い方:
 #   ./scripts/setup-launchd.sh           # 全 plist を登録
@@ -13,6 +14,23 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 PLIST_DIR="$PROJECT_DIR/launchd"
 TARGET_DIR="$HOME/Library/LaunchAgents"
 
+# 現在のマシンのパスを検出
+if command -v nvm &>/dev/null || [ -d "$HOME/.nvm" ]; then
+  # NVM環境: 現在アクティブなnodeを使用
+  CURRENT_NODE="$(which node)"
+  NVM_NODE_DIR="$(dirname "$CURRENT_NODE")"
+  CURRENT_PATH="$NVM_NODE_DIR:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+else
+  CURRENT_NODE="$(which node)"
+  CURRENT_PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+fi
+
+echo "検出パス:"
+echo "  PROJECT: $PROJECT_DIR"
+echo "  NODE:    $CURRENT_NODE"
+echo "  PATH:    $CURRENT_PATH"
+echo ""
+
 PLISTS=(
   "com.outdoor-affiliate.queue-to-sheets.plist"
   "com.outdoor-affiliate.sync-posted-status.plist"
@@ -20,6 +38,7 @@ PLISTS=(
   "com.outdoor-affiliate.weekly-pipeline.plist"
   "com.outdoor-affiliate.article-weekly.plist"
   "com.outdoor-affiliate.article-daily.plist"
+  "com.outdoor-affiliate.price-monitor.plist"
 )
 
 if [ "${1:-}" = "--unload" ]; then
@@ -53,8 +72,13 @@ for plist in "${PLISTS[@]}"; do
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || launchctl unload "$TARGET_DIR/$plist" 2>/dev/null || true
   fi
 
-  # コピー & 登録
-  cp "$SRC" "$TARGET_DIR/$plist"
+  # パスを現在のマシンに置換してコピー
+  sed \
+    -e "s|/opt/homebrew/bin/node|$CURRENT_NODE|g" \
+    -e "s|/Users/[^<]*/outdoor-affiliate|$PROJECT_DIR|g" \
+    -e "s|/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin|$CURRENT_PATH|g" \
+    "$SRC" > "$TARGET_DIR/$plist"
+
   launchctl bootstrap "gui/$(id -u)" "$TARGET_DIR/$plist" 2>/dev/null || launchctl load "$TARGET_DIR/$plist" 2>/dev/null
   echo "  登録: $LABEL"
 done
