@@ -6,8 +6,26 @@
     "articleSlug": "single-burner-ranking",
     "status": "approved",
     "scheduledDay": "月",
-    "scheduledTime": "07:00",
+    "scheduledTime": "12:00",
     "createdAt": "2026-04-03T00:00:00Z"
+  },
+  {
+    "id": "xpost-008",
+    "text": "アメドLを10年使った話。\n\n購入当時「高すぎる」と迷った。でも今も現役。台風も大雨も乗り越えた。\n\n安いテントを3年で買い替えるより、定番を10年使う方がトータルで安かった。\n\n最初から定番を買うのが正解だった。",
+    "type": "assertion",
+    "status": "approved",
+    "scheduledDay": "月",
+    "scheduledTime": "20:00",
+    "createdAt": "2026-04-17T00:00:00Z"
+  },
+  {
+    "id": "xpost-009",
+    "text": "長野キャンパーが選ぶ春装備。\n\n4月の長野、朝晩は3℃まで下がる。これだけあれば快適。\n\n・シュラフ → 快適温度5℃以下\n・フリース → ダウンより薄くかさばらない\n・厚手ソックス → 足元の冷えが一番きつい\n・薪 → 広葉樹多めで長持ち\n\n「春だから大丈夫」は長野では禁句。",
+    "type": "summary",
+    "status": "approved",
+    "scheduledDay": "火",
+    "scheduledTime": "12:00",
+    "createdAt": "2026-04-17T00:01:00Z"
   },
   {
     "id": "xpost-002",
@@ -24,8 +42,26 @@
     "type": "failure",
     "status": "approved",
     "scheduledDay": "水",
-    "scheduledTime": "08:00",
+    "scheduledTime": "12:00",
     "createdAt": "2026-04-03T00:02:00Z"
+  },
+  {
+    "id": "xpost-010",
+    "text": "GWキャンプ、どのスタイル？\n\n今年のGW、どんなキャンプを計画してる？\n\n① ソロ（静かに焚き火だけ）\n② ファミリー（子連れ賑やか）\n③ グループ（夫婦・友人）\n④ まだ決めていない\n\n僕は今年もファミリー確定。場所取りが最大の戦場になる。\n#GWキャンプ",
+    "type": "question",
+    "status": "approved",
+    "scheduledDay": "水",
+    "scheduledTime": "20:00",
+    "createdAt": "2026-04-17T00:02:00Z"
+  },
+  {
+    "id": "xpost-011",
+    "text": "子供デビューで失敗した話。\n\n娘5歳のキャンプデビュー。意気揚々と山奥に連れて行ったら夜中「怖い、帰りたい」と泣いた。\n\n学び：子供デビューはオートキャンプ場一択。設備が整った場所から始めて正解だった。\n\n翌年のリベンジは大成功した。\n#ファミリーキャンプ",
+    "type": "failure",
+    "status": "approved",
+    "scheduledDay": "木",
+    "scheduledTime": "12:00",
+    "createdAt": "2026-04-17T00:03:00Z"
   },
   {
     "id": "xpost-004",
@@ -33,7 +69,7 @@
     "type": "summary",
     "status": "approved",
     "scheduledDay": "木",
-    "scheduledTime": "21:00",
+    "scheduledTime": "20:00",
     "createdAt": "2026-04-03T00:03:00Z"
   },
   {
@@ -43,8 +79,18 @@
     "articleSlug": "budget-sleeping-bag-ranking",
     "status": "approved",
     "scheduledDay": "金",
-    "scheduledTime": "07:00",
+    "scheduledTime": "12:00",
     "createdAt": "2026-04-03T00:04:00Z"
+  },
+  {
+    "id": "xpost-012",
+    "text": "雨キャンプ、3つあれば余裕。\n\nタープ・レインウェア・防水グランドシート。この3つで雨キャンプは完結する。\n\n「雨だからキャンプ中止」は装備の問題。準備が整えば雨は敵じゃない。\n\n雨装備を全部まとめた👇\ncamp-gear-lab.com/articles/rain-camp-gear-essentials\n#キャンプギア",
+    "type": "assertion",
+    "articleSlug": "rain-camp-gear-essentials",
+    "status": "approved",
+    "scheduledDay": "金",
+    "scheduledTime": "20:00",
+    "createdAt": "2026-04-17T00:04:00Z"
   },
   {
     "id": "xpost-006",
