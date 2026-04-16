@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
+  try {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -144,4 +145,9 @@ export async function POST(request: NextRequest) {
     blocked,
     posts: newPosts,
   });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[generate] error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
