@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+
+export const maxDuration = 120; // Vercel Pro: 最大300s
 import { isAuthenticated } from "@/lib/auth";
 import { getPublishedArticles, getCategories } from "@/lib/db";
 import { getSheetsXPosts, saveSheetsXPosts } from "@/lib/sheets-xposts";
