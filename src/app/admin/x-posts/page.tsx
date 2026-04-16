@@ -164,10 +164,15 @@ export default function XPostsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ autoApprove: false }),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setPosts((prev) => [...data.posts, ...prev]);
+        alert(`${data.generated}件生成しました（チェックNG: ${data.blocked}件）`);
+      } else {
+        alert(`生成失敗: ${data.error || res.statusText}`);
       }
+    } catch (err) {
+      alert(`生成エラー: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setGenerating(false);
     }
