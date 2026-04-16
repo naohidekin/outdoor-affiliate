@@ -25,10 +25,6 @@ export async function generateMetadata({
   if (!article) return {};
 
   const description = article.metaDescription || article.excerpt;
-  const firstProducts = article.productIds?.length
-    ? await getProductsByIds(article.productIds.slice(0, 1))
-    : [];
-  const ogImage = firstProducts[0]?.imageUrl;
 
   return {
     title: article.title,
@@ -45,13 +41,11 @@ export async function generateMetadata({
       siteName: "Outdoor Gear Lab",
       locale: "ja_JP",
       url: `/articles/${article.slug}`,
-      ...(ogImage ? { images: [{ url: ogImage, width: 800, height: 600, alt: article.title }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt,
-      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }

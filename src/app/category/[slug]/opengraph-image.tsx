@@ -20,6 +20,15 @@ const CATEGORY_EMOJI: Record<string, string> = {
   cooler: "🧊",
 };
 
+async function loadNotoSansJP(): Promise<ArrayBuffer> {
+  const css = await fetch(
+    "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700",
+    { headers: { "User-Agent": "Mozilla/5.0 (compatible)" } }
+  ).then((r) => r.text());
+  const url = css.match(/src: url\((.+?)\)/)?.[1] ?? "";
+  return fetch(url).then((r) => r.arrayBuffer());
+}
+
 export default async function Image({
   params,
 }: {
@@ -29,6 +38,8 @@ export default async function Image({
   const category = await getCategoryBySlug(slug);
   const name = category?.name ?? slug;
   const emoji = CATEGORY_EMOJI[slug] ?? "🏕️";
+
+  const fontData = await loadNotoSansJP();
 
   return new ImageResponse(
     (
@@ -42,7 +53,7 @@ export default async function Image({
           alignItems: "center",
           background: "linear-gradient(135deg, #F5F0E8 0%, #E8DCC8 100%)",
           padding: "60px 80px",
-          fontFamily: "sans-serif",
+          fontFamily: "NotoSansJP",
         }}
       >
         <span style={{ fontSize: "100px", marginBottom: "24px" }}>{emoji}</span>
@@ -92,6 +103,9 @@ export default async function Image({
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [{ name: "NotoSansJP", data: fontData, weight: 700 }],
+    }
   );
 }
