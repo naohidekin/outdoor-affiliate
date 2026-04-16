@@ -164,12 +164,18 @@ export default function XPostsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ autoApprove: false }),
       });
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const text = await res.text();
+        alert(`生成失敗 [HTTP ${res.status}]: サーバーエラー\n${text.slice(0, 200)}`);
+        return;
+      }
       const data = await res.json();
       if (res.ok) {
         setPosts((prev) => [...data.posts, ...prev]);
         alert(`${data.generated}件生成しました（チェックNG: ${data.blocked}件）`);
       } else {
-        alert(`生成失敗: ${data.error || res.statusText}`);
+        alert(`生成失敗 [HTTP ${res.status}]: ${data.error || res.statusText}`);
       }
     } catch (err) {
       alert(`生成エラー: ${err instanceof Error ? err.message : String(err)}`);
