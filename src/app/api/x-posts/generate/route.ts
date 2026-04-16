@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-
-export const maxDuration = 120; // Vercel Pro: 最大300s
 import { isAuthenticated } from "@/lib/auth";
 import { getPublishedArticles, getCategories } from "@/lib/db";
 import { getSheetsXPosts, saveSheetsXPosts } from "@/lib/sheets-xposts";
@@ -9,6 +7,8 @@ import { XPost, XPostType } from "@/lib/types";
 // 共通プロンプトlib（Lake & Sky トーン明文化）
 import { buildLegacyBatchPrompt } from "@/lib/x-post-prompts.mjs";
 import { applyChecksAndLabels } from "@/lib/x-content-checks.mjs";
+
+export const maxDuration = 120; // Vercel Pro: 最大300s
 
 function generateId() {
   const now = new Date();
