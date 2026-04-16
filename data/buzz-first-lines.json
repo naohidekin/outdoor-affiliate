@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-13T19:27:05.310Z",
+  "lastUpdated": "2026-04-16T14:00:10.480Z",
   "lines": [
     {
       "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
@@ -141,6 +141,16 @@
       "axis": "ai",
       "collectedAt": "2026-04-13",
       "pattern": "ai_dev"
+    },
+    {
+      "text": "春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶",
+      "source": "own_post",
+      "postType": "outdoor_tip",
+      "likes": 3,
+      "bookmarks": 0,
+      "replies": 0,
+      "collectedAt": "2026-04-16",
+      "pattern": "hack"
     }
   ]
 }

@@ -1,110 +1,281 @@
 {
   "version": 3,
-  "updatedAt": "2026-04-13T19:27:01.699Z",
-  "period": "2026-03-16 ~ 2026-04-13",
+  "updatedAt": "2026-04-16T14:00:06.866Z",
+  "period": "2026-03-19 ~ 2026-04-16",
   "topPerformingTypes": [
-    "article_repost",
     "poll_question",
     "failure_story",
-    "ai_dev_log",
-    "parenting_outdoor"
+    "ai_dev_log"
   ],
   "lowPerformingTypes": [
-    "gear_thread",
-    "doc_health_tip"
+    "outdoor_tip",
+    "doc_health_tip",
+    "seasonal_hook"
   ],
-  "effectivePatterns": [],
-  "avoidPatterns": [],
+  "effectivePatterns": [
+    {
+      "pattern": "product_compare",
+      "reason": "平均スコア 7.8（2件）"
+    },
+    {
+      "pattern": "seasonal_start",
+      "reason": "平均スコア 7.8（3件）"
+    }
+  ],
+  "avoidPatterns": [
+    {
+      "pattern": "[誇大表現] \"必ず\" を検出",
+      "reason": "NG検出 4回"
+    }
+  ],
   "axisFeedback": {
-    "unknown": "69件生成、承認率52%、NG率0%",
-    "camp": "9件生成、承認率22%、NG率11%",
-    "parenting": "3件生成、承認率100%、NG率0%",
-    "ai": "2件生成、承認率100%、NG率0%",
-    "doctor": "2件生成、承認率0%、NG率50%"
+    "camp": "37件生成、承認率19%、NG率11%",
+    "parenting": "6件生成、承認率67%、NG率0%",
+    "ai": "5件生成、承認率100%、NG率0%",
+    "doctor": "5件生成、承認率40%、NG率20%",
+    "07:30": "1件生成、承認率0%、NG率0%",
+    "12:15": "1件生成、承認率100%、NG率0%"
   },
   "seasonalInsight": "GW準備ネタが刺さる。寒暖差ネタも反応良い",
   "writerHints": [
-    "NG率が高いタイプ: gear_thread, doc_health_tip — 表現を見直す",
-    "【重要】parenting軸の投稿を大幅に増やせ — parenting軸の承認率100%（3件中3件承認）と極めて高い。現在3件のみで数が少なすぎる。",
-    "【重要】ai軸の投稿も積極的に増やせ [ai_dev_log] — ai軸の承認率100%（2件中2件承認）で高品質。件数が少ないため拡大の余地あり。",
-    "【重要】doctor軸の投稿は一時停止しろ [doc_health_tip] — doctor軸の承認率0%（2件中0件承認）、NG率50%と極めて低調。品質改善が必要。",
-    "gear_threadタイプは当面控えろ [gear_thread] — 低パフォーマンスタイプに分類されており、NG率が高い傾向。リソースを他に集中させるべき。",
-    "【重要】GW準備ネタを積極的に仕込め — 季節情報でGW準備ネタが刺さると判明。4月中旬はGW直前でタイミング最適。",
-    "寒暖差ネタを春の体調管理切り口で増やせ [parenting_outdoor,failure_story] — 季節情報で寒暖差ネタの反応が良い。4月の気候変動と絡めて展開可能。",
-    "camp軸の切り口を抜本的に見直せ — camp軸の承認率22%（9件中2件のみ承認）、NG率11%と低調。現在のアプローチに問題あり。",
-    "unknown軸の承認率向上策を講じろ — unknown軸は69件と最多だが承認率52%と平凡。量が多いため改善効果が大きい。"
+    "高スコアパターン: product_compare, seasonal_start",
+    "NG率が高いタイプ: outdoor_tip, doc_health_tip, seasonal_hook — 表現を見直す",
+    "直近トップ投稿: [outdoor_tip]「春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶\n\n日中は半袖でも夜は10度以下なんてザラ。靴下の重ね履きや厚手のスリ」(♥3 🔖0) → 似た切り口を再活用",
+    "読者の反応/質問: @camp_gear_lab ギア男さん、こんばんは！\n昨日の自分に勝ち続けられたら、いつの間にか大きく成長した自分になってますよ😸 | @camp_gear_lab ギア男さん！なるほどーー🔥\n確かにAIの進化のスピードが早すぎて・・\n本を活用するなら基礎知識だけつけて、あとは更新される情報を | @camp_gear_lab 笑",
+    "【重要】outdoor_tipタイプの生成を一時停止し、parenting軸とai軸の投稿比率を大幅に増やせ [outdoor_tip,parenting_story,ai_dev_log] — outdoor_tipは承認率が低パフォーマンスタイプに分類される一方、parentingは承認率67%、aiは100%と高い成果を示している",
+    "【重要】「必ず」という誇大表現を完全に排除し、代わりに「〜しやすい」「〜の可能性が高い」等の表現に変えろ — 誇大表現「必ず」でNG検出が4回発生しており、明確な改善ポイントが特定されている",
+    "【重要】GW準備と寒暖差対策のネタを積極的に取り入れ、seasonal_startパターンでの投稿を増やせ [seasonal_hook,outdoor_tip] — seasonal_startパターンは平均スコア7.8と高評価で、季節情報でもGW準備・寒暖差ネタの反応が良いとされている",
+    "【重要】camp軸の投稿アプローチを根本的に見直し、承認率19%から50%以上に改善する戦略を立て直せ [outdoor_tip,gear_review] — camp軸は37件生成したが承認率わずか19%で、主力テーマでありながら効率が極めて悪い",
+    "AIの進化速度や基礎知識習得に関する読者の関心を活かし、ai_dev_logタイプの投稿頻度を倍増させろ [ai_dev_log] — 読者リプライでAI進化スピードへの言及があり、ai軸の承認率が100%と完璧な成果を示している",
+    "product_compareパターンを活用した投稿を増産し、平均スコア7.8の高評価を維持しながら量を確保しろ [gear_review,product_compare] — product_compareパターンは2件で平均スコア7.8と高評価を獲得しており、再現性のあるパフォーマンス向上が期待できる",
+    "doc_health_tipタイプの生成を一時停止し、doctor軸全体のアプローチを再検討せよ [doc_health_tip] — doc_health_tipは低パフォーマンスタイプに分類され、doctor軸全体でも承認率40%と平均以下の成果",
+    "エンゲージメントデータの蓄積期間を延長し、1行目パターンの有効性判定を可能にする投稿量を確保せよ — 全ての1行目パターンでエンゲージメントスコア0となっており、まだ判断に足る十分なデータが蓄積されていない"
   ],
-  "engagementByType": {},
-  "topEngagementPosts": [],
-  "replyThemes": [],
+  "engagementByType": {
+    "outdoor_tip": {
+      "likes": 3,
+      "bookmarks": 0,
+      "retweets": 0,
+      "replies": 0,
+      "impressions": 49,
+      "count": 1
+    }
+  },
+  "topEngagementPosts": [
+    {
+      "postType": "outdoor_tip",
+      "textPreview": "春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶\n\n日中は半袖でも夜は10度以下なんてザラ。靴下の重ね履きや厚手のスリ",
+      "likes": 3,
+      "bookmarks": 0,
+      "retweets": 0,
+      "replies": 0
+    }
+  ],
+  "replyThemes": [
+    "@camp_gear_lab ギア男さん、こんばんは！\n昨日の自分に勝ち続けられたら、いつの間にか大きく成長した自分になってますよ😸",
+    "@camp_gear_lab ギア男さん！なるほどーー🔥\n確かにAIの進化のスピードが早すぎて・・\n本を活用するなら基礎知識だけつけて、あとは更新される情報を",
+    "@camp_gear_lab 笑",
+    "@camp_gear_lab あ入ってしまった⁈😭笑",
+    "@camp_gear_lab キャンプ初期からご利用いただき、ありがとうございます！\nペグ以外にも商品揃えていますのでぜひご覧ください！！\nhttps://t.",
+    "@camp_gear_lab 分かってもらえて嬉しいです😃",
+    "@camp_gear_lab ありがとうございます✨️\n参考になります。\nやはりそうですよね、先行投資大切😤",
+    "@camp_gear_lab 👯💯",
+    "@camp_gear_lab ありがとうございます！",
+    "@camp_gear_lab わかります！僕も最初はエージェントが意図しない方向に突っ走って焦りました。今は事前にOpusでタスクを細かく分解させて、各ステップ"
+  ],
   "firstLineAnalysis": {
-    "ranking": [],
+    "ranking": [
+      {
+        "pattern": "experience_share",
+        "count": 1,
+        "avgSelfScore": 7.5,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "question",
+        "count": 2,
+        "avgSelfScore": 7.3,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "conclusion_first",
+        "count": 5,
+        "avgSelfScore": 7.3,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "product_compare",
+        "count": 2,
+        "avgSelfScore": 7.8,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "ai_dev",
+        "count": 3,
+        "avgSelfScore": 7.3,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "seasonal_start",
+        "count": 3,
+        "avgSelfScore": 7.8,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "parenting",
+        "count": 4,
+        "avgSelfScore": 7.3,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "contrast",
+        "count": 1,
+        "avgSelfScore": 7.1,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "poll",
+        "count": 1,
+        "avgSelfScore": 7.1,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      },
+      {
+        "pattern": "summary",
+        "count": 2,
+        "avgSelfScore": 7.4,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
+      }
+    ],
     "topPatterns": [],
     "weakPatterns": [],
-    "totalAnalyzed": 0
+    "totalAnalyzed": 24
   },
   "writerDirectives": [
     {
-      "directive": "parenting軸の投稿を大幅に増やせ",
-      "reason": "parenting軸の承認率100%（3件中3件承認）と極めて高い。現在3件のみで数が少なすぎる。",
+      "directive": "outdoor_tipタイプの生成を一時停止し、parenting軸とai軸の投稿比率を大幅に増やせ",
+      "reason": "outdoor_tipは承認率が低パフォーマンスタイプに分類される一方、parentingは承認率67%、aiは100%と高い成果を示している",
+      "priority": "high",
+      "appliesTo": [
+        "outdoor_tip",
+        "parenting_story",
+        "ai_dev_log"
+      ]
+    },
+    {
+      "directive": "「必ず」という誇大表現を完全に排除し、代わりに「〜しやすい」「〜の可能性が高い」等の表現に変えろ",
+      "reason": "誇大表現「必ず」でNG検出が4回発生しており、明確な改善ポイントが特定されている",
       "priority": "high",
       "appliesTo": [
         "all"
       ]
     },
     {
-      "directive": "ai軸の投稿も積極的に増やせ",
-      "reason": "ai軸の承認率100%（2件中2件承認）で高品質。件数が少ないため拡大の余地あり。",
+      "directive": "GW準備と寒暖差対策のネタを積極的に取り入れ、seasonal_startパターンでの投稿を増やせ",
+      "reason": "seasonal_startパターンは平均スコア7.8と高評価で、季節情報でもGW準備・寒暖差ネタの反応が良いとされている",
       "priority": "high",
+      "appliesTo": [
+        "seasonal_hook",
+        "outdoor_tip"
+      ]
+    },
+    {
+      "directive": "camp軸の投稿アプローチを根本的に見直し、承認率19%から50%以上に改善する戦略を立て直せ",
+      "reason": "camp軸は37件生成したが承認率わずか19%で、主力テーマでありながら効率が極めて悪い",
+      "priority": "high",
+      "appliesTo": [
+        "outdoor_tip",
+        "gear_review"
+      ]
+    },
+    {
+      "directive": "AIの進化速度や基礎知識習得に関する読者の関心を活かし、ai_dev_logタイプの投稿頻度を倍増させろ",
+      "reason": "読者リプライでAI進化スピードへの言及があり、ai軸の承認率が100%と完璧な成果を示している",
+      "priority": "medium",
       "appliesTo": [
         "ai_dev_log"
       ]
     },
     {
-      "directive": "doctor軸の投稿は一時停止しろ",
-      "reason": "doctor軸の承認率0%（2件中0件承認）、NG率50%と極めて低調。品質改善が必要。",
-      "priority": "high",
+      "directive": "product_compareパターンを活用した投稿を増産し、平均スコア7.8の高評価を維持しながら量を確保しろ",
+      "reason": "product_compareパターンは2件で平均スコア7.8と高評価を獲得しており、再現性のあるパフォーマンス向上が期待できる",
+      "priority": "medium",
+      "appliesTo": [
+        "gear_review",
+        "product_compare"
+      ]
+    },
+    {
+      "directive": "doc_health_tipタイプの生成を一時停止し、doctor軸全体のアプローチを再検討せよ",
+      "reason": "doc_health_tipは低パフォーマンスタイプに分類され、doctor軸全体でも承認率40%と平均以下の成果",
+      "priority": "medium",
       "appliesTo": [
         "doc_health_tip"
       ]
     },
     {
-      "directive": "gear_threadタイプは当面控えろ",
-      "reason": "低パフォーマンスタイプに分類されており、NG率が高い傾向。リソースを他に集中させるべき。",
-      "priority": "medium",
-      "appliesTo": [
-        "gear_thread"
-      ]
-    },
-    {
-      "directive": "GW準備ネタを積極的に仕込め",
-      "reason": "季節情報でGW準備ネタが刺さると判明。4月中旬はGW直前でタイミング最適。",
-      "priority": "high",
-      "appliesTo": [
-        "all"
-      ]
-    },
-    {
-      "directive": "寒暖差ネタを春の体調管理切り口で増やせ",
-      "reason": "季節情報で寒暖差ネタの反応が良い。4月の気候変動と絡めて展開可能。",
-      "priority": "medium",
-      "appliesTo": [
-        "parenting_outdoor",
-        "failure_story"
-      ]
-    },
-    {
-      "directive": "camp軸の切り口を抜本的に見直せ",
-      "reason": "camp軸の承認率22%（9件中2件のみ承認）、NG率11%と低調。現在のアプローチに問題あり。",
-      "priority": "medium",
-      "appliesTo": [
-        "all"
-      ]
-    },
-    {
-      "directive": "unknown軸の承認率向上策を講じろ",
-      "reason": "unknown軸は69件と最多だが承認率52%と平凡。量が多いため改善効果が大きい。",
-      "priority": "medium",
+      "directive": "エンゲージメントデータの蓄積期間を延長し、1行目パターンの有効性判定を可能にする投稿量を確保せよ",
+      "reason": "全ての1行目パターンでエンゲージメントスコア0となっており、まだ判断に足る十分なデータが蓄積されていない",
+      "priority": "low",
       "appliesTo": [
         "all"
       ]

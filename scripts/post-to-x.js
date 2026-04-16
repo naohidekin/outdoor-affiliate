@@ -320,8 +320,13 @@ async function postToX() {
   console.log(`投稿対象: ${targets.length}件 (本日残枠: ${remaining}件)`);
 
   for (const target of targets) {
-    const [, postType, text, imageUrl, sourceUrl, scheduledAt, , , selfReply] = target.data;
-    const preview = (text || "").slice(0, 60);
+    const [, postType, rawText, imageUrl, sourceUrl, scheduledAt, , , selfReply] = target.data;
+    // 本文からURL全除去（URLは必ずセルフリプライのみ — 本文掲載禁止）
+    const text = (rawText || "")
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    const preview = text.slice(0, 60);
     console.log(`  [${postType}] ${preview}...`);
 
     if (dryRun) continue;
@@ -340,6 +345,16 @@ async function postToX() {
         } catch {
           console.error(`    → スレッドJSON解析失敗: ${tweetsJson.slice(0, 100)}`);
           throw new Error("スレッドJSON解析失敗");
+        }
+
+        // URL 除去（スレッド各ツイートにも適用 — 本文掲載禁止）
+        const sanitize = (t) =>
+          (t || "").replace(/https?:\/\/\S+/g, "").replace(/\n{3,}/g, "\n\n").trim();
+        tweets = tweets.map(sanitize);
+
+        // sourceUrl がある場合は最後のツイートにリプ欄誘導を追記
+        if (sourceUrl && sourceUrl.trim() && tweets.length > 0) {
+          tweets[tweets.length - 1] = `${tweets[tweets.length - 1]}\n\n詳細はリプ欄へ。`;
         }
 
         // 最初のツイートを投稿
@@ -362,13 +377,13 @@ async function postToX() {
           }
         }
 
-        // スレッド最後のツイートにURLをリプライ
+        // スレッド末尾にURLセルフリプライ（URLのみ — 最後のツイートに「詳細はリプ欄へ。」追記済み）
         if (sourceUrl && sourceUrl.trim()) {
           try {
             await xClient.v2.tweet(sourceUrl, {
               reply: { in_reply_to_tweet_id: prevId },
             });
-            console.log(`    → スレッド末尾にURL: ${sourceUrl}`);
+            console.log(`    → スレッド末尾URLリプライ: ${sourceUrl.slice(0, 60)}`);
           } catch (replyErr) {
             console.warn(`    → URLリプライ失敗: ${replyErr.message}`);
           }
@@ -376,12 +391,17 @@ async function postToX() {
 
       // ─── 通常投稿（シングルツイート） ──────────────────
       } else {
+        // sourceUrl がある場合は本文末尾にリプ欄誘導を追記
+        const mainText = sourceUrl && sourceUrl.trim()
+          ? `${text}\n\n詳細はリプ欄へ。`
+          : text;
+
         // 画像添付（imageUrl がある場合はアップロードして mediaId を取得）
         const mediaId = await uploadImageToX(xClient, imageUrl);
         const tweetPayload = mediaId
           ? { media: { media_ids: [mediaId] } }
           : {};
-        const result = await xClient.v2.tweet(text, tweetPayload);
+        const result = await xClient.v2.tweet(mainText, tweetPayload);
         tweetId = result.data.id;
         postUrl = `https://x.com/camp_gear_lab/status/${tweetId}`;
 
@@ -398,13 +418,13 @@ async function postToX() {
           }
         }
 
-        // URLリプライ（source_url がある場合）
+        // URL セルフリプライ（URLのみ — 本文に「詳細はリプ欄へ。」を追記済み）
         if (sourceUrl && sourceUrl.trim()) {
           try {
             await xClient.v2.tweet(sourceUrl, {
               reply: { in_reply_to_tweet_id: tweetId },
             });
-            console.log(`    → リプライにURL: ${sourceUrl}`);
+            console.log(`    → URLセルフリプライ: ${sourceUrl.slice(0, 60)}`);
           } catch (replyErr) {
             console.warn(`    → URLリプライ失敗（メイン投稿は成功）: ${replyErr.message}`);
           }

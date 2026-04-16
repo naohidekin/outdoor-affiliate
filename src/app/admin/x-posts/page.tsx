@@ -506,7 +506,7 @@ export default function XPostsPage() {
       <div className="flex gap-2 mb-6">
         {(
           [
-            ["all", "���軸"],
+            ["all", "全軸"],
             ["camp", "Camp"],
             ["ai", "AI"],
             ["parenting", "子育て"],

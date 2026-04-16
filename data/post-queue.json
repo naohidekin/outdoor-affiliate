@@ -1,5 +1,15 @@
 {
   "version": 1,
   "description": "投稿キュー。Sheetsの「X投稿管理」のJSONミラー。Sheets障害時のフォールバック",
-  "queue": []
+  "queue": [
+    {
+      "status": "ready",
+      "type": "article_promo",
+      "text": "ランドロック vs ランドネストシェルター、4万円の差は何なのか検証してみた。前室の使い勝手と長期耐久性に明確な違いが。子連れファミキャンならどっちを選ぶべきか、忖度なしで比較した。\n\n詳細はリプ欄へ。\n\n#キャンプ #テント #ファミキャン",
+      "url": "https://camp-gear-lab.com/articles/landlock-vs-landnest-shelter?utm_source=x&utm_medium=social&utm_campaign=article_promo",
+      "selfReply": "",
+      "scheduledDate": "2026-04-16",
+      "queuedAt": "2026-04-16T10:37:08.946Z"
+    }
+  ]
 }

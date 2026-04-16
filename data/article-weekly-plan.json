@@ -1,56 +1,56 @@
 {
-  "generatedAt": "2026-04-16T00:00:00.000Z",
+  "generatedAt": "2026-04-16T13:00:00.000Z",
   "articles": [
     {
-      "themeId": "solo-tarp-ranking",
-      "title": "ソロキャンプ向けタープおすすめ5選｜ウイング・ヘキサ・レクタ形状別の選び方",
-      "slug": "solo-tarp-ranking",
-      "categoryId": "tarp",
-      "angle": "ソロキャンプ視点でタープを形状別に比較。設営しやすさ・サイズ・重量の3軸で選ぶ",
+      "themeId": "summer-camp-cooler-tips",
+      "title": "夏キャンプのクーラーボックス選び【保冷力・容量・予算別】失敗しない選び方と使い方",
+      "slug": "summer-camp-cooler-tips",
+      "categoryId": "cooler",
+      "angle": "夏キャンプで食材・飲み物を安全に保つためのクーラーボックス選び。保冷力・容量・コスパの3軸で選び、現地での使い方のコツも紹介",
       "targetKeywords": [
-        "ソロキャンプ タープ",
-        "タープ 種類 選び方",
-        "ウイングタープ おすすめ"
+        "夏キャンプ クーラーボックス",
+        "クーラーボックス 保冷力 比較",
+        "夏キャンプ 食材 保冷"
       ],
-      "seasonRelevance": "春〜秋（ソロキャンプシーズン）",
+      "seasonRelevance": "夏（6〜8月のキャンプ・BBQシーズン）",
+      "scheduledPublishDate": "2026-04-17",
+      "priority": "high",
+      "productCount": 5,
+      "productIds": ["cooler-001", "cooler-003", "cooler-004", "cooler-002", "cooler-005"]
+    },
+    {
+      "themeId": "winter-camp-beginners-checklist",
+      "title": "冬キャンプ初心者の持ち物チェックリスト【防寒・安全対策を徹底解説】",
+      "slug": "winter-camp-beginners-checklist",
+      "categoryId": "sleeping-bag",
+      "angle": "冬キャンプ初挑戦の人が「これを忘れると詰む」ギアを網羅したチェックリスト。シュラフ・防寒着・一酸化炭素チェッカーなど安全対策も含む",
+      "targetKeywords": [
+        "冬キャンプ 持ち物",
+        "冬キャンプ 初心者 必需品",
+        "冬キャンプ 装備 チェックリスト"
+      ],
+      "seasonRelevance": "冬（11〜2月の冬キャンプシーズン）",
       "scheduledPublishDate": "2026-04-18",
       "priority": "high",
-      "productCount": 4,
-      "productIds": ["tarp-004", "tarp-005", "tarp-006", "tarp-008"]
+      "productCount": 5,
+      "productIds": ["sb-nanga-001", "sb-budget-005", "fp-002", "fp-005", "sb-budget-004"]
     },
     {
-      "themeId": "compact-chair-ranking",
-      "title": "軽量・コンパクトアウトドアチェアおすすめ5選｜ソロキャン・登山兼用で選ぶ",
-      "slug": "compact-chair-ranking",
-      "categoryId": "chair",
-      "angle": "ヘリノックスを頂点とする軽量チェア市場を徹底比較。重量・収納サイズ・座り心地の3軸",
+      "themeId": "winter-sleeping-bag-ranking",
+      "title": "冬キャンプ用シュラフおすすめ比較【NANGA vs モンベル vs コスパ系】快適温度の見方も解説",
+      "slug": "winter-sleeping-bag-ranking",
+      "categoryId": "sleeping-bag",
+      "angle": "冬キャンプで安心して眠れるシュラフ選び。NANGAのフラッグシップから1万円台のコスパ系まで、快適温度・素材・重量で比較",
       "targetKeywords": [
-        "アウトドアチェア 軽量",
-        "コンパクトチェア キャンプ",
-        "ヘリノックス 比較"
+        "冬キャンプ シュラフ おすすめ",
+        "NANGA シュラフ 比較",
+        "冬用寝袋 おすすめ"
       ],
-      "seasonRelevance": "春〜秋（アウトドアシーズン全般）",
-      "scheduledPublishDate": "2026-04-20",
+      "seasonRelevance": "冬（11〜2月の冬キャンプシーズン）",
+      "scheduledPublishDate": "2026-04-19",
       "priority": "high",
-      "productCount": 5,
-      "productIds": ["chair-001", "chair-011", "chair-009", "rakuten-poncotan-10000531", "rakuten-longlife-global-10000378"]
-    },
-    {
-      "themeId": "soft-cooler-ranking",
-      "title": "ソフトクーラーバッグおすすめ5選｜デイキャン・BBQに最適なコスパ重視の選び方",
-      "slug": "soft-cooler-ranking",
-      "categoryId": "cooler",
-      "angle": "重いハードクーラー不要のデイキャン・バーベキュー向けソフトクーラー。保冷力・容量・価格を比較",
-      "targetKeywords": [
-        "ソフトクーラー おすすめ",
-        "クーラーバッグ デイキャンプ",
-        "保冷バッグ キャンプ"
-      ],
-      "seasonRelevance": "春〜夏（バーベキュー・デイキャンシーズン）",
-      "scheduledPublishDate": "2026-04-22",
-      "priority": "high",
-      "productCount": 5,
-      "productIds": ["cooler-005", "rakuten-livewell-10002781", "rakuten-3s-kikaku-10005573", "rakuten-k-lalala-10102906"]
+      "productCount": 6,
+      "productIds": ["sb-nanga-001", "sb-nanga-002", "sb-nanga-004", "sb-budget-004", "sb-budget-005", "sb-budget-003"]
     }
   ]
 }

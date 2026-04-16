@@ -254,23 +254,23 @@ function markSeedUsed(seedData, seedId) {
 const UTM_TYPES = new Set(["article_promo", "seasonal_hook", "parenting_outdoor", "news_comment"]);
 
 function addUtmIfNeeded(post, type) {
-  if (!UTM_TYPES.has(type)) return post;
-
-  const utmSuffix = `utm_source=x&utm_medium=social&utm_campaign=${type}`;
-
-  // url フィールドにのみ UTM を付与（本文には含めない）
-  if (post.url) {
+  // UTM 付与は対象タイプのみ
+  if (UTM_TYPES.has(type) && post.url) {
+    const utmSuffix = `utm_source=x&utm_medium=social&utm_campaign=${type}`;
     const sep = post.url.includes("?") ? "&" : "?";
     post.url = `${post.url}${sep}${utmSuffix}`;
   }
 
-  // 本文に残っている URL があれば除去（安全策）
+  // 全タイプ共通: 本文のURL全除去（URLは必ずセルフリプライのみ — 本文掲載禁止）
+  const stripUrl = (t) =>
+    (t || "").replace(/https?:\/\/\S+/g, "").replace(/\n\n\n+/g, "\n\n").trim();
+
   if (post.text) {
-    post.text = post.text.replace(/https?:\/\/camp-gear-lab\.com\/[^\s]*/g, "").replace(/\n\n\n+/g, "\n\n").trim();
+    post.text = stripUrl(post.text);
   }
   if (post.tweets) {
     post.tweets = post.tweets.map((t) =>
-      t.replace(/https?:\/\/camp-gear-lab\.com\/[^\s]*/g, "").replace(/\n\n\n+/g, "\n\n").trim()
+      stripUrl(t)
     );
   }
 
