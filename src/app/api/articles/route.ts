@@ -1,9 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { isAuthenticated } from "@/lib/auth";
-import { getArticles, saveArticle, deleteArticle, getArticleById } from "@/lib/db";
+import { getArticles, saveArticle, deleteArticle, getArticleById, getProducts } from "@/lib/db";
 import { Article } from "@/lib/types";
 import { notifyGoogleIndex } from "@/lib/indexing";
+
+/** 公開前の整合性チェック。警告メッセージの配列を返す（空なら問題なし）*/
+async function checkArticleIntegrity(article: Article): Promise<string[]> {
+  const warnings: string[] = [];
+  const content = article.content || "";
+
+  // 1. 「◯選」タイトル vs comparisonタグのID数
+  const titleMatch = article.title?.match(/(\d+)選/);
+  if (titleMatch) {
+    const claimed = parseInt(titleMatch[1]);
+    const compTags = content.match(/\{\{comparison:([^}]+)\}\}/g) || [];
+    for (const tag of compTags) {
+      const ids = tag.replace(/\{\{comparison:|}\}/g, "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (ids.length !== claimed) {
+        warnings.push(`タイトル「${claimed}選」に対してcomparisonタグの製品数が${ids.length}件です`);
+      }
+    }
+  }
+
+  // 2. comparisonタグの幽霊ID（productsに存在しないID）
+  const compTags = content.match(/\{\{comparison:([^}]+)\}\}/g) || [];
+  if (compTags.length > 0) {
+    const products = await getProducts();
+    const productIdSet = new Set(products.map((p) => p.id));
+    for (const tag of compTags) {
+      const ids = tag.replace(/\{\{comparison:|}\}/g, "").split(",").map((s) => s.trim()).filter(Boolean);
+      const ghosts = ids.filter((id) => !productIdSet.has(id));
+      if (ghosts.length > 0) {
+        warnings.push(`comparisonタグに存在しない製品ID: ${ghosts.join(", ")}`);
+      }
+    }
+  }
+
+  return warnings;
+}
 
 export async function GET() {
   return NextResponse.json(await getArticles());
@@ -59,6 +94,17 @@ export async function PUT(request: NextRequest) {
     publishedAt:
       body.status === "published" && !existing.publishedAt ? now : existing.publishedAt,
   };
+
+  // 公開時に整合性チェック
+  if (updated.status === "published" && existing.status !== "published") {
+    const warnings = await checkArticleIntegrity(updated);
+    if (warnings.length > 0) {
+      return NextResponse.json(
+        { error: "公開前チェックに失敗しました", warnings },
+        { status: 400 }
+      );
+    }
+  }
 
   await saveArticle(updated);
 
