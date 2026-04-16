@@ -79,12 +79,13 @@ export async function POST(req: NextRequest) {
   }
 
   // X投稿管理シートに行を追加
+  const sourceUrl = post.url || (post.articleSlug ? `https://camp-gear-lab.com/articles/${post.articleSlug}` : "");
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range: `${QUEUE_SHEET}!A:H`,
     valueInputOption: "RAW",
     requestBody: {
-      values: [["ready", post.type, post.text, "", post.url || "", new Date().toISOString().slice(0, 10), "", ""]],
+      values: [["ready", post.type, post.text, "", sourceUrl, new Date().toISOString().slice(0, 10), "", ""]],
     },
   });
 
