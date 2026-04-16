@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -53,17 +54,17 @@ export default function RootLayout({
           title="Outdoor Gear Lab"
           href="https://camp-gear-lab.com/feed"
         />
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-0F2R4RX636"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0F2R4RX636');`,
-          }}
-        />
       </head>
-      <body className="min-h-full flex flex-col bg-snow text-ink">{children}</body>
+      <body className="min-h-full flex flex-col bg-snow text-ink">
+        {children}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-0F2R4RX636"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0F2R4RX636');`}
+        </Script>
+      </body>
     </html>
   );
 }

@@ -2,6 +2,10 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let _client: SupabaseClient | null = null;
 
+export function isSupabaseConfigured(): boolean {
+  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export function getSupabase(): SupabaseClient {
   if (_client) return _client;
 
@@ -9,9 +13,7 @@ export function getSupabase(): SupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in environment variables"
-    );
+    return null as unknown as SupabaseClient;
   }
 
   _client = createClient(url, key);

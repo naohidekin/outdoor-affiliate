@@ -1,5 +1,17 @@
-import { getSupabase } from "./supabase";
+import fs from "fs";
+import path from "path";
+import { getSupabase, isSupabaseConfigured } from "./supabase";
 import { Category, Product, Article } from "./types";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+
+function readLocalJson<T>(filename: string): T[] {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(DATA_DIR, filename), "utf-8"));
+  } catch {
+    return [];
+  }
+}
 
 // ─── camelCase ↔ snake_case マッパー ──────────────────
 
@@ -116,6 +128,7 @@ function fromProduct(product: Product): Record<string, unknown> {
 // ─── Categories ─────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
+  if (!isSupabaseConfigured()) return readLocalJson<Category>("categories.json");
   const { data, error } = await getSupabase()
     .from("categories")
     .select("*")
@@ -127,6 +140,9 @@ export async function getCategories(): Promise<Category[]> {
 export async function getCategoryBySlug(
   slug: string
 ): Promise<Category | undefined> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Category>("categories.json").find((c) => c.slug === slug);
+  }
   const { data, error } = await getSupabase()
     .from("categories")
     .select("*")
@@ -139,6 +155,9 @@ export async function getCategoryBySlug(
 export async function getCategoryById(
   id: string
 ): Promise<Category | undefined> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Category>("categories.json").find((c) => c.id === id);
+  }
   const { data, error } = await getSupabase()
     .from("categories")
     .select("*")
@@ -163,6 +182,7 @@ export async function deleteCategory(id: string): Promise<void> {
 // ─── Products ───────────────────────────────────────
 
 export async function getProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured()) return readLocalJson<Product>("products.json");
   const { data, error } = await getSupabase()
     .from("products")
     .select("*")
@@ -196,6 +216,12 @@ export async function getProductsByCategory(
 
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
   if (ids.length === 0) return [];
+  if (!isSupabaseConfigured()) {
+    const all = readLocalJson<Product>("products.json");
+    return ids
+      .map((id) => all.find((p) => p.id === id))
+      .filter((p): p is Product => p !== undefined);
+  }
   const { data, error } = await getSupabase()
     .from("products")
     .select("*")
@@ -223,6 +249,7 @@ export async function deleteProduct(id: string): Promise<void> {
 // ─── Articles ───────────────────────────────────────
 
 export async function getArticles(): Promise<Article[]> {
+  if (!isSupabaseConfigured()) return readLocalJson<Article>("articles.json");
   const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
@@ -232,6 +259,11 @@ export async function getArticles(): Promise<Article[]> {
 }
 
 export async function getPublishedArticles(): Promise<Article[]> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Article>("articles.json").filter(
+      (a) => a.status === "published"
+    );
+  }
   const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
@@ -244,6 +276,9 @@ export async function getPublishedArticles(): Promise<Article[]> {
 export async function getArticleBySlug(
   slug: string
 ): Promise<Article | undefined> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Article>("articles.json").find((a) => a.slug === slug);
+  }
   const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
@@ -256,6 +291,9 @@ export async function getArticleBySlug(
 export async function getArticleById(
   id: string
 ): Promise<Article | undefined> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Article>("articles.json").find((a) => a.id === id);
+  }
   const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
@@ -268,6 +306,11 @@ export async function getArticleById(
 export async function getArticlesByCategory(
   categoryId: string
 ): Promise<Article[]> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Article>("articles.json").filter(
+      (a) => a.status === "published" && a.categoryId === categoryId
+    );
+  }
   const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
