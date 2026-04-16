@@ -1,56 +1,72 @@
 {
-  "generatedAt": "2026-04-16T13:00:00.000Z",
+  "week": "2026-W16",
+  "generatedAt": "2026-04-16T14:23:58.382Z",
   "articles": [
     {
-      "themeId": "summer-camp-cooler-tips",
-      "title": "夏キャンプのクーラーボックス選び【保冷力・容量・予算別】失敗しない選び方と使い方",
-      "slug": "summer-camp-cooler-tips",
-      "categoryId": "cooler",
-      "angle": "夏キャンプで食材・飲み物を安全に保つためのクーラーボックス選び。保冷力・容量・コスパの3軸で選び、現地での使い方のコツも紹介",
+      "themeId": "theme-2026-W16-01",
+      "categoryId": "tent",
+      "title": "春キャンプ向け前室付きテントおすすめ5選【2026年版】",
+      "slug": "tent-with-vestibule-ranking",
+      "angle": "前室の広さ・使い勝手に特化し、荷物収納や靴の置き場に困るファミリー・デュオキャンパーに向けた選び方を解説する。",
       "targetKeywords": [
-        "夏キャンプ クーラーボックス",
-        "クーラーボックス 保冷力 比較",
-        "夏キャンプ 食材 保冷"
+        "前室付きテント おすすめ",
+        "テント 前室 広い",
+        "春キャンプ テント"
       ],
-      "seasonRelevance": "夏（6〜8月のキャンプ・BBQシーズン）",
+      "seasonRelevance": "春は突然の雨も多く、前室で濡れた装備を一時保管できるテントへのニーズが高まる。",
+      "priority": "high",
+      "reason": "tentカテゴリはPV・検索セッションともにトップで最もトラフィック獲得余地が大きく、既存記事（ファミリー・ソロ・デュオ別ランキング）と重複しない「前室」軸の切り口で差別化できるため。",
       "scheduledPublishDate": "2026-04-17",
-      "priority": "high",
-      "productCount": 5,
-      "productIds": ["cooler-001", "cooler-003", "cooler-004", "cooler-002", "cooler-005"]
+      "productCount": 3,
+      "productIds": [
+        "tent-017",
+        "tent-018",
+        "tent-019"
+      ]
     },
     {
-      "themeId": "winter-camp-beginners-checklist",
-      "title": "冬キャンプ初心者の持ち物チェックリスト【防寒・安全対策を徹底解説】",
-      "slug": "winter-camp-beginners-checklist",
-      "categoryId": "sleeping-bag",
-      "angle": "冬キャンプ初挑戦の人が「これを忘れると詰む」ギアを網羅したチェックリスト。シュラフ・防寒着・一酸化炭素チェッカーなど安全対策も含む",
+      "themeId": "theme-2026-W16-02",
+      "categoryId": "tarp",
+      "title": "タープの張り方完全ガイド｜初心者でもできる基本〜応用5パターン【2026年版】",
+      "slug": "tarp-setup-guide-for-beginners",
+      "angle": "ヘキサ・レクタなど形状別に、ロープワーク不要の簡単な張り方から雨・日差しに強い応用アレンジまでを図解形式で紹介する。",
       "targetKeywords": [
-        "冬キャンプ 持ち物",
-        "冬キャンプ 初心者 必需品",
-        "冬キャンプ 装備 チェックリスト"
+        "タープ 張り方 初心者",
+        "タープ 張り方 種類",
+        "タープ ロープ 結び方"
       ],
-      "seasonRelevance": "冬（11〜2月の冬キャンプシーズン）",
-      "scheduledPublishDate": "2026-04-18",
+      "seasonRelevance": "春〜GWにかけてキャンプデビューする初心者がタープの使い方を一から学ぶ需要がピークを迎える。",
       "priority": "high",
-      "productCount": 5,
-      "productIds": ["sb-nanga-001", "sb-budget-005", "fp-002", "fp-005", "sb-budget-004"]
-    },
-    {
-      "themeId": "winter-sleeping-bag-ranking",
-      "title": "冬キャンプ用シュラフおすすめ比較【NANGA vs モンベル vs コスパ系】快適温度の見方も解説",
-      "slug": "winter-sleeping-bag-ranking",
-      "categoryId": "sleeping-bag",
-      "angle": "冬キャンプで安心して眠れるシュラフ選び。NANGAのフラッグシップから1万円台のコスパ系まで、快適温度・素材・重量で比較",
-      "targetKeywords": [
-        "冬キャンプ シュラフ おすすめ",
-        "NANGA シュラフ 比較",
-        "冬用寝袋 おすすめ"
-      ],
-      "seasonRelevance": "冬（11〜2月の冬キャンプシーズン）",
+      "reason": "来月の季節カテゴリに含まれるtarpの先行コンテンツとして今から仕込む価値があり、既存のランキング・雨キャンプ記事と相互リンクできるハウツー記事が未整備のため。",
       "scheduledPublishDate": "2026-04-19",
-      "priority": "high",
-      "productCount": 6,
-      "productIds": ["sb-nanga-001", "sb-nanga-002", "sb-nanga-004", "sb-budget-004", "sb-budget-005", "sb-budget-003"]
+      "productCount": 3,
+      "productIds": [
+        "tarp-011",
+        "tarp-012",
+        "tarp-013"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W16-03",
+      "categoryId": "chair",
+      "title": "ソロキャンプ向けローチェアおすすめ6選｜焚き火・地べたスタイルに合う選び方【2026年版】",
+      "slug": "solo-low-chair-ranking",
+      "angle": "焚き火台との相性・収納サイズ・座面高を軸に、ソロキャンプで映えるローチェアだけを厳選して比較する。",
+      "targetKeywords": [
+        "ローチェア ソロキャンプ おすすめ",
+        "焚き火 チェア 低い",
+        "ソロキャンプ 椅子 コンパクト"
+      ],
+      "seasonRelevance": "春の焚き火シーズンに合わせてローポジションでゆったり過ごしたいキャンパーからの需要が高まる。",
+      "priority": "medium",
+      "reason": "chairカテゴリはcamp-chair-ranking・compact-chair-rankingが既存だが「ソロ×焚き火×ロースタイル」の組み合わせ軸は未開拓であり、季節カテゴリ内で新たな検索意図を捉えられるため。",
+      "scheduledPublishDate": "2026-04-22",
+      "productCount": 3,
+      "productIds": [
+        "chair-012",
+        "chair-013",
+        "chair-014"
+      ]
     }
   ]
 }
