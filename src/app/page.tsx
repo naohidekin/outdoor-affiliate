@@ -51,6 +51,16 @@ export default async function Home() {
       name: "Outdoor Gear Lab",
       url: baseUrl,
     },
+    author: {
+      "@type": "Person",
+      name: "ギア男",
+      description: "長野在住・キャンプ歴10年・2児の父。医療系の仕事をしながらキャンプギアを徹底比較。",
+      url: `${baseUrl}/about`,
+      sameAs: [
+        "https://twitter.com/camp_gear_lab",
+        `${baseUrl}/about`,
+      ],
+    },
   };
 
   const collectionJsonLd = {

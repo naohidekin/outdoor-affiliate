@@ -66,7 +66,7 @@
 
   "postTypes": {
     "article_promo":     { "axis": "camp",      "weeklyCount": 2,   "approval": "batch" },
-    "outdoor_tip":       { "axis": "camp",      "weeklyCount": 1,   "approval": "auto" },
+    "outdoor_tip":       { "axis": "camp",      "weeklyCount": 2,   "approval": "auto" },
     "poll_question":     { "axis": "rotate",    "weeklyCount": 2,   "approval": "auto" },
     "failure_story":     { "axis": "camp",      "weeklyCount": 1,   "approval": "auto" },
     "gear_thread":       { "axis": "camp",      "weeklyCount": 0,   "approval": "batch", "isThread": true },

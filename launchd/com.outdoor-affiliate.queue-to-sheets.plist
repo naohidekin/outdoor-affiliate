@@ -12,21 +12,71 @@
 	<key>StartCalendarInterval</key>
 	<array>
 		<dict>
+			<!-- 土曜6:00〜8:00: 出発前のキャンパー層 (土曜のみ早朝) -->
+			<key>Hour</key>
+			<integer>6</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>6</integer>
+		</dict>
+		<dict>
+			<!-- 朝8:00: 毎日の基本スロット -->
 			<key>Hour</key>
 			<integer>8</integer>
 			<key>Minute</key>
 			<integer>0</integer>
 		</dict>
 		<dict>
+			<!-- 月曜12:00: 週末キャンプの余韻タイム -->
 			<key>Hour</key>
-			<integer>10</integer>
+			<integer>12</integer>
 			<key>Minute</key>
 			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
+			<!-- 金曜19:00: 週末準備タイム (金曜のみ夕方) -->
 			<key>Hour</key>
 			<integer>19</integer>
 			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>5</integer>
+		</dict>
+		<dict>
+			<!-- 火〜木21:00: 平日夜スロット (Weekday 2=火,3=水,4=木) -->
+			<key>Hour</key>
+			<integer>21</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>Hour</key>
+			<integer>21</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>Hour</key>
+			<integer>21</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
+			<integer>4</integer>
+		</dict>
+		<dict>
+			<!-- 日曜20:00: 帰宅後の振り返りタイム -->
+			<key>Hour</key>
+			<integer>20</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+			<key>Weekday</key>
 			<integer>0</integer>
 		</dict>
 	</array>

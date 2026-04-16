@@ -113,11 +113,19 @@ export default async function ArticlePage({
       name: "ギア男",
       description: "長野在住・キャンプ歴10年・2児の父。医療系の仕事をしながらキャンプギアを徹底比較。",
       url: `${baseUrl}/about`,
+      sameAs: [
+        "https://twitter.com/camp_gear_lab",
+        `${baseUrl}/about`,
+      ],
     },
     publisher: {
       "@type": "Organization",
       name: "Outdoor Gear Lab",
       url: baseUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/favicon.ico`,
+      },
     },
     mainEntityOfPage: `${baseUrl}/articles/${article.slug}`,
   };
