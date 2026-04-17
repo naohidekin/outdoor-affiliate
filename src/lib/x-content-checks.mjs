@@ -186,8 +186,15 @@ export function ensurePrLabel(text, opts = {}) {
  */
 export function applyChecksAndLabels(posts) {
   return posts.map((p) => {
+    // URL除去: AIが指示を無視してtext内にURLを埋め込んだ場合に強制除去
+    const cleanedText = (p.text || "")
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    const hadUrl = cleanedText !== (p.text || "").trim();
+
     // PRラベル
-    const labeled = ensurePrLabel(p.text, {
+    const labeled = ensurePrLabel(cleanedText, {
       articleUrl: p.url,
       hasAffiliate:
         p.type === "rakuten_sale" || p.type === "amazon_deal"
@@ -197,6 +204,7 @@ export function applyChecksAndLabels(posts) {
     // バリデーション（タイプ情報を渡して厳格チェック対応）
     const check = checkXPostContent(labeled.text, { type: p.type });
     const errs = [...check.errors, ...check.warnings];
+    if (hadUrl) errs.unshift("URL除去: text フィールドにURLが含まれていたため自動除去");
     return {
       ...p,
       text: labeled.text,
