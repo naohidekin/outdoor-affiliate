@@ -6,8 +6,8 @@ const SHEET_NAME = "下書き管理";
 // A=id, B=type, C=text, D=articleSlug, E=url, F=hashtags, G=status,
 // H=scheduledDate, I=generatedAt, J=postedAt, K=axis, L=seedId,
 // M=validationErrors, N=autoApproved, O=selfScore, P=firstLinePattern,
-// Q=similarityScore, R=retryCount
-const COLUMN_RANGE = "A2:R";
+// Q=similarityScore, R=retryCount, S=imageUrl
+const COLUMN_RANGE = "A2:S";
 
 function getAuth() {
   const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || "{}");
@@ -48,6 +48,7 @@ function rowToXPost(row: string[]): XPost {
     firstLinePattern: row[15] || undefined,
     similarityScore: row[16] ? parseFloat(row[16]) : undefined,
     retryCount: row[17] ? parseInt(row[17], 10) : undefined,
+    imageUrl: row[18] || undefined,
   };
 }
 
@@ -71,6 +72,7 @@ function xpostToRow(post: XPost): string[] {
     post.firstLinePattern || "",
     post.similarityScore != null ? String(post.similarityScore) : "",
     post.retryCount != null ? String(post.retryCount) : "",
+    post.imageUrl || "",
   ];
 }
 

@@ -83,6 +83,8 @@ export interface XPost {
   similarityScore?: number;
   /** リトライ回数 (0/1/2) */
   retryCount?: number;
+  /** 投稿に添付する画像URL (Unsplash or OG image) */
+  imageUrl?: string;
 }
 
 export interface Article {

@@ -4,6 +4,37 @@ import { isAuthenticated } from "@/lib/auth";
 import { getPublishedArticles, getCategories } from "@/lib/db";
 import { getSheetsXPosts, saveSheetsXPosts } from "@/lib/sheets-xposts";
 import { XPost, XPostType } from "@/lib/types";
+
+const SITE_URL = "https://camp-gear-lab.com";
+const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY;
+
+// タイプ別 Unsplash デフォルト検索クエリ
+const UNSPLASH_QUERIES: Partial<Record<XPostType, string>> = {
+  outdoor_tip: "camping outdoor nature tips",
+  seasonal_hook: "outdoor seasonal camping nature",
+  failure_story: "camping adventure outdoor fun",
+  parenting_outdoor: "family camping children outdoor",
+  ai_dev_log: "laptop coding outdoor nature",
+  doc_health_tip: "outdoor health nature wellness",
+  poll_question: "camping gear outdoor choice",
+};
+
+async function fetchUnsplashImage(query: string): Promise<string | null> {
+  if (!UNSPLASH_KEY) return null;
+  try {
+    const res = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
+      { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }
+    );
+    const data = await res.json();
+    const photos = data.results || [];
+    if (!photos.length) return null;
+    const photo = photos[Math.floor(Math.random() * photos.length)];
+    return photo.urls.regular + "&w=1200&q=80";
+  } catch {
+    return null;
+  }
+}
 // 共通プロンプトlib（Lake & Sky トーン明文化）
 import { buildLegacyBatchPrompt } from "@/lib/x-post-prompts.mjs";
 import { applyChecksAndLabels } from "@/lib/x-content-checks.mjs";
@@ -120,6 +151,19 @@ export async function POST(request: NextRequest) {
     _checkOk: boolean;
   }>;
 
+  // imageUrl を並行取得
+  const imageUrls = await Promise.all(
+    checked.map(async (g) => {
+      if (g.type === "article_promo" && g.articleSlug) {
+        // 記事OG画像（Next.js が自動生成）
+        return `${SITE_URL}/articles/${g.articleSlug}/opengraph-image`;
+      }
+      const query = UNSPLASH_QUERIES[g.type as XPostType];
+      if (query) return await fetchUnsplashImage(query);
+      return null;
+    })
+  );
+
   const newPosts: XPost[] = checked.map((g, i) => ({
     id: generateId(),
     type: g.type,
@@ -135,6 +179,7 @@ export async function POST(request: NextRequest) {
     axis: "camp",
     validationErrors: g.validationErrors,
     autoApproved: g._checkOk && autoApprove ? "true" : "false",
+    imageUrl: imageUrls[i] || undefined,
   }));
 
   await saveSheetsXPosts(newPosts);

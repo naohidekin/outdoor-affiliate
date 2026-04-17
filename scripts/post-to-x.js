@@ -199,8 +199,8 @@ async function uploadImageToX(xClient, imageUrl) {
   if (!imageUrl || !imageUrl.trim()) return null;
   try {
     const buf = await downloadImageBuffer(imageUrl.trim());
-    // MIME type を URL から推定
-    const mime = imageUrl.includes(".png") ? "image/png"
+    // MIME type を URL から推定（OG画像 /opengraph-image は PNG）
+    const mime = (imageUrl.includes(".png") || imageUrl.includes("opengraph-image")) ? "image/png"
       : imageUrl.includes(".gif") ? "image/gif"
       : "image/jpeg";
     const mediaId = await xClient.v1.uploadMedia(buf, { mimeType: mime });
