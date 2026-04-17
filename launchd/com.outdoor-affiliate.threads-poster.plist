@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.outdoor-affiliate.threads-poster</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/node</string>
+		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/post-to-threads.js</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<array>
+		<!-- X投稿（8:00/10:00/19:00）の90分後に投稿 -->
+		<dict>
+			<key>Hour</key>
+			<integer>9</integer>
+			<key>Minute</key>
+			<integer>30</integer>
+		</dict>
+		<dict>
+			<key>Hour</key>
+			<integer>11</integer>
+			<key>Minute</key>
+			<integer>30</integer>
+		</dict>
+		<dict>
+			<key>Hour</key>
+			<integer>20</integer>
+			<key>Minute</key>
+			<integer>30</integer>
+		</dict>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<key>StandardOutPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-threads.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-threads-error.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+</dict>
+</plist>

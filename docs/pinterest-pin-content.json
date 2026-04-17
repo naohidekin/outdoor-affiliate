@@ -1,0 +1,404 @@
+{
+  "boards": [
+    {
+      "name": "Japanese Beauty & Skincare",
+      "description": "Discover the best Japanese skincare, sunscreens, and beauty products. Learn how to buy them online and ship worldwide. #JapaneseBeauty #JapaneseSkincare #AsianBeauty",
+      "category": "beauty"
+    },
+    {
+      "name": "Japan Travel Essentials",
+      "description": "Everything you need for your Japan trip — SIM cards, hotel delivery, must-have items, and insider tips. #JapanTravel #JapanTrip #TravelJapan",
+      "category": "travel"
+    },
+    {
+      "name": "Japanese Food & Snacks",
+      "description": "Matcha KitKat, Japanese snacks, and gourmet finds you can order online. Ship authentic Japanese food to your door. #JapaneseFood #JapaneseSnacks #JapanFood",
+      "category": "food"
+    },
+    {
+      "name": "How to Buy from Japan",
+      "description": "Step-by-step guides to buying from Rakuten, Amazon Japan, and Yahoo Shopping. Compare proxy services and forwarding options. #BuyFromJapan #JapanShopping #ProxyShopping",
+      "category": "guide"
+    },
+    {
+      "name": "Japanese Home & Kitchen",
+      "description": "Traditional and modern Japanese kitchen knives, cookware, ceramics, and home goods — buy direct from Japan. #JapaneseKitchen #JapaneseKnives #Japandi",
+      "category": "home"
+    },
+    {
+      "name": "Japanese Stationery & Gifts",
+      "description": "Premium Japanese pens, notebooks, washi tape, and unique gifts. Perfect for stationery lovers worldwide. #JapaneseStationery #JapanesePens #BujoSupplies",
+      "category": "stationery"
+    }
+  ],
+  "pins": [
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Top 5 Japanese Sunscreens You Can Buy Online in 2026",
+      "description": "Japanese sunscreens are lightweight, non-greasy, and offer superior UV protection. Here are the top 5 you can order from Japan and ship worldwide using proxy shopping services like ZenMarket. #JapaneseSunscreen #Skincare #SPF #AsianBeauty",
+      "link": "https://japan-shop-helper.com/beauty/best-japanese-sunscreens",
+      "suggestedImage": "Flat lay of Japanese sunscreen products (Biore, Anessa, Skin Aqua)"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Japanese Skincare Routine: The 7-Step Guide for Beginners",
+      "description": "Master the famous Japanese skincare routine — cleansing oil, foam cleanser, toner, essence, serum, moisturizer, and sunscreen. Products you can buy from Japan today. #JapaneseSkincare #SkincareRoutine #JBeauty",
+      "link": "https://japan-shop-helper.com/beauty/japanese-skincare-routine",
+      "suggestedImage": "Step-by-step skincare products arranged in order"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Shiseido vs Kanebo vs SK-II: Which Japanese Brand is Best?",
+      "description": "A detailed comparison of Japan's top 3 luxury skincare brands. Price, ingredients, effectiveness — we break it all down. #Shiseido #Kanebo #SKII #JapaneseBeauty",
+      "link": "https://japan-shop-helper.com/beauty/shiseido-vs-kanebo-vs-skii",
+      "suggestedImage": "Three brand products side by side comparison layout"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Best Japanese Hair Care Products: Shampoo, Treatment & More",
+      "description": "From Shiseido Tsubaki to &honey — discover Japanese hair care products loved by millions. Available to ship worldwide. #JapaneseHairCare #HairCare #JBeauty",
+      "link": "https://japan-shop-helper.com/beauty/japanese-hair-care",
+      "suggestedImage": "Japanese shampoo and treatment bottles"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "10 Cult-Favorite Japanese Drugstore Beauty Products Under $15",
+      "description": "Affordable Japanese beauty products that actually work. From Canmake to CEZANNE — drugstore gems you need to try. #JapaneseBeauty #DrugstoreBeauty #AffordableSkincare",
+      "link": "https://japan-shop-helper.com/beauty/japanese-drugstore-beauty",
+      "suggestedImage": "Colorful array of affordable Japanese cosmetics"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Best Japanese Eye Creams for Dark Circles & Wrinkles",
+      "description": "Japanese eye creams use advanced ingredients like retinol and ceramides. Here are the best options you can buy online. #EyeCream #JapaneseSkincare #AntiAging",
+      "link": "https://japan-shop-helper.com/beauty/japanese-eye-creams",
+      "suggestedImage": "Close-up of eye cream products with elegant packaging"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "DHC Deep Cleansing Oil: Why Japan's #1 Cleanser is a Must-Have",
+      "description": "The cult-favorite DHC cleansing oil has sold over 100 million bottles. Here's why it works and how to get it shipped to you. #DHC #CleansingOil #JBeauty",
+      "link": "https://japan-shop-helper.com/beauty/dhc-cleansing-oil-review",
+      "suggestedImage": "DHC cleansing oil product photo"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Japanese Face Masks: 10 Best Sheet Masks from Japan",
+      "description": "LuLuLun, Kose, Minon — Japanese sheet masks are affordable and effective. Here are 10 best picks to order online. #FaceMask #SheetMask #JapaneseSkincare",
+      "link": "https://japan-shop-helper.com/beauty/japanese-face-masks",
+      "suggestedImage": "Variety of Japanese sheet mask packages"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Japan SIM Card vs eSIM: Which Should You Get? (2026 Guide)",
+      "description": "Traveling to Japan? Compare physical SIM cards vs eSIM options for tourists. Prices, coverage, and setup — everything you need to know. #JapanTravel #JapanSIM #eSIM",
+      "link": "https://japan-shop-helper.com/travel/japan-sim-card-vs-esim",
+      "suggestedImage": "SIM card and phone with Japan map background"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Amazon Japan Hotel Delivery: The Shopping Hack You Need",
+      "description": "Did you know you can order from Amazon Japan and have it delivered to your hotel? Here's exactly how to do it step by step. #JapanTravel #AmazonJapan #TravelHack",
+      "link": "https://japan-shop-helper.com/travel/amazon-japan-hotel-delivery",
+      "suggestedImage": "Amazon boxes at hotel reception"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "10 Must-Have Items for Your Japan Trip (2026 Edition)",
+      "description": "From portable WiFi to travel adapters — the essential gear checklist for visiting Japan. Don't leave home without these. #JapanTrip #TravelEssentials #PackingList",
+      "link": "https://japan-shop-helper.com/travel/japan-trip-essentials",
+      "suggestedImage": "Flat lay of travel essentials for Japan"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Best Pocket WiFi Rentals for Japan: Compared & Ranked",
+      "description": "Stay connected in Japan with a pocket WiFi. We compare the top rental services by speed, coverage, price, and convenience. #PocketWiFi #JapanTravel #JapanWiFi",
+      "link": "https://japan-shop-helper.com/travel/japan-pocket-wifi",
+      "suggestedImage": "Pocket WiFi device with Tokyo skyline"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "What to Buy in Japan: 20 Best Souvenirs & Where to Find Them",
+      "description": "The ultimate Japan shopping guide — from Daiso finds to department store exclusives. What to buy and where to get it. #JapanSouvenirs #JapanShopping #WhatToBuyInJapan",
+      "link": "https://japan-shop-helper.com/travel/what-to-buy-in-japan",
+      "suggestedImage": "Colorful array of Japanese souvenirs"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Japan IC Cards Explained: Suica, Pasmo & ICOCA (2026)",
+      "description": "Everything you need to know about Japan's IC transit cards. Which one to get, how to charge, and where they work. #Suica #JapanTransit #JapanTravel",
+      "link": "https://japan-shop-helper.com/travel/japan-ic-cards",
+      "suggestedImage": "Suica and Pasmo cards with train station background"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Where to Buy Matcha KitKat: Ship from Japan Worldwide",
+      "description": "Japan-exclusive KitKat flavors you can order online — Matcha, Strawberry Cheesecake, Sake, and more. Here's how to get them delivered. #MatchaKitKat #JapaneseSnacks #KitKat",
+      "link": "https://japan-shop-helper.com/food/matcha-kitkat",
+      "suggestedImage": "Collection of Japanese KitKat flavors"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Best Japanese Instant Ramen to Order Online (Top 10)",
+      "description": "From Ichiran to Nissin — the best Japanese instant ramen you can buy online and have shipped worldwide. Taste test ranked. #JapaneseRamen #InstantRamen #JapaneseFood",
+      "link": "https://japan-shop-helper.com/food/best-japanese-instant-ramen",
+      "suggestedImage": "Bowl of ramen with instant ramen packages"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Japanese Matcha Powder: Best Brands to Buy Online",
+      "description": "Ceremonial vs culinary grade matcha — which Japanese brands are worth buying? We compare Ippodo, Marukyu Koyamaen, and more. #Matcha #JapaneseMatcha #MatchaTea",
+      "link": "https://japan-shop-helper.com/food/japanese-matcha-powder",
+      "suggestedImage": "Matcha powder with whisk and tea bowl"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "10 Japanese Snack Boxes: Which Subscription is Best?",
+      "description": "Bokksu, TokyoTreat, Sakuraco — we compare the top Japanese snack box subscriptions by value, variety, and taste. #JapaneseSnackBox #Bokksu #TokyoTreat",
+      "link": "https://japan-shop-helper.com/food/japanese-snack-box-comparison",
+      "suggestedImage": "Unboxing of Japanese snack subscription box"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Japanese Whisky Guide: What to Buy & How to Ship Overseas",
+      "description": "Suntory, Nikka, and hidden gems — the best Japanese whiskies and how to legally ship them overseas. #JapaneseWhisky #Suntory #Nikka",
+      "link": "https://japan-shop-helper.com/food/japanese-whisky-guide",
+      "suggestedImage": "Japanese whisky bottles with elegant background"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Best Japanese Soy Sauce Brands You've Never Tried",
+      "description": "Upgrade your cooking with premium Japanese soy sauce. Kikkoman is just the beginning — discover artisan brands. #JapaneseSoySauce #JapaneseCooking #Washoku",
+      "link": "https://japan-shop-helper.com/food/japanese-soy-sauce",
+      "suggestedImage": "Artisan soy sauce bottles lined up"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Japanese Convenience Store Snacks: 15 Must-Try Items",
+      "description": "7-Eleven, Lawson, FamilyMart — the best konbini snacks you can now order online from Japan. #Konbini #JapaneseConvenienceStore #JapaneseSnacks",
+      "link": "https://japan-shop-helper.com/food/japanese-konbini-snacks",
+      "suggestedImage": "Japanese convenience store snack haul"
+    },
+    {
+      "board": "Japanese Food & Snacks",
+      "title": "Japanese Kit Kat: Complete Flavor Guide (50+ Flavors Ranked)",
+      "description": "Every Japanese Kit Kat flavor ranked and reviewed. From matcha to sweet potato — which ones are worth ordering? #KitKat #JapaneseKitKat #JapaneseCandy",
+      "link": "https://japan-shop-helper.com/food/japanese-kitkat-flavors",
+      "suggestedImage": "Rainbow display of all KitKat flavors"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "How to Buy from Rakuten Japan: Complete Guide for Foreigners",
+      "description": "Rakuten Japan has amazing deals but it's all in Japanese. Here's a step-by-step guide to buying from Rakuten and shipping overseas. #Rakuten #BuyFromJapan #JapanShopping",
+      "link": "https://japan-shop-helper.com/guide/how-to-buy-from-rakuten",
+      "suggestedImage": "Rakuten website screenshot with annotations"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "ZenMarket vs Buyee vs Neokyo: Best Japan Proxy Service (2026)",
+      "description": "We compare the top 3 Japanese proxy shopping services by fees, shipping, ease of use, and reliability. Which one is best for you? #ZenMarket #Buyee #Neokyo #ProxyShopping",
+      "link": "https://japan-shop-helper.com/guide/proxy-service-comparison",
+      "suggestedImage": "Three service logos in comparison layout"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "How to Buy from Amazon Japan: Ship Internationally (2026)",
+      "description": "Amazon Japan ships some items directly overseas. For everything else, use a forwarding service. Here's the complete guide. #AmazonJapan #BuyFromJapan #InternationalShopping",
+      "link": "https://japan-shop-helper.com/guide/how-to-buy-from-amazon-japan",
+      "suggestedImage": "Amazon Japan homepage with guide overlay"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Japan Forwarding Services Compared: tenso vs Blackship vs others",
+      "description": "Need a Japanese address to shop online? Compare the top forwarding services by cost, speed, and features. #ForwardingService #JapanAddress #ShipFromJapan",
+      "link": "https://japan-shop-helper.com/guide/japan-forwarding-services",
+      "suggestedImage": "Package forwarding flow diagram"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Yahoo Auctions Japan: How to Bid from Overseas",
+      "description": "Yahoo Auctions Japan has incredible deals on vintage items, electronics, and collectibles. Here's how foreigners can bid. #YahooAuctions #JapanAuction #BuyFromJapan",
+      "link": "https://japan-shop-helper.com/guide/yahoo-auctions-japan",
+      "suggestedImage": "Yahoo Auctions Japan listing examples"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Mercari Japan: How to Buy Secondhand from Japan",
+      "description": "Mercari is Japan's biggest flea market app. Learn how to browse, buy, and ship items overseas using a proxy. #Mercari #SecondhandJapan #JapanShopping",
+      "link": "https://japan-shop-helper.com/guide/mercari-japan-guide",
+      "suggestedImage": "Mercari app screenshots with guide annotations"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Japan Proxy Shopping: Beginner's Complete Guide (2026)",
+      "description": "Never used a proxy shopping service? This beginner-friendly guide explains everything from sign-up to delivery. #ProxyShopping #BuyFromJapan #JapanShopping",
+      "link": "https://japan-shop-helper.com/guide/proxy-shopping-beginners",
+      "suggestedImage": "Infographic: proxy shopping flow in 5 steps"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Japan Shopping Fees Explained: Proxy, Shipping & Customs",
+      "description": "Hidden costs of buying from Japan — service fees, international shipping, customs duties. We break down the real total cost. #JapanShopping #ShippingCost #CustomsDuty",
+      "link": "https://japan-shop-helper.com/guide/japan-shopping-fees",
+      "suggestedImage": "Cost breakdown infographic"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Best Japanese Kitchen Knives: Buyer's Guide (2026)",
+      "description": "From Shun to Miyabi to Tojiro — the ultimate guide to Japanese kitchen knives. Types, steel grades, and where to buy. #JapaneseKnives #KitchenKnives #ChefKnife",
+      "link": "https://japan-shop-helper.com/home/japanese-kitchen-knives",
+      "suggestedImage": "Japanese chef knife on cutting board"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japanese Cast Iron Teapots (Tetsubin): Top 5 to Buy Online",
+      "description": "Beautiful and functional — Japanese cast iron teapots keep tea warm and add minerals. Here are the 5 best tetsubin to buy. #Tetsubin #JapaneseTeapot #JapaneseTea",
+      "link": "https://japan-shop-helper.com/home/japanese-tetsubin",
+      "suggestedImage": "Elegant tetsubin teapot with cups"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japanese Rice Cookers: Zojirushi vs Tiger vs Panasonic",
+      "description": "Japan's rice cookers are legendary. We compare the top 3 brands by features, price, and rice quality. Worth the import? Absolutely. #RiceCooker #Zojirushi #JapaneseKitchen",
+      "link": "https://japan-shop-helper.com/home/japanese-rice-cookers",
+      "suggestedImage": "Three rice cooker models side by side"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "10 Japanese Kitchen Tools Every Home Cook Needs",
+      "description": "Mandoline, oroshigane, makisu — essential Japanese kitchen tools that elevate your cooking. Available online. #JapaneseKitchen #KitchenTools #JapaneseCooking",
+      "link": "https://japan-shop-helper.com/home/japanese-kitchen-tools",
+      "suggestedImage": "Flat lay of Japanese kitchen tools"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japanese Ceramics & Pottery: Where to Buy Authentic Pieces",
+      "description": "Arita, Hasami, Mashiko — discover Japan's ceramic traditions and buy authentic pieces online. #JapaneseCeramics #JapanesePottery #Hasami",
+      "link": "https://japan-shop-helper.com/home/japanese-ceramics",
+      "suggestedImage": "Beautiful Japanese ceramic bowls and plates"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Best Japanese Bento Boxes for Adults & Kids",
+      "description": "Functional, beautiful, and perfectly portioned — Japanese bento boxes make meal prep a joy. Our top picks to buy online. #BentoBox #JapaneseBento #MealPrep",
+      "link": "https://japan-shop-helper.com/home/japanese-bento-boxes",
+      "suggestedImage": "Colorful bento box filled with food"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japanese Incense Guide: Best Brands & Where to Buy",
+      "description": "Nippon Kodo, Shoyeido, Baieido — discover Japan's finest incense. Calming scents shipped worldwide. #JapaneseIncense #Incense #JapaneseHome",
+      "link": "https://japan-shop-helper.com/home/japanese-incense",
+      "suggestedImage": "Incense sticks with holder in zen setting"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japandi Interior: 8 Japanese Home Items for Minimalist Living",
+      "description": "Blend Japanese simplicity with Scandinavian design. These 8 items from Japan bring Japandi style to your home. #Japandi #MinimalistHome #JapaneseDesign",
+      "link": "https://japan-shop-helper.com/home/japandi-items",
+      "suggestedImage": "Minimalist Japanese room with curated items"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Best Japanese Pens: Pilot, Uni, Pentel — Ultimate Guide",
+      "description": "Japanese pens are the world's best. From Pilot G2 to Uni Jetstream — our complete guide to Japanese writing instruments. #JapanesePens #Pilot #Uni #Stationery",
+      "link": "https://japan-shop-helper.com/stationery/best-japanese-pens",
+      "suggestedImage": "Array of Japanese pens with writing samples"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Japanese Bullet Journal Supplies: 15 Must-Have Items",
+      "description": "Tombow, Zebra Mildliner, Kokuyo notebooks — the best Japanese bujo supplies for planning and journaling enthusiasts. #BulletJournal #Bujo #JapaneseStationery",
+      "link": "https://japan-shop-helper.com/stationery/japanese-bujo-supplies",
+      "suggestedImage": "Bullet journal spread with Japanese supplies"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Washi Tape from Japan: Best Brands & How to Buy",
+      "description": "MT, Kamoi, Bande — Japanese washi tape is the original and the best. Hundreds of designs to order online. #WashiTape #MT #JapaneseStationery",
+      "link": "https://japan-shop-helper.com/stationery/japanese-washi-tape",
+      "suggestedImage": "Colorful washi tape rolls spread out"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Best Japanese Notebooks: Hobonichi, Midori, Kokuyo Compared",
+      "description": "Paper quality matters. We compare Japan's top notebooks — Hobonichi Techo, Midori MD, and Kokuyo Campus. #JapaneseNotebook #Hobonichi #Midori",
+      "link": "https://japan-shop-helper.com/stationery/japanese-notebooks",
+      "suggestedImage": "Three notebooks open showing paper quality"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Unique Japanese Gifts: 20 Ideas Under $30",
+      "description": "Looking for unique gifts from Japan? From Daruma dolls to furoshiki wrapping cloths — 20 ideas that ship worldwide. #JapaneseGifts #GiftIdeas #MadeInJapan",
+      "link": "https://japan-shop-helper.com/stationery/japanese-gift-ideas",
+      "suggestedImage": "Curated gift items from Japan"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Japanese Erasers & Correction Tape: Tiny Tools, Big Difference",
+      "description": "Tombow Mono, Pentel Ain, Plus WhiPer — why Japanese erasers and correction tools are superior. #Stationery #JapaneseStationery #SchoolSupplies",
+      "link": "https://japan-shop-helper.com/stationery/japanese-erasers",
+      "suggestedImage": "Collection of Japanese erasers and correction tape"
+    },
+    {
+      "board": "Japanese Stationery & Gifts",
+      "title": "Kokuyo Campus Notebooks: Why Students in Japan Swear By Them",
+      "description": "The best-selling notebook in Japan since 1975. Smooth paper, smart design, affordable price. Here's why Kokuyo Campus is unbeatable. #Kokuyo #StudentLife #JapaneseStationery",
+      "link": "https://japan-shop-helper.com/stationery/kokuyo-campus",
+      "suggestedImage": "Stack of Kokuyo Campus notebooks in different colors"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Japanese Lip Products: Tints, Balms & Lipsticks Worth Buying",
+      "description": "From Opera to Canmake — Japanese lip products offer beautiful colors and lasting wear at great prices. #JapaneseMakeup #LipTint #JBeauty",
+      "link": "https://japan-shop-helper.com/beauty/japanese-lip-products",
+      "suggestedImage": "Japanese lip products swatches and packaging"
+    },
+    {
+      "board": "Japanese Beauty & Skincare",
+      "title": "Muji Skincare: Honest Review — Is It Worth the Hype?",
+      "description": "Muji's minimalist skincare line is affordable and popular. But is it actually good? We test and review the full range. #Muji #MujiSkincare #MinimalistBeauty",
+      "link": "https://japan-shop-helper.com/beauty/muji-skincare-review",
+      "suggestedImage": "Muji skincare product lineup"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Daiso Japan: Best Items to Buy (2026 Guide)",
+      "description": "Japan's famous 100-yen shop has incredible finds. Here are the 20 best Daiso items tourists and residents love. #Daiso #100YenShop #JapanShopping",
+      "link": "https://japan-shop-helper.com/travel/best-daiso-items",
+      "suggestedImage": "Colorful Daiso items on display"
+    },
+    {
+      "board": "Japan Travel Essentials",
+      "title": "Don Quijote Guide: What to Buy at Japan's Discount Store",
+      "description": "Don Quijote (Donki) is a treasure trove. Snacks, cosmetics, electronics — here's what to grab during your Japan visit. #DonQuijote #Donki #JapanShopping",
+      "link": "https://japan-shop-helper.com/travel/don-quijote-guide",
+      "suggestedImage": "Don Quijote store exterior and product haul"
+    },
+    {
+      "board": "Japanese Home & Kitchen",
+      "title": "Japanese Thermos & Water Bottles: Zojirushi vs Tiger",
+      "description": "Japanese thermoses keep drinks hot for 12+ hours. Zojirushi and Tiger are the top brands — here's how they compare. #Zojirushi #Tiger #JapaneseThermos",
+      "link": "https://japan-shop-helper.com/home/japanese-thermos",
+      "suggestedImage": "Zojirushi and Tiger thermoses comparison"
+    },
+    {
+      "board": "How to Buy from Japan",
+      "title": "Is ZenMarket Safe? Honest Review After 10 Orders",
+      "description": "We used ZenMarket for 10 orders over 3 months. Here's our honest review — the good, the bad, and the fees. #ZenMarket #ZenMarketReview #ProxyShopping",
+      "link": "https://japan-shop-helper.com/guide/zenmarket-review",
+      "suggestedImage": "ZenMarket order tracking screenshot with review score"
+    }
+  ],
+  "existingPins": {
+    "note": "Reassign these existing pins to the appropriate boards",
+    "assignments": [
+      { "pin": "Amazon Japan Hotel Delivery", "board": "Japan Travel Essentials" },
+      { "pin": "Complete Japanese Beauty Routine", "board": "Japanese Beauty & Skincare" },
+      { "pin": "Japan SIM Card vs eSIM", "board": "Japan Travel Essentials" },
+      { "pin": "Where to Buy Matcha KitKat", "board": "Japanese Food & Snacks" },
+      { "pin": "Japanese Skincare Secrets", "board": "Japanese Beauty & Skincare" },
+      { "pin": "10 Must-Have Items for Your Japan Trip", "board": "Japan Travel Essentials" }
+    ]
+  }
+}
