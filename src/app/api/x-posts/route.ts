@@ -31,9 +31,14 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const updated: XPost = { ...result.post, ...body };
-  await saveSheetsXPost(updated);
-  return NextResponse.json(updated);
+  try {
+    const updated: XPost = { ...result.post, ...body };
+    await saveSheetsXPost(updated);
+    return NextResponse.json(updated);
+  } catch (e) {
+    console.error("X posts PATCH error:", e);
+    return NextResponse.json({ error: "更新に失敗しました" }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: NextRequest) {

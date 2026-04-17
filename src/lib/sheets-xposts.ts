@@ -124,14 +124,14 @@ export async function saveSheetsXPost(post: XPost): Promise<void> {
   if (existing) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${SHEET_NAME}!A${existing.rowIndex}:R${existing.rowIndex}`,
+      range: `${SHEET_NAME}!A${existing.rowIndex}:S${existing.rowIndex}`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
   } else {
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${SHEET_NAME}!A:R`,
+      range: `${SHEET_NAME}!A:S`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
@@ -145,7 +145,7 @@ export async function saveSheetsXPosts(posts: XPost[]): Promise<void> {
   const rows = posts.map(xpostToRow);
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${SHEET_NAME}!A:R`,
+    range: `${SHEET_NAME}!A:S`,
     valueInputOption: "RAW",
     requestBody: { values: rows },
   });

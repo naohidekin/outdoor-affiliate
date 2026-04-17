@@ -223,6 +223,11 @@ export default function XPostsPage() {
         ...(status === "posted" ? { postedAt: new Date().toISOString() } : {}),
       }),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(`更新失敗: ${(err as { error?: string }).error || res.statusText}`);
+      return;
+    }
     const updated = await res.json();
     setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
   }
