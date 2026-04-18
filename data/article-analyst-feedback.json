@@ -1,46 +1,46 @@
 {
-  "updatedAt": "2026-04-17T01:00:09.163Z",
+  "updatedAt": "2026-04-18T01:00:09.954Z",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 16,
+      "pv7d": 23,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "gw-camp-guide-2026",
       "categoryId": "tent",
-      "pv7d": 8,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "backpack-ranking",
-      "categoryId": "backpack",
-      "pv7d": 4,
+      "pv7d": 7,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "spring-camp-clothing-guide",
       "categoryId": "wear",
-      "pv7d": 4,
+      "pv7d": 6,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "backpack-ranking",
+      "categoryId": "backpack",
+      "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "low-table-ranking",
       "categoryId": "table",
-      "pv7d": 4,
+      "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 3,
+      "pv7d": 4,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -87,6 +87,20 @@
       "ctr": 0
     },
     {
+      "slug": "firepit-3way-showdown",
+      "categoryId": "firepit",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "winter-camp-beginners-checklist",
+      "categoryId": "sleeping-bag",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "nanga-sleeping-bag-comparison",
       "categoryId": "sleeping-bag",
       "pv7d": 1,
@@ -108,22 +122,15 @@
       "ctr": 0
     },
     {
+      "slug": "duo-tent-ranking",
+      "categoryId": "tent",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "tarp-ranking",
       "categoryId": "tarp",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camp-table-ranking",
-      "categoryId": "table",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-3way-showdown",
-      "categoryId": "firepit",
       "pv7d": 1,
       "clicks7d": 0,
       "ctr": 0
@@ -134,46 +141,46 @@
       "pv7d": 1,
       "clicks7d": 0,
       "ctr": 0
-    },
-    {
-      "slug": "winter-camp-beginners-checklist",
-      "categoryId": "sleeping-bag",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 29,
+      "pv7d": 37,
       "clicks7d": 0,
-      "searchSessions": 24,
+      "searchSessions": 34,
       "trend": "active"
     },
     {
       "categoryId": "wear",
-      "pv7d": 6,
+      "pv7d": 8,
       "clicks7d": 0,
-      "searchSessions": 4,
+      "searchSessions": 6,
       "trend": "low"
     },
     {
       "categoryId": "sleeping-bag",
-      "pv7d": 6,
+      "pv7d": 7,
       "clicks7d": 0,
       "searchSessions": 5,
+      "trend": "low"
+    },
+    {
+      "categoryId": "backpack",
+      "pv7d": 5,
+      "clicks7d": 0,
+      "searchSessions": 4,
       "trend": "low"
     },
     {
       "categoryId": "table",
       "pv7d": 5,
       "clicks7d": 0,
-      "searchSessions": 1,
+      "searchSessions": 2,
       "trend": "low"
     },
     {
-      "categoryId": "backpack",
+      "categoryId": "firepit",
       "pv7d": 4,
       "clicks7d": 0,
       "searchSessions": 3,
@@ -184,13 +191,6 @@
       "pv7d": 3,
       "clicks7d": 0,
       "searchSessions": 0,
-      "trend": "low"
-    },
-    {
-      "categoryId": "firepit",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "searchSessions": 3,
       "trend": "low"
     },
     {

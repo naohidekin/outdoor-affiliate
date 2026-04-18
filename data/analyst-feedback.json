@@ -1,9 +1,14 @@
 {
   "version": 3,
-  "updatedAt": "2026-04-15T14:01:36.509Z",
-  "period": "2026-03-18 ~ 2026-04-15",
-  "topPerformingTypes": [],
-  "lowPerformingTypes": [],
+  "updatedAt": "2026-04-17T14:00:07.707Z",
+  "period": "2026-03-20 ~ 2026-04-17",
+  "topPerformingTypes": [
+    "doc_health_tip"
+  ],
+  "lowPerformingTypes": [
+    "seasonal_hook",
+    "outdoor_tip"
+  ],
   "effectivePatterns": [
     {
       "pattern": "product_compare",
@@ -11,18 +16,69 @@
     },
     {
       "pattern": "seasonal_start",
-      "reason": "平均スコア 7.9（2件）"
+      "reason": "平均スコア 7.8（3件）"
     }
   ],
-  "avoidPatterns": [],
-  "axisFeedback": {},
-  "seasonalInsight": "GW準備ネタが刺さる。寒暖差ネタも反応良い",
-  "writerHints": [
-    "高スコアパターン: product_compare, seasonal_start"
+  "avoidPatterns": [
+    {
+      "pattern": "[誇大表現] \"必ず\" を検出",
+      "reason": "NG検出 3回"
+    }
   ],
-  "engagementByType": {},
-  "topEngagementPosts": [],
-  "replyThemes": [],
+  "axisFeedback": {
+    "camp": "16件生成、承認率25%、NG率25%",
+    "parenting": "2件生成、承認率0%、NG率0%",
+    "doctor": "2件生成、承認率100%、NG率0%",
+    "12:15": "1件生成、承認率100%、NG率0%"
+  },
+  "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
+  "writerHints": [
+    "高スコアパターン: product_compare, seasonal_start",
+    "NG率が高いタイプ: seasonal_hook, outdoor_tip — 表現を見直す",
+    "X経由PVが高い記事を article_promo で優先的に紹介する",
+    "直近トップ投稿: [outdoor_tip]「春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶\n\n日中は半袖でも夜は10度以下なんてザラ。靴下の重ね履きや厚手のスリ」(♥3 🔖0) → 似た切り口を再活用",
+    "読者の反応/質問: @camp_gear_lab @life_is_orz よろしくお願いいたします！ | @camp_gear_lab ギア男さん、ありがとうございます！\n手を動かすのは本当に大事ですよね😊\n朝イチのリプ１つがうってつけです✨ | @camp_gear_lab ギア男さん、初めまして✨リプありがとうございます！そう言っていただけて嬉しいです〜！無理は禁物ですが、できる範囲で量もやると、効果",
+    "【重要】誇大表現「必ず」の使用を完全に禁止しろ — NG検出が3回発生し、承認率低下の主要因となっている。",
+    "【重要】doctor軸の投稿を大幅に増やせ [doc_health_tip] — doctor軸は承認率100%・NG率0%で最高パフォーマンス。camp軸の承認率25%と大きな差がある。",
+    "【重要】seasonal_hookとoutdoor_tipタイプの生成を一時停止しろ [seasonal_hook,outdoor_tip] — 両タイプとも低パフォーマンスタイプに分類され、NG率が高い状況。",
+    "product_compareとseasonal_startの書き出しパターンを優先的に使え — 両パターンとも平均スコア7.8を記録し、他パターンより高評価。",
+    "読者の「手を動かす」「量をこなす」といった実践系フィードバックを投稿ネタに活用しろ — リプライで「手を動かすのは大事」「量もやると効果」など実践重視の反応が見られる。",
+    "camp軸の投稿品質を見直し、承認率50%以上を目標にしろ [camp] — camp軸は16件生成で承認率25%と低く、主力軸として改善が必要。",
+    "multi-burner-ranking関連の春キャンプ料理ネタを増やせ [outdoor_tip,camp] — X経由PV3を獲得し、季節的にも4月の需要に合致している。",
+    "エンゲージメント分析は引き続きデータ蓄積に専念しろ — 全1行目パターンでエンゲージメントスコア0のため、まだパターン判定ができない状況。"
+  ],
+  "engagementByType": {
+    "outdoor_tip": {
+      "likes": 3,
+      "bookmarks": 0,
+      "retweets": 0,
+      "replies": 0,
+      "impressions": 50,
+      "count": 1
+    }
+  },
+  "topEngagementPosts": [
+    {
+      "postType": "outdoor_tip",
+      "textPreview": "春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶\n\n日中は半袖でも夜は10度以下なんてザラ。靴下の重ね履きや厚手のスリ",
+      "likes": 3,
+      "bookmarks": 0,
+      "retweets": 0,
+      "replies": 0
+    }
+  ],
+  "replyThemes": [
+    "@camp_gear_lab @life_is_orz よろしくお願いいたします！",
+    "@camp_gear_lab ギア男さん、ありがとうございます！\n手を動かすのは本当に大事ですよね😊\n朝イチのリプ１つがうってつけです✨",
+    "@camp_gear_lab ギア男さん、初めまして✨リプありがとうございます！そう言っていただけて嬉しいです〜！無理は禁物ですが、できる範囲で量もやると、効果",
+    "@camp_gear_lab 貸切だったので遠くから望遠で狙えたのが良かったです🥰",
+    "@camp_gear_lab ギア男さん、ありがとうございます🔥\nよろしくお願いします🙌",
+    "@camp_gear_lab たくさん交流しましょう！！",
+    "@camp_gear_lab \nギア男さん！\n初めまして！\nベンティと申します😁\nフォローさせていただきました！\nよろしくお願いいたします！",
+    "@camp_gear_lab ですですwww",
+    "@camp_gear_lab Xでも発揮していきます😂💪",
+    "@camp_gear_lab 一緒に頑張りましょう😸"
+  ],
   "firstLineAnalysis": {
     "ranking": [
       {
@@ -51,7 +107,7 @@
       },
       {
         "pattern": "conclusion_first",
-        "count": 2,
+        "count": 5,
         "avgSelfScore": 7.3,
         "avgLikes": 0,
         "avgBookmarks": 0,
@@ -75,8 +131,8 @@
       },
       {
         "pattern": "ai_dev",
-        "count": 1,
-        "avgSelfScore": 7.2,
+        "count": 3,
+        "avgSelfScore": 7.3,
         "avgLikes": 0,
         "avgBookmarks": 0,
         "avgReplies": 0,
@@ -87,8 +143,8 @@
       },
       {
         "pattern": "seasonal_start",
-        "count": 2,
-        "avgSelfScore": 7.9,
+        "count": 3,
+        "avgSelfScore": 7.8,
         "avgLikes": 0,
         "avgBookmarks": 0,
         "avgReplies": 0,
@@ -99,8 +155,8 @@
       },
       {
         "pattern": "parenting",
-        "count": 1,
-        "avgSelfScore": 7,
+        "count": 4,
+        "avgSelfScore": 7.3,
         "avgLikes": 0,
         "avgBookmarks": 0,
         "avgReplies": 0,
@@ -132,11 +188,90 @@
         "engagementScore": 0,
         "bestPost": null,
         "hasEngagementData": false
+      },
+      {
+        "pattern": "summary",
+        "count": 2,
+        "avgSelfScore": 7.4,
+        "avgLikes": 0,
+        "avgBookmarks": 0,
+        "avgReplies": 0,
+        "avgImpressions": 0,
+        "engagementScore": 0,
+        "bestPost": null,
+        "hasEngagementData": false
       }
     ],
     "topPatterns": [],
     "weakPatterns": [],
-    "totalAnalyzed": 13
+    "totalAnalyzed": 24
   },
-  "writerDirectives": []
+  "writerDirectives": [
+    {
+      "directive": "誇大表現「必ず」の使用を完全に禁止しろ",
+      "reason": "NG検出が3回発生し、承認率低下の主要因となっている。",
+      "priority": "high",
+      "appliesTo": [
+        "all"
+      ]
+    },
+    {
+      "directive": "doctor軸の投稿を大幅に増やせ",
+      "reason": "doctor軸は承認率100%・NG率0%で最高パフォーマンス。camp軸の承認率25%と大きな差がある。",
+      "priority": "high",
+      "appliesTo": [
+        "doc_health_tip"
+      ]
+    },
+    {
+      "directive": "seasonal_hookとoutdoor_tipタイプの生成を一時停止しろ",
+      "reason": "両タイプとも低パフォーマンスタイプに分類され、NG率が高い状況。",
+      "priority": "high",
+      "appliesTo": [
+        "seasonal_hook",
+        "outdoor_tip"
+      ]
+    },
+    {
+      "directive": "product_compareとseasonal_startの書き出しパターンを優先的に使え",
+      "reason": "両パターンとも平均スコア7.8を記録し、他パターンより高評価。",
+      "priority": "medium",
+      "appliesTo": [
+        "all"
+      ]
+    },
+    {
+      "directive": "読者の「手を動かす」「量をこなす」といった実践系フィードバックを投稿ネタに活用しろ",
+      "reason": "リプライで「手を動かすのは大事」「量もやると効果」など実践重視の反応が見られる。",
+      "priority": "medium",
+      "appliesTo": [
+        "all"
+      ]
+    },
+    {
+      "directive": "camp軸の投稿品質を見直し、承認率50%以上を目標にしろ",
+      "reason": "camp軸は16件生成で承認率25%と低く、主力軸として改善が必要。",
+      "priority": "medium",
+      "appliesTo": [
+        "camp"
+      ]
+    },
+    {
+      "directive": "multi-burner-ranking関連の春キャンプ料理ネタを増やせ",
+      "reason": "X経由PV3を獲得し、季節的にも4月の需要に合致している。",
+      "priority": "low",
+      "appliesTo": [
+        "outdoor_tip",
+        "camp"
+      ]
+    },
+    {
+      "directive": "エンゲージメント分析は引き続きデータ蓄積に専念しろ",
+      "reason": "全1行目パターンでエンゲージメントスコア0のため、まだパターン判定ができない状況。",
+      "priority": "low",
+      "appliesTo": [
+        "all"
+      ]
+    }
+  ]
 }
