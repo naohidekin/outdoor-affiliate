@@ -7,10 +7,20 @@ const MAX_RETRIES = 3;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-const CHARACTER_BASE = 'soft manga illustration, gentle watercolor shading, warm pastel tones, friendly Japanese man in outdoor cap and camping jacket, character fills most of the frame, medium shot centered on character, background is simple and blurred, white background, no text on image, no speech bubbles in image';
+const STYLES = {
+  painting: 'soft manga illustration, gentle watercolor shading, warm pastel tones, friendly Japanese man in outdoor cap and camping jacket, character fills most of the frame, medium shot centered on character, background simple and blurred, white background, no text, no speech bubbles',
+  flat:     'flat vector illustration, clean bold line art, earth tones green brown orange, friendly Japanese man in outdoor cap and camping jacket, character centered, simple background, white background, no text, no speech bubbles',
+  sketch:   'pencil sketch manga style, rough expressive hand-drawn lines, light hatching, monochrome with soft grey tones, friendly Japanese man in outdoor cap, character fills frame, minimal background, no text, no speech bubbles',
+  chibi:    'cute chibi manga style, big round eyes, rounded simplified body, bright cheerful colors, friendly Japanese man in outdoor cap and camping jacket, character large in frame, simple pastel background, no text, no speech bubbles',
+  retro:    'retro 1980s Japanese manga style, bold thick ink lines, screen tone dot shading, high contrast black and white, friendly Japanese man in outdoor cap, expressive exaggerated emotions, character prominent, no text, no speech bubbles',
+  webtoon:  'modern webtoon style, clean digital line art, soft color gradients, bright warm palette, friendly Japanese man in outdoor cap and camping jacket, character centered and fills frame, simple clean background, no text, no speech bubbles',
+};
 
-function buildPrompt(panel) {
-  return `${CHARACTER_BASE}, ${panel.character_pose}, simple ${panel.scene}, character prominent in frame, soft gentle manga style`;
+export const STYLE_KEYS = Object.keys(STYLES);
+
+function buildPrompt(panel, style = 'painting') {
+  const base = STYLES[style] ?? STYLES.painting;
+  return `${base}, ${panel.character_pose}, simple ${panel.scene}, character prominent in frame`;
 }
 
 async function downloadPanel(url, outPath, itemName, retries = 0) {
@@ -63,14 +73,14 @@ async function downloadPanel(url, outPath, itemName, retries = 0) {
   });
 }
 
-export async function generatePanelImages(story, outDir) {
+export async function generatePanelImages(story, outDir, style = 'painting') {
   fs.mkdirSync(outDir, { recursive: true });
   const paths = [];
   // baseSeed is fixed per story so all panels stay in the same seed neighborhood,
   // improving character consistency slightly within a single 4-panel run
   const baseSeed = Math.floor(Math.random() * 100000);
   for (const panel of story.panels) {
-    const prompt = buildPrompt(panel);
+    const prompt = buildPrompt(panel, style);
     const encoded = encodeURIComponent(prompt);
     const seed = baseSeed + panel.panel;
     const url = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true&model=flux`;

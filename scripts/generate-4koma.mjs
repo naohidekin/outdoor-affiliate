@@ -27,7 +27,7 @@ function loadEnv() {
 loadEnv();
 
 import { generate4komaStory } from './4koma/story-generator.mjs';
-import { generatePanelImages } from './4koma/panel-generator.mjs';
+import { generatePanelImages, STYLE_KEYS } from './4koma/panel-generator.mjs';
 import { compose4koma } from './4koma/composer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,7 +42,7 @@ const DEFAULT_THEMES = [
   'ギア収納の悩み',
 ];
 
-async function generateOne(theme, outBaseDir, dryRun) {
+async function generateOne(theme, outBaseDir, dryRun, style = 'painting') {
   console.log(`\n🎨 Theme: "${theme}"`);
 
   console.log('Step 1/3: Generating story with Claude...');
@@ -58,11 +58,11 @@ async function generateOne(theme, outBaseDir, dryRun) {
 
   const slug = theme.replace(/[^\w\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '-').replace(/-+/g, '-').slice(0, 30);
   const date = new Date().toISOString().slice(0, 10);
-  const outPath = path.join(outBaseDir, `${date}-${slug}.png`);
+  const outPath = path.join(outBaseDir, `${date}-${slug}-${style}.png`);
   const panelDir = path.join(os.tmpdir(), `4koma-panels-${slug}-${Date.now()}`);
 
-  console.log('Step 2/3: Generating panel images...');
-  const panelPaths = await generatePanelImages(story, panelDir);
+  console.log(`Step 2/3: Generating panel images [style: ${style}]...`);
+  const panelPaths = await generatePanelImages(story, panelDir, style);
 
   console.log('Step 3/3: Composing 4-panel image...');
   await compose4koma(story, panelPaths, outPath);
@@ -76,7 +76,13 @@ async function run() {
   const args = process.argv.slice(2);
   const themeArg = args.find(a => a.startsWith('--theme='))?.split('=').slice(1).join('=');
   const countArg = parseInt(args.find(a => a.startsWith('--count='))?.split('=')[1] ?? '1');
+  const styleArg = args.find(a => a.startsWith('--style='))?.split('=')[1] ?? 'painting';
   const dryRun = args.includes('--dry-run');
+
+  if (!STYLE_KEYS.includes(styleArg)) {
+    console.error(`❌ Unknown style: "${styleArg}". Available: ${STYLE_KEYS.join(', ')}`);
+    process.exit(1);
+  }
 
   const themes = themeArg ? [themeArg] : DEFAULT_THEMES.slice(0, countArg);
   const outBaseDir = path.join(__dirname, '../public/images/4koma');
@@ -84,7 +90,7 @@ async function run() {
 
   const results = [];
   for (const theme of themes) {
-    const outPath = await generateOne(theme, outBaseDir, dryRun);
+    const outPath = await generateOne(theme, outBaseDir, dryRun, styleArg);
     if (outPath) results.push(outPath);
   }
 
