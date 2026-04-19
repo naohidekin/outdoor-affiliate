@@ -14,6 +14,7 @@ const STYLES = {
   chibi:    'cute chibi manga style, big round eyes, rounded simplified body, bright cheerful colors, friendly Japanese man in outdoor cap and camping jacket, character large in frame, simple pastel background, no text, no speech bubbles',
   retro:    'retro 1980s Japanese manga style, bold thick ink lines, screen tone dot shading, high contrast black and white, friendly Japanese man in outdoor cap, expressive exaggerated emotions, character prominent, no text, no speech bubbles',
   webtoon:  'modern webtoon style, clean digital line art, soft color gradients, bright warm palette, friendly Japanese man in outdoor cap and camping jacket, character centered and fills frame, simple clean background, no text, no speech bubbles',
+  manga:    'classic Japanese manga style, bold clean ink lines, strong black outlines, cel-shading, high contrast black and white with spot color, expressive character art, friendly Japanese man in outdoor cap and camping jacket, character fills frame, minimal background, no text, no speech bubbles',
 };
 
 export const STYLE_KEYS = Object.keys(STYLES);
