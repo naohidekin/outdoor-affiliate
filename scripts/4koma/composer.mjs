@@ -4,7 +4,9 @@ import path from 'path';
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function buildHtml(story, panelPaths) {
@@ -99,8 +101,14 @@ function buildHtml(story, panelPaths) {
 }
 
 export async function compose4koma(story, panelPaths, outPath) {
+  if (!Array.isArray(story.panels) || story.panels.length === 0) {
+    throw new Error('story.panels must be a non-empty array');
+  }
   if (panelPaths.length !== story.panels.length) {
     throw new Error(`Panel count mismatch: ${panelPaths.length} paths vs ${story.panels.length} panels`);
+  }
+  for (const [i, p] of panelPaths.entries()) {
+    if (!fs.existsSync(p)) throw new Error(`Panel image not found (index ${i}): ${p}`);
   }
 
   const html = buildHtml(story, panelPaths);
@@ -111,7 +119,10 @@ export async function compose4koma(story, panelPaths, outPath) {
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 840, height: 600 });
-    await page.goto(`file://${htmlPath}`, { waitUntil: 'load' });
+    await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle0' });
+    await page.evaluate(() =>
+      Promise.all([...document.images].map(img => img.decode()))
+    );
     await page.waitForSelector('.grid');
 
     const wrapper = await page.$('.wrapper');
@@ -119,7 +130,7 @@ export async function compose4koma(story, panelPaths, outPath) {
     await wrapper.screenshot({ path: outPath });
     console.log(`  ✓ Composed: ${outPath}`);
   } finally {
-    await browser.close();
+    try { await browser.close(); } catch {}
     try { fs.unlinkSync(htmlPath); } catch {}
   }
 
