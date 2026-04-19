@@ -462,7 +462,7 @@ export default function XPostsPage() {
       )}
 
       {/* Status filter tabs */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex flex-wrap gap-2 mb-3">
         {(
           [
             ["all", "すべて"],
@@ -545,7 +545,7 @@ export default function XPostsPage() {
 
       {/* Batch action bar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-gray-100 border border-gray-200">
+        <div className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg bg-gray-100 border border-gray-200">
           <span className="text-sm font-medium text-gray-700">
             {selectedIds.size}件選択中
           </span>

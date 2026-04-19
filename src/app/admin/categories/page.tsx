@@ -158,7 +158,8 @@ export default function AdminCategories() {
       )}
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[480px]">
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">順序</th>
@@ -195,6 +196,7 @@ export default function AdminCategories() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -491,7 +491,8 @@ https://camp-gear-lab.com/articles/${article.slug}
       </div>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px]">
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">
@@ -607,6 +608,7 @@ https://camp-gear-lab.com/articles/${article.slug}
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

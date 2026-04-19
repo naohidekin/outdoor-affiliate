@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const navItems = [
   { href: "/admin", label: "ダッシュボード", icon: "📊" },
@@ -16,6 +17,7 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -28,19 +30,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-700">
-          <Link href="/" className="text-lg font-bold text-green-400">
-            🏕️ Outdoor Affiliate
-          </Link>
-          <p className="text-xs text-gray-400 mt-1">管理画面</p>
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-200 lg:relative lg:translate-x-0 lg:z-auto ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+          <div>
+            <Link href="/" className="text-lg font-bold text-green-400">
+              🏕️ Outdoor Affiliate
+            </Link>
+            <p className="text-xs text-gray-400 mt-1">管理画面</p>
+          </div>
+          <button
+            className="lg:hidden text-gray-400 hover:text-white p-1 text-lg leading-none"
+            onClick={() => setOpen(false)}
+            aria-label="閉じる"
+          >
+            ✕
+          </button>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm ${
                 pathname === item.href
                   ? "bg-green-600 text-white"
@@ -69,7 +93,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-8 overflow-auto">{children}</main>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <header className="lg:hidden bg-gray-900 text-white px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+          <button
+            onClick={() => setOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-800 transition text-xl leading-none"
+            aria-label="メニューを開く"
+          >
+            ☰
+          </button>
+          <Link href="/" className="text-base font-bold text-green-400">
+            🏕️ Outdoor Affiliate
+          </Link>
+        </header>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }
