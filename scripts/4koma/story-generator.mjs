@@ -32,7 +32,7 @@ const SYSTEM_PROMPT = `あなたはキャンプ・アウトドア系アフィリ
 
 必ずJSON形式のみを返してください。説明文・前置き・コードブロックは不要です。`;
 
-const USER_TEMPLATE = (theme) => `テーマ「${theme}」で4コマ漫画のストーリーをJSONで生成してください。
+const USER_TEMPLATE = (theme) => `テーマ「${theme}」で4コマ漫画のストーリーをJSONで生成してください。返却はJSONのみ。説明文・コードフェンス・前置き・後置きは一切含めないこと。
 
 {
   "title": "4コマのタイトル",
@@ -54,7 +54,7 @@ const USER_TEMPLATE = (theme) => `テーマ「${theme}」で4コマ漫画のス�
 export async function generate4komaStory(theme) {
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: USER_TEMPLATE(theme) }],
   });
@@ -62,7 +62,16 @@ export async function generate4komaStory(theme) {
   const text = response.content[0].text.trim();
   const match = text.match(/\{[\s\S]+\}/);
   if (!match) throw new Error(`No JSON found in Claude response: ${text.slice(0, 200)}`);
-  return JSON.parse(match[0]);
+  let story;
+  try {
+    story = JSON.parse(match[0]);
+  } catch (e) {
+    throw new Error(`JSON parse failed: ${e.message}\nRaw: ${text.slice(0, 300)}`);
+  }
+  if (!Array.isArray(story.panels) || story.panels.length !== 4) {
+    throw new Error(`Expected 4 panels, got ${story.panels?.length ?? 'undefined'}`);
+  }
+  return story;
 }
 
 // CLI直接実行

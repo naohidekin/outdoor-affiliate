@@ -66,11 +66,13 @@ async function downloadPanel(url, outPath, itemName, retries = 0) {
 export async function generatePanelImages(story, outDir) {
   fs.mkdirSync(outDir, { recursive: true });
   const paths = [];
+  // baseSeed is fixed per story so all panels stay in the same seed neighborhood,
+  // improving character consistency slightly within a single 4-panel run
+  const baseSeed = Math.floor(Math.random() * 100000);
   for (const panel of story.panels) {
     const prompt = buildPrompt(panel);
     const encoded = encodeURIComponent(prompt);
-    // seed per panel: deterministic enough to distinguish panels, random enough to vary per run
-    const seed = panel.panel * 1000 + Math.floor(Math.random() * 100);
+    const seed = baseSeed + panel.panel;
     const url = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true&model=flux`;
     const outPath = path.join(outDir, `panel-${panel.panel}.png`);
     console.log(`  [${panel.panel}/4] Generating panel...`);
