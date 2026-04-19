@@ -7,10 +7,10 @@ const MAX_RETRIES = 3;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-const CHARACTER_BASE = 'flat manga style, friendly Japanese man in outdoor cap and camping jacket, simple clean line art, white background, no text on image, no speech bubbles in image';
+const CHARACTER_BASE = 'soft manga illustration, gentle watercolor shading, warm pastel tones, friendly Japanese man in outdoor cap and camping jacket, character fills most of the frame, medium shot centered on character, background is simple and blurred, white background, no text on image, no speech bubbles in image';
 
 function buildPrompt(panel) {
-  return `${CHARACTER_BASE}, ${panel.character_pose}, ${panel.scene}, panel ${panel.panel} of 4-panel comic`;
+  return `${CHARACTER_BASE}, ${panel.character_pose}, simple ${panel.scene}, character prominent in frame, soft gentle manga style`;
 }
 
 async function downloadPanel(url, outPath, itemName, retries = 0) {
