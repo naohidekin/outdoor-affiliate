@@ -50,17 +50,17 @@ function buildImageUrl(panel: Panel, style: string, seed: number): string {
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`;
 }
 
-async function downloadImage(url: string, retries = 3): Promise<Buffer> {
+async function downloadImage(url: string, retries = 2): Promise<Buffer> {
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+      const res = await fetch(url, { signal: AbortSignal.timeout(25000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const buf = Buffer.from(await res.arrayBuffer());
       if (buf.length < 2000) throw new Error(`Too small: ${buf.length}B`);
       return buf;
     } catch (e) {
       if (i === retries - 1) throw e;
-      await new Promise(r => setTimeout(r, 3500));
+      await new Promise(r => setTimeout(r, 2000));
     }
   }
   throw new Error("Download failed");
@@ -130,18 +130,18 @@ export async function POST(req: NextRequest) {
         send({ log: `  タイトル: ${story.title}\n` });
         story.panels.forEach(p => send({ log: `  [${p.panel}] ${p.dialogue}\n` }));
 
-        // Step 2: Images
-        send({ log: "\nStep 2/3: パネル画像を生成中...\n" });
+        // Step 2: Images (parallel)
+        send({ log: "\nStep 2/3: パネル画像を生成中（並行）...\n" });
         const baseSeed = Math.floor(Math.random() * 100000);
-        const panelBuffers: Buffer[] = [];
-        for (const panel of story.panels) {
-          send({ log: `  Generating panel ${panel.panel}/4...\n` });
-          const url = buildImageUrl(panel, style, baseSeed + panel.panel);
-          const buf = await downloadImage(url);
-          panelBuffers.push(buf);
-          send({ log: `    ✓ panel ${panel.panel} (${(buf.length / 1024).toFixed(1)}KB)\n` });
-          if (panel.panel < 4) await new Promise(r => setTimeout(r, 3500));
-        }
+        story.panels.forEach(p => send({ log: `  Generating panel ${p.panel}/4...\n` }));
+        const panelBuffers = await Promise.all(
+          story.panels.map(async (panel) => {
+            const url = buildImageUrl(panel, style, baseSeed + panel.panel);
+            const buf = await downloadImage(url);
+            send({ log: `    ✓ panel ${panel.panel} (${(buf.length / 1024).toFixed(1)}KB)\n` });
+            return buf;
+          })
+        );
 
         // Step 3: Compose
         send({ log: "\nStep 3/3: Composing 4-panel image...\n" });
