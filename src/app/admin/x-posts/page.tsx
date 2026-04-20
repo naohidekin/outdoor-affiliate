@@ -41,6 +41,7 @@ interface XPost {
   firstLinePattern?: string;
   similarityScore?: number;
   retryCount?: number;
+  imageUrl?: string;
 }
 
 const TYPE_LABELS: Record<XPostType, string> = {
@@ -116,6 +117,8 @@ export default function XPostsPage() {
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchLoading, setBatchLoading] = useState(false);
+  const [mangaPicker, setMangaPicker] = useState<string | null>(null);
+  const [mangaList, setMangaList] = useState<string[]>([]);
   // Phase1-B: 0件表示バグ診断用
   const [debug, setDebug] = useState<{
     fetchedAt: string;
@@ -241,6 +244,41 @@ export default function XPostsPage() {
     const updated = await res.json();
     setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
     setEditing(null);
+  }
+
+  async function openMangaPicker(postId: string) {
+    if (mangaList.length === 0) {
+      const res = await fetch("/api/4koma/list");
+      const data = await res.json();
+      setMangaList(Array.isArray(data) ? data : []);
+    }
+    setMangaPicker(postId);
+  }
+
+  async function attachManga(postId: string, imagePath: string) {
+    const imageUrl = `/images/4koma/${imagePath}`;
+    const res = await fetch("/api/x-posts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: postId, imageUrl }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
+    }
+    setMangaPicker(null);
+  }
+
+  async function removeManga(postId: string) {
+    const res = await fetch("/api/x-posts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: postId, imageUrl: "" }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
+    }
   }
 
   async function deletePost(id: string) {
@@ -721,6 +759,16 @@ export default function XPostsPage() {
                       <div className="text-xs text-gray-400 mt-1">
                         {[...post.text].length}/280文字
                       </div>
+                      {post.imageUrl && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <img
+                            src={post.imageUrl}
+                            alt="4コマ漫画"
+                            className="w-20 h-20 object-cover rounded border border-gray-200"
+                          />
+                          <span className="text-xs text-orange-600">🎨 4コマ添付中</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -778,6 +826,24 @@ export default function XPostsPage() {
                     )}
                     {post.status !== "posted" && (
                       <button
+                        onClick={() => openMangaPicker(post.id)}
+                        className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs hover:bg-orange-100"
+                        title="4コマ漫画を添付"
+                      >
+                        {post.imageUrl ? "🎨 変更" : "🎨 漫画"}
+                      </button>
+                    )}
+                    {post.imageUrl && post.status !== "posted" && (
+                      <button
+                        onClick={() => removeManga(post.id)}
+                        className="px-3 py-1.5 bg-gray-50 text-gray-400 rounded-lg text-xs hover:bg-gray-100"
+                        title="漫画を外す"
+                      >
+                        🎨✕
+                      </button>
+                    )}
+                    {post.status !== "posted" && (
+                      <button
                         onClick={() => deletePost(post.id)}
                         className="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs hover:bg-red-100"
                       >
@@ -810,6 +876,51 @@ export default function XPostsPage() {
         <div className="text-center py-16 text-gray-400">
           <p className="text-lg mb-2">該当する投稿がありません</p>
           <p className="text-sm">「今すぐ生成」でポストを作成してください</p>
+        </div>
+      )}
+
+      {/* 4コマ漫画ピッカーモーダル */}
+      {mangaPicker && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setMangaPicker(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-800">4コマ漫画を選択</h3>
+              <button
+                onClick={() => setMangaPicker(null)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            {mangaList.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">
+                4コマ漫画がありません。先に生成してください。
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {mangaList.map((filename) => (
+                  <button
+                    key={filename}
+                    onClick={() => attachManga(mangaPicker, filename)}
+                    className="rounded-lg overflow-hidden border-2 border-transparent hover:border-orange-400 transition"
+                  >
+                    <img
+                      src={`/images/4koma/${filename}`}
+                      alt={filename}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <p className="text-xs text-gray-500 p-1 truncate">{filename}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
