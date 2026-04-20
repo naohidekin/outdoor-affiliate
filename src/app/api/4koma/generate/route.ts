@@ -16,6 +16,17 @@ const STYLES: Record<string, string> = {
   manga:    "classic Japanese manga style, bold clean ink lines, strong black outlines, cel-shading, high contrast black and white with spot color, expressive character art, friendly Japanese man in outdoor cap and camping jacket, character fills frame, minimal background, no text, no speech bubbles",
 };
 
+// キーイラスト用スタイル（1枚絵・シーン重視）
+const KEYVISUAL_STYLES: Record<string, string> = {
+  painting:  "soft atmospheric watercolor illustration, Japanese man camping at golden hour sunset, warm amber light, scenic mountain forest background, peaceful serene mood, detailed environment storytelling, high quality digital art, no text, no speech bubbles",
+  flat:      "flat vector illustration, bold clean design, Japanese man in camping gear at scenic campsite, earth tones green brown orange, strong composition, minimal elegant background, no text, no speech bubbles",
+  sketch:    "expressive pencil sketch, Japanese man enjoying campfire at night, dynamic gestural lines, moody atmospheric hatching, monochrome with warm glow, high contrast, no text, no speech bubbles",
+  chibi:     "cute chibi illustration, Japanese man holding camping gear triumphantly, bright cheerful colors, sparkle effects, detailed camping background, dynamic pose, no text, no speech bubbles",
+  retro:     "retro 1980s manga key visual, bold thick ink lines, screen tone shading, dramatic campfire scene, Japanese man silhouette against night sky, high contrast black and white, cinematic composition, no text, no speech bubbles",
+  webtoon:   "modern webtoon key visual, clean digital art, soft warm color gradients, Japanese man at lakeside campsite at dusk, detailed scenic background, emotional atmospheric mood, no text, no speech bubbles",
+  manga:     "classic manga key illustration, bold ink lines, dynamic composition, Japanese man with camping gear in heroic pose, detailed mountain background, dramatic lighting with black and white spot color, no text, no speech bubbles",
+};
+
 const SYSTEM_PROMPT = `あなたはキャンプ・アウトドア系アフィリエイトサイト「ギア男キャンプ研究所」の4コマ漫画ライターです。
 
 キャラクター設定：
@@ -94,7 +105,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  const { theme, style } = await req.json();
+  const { theme, style, mode = "4koma" } = await req.json();
   if (!theme || !style) {
     return NextResponse.json({ error: "theme と style は必須です" }, { status: 400 });
   }
@@ -111,45 +122,62 @@ export async function POST(req: NextRequest) {
         controller.enqueue(enc.encode(`data: ${JSON.stringify(data)}\n\n`));
 
       try {
-        // Step 1: Story
-        send({ log: "Step 1/3: ストーリーをClaudeで生成中...\n" });
-        const client = new Anthropic({ apiKey });
-        const response = await client.messages.create({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 1024,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: buildStoryPrompt(theme) }],
-        });
-        const raw = response.content[0].type === "text" ? response.content[0].text.trim() : "";
-        const jsonMatch = raw.match(/\{[\s\S]+\}/);
-        if (!jsonMatch) throw new Error("Claude response has no JSON");
-        const story: Story = JSON.parse(jsonMatch[0]);
-        if (!Array.isArray(story.panels) || story.panels.length !== 4) {
-          throw new Error(`Expected 4 panels, got ${story.panels?.length}`);
+        if (mode === "keyvisual") {
+          // ─── キーイラスト（1枚絵）生成 ─────────────────────
+          send({ log: "🎨 キーイラスト生成中...\n" });
+          const kvStyle = KEYVISUAL_STYLES[style] ?? KEYVISUAL_STYLES.painting;
+          const kvPrompt = `${kvStyle}, theme: ${theme}, high quality, detailed scene, compelling composition`;
+          const seed = Math.floor(Math.random() * 100000);
+          const kvUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(kvPrompt)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
+          send({ log: `  Generating keyvisual...\n` });
+          const buf = await downloadImage(kvUrl);
+          send({ log: `  ✓ (${(buf.length / 1024).toFixed(1)}KB)\n` });
+
+          // リサイズして最適化（1024×1024 PNG）
+          const imageBuffer = await sharp(buf).resize(1024, 1024, { fit: "cover" }).png().toBuffer();
+          const dataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+          send({ log: "✅ 完了！\n" });
+          send({ done: true, code: 0, imagePath: dataUrl, mode: "keyvisual" });
+
+        } else {
+          // ─── 4コマ漫画生成 ─────────────────────────────────
+          send({ log: "Step 1/3: ストーリーをClaudeで生成中...\n" });
+          const client = new Anthropic({ apiKey });
+          const response = await client.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 1024,
+            system: SYSTEM_PROMPT,
+            messages: [{ role: "user", content: buildStoryPrompt(theme) }],
+          });
+          const raw = response.content[0].type === "text" ? response.content[0].text.trim() : "";
+          const jsonMatch = raw.match(/\{[\s\S]+\}/);
+          if (!jsonMatch) throw new Error("Claude response has no JSON");
+          const story: Story = JSON.parse(jsonMatch[0]);
+          if (!Array.isArray(story.panels) || story.panels.length !== 4) {
+            throw new Error(`Expected 4 panels, got ${story.panels?.length}`);
+          }
+          send({ log: `  タイトル: ${story.title}\n` });
+          story.panels.forEach(p => send({ log: `  [${p.panel}] ${p.dialogue}\n` }));
+
+          send({ log: "\nStep 2/3: パネル画像を生成中（並行）...\n" });
+          const baseSeed = Math.floor(Math.random() * 100000);
+          story.panels.forEach(p => send({ log: `  Generating panel ${p.panel}/4...\n` }));
+          const panelBuffers = await Promise.all(
+            story.panels.map(async (panel) => {
+              const url = buildImageUrl(panel, style, baseSeed + panel.panel);
+              const buf = await downloadImage(url);
+              send({ log: `    ✓ panel ${panel.panel} (${(buf.length / 1024).toFixed(1)}KB)\n` });
+              return buf;
+            })
+          );
+
+          send({ log: "\nStep 3/3: Composing 4-panel image...\n" });
+          const imageBuffer = await compose4koma(panelBuffers);
+          const dataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+
+          send({ log: "✅ 完了！\n" });
+          send({ done: true, code: 0, imagePath: dataUrl });
         }
-        send({ log: `  タイトル: ${story.title}\n` });
-        story.panels.forEach(p => send({ log: `  [${p.panel}] ${p.dialogue}\n` }));
-
-        // Step 2: Images (parallel)
-        send({ log: "\nStep 2/3: パネル画像を生成中（並行）...\n" });
-        const baseSeed = Math.floor(Math.random() * 100000);
-        story.panels.forEach(p => send({ log: `  Generating panel ${p.panel}/4...\n` }));
-        const panelBuffers = await Promise.all(
-          story.panels.map(async (panel) => {
-            const url = buildImageUrl(panel, style, baseSeed + panel.panel);
-            const buf = await downloadImage(url);
-            send({ log: `    ✓ panel ${panel.panel} (${(buf.length / 1024).toFixed(1)}KB)\n` });
-            return buf;
-          })
-        );
-
-        // Step 3: Compose
-        send({ log: "\nStep 3/3: Composing 4-panel image...\n" });
-        const imageBuffer = await compose4koma(panelBuffers);
-        const dataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
-
-        send({ log: "✅ 完了！\n" });
-        send({ done: true, code: 0, imagePath: dataUrl });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         send({ log: `❌ エラー: ${msg}\n` });
