@@ -210,6 +210,16 @@ function saveProgress(progress) {
       await page.goto(product.productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.waitForTimeout(2000);
 
+      // 商品ページが有効か確認（削除・URL変更時はエラーページにリダイレクトされる）
+      const currentUrl = page.url();
+      const pageTitle = await page.title().catch(() => '');
+      const hasError = await page.locator('text=ページが表示できません').count().catch(() => 0);
+      if (!currentUrl.includes('item.rakuten.co.jp') || hasError > 0) {
+        console.log(`  ⚠️  商品ページ無効（削除またはURL変更）: ${currentUrl.substring(0, 60)}`);
+        progress.posted.push(product.id); // スキップ済みとしてマーク
+        continue;
+      }
+
       const roomLinks = await page.locator('a[href*="room.rakuten.co.jp/mix"]').all();
       if (roomLinks.length === 0) {
         console.log('  ⚠️  「ROOMに投稿」ボタン見つからず');
