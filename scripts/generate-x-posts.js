@@ -53,6 +53,10 @@ const DATA_DIR = path.join(__dirname, "..", "data");
 
 const DRAFT_SHEET = "下書き管理";
 
+// フォロワー増加フェーズ: article_promo（サイト誘導型）を生成対象から除外
+const FOLLOWER_GROWTH_MODE = true;
+const GROWTH_MODE_EXCLUDED_TYPES = new Set(["article_promo"]);
+
 loadEnv();
 
 // === CLI オプション ===
@@ -66,6 +70,7 @@ function parseArgs() {
     count: null,
     axis: null,
     planFile: null,
+    research: false,
   };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -76,6 +81,7 @@ function parseArgs() {
     switch (key) {
       case "--auto-approve": opts.autoApprove = true; break;
       case "--dry-run":      opts.dryRun = true; break;
+      case "--research":     opts.research = true; break;
       case "--type":         opts.type = val; if (eqIdx === -1) i++; break;
       case "--count":        opts.count = parseInt(val, 10); if (eqIdx === -1) i++; break;
       case "--axis":         opts.axis = val; if (eqIdx === -1) i++; break;
@@ -447,6 +453,54 @@ ${selected.map((l) => `- 「${l.text}」 [${l.pattern || "未分類"}]${l.likes 
 **注意**: これらをそのまま使わない。構造・リズム・フック感だけ参考にして、自分のネタで書く。`;
 }
 
+// === リサーチデータ注入 ===
+
+function loadLatestResearch() {
+  const researchDir = path.join(DATA_DIR, "x-research");
+  if (!fs.existsSync(researchDir)) return null;
+  const files = fs.readdirSync(researchDir)
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .reverse();
+  if (files.length === 0) return null;
+  try {
+    return JSON.parse(fs.readFileSync(path.join(researchDir, files[0]), "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
+function buildResearchBlock(axis) {
+  const research = loadLatestResearch();
+  if (!research) return "";
+
+  const axisData = research.axes?.[axis] || research.axes?.["camp"];
+  if (!axisData?.summary) return "";
+
+  const s = axisData.summary;
+  const topPosts = (axisData.posts || []).slice(0, 3);
+
+  const lines = [
+    `\n## リサーチデータ（${research.date}調査 / ${axis}軸 高エンゲージメント投稿の傾向）`,
+    `- 文字数・行数: 平均${s.avgChars}文字 / ${s.avgLines}行`,
+    `- 絵文字: 平均${s.avgEmoji}個/投稿`,
+    `- 主要フック: ${s.topHooks?.join(", ") || "不明"}`,
+    `- リスト型: ${s.listRate}% / URLあり: ${s.urlRate}%`,
+    `- 総評: ${s.insight}`,
+  ];
+
+  if (topPosts.length > 0) {
+    lines.push("\n### 高エンゲージメント投稿の例（構造を参考にすること）");
+    for (const p of topPosts) {
+      const preview = p.text.slice(0, 60).replace(/\n/g, " ");
+      lines.push(`- 「${preview}…」 ♥${p.metrics.likes} RT${p.metrics.retweets}`);
+    }
+    lines.push("**注意**: これらを直接引用・転用しない。フック構造・リズムだけ参考にすること。");
+  }
+
+  return lines.join("\n");
+}
+
 // === Analyst ディレクティブ注入 ===
 
 function buildAnalystHintsBlock(currentType = null) {
@@ -495,6 +549,8 @@ function determineGenerationPlan(opts) {
     plan.push({ type: opts.type, count, axis: opts.axis || meta.axis });
   } else {
     for (const [type, meta] of Object.entries(POST_TYPES)) {
+      // フォロワー増加モード: サイト誘導型タイプを除外
+      if (FOLLOWER_GROWTH_MODE && GROWTH_MODE_EXCLUDED_TYPES.has(type)) continue;
       // --axis フィルタ
       if (opts.axis) {
         if (meta.axis !== "all" && meta.axis !== "rotate" && meta.axis !== opts.axis) continue;
@@ -630,6 +686,16 @@ async function generatePosts(opts) {
     prompt += buildPatternRotationBlock();
     prompt += buildBuzzFirstLinesBlock(item.type);
     prompt += buildAnalystHintsBlock(item.type);
+    if (opts.research) {
+      prompt += buildResearchBlock(item.axis === "all" || item.axis === "rotate" ? "camp" : item.axis);
+    }
+    if (FOLLOWER_GROWTH_MODE) {
+      prompt += `\n\n## 【最重要】フォロワー増加モード
+- **本文にURLを絶対に含めない**（http:// https:// camp-gear-lab.com 等すべて禁止）
+- サイトへの誘導・記事紹介・商品リンクは書かない
+- 「〜はこちら」「詳しくはプロフィールのリンクから」も禁止
+- 目的は共感・保存・フォロー。純粋な価値提供の投稿のみ生成すること`;
+    }
 
     const isThread = item.type === "gear_thread";
     const approvalLevel = getApprovalLevel(item.type);

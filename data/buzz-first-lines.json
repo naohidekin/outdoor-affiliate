@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-16T14:00:10.480Z",
+  "lastUpdated": "2026-04-19T14:00:10.401Z",
   "lines": [
     {
       "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
@@ -151,6 +151,36 @@
       "replies": 0,
       "collectedAt": "2026-04-16",
       "pattern": "hack"
+    },
+    {
+      "text": "ガスランタンの温かい光、やっぱり憧れるよね✨",
+      "source": "own_post",
+      "postType": "article_promo",
+      "likes": 1,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-18",
+      "pattern": "experience_share"
+    },
+    {
+      "text": "焚き火台3台買い替えた人間の結論",
+      "source": "own_post",
+      "postType": "article_promo",
+      "likes": 4,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-19",
+      "pattern": "conclusion_first"
+    },
+    {
+      "text": "今週めちゃくちゃ読まれてる焚き火台記事、改めて紹介させてください🔥",
+      "source": "own_post",
+      "postType": "article_repost",
+      "likes": 2,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-19",
+      "pattern": "summary"
     }
   ]
 }
