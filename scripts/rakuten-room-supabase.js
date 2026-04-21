@@ -298,6 +298,10 @@ function saveProgress(progress) {
 
     } catch (err) {
       console.log(`  ❌ エラー: ${err.message.substring(0, 100)}`);
+      if (err.message.includes('ERR_ABORTED') || err.message.includes('ERR_NAME_NOT_RESOLVED')) {
+        progress.posted.push(product.id);
+        console.log('  → 無効URLとしてスキップ済みにマーク');
+      }
     }
 
     await page.waitForTimeout(2000 + Math.floor(Math.random() * 2000));
