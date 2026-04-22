@@ -152,6 +152,11 @@ function buildThreadsText(text, sourceUrl) {
 
 async function main() {
   const opts = parseArgs();
+  if (!opts.dryRun) {
+    const waitMs = Math.floor(Math.random() * 60 * 60 * 1000);
+    console.log(`[random delay] ${Math.round(waitMs / 60000)}m before posting...`);
+    await new Promise(r => setTimeout(r, waitMs));
+  }
 
   // KILL SWITCH
   const ks = checkKillSwitch();

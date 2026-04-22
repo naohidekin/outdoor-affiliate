@@ -121,6 +121,11 @@ function saveProgress(progress) {
 }
 
 (async () => {
+  if (!DRY_RUN) {
+    const waitMs = Math.floor(Math.random() * 60 * 60 * 1000);
+    console.log(`[random delay] ${Math.round(waitMs / 60000)}m before posting...`);
+    await new Promise(r => setTimeout(r, waitMs));
+  }
   const env = loadEnv();
 
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
