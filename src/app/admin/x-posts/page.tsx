@@ -201,18 +201,30 @@ export default function XPostsPage() {
   }
 
   async function queueNow(id: string) {
-    if (!confirm("この投稿をすぐにXに送信しますか？\nIFTTTが検知次第（5〜10分）投稿されます。")) return;
-    const res = await fetch("/api/x-posts/queue", {
+    if (!confirm("この投稿をすぐにXに送信しますか？")) return;
+
+    // 1. Sheets に ready 行を追加
+    const qRes = await fetch("/api/x-posts/queue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    if (res.ok) {
-      const updated = await res.json();
-      setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    if (!qRes.ok) {
+      const err = await qRes.json();
+      alert(err.error || "キュー追加に失敗しました");
+      return;
+    }
+    const updated = await qRes.json();
+    setPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+
+    // 2. post-to-x.js を起動して即時投稿
+    const runRes = await fetch("/api/x-posts/run", { method: "POST" });
+    const result = await runRes.json();
+    if (result.ok) {
+      alert("投稿しました ✓\n\n" + result.output);
+      window.location.reload();
     } else {
-      const err = await res.json();
-      alert(err.error || "エラーが発生しました");
+      alert("投稿に失敗しました\n\n" + result.output);
     }
   }
 
