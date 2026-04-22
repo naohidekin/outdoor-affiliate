@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Google検索トレンド リサーチソース
+ * Brave Search リサーチソース（旧: Google Custom Search）
  *
- * Googleの検索結果からキャンプ・アウトドア関連のトレンドネタを収集し、
+ * Brave Search APIからキャンプ・アウトドア関連のトレンドネタを収集し、
  * x-content-seeds.json に追加する。
  *
  * 必要な環境変数:
- *   GOOGLE_CUSTOM_SEARCH_KEY — Google Custom Search API キー
- *   GOOGLE_CUSTOM_SEARCH_CX  — カスタム検索エンジンID
- *   ANTHROPIC_API_KEY         — Claude API キー（ネタ抽出用）
+ *   BRAVE_API_KEY     — Brave Search API キー
+ *   ANTHROPIC_API_KEY — Claude API キー（ネタ抽出用）
  *
  * 使い方:
  *   node scripts/research-sources/google-trends.js
@@ -54,6 +53,28 @@ const SEARCH_QUERIES = {
   ],
 };
 
+// ─── Brave Search API ─────────────────────────────────
+
+async function braveSearch(apiKey, query, count = 5) {
+  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}&country=JP`;
+  const res = await fetch(url, {
+    headers: {
+      "Accept": "application/json",
+      "Accept-Encoding": "gzip",
+      "X-Subscription-Token": apiKey,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Brave Search 失敗 (${res.status}): ${query}`);
+  }
+  const data = await res.json();
+  return (data.web?.results || []).map((r) => ({
+    title: r.title,
+    snippet: r.description || "",
+    url: r.url,
+  }));
+}
+
 // ─── メイン ──────────────────────────────────────────
 
 async function main() {
@@ -63,21 +84,19 @@ async function main() {
 
   const ks = checkKillSwitch();
   if (ks.killed) {
-    console.error(`[google-trends] KILL SWITCH 有効: ${ks.reason}`);
+    console.error(`[brave-search] KILL SWITCH 有効: ${ks.reason}`);
     process.exit(1);
   }
 
-  const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_KEY;
-  const cx = process.env.GOOGLE_CUSTOM_SEARCH_CX;
-
-  if (!apiKey || !cx) {
-    console.log("[google-trends] GOOGLE_CUSTOM_SEARCH_KEY / CX 未設定。スキップ。");
+  const apiKey = process.env.BRAVE_API_KEY;
+  if (!apiKey) {
+    console.log("[brave-search] BRAVE_API_KEY 未設定。スキップ。");
     return;
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!anthropicKey) {
-    console.error("[google-trends] ANTHROPIC_API_KEY 未設定");
+    console.error("[brave-search] ANTHROPIC_API_KEY 未設定");
     process.exit(1);
   }
 
@@ -91,30 +110,21 @@ async function main() {
 
   for (const axis of axes) {
     const queries = SEARCH_QUERIES[axis] || [];
-    console.log(`[google-trends] ${axis}軸: ${queries.length}クエリ`);
+    console.log(`[brave-search] ${axis}軸: ${queries.length}クエリ`);
 
     for (const query of queries) {
       try {
-        // Google Custom Search API
-        const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&num=5&lr=lang_ja&dateRestrict=m3`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          console.warn(`[google-trends] 検索失敗 (${res.status}): ${query}`);
-          continue;
-        }
-        const data = await res.json();
-        const items = data.items || [];
-
+        const items = await braveSearch(apiKey, query);
         if (items.length === 0) continue;
 
         // Claude でネタ抽出
         const snippets = items.map((item) => `- ${item.title}: ${item.snippet}`).join("\n");
         const extraction = await client.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 800,
           messages: [{
             role: "user",
-            content: `以下のGoogle検索結果からX投稿のネタになるトピックを最大3件抽出してください。
+            content: `以下の検索結果からX投稿のネタになるトピックを最大3件抽出してください。
 検索クエリ: "${query}"
 軸: ${axis}
 
@@ -135,15 +145,14 @@ JSON配列で出力:
         const today = new Date().toISOString().slice(0, 10);
 
         for (const topic of topics) {
-          // 重複チェック
           const isDupe = seedData.seeds.some(
             (s) => s.theme === topic.theme && s.angle === topic.angle
           );
           if (isDupe) continue;
 
           const seed = {
-            id: `seed-google-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-            source: "google",
+            id: `seed-brave-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+            source: "brave",
             theme: topic.theme,
             angle: topic.angle,
             hint: topic.hint,
@@ -165,20 +174,20 @@ JSON配列で出力:
           console.log(`  + [${axis}] ${seed.theme} (${seed.bookmarkPotential})`);
         }
       } catch (err) {
-        console.warn(`[google-trends] エラー (${query}): ${err.message}`);
+        console.warn(`[brave-search] エラー (${query}): ${err.message}`);
       }
     }
   }
 
-  console.log(`[google-trends] ${addedCount}件のシードを追加`);
+  console.log(`[brave-search] ${addedCount}件のシードを追加`);
 
   if (!dryRun && addedCount > 0) {
     writeJson("x-content-seeds.json", seedData);
-    console.log("[google-trends] x-content-seeds.json を更新しました");
+    console.log("[brave-search] x-content-seeds.json を更新しました");
   }
 }
 
 main().catch((err) => {
-  console.error("[google-trends] エラー:", err.message);
+  console.error("[brave-search] エラー:", err.message);
   process.exit(1);
 });
