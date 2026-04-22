@@ -32,6 +32,7 @@ export default function ThreadsPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"pending" | "posted" | "error">("pending");
   const [posting, setPosting] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchPosts();
@@ -171,7 +172,23 @@ export default function ThreadsPage() {
                   </div>
 
                   {/* テキスト */}
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap line-clamp-3">{post.text}</p>
+                  <div>
+                    <p className={`text-sm text-gray-800 whitespace-pre-wrap ${expanded.has(post.id) ? "" : "line-clamp-3"}`}>
+                      {post.text}
+                    </p>
+                    {post.text.length > 120 && (
+                      <button
+                        onClick={() => setExpanded((prev) => {
+                          const next = new Set(prev);
+                          next.has(post.id) ? next.delete(post.id) : next.add(post.id);
+                          return next;
+                        })}
+                        className="text-xs text-gray-400 hover:text-gray-600 mt-1"
+                      >
+                        {expanded.has(post.id) ? "折りたたむ ▲" : "全文を見る ▼"}
+                      </button>
+                    )}
+                  </div>
 
                   {/* URL */}
                   {post.url && (
