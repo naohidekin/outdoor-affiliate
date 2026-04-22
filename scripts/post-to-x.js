@@ -37,6 +37,12 @@ loadEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// JST (UTC+9) ベースで日付文字列を返す。postedAt（UTC ISO文字列）の比較にも使用
+function jstDateStr(dateArg) {
+  const d = dateArg ? new Date(dateArg) : new Date();
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 const QUEUE_SHEET = "X投稿管理";
 const DRAFT_SHEET = "下書き管理";
 
@@ -90,14 +96,14 @@ function checkPostingSafety() {
   const safety = loadSafetyConfig();
   const history = loadPostHistory();
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = jstDateStr();
 
   // ウォームアップスケジュールに基づく動的上限
   const effectiveLimit = getEffectiveDailyLimit(safety, history);
 
-  // 1日の投稿数チェック
+  // 1日の投稿数チェック（JST基準）
   const todayPosts = history.entries.filter(
-    (e) => e.postedAt && e.postedAt.startsWith(todayStr)
+    (e) => e.postedAt && jstDateStr(e.postedAt) === todayStr
   );
   if (todayPosts.length >= effectiveLimit) {
     return { allowed: false, reason: `1日の投稿上限(${effectiveLimit}件, ウォームアップ適用)に到達` };
@@ -304,8 +310,8 @@ async function postToX() {
   // 安全装置: ウォームアップ考慮の残り投稿枠
   const safety = loadSafetyConfig();
   const history = loadPostHistory();
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const todayCount = history.entries.filter((e) => e.postedAt?.startsWith(todayStr)).length;
+  const todayStr = jstDateStr();
+  const todayCount = history.entries.filter((e) => e.postedAt && jstDateStr(e.postedAt) === todayStr).length;
   const effectiveLimit = getEffectiveDailyLimit(safety, history);
   const remaining = Math.max(0, effectiveLimit - todayCount);
   const effectiveMax = Math.min(maxCount, remaining);

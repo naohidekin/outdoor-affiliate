@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-19T13:00:07.801Z",
+  "lastUpdated": "2026-04-21T13:00:07.814Z",
   "recentMetrics": [
     {
       "tweetId": "2043223809470394555",
@@ -11,8 +11,8 @@
       "replies": 0,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 50,
-      "fetchedAt": "2026-04-19T13:00:07.798Z"
+      "impressions": 51,
+      "fetchedAt": "2026-04-21T13:00:07.806Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -24,8 +24,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 30,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "impressions": 35,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -37,8 +37,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 46,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "impressions": 48,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     },
     {
       "tweetId": "2045079866706653401",
@@ -50,8 +50,73 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
+      "impressions": 37,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045306355591086329",
+      "postType": "article_promo",
+      "textPreview": "ファミリーテントで大人気の一品\n\nコールマンのタフワイドドーム、去年より安くなってるし買い回り込みなら実質2万切りそう。",
+      "postedAt": "2026-04-18T01:00:09.429Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 52,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045442246053613590",
+      "postType": "article_promo",
+      "textPreview": "ソロキャンプ始めて変わったこと\n\n・金曜の夜が待ち遠しくなった\n・天気予報を毎日3回見る\n・スーパーで薪を探す癖\n・「あ",
+      "postedAt": "2026-04-18T10:00:08.421Z",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 52,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045674533512978854",
+      "postType": "article_promo",
+      "textPreview": "1万円以下のシュラフ、マラソンなら確実に買い時\n\nロゴスの丸洗いシリーズ、普段8000円がクーポン込みで6500円。ポイ",
+      "postedAt": "2026-04-19T01:23:09.325Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 19,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045804633625698589",
+      "postType": "outdoor_tip",
+      "textPreview": "マラソンでキャンプ道具買うコツ\n\n・送料無料ライン超えるよう調整\n・同じブランドでも店舗によって価格差あり\n・クーポン併",
+      "postedAt": "2026-04-19T10:00:08.285Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 21,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045804641468948944",
+      "postType": "article_promo",
+      "textPreview": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
+      "postedAt": "2026-04-19T10:00:09.665Z",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
       "impressions": 34,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     }
   ],
   "topPosts": [
@@ -65,8 +130,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 34,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "impressions": 37,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     },
     {
       "tweetId": "2043223809470394555",
@@ -78,8 +143,8 @@
       "replies": 0,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 50,
-      "fetchedAt": "2026-04-19T13:00:07.798Z"
+      "impressions": 51,
+      "fetchedAt": "2026-04-21T13:00:07.806Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -91,8 +156,34 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 46,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "impressions": 48,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045442246053613590",
+      "postType": "article_promo",
+      "textPreview": "ソロキャンプ始めて変わったこと\n\n・金曜の夜が待ち遠しくなった\n・天気予報を毎日3回見る\n・スーパーで薪を探す癖\n・「あ",
+      "postedAt": "2026-04-18T10:00:08.421Z",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 52,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045804641468948944",
+      "postType": "article_promo",
+      "textPreview": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
+      "postedAt": "2026-04-19T10:00:09.665Z",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 34,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -104,22 +195,97 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 30,
-      "fetchedAt": "2026-04-19T13:00:07.799Z"
+      "impressions": 35,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045306355591086329",
+      "postType": "article_promo",
+      "textPreview": "ファミリーテントで大人気の一品\n\nコールマンのタフワイドドーム、去年より安くなってるし買い回り込みなら実質2万切りそう。",
+      "postedAt": "2026-04-18T01:00:09.429Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 52,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045674533512978854",
+      "postType": "article_promo",
+      "textPreview": "1万円以下のシュラフ、マラソンなら確実に買い時\n\nロゴスの丸洗いシリーズ、普段8000円がクーポン込みで6500円。ポイ",
+      "postedAt": "2026-04-19T01:23:09.325Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 19,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
+    },
+    {
+      "tweetId": "2045804633625698589",
+      "postType": "outdoor_tip",
+      "textPreview": "マラソンでキャンプ道具買うコツ\n\n・送料無料ライン超えるよう調整\n・同じブランドでも店舗によって価格差あり\n・クーポン併",
+      "postedAt": "2026-04-19T10:00:08.285Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 21,
+      "fetchedAt": "2026-04-21T13:00:07.811Z"
     }
   ],
   "replyDigest": [
+    {
+      "tweetId": "2046215536435208523",
+      "text": "@camp_gear_lab ありがとうございます！🥹",
+      "createdAt": "2026-04-20T13:12:55.000Z",
+      "conversationId": "2042891635814732230"
+    },
+    {
+      "tweetId": "2046212024871608674",
+      "text": "@camp_gear_lab 👀です！",
+      "createdAt": "2026-04-20T12:58:58.000Z",
+      "conversationId": "2046120492722246030"
+    },
+    {
+      "tweetId": "2046207891103961244",
+      "text": "@camp_gear_lab テントサイトは少ないですが川沿いでよかったです",
+      "createdAt": "2026-04-20T12:42:32.000Z",
+      "conversationId": "2045660845603254408"
+    },
+    {
+      "tweetId": "2046200743288557942",
+      "text": "@camp_gear_lab Claude頭ひとつ抜けた感あります！",
+      "createdAt": "2026-04-20T12:14:08.000Z",
+      "conversationId": "2038222055527841853"
+    },
+    {
+      "tweetId": "2046198163242160133",
+      "text": "@camp_gear_lab リプありがとうございます😊\n急に増えました😅ありがたや🙏🙏",
+      "createdAt": "2026-04-20T12:03:53.000Z",
+      "conversationId": "2045999130884087920"
+    },
+    {
+      "tweetId": "2046181437184123318",
+      "text": "@camp_gear_lab ボーナスありですね！\nクリニックですが、一部で訪問とかもやってるので！",
+      "createdAt": "2026-04-20T10:57:25.000Z",
+      "conversationId": "2042891635814732230"
+    },
+    {
+      "tweetId": "2046006148466413604",
+      "text": "@camp_gear_lab ギア男さん、そうですよね。\nこの情報に価値を感じていただける方に\n届いて欲しいな〜って思っています！",
+      "createdAt": "2026-04-19T23:20:53.000Z",
+      "conversationId": "2045914150480802116"
+    },
     {
       "tweetId": "2045794828580184081",
       "text": "@camp_gear_lab ありがとうございます！\n正直経営者ならCoworkでも十分かなと思いつつです笑",
       "createdAt": "2026-04-19T09:21:10.000Z",
       "conversationId": "2045720064314462438"
-    },
-    {
-      "tweetId": "2045760827060539417",
-      "text": "@camp_gear_lab 是非！助け合いましょう！！🔥",
-      "createdAt": "2026-04-19T07:06:04.000Z",
-      "conversationId": "2045701026095989109"
     },
     {
       "tweetId": "2045655880184791206",
@@ -192,36 +358,6 @@
       "text": "@camp_gear_lab なるほど、、！刺さる言葉ですね😅\nいつかアプリぜひお見せ下さい〜！\n気になりです🙋‍♂️",
       "createdAt": "2026-04-18T06:23:09.000Z",
       "conversationId": "2045110482840002986"
-    },
-    {
-      "tweetId": "2045382317133496753",
-      "text": "@camp_gear_lab こんにちは😃",
-      "createdAt": "2026-04-18T06:02:00.000Z",
-      "conversationId": "2045284929186247017"
-    },
-    {
-      "tweetId": "2045375435882758191",
-      "text": "@camp_gear_lab 👏\n\n院内で使う専用だとあまりUI、UXこだわりすぎる必要もなくどんどん開発進みそうです",
-      "createdAt": "2026-04-18T05:34:39.000Z",
-      "conversationId": "2045110482840002986"
-    },
-    {
-      "tweetId": "2045374571143102787",
-      "text": "@camp_gear_lab コメントありがとうございます！\nお医者さんもアプリ開発する時代ですか。。\nすごいです👏",
-      "createdAt": "2026-04-18T05:31:13.000Z",
-      "conversationId": "2045110482840002986"
-    },
-    {
-      "tweetId": "2045364137765814300",
-      "text": "@camp_gear_lab 安定のヘリノックスですね😀👍",
-      "createdAt": "2026-04-18T04:49:46.000Z",
-      "conversationId": "2045096480122569010"
-    },
-    {
-      "tweetId": "2045352596505088396",
-      "text": "@camp_gear_lab いやほんと。助かります。\nありがとうございます！",
-      "createdAt": "2026-04-18T04:03:54.000Z",
-      "conversationId": "2045326870871450083"
     }
   ]
 }

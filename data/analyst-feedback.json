@@ -1,13 +1,11 @@
 {
   "version": 3,
-  "updatedAt": "2026-04-19T14:00:07.591Z",
-  "period": "2026-03-22 ~ 2026-04-19",
-  "topPerformingTypes": [
-    "doc_health_tip"
-  ],
+  "updatedAt": "2026-04-21T14:00:06.507Z",
+  "period": "2026-03-24 ~ 2026-04-21",
+  "topPerformingTypes": [],
   "lowPerformingTypes": [
-    "seasonal_hook",
-    "outdoor_tip"
+    "outdoor_tip",
+    "seasonal_hook"
   ],
   "effectivePatterns": [
     {
@@ -22,54 +20,53 @@
   "avoidPatterns": [
     {
       "pattern": "[誇大表現] \"必ず\" を検出",
-      "reason": "NG検出 3回"
+      "reason": "NG検出 5回"
     }
   ],
   "axisFeedback": {
-    "camp": "28件生成、承認率29%、NG率18%",
-    "parenting": "2件生成、承認率0%、NG率0%",
-    "doctor": "2件生成、承認率100%、NG率0%",
-    "12:15": "1件生成、承認率100%、NG率0%"
+    "camp": "34件生成、承認率26%、NG率21%",
+    "12:15": "1件生成、承認率100%、NG率0%",
+    "parenting": "1件生成、承認率0%、NG率0%"
   },
   "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
   "writerHints": [
     "高スコアパターン: product_compare, seasonal_start",
-    "NG率が高いタイプ: seasonal_hook, outdoor_tip — 表現を見直す",
+    "NG率が高いタイプ: outdoor_tip, seasonal_hook — 表現を見直す",
     "X経由PVが高い記事を article_promo で優先的に紹介する",
     "直近トップ投稿: [article_promo]「焚き火台3台買い替えた人間の結論\n\n1台目：軽さ重視→薪が落ちる\n2台目：頑丈系→重すぎて車から出すの億劫\n3台目：やっ」(♥4 🔖0) → 似た切り口を再活用",
-    "読者の反応/質問: @camp_gear_lab ありがとうございます！\n正直経営者ならCoworkでも十分かなと思いつつです笑 | @camp_gear_lab 是非！助け合いましょう！！🔥 | @camp_gear_lab ありがとうございます！\n頑張ります！💪",
-    "【重要】article_promoタイプを最優先で増やせ [article_promo] — article_promoが平均いいね2.5、リプライ1.0で全タイプ中最高エンゲージメント。トップ投稿も4いいね獲得",
-    "【重要】焚き火台をメイン商材として継続的に扱え [article_promo,outdoor_tip] — 焚き火台関連投稿がトップ2位を獲得し、X経由PVでもmulti-burner-rankingが3PVでトップ。明確に読者の関心が高い",
-    "【重要】体験談ベースの結論先出し形式を標準化せよ [article_promo,outdoor_tip] — 「焚き火台3台買い替えた人間の結論」が4いいねでトップ。実体験＋結論の組み合わせが効果的",
-    "【重要】誇大表現「必ず」の使用を完全禁止せよ — 「必ず」でのNG検出が3回発生。承認率低下の主要因となっている",
-    "【重要】camp軸の投稿承認率を50%以上に改善せよ [outdoor_tip,article_promo] — camp軸が28件生成で承認率29%と低迷。主力軸なので改善必須",
-    "春キャンプの寒暖差対策ネタを展開せよ [outdoor_tip] — 「春キャンプの寒暖差対策」投稿が3いいね獲得。季節的にも4月に適合したテーマ",
-    "読者の助け合い精神に訴求するコミュニティ感を演出せよ — リプライに「助け合いましょう」「ありがとうございます」等の協力的なメッセージが複数。コミュニティ志向が強い",
-    "データ不足のため1行目パターンの判定は保留。引き続きデータ蓄積せよ — 全パターンでエンゲージメントスコア0のため有効性判定不可。より多くのデータが必要"
+    "読者の反応/質問: @camp_gear_lab ありがとうございます！🥹 | @camp_gear_lab 👀です！ | @camp_gear_lab テントサイトは少ないですが川沿いでよかったです",
+    "【重要】article_promoタイプに投稿を集中させろ [article_promo] — article_promoは平均いいね1.83、インプレッション38.2でoutdoor_tipの平均いいね2.0、インプレッション36を上回り、リプライも6件と最多獲得している",
+    "【重要】「買い替えた人間の結論」「変わったこと」など体験談ベースの切り口を増やせ [article_promo] — トップ2投稿が共に実体験をベースにした内容で、いいね4と3を獲得している",
+    "【重要】「必ず」などの誇大表現を完全に排除しろ — NG検出が5回と頻発しており、投稿承認率を下げている主要因となっている",
+    "【重要】outdoor_tipとseasonal_hookタイプの投稿を当面停止しろ [outdoor_tip,seasonal_hook] — 両タイプが低パフォーマンスタイプに分類されており、NG率が高く承認率が低い",
+    "春キャンプの寒暖差や足元対策など季節特有の実用情報を盛り込め [article_promo] — 「春キャンプの寒暖差対策」投稿がいいね3を獲得し、seasonal_startパターンの平均スコア7.8と高評価",
+    "商品比較（スノピ・ユニフレーム・ピコグリル等）の切り口を増やせ [article_promo] — product_compareパターンが平均スコア7.8を記録し、焚き火台比較記事が複数回言及されている",
+    "12:15の投稿時間を積極的に活用しろ — 12:15投稿が承認率100%、NG率0%と完璧な成績を記録している",
+    "1行目パターンの効果測定を継続し、データが少なすぎるため判断保留 — 全パターンでエンゲージメントスコア0となっており、まだ有効なデータが蓄積されていない"
   ],
   "engagementByType": {
     "outdoor_tip": {
-      "likes": 3,
+      "likes": 4,
       "bookmarks": 0,
       "retweets": 0,
-      "replies": 0,
-      "impressions": 50,
-      "count": 1
+      "replies": 1,
+      "impressions": 72,
+      "count": 2
     },
     "article_promo": {
-      "likes": 5,
+      "likes": 11,
       "bookmarks": 0,
       "retweets": 0,
-      "replies": 2,
-      "impressions": 64,
-      "count": 2
+      "replies": 6,
+      "impressions": 229,
+      "count": 6
     },
     "article_repost": {
       "likes": 2,
       "bookmarks": 0,
       "retweets": 0,
       "replies": 1,
-      "impressions": 46,
+      "impressions": 48,
       "count": 1
     }
   },
@@ -100,24 +97,32 @@
     },
     {
       "postType": "article_promo",
-      "textPreview": "ガスランタンの温かい光、やっぱり憧れるよね✨\n\nでもOD缶とCB缶、どっちを選ぶ？スノーピーク、SOTO、プリムスなど人",
-      "likes": 1,
+      "textPreview": "ソロキャンプ始めて変わったこと\n\n・金曜の夜が待ち遠しくなった\n・天気予報を毎日3回見る\n・スーパーで薪を探す癖\n・「あ",
+      "likes": 2,
+      "bookmarks": 0,
+      "retweets": 0,
+      "replies": 1
+    },
+    {
+      "postType": "article_promo",
+      "textPreview": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
+      "likes": 2,
       "bookmarks": 0,
       "retweets": 0,
       "replies": 1
     }
   ],
   "replyThemes": [
+    "@camp_gear_lab ありがとうございます！🥹",
+    "@camp_gear_lab 👀です！",
+    "@camp_gear_lab テントサイトは少ないですが川沿いでよかったです",
+    "@camp_gear_lab Claude頭ひとつ抜けた感あります！",
+    "@camp_gear_lab リプありがとうございます😊\n急に増えました😅ありがたや🙏🙏",
+    "@camp_gear_lab ボーナスありですね！\nクリニックですが、一部で訪問とかもやってるので！",
+    "@camp_gear_lab ギア男さん、そうですよね。\nこの情報に価値を感じていただける方に\n届いて欲しいな〜って思っています！",
     "@camp_gear_lab ありがとうございます！\n正直経営者ならCoworkでも十分かなと思いつつです笑",
-    "@camp_gear_lab 是非！助け合いましょう！！🔥",
     "@camp_gear_lab ありがとうございます！\n頑張ります！💪",
-    "@camp_gear_lab パワーカップル目指します！🥹💪",
-    "@camp_gear_lab チャットと同じような感覚で使えるので、AI初心者は確実にCoworkでいいよねって思います。",
-    "@camp_gear_lab フォローありがとうございます🙌🏼\nまだまだガンガン行きます🔥",
-    "@camp_gear_lab 時間あっという間ですよねー",
-    "@camp_gear_lab いっぱい作ってますね笑笑\nすごいです👏\n\n現場で働いてると必要なもの作れるので強いですよね〜",
-    "@camp_gear_lab そうなんですよね♪大切な部分が共有できてうれしいんです",
-    "@camp_gear_lab ありがとうございます！\n頑張りましょう！"
+    "@camp_gear_lab パワーカップル目指します！🥹💪"
   ],
   "firstLineAnalysis": {
     "ranking": [
@@ -248,67 +253,65 @@
   },
   "writerDirectives": [
     {
-      "directive": "article_promoタイプを最優先で増やせ",
-      "reason": "article_promoが平均いいね2.5、リプライ1.0で全タイプ中最高エンゲージメント。トップ投稿も4いいね獲得",
+      "directive": "article_promoタイプに投稿を集中させろ",
+      "reason": "article_promoは平均いいね1.83、インプレッション38.2でoutdoor_tipの平均いいね2.0、インプレッション36を上回り、リプライも6件と最多獲得している",
       "priority": "high",
       "appliesTo": [
         "article_promo"
       ]
     },
     {
-      "directive": "焚き火台をメイン商材として継続的に扱え",
-      "reason": "焚き火台関連投稿がトップ2位を獲得し、X経由PVでもmulti-burner-rankingが3PVでトップ。明確に読者の関心が高い",
+      "directive": "「買い替えた人間の結論」「変わったこと」など体験談ベースの切り口を増やせ",
+      "reason": "トップ2投稿が共に実体験をベースにした内容で、いいね4と3を獲得している",
       "priority": "high",
       "appliesTo": [
-        "article_promo",
-        "outdoor_tip"
+        "article_promo"
       ]
     },
     {
-      "directive": "体験談ベースの結論先出し形式を標準化せよ",
-      "reason": "「焚き火台3台買い替えた人間の結論」が4いいねでトップ。実体験＋結論の組み合わせが効果的",
-      "priority": "high",
-      "appliesTo": [
-        "article_promo",
-        "outdoor_tip"
-      ]
-    },
-    {
-      "directive": "誇大表現「必ず」の使用を完全禁止せよ",
-      "reason": "「必ず」でのNG検出が3回発生。承認率低下の主要因となっている",
+      "directive": "「必ず」などの誇大表現を完全に排除しろ",
+      "reason": "NG検出が5回と頻発しており、投稿承認率を下げている主要因となっている",
       "priority": "high",
       "appliesTo": [
         "all"
       ]
     },
     {
-      "directive": "camp軸の投稿承認率を50%以上に改善せよ",
-      "reason": "camp軸が28件生成で承認率29%と低迷。主力軸なので改善必須",
+      "directive": "outdoor_tipとseasonal_hookタイプの投稿を当面停止しろ",
+      "reason": "両タイプが低パフォーマンスタイプに分類されており、NG率が高く承認率が低い",
       "priority": "high",
       "appliesTo": [
         "outdoor_tip",
+        "seasonal_hook"
+      ]
+    },
+    {
+      "directive": "春キャンプの寒暖差や足元対策など季節特有の実用情報を盛り込め",
+      "reason": "「春キャンプの寒暖差対策」投稿がいいね3を獲得し、seasonal_startパターンの平均スコア7.8と高評価",
+      "priority": "medium",
+      "appliesTo": [
         "article_promo"
       ]
     },
     {
-      "directive": "春キャンプの寒暖差対策ネタを展開せよ",
-      "reason": "「春キャンプの寒暖差対策」投稿が3いいね獲得。季節的にも4月に適合したテーマ",
+      "directive": "商品比較（スノピ・ユニフレーム・ピコグリル等）の切り口を増やせ",
+      "reason": "product_compareパターンが平均スコア7.8を記録し、焚き火台比較記事が複数回言及されている",
       "priority": "medium",
       "appliesTo": [
-        "outdoor_tip"
+        "article_promo"
       ]
     },
     {
-      "directive": "読者の助け合い精神に訴求するコミュニティ感を演出せよ",
-      "reason": "リプライに「助け合いましょう」「ありがとうございます」等の協力的なメッセージが複数。コミュニティ志向が強い",
+      "directive": "12:15の投稿時間を積極的に活用しろ",
+      "reason": "12:15投稿が承認率100%、NG率0%と完璧な成績を記録している",
       "priority": "medium",
       "appliesTo": [
         "all"
       ]
     },
     {
-      "directive": "データ不足のため1行目パターンの判定は保留。引き続きデータ蓄積せよ",
-      "reason": "全パターンでエンゲージメントスコア0のため有効性判定不可。より多くのデータが必要",
+      "directive": "1行目パターンの効果測定を継続し、データが少なすぎるため判断保留",
+      "reason": "全パターンでエンゲージメントスコア0となっており、まだ有効なデータが蓄積されていない",
       "priority": "low",
       "appliesTo": [
         "all"

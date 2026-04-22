@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-19T14:00:10.401Z",
+  "lastUpdated": "2026-04-21T14:00:10.813Z",
   "lines": [
     {
       "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
@@ -181,6 +181,26 @@
       "replies": 1,
       "collectedAt": "2026-04-19",
       "pattern": "summary"
+    },
+    {
+      "text": "ソロキャンプ始めて変わったこと",
+      "source": "own_post",
+      "postType": "article_promo",
+      "likes": 2,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-20",
+      "pattern": null
+    },
+    {
+      "text": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
+      "source": "own_post",
+      "postType": "article_promo",
+      "likes": 2,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-21",
+      "pattern": "failure_open"
     }
   ]
 }
