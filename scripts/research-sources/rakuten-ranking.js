@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * 楽天ランキング リサーチソース
+ * 楽天商品リサーチソース（Brave Search版）
  *
- * 楽天市場のランキングAPIからアウトドア・キャンプジャンルの
- * トレンド商品を取得し、x-content-seeds.json にネタシードとして追加。
+ * Brave Search で site:item.rakuten.co.jp を使い、
+ * キャンプ・アウトドアジャンルの人気商品を収集して
+ * x-content-seeds.json と products.json に追加する。
  *
  * 必要な環境変数:
- *   RAKUTEN_APP_ID — 楽天アプリID
+ *   BRAVE_API_KEY     — Brave Search API キー
+ *   ANTHROPIC_API_KEY — Claude API キー
  *
  * 使い方:
  *   node scripts/research-sources/rakuten-ranking.js
@@ -19,24 +21,53 @@ import {
   readJson,
   writeJson,
   checkKillSwitch,
+  ipv4Fetch,
 } from "../../src/lib/x-agent-utils.mjs";
 
 loadEnv();
 
-// 楽天アフィリエイトID（既存products.jsonと統一）
 const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
-// キャンプギアカテゴリ別の検索キーワード（ランキングより検索APIの方が精度高い）
 const GEAR_CATEGORIES = [
   { keyword: "キャンプ テント", name: "テント" },
   { keyword: "LEDランタン キャンプ", name: "ランタン" },
   { keyword: "アウトドアチェア キャンプ", name: "チェア" },
   { keyword: "クーラーボックス キャンプ", name: "クーラーボックス" },
-  { keyword: "シュラフ 寝袋", name: "シュラフ" },
-  { keyword: "焚き火台", name: "焚き火台" },
-  { keyword: "キャンプ バーナー", name: "バーナー" },
+  { keyword: "シュラフ 寝袋 キャンプ", name: "シュラフ" },
+  { keyword: "焚き火台 アウトドア", name: "焚き火台" },
+  { keyword: "キャンプ バーナー ストーブ", name: "バーナー" },
   { keyword: "タープ キャンプ", name: "タープ" },
 ];
+
+// ─── Brave Search（楽天サイト絞り込み）─────────────────
+
+async function braveSearchRakuten(apiKey, keyword, count = 5) {
+  const query = `${keyword} site:item.rakuten.co.jp`;
+  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}&country=JP`;
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "Accept-Encoding": "gzip",
+      "X-Subscription-Token": apiKey,
+    },
+  });
+  if (!res.ok) throw new Error(`Brave Search 失敗 (${res.status}): ${keyword}`);
+  const data = await res.json();
+  return (data.web?.results || [])
+    .filter((r) => r.url.includes("item.rakuten.co.jp"))
+    .map((r) => ({
+      title: r.title,
+      snippet: r.description || "",
+      url: r.url,
+    }));
+}
+
+// 楽天アイテムURLからアフィリエイトURLを生成
+function buildAffiliateUrl(itemUrl) {
+  return `https://hb.afl.rakuten.co.jp/ichiba/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(itemUrl)}&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9`;
+}
+
+// ─── メイン ──────────────────────────────────────────
 
 async function main() {
   const args = process.argv.slice(2);
@@ -44,93 +75,131 @@ async function main() {
 
   const ks = checkKillSwitch();
   if (ks.killed) {
-    console.error(`[rakuten-ranking] KILL SWITCH 有効: ${ks.reason}`);
+    console.error(`[rakuten-brave] KILL SWITCH 有効: ${ks.reason}`);
     process.exit(1);
   }
 
-  const appId = process.env.RAKUTEN_APP_ID;
-  const accessKey = process.env.RAKUTEN_ACCESS_KEY;
-  if (!appId) {
-    console.log("[rakuten-ranking] RAKUTEN_APP_ID 未設定。スキップ。");
+  const apiKey = process.env.BRAVE_API_KEY;
+  if (!apiKey) {
+    console.log("[rakuten-brave] BRAVE_API_KEY 未設定。スキップ。");
     return;
   }
 
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!anthropicKey) {
+    console.error("[rakuten-brave] ANTHROPIC_API_KEY 未設定");
+    process.exit(1);
+  }
+
+  const Anthropic = (await import("@anthropic-ai/sdk")).default;
+  const client = new Anthropic({ apiKey: anthropicKey, fetch: ipv4Fetch, maxRetries: 3 });
+
   const seedData = readJson("x-content-seeds.json") || { seeds: [] };
   const productsData = readJson("products.json") || [];
-  let addedCount = 0;
-  let productsAdded = 0;
   const today = new Date().toISOString().slice(0, 10);
+  let addedSeeds = 0;
+  let addedProducts = 0;
 
   for (let ci = 0; ci < GEAR_CATEGORIES.length; ci++) {
     const cat = GEAR_CATEGORIES[ci];
-    // 楽天APIレート制限対策: 2リクエスト目以降は1秒待機
-    if (ci > 0) await new Promise((r) => setTimeout(r, 1100));
+    if (ci > 0) await new Promise((r) => setTimeout(r, 1000));
+
     try {
-      // 楽天商品検索API（カテゴリ別キーワード検索、レビュー件数順）
-      const url = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&applicationId=${appId}${accessKey ? "&accessKey=" + accessKey : ""}&affiliateId=${RAKUTEN_AFFILIATE_ID}&keyword=${encodeURIComponent(cat.keyword)}&hits=10&sort=-reviewCount`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.warn(`[rakuten-ranking] API失敗 (${res.status}): ${cat.name}`);
+      const items = await braveSearchRakuten(apiKey, cat.keyword);
+      if (items.length === 0) {
+        console.log(`[rakuten-brave] ${cat.name}: 0件`);
         continue;
       }
-      const data = await res.json();
-      const items = data.Items || [];
+      console.log(`[rakuten-brave] ${cat.name}: ${items.length}件`);
 
-      console.log(`[rakuten-ranking] ${cat.name}: ${items.length}件`);
+      // Claude で商品情報・ネタ抽出
+      const snippets = items
+        .map((it) => `- タイトル: ${it.title}\n  説明: ${it.snippet}\n  URL: ${it.url}`)
+        .join("\n");
 
-      // 上位3件からシード生成 + products.json に商品追加
-      for (const item of items.slice(0, 3)) {
-        const product = item.Item || item;
-        const name = product.itemName || "";
-        const price = product.itemPrice;
-        const reviewCount = product.reviewCount || 0;
-        const reviewAvg = product.reviewAverage || 0;
-        const affiliateUrl = product.affiliateUrl || "";
-        const itemUrl = product.itemUrl || "";
-        const imageUrl = (product.mediumImageUrls && product.mediumImageUrls[0]?.imageUrl) || "";
-        const shopName = product.shopName || "";
-        const itemCode = product.itemCode || "";
+      const extraction = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `以下は楽天市場の「${cat.name}」カテゴリの商品検索結果です。
+上位2件の商品情報を抽出し、X投稿ネタも生成してください。
 
-        if (reviewCount < 10) continue;
+検索結果:
+${snippets}
 
-        const theme = `${cat.name}: ${name}`;
-        const isDupe = seedData.seeds.some((s) => s.theme.includes(name.slice(0, 20)));
-        if (isDupe) continue;
+JSON形式で出力:
+{
+  "products": [
+    {
+      "name": "商品名（簡潔に、100文字以内）",
+      "price": "価格（スニペットから読み取れれば数値、不明なら0）",
+      "url": "元のURL",
+      "description": "商品特徴の要約（50文字以内）"
+    }
+  ],
+  "seeds": [
+    {
+      "theme": "テーマ",
+      "angle": "切り口",
+      "hint": "投稿の方向性",
+      "bookmarkPotential": "high/medium/low"
+    }
+  ]
+}
 
-        // products.json に自動追加（重複チェック付き）
-        const productId = `rakuten-${itemCode.replace(/[^a-zA-Z0-9-]/g, "-")}`;
-        const existingProduct = productsData.find(
-          (p) => p.id === productId || p.name === name.slice(0, 80)
-        );
-        if (!existingProduct) {
+注意: priceは整数のみ（円マーク不要）。URLはそのまま転記。`,
+        }],
+      });
+
+      const jsonMatch = extraction.content[0].text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) continue;
+
+      const result = JSON.parse(jsonMatch[0]);
+
+      // products.json に追加
+      for (const p of (result.products || [])) {
+        if (!p.url || !p.name) continue;
+        const productId = `rakuten-brave-${ci}-${p.url.split("/").slice(-2, -1)[0] || Date.now()}`;
+        const exists = productsData.find((x) => x.id === productId || x.name === p.name.slice(0, 80));
+        if (!exists) {
+          const affiliateUrl = buildAffiliateUrl(p.url);
           productsData.push({
             id: productId,
-            name: name.slice(0, 100),
-            brand: shopName,
-            price,
-            imageUrl,
-            affiliateUrl: affiliateUrl || itemUrl,
+            name: p.name.slice(0, 100),
+            brand: "",
+            price: typeof p.price === "number" ? p.price : parseInt(p.price) || 0,
+            imageUrl: "",
+            affiliateUrl,
             amazonUrl: "",
             categoryId: cat.name,
             specs: {},
-            description: `楽天レビュー${reviewCount}件、★${reviewAvg}`,
-            rating: parseFloat(reviewAvg) || 0,
+            description: p.description || "",
+            rating: 0,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             autoAdded: true,
-            addedBy: "rakuten-ranking",
+            addedBy: "rakuten-brave",
             addedAt: today,
-            sourceApi: "rakuten",
+            sourceApi: "brave-rakuten",
           });
-          productsAdded++;
+          addedProducts++;
         }
+      }
 
-        const seed = {
+      // seeds に追加
+      for (const topic of (result.seeds || [])) {
+        const isDupe = seedData.seeds.some(
+          (s) => s.theme === topic.theme && s.angle === topic.angle
+        );
+        if (isDupe) continue;
+
+        seedData.seeds.push({
           id: `seed-rakuten-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-          source: "rakuten",
-          theme,
-          angle: `楽天ランキング上位。レビュー${reviewCount}件、評価${reviewAvg}。${price}円`,
-          hint: `レビューの傾向を元に「実際どうなの？」系の投稿に。価格帯の妥当性も言及可能`,
+          source: "rakuten-brave",
+          theme: topic.theme,
+          angle: topic.angle,
+          hint: topic.hint,
           axis: "camp",
           types: ["outdoor_tip", "gear_thread", "article_promo"],
           season: [],
@@ -138,35 +207,31 @@ async function main() {
           last_used: null,
           addedAt: today,
           freshUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-          bookmarkPotential: reviewCount >= 100 ? "high" : "medium",
-          productId,
-          affiliateUrl: affiliateUrl || itemUrl,
-          imageUrl,
-        };
-
-        seedData.seeds.push(seed);
-        addedCount++;
-        console.log(`  + ${name.slice(0, 40)} (★${reviewAvg}, ${reviewCount}件)`);
+          bookmarkPotential: topic.bookmarkPotential || "medium",
+        });
+        addedSeeds++;
+        console.log(`  + ${topic.theme} (${topic.bookmarkPotential})`);
       }
     } catch (err) {
-      console.warn(`[rakuten-ranking] エラー (${cat.name}): ${err.message}`);
+      console.warn(`[rakuten-brave] エラー (${cat.name}): ${err.message}`);
     }
   }
 
-  console.log(`[rakuten-ranking] ${addedCount}件のシードを追加`);
-  console.log(`[rakuten-ranking] ${productsAdded}件の商品をproducts.jsonに追加`);
+  console.log(`[rakuten-brave] シード ${addedSeeds}件、商品 ${addedProducts}件を追加`);
 
-  if (!dryRun && addedCount > 0) {
-    writeJson("x-content-seeds.json", seedData);
-    console.log("[rakuten-ranking] x-content-seeds.json を更新しました");
-  }
-  if (!dryRun && productsAdded > 0) {
-    writeJson("products.json", productsData);
-    console.log("[rakuten-ranking] products.json を更新しました");
+  if (!dryRun) {
+    if (addedSeeds > 0) {
+      writeJson("x-content-seeds.json", seedData);
+      console.log("[rakuten-brave] x-content-seeds.json を更新しました");
+    }
+    if (addedProducts > 0) {
+      writeJson("products.json", productsData);
+      console.log("[rakuten-brave] products.json を更新しました");
+    }
   }
 }
 
 main().catch((err) => {
-  console.error("[rakuten-ranking] エラー:", err.message);
+  console.error("[rakuten-brave] エラー:", err.message);
   process.exit(1);
 });

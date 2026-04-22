@@ -181,7 +181,7 @@ async function weeklyPipeline(dryRun) {
     { script: "youtube-researcher.js", envKey: "YOUTUBE_API_KEY", label: "YouTube" },
     { script: "research-sources/google-trends.js", envKey: "BRAVE_API_KEY", label: "Brave検索" },
     { script: "research-sources/x-search.js", envKey: "TWITTER_BEARER_TOKEN", label: "X検索" },
-    { script: "research-sources/rakuten-ranking.js", envKey: "RAKUTEN_APP_ID", label: "楽天ランキング" },
+    { script: "research-sources/rakuten-ranking.js", envKey: "BRAVE_API_KEY", label: "楽天商品" },
     { script: "research-sources/amazon-reviews.js", envKey: "AMAZON_ACCESS_KEY", label: "Amazon" },
   ];
 
