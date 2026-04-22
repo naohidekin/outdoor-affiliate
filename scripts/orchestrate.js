@@ -179,7 +179,8 @@ async function weeklyPipeline(dryRun) {
   // 3a. リサーチソース（全ソースを順次実行、API未設定のソースは自動スキップ）
   const researchSources = [
     { script: "youtube-researcher.js", envKey: "YOUTUBE_API_KEY", label: "YouTube" },
-    { script: "research-sources/google-trends.js", envKey: "GOOGLE_CUSTOM_SEARCH_KEY", label: "Google検索" },
+    { script: "research-sources/google-trends.js", envKey: "BRAVE_API_KEY", label: "Brave検索" },
+    { script: "research-sources/x-search.js", envKey: "TWITTER_BEARER_TOKEN", label: "X検索" },
     { script: "research-sources/rakuten-ranking.js", envKey: "RAKUTEN_APP_ID", label: "楽天ランキング" },
     { script: "research-sources/amazon-reviews.js", envKey: "AMAZON_ACCESS_KEY", label: "Amazon" },
   ];
