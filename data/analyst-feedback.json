@@ -1,8 +1,11 @@
 {
   "version": 3,
-  "updatedAt": "2026-04-21T14:00:06.507Z",
-  "period": "2026-03-24 ~ 2026-04-21",
-  "topPerformingTypes": [],
+  "updatedAt": "2026-04-22T12:05:11.444Z",
+  "period": "2026-03-25 ~ 2026-04-22",
+  "topPerformingTypes": [
+    "article_repost",
+    "doc_health_tip"
+  ],
   "lowPerformingTypes": [
     "outdoor_tip",
     "seasonal_hook"
@@ -24,9 +27,11 @@
     }
   ],
   "axisFeedback": {
-    "camp": "34件生成、承認率26%、NG率21%",
-    "12:15": "1件生成、承認率100%、NG率0%",
-    "parenting": "1件生成、承認率0%、NG率0%"
+    "unknown": "27件生成、承認率100%、NG率0%",
+    "camp": "35件生成、承認率26%、NG率20%",
+    "parenting": "2件生成、承認率0%、NG率0%",
+    "doctor": "2件生成、承認率100%、NG率0%",
+    "12:15": "1件生成、承認率100%、NG率0%"
   },
   "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
   "writerHints": [
@@ -35,14 +40,14 @@
     "X経由PVが高い記事を article_promo で優先的に紹介する",
     "直近トップ投稿: [article_promo]「焚き火台3台買い替えた人間の結論\n\n1台目：軽さ重視→薪が落ちる\n2台目：頑丈系→重すぎて車から出すの億劫\n3台目：やっ」(♥4 🔖0) → 似た切り口を再活用",
     "読者の反応/質問: @camp_gear_lab ありがとうございます！🥹 | @camp_gear_lab 👀です！ | @camp_gear_lab テントサイトは少ないですが川沿いでよかったです",
-    "【重要】article_promoタイプに投稿を集中させろ [article_promo] — article_promoは平均いいね1.83、インプレッション38.2でoutdoor_tipの平均いいね2.0、インプレッション36を上回り、リプライも6件と最多獲得している",
-    "【重要】「買い替えた人間の結論」「変わったこと」など体験談ベースの切り口を増やせ [article_promo] — トップ2投稿が共に実体験をベースにした内容で、いいね4と3を獲得している",
-    "【重要】「必ず」などの誇大表現を完全に排除しろ — NG検出が5回と頻発しており、投稿承認率を下げている主要因となっている",
-    "【重要】outdoor_tipとseasonal_hookタイプの投稿を当面停止しろ [outdoor_tip,seasonal_hook] — 両タイプが低パフォーマンスタイプに分類されており、NG率が高く承認率が低い",
-    "春キャンプの寒暖差や足元対策など季節特有の実用情報を盛り込め [article_promo] — 「春キャンプの寒暖差対策」投稿がいいね3を獲得し、seasonal_startパターンの平均スコア7.8と高評価",
-    "商品比較（スノピ・ユニフレーム・ピコグリル等）の切り口を増やせ [article_promo] — product_compareパターンが平均スコア7.8を記録し、焚き火台比較記事が複数回言及されている",
-    "12:15の投稿時間を積極的に活用しろ — 12:15投稿が承認率100%、NG率0%と完璧な成績を記録している",
-    "1行目パターンの効果測定を継続し、データが少なすぎるため判断保留 — 全パターンでエンゲージメントスコア0となっており、まだ有効なデータが蓄積されていない"
+    "【重要】article_promoタイプの投稿を大幅に増やせ [article_promo] — article_promoは6件でいいね合計11（平均1.8）、outdoor_tipは2件でいいね合計4（平均2.0）だが、リプライ数とインプレッション数が圧倒的に高い（229 vs 72）",
+    "【重要】焚き火台関連のネタを継続的に投稿しろ [article_promo,outdoor_tip] — トップ投稿2本が焚き火台関連で、読者からも「👀です！」など関心の高いリプライが来ている。買い替え体験談が特に刺さる",
+    "【重要】「必ず」という誇大表現を完全に排除しろ — NG検出が5回と頻発している最大要因。承認率を下げる直接原因",
+    "【重要】体験談ベースの失敗・成功ストーリーを増やせ [article_promo,outdoor_tip] — 「3台買い替えた」「4人用テント買ったら地獄だった」など具体的な体験談がトップエンゲージメントを獲得",
+    "春キャンプの寒暖差・足元対策などの季節ネタを継続しろ [outdoor_tip,seasonal_hook] — 春キャンプ寒暖差対策が3いいねでトップ2位。4月の季節性を活かしたネタが刺さっている",
+    "camp軸の承認率を上げるため、誇大表現チェックを強化しろ [camp] — camp軸は35件生成で承認率わずか26%、NG率20%。他軸（unknown100%、doctor100%）と差が大きすぎる",
+    "読者の感謝リプライに対して、新たなお悩み解決ネタを仕込め [article_promo,outdoor_tip] — 「ありがとうございます！🥹」「ありがたや🙏🙏」など感謝系リプライが多く、読者の課題解決ニーズが高い",
+    "article_repostタイプは少数精鋭で継続しろ [article_repost] — 1件のみだが確実にエンゲージメント獲得（いいね2、リプライ1）。高パフォーマンスタイプに分類済み"
   ],
   "engagementByType": {
     "outdoor_tip": {
@@ -253,68 +258,71 @@
   },
   "writerDirectives": [
     {
-      "directive": "article_promoタイプに投稿を集中させろ",
-      "reason": "article_promoは平均いいね1.83、インプレッション38.2でoutdoor_tipの平均いいね2.0、インプレッション36を上回り、リプライも6件と最多獲得している",
+      "directive": "article_promoタイプの投稿を大幅に増やせ",
+      "reason": "article_promoは6件でいいね合計11（平均1.8）、outdoor_tipは2件でいいね合計4（平均2.0）だが、リプライ数とインプレッション数が圧倒的に高い（229 vs 72）",
       "priority": "high",
       "appliesTo": [
         "article_promo"
       ]
     },
     {
-      "directive": "「買い替えた人間の結論」「変わったこと」など体験談ベースの切り口を増やせ",
-      "reason": "トップ2投稿が共に実体験をベースにした内容で、いいね4と3を獲得している",
+      "directive": "焚き火台関連のネタを継続的に投稿しろ",
+      "reason": "トップ投稿2本が焚き火台関連で、読者からも「👀です！」など関心の高いリプライが来ている。買い替え体験談が特に刺さる",
       "priority": "high",
       "appliesTo": [
-        "article_promo"
+        "article_promo",
+        "outdoor_tip"
       ]
     },
     {
-      "directive": "「必ず」などの誇大表現を完全に排除しろ",
-      "reason": "NG検出が5回と頻発しており、投稿承認率を下げている主要因となっている",
+      "directive": "「必ず」という誇大表現を完全に排除しろ",
+      "reason": "NG検出が5回と頻発している最大要因。承認率を下げる直接原因",
       "priority": "high",
       "appliesTo": [
         "all"
       ]
     },
     {
-      "directive": "outdoor_tipとseasonal_hookタイプの投稿を当面停止しろ",
-      "reason": "両タイプが低パフォーマンスタイプに分類されており、NG率が高く承認率が低い",
+      "directive": "体験談ベースの失敗・成功ストーリーを増やせ",
+      "reason": "「3台買い替えた」「4人用テント買ったら地獄だった」など具体的な体験談がトップエンゲージメントを獲得",
       "priority": "high",
+      "appliesTo": [
+        "article_promo",
+        "outdoor_tip"
+      ]
+    },
+    {
+      "directive": "春キャンプの寒暖差・足元対策などの季節ネタを継続しろ",
+      "reason": "春キャンプ寒暖差対策が3いいねでトップ2位。4月の季節性を活かしたネタが刺さっている",
+      "priority": "medium",
       "appliesTo": [
         "outdoor_tip",
         "seasonal_hook"
       ]
     },
     {
-      "directive": "春キャンプの寒暖差や足元対策など季節特有の実用情報を盛り込め",
-      "reason": "「春キャンプの寒暖差対策」投稿がいいね3を獲得し、seasonal_startパターンの平均スコア7.8と高評価",
+      "directive": "camp軸の承認率を上げるため、誇大表現チェックを強化しろ",
+      "reason": "camp軸は35件生成で承認率わずか26%、NG率20%。他軸（unknown100%、doctor100%）と差が大きすぎる",
       "priority": "medium",
       "appliesTo": [
-        "article_promo"
+        "camp"
       ]
     },
     {
-      "directive": "商品比較（スノピ・ユニフレーム・ピコグリル等）の切り口を増やせ",
-      "reason": "product_compareパターンが平均スコア7.8を記録し、焚き火台比較記事が複数回言及されている",
+      "directive": "読者の感謝リプライに対して、新たなお悩み解決ネタを仕込め",
+      "reason": "「ありがとうございます！🥹」「ありがたや🙏🙏」など感謝系リプライが多く、読者の課題解決ニーズが高い",
       "priority": "medium",
       "appliesTo": [
-        "article_promo"
+        "article_promo",
+        "outdoor_tip"
       ]
     },
     {
-      "directive": "12:15の投稿時間を積極的に活用しろ",
-      "reason": "12:15投稿が承認率100%、NG率0%と完璧な成績を記録している",
-      "priority": "medium",
-      "appliesTo": [
-        "all"
-      ]
-    },
-    {
-      "directive": "1行目パターンの効果測定を継続し、データが少なすぎるため判断保留",
-      "reason": "全パターンでエンゲージメントスコア0となっており、まだ有効なデータが蓄積されていない",
+      "directive": "article_repostタイプは少数精鋭で継続しろ",
+      "reason": "1件のみだが確実にエンゲージメント獲得（いいね2、リプライ1）。高パフォーマンスタイプに分類済み",
       "priority": "low",
       "appliesTo": [
-        "all"
+        "article_repost"
       ]
     }
   ]
