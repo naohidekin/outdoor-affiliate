@@ -22,6 +22,16 @@ const DEFAULT_THEMES = [
   { label: "ギアを買いすぎる",   emoji: "💸" },
 ];
 
+const KEYVISUAL_THEMES = [
+  { label: "夕暮れの焚き火",    emoji: "🌅" },
+  { label: "山頂でのコーヒー",   emoji: "☕" },
+  { label: "星空テント",       emoji: "✨" },
+  { label: "朝霧の湖畔",       emoji: "🌫️" },
+  { label: "ギア全部並べた",    emoji: "🎒" },
+  { label: "GWの混雑キャンプ",  emoji: "🏕️" },
+  { label: "子供とキャンプ",    emoji: "👨‍👧" },
+];
+
 type HistoryItem = { name: string; path: string; createdAt: string };
 
 function parsePanel(log: string): number {
@@ -30,6 +40,7 @@ function parsePanel(log: string): number {
 }
 
 export default function FourKomaPage() {
+  const [mode, setMode] = useState<"4koma" | "keyvisual">("4koma");
   const [style, setStyle] = useState("manga");
   const [customTheme, setCustomTheme] = useState("");
   const [running, setRunning] = useState(false);
@@ -67,7 +78,7 @@ export default function FourKomaPage() {
       const res = await fetch("/api/4koma/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme: theme.trim(), style }),
+        body: JSON.stringify({ theme: theme.trim(), style, mode }),
       });
 
       if (!res.ok || !res.body) {
@@ -119,15 +130,51 @@ export default function FourKomaPage() {
     }
   }
 
-  const phaseLabel = phase === "story" ? "ストーリー生成中…" : phase === "panels" ? `パネル ${panelProgress}/4 生成中…` : phase === "compose" ? "コマ割り合成中…" : "";
+  const phaseLabel = mode === "keyvisual"
+    ? (running ? "キーイラスト生成中…" : "")
+    : phase === "story" ? "ストーリー生成中…" : phase === "panels" ? `パネル ${panelProgress}/4 生成中…` : phase === "compose" ? "コマ割り合成中…" : "";
+
+  const activeThemes = mode === "keyvisual" ? KEYVISUAL_THEMES : DEFAULT_THEMES;
 
   return (
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">4コマ漫画生成</h1>
+          <h1 className="text-2xl font-bold text-gray-800">イラスト生成</h1>
           <p className="text-sm text-gray-500 mt-0.5">テーマを選んでクリックするだけ！</p>
         </div>
+      </div>
+
+      {/* Mode toggle */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">モード</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode("4koma")}
+            disabled={running}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition disabled:opacity-40 ${
+              mode === "4koma"
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-green-400"
+            }`}
+          >
+            📖 4コマ漫画
+          </button>
+          <button
+            onClick={() => setMode("keyvisual")}
+            disabled={running}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition disabled:opacity-40 ${
+              mode === "keyvisual"
+                ? "bg-purple-600 text-white border-purple-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-purple-400"
+            }`}
+          >
+            🖼️ キーイラスト
+          </button>
+        </div>
+        {mode === "keyvisual" && (
+          <p className="text-xs text-purple-500 mt-2">1枚の大判イラスト（1024×1024）をX投稿に添付するのに最適</p>
+        )}
       </div>
 
       {/* Style picker */}
@@ -154,9 +201,11 @@ export default function FourKomaPage() {
 
       {/* Theme quick-pick */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">テーマを選ぶ（クリックで即生成）</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          {mode === "keyvisual" ? "シーンを選ぶ（クリックで即生成）" : "テーマを選ぶ（クリックで即生成）"}
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-          {DEFAULT_THEMES.map((t) => (
+          {activeThemes.map((t) => (
             <button
               key={t.label}
               onClick={() => generate(t.label)}
@@ -203,7 +252,9 @@ export default function FourKomaPage() {
               {phaseLabel || "生成中…"}
             </span>
           </div>
-          {phase === "panels" && (
+          {mode === "keyvisual" ? (
+            <div className="w-full h-2 rounded-full bg-purple-200 animate-pulse" />
+          ) : phase === "panels" && (
             <div className="flex gap-2">
               {[1, 2, 3, 4].map((n) => (
                 <div
