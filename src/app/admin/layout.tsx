@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/products", label: "商品管理", icon: "📦" },
   { href: "/admin/categories", label: "カテゴリ管理", icon: "🏷️" },
   { href: "/admin/x-posts", label: "X 投稿管理", icon: "𝕏" },
+  { href: "/admin/threads", label: "Threads 投稿管理", icon: "🧵" },
   { href: "/admin/x-analytics", label: "X Analytics", icon: "📈" },
   { href: "/admin/4koma", label: "4コマ漫画", icon: "🎨" },
 ];

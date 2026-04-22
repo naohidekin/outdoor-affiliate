@@ -38,6 +38,7 @@ function parseArgs() {
   return {
     dryRun: args.includes("--dry-run"),
     refresh: args.includes("--refresh"),
+    immediate: args.includes("--immediate"),
     max: parseInt(args.find((a) => a.startsWith("--max="))?.split("=")[1] || "1"),
   };
 }
@@ -152,7 +153,7 @@ function buildThreadsText(text, sourceUrl) {
 
 async function main() {
   const opts = parseArgs();
-  if (!opts.dryRun) {
+  if (!opts.dryRun && !opts.immediate) {
     const waitMs = Math.floor(Math.random() * 60 * 60 * 1000);
     console.log(`[random delay] ${Math.round(waitMs / 60000)}m before posting...`);
     await new Promise(r => setTimeout(r, waitMs));
