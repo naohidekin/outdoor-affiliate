@@ -7466,6 +7466,557 @@
       "productId": "rakuten-maxshare-10060489",
       "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00prba6.wwmjsa5c.g00prba6.wwmjt79e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmaxshare%2Fa19180%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmaxshare%2Fi%2F10060489%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
       "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/maxshare/cabinet/master/1st/a19180.jpg?_ex=128x128"
+    },
+    {
+      "id": "seed-rakuten-1776868533555-5zu",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプ時代の相棒",
+      "angle": "タープの魅力",
+      "hint": "軽量で設営が簡単、焚火もできるタトンカタープの使い勝手を紹介。ビギナーも上級者も満足できるポイントを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868533555-ygn",
+      "source": "rakuten-brave",
+      "theme": "キャンプも防災も1つで対応",
+      "angle": "多機能テントの価値",
+      "hint": "ワンタッチテントが災害時にも活躍する現実を提示。アウトドア好きが防災グッズを兼ねることのメリットを語る",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868533555-v3d",
+      "source": "rakuten-brave",
+      "theme": "テント選びの落とし穴",
+      "angle": "素材による違い",
+      "hint": "ポリコットンとポリエステルの違い、ポリコットンが選ばれる理由を解説。長期使用時の満足度の差を言及",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868533555-q51",
+      "source": "rakuten-brave",
+      "theme": "春キャンプの準備はお早めに",
+      "angle": "季節性",
+      "hint": "シーズン前の購入を促す投稿。タープとテント両方揃えるメリット、楽天セール情報も含める",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868540322-98p",
+      "source": "rakuten-brave",
+      "theme": "防災・停電対策",
+      "angle": "家庭の必需品化",
+      "hint": "1500ルーメンの超高輝度で、災害時の備えとして必須アイテム化。購入のきっかけを提案",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868540323-uli",
+      "source": "rakuten-brave",
+      "theme": "キャンプ・アウトドア",
+      "angle": "シーン別の使い分け",
+      "hint": "夜釣り、車中泊、キャンプなど多用途での活躍シーンを具体的に紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868540323-scx",
+      "source": "rakuten-brave",
+      "theme": "ギフト選び",
+      "angle": "実用的なプレゼント",
+      "hint": "名入れ対応やおしゃれなデザイン、防災グッズとしての贈り物価値を訴求",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868540323-zkd",
+      "source": "rakuten-brave",
+      "theme": "長時間点灯",
+      "angle": "コストパフォーマンス",
+      "hint": "最長240時間の圧倒的な点灯時間で、電池代節約のメリットを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868548519-ueb",
+      "source": "rakuten-brave",
+      "theme": "メディア掲載の信頼性",
+      "angle": "めざましテレビ紹介商品の注目度",
+      "hint": "『TV出演した話題のチェア』で検索ユーザーの関心を引く。実際に見た人からの検索流入期待",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868548520-05e",
+      "source": "rakuten-brave",
+      "theme": "機能性の詳細解説",
+      "angle": "高さ調節・ハイバック機能の実用性",
+      "hint": "『4段階調節で自分好みの高さに』『ハイバックで疲れない』など、実際の使用シーンをビフォーアフターで表現",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868548520-6g2",
+      "source": "rakuten-brave",
+      "theme": "シーズナル訴求",
+      "angle": "春キャンプシーズンへの準備",
+      "hint": "『新年度のアウトドア企画に必須』『家族でキャンプデビュー』など、タイミング的な購買欲を刺激",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868548520-2z1",
+      "source": "rakuten-brave",
+      "theme": "ポイント還元キャンペーン",
+      "angle": "楽天ポイント10倍のお得感",
+      "hint": "『ポイント還元で実質値引き』『今買うなら10倍チャンス』という限定性を強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868555298-8d2",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプの必需品",
+      "angle": "軽量×コンパクト志向",
+      "hint": "一人キャンプの荷物制限の中で、折りたためるクーラーボックスの活躍シーン。飲料や食材の保冷を軽く実現できるメリットを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868555298-80n",
+      "source": "rakuten-brave",
+      "theme": "部活での使用シーン",
+      "angle": "実用性とコスパ",
+      "hint": "運動部の遠征や外でのドリンク補給に。3サイズ展開で選べる利便性と、学生向けの価格帯の訴求",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868555299-1uq",
+      "source": "rakuten-brave",
+      "theme": "夏のBBQ・レジャー準備",
+      "angle": "映える×機能性",
+      "hint": "インスタ映えするデザインのLiberaidersで、おしゃれにドリンク・食材をキープ。20倍ポイントのお得感も付加",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868562558-mqc",
+      "source": "rakuten-brave",
+      "theme": "冬キャンプの必需品",
+      "angle": "初心者向け選び方ガイド",
+      "hint": "-10℃対応の高機能シュラフなら真冬キャンプも安心。枕付きなら寝心地も◎",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868562559-9bi",
+      "source": "rakuten-brave",
+      "theme": "防災対策×キャンプ用品",
+      "angle": "一石二鳥の備え",
+      "hint": "丸洗いできるシュラフは防災グッズとしても最適。災害時の体温維持に必須アイテム",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868562559-n9h",
+      "source": "rakuten-brave",
+      "theme": "車中泊のリアル",
+      "angle": "快適な睡眠環境づくり",
+      "hint": "コンパクト×軽量なシュラフなら車中泊も快適。オールシーズン対応で春夏秋冬対応",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868562559-5s9",
+      "source": "rakuten-brave",
+      "theme": "洗えるシュラフのメリット",
+      "angle": "お手入れ簡単=長持ち",
+      "hint": "丸洗いOKなら衛生面も安心。何度も使うからこそ洗える機能は重要ポイント",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868571221-tpa",
+      "source": "rakuten-brave",
+      "theme": "焚き火台選びの失敗あるある",
+      "angle": "キャンプ初心者あぐあるベストな選び方",
+      "hint": "「サイズ選びで失敗した」「重すぎて後悔」などのリアルな悩みに共感。解決策としてコンパクト・軽量モデルを提案",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868571222-9ik",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプ女子の装備紹介",
+      "angle": "推し焚き火台で夜を過ごす時間",
+      "hint": "焚き火での焚き火飯シーン、雰囲気のある夜の過ごし方。インスタ映えする焚き火台の紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868571222-f93",
+      "source": "rakuten-brave",
+      "theme": "春キャンプの準備チェックリスト",
+      "angle": "意外と忘れがちな焚き火台選びのコツ",
+      "hint": "シーズン別・用途別の焚き火台選択ガイド。楽天セール情報とリンク",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868577716-4wg",
+      "source": "rakuten-brave",
+      "theme": "キャンプ初心者向けバーナー選び",
+      "angle": "コンパクトさ vs 安定性の比較",
+      "hint": "SOTOアミカスの軽量性とプリムスの安定性を対比。初心者がどちらを選ぶべきか投げかける",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868577716-fr2",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプの必需品",
+      "angle": "シングルバーナーの選定ポイント",
+      "hint": "コンパクトで風に強い、価格帯、燃料タイプなど選定基準を解説",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868577716-5p7",
+      "source": "rakuten-brave",
+      "theme": "バーナーのカスタマイズ沼",
+      "angle": "純正品 vs カスタムパーツ",
+      "hint": "CBODなどのカスタムパーツで見た目と機能をアップグレードする楽しみ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868585731-nrz",
+      "source": "rakuten-brave",
+      "theme": "ポリコットンタープの魅力",
+      "angle": "焚き火との相性",
+      "hint": "火の粉に強い素材で、タープ下での焚き火が可能な点を推し。キャンプの快適さアップ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868585731-ic7",
+      "source": "rakuten-brave",
+      "theme": "車中泊・アウトドア",
+      "angle": "設営時間の短さ",
+      "hint": "5分で設営できるカーサイドタープの時短メリット。準備時間を短くしたいキャンパー向け",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1776868585731-5kc",
+      "source": "rakuten-brave",
+      "theme": "タープ選びの基準",
+      "angle": "用途別サイズ選択",
+      "hint": "1TC・2TC・4TCなどサイズ展開の違いを解説。自分に合ったタープ選びのコツ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1776868585731-pc4",
+      "source": "rakuten-brave",
+      "theme": "真夏のキャンプ対策",
+      "angle": "UV・遮熱機能",
+      "hint": "複数の製品に共通するUVカット・遮熱機能。快適なキャンプサイト作りのポイント",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-04-22",
+      "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-21T13:00:07.814Z",
+  "lastUpdated": "2026-04-22T13:00:08.277Z",
   "recentMetrics": [
     {
       "tweetId": "2043223809470394555",
@@ -12,7 +12,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 51,
-      "fetchedAt": "2026-04-21T13:00:07.806Z"
+      "fetchedAt": "2026-04-22T13:00:08.272Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -25,7 +25,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 35,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -38,7 +38,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 48,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045079866706653401",
@@ -51,7 +51,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 37,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045306355591086329",
@@ -63,8 +63,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 52,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "impressions": 53,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045442246053613590",
@@ -77,7 +77,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 52,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045674533512978854",
@@ -90,7 +90,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 19,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045804633625698589",
@@ -103,7 +103,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 21,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045804641468948944",
@@ -116,7 +116,46 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 34,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
+    },
+    {
+      "tweetId": "2046000931314303243",
+      "postType": "article_promo",
+      "textPreview": "チェア選び、座り心地重視なら絶対現物触った方がいい。ヘリノックスは軽いけど包まれる感じが好き嫌い分かれる。コールマンは安",
+      "postedAt": "2026-04-19T23:00:09.047Z",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 31,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
+    },
+    {
+      "tweetId": "2046174330128850997",
+      "postType": "article_promo",
+      "textPreview": "タープ、形が違うだけと思ってた。ヘキサは風に強い、レクタは日陰広い、ウイングは設営楽。用途で全然変わる。5ブランドの代表",
+      "postedAt": "2026-04-20T10:29:10.803Z",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 0,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 38,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
+    },
+    {
+      "tweetId": "2046189668425994457",
+      "postType": "outdoor_tip",
+      "textPreview": "GW前の装備点検、ガスカートリッジの残量チェック忘れがち。料理中にガス切れで冷えたカレーを食べる羽目に。予備を1本多めに",
+      "postedAt": "2026-04-20T11:30:07.815Z",
+      "likes": 4,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 47,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     }
   ],
   "topPosts": [
@@ -131,7 +170,20 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 37,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
+    },
+    {
+      "tweetId": "2046189668425994457",
+      "postType": "outdoor_tip",
+      "textPreview": "GW前の装備点検、ガスカートリッジの残量チェック忘れがち。料理中にガス切れで冷えたカレーを食べる羽目に。予備を1本多めに",
+      "postedAt": "2026-04-20T11:30:07.815Z",
+      "likes": 4,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 47,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2043223809470394555",
@@ -144,7 +196,20 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 51,
-      "fetchedAt": "2026-04-21T13:00:07.806Z"
+      "fetchedAt": "2026-04-22T13:00:08.272Z"
+    },
+    {
+      "tweetId": "2046174330128850997",
+      "postType": "article_promo",
+      "textPreview": "タープ、形が違うだけと思ってた。ヘキサは風に強い、レクタは日陰広い、ウイングは設営楽。用途で全然変わる。5ブランドの代表",
+      "postedAt": "2026-04-20T10:29:10.803Z",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 0,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 38,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -157,7 +222,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 48,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045442246053613590",
@@ -170,7 +235,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 52,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045804641468948944",
@@ -183,7 +248,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 34,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -196,7 +261,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 35,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045306355591086329",
@@ -208,8 +273,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 52,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "impressions": 53,
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     },
     {
       "tweetId": "2045674533512978854",
@@ -222,23 +287,22 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 19,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
-    },
-    {
-      "tweetId": "2045804633625698589",
-      "postType": "outdoor_tip",
-      "textPreview": "マラソンでキャンプ道具買うコツ\n\n・送料無料ライン超えるよう調整\n・同じブランドでも店舗によって価格差あり\n・クーポン併",
-      "postedAt": "2026-04-19T10:00:08.285Z",
-      "likes": 1,
-      "retweets": 0,
-      "replies": 1,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 21,
-      "fetchedAt": "2026-04-21T13:00:07.811Z"
+      "fetchedAt": "2026-04-22T13:00:08.275Z"
     }
   ],
   "replyDigest": [
+    {
+      "tweetId": "2046926906654863550",
+      "text": "@camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️",
+      "createdAt": "2026-04-22T12:19:39.000Z",
+      "conversationId": "2046910035645898804"
+    },
+    {
+      "tweetId": "2046743346140570024",
+      "text": "@camp_gear_lab ギア男さん！本当ですね🥹夢広がります！まだまだここから頑張ります☺️よろしくお願いします✨",
+      "createdAt": "2026-04-22T00:10:15.000Z",
+      "conversationId": "2046696410620592496"
+    },
     {
       "tweetId": "2046215536435208523",
       "text": "@camp_gear_lab ありがとうございます！🥹",
@@ -346,18 +410,6 @@
       "text": "@camp_gear_lab 私も以前はそうしてましたが、これ知ってから効率上がりました！",
       "createdAt": "2026-04-18T07:58:02.000Z",
       "conversationId": "2045331450590028065"
-    },
-    {
-      "tweetId": "2045407008745234839",
-      "text": "@camp_gear_lab もちろんすでに弄り倒してるんですが、あまりにもこの界隈で買ってる人が多いのでついつい…(;´∀`)ｱﾊﾊ…",
-      "createdAt": "2026-04-18T07:40:07.000Z",
-      "conversationId": "2045318340948951079"
-    },
-    {
-      "tweetId": "2045387638614667610",
-      "text": "@camp_gear_lab なるほど、、！刺さる言葉ですね😅\nいつかアプリぜひお見せ下さい〜！\n気になりです🙋‍♂️",
-      "createdAt": "2026-04-18T06:23:09.000Z",
-      "conversationId": "2045110482840002986"
     }
   ]
 }
