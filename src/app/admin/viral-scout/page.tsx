@@ -63,6 +63,19 @@ const STATUS_STYLES: Record<string, string> = {
   skipped: "bg-gray-100 text-gray-500",
 };
 
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 60) return `${diffMin}分前`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}時間前`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `${diffD}日前`;
+  return new Date(dateStr).toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+}
+
 export default function ViralScoutPage() {
   const [posts, setPosts] = useState<ViralPost[]>([]);
   const [aggregate, setAggregate] = useState<AggregateAnalysis | null>(null);
@@ -219,19 +232,37 @@ export default function ViralScoutPage() {
           <div key={post.tweetId} className="bg-white rounded-lg shadow-sm border overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full ${AXIS_COLORS[post.axis] || ""}`}>
                   {AXIS_LABELS[post.axis] || post.axis}
                 </span>
-                <span className="font-medium text-sm">@{post.authorUsername}</span>
+                <a
+                  href={`https://x.com/${post.authorUsername}/status/${post.tweetId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-sm text-blue-600 hover:underline"
+                >
+                  @{post.authorUsername}
+                </a>
                 <span className="text-xs text-gray-400">
                   {post.authorFollowers.toLocaleString()} followers
+                </span>
+                <span className="text-xs text-gray-400">
+                  {post.createdAt ? timeAgo(post.createdAt) : ""}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span>score: {post.metrics.engagementScore}</span>
                 <span>♥ {post.metrics.likes}</span>
                 <span>RT {post.metrics.retweets}</span>
+                <a
+                  href={`https://x.com/${post.authorUsername}/status/${post.tweetId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  元ポスト →
+                </a>
               </div>
             </div>
 
