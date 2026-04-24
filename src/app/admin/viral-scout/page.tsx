@@ -83,9 +83,11 @@ export default function ViralScoutPage() {
   const [filterAxis, setFilterAxis] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [scouting, setScouting] = useState(false);
+  const [scoutLog, setScoutLog] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadData() {
     fetch("/api/viral-scout")
       .then((r) => r.json())
       .then((data) => {
@@ -95,7 +97,32 @@ export default function ViralScoutPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { loadData(); }, []);
+
+  async function runScout() {
+    if (scouting) return;
+    setScouting(true);
+    setScoutLog("スカウト実行中... (数分かかります)");
+    try {
+      const res = await fetch("/api/viral-scout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: 2, minScore: 20 }),
+      });
+      const data = await res.json();
+      setScoutLog(data.ok ? "完了! データを再読込中..." : `エラー: ${data.output?.slice(-200) || "不明"}`);
+      if (data.ok) {
+        loadData();
+        setTimeout(() => setScoutLog(""), 3000);
+      }
+    } catch (err) {
+      setScoutLog("通信エラー");
+    } finally {
+      setScouting(false);
+    }
+  }
 
   async function updateStatus(tweetId: string, field: "quoteTweet" | "reply", status: string) {
     await fetch("/api/viral-scout", {
@@ -166,7 +193,21 @@ export default function ViralScoutPage() {
             {scoutedAt && `最終実行: ${new Date(scoutedAt).toLocaleString("ja-JP")}`} / {posts.length}件
           </p>
         </div>
+        <button
+          onClick={runScout}
+          disabled={scouting}
+          className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition ${
+            scouting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          {scouting ? "スカウト中..." : "再スカウト (直近2日)"}
+        </button>
       </div>
+      {scoutLog && (
+        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${scouting ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"}`}>
+          {scoutLog}
+        </div>
+      )}
 
       {/* Aggregate Stats */}
       {aggregate && (

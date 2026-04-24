@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { execFile } from "child_process";
 import fs from "fs";
 import path from "path";
 
@@ -37,4 +38,26 @@ export async function PATCH(req: Request) {
   } catch (err) {
     return NextResponse.json({ error: "更新エラー" }, { status: 500 });
   }
+}
+
+export async function POST(req: Request) {
+  const cwd = path.resolve(process.cwd());
+  const script = path.join(cwd, "scripts", "viral-scout-agent.js");
+  const { days = 2, minScore = 20 } = await req.json().catch(() => ({}));
+
+  return new Promise<NextResponse>((resolve) => {
+    execFile(
+      "node",
+      ["--dns-result-order=ipv4first", script, `--days=${days}`, `--min-score=${minScore}`],
+      { cwd, env: { ...process.env }, timeout: 600_000 },
+      (error, stdout, stderr) => {
+        const output = (stdout + stderr).trim();
+        if (error && error.code !== 0) {
+          resolve(NextResponse.json({ ok: false, output }, { status: 500 }));
+        } else {
+          resolve(NextResponse.json({ ok: true, output }));
+        }
+      }
+    );
+  });
 }
