@@ -53,19 +53,28 @@ export function readJson(filename) {
 
 /**
  * data/ 配下に JSON を書く（ロックファイルで排他制御）。
+ * Vercel等の read-only filesystem では書き込み不能のため、エラーは
+ * 捕捉してログだけ出す（生成本体を止めない）。
  */
 export function writeJson(filename, data) {
   const filePath = path.join(DATA_DIR, filename);
   const lockPath = filePath + ".lock";
-  const maxWait = 10_000; // 最大10秒待機
+  const maxWait = 10_000;
   const start = Date.now();
 
-  // ロック取得（スピンウェイト）
+  // ロック取得（スピンウェイト）。read-only fs ではここで失敗するので即諦める。
+  let locked = false;
   while (Date.now() - start < maxWait) {
     try {
       fs.writeFileSync(lockPath, String(process.pid), { flag: "wx" });
-      break; // ロック取得成功
-    } catch {
+      locked = true;
+      break;
+    } catch (err) {
+      // EROFS / EACCES は read-only filesystem なので即時諦める
+      if (err && (err.code === "EROFS" || err.code === "EACCES")) {
+        console.warn(`[writeJson] ${filename} 書き込みスキップ（read-only fs）: ${err.code}`);
+        return;
+      }
       // ロック競合 — 古いロック（30秒超）は強制解除
       try {
         const lockStat = fs.statSync(lockPath);
@@ -79,9 +88,19 @@ export function writeJson(filename, data) {
       while (Date.now() < waitEnd) { /* busy wait */ }
     }
   }
+  if (!locked) {
+    console.warn(`[writeJson] ${filename} ロック取得失敗、書き込みスキップ`);
+    return;
+  }
 
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  } catch (err) {
+    if (err && (err.code === "EROFS" || err.code === "EACCES")) {
+      console.warn(`[writeJson] ${filename} 書き込みスキップ（read-only fs）: ${err.code}`);
+    } else {
+      throw err;
+    }
   } finally {
     try { fs.unlinkSync(lockPath); } catch { /* cleanup */ }
   }

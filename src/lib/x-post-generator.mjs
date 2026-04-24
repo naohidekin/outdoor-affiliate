@@ -121,10 +121,14 @@ function loadNewsFeed(count) {
 
 function markNewsUsed(usedItems) {
   const filePath = path.join(DATA_DIR, "news-feed.json");
-  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  const usedIds = new Set(usedItems.map((n) => n.id));
-  const updated = all.map((n) => (usedIds.has(n.id) ? { ...n, used: true } : n));
-  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), "utf-8");
+  try {
+    const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    const usedIds = new Set(usedItems.map((n) => n.id));
+    const updated = all.map((n) => (usedIds.has(n.id) ? { ...n, used: true } : n));
+    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (err) {
+    console.warn(`[markNewsUsed] 書き込み失敗（read-only fs か）: ${err.message}`);
+  }
 }
 
 // === ユーティリティ ===
@@ -222,7 +226,12 @@ function loadSeeds() {
 
 function saveSeeds(seedData) {
   const seedPath = path.join(DATA_DIR, "x-content-seeds.json");
-  fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2) + "\n", "utf-8");
+  try {
+    fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2) + "\n", "utf-8");
+  } catch (err) {
+    // Vercel 等の read-only filesystem では書き込み不能。ログだけ出して続行。
+    console.warn(`[saveSeeds] 書き込み失敗（read-only fs か）: ${err.message}`);
+  }
 }
 
 function selectSeed(seedData, { type, month, axis }) {

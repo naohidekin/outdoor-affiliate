@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。
+  // Vercel の自動 file tracing は動的読み込みを検出できないため、明示的に
+  // bundle に含める。これがないと本番で ENOENT エラーになる。
+  outputFileTracingIncludes: {
+    "/api/x-posts/generate": ["./data/**/*"],
+    "/api/x-posts": ["./data/**/*"],
+    "/api/viral-scout": ["./data/**/*"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.r10s.jp" },
