@@ -1019,6 +1019,9 @@ async function generatePosts(opts) {
       spreadsheetId: process.env.X_SHEET_ID,
       range: `${DRAFT_SHEET}!A:U`,
       valueInputOption: "RAW",
+      // INSERT_ROWS: 必ず新規行として挿入（既存データの「table」検出に
+      // 引きずられて変な列に書き込まれるのを防ぐ）
+      insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
     });
 

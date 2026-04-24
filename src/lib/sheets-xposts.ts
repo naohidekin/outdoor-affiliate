@@ -133,6 +133,7 @@ export async function saveSheetsXPost(post: XPost): Promise<void> {
       spreadsheetId,
       range: `${SHEET_NAME}!A:S`,
       valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
       requestBody: { values: [xpostToRow(post)] },
     });
   }
@@ -147,6 +148,7 @@ export async function saveSheetsXPosts(posts: XPost[]): Promise<void> {
     spreadsheetId,
     range: `${SHEET_NAME}!A:S`,
     valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
     requestBody: { values: rows },
   });
 }

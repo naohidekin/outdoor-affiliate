@@ -210,6 +210,7 @@ export async function upsertManyOverrides(
       spreadsheetId,
       range: `${SHEET_NAME}!A:G`,
       valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
       requestBody: { values: appends },
     });
   }
