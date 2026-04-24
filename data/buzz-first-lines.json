@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-22T14:00:13.815Z",
+  "lastUpdated": "2026-04-23T14:00:05.318Z",
   "lines": [
     {
       "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
@@ -221,6 +221,16 @@
       "replies": 0,
       "collectedAt": "2026-04-22",
       "pattern": "product_compare"
+    },
+    {
+      "text": "タープ沼にハマってから分かったヘキサとレクタの使い分け。風の強さとサイト形状で全然変わる。去年の台風みたいな時はウイング",
+      "source": "own_post",
+      "postType": "article_promo",
+      "likes": 3,
+      "bookmarks": 0,
+      "replies": 1,
+      "collectedAt": "2026-04-23",
+      "pattern": null
     }
   ]
 }

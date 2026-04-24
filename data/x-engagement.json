@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-22T13:00:08.277Z",
+  "lastUpdated": "2026-04-23T13:00:08.158Z",
   "recentMetrics": [
     {
       "tweetId": "2043223809470394555",
@@ -12,7 +12,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 51,
-      "fetchedAt": "2026-04-22T13:00:08.272Z"
+      "fetchedAt": "2026-04-23T13:00:08.150Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -25,7 +25,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 35,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -38,7 +38,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 48,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045079866706653401",
@@ -51,7 +51,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 37,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045306355591086329",
@@ -64,7 +64,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 53,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045442246053613590",
@@ -77,7 +77,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 52,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045674533512978854",
@@ -90,7 +90,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 19,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045804633625698589",
@@ -102,8 +102,8 @@
       "replies": 1,
       "quotes": 0,
       "bookmarks": 0,
-      "impressions": 21,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "impressions": 22,
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045804641468948944",
@@ -116,7 +116,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 34,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2046000931314303243",
@@ -129,7 +129,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 31,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2046174330128850997",
@@ -142,7 +142,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 38,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2046189668425994457",
@@ -155,7 +155,33 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 47,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
+    },
+    {
+      "tweetId": "2046363314637410674",
+      "postType": "article_promo",
+      "textPreview": "クーラーボックス買い替えで色々試した結果をブログに。氷の持ちって容量より断熱材の質なのね。安物使ってた頃は1日で氷全滅し",
+      "postedAt": "2026-04-20T23:00:08.116Z",
+      "likes": 0,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 13,
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
+    },
+    {
+      "tweetId": "2046529399483400223",
+      "postType": "article_promo",
+      "textPreview": "タープ沼にハマってから分かったヘキサとレクタの使い分け。風の強さとサイト形状で全然変わる。去年の台風みたいな時はウイング",
+      "postedAt": "2026-04-21T10:00:05.887Z",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 25,
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     }
   ],
   "topPosts": [
@@ -170,7 +196,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 37,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2046189668425994457",
@@ -183,7 +209,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 47,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2043223809470394555",
@@ -196,7 +222,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 51,
-      "fetchedAt": "2026-04-22T13:00:08.272Z"
+      "fetchedAt": "2026-04-23T13:00:08.150Z"
     },
     {
       "tweetId": "2046174330128850997",
@@ -209,7 +235,20 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 38,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
+    },
+    {
+      "tweetId": "2046529399483400223",
+      "postType": "article_promo",
+      "textPreview": "タープ沼にハマってから分かったヘキサとレクタの使い分け。風の強さとサイト形状で全然変わる。去年の台風みたいな時はウイング",
+      "postedAt": "2026-04-21T10:00:05.887Z",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "quotes": 0,
+      "bookmarks": 0,
+      "impressions": 25,
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2044913742329311664",
@@ -222,7 +261,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 48,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045442246053613590",
@@ -235,7 +274,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 52,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045804641468948944",
@@ -248,7 +287,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 34,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2044726791680737400",
@@ -261,7 +300,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 35,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     },
     {
       "tweetId": "2045306355591086329",
@@ -274,23 +313,22 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 53,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
-    },
-    {
-      "tweetId": "2045674533512978854",
-      "postType": "article_promo",
-      "textPreview": "1万円以下のシュラフ、マラソンなら確実に買い時\n\nロゴスの丸洗いシリーズ、普段8000円がクーポン込みで6500円。ポイ",
-      "postedAt": "2026-04-19T01:23:09.325Z",
-      "likes": 1,
-      "retweets": 0,
-      "replies": 1,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 19,
-      "fetchedAt": "2026-04-22T13:00:08.275Z"
+      "fetchedAt": "2026-04-23T13:00:08.155Z"
     }
   ],
   "replyDigest": [
+    {
+      "tweetId": "2047286181260636286",
+      "text": "@camp_gear_lab まずは増やすこと大事ですよね(๑•̀ㅂ•́)و✧",
+      "createdAt": "2026-04-23T12:07:17.000Z",
+      "conversationId": "2046901577147937099"
+    },
+    {
+      "tweetId": "2047283206198808917",
+      "text": "@camp_gear_lab ありがとうございます！！笑",
+      "createdAt": "2026-04-23T11:55:27.000Z",
+      "conversationId": "2046907365648367819"
+    },
     {
       "tweetId": "2046926906654863550",
       "text": "@camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️",
@@ -398,18 +436,6 @@
       "text": "@camp_gear_lab ありがとうございます！\n頑張りましょう！",
       "createdAt": "2026-04-18T08:58:06.000Z",
       "conversationId": "2045123206391206388"
-    },
-    {
-      "tweetId": "2045424345384989039",
-      "text": "@camp_gear_lab 本当そうですよね😆  \n淡々と続けること自体が、立派な才能であり努力ですよね。  \n\n結果はすぐ出ないからこそ、やめずに続けた人にチャンスが来る気がします。  \nコツコツ積み上げていきましょう🔥",
-      "createdAt": "2026-04-18T08:49:00.000Z",
-      "conversationId": "2045123206391206388"
-    },
-    {
-      "tweetId": "2045411518716768600",
-      "text": "@camp_gear_lab 私も以前はそうしてましたが、これ知ってから効率上がりました！",
-      "createdAt": "2026-04-18T07:58:02.000Z",
-      "conversationId": "2045331450590028065"
     }
   ]
 }

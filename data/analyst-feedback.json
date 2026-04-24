@@ -1,13 +1,13 @@
 {
   "version": 3,
-  "updatedAt": "2026-04-22T14:00:10.031Z",
-  "period": "2026-03-25 ~ 2026-04-22",
+  "updatedAt": "2026-04-23T14:00:04.847Z",
+  "period": "2026-03-26 ~ 2026-04-23",
   "topPerformingTypes": [
     "poll_question",
-    "ai_dev_log"
+    "ai_dev_log",
+    "parenting_outdoor"
   ],
   "lowPerformingTypes": [
-    "seasonal_hook",
     "outdoor_tip",
     "failure_story",
     "doc_health_tip"
@@ -25,7 +25,7 @@
   "avoidPatterns": [
     {
       "pattern": "[誇大表現] \"必ず\" を検出",
-      "reason": "NG検出 5回"
+      "reason": "NG検出 4回"
     },
     {
       "pattern": "[誇大表現] \"完全\" を検出",
@@ -33,27 +33,18 @@
     }
   ],
   "axisFeedback": {
-    "parenting": "2件生成、承認率50%、NG率0%",
-    "camp": "46件生成、承認率28%、NG率15%",
+    "camp": "45件生成、承認率24%、NG率13%",
     "ai": "1件生成、承認率100%、NG率0%",
+    "parenting": "1件生成、承認率100%、NG率0%",
     "doctor": "2件生成、承認率0%、NG率50%"
   },
   "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
   "writerHints": [
     "高スコアパターン: product_compare, seasonal_start",
-    "NG率が高いタイプ: seasonal_hook, outdoor_tip, failure_story, doc_health_tip — 表現を見直す",
+    "NG率が高いタイプ: outdoor_tip, failure_story, doc_health_tip — 表現を見直す",
     "X経由PVが高い記事を article_promo で優先的に紹介する",
     "直近トップ投稿: [article_promo]「焚き火台3台買い替えた人間の結論\n\n1台目：軽さ重視→薪が落ちる\n2台目：頑丈系→重すぎて車から出すの億劫\n3台目：やっ」(♥4 🔖0) → 似た切り口を再活用",
-    "読者の反応/質問: @camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️ | @camp_gear_lab ギア男さん！本当ですね🥹夢広がります！まだまだここから頑張ります☺️よろしくお願いします✨ | @camp_gear_lab ありがとうございます！🥹",
-    "【重要】article_promoタイプに投稿を集中投下せよ [article_promo] — article_promoのいいね平均1.9に対し、outdoor_tipは2.7だが、インプレッション効率（いいね/インプレッション）はarticle_promoが0.050、outdoor_tipが0.067とほぼ同等。リプライ率はarticle_promoが87.5%と圧倒的に高い。",
-    "【重要】体験談ベースの失敗→解決ストーリー構成を増やせ [article_promo,outdoor_tip] — トップ投稿「焚き火台3台買い替えた人間の結論」がいいね4・リプライ1を獲得。experience_shareパターンでの成功事例。",
-    "【重要】「必ず」「完全」などの誇大表現を完全排除せよ — 誇大表現でのNG検出が7回（必ず5回、完全2回）。承認率低下の主要因。",
-    "【重要】GW・春キャンプなど季節フックを前面に出せ [outdoor_tip,article_promo] — 「GW前の装備点検」「春キャンプの寒暖差対策」がトップ5入り。seasonal_startパターンが機能している可能性。",
-    "製品比較・ランキング記事のプロモを強化せよ [article_promo] — multi-burner-rankingがX経由PVトップ3PV獲得。「タープ、形が違うだけと思ってた」比較投稿もトップ5入り。",
-    "campジャンル以外への展開は一時停止せよ — camp軸の承認率28%に対し、doctor軸は承認率0%・NG率50%。リソースをcamp軸に集中すべき。",
-    "読者の川沿いキャンプ・テントサイト体験に言及した投稿を作れ [outdoor_tip,article_promo] — リプライで「川沿いでよかった」「テントサイト」の言及あり。読者の実体験に共感する内容が有効。",
-    "article_repostタイプは投稿頻度を下げろ [article_repost] — 1件でいいね2・インプレッション48と全タイプ中最低パフォーマンス。効率が悪い。",
-    "1行目パターンの効果測定は継続せよ — 全パターンでエンゲージメントスコア0となっているが、データ不足。まだ判断できない。"
+    "読者の反応/質問: @camp_gear_lab まずは増やすこと大事ですよね(๑•̀ㅂ•́)و✧ | @camp_gear_lab ありがとうございます！！笑 | @camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️"
   ],
   "engagementByType": {
     "outdoor_tip": {
@@ -61,16 +52,16 @@
       "bookmarks": 0,
       "retweets": 0,
       "replies": 2,
-      "impressions": 119,
+      "impressions": 120,
       "count": 3
     },
     "article_promo": {
-      "likes": 15,
+      "likes": 18,
       "bookmarks": 0,
       "retweets": 0,
-      "replies": 7,
-      "impressions": 299,
-      "count": 8
+      "replies": 9,
+      "impressions": 337,
+      "count": 10
     },
     "article_repost": {
       "likes": 2,
@@ -115,15 +106,17 @@
       "replies": 0
     },
     {
-      "postType": "article_repost",
-      "textPreview": "今週めちゃくちゃ読まれてる焚き火台記事、改めて紹介させてください🔥\n\nスノピ・ユニフレーム・ピコグリルの3大定番を5年",
-      "likes": 2,
+      "postType": "article_promo",
+      "textPreview": "タープ沼にハマってから分かったヘキサとレクタの使い分け。風の強さとサイト形状で全然変わる。去年の台風みたいな時はウイング",
+      "likes": 3,
       "bookmarks": 0,
       "retweets": 0,
       "replies": 1
     }
   ],
   "replyThemes": [
+    "@camp_gear_lab まずは増やすこと大事ですよね(๑•̀ㅂ•́)و✧",
+    "@camp_gear_lab ありがとうございます！！笑",
     "@camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️",
     "@camp_gear_lab ギア男さん！本当ですね🥹夢広がります！まだまだここから頑張ります☺️よろしくお願いします✨",
     "@camp_gear_lab ありがとうございます！🥹",
@@ -131,9 +124,7 @@
     "@camp_gear_lab テントサイトは少ないですが川沿いでよかったです",
     "@camp_gear_lab Claude頭ひとつ抜けた感あります！",
     "@camp_gear_lab リプありがとうございます😊\n急に増えました😅ありがたや🙏🙏",
-    "@camp_gear_lab ボーナスありですね！\nクリニックですが、一部で訪問とかもやってるので！",
-    "@camp_gear_lab ギア男さん、そうですよね。\nこの情報に価値を感じていただける方に\n届いて欲しいな〜って思っています！",
-    "@camp_gear_lab ありがとうございます！\n正直経営者ならCoworkでも十分かなと思いつつです笑"
+    "@camp_gear_lab ボーナスありですね！\nクリニックですが、一部で訪問とかもやってるので！"
   ],
   "firstLineAnalysis": {
     "ranking": [
@@ -298,81 +289,5 @@
     "weakPatterns": [],
     "totalAnalyzed": 41
   },
-  "writerDirectives": [
-    {
-      "directive": "article_promoタイプに投稿を集中投下せよ",
-      "reason": "article_promoのいいね平均1.9に対し、outdoor_tipは2.7だが、インプレッション効率（いいね/インプレッション）はarticle_promoが0.050、outdoor_tipが0.067とほぼ同等。リプライ率はarticle_promoが87.5%と圧倒的に高い。",
-      "priority": "high",
-      "appliesTo": [
-        "article_promo"
-      ]
-    },
-    {
-      "directive": "体験談ベースの失敗→解決ストーリー構成を増やせ",
-      "reason": "トップ投稿「焚き火台3台買い替えた人間の結論」がいいね4・リプライ1を獲得。experience_shareパターンでの成功事例。",
-      "priority": "high",
-      "appliesTo": [
-        "article_promo",
-        "outdoor_tip"
-      ]
-    },
-    {
-      "directive": "「必ず」「完全」などの誇大表現を完全排除せよ",
-      "reason": "誇大表現でのNG検出が7回（必ず5回、完全2回）。承認率低下の主要因。",
-      "priority": "high",
-      "appliesTo": [
-        "all"
-      ]
-    },
-    {
-      "directive": "GW・春キャンプなど季節フックを前面に出せ",
-      "reason": "「GW前の装備点検」「春キャンプの寒暖差対策」がトップ5入り。seasonal_startパターンが機能している可能性。",
-      "priority": "high",
-      "appliesTo": [
-        "outdoor_tip",
-        "article_promo"
-      ]
-    },
-    {
-      "directive": "製品比較・ランキング記事のプロモを強化せよ",
-      "reason": "multi-burner-rankingがX経由PVトップ3PV獲得。「タープ、形が違うだけと思ってた」比較投稿もトップ5入り。",
-      "priority": "medium",
-      "appliesTo": [
-        "article_promo"
-      ]
-    },
-    {
-      "directive": "campジャンル以外への展開は一時停止せよ",
-      "reason": "camp軸の承認率28%に対し、doctor軸は承認率0%・NG率50%。リソースをcamp軸に集中すべき。",
-      "priority": "medium",
-      "appliesTo": [
-        "all"
-      ]
-    },
-    {
-      "directive": "読者の川沿いキャンプ・テントサイト体験に言及した投稿を作れ",
-      "reason": "リプライで「川沿いでよかった」「テントサイト」の言及あり。読者の実体験に共感する内容が有効。",
-      "priority": "medium",
-      "appliesTo": [
-        "outdoor_tip",
-        "article_promo"
-      ]
-    },
-    {
-      "directive": "article_repostタイプは投稿頻度を下げろ",
-      "reason": "1件でいいね2・インプレッション48と全タイプ中最低パフォーマンス。効率が悪い。",
-      "priority": "low",
-      "appliesTo": [
-        "article_repost"
-      ]
-    },
-    {
-      "directive": "1行目パターンの効果測定は継続せよ",
-      "reason": "全パターンでエンゲージメントスコア0となっているが、データ不足。まだ判断できない。",
-      "priority": "low",
-      "appliesTo": [
-        "all"
-      ]
-    }
-  ]
+  "writerDirectives": []
 }
