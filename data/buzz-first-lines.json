@@ -1,236 +1,482 @@
-{
-  "version": 1,
-  "lastUpdated": "2026-04-23T14:00:05.318Z",
-  "lines": [
-    {
-      "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "doctor_view"
-    },
-    {
-      "text": "ウォーキングマシン選びの決定版：静音45dB以下（図書館レベル）のYPO vs 5年保証・150kg耐荷重のCAO vs 2つ折り特許技術で隙間収納のウォーキングパッドG1。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "product_compare"
-    },
-    {
-      "text": "スマートトレーナー vs 3本ローラー論争に終止符。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "室内トレーニングの騒音問題：3本ローラーは強度上げるほど爆音、ウォーキングマシンは45dB以下なら図書館レベルで深夜OK。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "contrast"
-    },
-    {
-      "text": "栄養剤は目的で選ぶのが正解。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "Amazonのホエイプロテイン比較。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "product_compare"
-    },
-    {
-      "text": "リンゴ酢は「マザー入り」を選ぶべき理由。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "キャンプで朝起きたら体バキバキ問題、実は「地面から浮く」だけで解決する件。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "コット選びで見るべき3ポイント：①2WAY対応（ハイ・ロー切替）②フレーム素材（7075アルミ推奨）③静音性（ギシギシ音で台無し防止）。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "hack"
-    },
-    {
-      "text": "インフレーターマットの厚み選び：5cm=軽量重視、8cm=バランス型、10cm=車中泊特化。",
-      "source": "youtube_title",
-      "axis": "doctor",
-      "collectedAt": "2026-04-13",
-      "pattern": "hack"
-    },
-    {
-      "text": "コメリの真空断熱クーラーボックス、15L→9,800円、47L→19,800円。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "number_hook"
-    },
-    {
-      "text": "ダイソー鍛造ペグに新サイズ登場。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "product_compare"
-    },
-    {
-      "text": "キャンプあるある解決：保冷剤凍らせ忘れ・溶けて食材ビチャビチャ・2泊目で買い出し。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "hack"
-    },
-    {
-      "text": "「初心者だから安いもので」が一番ダメなパターン。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "「ポータブル冷蔵庫は冬いらない」は大間違い。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "SOTOのトレックマスター ST-331は液出し式でCB缶なのに冬に強い唯一無二のバーナー。",
-      "source": "youtube_title",
-      "axis": "camp",
-      "collectedAt": "2026-04-13",
-      "pattern": "product_compare"
-    },
-    {
-      "text": "個人開発ハッカソン115人参加→多数の相談「作れるようになったけどユーザー0人」「マネタイズ1円もできない」。",
-      "source": "youtube_title",
-      "axis": "ai",
-      "collectedAt": "2026-04-13",
-      "pattern": "experience_share"
-    },
-    {
-      "text": "個人開発で迷わない技術選択：Next.js一択、Vercelでデプロイ、ReactはAIが最も学習済み。",
-      "source": "youtube_title",
-      "axis": "ai",
-      "collectedAt": "2026-04-13",
-      "pattern": "hack"
-    },
-    {
-      "text": "Claude Codeのサブエージェント機能でコードレビュー・動作確認を自動化。",
-      "source": "youtube_title",
-      "axis": "ai",
-      "collectedAt": "2026-04-13",
-      "pattern": "ai_dev"
-    },
-    {
-      "text": "GoogleのGemma 4がローカルで実用レベルに。",
-      "source": "youtube_title",
-      "axis": "ai",
-      "collectedAt": "2026-04-13",
-      "pattern": "ai_dev"
-    },
-    {
-      "text": "春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶",
-      "source": "own_post",
-      "postType": "outdoor_tip",
-      "likes": 3,
-      "bookmarks": 0,
-      "replies": 0,
-      "collectedAt": "2026-04-16",
-      "pattern": "hack"
-    },
-    {
-      "text": "ガスランタンの温かい光、やっぱり憧れるよね✨",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 1,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-18",
-      "pattern": "experience_share"
-    },
-    {
-      "text": "焚き火台3台買い替えた人間の結論",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 4,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-19",
-      "pattern": "conclusion_first"
-    },
-    {
-      "text": "今週めちゃくちゃ読まれてる焚き火台記事、改めて紹介させてください🔥",
-      "source": "own_post",
-      "postType": "article_repost",
-      "likes": 2,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-19",
-      "pattern": "summary"
-    },
-    {
-      "text": "ソロキャンプ始めて変わったこと",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 2,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-20",
-      "pattern": null
-    },
-    {
-      "text": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 2,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-21",
-      "pattern": "failure_open"
-    },
-    {
-      "text": "GW前の装備点検、ガスカートリッジの残量チェック忘れがち。料理中にガス切れで冷えたカレーを食べる羽目に。予備を1本多めに",
-      "source": "own_post",
-      "postType": "outdoor_tip",
-      "likes": 4,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-22",
-      "pattern": "hack"
-    },
-    {
-      "text": "タープ、形が違うだけと思ってた。ヘキサは風に強い、レクタは日陰広い、ウイングは設営楽。用途で全然変わる。5ブランドの代表",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 3,
-      "bookmarks": 0,
-      "replies": 0,
-      "collectedAt": "2026-04-22",
-      "pattern": "product_compare"
-    },
-    {
-      "text": "タープ沼にハマってから分かったヘキサとレクタの使い分け。風の強さとサイト形状で全然変わる。去年の台風みたいな時はウイング",
-      "source": "own_post",
-      "postType": "article_promo",
-      "likes": 3,
-      "bookmarks": 0,
-      "replies": 1,
-      "collectedAt": "2026-04-23",
-      "pattern": null
-    }
-  ]
-}
+[
+  {
+    "text": "精神科医が警告「死にたい時にやってはいけない6つ」①結論を急ぐ②嫌な人と我慢③一人で耐える④酒に逃げる⑤SNSの幸せ投稿を見る⑥生きる目的を探す。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "doctor_view"
+  },
+  {
+    "text": "ウォーキングマシン選びの決定版：静音45dB以下（図書館レベル）のYPO vs 5年保証・150kg耐荷重のCAO vs 2つ折り特許技術で隙間収納のウォーキングパッドG1。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "product_compare"
+  },
+  {
+    "text": "スマートトレーナー vs 3本ローラー論争に終止符。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "室内トレーニングの騒音問題：3本ローラーは強度上げるほど爆音、ウォーキングマシンは45dB以下なら図書館レベルで深夜OK。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "contrast"
+  },
+  {
+    "text": "栄養剤は目的で選ぶのが正解。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "Amazonのホエイプロテイン比較。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "product_compare"
+  },
+  {
+    "text": "リンゴ酢は「マザー入り」を選ぶべき理由。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "キャンプで朝起きたら体バキバキ問題、実は「地面から浮く」だけで解決する件。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "コット選びで見るべき3ポイント：①2WAY対応（ハイ・ロー切替）②フレーム素材（7075アルミ推奨）③静音性（ギシギシ音で台無し防止）。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "hack"
+  },
+  {
+    "text": "インフレーターマットの厚み選び：5cm=軽量重視、8cm=バランス型、10cm=車中泊特化。",
+    "source": "youtube_title",
+    "axis": "doctor",
+    "collectedAt": "2026-04-13",
+    "pattern": "hack"
+  },
+  {
+    "text": "コメリの真空断熱クーラーボックス、15L→9,800円、47L→19,800円。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "number_hook"
+  },
+  {
+    "text": "ダイソー鍛造ペグに新サイズ登場。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "product_compare"
+  },
+  {
+    "text": "キャンプあるある解決：保冷剤凍らせ忘れ・溶けて食材ビチャビチャ・2泊目で買い出し。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "hack"
+  },
+  {
+    "text": "「初心者だから安いもので」が一番ダメなパターン。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "「ポータブル冷蔵庫は冬いらない」は大間違い。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "SOTOのトレックマスター ST-331は液出し式でCB缶なのに冬に強い唯一無二のバーナー。",
+    "source": "youtube_title",
+    "axis": "camp",
+    "collectedAt": "2026-04-13",
+    "pattern": "product_compare"
+  },
+  {
+    "text": "個人開発ハッカソン115人参加→多数の相談「作れるようになったけどユーザー0人」「マネタイズ1円もできない」。",
+    "source": "youtube_title",
+    "axis": "ai",
+    "collectedAt": "2026-04-13",
+    "pattern": "experience_share"
+  },
+  {
+    "text": "個人開発で迷わない技術選択：Next.js一択、Vercelでデプロイ、ReactはAIが最も学習済み。",
+    "source": "youtube_title",
+    "axis": "ai",
+    "collectedAt": "2026-04-13",
+    "pattern": "hack"
+  },
+  {
+    "text": "Claude Codeのサブエージェント機能でコードレビュー・動作確認を自動化。",
+    "source": "youtube_title",
+    "axis": "ai",
+    "collectedAt": "2026-04-13",
+    "pattern": "ai_dev"
+  },
+  {
+    "text": "GoogleのGemma 4がローカルで実用レベルに。",
+    "source": "youtube_title",
+    "axis": "ai",
+    "collectedAt": "2026-04-13",
+    "pattern": "ai_dev"
+  },
+  {
+    "text": "春キャンプの寒暖差対策、忘れがちなのが足元だよ🦶",
+    "source": "own_post",
+    "postType": "outdoor_tip",
+    "likes": 3,
+    "bookmarks": 0,
+    "replies": 0,
+    "collectedAt": "2026-04-16",
+    "pattern": "hack"
+  },
+  {
+    "text": "ガスランタンの温かい光、やっぱり憧れるよね✨",
+    "source": "own_post",
+    "postType": "article_promo",
+    "likes": 1,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-18",
+    "pattern": "experience_share"
+  },
+  {
+    "text": "焚き火台3台買い替えた人間の結論",
+    "source": "own_post",
+    "postType": "article_promo",
+    "likes": 4,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-19",
+    "pattern": "conclusion_first"
+  },
+  {
+    "text": "今週めちゃくちゃ読まれてる焚き火台記事、改めて紹介させてください🔥",
+    "source": "own_post",
+    "postType": "article_repost",
+    "likes": 2,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-19",
+    "pattern": "summary"
+  },
+  {
+    "text": "ソロキャンプ始めて変わったこと",
+    "source": "own_post",
+    "postType": "article_promo",
+    "likes": 2,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-20",
+    "pattern": null
+  },
+  {
+    "text": "家族キャンプで4人用テント買ったら荷物入らなくて地獄だった去年の反省から、スペック見直して記事にした。2万円台から13万",
+    "source": "own_post",
+    "postType": "article_promo",
+    "likes": 2,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-21",
+    "pattern": "failure_open"
+  },
+  {
+    "text": "GW前の装備点検、ガスカートリッジの残量チェック忘れがち。料理中にガス切れで冷えたカレーを食べる羽目に。予備を1本多めに",
+    "source": "own_post",
+    "postType": "outdoor_tip",
+    "likes": 4,
+    "bookmarks": 0,
+    "replies": 1,
+    "collectedAt": "2026-04-22",
+    "pattern": "hack"
+  },
+  {
+    "text": "タープ、形が違うだけと思ってた。ヘキサは風に強い、レクタは日陰広い、ウイングは設営楽。用途で全然変わる。5ブランドの代表",
+    "source": "own_post",
+    "postType": "article_promo",
+    "likes": 3,
+    "bookmarks": 0,
+    "replies": 0,
+    "collectedAt": "2026-04-22",
+    "pattern": "product_compare"
+  },
+  {
+    "text": "医者になってびっくりしたこと",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "conclusion_first",
+    "likes": 6149,
+    "retweets": 661,
+    "bookmarks": 293,
+    "replies": 47,
+    "originalAuthor": "@NakayamaYujiro",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "イーロンすげぇぇ🤯",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "reveal",
+    "likes": 2126,
+    "retweets": 312,
+    "bookmarks": 587,
+    "replies": 23,
+    "originalAuthor": "@MLBear2",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "医師免許があれば",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "contrast",
+    "likes": 1233,
+    "retweets": 58,
+    "bookmarks": 188,
+    "replies": 52,
+    "originalAuthor": "@ao_xin514761",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "Claude Designおもしれ　おもしれーけどこれはAIコード生成で非エンジニアがワーッとなってるのをエンジニアがウーンと思っているやつのデザイン版なのかもしれないな",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "hot_take",
+    "likes": 614,
+    "retweets": 55,
+    "bookmarks": 132,
+    "replies": 6,
+    "originalAuthor": "@necocen",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "Claude codeエアプ",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "contrast",
+    "likes": 567,
+    "retweets": 20,
+    "bookmarks": 79,
+    "replies": 19,
+    "originalAuthor": "@shiro_life0",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "二度と忘れるか。",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "story",
+    "likes": 345,
+    "retweets": 33,
+    "bookmarks": 70,
+    "replies": 26,
+    "originalAuthor": "@gashogenryou",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "医クラ界隈が訴える弁護士像ってなんで患者側弁護士なんだろう。",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "question",
+    "likes": 173,
+    "retweets": 39,
+    "bookmarks": 16,
+    "replies": 13,
+    "originalAuthor": "@AC71060499",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "AIと一緒に個人開発を半年くらいしてる大学生ですᐡっ ̫ &lt;⸝⸝ᐡ❤︎  ",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "self_disclosure",
+    "likes": 221,
+    "retweets": 2,
+    "bookmarks": 7,
+    "replies": 16,
+    "originalAuthor": "@ichigo880044",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "焚き火越しの愛車クロスビー",
+    "source": "viral_scout",
+    "axis": "camp",
+    "postType": null,
+    "pattern": "self_disclosure",
+    "likes": 218,
+    "retweets": 2,
+    "bookmarks": 1,
+    "replies": 1,
+    "originalAuthor": "@HumanLotion",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "AIインフルエンサー、作らないと損する時代へ。",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "conclusion_first",
+    "likes": 202,
+    "retweets": 5,
+    "bookmarks": 195,
+    "replies": 2,
+    "originalAuthor": "@milbon_",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "安さで選ぶな。法人利用なら責任と体制を見ろ。",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "conclusion_first",
+    "likes": 57,
+    "retweets": 45,
+    "bookmarks": 0,
+    "replies": 1,
+    "originalAuthor": "@t_ceo_serial",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "はい、嘘です。",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "contrast",
+    "likes": 108,
+    "retweets": 17,
+    "bookmarks": 9,
+    "replies": 8,
+    "originalAuthor": "@21st_Psychiatry",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "💡 SpaceXAI、Cursor買収オプションを取得 | H100換算100万基級 Colossus で世界最高のコーディングAI構築へ ",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "reveal",
+    "likes": 115,
+    "retweets": 17,
+    "bookmarks": 19,
+    "replies": 4,
+    "originalAuthor": "@FABYMETAL4",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "@rottasub2 ごっこ＝お医者さんごっこに代表されるような「なってみたい、やってみたい」という気持ちから行う戯れ。",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "comparison",
+    "likes": 108,
+    "retweets": 18,
+    "bookmarks": 3,
+    "replies": 2,
+    "originalAuthor": "@happa_taro",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "今回ご紹介するのは、那覇空港から車で1時間35分",
+    "source": "viral_scout",
+    "axis": "parenting",
+    "postType": null,
+    "pattern": "other",
+    "likes": 133,
+    "retweets": 8,
+    "bookmarks": 3,
+    "replies": 1,
+    "originalAuthor": "@YmByGsBlz0NUirw",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "外科医としての最後の仕事と腹を括り、心も擦り減らして尽力した私大病院での勤務。本当に何もなかった。データベースも一から作り上げた。",
+    "source": "viral_scout",
+    "axis": "doctor",
+    "postType": null,
+    "pattern": "self_disclosure",
+    "likes": 136,
+    "retweets": 4,
+    "bookmarks": 5,
+    "replies": 4,
+    "originalAuthor": "@Komoo7",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "今日はバイクでキャンプ⛺️",
+    "source": "viral_scout",
+    "axis": "camp",
+    "postType": null,
+    "pattern": "other",
+    "likes": 138,
+    "retweets": 4,
+    "bookmarks": 0,
+    "replies": 0,
+    "originalAuthor": "@BoZhuang23279",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "📝Claude Codeの生みの親、Anthropic社のBoris Cherny氏のプレゼン動画が、10ヶ月たった今も",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "other",
+    "likes": 104,
+    "retweets": 12,
+    "bookmarks": 214,
+    "replies": 1,
+    "originalAuthor": "@tetumemo",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "YouTubeあがりましたー！",
+    "source": "viral_scout",
+    "axis": "camp",
+    "postType": null,
+    "pattern": "other",
+    "likes": 102,
+    "retweets": 14,
+    "bookmarks": 1,
+    "replies": 0,
+    "originalAuthor": "@west_kohmoto",
+    "collectedAt": "2026-04-24"
+  },
+  {
+    "text": "Claude Codeの情報が欲しい！→おすすめがClaude Codeで溢れて胃もたれ→🤮→本に逃避したい！→おすすめが書籍情報で溢れて幸→☺️→ Claude Codeそろそろ本気出す！→ Claude Codeの情報が…エンドレス…",
+    "source": "viral_scout",
+    "axis": "ai",
+    "postType": null,
+    "pattern": "other",
+    "likes": 127,
+    "retweets": 0,
+    "bookmarks": 1,
+    "replies": 6,
+    "originalAuthor": "@takeiyu_888",
+    "collectedAt": "2026-04-24"
+  }
+]
