@@ -197,16 +197,23 @@ export default function XPostsPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ autoApprove: false, type }),
           });
+          // エラー・成功とも可能なら JSON 本体を読んでエラーメッセージを取得
+          let body: { ok?: boolean; generated?: number; qualityRetries?: number; error?: string } | null = null;
+          try {
+            body = await res.json();
+          } catch {
+            /* JSON でないケース (HTML エラーページ等) */
+          }
           if (!res.ok) {
-            errors.push(`${type}: HTTP ${res.status}`);
+            const detail = body?.error ? ` - ${body.error.slice(0, 200)}` : "";
+            errors.push(`${type}: HTTP ${res.status}${detail}`);
             continue;
           }
-          const data = await res.json();
-          if (data.ok !== false) {
-            totalGenerated += data.generated || 0;
-            totalRetries += data.qualityRetries || 0;
+          if (body?.ok !== false) {
+            totalGenerated += body?.generated || 0;
+            totalRetries += body?.qualityRetries || 0;
           } else {
-            errors.push(`${type}: ${data.error || "不明"}`);
+            errors.push(`${type}: ${body?.error?.slice(0, 200) || "不明"}`);
           }
         } catch (e) {
           errors.push(`${type}: ${e instanceof Error ? e.message : String(e)}`);
