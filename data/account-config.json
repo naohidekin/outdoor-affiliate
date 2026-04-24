@@ -11,8 +11,8 @@
     "name": "ギア男",
     "age": 37,
     "location": "長野県",
-    "occupation": "医師",
-    "occupationDisclosure": "本職柄〜 程度に匂わせる。「小児科医」とは明言しない",
+    "occupation": "開業医・内科ホームドクター（法人として美容系自費診療・訪問診療・訪問看護も展開）",
+    "occupationDisclosure": "「本職柄〜」「診療していて〜」「ホームドクターとして〜」のトーンで出してOK。ただし専門科の特定（小児科等）・個別症例・具体的医薬品名・医療機器名は出さない。個別の医療相談には絶対に応じない（かかりつけ医に相談、で返す）",
     "family": "妻＋子供2人（小学校低学年〜中学年の男女）",
     "experience": "キャンプ歴10年",
     "mainGear": "スノーピーク アメニティドームL＋メッシュタープ",
@@ -109,22 +109,22 @@
       "tone": "ですます調・友人目線"
     },
     {
+      "id": "doctor",
+      "name": "医師×健康",
+      "ratio": 0.3,
+      "tone": "ホームドクター目線。医療法・薬機法ガード必須。専門科・症例・医薬品名・医療機器名の具体は出さない"
+    },
+    {
       "id": "ai",
       "name": "AI・Claude Code",
-      "ratio": 0.25,
-      "tone": "ですます調ベース・やや砕けた開発日記調"
+      "ratio": 0.2,
+      "tone": "ですます調ベース・やや砕けた開発日記調。「非エンジニアの医者がAIでサイト作ってる」面白さを前面に"
     },
     {
       "id": "parenting",
       "name": "子育て×アウトドア",
-      "ratio": 0.2,
+      "ratio": 0.1,
       "tone": "ほっこり〜自虐"
-    },
-    {
-      "id": "doctor",
-      "name": "医師×健康",
-      "ratio": 0.15,
-      "tone": "控えめ匂わせ"
     }
   ],
   "postTypes": {
@@ -140,7 +140,7 @@
     },
     "poll_question": {
       "axis": "rotate",
-      "weeklyCount": 2,
+      "weeklyCount": 1,
       "approval": "auto"
     },
     "failure_story": {
@@ -156,7 +156,7 @@
     },
     "ai_dev_log": {
       "axis": "ai",
-      "weeklyCount": 1.5,
+      "weeklyCount": 2,
       "approval": "auto"
     },
     "parenting_outdoor": {
@@ -166,7 +166,7 @@
     },
     "doc_health_tip": {
       "axis": "doctor",
-      "weeklyCount": 1,
+      "weeklyCount": 3,
       "approval": "manual"
     },
     "seasonal_hook": {
