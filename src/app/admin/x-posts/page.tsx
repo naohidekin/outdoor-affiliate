@@ -110,6 +110,7 @@ export default function XPostsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState<string>("");
   const [axisFilter, setAxisFilter] = useState<string>("all");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -160,46 +161,74 @@ export default function XPostsPage() {
   }, []);
 
   async function handleGenerate() {
+    // Vercel Hobby の 300秒タイムアウトを避けるため、タイプごとに分けて
+    // 逐次API呼び出しする。各呼び出しは30-60秒で収まる。
+    const TYPES_TO_GENERATE = [
+      "doc_health_tip",
+      "ai_dev_log",
+      "outdoor_tip",
+      "failure_story",
+      "parenting_outdoor",
+      "seasonal_hook",
+      "poll_question",
+      "news_comment",
+      "repost_rewrite",
+    ];
+
     setGenerating(true);
+    setGenProgress(`0/${TYPES_TO_GENERATE.length} タイプ 生成開始...`);
+
+    let totalGenerated = 0;
+    let totalRetries = 0;
+    const errors: string[] = [];
+
     try {
-      const res = await fetch("/api/x-posts/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ autoApprove: false }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      if (!ct.includes("application/json")) {
-        const text = await res.text();
-        alert(`生成失敗 [HTTP ${res.status}]: サーバーエラー\n${text.slice(0, 200)}`);
-        return;
-      }
-      const data = await res.json();
-      if (res.ok && data.ok !== false) {
-        // 新パイプラインは CLI で Sheets に直接書くので、ページを再読み込みして取得
-        const retryInfo =
-          typeof data.qualityRetries === "number" && data.qualityRetries > 0
-            ? `\n（品質ゲートで${data.qualityRetries}回の再生成を実行）`
-            : "";
-        alert(`${data.generated}件生成しました${retryInfo}`);
-        // 下書き一覧を再取得（新パイプラインは Sheets に直接書くので、UIステートを反映し直す）
+      for (let i = 0; i < TYPES_TO_GENERATE.length; i++) {
+        const type = TYPES_TO_GENERATE[i];
+        setGenProgress(`${i + 1}/${TYPES_TO_GENERATE.length} [${type}] を生成中...`);
         try {
-          const r = await fetch("/api/x-posts");
-          if (r.ok) {
-            const d = await r.json();
-            if (Array.isArray(d)) setPosts(d);
-            else if (Array.isArray(d.posts)) setPosts(d.posts);
+          const res = await fetch("/api/x-posts/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ autoApprove: false, type }),
+          });
+          if (!res.ok) {
+            errors.push(`${type}: HTTP ${res.status}`);
+            continue;
           }
-        } catch {
-          /* 無視（アラート閉じた後ユーザーが手動リロードしても反映される） */
+          const data = await res.json();
+          if (data.ok !== false) {
+            totalGenerated += data.generated || 0;
+            totalRetries += data.qualityRetries || 0;
+          } else {
+            errors.push(`${type}: ${data.error || "不明"}`);
+          }
+        } catch (e) {
+          errors.push(`${type}: ${e instanceof Error ? e.message : String(e)}`);
         }
-      } else {
-        const detail = data.output ? `\n\n${data.output.slice(-500)}` : "";
-        alert(`生成失敗 [HTTP ${res.status}]: ${data.error || res.statusText}${detail}`);
       }
-    } catch (err) {
-      alert(`生成エラー: ${err instanceof Error ? err.message : String(err)}`);
+
+      // 結果表示
+      const retryInfo = totalRetries > 0 ? `（品質ゲートで${totalRetries}回の再生成）` : "";
+      const errSummary = errors.length > 0
+        ? `\n\n⚠️ ${errors.length}タイプで失敗:\n${errors.join("\n")}`
+        : "";
+      alert(`${totalGenerated}件生成しました${retryInfo}${errSummary}`);
+
+      // 下書き一覧を再取得
+      try {
+        const r = await fetch("/api/x-posts");
+        if (r.ok) {
+          const d = await r.json();
+          if (Array.isArray(d)) setPosts(d);
+          else if (Array.isArray(d.posts)) setPosts(d.posts);
+        }
+      } catch {
+        /* 無視：ユーザーが手動リロードで反映できる */
+      }
     } finally {
       setGenerating(false);
+      setGenProgress("");
     }
   }
 
@@ -420,6 +449,16 @@ export default function XPostsPage() {
           {generating ? "生成中..." : "今すぐ生成"}
         </button>
       </div>
+
+      {/* 生成中の進捗表示 */}
+      {generating && genProgress && (
+        <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-900">
+          🔄 {genProgress}
+          <span className="text-xs text-blue-600 ml-2">
+            （全タイプ完了まで5〜7分ほどかかります。タブを閉じずにお待ちください）
+          </span>
+        </div>
+      )}
 
       {/* KILL SWITCH 警告 */}
       {agentStatus?.killSwitch.enabled && (
