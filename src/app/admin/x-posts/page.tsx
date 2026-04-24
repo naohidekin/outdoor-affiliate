@@ -160,32 +160,37 @@ export default function XPostsPage() {
       .catch(() => {});
   }, []);
 
-  async function handleGenerate() {
-    // Vercel Hobby の 300秒タイムアウトを避けるため、タイプごとに分けて
-    // 逐次API呼び出しする。各呼び出しは30-60秒で収まる。
-    const TYPES_TO_GENERATE = [
-      "doc_health_tip",
-      "ai_dev_log",
-      "outdoor_tip",
-      "failure_story",
-      "parenting_outdoor",
-      "seasonal_hook",
-      "poll_question",
-      "news_comment",
-      "repost_rewrite",
-    ];
+  // 軸別の生成グループ定義。各ボタンはこのうちの1セットを順次APIに投げる。
+  const GENERATE_GROUPS: Record<string, { label: string; types: string[] }> = {
+    doctorAi: {
+      label: "🩺 医師+AI",
+      types: ["doc_health_tip", "ai_dev_log"],
+    },
+    camp: {
+      label: "🏕️ キャンプ系",
+      types: ["outdoor_tip", "failure_story", "news_comment"],
+    },
+    others: {
+      label: "📅 その他",
+      types: ["parenting_outdoor", "seasonal_hook", "poll_question", "repost_rewrite"],
+    },
+  };
+
+  async function handleGenerate(groupKey: keyof typeof GENERATE_GROUPS) {
+    const group = GENERATE_GROUPS[groupKey];
+    const types = group.types;
 
     setGenerating(true);
-    setGenProgress(`0/${TYPES_TO_GENERATE.length} タイプ 生成開始...`);
+    setGenProgress(`${group.label} 生成開始...`);
 
     let totalGenerated = 0;
     let totalRetries = 0;
     const errors: string[] = [];
 
     try {
-      for (let i = 0; i < TYPES_TO_GENERATE.length; i++) {
-        const type = TYPES_TO_GENERATE[i];
-        setGenProgress(`${i + 1}/${TYPES_TO_GENERATE.length} [${type}] を生成中...`);
+      for (let i = 0; i < types.length; i++) {
+        const type = types[i];
+        setGenProgress(`${group.label} ${i + 1}/${types.length} [${type}] 生成中...`);
         try {
           const res = await fetch("/api/x-posts/generate", {
             method: "POST",
@@ -208,14 +213,12 @@ export default function XPostsPage() {
         }
       }
 
-      // 結果表示
       const retryInfo = totalRetries > 0 ? `（品質ゲートで${totalRetries}回の再生成）` : "";
       const errSummary = errors.length > 0
         ? `\n\n⚠️ ${errors.length}タイプで失敗:\n${errors.join("\n")}`
         : "";
-      alert(`${totalGenerated}件生成しました${retryInfo}${errSummary}`);
+      alert(`${group.label}: ${totalGenerated}件生成しました${retryInfo}${errSummary}`);
 
-      // 下書き一覧を再取得
       try {
         const r = await fetch("/api/x-posts");
         if (r.ok) {
@@ -441,13 +444,32 @@ export default function XPostsPage() {
             ギア男 @camp_gear_lab のツイート管理
           </p>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
-        >
-          {generating ? "生成中..." : "今すぐ生成"}
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => handleGenerate("doctorAi")}
+            disabled={generating}
+            title="doc_health_tip (3件) + ai_dev_log (2件) = 約2分"
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            🩺 医師+AI 生成
+          </button>
+          <button
+            onClick={() => handleGenerate("camp")}
+            disabled={generating}
+            title="outdoor_tip (2件) + failure_story (1件) + news_comment (1件) = 約1-2分"
+            className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+          >
+            🏕️ キャンプ系 生成
+          </button>
+          <button
+            onClick={() => handleGenerate("others")}
+            disabled={generating}
+            title="parenting + 季節 + poll + repost = 約1-2分"
+            className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50"
+          >
+            📅 その他 生成
+          </button>
+        </div>
       </div>
 
       {/* 生成中の進捗表示 */}
@@ -455,7 +477,7 @@ export default function XPostsPage() {
         <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-900">
           🔄 {genProgress}
           <span className="text-xs text-blue-600 ml-2">
-            （全タイプ完了まで5〜7分ほどかかります。タブを閉じずにお待ちください）
+            （1〜3分で完了します。タブを閉じずにお待ちください）
           </span>
         </div>
       )}
