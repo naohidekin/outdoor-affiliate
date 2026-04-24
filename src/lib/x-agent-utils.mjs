@@ -126,6 +126,21 @@ export function checkArticleKillSwitch() {
   return { killed: false, reason: "" };
 }
 
+/**
+ * リサーチ系（viral-scout / youtube-researcher / x-search）用 Kill Switch チェック。
+ * 投稿停止(enabled)とは独立。researchEnabled が明示的に true の場合のみ停止する。
+ * → デフォルトでは「投稿を止めても研究は継続」の設計。
+ * @returns {{ killed: boolean, reason: string }}
+ */
+export function checkResearchKillSwitch() {
+  const data = readJson("kill-switch.json");
+  if (!data) return { killed: false, reason: "" };
+  if (data.researchEnabled) {
+    return { killed: true, reason: data.reason || "リサーチ Kill Switch 有効" };
+  }
+  return { killed: false, reason: "" };
+}
+
 // ─── 投稿��歴管理 ────────────────���───────────────────
 
 /**

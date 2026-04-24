@@ -26,7 +26,7 @@ import {
   loadEnv,
   readJson,
   writeJson,
-  checkKillSwitch,
+  checkResearchKillSwitch,
   ipv4Fetch,
 } from "../src/lib/x-agent-utils.mjs";
 import { checkXPostContent } from "../src/lib/x-content-checks.mjs";
@@ -94,7 +94,8 @@ const AXIS_QUERIES = {
 };
 
 // 各軸の目標件数（合計50件）
-const AXIS_TARGETS = { ai: 20, camp: 13, parenting: 10, doctor: 7 };
+// 2026-04-24 軸配分ピボット: camp40/doctor30/AI20/parenting10 (total 50)
+const AXIS_TARGETS = { camp: 20, doctor: 15, ai: 10, parenting: 5 };
 
 // === エンゲージメントスコア ===
 
@@ -610,10 +611,10 @@ function printReport(posts, aggregate) {
 async function main() {
   const opts = parseArgs();
 
-  // Kill Switch チェック
-  const ks = checkKillSwitch();
+  // Research Kill Switch チェック（投稿停止とは独立）
+  const ks = checkResearchKillSwitch();
   if (ks.killed) {
-    console.error(`[viral-scout] KILL SWITCH 有効: ${ks.reason}`);
+    console.error(`[viral-scout] RESEARCH KILL SWITCH 有効: ${ks.reason}`);
     process.exit(1);
   }
 

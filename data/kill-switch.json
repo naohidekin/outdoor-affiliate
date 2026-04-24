@@ -1,7 +1,8 @@
 {
   "enabled": true,
   "articleEnabled": false,
-  "reason": "手動投稿に切替（X投稿の品質改善のため自動投稿を一時停止） - 2026-04-24",
+  "researchEnabled": false,
+  "reason": "手動投稿に切替（X投稿の品質改善のため自動投稿を一時停止）。研究（viral-scout等）は継続 - 2026-04-24",
   "enabledAt": "2026-04-24T11:15:00+09:00",
   "enabledBy": "manual",
   "consecutiveErrors": []
