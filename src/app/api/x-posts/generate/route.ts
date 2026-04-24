@@ -1,198 +1,84 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { execFile } from "child_process";
+import path from "path";
 import { isAuthenticated } from "@/lib/auth";
-import { getPublishedArticles, getCategories } from "@/lib/db";
-import { getSheetsXPosts, saveSheetsXPosts } from "@/lib/sheets-xposts";
-import { XPost, XPostType } from "@/lib/types";
 
-const SITE_URL = "https://camp-gear-lab.com";
-const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY;
-
-// タイプ別 Unsplash デフォルト検索クエリ
-const UNSPLASH_QUERIES: Partial<Record<XPostType, string>> = {
-  outdoor_tip: "camping outdoor nature tips",
-  seasonal_hook: "outdoor seasonal camping nature",
-  failure_story: "camping adventure outdoor fun",
-  parenting_outdoor: "family camping children outdoor",
-  ai_dev_log: "laptop coding outdoor nature",
-  doc_health_tip: "outdoor health nature wellness",
-  poll_question: "camping gear outdoor choice",
-};
-
-async function fetchUnsplashImage(query: string): Promise<string | null> {
-  if (!UNSPLASH_KEY) return null;
-  try {
-    const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
-      { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }
-    );
-    const data = await res.json();
-    const photos = data.results || [];
-    if (!photos.length) return null;
-    const photo = photos[Math.floor(Math.random() * photos.length)];
-    return photo.urls.regular + "&w=1200&q=80";
-  } catch {
-    return null;
-  }
-}
-// 共通プロンプトlib（Lake & Sky トーン明文化）
-import { buildLegacyBatchPrompt } from "@/lib/x-post-prompts.mjs";
-import { applyChecksAndLabels } from "@/lib/x-content-checks.mjs";
-
-export const maxDuration = 120; // Vercel Pro: 最大300s
-
-function generateId() {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).slice(2, 6);
-  return `xp-${date}-${rand}`;
-}
-
-// 平日3スロット(朝07:30/昼12:15/夜20:00)、休日1スロット(昼12:15)
-function getScheduledSlots(
-  count: number
-): Array<{ date: string; time: string }> {
-  const SLOTS_WEEKDAY = ["07:30", "12:15", "20:00"];
-  const SLOTS_WEEKEND = ["12:15"];
-  const out: Array<{ date: string; time: string }> = [];
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  while (out.length < count) {
-    const day = d.getDay();
-    const isWeekend = day === 0 || day === 6;
-    const slots = isWeekend ? SLOTS_WEEKEND : SLOTS_WEEKDAY;
-    const dateStr = d.toISOString().slice(0, 10);
-    for (const t of slots) {
-      if (out.length >= count) break;
-      out.push({ date: dateStr, time: t });
-    }
-    d.setDate(d.getDate() + 1);
-  }
-  return out;
-}
+// 新パイプライン（scripts/generate-x-posts.js）を子プロセスで実行する。
+// 以前は buildLegacyBatchPrompt ベースの旧バッチを呼んでいたが、
+// doctor/AI軸・viral-scout分析・品質ゲート(7.5/カテゴリ別最低点/NGリトライ)を
+// 通すため CLI と同じロジックに統一した。
+export const maxDuration = 600;
 
 export async function POST(request: NextRequest) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  try {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEYが設定されていません" },
-      { status: 500 }
-    );
-  }
-
   const body = await request.json().catch(() => ({}));
   const autoApprove = body.autoApprove === true;
+  const type: string | undefined = body.type;
+  const count: number | undefined = body.count;
+  const axis: string | undefined = body.axis;
 
-  const client = new Anthropic({ apiKey });
-  const articles = await getPublishedArticles();
-  const categories = await getCategories();
-  const existingPosts = await getSheetsXPosts();
+  const cwd = path.resolve(process.cwd());
+  const script = path.join(cwd, "scripts", "generate-x-posts.js");
 
-  if (articles.length === 0) {
-    return NextResponse.json(
-      { error: "公開済み記事がありません" },
-      { status: 400 }
-    );
-  }
+  const args = ["--dns-result-order=ipv4first", script];
+  if (autoApprove) args.push("--auto-approve");
+  if (type) args.push(`--type=${type}`);
+  if (typeof count === "number") args.push(`--count=${count}`);
+  if (axis) args.push(`--axis=${axis}`);
 
-  const recentSlugs = new Set(
-    existingPosts
-      .filter((p) => p.type === "article_promo" && p.status !== "draft")
-      .slice(0, articles.length - 1)
-      .map((p) => p.articleSlug)
-  );
+  return new Promise<NextResponse>((resolve) => {
+    execFile(
+      "node",
+      args,
+      {
+        cwd,
+        env: { ...process.env },
+        timeout: 590_000,
+        maxBuffer: 20 * 1024 * 1024,
+      },
+      (error, stdout, stderr) => {
+        const output = (stdout + stderr).trim();
+        // タイムアウトや致命的失敗
+        if (error && error.code !== 0 && !stdout) {
+          console.error("[generate] execFile error:", error.message);
+          resolve(
+            NextResponse.json(
+              { ok: false, error: error.message, output: output.slice(-3000) },
+              { status: 500 }
+            )
+          );
+          return;
+        }
 
-  const candidates = articles.filter((a) => !recentSlugs.has(a.slug));
-  const selectCount = Math.min(6, articles.length);
-  const selected =
-    candidates.length >= selectCount
-      ? candidates.sort(() => Math.random() - 0.5).slice(0, selectCount)
-      : articles.sort(() => Math.random() - 0.5).slice(0, selectCount);
+        // 生成件数パース: "Sheets に N件を保存しました"（最終行近辺）
+        const savedMatch = output.match(/Sheets に\s*(\d+)\s*件を保存/);
+        const generated = savedMatch ? parseInt(savedMatch[1], 10) : 0;
 
-  const month = new Date().getMonth() + 1;
-  const prompt = buildLegacyBatchPrompt({
-    articles: selected,
-    categories,
-    month,
-  });
+        // 品質ゲートで捨てられた件数: 「品質不足」「NGチェック失敗」「類似度」
+        // のログ出現回数をカウント（同じ投稿が複数回弾かれても累計でOK）
+        const qualityRetries =
+          (output.match(/品質不足/g)?.length || 0) +
+          (output.match(/NGチェック失敗/g)?.length || 0) +
+          (output.match(/類似度.*→ 再生成/g)?.length || 0);
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4000,
-    messages: [{ role: "user", content: prompt }],
-  });
+        // blocked: validationErrors 付き（checkXPostContent で弾かれた状態）の保存件数
+        const blockedMatch = output.match(/\[([^\]]+)\]\s*\d+件.*validationErrors/g);
+        const blocked = blockedMatch?.length || 0;
 
-  const content =
-    response.content[0].type === "text" ? response.content[0].text : "";
-  const jsonMatch = content.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    return NextResponse.json(
-      { error: "生成結果の解析に失敗しました" },
-      { status: 500 }
-    );
-  }
-
-  const generated = JSON.parse(jsonMatch[0]);
-  const slots = getScheduledSlots(generated.length);
-
-  // NGワード/誇大表現/PRラベル チェック適用
-  const checked = applyChecksAndLabels(generated) as Array<{
-    type: XPostType;
-    text: string;
-    articleSlug: string | null;
-    url: string | null;
-    prLabel: boolean;
-    validationErrors?: string;
-    _checkOk: boolean;
-  }>;
-
-  // imageUrl を並行取得
-  const imageUrls = await Promise.all(
-    checked.map(async (g) => {
-      if (g.type === "article_promo" && g.articleSlug) {
-        // 記事OG画像（Next.js が自動生成）
-        return `${SITE_URL}/articles/${g.articleSlug}/opengraph-image`;
+        resolve(
+          NextResponse.json({
+            ok: true,
+            generated,
+            blocked,
+            qualityRetries,
+            // 最終 3000 文字（末尾）だけ返す（進捗/エラー確認用）
+            output: output.slice(-3000),
+          })
+        );
       }
-      const query = UNSPLASH_QUERIES[g.type as XPostType];
-      if (query) return await fetchUnsplashImage(query);
-      return null;
-    })
-  );
-
-  const newPosts: XPost[] = checked.map((g, i) => ({
-    id: generateId(),
-    type: g.type,
-    text: g.text,
-    articleSlug: g.articleSlug,
-    url: g.url,
-    hashtags: "",
-    // 違反検出時は autoApprove でも draft に強制
-    status: (g._checkOk && autoApprove ? "approved" : "draft") as XPost["status"],
-    scheduledDate: slots[i].date,
-    generatedAt: new Date().toISOString(),
-    postedAt: null,
-    axis: "camp",
-    validationErrors: g.validationErrors,
-    autoApproved: g._checkOk && autoApprove ? "true" : "false",
-    imageUrl: imageUrls[i] || undefined,
-  }));
-
-  await saveSheetsXPosts(newPosts);
-
-  const blocked = newPosts.filter((p) => p.validationErrors).length;
-  return NextResponse.json({
-    generated: newPosts.length,
-    blocked,
-    posts: newPosts,
+    );
   });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[generate] error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
 }

@@ -174,11 +174,27 @@ export default function XPostsPage() {
         return;
       }
       const data = await res.json();
-      if (res.ok) {
-        setPosts((prev) => [...data.posts, ...prev]);
-        alert(`${data.generated}件生成しました（チェックNG: ${data.blocked}件）`);
+      if (res.ok && data.ok !== false) {
+        // 新パイプラインは CLI で Sheets に直接書くので、ページを再読み込みして取得
+        const retryInfo =
+          typeof data.qualityRetries === "number" && data.qualityRetries > 0
+            ? `\n（品質ゲートで${data.qualityRetries}回の再生成を実行）`
+            : "";
+        alert(`${data.generated}件生成しました${retryInfo}`);
+        // 下書き一覧を再取得（新パイプラインは Sheets に直接書くので、UIステートを反映し直す）
+        try {
+          const r = await fetch("/api/x-posts");
+          if (r.ok) {
+            const d = await r.json();
+            if (Array.isArray(d)) setPosts(d);
+            else if (Array.isArray(d.posts)) setPosts(d.posts);
+          }
+        } catch {
+          /* 無視（アラート閉じた後ユーザーが手動リロードしても反映される） */
+        }
       } else {
-        alert(`生成失敗 [HTTP ${res.status}]: ${data.error || res.statusText}`);
+        const detail = data.output ? `\n\n${data.output.slice(-500)}` : "";
+        alert(`生成失敗 [HTTP ${res.status}]: ${data.error || res.statusText}${detail}`);
       }
     } catch (err) {
       alert(`生成エラー: ${err instanceof Error ? err.message : String(err)}`);
