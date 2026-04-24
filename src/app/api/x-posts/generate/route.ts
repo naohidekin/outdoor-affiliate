@@ -7,7 +7,9 @@ import { isAuthenticated } from "@/lib/auth";
 // 以前は buildLegacyBatchPrompt ベースの旧バッチを呼んでいたが、
 // doctor/AI軸・viral-scout分析・品質ゲート(7.5/カテゴリ別最低点/NGリトライ)を
 // 通すため CLI と同じロジックに統一した。
-export const maxDuration = 600;
+// Vercel Hobby プランの上限は 300 秒。新パイプラインは軸×件数×リトライで
+// 最長 3〜5 分かかる見込みなので、上限いっぱいに設定する。
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   if (!(await isAuthenticated())) {
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
       {
         cwd,
         env: { ...process.env },
-        timeout: 590_000,
+        timeout: 290_000,
         maxBuffer: 20 * 1024 * 1024,
       },
       (error, stdout, stderr) => {
