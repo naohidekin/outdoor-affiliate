@@ -51,6 +51,34 @@ export async function PATCH(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const { tweetIds } = await req.json();
+    if (!Array.isArray(tweetIds) || tweetIds.length === 0) {
+      return NextResponse.json({ error: "tweetIds (非空配列) が必要です" }, { status: 400 });
+    }
+    if (!fs.existsSync(DATA_PATH)) {
+      return NextResponse.json({ error: "データなし" }, { status: 404 });
+    }
+    const data = JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
+    const idSet = new Set<string>(tweetIds);
+    const before: number = data.viralPosts?.length || 0;
+    data.viralPosts = (data.viralPosts || []).filter(
+      (p: { tweetId: string }) => !idSet.has(p.tweetId)
+    );
+    const after: number = data.viralPosts.length;
+    // 集約analysisの件数表示も更新しておく（別の再集計はしない）
+    if (data.aggregateAnalysis && typeof data.aggregateAnalysis.totalAnalyzed === "number") {
+      data.aggregateAnalysis.totalAnalyzed = after;
+    }
+    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+    return NextResponse.json({ ok: true, deleted: before - after, remaining: after });
+  } catch (err) {
+    console.error("[viral-scout DELETE] error:", err);
+    return NextResponse.json({ error: "削除エラー" }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   const cwd = path.resolve(process.cwd());
   const script = path.join(cwd, "scripts", "viral-scout-agent.js");

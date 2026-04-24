@@ -190,6 +190,8 @@ export default function ViralScoutPage() {
   const [scouting, setScouting] = useState(false);
   const [scoutLog, setScoutLog] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   function loadData() {
     fetch("/api/viral-scout")
@@ -256,6 +258,55 @@ export default function ViralScoutPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
+  }
+
+  function toggleSelect(tweetId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(tweetId)) next.delete(tweetId);
+      else next.add(tweetId);
+      return next;
+    });
+  }
+
+  function selectAllVisible(visibleIds: string[]) {
+    setSelectedIds((prev) => {
+      const allSelected = visibleIds.every((id) => prev.has(id));
+      if (allSelected) {
+        // 全て選択済なら解除
+        const next = new Set(prev);
+        for (const id of visibleIds) next.delete(id);
+        return next;
+      }
+      const next = new Set(prev);
+      for (const id of visibleIds) next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`${ids.length}件を削除します。元に戻せません。よろしいですか？`)) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/viral-scout", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tweetIds: ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setPosts((prev) => prev.filter((p) => !selectedIds.has(p.tweetId)));
+        setSelectedIds(new Set());
+      } else {
+        alert(`削除失敗: ${data.error || res.statusText}`);
+      }
+    } catch (err) {
+      alert(`削除エラー: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBulkBusy(false);
+    }
   }
 
   function matchStatusFilter(qs: string | undefined, rs: string | undefined): boolean {
@@ -413,15 +464,61 @@ export default function ViralScoutPage() {
           <option value="all">全て ({posts.length * 2}件)</option>
         </select>
         <span className="text-sm text-gray-500 self-center">{filtered.length}件表示</span>
+        <button
+          onClick={() => selectAllVisible(filtered.map((p) => p.tweetId))}
+          className="ml-auto text-sm px-3 py-2 border rounded-lg hover:bg-gray-50"
+        >
+          {filtered.length > 0 && filtered.every((p) => selectedIds.has(p.tweetId))
+            ? "表示中の選択を解除"
+            : "表示中を全選択"}
+        </button>
       </div>
+
+      {/* 一括操作バー（1件以上選択時のみ表示） */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+          <span className="text-sm text-blue-900 font-medium">
+            {selectedIds.size}件選択中
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-sm px-3 py-1.5 text-gray-600 hover:bg-white rounded"
+            >
+              選択解除
+            </button>
+            <button
+              onClick={bulkDelete}
+              disabled={bulkBusy}
+              className={`text-sm px-4 py-1.5 font-medium rounded text-white ${
+                bulkBusy ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              {bulkBusy ? "削除中..." : `🗑 一括削除 (${selectedIds.size})`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Post Cards */}
       <div className="space-y-4">
         {filtered.map((post) => (
-          <div key={post.tweetId} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div
+            key={post.tweetId}
+            className={`bg-white rounded-lg shadow-sm border overflow-hidden ${
+              selectedIds.has(post.tweetId) ? "ring-2 ring-blue-400" : ""
+            }`}
+          >
             {/* Header */}
             <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(post.tweetId)}
+                  onChange={() => toggleSelect(post.tweetId)}
+                  className="w-4 h-4 mr-1 cursor-pointer"
+                  aria-label="この投稿を選択"
+                />
                 <span className={`text-xs px-2 py-0.5 rounded-full ${AXIS_COLORS[post.axis] || ""}`}>
                   {AXIS_LABELS[post.axis] || post.axis}
                 </span>
