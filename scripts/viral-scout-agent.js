@@ -40,7 +40,7 @@ loadEnv();
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { axis: null, dryRun: false, count: 50, minScore: 50 };
+  const opts = { axis: null, dryRun: false, count: 50, minScore: 50, days: 2 };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const eqIdx = arg.indexOf("=");
@@ -51,6 +51,7 @@ function parseArgs() {
       case "--dry-run":   opts.dryRun = true; break;
       case "--count":     opts.count = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
       case "--min-score": opts.minScore = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
+      case "--days":      opts.days = parseInt(val, 10) || 2; if (eqIdx === -1) i++; break;
     }
   }
   if (opts.axis && !["camp", "ai", "parenting", "doctor"].includes(opts.axis)) {
@@ -130,9 +131,11 @@ function getXClient() {
 
 // === X API v2 検索 ===
 
-async function searchRecentTweets(client, query, maxResults = 100) {
+async function searchRecentTweets(client, query, maxResults = 100, days = 2) {
+  const startTime = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const response = await client.v2.search(query, {
     max_results: Math.min(maxResults, 100),
+    start_time: startTime,
     "tweet.fields": ["public_metrics", "created_at", "author_id", "entities"],
     expansions: ["author_id"],
     "user.fields": ["username", "name", "public_metrics"],
@@ -183,7 +186,7 @@ async function scoutViralPosts(client, opts) {
 
     for (const query of queries) {
       try {
-        const tweets = await searchRecentTweets(client, query, 100);
+        const tweets = await searchRecentTweets(client, query, 100, opts.days);
         let added = 0;
 
         for (const tweet of tweets) {
@@ -626,7 +629,7 @@ async function main() {
   const claude = new Anthropic({ apiKey: anthropicKey, fetch: ipv4Fetch, maxRetries: 3 });
 
   console.log("=== Viral Scout Agent ===");
-  console.log(`目標: ${opts.count}件 / 最低スコア: ${opts.minScore} / 軸: ${opts.axis || "全軸"}`);
+  console.log(`目標: ${opts.count}件 / 最低スコア: ${opts.minScore} / 軸: ${opts.axis || "全軸"} / 直近${opts.days}日`);
 
   // Phase 1: Scout
   console.log("\n[Phase 1] バイラルポスト検索...");
