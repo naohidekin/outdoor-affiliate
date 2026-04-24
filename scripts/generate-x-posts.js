@@ -294,7 +294,7 @@ function formatThreadForSheets(tweets) {
 async function selfScorePost(client, { type, axis, text }) {
   const prompt = `あなたは X 投稿の品質審査員です。
 以下の投稿を10基準で採点してください（各0〜10点）。
-**平均7.0未満は不合格**。厳しめに採点すること。お世辞は不要。
+**平均7.5未満は不合格**。ペルソナ一致度(#5)・軸適合(#9)・フック(#1)は特に厳しめに。お世辞は不要。
 
 ## 投稿
 タイプ: ${type}
@@ -831,10 +831,17 @@ async function generatePosts(opts) {
         const postText = isThread && g.tweets ? formatThreadForSheets(g.tweets) : g.text;
         const plainText = isThread && g.tweets ? g.tweets.join(" ") : g.text;
 
+        // NG語チェック失敗でもリトライ（薬機法・医療法系のブロックエラーを防ぐ）
+        if (!g._checkOk && attempt < MAX_RETRIES) {
+          console.log(`[${item.type}] NGチェック失敗 (${g.validationErrors}) → 再生成`);
+          needsRetry = true;
+          continue;
+        }
+
         // 類似チェック
         const similarityScore = checkSimilarity(plainText);
         if (similarityScore > SIMILARITY_THRESHOLD && attempt < MAX_RETRIES) {
-          console.log(`[${item.type}] 類似度 ${similarityScore.toFixed(2)} > 0.6 → 再生成`);
+          console.log(`[${item.type}] 類似度 ${similarityScore.toFixed(2)} > ${SIMILARITY_THRESHOLD} → 再生成`);
           needsRetry = true;
           continue;
         }
@@ -845,10 +852,29 @@ async function generatePosts(opts) {
           axis: postAxis,
           text: plainText,
         });
-        console.log(`[${item.type}] selfScore: ${scoreResult.total}`);
 
-        if (scoreResult.total < QUALITY_THRESHOLD && attempt < MAX_RETRIES) {
-          console.log(`[${item.type}] スコア ${scoreResult.total} < 7.0 → 再生成`);
+        // カテゴリ別最低点（persona=#5,軸=#9 / engagement=#1,#7,#8 / compliance=残り）
+        const s = scoreResult.scores || [];
+        const personaMin = s.length >= 9 ? Math.min(s[4], s[8]) : null;
+        const engagementMin = s.length >= 8 ? Math.min(s[0], s[6], s[7]) : null;
+        const PERSONA_MIN_THRESHOLD = 6;
+        const ENGAGEMENT_MIN_THRESHOLD = 6;
+
+        console.log(`[${item.type}] selfScore: ${scoreResult.total} (persona最低=${personaMin ?? "N/A"}, engagement最低=${engagementMin ?? "N/A"})`);
+        if (scoreResult.comment) {
+          console.log(`  └ 改善ポイント: ${scoreResult.comment}`);
+        }
+
+        const totalBelow = scoreResult.total < QUALITY_THRESHOLD;
+        const personaBelow = personaMin !== null && personaMin < PERSONA_MIN_THRESHOLD;
+        const engagementBelow = engagementMin !== null && engagementMin < ENGAGEMENT_MIN_THRESHOLD;
+
+        if ((totalBelow || personaBelow || engagementBelow) && attempt < MAX_RETRIES) {
+          const reasons = [];
+          if (totalBelow) reasons.push(`total<${QUALITY_THRESHOLD}`);
+          if (personaBelow) reasons.push(`persona<${PERSONA_MIN_THRESHOLD}`);
+          if (engagementBelow) reasons.push(`engagement<${ENGAGEMENT_MIN_THRESHOLD}`);
+          console.log(`[${item.type}] 品質不足 (${reasons.join(", ")}) → 再生成`);
           needsRetry = true;
           continue;
         }
