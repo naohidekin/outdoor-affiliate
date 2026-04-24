@@ -28,13 +28,24 @@ export async function PATCH(req: Request) {
     if (!post) {
       return NextResponse.json({ error: "投稿が見つかりません" }, { status: 404 });
     }
-    if (field === "quoteTweet" && post.generatedContent?.quoteTweet) {
-      post.generatedContent.quoteTweet.status = status;
-    } else if (field === "reply" && post.generatedContent?.reply) {
-      post.generatedContent.reply.status = status;
+    const target =
+      field === "quoteTweet"
+        ? post.generatedContent?.quoteTweet
+        : field === "reply"
+        ? post.generatedContent?.reply
+        : null;
+    if (!target) {
+      return NextResponse.json({ error: "対象フィールドがありません" }, { status: 400 });
+    }
+    target.status = status;
+    // posted遷移でタイムスタンプを記録、posted→他へ戻す時はクリア
+    if (status === "posted") {
+      target.postedAt = new Date().toISOString();
+    } else if (target.postedAt) {
+      delete target.postedAt;
     }
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, postedAt: target.postedAt || null });
   } catch (err) {
     return NextResponse.json({ error: "更新エラー" }, { status: 500 });
   }

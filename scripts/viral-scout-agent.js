@@ -685,6 +685,27 @@ async function main() {
     })),
   };
 
+  // 既存結果とマージ: tweetIdが一致する投稿は status/postedAt を保持する
+  // （管理画面で「投稿済み」マークされた内容が再スカウトで失われないように）
+  const prev = readJson("viral-scout-results.json");
+  if (prev?.viralPosts?.length) {
+    const prevById = new Map(prev.viralPosts.map((p) => [p.tweetId, p]));
+    for (const post of output.viralPosts) {
+      const old = prevById.get(post.tweetId);
+      if (!old?.generatedContent || !post.generatedContent) continue;
+      for (const field of ["quoteTweet", "reply"]) {
+        const oldField = old.generatedContent[field];
+        const newField = post.generatedContent[field];
+        if (!oldField || !newField) continue;
+        // draft以外（approved/posted/skipped/needs_review）は旧値を尊重する
+        if (oldField.status && oldField.status !== "draft") {
+          newField.status = oldField.status;
+          if (oldField.postedAt) newField.postedAt = oldField.postedAt;
+        }
+      }
+    }
+  }
+
   writeJson("viral-scout-results.json", output);
   console.log(`\n保存完了: data/viral-scout-results.json`);
 
