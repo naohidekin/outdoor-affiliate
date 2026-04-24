@@ -316,8 +316,10 @@ ${text}
 { "scores": [8, 7, 9, 8, 7, 8, 9, 6, 7, 8], "total": 7.7, "comment": "改善ポイントを1文で" }`;
 
   try {
+    // 自己採点は Haiku（軽量・高速）で十分。生成本体は Sonnet のまま。
+    // Vercel Hobby 300s 上限でのタイムアウトを避けるため、採点のみ速度優先に切り替え。
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 500,
       messages: [{ role: "user", content: prompt }],
     });
