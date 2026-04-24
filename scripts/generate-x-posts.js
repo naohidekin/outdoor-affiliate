@@ -501,6 +501,74 @@ function buildResearchBlock(axis) {
   return lines.join("\n");
 }
 
+// === Viral Scout 分析結果の注入 ===
+
+function buildViralScoutBlock(axis) {
+  const filePath = path.join(DATA_DIR, "viral-scout-results.json");
+  if (!fs.existsSync(filePath)) return "";
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } catch {
+    return "";
+  }
+  if (!data.aggregateAnalysis || !Array.isArray(data.viralPosts)) return "";
+
+  // 鮮度チェック: 7日以上古ければ警告的に扱う（ただし無視はしない）
+  const scoutedAt = data.scoutedAt ? new Date(data.scoutedAt) : null;
+  const ageDays = scoutedAt ? Math.floor((Date.now() - scoutedAt) / 86400000) : null;
+
+  const axisKey = (axis === "all" || axis === "rotate" || !axis) ? null : axis;
+  const byAxis = axisKey ? data.aggregateAnalysis.byAxis?.[axisKey] : null;
+
+  const aggLines = [];
+  if (byAxis && byAxis.count >= 3) {
+    aggLines.push(`### ${axisKey}軸のバイラル傾向（N=${byAxis.count}, 平均engagement=${byAxis.avgEngagement}）`);
+    if (byAxis.topHooks?.length) {
+      aggLines.push(`- トップフック: ${byAxis.topHooks.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+    }
+    if (byAxis.topFormats?.length) {
+      aggLines.push(`- 形式: ${byAxis.topFormats.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+    }
+  } else {
+    const agg = data.aggregateAnalysis;
+    aggLines.push(`### 全軸のバイラル傾向（N=${agg.totalAnalyzed}）`);
+    if (agg.topHooks?.length) aggLines.push(`- トップフック: ${agg.topHooks.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+    if (agg.topEmotionalTriggers?.length) aggLines.push(`- 感情トリガー: ${agg.topEmotionalTriggers.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+    if (agg.topFormats?.length) aggLines.push(`- 形式: ${agg.topFormats.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+    if (agg.topShareability?.length) aggLines.push(`- シェア動機: ${agg.topShareability.slice(0, 3).map((h) => `${h.pattern}(${h.pct}%)`).join(" / ")}`);
+  }
+
+  // 高adaptability（ギア男に転用しやすい）を優先し、軸マッチを優先
+  const axisPosts = data.viralPosts
+    .filter((p) => !axisKey || p.axis === axisKey)
+    .sort((a, b) => (b.metrics?.engagementScore || 0) - (a.metrics?.engagementScore || 0));
+
+  const highAdapt = axisPosts.filter((p) => p.analysis?.adaptability === "high");
+  const picked = (highAdapt.length >= 3 ? highAdapt : axisPosts).slice(0, 3);
+
+  const exampleLines = picked.map((p) => {
+    const t = (p.text || "").replace(/\s+/g, " ").slice(0, 90);
+    const m = p.metrics || {};
+    const a = p.analysis || {};
+    const techs = (a.keyTechniques || []).slice(0, 2).join("/");
+    return `- 「${t}…」(♥${m.likes || "?"} RT${m.retweets || "?"} / hook=${a.hook || "?"} / format=${a.format || "?"}${techs ? " / 手法=" + techs : ""})`;
+  });
+
+  if (aggLines.length === 0 && exampleLines.length === 0) return "";
+
+  const dateStr = scoutedAt ? scoutedAt.toISOString().slice(0, 10) : "?";
+  const freshness = ageDays !== null && ageDays > 7 ? ` ⚠️ ${ageDays}日前のデータ` : "";
+
+  return `\n## Viral Scout 分析（${dateStr}時点${freshness}）— 実際に伸びている投稿の構造を反映せよ
+${aggLines.join("\n")}
+
+### ${axisKey || "全軸"}の高エンゲージメント実例（構造・フック・手法だけ学ぶこと）
+${exampleLines.join("\n")}
+
+**使い方**: 上の「hook / format / 手法」の組み合わせを自分のネタで再現する。本文そのものは絶対に転用しない。ギア男ペルソナと今回のtypeに沿った題材で、同じ型だけ真似ること。`;
+}
+
 // === Analyst ディレクティブ注入 ===
 
 function buildAnalystHintsBlock(currentType = null) {
@@ -685,6 +753,7 @@ async function generatePosts(opts) {
     prompt += buildFormatPatternBlock();
     prompt += buildPatternRotationBlock();
     prompt += buildBuzzFirstLinesBlock(item.type);
+    prompt += buildViralScoutBlock(item.axis);
     prompt += buildAnalystHintsBlock(item.type);
     if (opts.research) {
       prompt += buildResearchBlock(item.axis === "all" || item.axis === "rotate" ? "camp" : item.axis);
