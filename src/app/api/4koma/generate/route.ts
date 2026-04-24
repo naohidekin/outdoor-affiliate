@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
+import { put } from "@vercel/blob";
 import { isAuthenticated } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
+
+/**
+ * 画像を Vercel Blob にアップロードして公開URLを返す。
+ * BLOB_READ_WRITE_TOKEN 未設定の場合は base64 data URL にフォールバック
+ * （生成直後の表示は出来るが、ページリロード後には消える）。
+ */
+async function uploadOrFallback(
+  buffer: Buffer,
+  prefix: string
+): Promise<string> {
+  const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+  if (!hasToken) {
+    return `data:image/png;base64,${buffer.toString("base64")}`;
+  }
+  const filename = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.png`;
+  const blob = await put(filename, buffer, {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: "image/png",
+  });
+  return blob.url;
+}
 
 const STYLES: Record<string, string> = {
   painting: "soft manga illustration, gentle watercolor shading, warm pastel tones, friendly Japanese man in outdoor cap and camping jacket, character fills most of the frame, medium shot centered on character, background simple and blurred, white background, no text, no speech bubbles",
@@ -135,9 +158,12 @@ export async function POST(req: NextRequest) {
 
           // リサイズして最適化（1024×1024 PNG）
           const imageBuffer = await sharp(buf).resize(1024, 1024, { fit: "cover" }).png().toBuffer();
-          const dataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+          send({ log: "  Uploading...\n" });
+          const imagePath = await uploadOrFallback(imageBuffer, `keyvisual-${style}`);
+          const isBlob = imagePath.startsWith("https://");
+          send({ log: isBlob ? "  ✓ Blob storage\n" : "  ⚠️ 一時表示のみ（Blob未設定）\n" });
           send({ log: "✅ 完了！\n" });
-          send({ done: true, code: 0, imagePath: dataUrl, mode: "keyvisual" });
+          send({ done: true, code: 0, imagePath, mode: "keyvisual" });
 
         } else {
           // ─── 4コマ漫画生成 ─────────────────────────────────
@@ -173,10 +199,13 @@ export async function POST(req: NextRequest) {
 
           send({ log: "\nStep 3/3: Composing 4-panel image...\n" });
           const imageBuffer = await compose4koma(panelBuffers);
-          const dataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
 
+          send({ log: "  Uploading...\n" });
+          const imagePath = await uploadOrFallback(imageBuffer, `4koma-${style}`);
+          const isBlob = imagePath.startsWith("https://");
+          send({ log: isBlob ? "  ✓ Blob storage\n" : "  ⚠️ 一時表示のみ（Blob未設定）\n" });
           send({ log: "✅ 完了！\n" });
-          send({ done: true, code: 0, imagePath: dataUrl });
+          send({ done: true, code: 0, imagePath });
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
