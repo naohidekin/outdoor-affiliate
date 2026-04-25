@@ -15,6 +15,7 @@ import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { list as listBlob } from "@vercel/blob";
 
 import {
   SITE_URL,
@@ -641,6 +642,74 @@ function determineGenerationPlan(opts) {
   return plan;
 }
 
+// === 自動画像添付 ===
+
+// type 別の Unsplash 検索クエリ
+const UNSPLASH_QUERIES = {
+  outdoor_tip: "camping outdoor nature tips",
+  seasonal_hook: "outdoor seasonal camping nature",
+  failure_story: "camping adventure outdoor fun",
+  parenting_outdoor: "family camping children outdoor",
+  ai_dev_log: "laptop coding nature",
+  doc_health_tip: "doctor health wellness lifestyle",
+  poll_question: "outdoor camping choice gear",
+  news_comment: "news outdoor",
+  repost_rewrite: "outdoor camping nature",
+};
+
+/**
+ * Vercel Blob 上の 4コマ漫画・キーイラスト URL を全件取得。
+ * BLOB_READ_WRITE_TOKEN 未設定時は空配列を返し、呼び出し側は Unsplash fallback。
+ */
+async function loadBlobImagePool() {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return [];
+  try {
+    const urls = [];
+    for (const prefix of ["4koma-", "keyvisual-"]) {
+      const { blobs } = await listBlob({ prefix });
+      for (const b of blobs) urls.push(b.url);
+    }
+    return urls;
+  } catch (err) {
+    console.warn(`[loadBlobImagePool] ${err.message}`);
+    return [];
+  }
+}
+
+/**
+ * Unsplash で type に合った写真URLを1件取得。失敗時は null。
+ */
+async function fetchUnsplashImage(type) {
+  const key = process.env.UNSPLASH_ACCESS_KEY;
+  if (!key) return null;
+  const query = UNSPLASH_QUERIES[type] || "outdoor camping nature";
+  try {
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=10&orientation=landscape`;
+    const res = await fetch(url, { headers: { Authorization: `Client-ID ${key}` } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const photos = data.results || [];
+    if (!photos.length) return null;
+    const photo = photos[Math.floor(Math.random() * photos.length)];
+    return photo.urls?.regular ? `${photo.urls.regular}&w=1200&q=80` : null;
+  } catch (err) {
+    console.warn(`[fetchUnsplashImage] ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * 投稿に自動添付する画像URLを選ぶ。
+ * 優先順序: Blob プール（4コマ・キーイラスト）→ Unsplash → null
+ */
+async function pickAutoImage(type, blobImagePool) {
+  if (Array.isArray(blobImagePool) && blobImagePool.length > 0) {
+    return blobImagePool[Math.floor(Math.random() * blobImagePool.length)];
+  }
+  const unsplashUrl = await fetchUnsplashImage(type);
+  return unsplashUrl || "";
+}
+
 // === メイン ===
 
 async function generatePosts(opts) {
@@ -712,6 +781,11 @@ async function generatePosts(opts) {
   const allPosts = [];
   const usedNewsItems = [];
   const patternsData = readDataJson("first-line-patterns.json");
+
+  // 投稿に自動添付する画像URL一覧を1回だけ取得（Vercel Blob の 4koma/keyvisual を優先）
+  // BLOB_READ_WRITE_TOKEN 未設定時はスキップして Unsplash fallback
+  const blobImageUrls = await loadBlobImagePool();
+  console.log(`画像プール: Blob ${blobImageUrls.length}件 / Unsplash fallback有効`);
 
   console.log(`\n生成プラン: ${plan.map((p) => `${p.type}(${p.count}件)`).join(", ")}`);
   console.log(`季節: ${month}月 - ${SEASON_CONTEXT[month]}\n`);
@@ -924,6 +998,11 @@ async function generatePosts(opts) {
               if (prod?.imageUrl) { postImageUrl = prod.imageUrl; break; }
             }
           }
+        }
+        // それ以外（doc_health_tip / ai_dev_log / outdoor_tip 等）は
+        // Blob の 4コマ・キーイラストプールから抽選 → 無ければ Unsplash
+        if (!postImageUrl) {
+          postImageUrl = await pickAutoImage(item.type, blobImageUrls);
         }
 
         posts.push({
