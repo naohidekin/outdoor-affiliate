@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { execFile } from "child_process";
 import fs from "fs";
 import path from "path";
 import {
@@ -7,6 +6,9 @@ import {
   markDeleted,
   setStatus,
 } from "@/lib/viral-scout-overrides";
+import { runViralScout } from "@/lib/viral-scout-agent.mjs";
+
+export const maxDuration = 300;
 
 const DATA_PATH = path.join(process.cwd(), "data", "viral-scout-results.json");
 
@@ -114,23 +116,21 @@ export async function DELETE(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const cwd = path.resolve(process.cwd());
-  const script = path.join(cwd, "scripts", "viral-scout-agent.js");
-  const { days = 2, minScore = 20 } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  const opts = {
+    days: typeof body.days === "number" ? body.days : 2,
+    minScore: typeof body.minScore === "number" ? body.minScore : 20,
+    count: typeof body.count === "number" ? body.count : 50,
+    axis: body.axis || null,
+    dryRun: false,
+  };
 
-  return new Promise<NextResponse>((resolve) => {
-    execFile(
-      "node",
-      ["--dns-result-order=ipv4first", script, `--days=${days}`, `--min-score=${minScore}`],
-      { cwd, env: { ...process.env }, timeout: 600_000 },
-      (error, stdout, stderr) => {
-        const output = (stdout + stderr).trim();
-        if (error && error.code !== 0) {
-          resolve(NextResponse.json({ ok: false, output }, { status: 500 }));
-        } else {
-          resolve(NextResponse.json({ ok: true, output }));
-        }
-      }
-    );
-  });
+  try {
+    const result = await runViralScout(opts);
+    return NextResponse.json({ ok: true, ...result });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[viral-scout POST]", msg);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
 }
