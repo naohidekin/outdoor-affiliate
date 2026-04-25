@@ -227,7 +227,7 @@
     "shoes": "#トレッキングシューズ #登山靴"
   },
   "safety": {
-    "qualityThreshold": 7.5,
+    "qualityThreshold": 6.5,
     "similarityThreshold": 0.85,
     "maxRetries": 2,
     "dailyPostLimit": 5,

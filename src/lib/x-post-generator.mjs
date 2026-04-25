@@ -301,7 +301,8 @@ function formatThreadForSheets(tweets) {
 async function selfScorePost(client, { type, axis, text }) {
   const prompt = `あなたは X 投稿の品質審査員です。
 以下の投稿を10基準で採点してください（各0〜10点）。
-**平均7.5未満は不合格**。ペルソナ一致度(#5)・軸適合(#9)・フック(#1)は特に厳しめに。お世辞は不要。
+**平均6.5未満は不合格**。ペルソナ一致度(#5)・軸適合(#9)・フック(#1)は特に意識して採点。
+全体に厳しすぎず、6点台の標準的な投稿は通過させる方針。お世辞は不要。
 
 ## 投稿
 タイプ: ${type}
@@ -869,8 +870,8 @@ async function generatePosts(opts) {
         const s = scoreResult.scores || [];
         const personaMin = s.length >= 9 ? Math.min(s[4], s[8]) : null;
         const engagementMin = s.length >= 8 ? Math.min(s[0], s[6], s[7]) : null;
-        const PERSONA_MIN_THRESHOLD = 6;
-        const ENGAGEMENT_MIN_THRESHOLD = 6;
+        const PERSONA_MIN_THRESHOLD = 5;
+        const ENGAGEMENT_MIN_THRESHOLD = 5;
 
         console.log(`[${item.type}] selfScore: ${scoreResult.total} (persona最低=${personaMin ?? "N/A"}, engagement最低=${engagementMin ?? "N/A"})`);
         if (scoreResult.comment) {
