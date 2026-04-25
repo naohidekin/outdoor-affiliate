@@ -119,7 +119,7 @@ export default function XPostsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchLoading, setBatchLoading] = useState(false);
   const [mangaPicker, setMangaPicker] = useState<string | null>(null);
-  const [mangaList, setMangaList] = useState<string[]>([]);
+  const [mangaList, setMangaList] = useState<Array<{ name: string; path: string; createdAt: string }>>([]);
   // Phase1-B: 0件表示バグ診断用
   const [debug, setDebug] = useState<{
     fetchedAt: string;
@@ -317,13 +317,15 @@ export default function XPostsPage() {
     if (mangaList.length === 0) {
       const res = await fetch("/api/4koma/list");
       const data = await res.json();
-      setMangaList(Array.isArray(data) ? data : []);
+      // /api/4koma/list は { files: [{name, path, createdAt}] } を返す
+      const files = Array.isArray(data?.files) ? data.files : Array.isArray(data) ? data : [];
+      setMangaList(files);
     }
     setMangaPicker(postId);
   }
 
-  async function attachManga(postId: string, imagePath: string) {
-    const imageUrl = `/images/4koma/${imagePath}`;
+  async function attachManga(postId: string, imageUrl: string) {
+    // imageUrl は Vercel Blob の絶対URL or ローカル "/images/4koma/xxx.png" のどちらか
     const res = await fetch("/api/x-posts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -1000,18 +1002,18 @@ export default function XPostsPage() {
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {mangaList.map((filename) => (
+                {mangaList.map((item) => (
                   <button
-                    key={filename}
-                    onClick={() => attachManga(mangaPicker, filename)}
+                    key={item.name}
+                    onClick={() => attachManga(mangaPicker, item.path)}
                     className="rounded-lg overflow-hidden border-2 border-transparent hover:border-orange-400 transition"
                   >
                     <img
-                      src={`/images/4koma/${filename}`}
-                      alt={filename}
+                      src={item.path}
+                      alt={item.name}
                       className="w-full aspect-square object-cover"
                     />
-                    <p className="text-xs text-gray-500 p-1 truncate">{filename}</p>
+                    <p className="text-xs text-gray-500 p-1 truncate">{item.name}</p>
                   </button>
                 ))}
               </div>
