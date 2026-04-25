@@ -83,7 +83,14 @@ export interface XPost {
   similarityScore?: number;
   /** リトライ回数 (0/1/2) */
   retryCount?: number;
-  /** 投稿に添付する画像URL (Unsplash or OG image) */
+  // --- S列: 投稿直後リプライ ---
+  /** 投稿直後にリプ欄に追加するコメント（会話誘発用） */
+  selfReply?: string;
+  // --- T列: 投稿フォーマットパターン ---
+  /** 使用した投稿フォーマットパターンID */
+  formatPattern?: string;
+  // --- U列: 添付画像URL ---
+  /** 投稿に添付する画像URL (Vercel Blob URL or Unsplash or OG image) */
   imageUrl?: string;
 }
 

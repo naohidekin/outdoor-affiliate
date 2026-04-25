@@ -2,12 +2,12 @@ import { google } from "googleapis";
 import { XPost } from "./types";
 
 const SHEET_NAME = "下書き管理";
-// カラムマッピング（generate-x-posts.js の書き込み順に準拠）:
+// カラムマッピング（src/lib/x-post-generator.mjs の書き込み順に準拠）:
 // A=id, B=type, C=text, D=articleSlug, E=url, F=hashtags, G=status,
 // H=scheduledDate, I=generatedAt, J=postedAt, K=axis, L=seedId,
 // M=validationErrors, N=autoApproved, O=selfScore, P=firstLinePattern,
-// Q=similarityScore, R=retryCount, S=imageUrl
-const COLUMN_RANGE = "A2:S";
+// Q=similarityScore, R=retryCount, S=selfReply, T=formatPattern, U=imageUrl
+const COLUMN_RANGE = "A2:U";
 
 function getAuth() {
   const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || "{}");
@@ -28,7 +28,6 @@ function getSpreadsheetId(): string {
 }
 
 function rowToXPost(row: string[]): XPost {
-  // K〜R列は既存行では undefined のことが多い → 後方互換
   return {
     id: row[0] || "",
     type: (row[1] as XPost["type"]) || "outdoor_tip",
@@ -48,7 +47,9 @@ function rowToXPost(row: string[]): XPost {
     firstLinePattern: row[15] || undefined,
     similarityScore: row[16] ? parseFloat(row[16]) : undefined,
     retryCount: row[17] ? parseInt(row[17], 10) : undefined,
-    imageUrl: row[18] || undefined,
+    selfReply: row[18] || undefined,
+    formatPattern: row[19] || undefined,
+    imageUrl: row[20] || undefined,
   };
 }
 
@@ -72,7 +73,9 @@ function xpostToRow(post: XPost): string[] {
     post.firstLinePattern || "",
     post.similarityScore != null ? String(post.similarityScore) : "",
     post.retryCount != null ? String(post.retryCount) : "",
-    post.imageUrl || "",
+    post.selfReply || "",      // S
+    post.formatPattern || "",  // T
+    post.imageUrl || "",       // U
   ];
 }
 
@@ -124,14 +127,14 @@ export async function saveSheetsXPost(post: XPost): Promise<void> {
   if (existing) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${SHEET_NAME}!A${existing.rowIndex}:S${existing.rowIndex}`,
+      range: `${SHEET_NAME}!A${existing.rowIndex}:U${existing.rowIndex}`,
       valueInputOption: "RAW",
       requestBody: { values: [xpostToRow(post)] },
     });
   } else {
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${SHEET_NAME}!A:S`,
+      range: `${SHEET_NAME}!A:U`,
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: [xpostToRow(post)] },
