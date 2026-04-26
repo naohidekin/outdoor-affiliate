@@ -242,7 +242,7 @@
   },
   "formatting": {
     "maxChars": 280,
-    "hashtagCount": "2〜3個",
+    "hashtagCount": "0個（# 一切使わない、Xアルゴリズム上不利のため）",
     "urlInBody": false
   }
 }

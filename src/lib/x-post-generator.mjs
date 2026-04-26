@@ -892,6 +892,19 @@ async function generatePosts(opts) {
       // UTM パラメータ付与
       generated = generated.map((g) => addUtmIfNeeded(g, item.type));
 
+      // ハッシュタグを safety net で削除（# は X アルゴリズム上不利）
+      // Claude が指示を無視して入れた場合に備えて、本文と selfReply / tweets から strip する
+      const stripHashtags = (s) =>
+        typeof s === "string"
+          ? s.replace(/(^|\s)#[^\s#]+/g, "$1").replace(/[ \t]+\n/g, "\n").trim()
+          : s;
+      generated = generated.map((g) => ({
+        ...g,
+        text: stripHashtags(g.text),
+        selfReply: stripHashtags(g.selfReply),
+        tweets: Array.isArray(g.tweets) ? g.tweets.map(stripHashtags) : g.tweets,
+      }));
+
       // NG チェック
       generated = generated.map((g) => {
         let check;
