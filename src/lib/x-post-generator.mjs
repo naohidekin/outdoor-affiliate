@@ -106,16 +106,20 @@ function parseArgs() {
 function loadNewsFeed(count) {
   const filePath = path.join(DATA_DIR, "news-feed.json");
   if (!fs.existsSync(filePath)) {
-    throw new Error(
-      "data/news-feed.json が見つかりません。先に scripts/fetch-news.js を実行してください"
-    );
+    console.warn("[news_comment] data/news-feed.json が無いため空で続行");
+    return [];
   }
-  const all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  const usable = all.filter((n) => !n.used && !n.sensitive);
+  let all;
+  try {
+    all = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } catch (err) {
+    console.warn(`[news_comment] news-feed.json 読み込み失敗: ${err.message}`);
+    return [];
+  }
+  const usable = (Array.isArray(all) ? all : []).filter((n) => !n.used && !n.sensitive);
   if (usable.length === 0) {
-    throw new Error(
-      "使用可能なニュースがありません。scripts/fetch-news.js で取得してください"
-    );
+    console.warn("[news_comment] 使用可能なニュースなし、空で続行");
+    return [];
   }
   return usable.sort(() => Math.random() - 0.5).slice(0, count);
 }
@@ -828,6 +832,10 @@ async function generatePosts(opts) {
     // news_comment: ニュースフィードをコンテキストに追加
     if (item.type === "news_comment") {
       context.newsItems = loadNewsFeed(item.count);
+      if (context.newsItems.length === 0) {
+        console.log(`[news_comment] ニュースが無いためスキップ`);
+        continue;
+      }
       usedNewsItems.push(...context.newsItems);
     }
 
