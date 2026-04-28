@@ -18,6 +18,8 @@ const CATEGORY_EMOJI: Record<string, string> = {
   chair: "🪑",
   table: "🪵",
   cooler: "🧊",
+  tumbler: "🥤",
+  "insect-repellent": "🦟",
 };
 
 async function loadNotoSansJP(): Promise<ArrayBuffer> {

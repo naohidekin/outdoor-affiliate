@@ -534,6 +534,19 @@
       "postedAt": null,
       "seedId": null,
       "engagements": null
+    },
+    {
+      "id": "xp-20260424-nery",
+      "type": "poll_question",
+      "axis": "camp",
+      "text": "GW直前！家族キャンプの場所選び、何を最重視する？\n\n①トイレの清潔さ\n②料金の安さ\n③車でのアクセス\n④遊具・川遊びの充実\n\n個人的には①。子供がトイレを嫌がると本当に大変になります。\n\n#ファミリーキャンプ #GWキャンプ",
+      "articleSlug": null,
+      "firstLinePattern": "question",
+      "formatPattern": "comment_bait/poll_type",
+      "selfScore": 7.6,
+      "postedAt": null,
+      "seedId": "seed-062",
+      "engagements": null
     }
   ]
 }

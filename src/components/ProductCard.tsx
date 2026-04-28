@@ -6,13 +6,13 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <div className="border border-line rounded-xl overflow-hidden bg-white">
       {product.imageUrl && (
-        <div className="aspect-video bg-mist overflow-hidden relative">
+        <div className="aspect-square bg-white overflow-hidden relative">
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 100vw, 600px"
-            className="object-cover"
+            className="object-contain p-4"
             loading="lazy"
           />
         </div>

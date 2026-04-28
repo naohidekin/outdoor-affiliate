@@ -99,6 +99,11 @@ export default function ArticleContent({ content, products }: Props) {
                     </a>
                   );
                 },
+                table: ({ children, ...props }) => (
+                  <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                    <table {...props}>{children}</table>
+                  </div>
+                ),
               }}
             >
               {part}

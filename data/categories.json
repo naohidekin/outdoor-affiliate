@@ -1,5 +1,12 @@
 [
   {
+    "id": "insect-repellent",
+    "name": "虫除け・虫対策",
+    "slug": "insect-repellent",
+    "description": "キャンプの大敵・蚊やブヨから家族を守る虫除けアイテム",
+    "order": 0
+  },
+  {
     "id": "tent",
     "name": "テント",
     "slug": "tent",
@@ -82,5 +89,12 @@
     "slug": "cooler",
     "description": "食材・飲料を冷たくキープするクーラー",
     "order": 12
+  },
+  {
+    "id": "tumbler",
+    "name": "タンブラー・ボトル",
+    "slug": "tumbler",
+    "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
+    "order": 13
   }
 ]

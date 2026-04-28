@@ -4,100 +4,175 @@
  * Google Indexing API — URL一括インデックスリクエスト
  *
  * 使い方:
- *   node scripts/request-indexing.js                # サイトマップ全URLをリクエスト
- *   node scripts/request-indexing.js --dry-run      # 確認のみ
- *   node scripts/request-indexing.js --urls url1 url2  # 指定URLのみ
+ *   node scripts/request-indexing.js                       # sitemap.xml の全URLをリクエスト（推奨）
+ *   node scripts/request-indexing.js --filter articles     # /articles/ を含むURLのみ
+ *   node scripts/request-indexing.js --filter category     # /category/ のみ
+ *   node scripts/request-indexing.js --limit 50            # 上限指定
+ *   node scripts/request-indexing.js --dry-run             # 確認のみ
+ *   node scripts/request-indexing.js --urls url1 url2      # 指定URLのみ
+ *
+ * Indexing API クォータ: デフォルト 200 req/day
  */
 
 import { google } from "googleapis";
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
 
-const credentials = JSON.parse(process.env.INDEXING_CREDENTIALS || "{}");
-const dryRun = process.argv.includes("--dry-run");
+const SITEMAP_URL = "https://camp-gear-lab.com/sitemap.xml";
+const LOG_PATH = path.join(process.cwd(), "data", "seo-indexing-log.json");
+const RATE_LIMIT_MS = 1100; // 1 req/sec
 
-// ─── 対象URL ─────────────────────────────────────────
+// ─── CLI ─────────────────────────────────────────────
 
-function getUrls() {
-  const urlsIdx = process.argv.indexOf("--urls");
-  if (urlsIdx !== -1) {
-    return process.argv.slice(urlsIdx + 1).filter(u => u.startsWith("http"));
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const opts = { filter: null, limit: Infinity, dryRun: false, urls: null };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === "--filter") opts.filter = args[++i];
+    else if (a === "--limit") opts.limit = parseInt(args[++i], 10) || Infinity;
+    else if (a === "--dry-run") opts.dryRun = true;
+    else if (a === "--urls") {
+      opts.urls = args.slice(i + 1).filter((u) => u.startsWith("http"));
+      break;
+    }
+  }
+  return opts;
+}
+
+// ─── URL取得 ─────────────────────────────────────────
+
+async function fetchSitemapUrls() {
+  const res = await fetch(`${SITEMAP_URL}?_cb=${Date.now()}`, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache" },
+  });
+  if (!res.ok) throw new Error(`sitemap fetch ${res.status}`);
+  const xml = await res.text();
+  const matches = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)];
+  return matches.map((m) => m[1].trim()).filter((u) => u.startsWith("http"));
+}
+
+function fetchUrlsFromLocalData() {
+  // sitemap が CDN キャッシュされている場合に備えてローカルJSONからも生成
+  const baseUrl = "https://camp-gear-lab.com";
+  const articles = JSON.parse(fs.readFileSync("data/articles.json", "utf8"));
+  const categories = JSON.parse(fs.readFileSync("data/categories.json", "utf8"));
+  const urls = [baseUrl];
+  for (const c of categories) urls.push(`${baseUrl}/category/${c.slug}`);
+  for (const a of articles) {
+    if (a.status === "published") urls.push(`${baseUrl}/articles/${a.slug}`);
+  }
+  return urls;
+}
+
+async function getUrls(opts) {
+  if (opts.urls && opts.urls.length > 0) return opts.urls;
+
+  let sitemapUrls = [];
+  try {
+    sitemapUrls = await fetchSitemapUrls();
+    console.log(`[index-now] sitemap urls: ${sitemapUrls.length}`);
+  } catch (err) {
+    console.warn(`[index-now] sitemap fetch failed: ${err.message}`);
   }
 
-  // デフォルト: GSCで「検出 - インデックス未登録」の全URL
-  return [
-    "https://camp-gear-lab.com/articles/budget-sleeping-bag-ranking",
-    "https://camp-gear-lab.com/articles/camp-chair-ranking",
-    "https://camp-gear-lab.com/articles/camp-table-ranking",
-    "https://camp-gear-lab.com/articles/camping-beginner-gear-checklist",
-    "https://camp-gear-lab.com/articles/cooler-box-ranking",
-    "https://camp-gear-lab.com/articles/duo-tent-ranking",
-    "https://camp-gear-lab.com/articles/firepit-3way-showdown",
-    "https://camp-gear-lab.com/articles/firepit-solo-ranking",
-    "https://camp-gear-lab.com/articles/rainwear-ranking",
-    "https://camp-gear-lab.com/articles/solo-tent-ranking",
-    "https://camp-gear-lab.com/articles/tarp-ranking",
-    "https://camp-gear-lab.com/category/backpack",
-    "https://camp-gear-lab.com/category/burner",
-    "https://camp-gear-lab.com/category/chair",
-    "https://camp-gear-lab.com/category/cooler",
-    "https://camp-gear-lab.com/category/firepit",
-    "https://camp-gear-lab.com/category/light",
-    "https://camp-gear-lab.com/category/shoes",
-    "https://camp-gear-lab.com/category/sleeping-bag",
-    "https://camp-gear-lab.com/category/table",
-    "https://camp-gear-lab.com/category/tarp",
-    "https://camp-gear-lab.com/category/tent",
-    "https://camp-gear-lab.com/category/wear",
-  ];
+  const localUrls = fetchUrlsFromLocalData();
+  console.log(`[index-now] local urls: ${localUrls.length}`);
+
+  // sitemap と local をマージ（ローカルの方が新しい可能性があるため和集合）
+  const merged = Array.from(new Set([...sitemapUrls, ...localUrls]));
+  console.log(`[index-now] merged unique urls: ${merged.length}`);
+  return merged;
+}
+
+// ─── Indexing API ────────────────────────────────────
+
+async function publishUrl(indexing, url) {
+  try {
+    const res = await indexing.urlNotifications.publish({
+      requestBody: { url, type: "URL_UPDATED" },
+    });
+    return { ok: true, status: 200, body: res.data?.urlNotificationMetadata?.latestUpdate?.type || "OK" };
+  } catch (err) {
+    return { ok: false, status: err.code || 0, body: err.message?.slice(0, 200) || "error" };
+  }
 }
 
 // ─── メイン ─────────────────────────────────────────
 
 async function main() {
-  const urls = getUrls();
-  console.log(`\n=== Indexing API リクエスト ${dryRun ? "(DRY RUN)" : ""} ===`);
+  const opts = parseArgs();
+  let urls = await getUrls(opts);
+
+  if (opts.filter) {
+    urls = urls.filter((u) => u.includes(opts.filter));
+    console.log(`[index-now] filtered "${opts.filter}": ${urls.length}`);
+  }
+  if (urls.length > opts.limit) {
+    urls = urls.slice(0, opts.limit);
+    console.log(`[index-now] limited to ${opts.limit}`);
+  }
+
+  console.log(`\n=== Indexing API リクエスト ${opts.dryRun ? "(DRY RUN)" : ""} ===`);
   console.log(`対象: ${urls.length}件\n`);
 
-  if (dryRun) {
-    urls.forEach(u => console.log(`  [DRY] ${u}`));
+  if (opts.dryRun) {
+    urls.forEach((u) => console.log(`  [DRY] ${u}`));
     return;
   }
 
+  const credentials = JSON.parse(process.env.INDEXING_CREDENTIALS || "{}");
+  if (!credentials.client_email) {
+    console.error("[index-now] INDEXING_CREDENTIALS 未設定または無効");
+    process.exit(1);
+  }
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ["https://www.googleapis.com/auth/indexing"],
   });
-
   const indexing = google.indexing({ version: "v3", auth });
 
+  const log = { startedAt: new Date().toISOString(), results: [] };
   let success = 0;
   let failed = 0;
+  let quotaExceeded = false;
 
-  for (const url of urls) {
-    try {
-      const res = await indexing.urlNotifications.publish({
-        requestBody: {
-          url,
-          type: "URL_UPDATED",
-        },
-      });
-      console.log(`  ✓ ${url} → ${res.data.urlNotificationMetadata?.latestUpdate?.type || "OK"}`);
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    const r = await publishUrl(indexing, url);
+    log.results.push({ url, ...r });
+    if (r.ok) {
       success++;
-    } catch (err) {
-      console.error(`  ✗ ${url} → ${err.message}`);
+      console.log(`[${i + 1}/${urls.length}] ✓ ${url}`);
+    } else {
       failed++;
+      console.warn(`[${i + 1}/${urls.length}] ✗ ${r.status} ${url} :: ${r.body}`);
+      if (r.status === 429 || r.body?.includes("quota")) {
+        console.warn("[index-now] クォータ上限到達 — 中断");
+        quotaExceeded = true;
+        break;
+      }
+      if (r.status === 403) {
+        console.warn("[index-now] 403 — service account を Search Console の「所有者」に追加してください");
+      }
     }
-
-    // Rate limit: 1 req/sec
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
   }
 
-  console.log(`\n完了: 成功=${success} 失敗=${failed}\n`);
+  log.finishedAt = new Date().toISOString();
+  log.summary = { success, failed, quotaExceeded, total: urls.length };
+  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+  fs.writeFileSync(LOG_PATH, JSON.stringify(log, null, 2));
+
+  console.log(`\n[index-now] 完了: 成功=${success} 失敗=${failed} / 全${urls.length}`);
+  console.log(`[index-now] ログ: ${LOG_PATH}`);
 }
 
-main().catch(err => {
-  console.error("エラー:", err.message);
+main().catch((err) => {
+  console.error("[index-now] エラー:", err.message);
   process.exit(1);
 });

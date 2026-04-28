@@ -151,8 +151,39 @@ async function syncTable(table, localData, toRow, label, syncState) {
 
 // ─── メイン ─────────────────────────────────────────
 
+async function autoPullFirst() {
+  // ステイル防止: sync前にSupabase最新をローカルにpullしておく
+  // 環境変数 `SKIP_AUTO_PULL=1` または `--no-pull` で無効化可
+  if (process.env.SKIP_AUTO_PULL === "1" || process.argv.includes("--no-pull")) {
+    console.log("[sync-to-supabase] auto-pull skipped");
+    return;
+  }
+  if (dryRun) {
+    console.log("[sync-to-supabase] DRY RUN: auto-pull skipped");
+    return;
+  }
+  try {
+    console.log("[sync-to-supabase] auto-pull (Supabase → local) ...");
+    const { spawn } = await import("node:child_process");
+    await new Promise((resolve, reject) => {
+      const proc = spawn("node", ["scripts/pull-from-supabase.js"], {
+        stdio: "inherit",
+        env: process.env,
+      });
+      proc.on("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error(`pull exit ${code}`))
+      );
+      proc.on("error", reject);
+    });
+  } catch (err) {
+    console.warn(`[sync-to-supabase] auto-pull failed (continue): ${err.message}`);
+  }
+}
+
 async function main() {
   console.log(`[sync-to-supabase] 開始 ${dryRun ? "(DRY RUN)" : ""}`);
+
+  await autoPullFirst();
 
   // 前回の同期状態を読み込み
   const syncState = readJson("_sync-state.json") || {};

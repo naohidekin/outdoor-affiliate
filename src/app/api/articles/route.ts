@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { isAuthenticated } from "@/lib/auth";
 import { getArticles, saveArticle, deleteArticle, getArticleById, getProducts } from "@/lib/db";
 import { Article } from "@/lib/types";
-import { notifyGoogleIndex } from "@/lib/indexing";
+import { triggerPostPublishIndexing } from "@/lib/indexing";
+import { pullFromSupabase } from "@/lib/local-sync";
 
 /** 公開前の整合性チェック。警告メッセージの配列を返す（空なら問題なし）*/
 async function checkArticleIntegrity(article: Article): Promise<string[]> {
@@ -69,7 +70,8 @@ export async function POST(request: NextRequest) {
   await saveArticle(article);
 
   if (article.status === "published" && article.slug) {
-    notifyGoogleIndex(article.slug).catch(() => {});
+    triggerPostPublishIndexing(article.slug).catch(() => {});
+    pullFromSupabase().catch(() => {});
   }
 
   return NextResponse.json(article, { status: 201 });
@@ -109,7 +111,8 @@ export async function PUT(request: NextRequest) {
   await saveArticle(updated);
 
   if (updated.status === "published" && updated.slug) {
-    notifyGoogleIndex(updated.slug).catch(() => {});
+    triggerPostPublishIndexing(updated.slug).catch(() => {});
+    pullFromSupabase().catch(() => {});
   }
 
   return NextResponse.json(updated);

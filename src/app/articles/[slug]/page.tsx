@@ -52,12 +52,17 @@ export async function generateMetadata({
 
 export default async function ArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const isPreview = sp?.preview === "1";
   const article = await getArticleBySlug(slug);
-  if (!article || article.status !== "published") notFound();
+  if (!article) notFound();
+  if (article.status !== "published" && !isPreview) notFound();
 
   const [categories, category, products, sameCategoryArticles, allArticles] =
     await Promise.all([
