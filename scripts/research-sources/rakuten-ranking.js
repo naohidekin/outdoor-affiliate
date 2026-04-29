@@ -28,16 +28,50 @@ loadEnv();
 
 const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
-const GEAR_CATEGORIES = [
+// 通年カテゴリ
+const BASE_CATEGORIES = [
   { keyword: "キャンプ テント", name: "テント" },
   { keyword: "LEDランタン キャンプ", name: "ランタン" },
   { keyword: "アウトドアチェア キャンプ", name: "チェア" },
-  { keyword: "クーラーボックス キャンプ", name: "クーラーボックス" },
-  { keyword: "シュラフ 寝袋 キャンプ", name: "シュラフ" },
   { keyword: "焚き火台 アウトドア", name: "焚き火台" },
-  { keyword: "キャンプ バーナー ストーブ", name: "バーナー" },
   { keyword: "タープ キャンプ", name: "タープ" },
 ];
+
+// 季節別追加カテゴリ
+const SEASONAL_CATEGORIES = {
+  spring: [ // 3-5月
+    { keyword: "キャンプ バーナー ストーブ", name: "バーナー" },
+    { keyword: "キャンプ テーブル 折りたたみ", name: "テーブル" },
+    { keyword: "虫除け キャンプ アウトドア", name: "虫除け" },
+  ],
+  summer: [ // 6-8月
+    { keyword: "クーラーボックス キャンプ", name: "クーラーボックス" },
+    { keyword: "ハンモック キャンプ", name: "ハンモック" },
+    { keyword: "ポータブル扇風機 アウトドア", name: "ポータブル扇風機" },
+  ],
+  autumn: [ // 9-11月
+    { keyword: "シュラフ 寝袋 キャンプ", name: "シュラフ" },
+    { keyword: "焚き火 薪 キャンプ", name: "薪・着火" },
+    { keyword: "キャンプ 防寒 アウトドア", name: "防寒ウェア" },
+  ],
+  winter: [ // 12-2月
+    { keyword: "シュラフ 寝袋 冬用 キャンプ", name: "冬用シュラフ" },
+    { keyword: "ストーブ キャンプ 暖房", name: "暖房器具" },
+    { keyword: "スキー ウェア アウトドア", name: "スキーウェア" },
+  ],
+};
+
+function getSeasonalCategories() {
+  const month = new Date().getMonth() + 1;
+  let season;
+  if (month >= 3 && month <= 5) season = "spring";
+  else if (month >= 6 && month <= 8) season = "summer";
+  else if (month >= 9 && month <= 11) season = "autumn";
+  else season = "winter";
+  return [...BASE_CATEGORIES, ...SEASONAL_CATEGORIES[season]];
+}
+
+const GEAR_CATEGORIES = getSeasonalCategories();
 
 // ─── Brave Search（楽天サイト絞り込み）─────────────────
 
@@ -157,11 +191,18 @@ JSON形式で出力:
 
       const result = JSON.parse(jsonMatch[0]);
 
-      // products.json に追加
+      // products.json に追加（重複チェック強化）
       for (const p of (result.products || [])) {
         if (!p.url || !p.name) continue;
         const productId = `rakuten-brave-${ci}-${p.url.split("/").slice(-2, -1)[0] || Date.now()}`;
-        const exists = productsData.find((x) => x.id === productId || x.name === p.name.slice(0, 80));
+        // 正規化: スペース・記号を除去して比較（「スノーピーク ランドロック」≒「スノーピークランドロック」）
+        const normalize = (s) => (s || "").replace(/[\s\-・　]/g, "").toLowerCase().slice(0, 60);
+        const newNorm = normalize(p.name);
+        const exists = productsData.find((x) =>
+          x.id === productId ||
+          x.name === p.name.slice(0, 80) ||
+          normalize(x.name) === newNorm
+        );
         if (!exists) {
           const affiliateUrl = buildAffiliateUrl(p.url);
           productsData.push({

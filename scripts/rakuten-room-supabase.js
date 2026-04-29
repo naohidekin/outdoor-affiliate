@@ -1,8 +1,9 @@
 /**
- * 楽天ROOM Supabase連携版 v1
+ * 楽天ROOM Supabase連携版 v2
  * - Supabase productsテーブルから楽天商品を取得
  * - affiliate_urlのpc=パラメータをデコードして直接商品URLへ
  * - 1日5件ずつ投稿、進捗はproduct IDで管理
+ * - v2: ボタン検出安定化、リトライ/フォールバック、コメント品質向上
  * Usage: node run.js /tmp/playwright-rakuten-room-supabase.js [--login] [--dry-run]
  */
 const { chromium } = require('playwright');
@@ -12,9 +13,12 @@ const os = require('os');
 const https = require('https');
 
 const DAILY_LIMIT = 5;
+const MAX_FAILURES = 3; // この回数失敗したらスキップ
 const PROFILE_DIR = path.join(os.homedir(), '.rakuten-room-profile');
-const PROGRESS_FILE = '/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/data/rakuten-room-supabase-progress.json';
-const ENV_FILE = '/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/.env.local';
+const BASE_DIR = '/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate';
+const PROGRESS_FILE = path.join(BASE_DIR, 'data/rakuten-room-supabase-progress.json');
+const PRODUCTS_FILE = path.join(BASE_DIR, 'data/products.json');
+const ENV_FILE = path.join(BASE_DIR, '.env.local');
 const LOGIN_MODE = process.argv.includes('--login');
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -64,19 +68,69 @@ async function fetchRakutenProducts(env) {
   });
 }
 
-async function generateRoomComment(productName, apiKey) {
+function loadProductsData() {
+  try {
+    return JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+  } catch { return []; }
+}
+
+function getProductContext(productId, productsData) {
+  const p = productsData.find(d => d.id === productId);
+  if (!p) return '';
+  const parts = [];
+  if (p.brand) parts.push(`ブランド: ${p.brand}`);
+  if (p.price) parts.push(`価格: ¥${p.price.toLocaleString()}`);
+  if (p.description) parts.push(`説明: ${p.description.substring(0, 150)}`);
+  if (p.specs && Object.keys(p.specs).length > 0) {
+    const specStr = Object.entries(p.specs).slice(0, 5).map(([k, v]) => `${k}: ${v}`).join(', ');
+    parts.push(`スペック: ${specStr}`);
+  }
+  if (p.rating) parts.push(`評価: ${p.rating}/5`);
+  return parts.length > 0 ? `\n\n商品データ:\n${parts.join('\n')}` : '';
+}
+
+function detectCategory(productName) {
+  const name = productName.toLowerCase();
+  if (/テント|ドーム|シェルター|タープ/.test(name)) return 'テント・タープ';
+  if (/シュラフ|寝袋|スリーピング/.test(name)) return 'シュラフ・寝具';
+  if (/ランタン|ライト|ランプ/.test(name)) return 'ランタン・照明';
+  if (/バーナー|ストーブ|コンロ/.test(name)) return 'バーナー・火器';
+  if (/焚き火|焚火|ファイヤー/.test(name)) return '焚き火台';
+  if (/チェア|椅子/.test(name)) return 'チェア';
+  if (/テーブル/.test(name)) return 'テーブル';
+  if (/バック|リュック|パック/.test(name)) return 'バックパック';
+  if (/ジャケット|ウェア|レイン/.test(name)) return 'ウェア';
+  if (/クーラー|保冷/.test(name)) return 'クーラーボックス';
+  if (/キッズ|kids|子ども/.test(name)) return 'キッズギア';
+  return 'キャンプギア';
+}
+
+async function generateRoomComment(productName, apiKey, productId, productsData) {
   if (!apiKey) return '';
+  const category = detectCategory(productName);
+  const productContext = getProductContext(productId, productsData);
   const prompt = `楽天ROOMに投稿するキャンプギアの紹介コメントを日本語で書いてください。
 
 商品名: ${productName}
+カテゴリ: ${category}${productContext}
+
+ペルソナ:
+- 37歳の開業医（内科ホームドクター）、長野在住
+- キャンプ歴10年、家族キャンプ中心（妻+子供2人）、たまにソロ
+- メイン装備: スノーピーク アメニティドームL + メッシュタープ
+- 買う前に徹底比較する「スペック厨」だが偉そうにしない
+- 一人称は「僕」
 
 条件:
-- 3〜5行、絵文字を適度に使用
-- キャンプ好き（長野在住・家族キャンプ・ソロキャンプ）のギア男(@camp_gear_lab)らしいコメント
+- 3〜5行、絵文字を適度に使用（多すぎない）
+- 実際に使った or 検討した体験をベースにした語り口（「先週のキャンプで〜」「ずっと気になってた〜」等）
+- カテゴリに合わせたトーン: テント系→設営の話、シュラフ系→温度感の話、バーナー系→火力や使い勝手の話
 - 最後に関連ハッシュタグ5〜7個（#キャンプ #アウトドア等）
 - 合計500文字以内
 - セール・マラソン・クーポン・期間限定・ポイント等の情報は一切含めない
-- JSONや余計な説明は不要。コメント本文のみ出力`;
+- 「おすすめです」「ぜひ」等の販促ワードは控えめに
+- AIっぽい硬い表現（〜することができます、〜と言えるでしょう）は禁止
+- コメント本文のみ出力（JSONや余計な説明は不要）`;
 
   return new Promise((resolve) => {
     const body = JSON.stringify({
@@ -111,10 +165,18 @@ async function generateRoomComment(productName, apiKey) {
 
 function loadProgress() {
   try {
-    return JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+    const data = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+    if (!data.failures) data.failures = {};
+    return data;
   } catch {
-    return { posted: [], lastRun: null };
+    return { posted: [], failures: {}, lastRun: null };
   }
+}
+function recordFailure(progress, productId) {
+  progress.failures[productId] = (progress.failures[productId] || 0) + 1;
+}
+function isMaxFailures(progress, productId) {
+  return (progress.failures[productId] || 0) >= MAX_FAILURES;
 }
 function saveProgress(progress) {
   fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
@@ -148,7 +210,11 @@ function saveProgress(progress) {
 
   const progress = loadProgress();
   const postedSet = new Set(progress.posted);
-  const pending = validProducts.filter(p => !postedSet.has(p.id));
+  const pending = validProducts.filter(p => !postedSet.has(p.id) && !isMaxFailures(progress, p.id));
+  const skippedByFailure = validProducts.filter(p => !postedSet.has(p.id) && isMaxFailures(progress, p.id));
+  if (skippedByFailure.length > 0) {
+    console.log(`  ⏭️  ${skippedByFailure.length}件を${MAX_FAILURES}回以上失敗のためスキップ`);
+  }
   const todayBatch = pending.slice(0, DAILY_LIMIT);
 
   if (todayBatch.length === 0) {
@@ -164,6 +230,9 @@ function saveProgress(progress) {
     console.log('🔍 --dry-run モード: 実際の投稿はスキップします');
     return;
   }
+
+  const productsData = loadProductsData();
+  console.log(`  📦 products.json: ${productsData.length}件の商品データ読込\n`);
 
   if (!fs.existsSync(PROFILE_DIR)) fs.mkdirSync(PROFILE_DIR, { recursive: true });
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
@@ -228,6 +297,8 @@ function saveProgress(progress) {
       const roomLinks = await page.locator('a[href*="room.rakuten.co.jp/mix"]').all();
       if (roomLinks.length === 0) {
         console.log('  ⚠️  「ROOMに投稿」ボタン見つからず');
+        recordFailure(progress, product.id);
+        console.log(`  → 失敗記録 (${progress.failures[product.id]}/${MAX_FAILURES})`);
         await page.screenshot({ path: `/tmp/room-debug-${product.id}.png` });
         continue;
       }
@@ -251,7 +322,7 @@ function saveProgress(progress) {
       try {
         const textarea = targetPage.locator('textarea').first();
         if (await textarea.isVisible({ timeout: 3000 })) {
-          const comment = await generateRoomComment(product.name, env.ANTHROPIC_API_KEY);
+          const comment = await generateRoomComment(product.name, env.ANTHROPIC_API_KEY, product.id, productsData);
           if (comment) {
             await textarea.fill(comment);
             console.log(`  ✏️  コメント: ${comment.substring(0, 40)}...`);
@@ -260,29 +331,46 @@ function saveProgress(progress) {
         }
       } catch {}
 
-      const submitSelectors = [
-        '.collect-btn',
-        'button:has-text("完了")',
-        'button[type="submit"]',
-        'button:has-text("投稿")',
-        'button:has-text("コレ")',
-        '[class*="submit"]',
-        'input[type="submit"]',
-      ];
-
+      // 投稿ボタン検出: .collect-btn が複数ある場合、最後のものが実際の投稿ボタン
+      // （最初のものは画像編集の「完了」ボタンの場合がある）
       let posted = false;
-      for (const sel of submitSelectors) {
-        try {
-          const btn = targetPage.locator(sel).first();
-          if (await btn.isVisible({ timeout: 2000 })) {
-            const btnText = (await btn.textContent()).trim();
-            console.log(`  ✅ 投稿ボタン: "${btnText}" → クリック`);
-            await btn.click();
-            await targetPage.waitForTimeout(2000);
+      try {
+        const collectBtns = await targetPage.locator('.collect-btn').all();
+        if (collectBtns.length > 0) {
+          // 最後の .collect-btn を使用（実際の投稿送信ボタン）
+          const submitBtn = collectBtns[collectBtns.length - 1];
+          if (await submitBtn.isVisible({ timeout: 3000 })) {
+            const btnText = (await submitBtn.textContent()).trim();
+            console.log(`  🔘 投稿ボタン: "${btnText}" (${collectBtns.length}個中最後) → クリック`);
+            await submitBtn.click();
+            await targetPage.waitForTimeout(3000);
             posted = true;
-            break;
           }
-        } catch { continue; }
+        }
+      } catch (err) {
+        console.log(`  ⚠️  .collect-btn クリックエラー: ${err.message.substring(0, 80)}`);
+      }
+
+      // フォールバック: .collect-btn がなかった場合
+      if (!posted) {
+        const fallbackSelectors = [
+          'button:has-text("投稿")',
+          'button:has-text("コレ")',
+          'button[type="submit"]',
+        ];
+        for (const sel of fallbackSelectors) {
+          try {
+            const btn = targetPage.locator(sel).last();
+            if (await btn.isVisible({ timeout: 2000 })) {
+              const btnText = (await btn.textContent()).trim();
+              console.log(`  🔘 フォールバック: "${btnText}" → クリック`);
+              await btn.click();
+              await targetPage.waitForTimeout(2000);
+              posted = true;
+              break;
+            }
+          } catch { continue; }
+        }
       }
 
       if (!posted) {
@@ -292,11 +380,13 @@ function saveProgress(progress) {
             .filter(b => b.text).slice(0, 10)
         );
         console.log('  ⚠️  投稿ボタン自動検出失敗。ページ上のボタン:', JSON.stringify(btns));
+        recordFailure(progress, product.id);
         if (newPage) await newPage.close().catch(() => {});
         continue;
       }
 
       progress.posted.push(product.id);
+      if (progress.failures[product.id]) delete progress.failures[product.id];
       addedCount++;
       console.log('  ✅ 追加完了！');
       if (newPage) await newPage.close().catch(() => {});
@@ -306,6 +396,9 @@ function saveProgress(progress) {
       if (err.message.includes('ERR_ABORTED') || err.message.includes('ERR_NAME_NOT_RESOLVED')) {
         progress.posted.push(product.id);
         console.log('  → 無効URLとしてスキップ済みにマーク');
+      } else {
+        recordFailure(progress, product.id);
+        console.log(`  → 失敗記録 (${progress.failures[product.id]}/${MAX_FAILURES})`);
       }
     }
 
@@ -315,10 +408,12 @@ function saveProgress(progress) {
   progress.lastRun = new Date().toISOString();
   saveProgress(progress);
 
+  const failedCount = Object.values(progress.failures).filter(v => v >= MAX_FAILURES).length;
   console.log(`\n============================`);
   console.log(`✅ 本日: ${addedCount}/${todayBatch.length} 件追加`);
   console.log(`📊 累計: ${progress.posted.length}/${validProducts.length} 件`);
-  console.log(`残り: ${validProducts.length - progress.posted.length} 件`);
+  console.log(`残り: ${validProducts.length - progress.posted.length - failedCount} 件`);
+  if (failedCount > 0) console.log(`⏭️  永続スキップ: ${failedCount} 件`);
   console.log(`============================`);
 
   await page.waitForTimeout(2000);

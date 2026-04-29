@@ -2,6 +2,7 @@
   "version": 1,
   "genre": "camp-gear",
   "siteUrl": "https://camp-gear-lab.com",
+  "rakutenRoomUrl": "https://room.rakuten.co.jp/camp_gear_lab",
   "account": {
     "platform": "x",
     "handle": "@camp_gear_lab",
@@ -183,6 +184,11 @@
       "axis": "camp",
       "weeklyCount": 1,
       "approval": "auto"
+    },
+    "rakuten_room_pick": {
+      "axis": "camp",
+      "weeklyCount": 1,
+      "approval": "batch"
     }
   },
   "approvalRules": {
@@ -197,7 +203,8 @@
     "batch": [
       "article_promo",
       "seasonal_hook",
-      "repost_rewrite"
+      "repost_rewrite",
+      "rakuten_room_pick"
     ],
     "manual": [
       "doc_health_tip"

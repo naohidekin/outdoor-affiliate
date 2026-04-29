@@ -29,6 +29,7 @@ export const ACCOUNT_CONFIG = _config;
 // === 外部化された定数（account-config.json から読み込み）===
 
 export const SITE_URL = _config.siteUrl;
+export const RAKUTEN_ROOM_URL = _config.rakutenRoomUrl || "${RAKUTEN_ROOM_URL}";
 export const CATEGORY_HASHTAGS = _config.categoryHashtags;
 
 export const SEASON_CONTEXT = _config.seasonContext;
@@ -513,17 +514,45 @@ ${seedBlock(seed)}
 ${jsonOutputSpec()}`;
 }
 
-export function buildSeasonalHookPrompt({ count, month, seed, articles, categories }) {
+// 楽天セールカレンダー（主要イベント）
+const RAKUTEN_SALE_CALENDAR = {
+  1:  [{ name: "お買い物マラソン", around: "中旬" }],
+  2:  [{ name: "お買い物マラソン", around: "中旬" }],
+  3:  [{ name: "スーパーSALE", around: "上旬" }, { name: "お買い物マラソン", around: "下旬" }],
+  4:  [{ name: "お買い物マラソン", around: "中旬" }],
+  5:  [{ name: "お買い物マラソン", around: "中旬" }],
+  6:  [{ name: "スーパーSALE", around: "上旬" }, { name: "お買い物マラソン", around: "下旬" }],
+  7:  [{ name: "お買い物マラソン", around: "中旬" }],
+  8:  [{ name: "お買い物マラソン", around: "中旬" }],
+  9:  [{ name: "スーパーSALE", around: "上旬" }, { name: "お買い物マラソン", around: "下旬" }],
+  10: [{ name: "お買い物マラソン", around: "中旬" }],
+  11: [{ name: "お買い物マラソン", around: "中旬" }],
+  12: [{ name: "スーパーSALE", around: "上旬" }, { name: "大感謝祭", around: "下旬" }],
+};
+
+export function buildSeasonalHookPrompt({ count, month, seed, articles, categories, roomProducts }) {
   const seasonContext = SEASON_CONTEXT[month];
   const articleInfo = articles?.length
     ? `\n## 関連記事（リンク候補）\n${articleListBlock(articles, categories)}`
     : "";
+
+  // 楽天セール情報
+  const sales = RAKUTEN_SALE_CALENDAR[month] || [];
+  const saleBlock = sales.length > 0
+    ? `\n## 今月の楽天セール情報（投稿ネタ候補）
+${sales.map((s) => `- 楽天${s.name}（${month}月${s.around}頃）`).join("\n")}
+- セール時期なら「${count}件のうち1件は楽天セール×キャンプギアのネタにしてもよい」
+- その場合: urlフィールドに「${RAKUTEN_ROOM_URL}」を入れ、末尾に「楽天ROOMはリプ欄に。(*広告を含みます)」と書く
+- セール投稿は押しつけない。「この時期に買い回るなら」「僕もマラソンで補充した」程度のトーン`
+    : "";
+
   return `${PERSONA_PREAMBLE}
 
 ## 現在の季節
 ${month}月: ${seasonContext}
 ${seedBlock(seed)}
 ${articleInfo}
+${saleBlock}
 
 ## タスク
 今の季節・イベント・トレンドに連動した投稿を${count}件。
@@ -565,26 +594,63 @@ ${jsonOutputSpec("各オブジェクトに \"originalIndex\": 元投稿の番号
 
 /**
  * タイプ名からプロンプトを生成するディスパッチャー
- * @param {string} type - 10タイプのいずれか
- * @param {object} context - { month, count, seed, articles, categories, existingPosts }
+ * @param {string} type - 投稿タイプ
+ * @param {object} context - { month, count, seed, articles, categories, existingPosts, roomProducts }
  * @returns {string} プロンプト文字列
  */
 export function getPromptForType(type, context) {
   switch (type) {
-    case "article_promo":     return buildArticlePromoPrompt(context);
-    case "outdoor_tip":       return buildOutdoorTipPrompt(context);
-    case "poll_question":     return buildPollQuestionPrompt(context);
-    case "failure_story":     return buildFailureStoryPrompt(context);
-    case "gear_thread":       return buildGearThreadPrompt(context);
-    case "ai_dev_log":        return buildAiDevLogPrompt(context);
-    case "parenting_outdoor": return buildParentingOutdoorPrompt(context);
-    case "doc_health_tip":    return buildDocHealthTipPrompt(context);
-    case "seasonal_hook":     return buildSeasonalHookPrompt(context);
-    case "repost_rewrite":    return buildRepostRewritePrompt(context);
-    case "news_comment":      return buildNewsCommentPrompt(context);
+    case "article_promo":      return buildArticlePromoPrompt(context);
+    case "outdoor_tip":        return buildOutdoorTipPrompt(context);
+    case "poll_question":      return buildPollQuestionPrompt(context);
+    case "failure_story":      return buildFailureStoryPrompt(context);
+    case "gear_thread":        return buildGearThreadPrompt(context);
+    case "ai_dev_log":         return buildAiDevLogPrompt(context);
+    case "parenting_outdoor":  return buildParentingOutdoorPrompt(context);
+    case "doc_health_tip":     return buildDocHealthTipPrompt(context);
+    case "seasonal_hook":      return buildSeasonalHookPrompt(context);
+    case "repost_rewrite":     return buildRepostRewritePrompt(context);
+    case "news_comment":       return buildNewsCommentPrompt(context);
+    case "rakuten_room_pick":  return buildRakutenRoomPickPrompt(context);
     default:
       throw new Error(`未知の投稿タイプ: ${type}`);
   }
+}
+
+/**
+ * rakuten_room_pick: 楽天ROOMに追加した商品をX投稿で紹介。
+ * context.roomProducts: ROOM投稿済み商品リスト [{ id, name, price, productUrl }]
+ */
+export function buildRakutenRoomPickPrompt({ count, month, seed, roomProducts }) {
+  const seasonContext = SEASON_CONTEXT[month];
+  const productList = (roomProducts || [])
+    .slice(0, 10)
+    .map((p, i) => `${i + 1}. ${p.name}${p.price ? ` (¥${p.price.toLocaleString()})` : ""}`)
+    .join("\n");
+
+  return `${PERSONA_PREAMBLE}
+
+## 現在の季節
+${month}月: ${seasonContext}
+${seedBlock(seed)}
+
+## タスク
+楽天ROOMに最近追加したキャンプギアを紹介するX投稿を${count}件。
+
+- type は全て "rakuten_room_pick"
+- トーン: 「最近ROOMに追加した○○、実際に使ってるけど△△なところが気に入ってる」「ずっと楽天で買い回ってるギアたち、ROOMにまとめ始めた」など自然な語り口
+- **本文にURLを含めない**。末尾に「楽天ROOMはリプ欄に。」と書く
+- urlフィールドに「${RAKUTEN_ROOM_URL}」を入れる（ROOMマイページリンク）
+- selfReply: 「ROOM覗いてみて、他のギアも載せてます」「フォローしてくれたら嬉しい」系の軽い誘導
+- ハッシュタグは付けない（# 一切使わない）
+- 文末に「(*広告を含みます)」と入れる（アフィリエイト表記）
+- 商品の具体的な感想・スペック比較・使用シーンを盛り込むこと
+- 1投稿で1〜2商品に絞る（詰め込まない）
+
+## ROOM掲載商品（この中から選んで紹介）
+${productList || "（商品データなし — 一般的なキャンプギアについて書いてください）"}
+
+${jsonOutputSpec()}`;
 }
 
 /**

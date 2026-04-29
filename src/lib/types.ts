@@ -40,6 +40,7 @@ export type XPostType =
   | "rakuten_sale"
   | "amazon_deal"
   | "news_comment"
+  | "rakuten_room_pick"
   | "gear_story"
   | "poll_question"
   | "failure_story"

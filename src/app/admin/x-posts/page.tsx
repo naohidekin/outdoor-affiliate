@@ -10,6 +10,7 @@ type XPostType =
   | "rakuten_sale"
   | "amazon_deal"
   | "news_comment"
+  | "rakuten_room_pick"
   | "gear_story"
   | "poll_question"
   | "failure_story"
@@ -52,6 +53,7 @@ const TYPE_LABELS: Record<XPostType, string> = {
   rakuten_sale: "楽天セール",
   amazon_deal: "Amazonセール",
   news_comment: "ニュース",
+  rakuten_room_pick: "楽天ROOM",
   gear_story: "ギア小話",
   poll_question: "アンケート",
   failure_story: "失敗談",
@@ -168,7 +170,7 @@ export default function XPostsPage() {
     },
     camp: {
       label: "🏕️ キャンプ系",
-      types: ["outdoor_tip", "failure_story", "news_comment"],
+      types: ["outdoor_tip", "failure_story", "news_comment", "rakuten_room_pick"],
     },
     others: {
       label: "📅 その他",
@@ -465,7 +467,7 @@ export default function XPostsPage() {
           <button
             onClick={() => handleGenerate("camp")}
             disabled={generating}
-            title="outdoor_tip (2件) + failure_story (1件) + news_comment (1件) = 約1-2分"
+            title="outdoor_tip (2件) + failure_story (1件) + news_comment (1件) + rakuten_room_pick (1件) = 約1-2分"
             className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
           >
             🏕️ キャンプ系 生成

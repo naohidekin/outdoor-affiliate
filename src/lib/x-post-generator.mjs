@@ -269,7 +269,7 @@ function markSeedUsed(seedData, seedId) {
 
 // === UTM パラメータ ===
 
-const UTM_TYPES = new Set(["article_promo", "seasonal_hook", "parenting_outdoor", "news_comment"]);
+const UTM_TYPES = new Set(["article_promo", "seasonal_hook", "parenting_outdoor", "news_comment", "rakuten_room_pick"]);
 
 function addUtmIfNeeded(post, type) {
   // UTM 付与は対象タイプのみ
@@ -659,6 +659,7 @@ const UNSPLASH_QUERIES = {
   poll_question: "outdoor camping choice gear",
   news_comment: "news outdoor",
   repost_rewrite: "outdoor camping nature",
+  rakuten_room_pick: "camping gear equipment outdoor",
 };
 
 /**
@@ -827,6 +828,30 @@ async function generatePosts(opts) {
       context.existingPosts = existingPosts
         .filter((p) => p.status === "posted" && p.postedAt && new Date(p.postedAt) < thirtyDaysAgo)
         .slice(0, 10);
+    }
+
+    // rakuten_room_pick: ROOM投稿済み商品をコンテキストに追加
+    if (item.type === "rakuten_room_pick") {
+      const progressPath = path.join(DATA_DIR, "rakuten-room-supabase-progress.json");
+      try {
+        const progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
+        const postedIds = new Set(progress.posted || []);
+        // products.json から ROOM投稿済み商品を抽出
+        const allProducts = products || [];
+        context.roomProducts = allProducts
+          .filter((p) => postedIds.has(p.id) && p.affiliateUrl?.includes("rakuten"))
+          .map((p) => ({ id: p.id, name: p.name, price: p.price, productUrl: p.affiliateUrl }))
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 10);
+        if (context.roomProducts.length === 0) {
+          console.log(`[rakuten_room_pick] ROOM投稿済み商品が見つかりません。一般的な内容で生成します`);
+        } else {
+          console.log(`[rakuten_room_pick] ROOM投稿済み商品 ${context.roomProducts.length}件をプロンプトに注入`);
+        }
+      } catch (err) {
+        console.warn(`[rakuten_room_pick] 進捗ファイル読み込みエラー: ${err.message}`);
+        context.roomProducts = [];
+      }
     }
 
     // news_comment: ニュースフィードをコンテキストに追加
