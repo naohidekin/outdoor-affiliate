@@ -28,37 +28,75 @@ loadEnv();
 
 const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
-// 通年カテゴリ
-const BASE_CATEGORIES = [
-  { keyword: "キャンプ テント", name: "テント" },
-  { keyword: "LEDランタン キャンプ", name: "ランタン" },
-  { keyword: "アウトドアチェア キャンプ", name: "チェア" },
-  { keyword: "焚き火台 アウトドア", name: "焚き火台" },
-  { keyword: "タープ キャンプ", name: "タープ" },
-];
+// === 4軸 × 季節別カテゴリ ===
 
-// 季節別追加カテゴリ
-const SEASONAL_CATEGORIES = {
-  spring: [ // 3-5月
-    { keyword: "キャンプ バーナー ストーブ", name: "バーナー" },
-    { keyword: "キャンプ テーブル 折りたたみ", name: "テーブル" },
-    { keyword: "虫除け キャンプ アウトドア", name: "虫除け" },
-  ],
-  summer: [ // 6-8月
-    { keyword: "クーラーボックス キャンプ", name: "クーラーボックス" },
-    { keyword: "ハンモック キャンプ", name: "ハンモック" },
-    { keyword: "ポータブル扇風機 アウトドア", name: "ポータブル扇風機" },
-  ],
-  autumn: [ // 9-11月
-    { keyword: "シュラフ 寝袋 キャンプ", name: "シュラフ" },
-    { keyword: "焚き火 薪 キャンプ", name: "薪・着火" },
-    { keyword: "キャンプ 防寒 アウトドア", name: "防寒ウェア" },
-  ],
-  winter: [ // 12-2月
-    { keyword: "シュラフ 寝袋 冬用 キャンプ", name: "冬用シュラフ" },
-    { keyword: "ストーブ キャンプ 暖房", name: "暖房器具" },
-    { keyword: "スキー ウェア アウトドア", name: "スキーウェア" },
-  ],
+const AXIS_CATEGORIES = {
+  camp: {
+    base: [
+      { keyword: "キャンプ テント 人気", name: "テント" },
+      { keyword: "LEDランタン キャンプ", name: "ランタン" },
+      { keyword: "アウトドアチェア キャンプ", name: "チェア" },
+      { keyword: "焚き火台 アウトドア", name: "焚き火台" },
+      { keyword: "タープ キャンプ", name: "タープ" },
+    ],
+    seasonal: {
+      spring: [
+        { keyword: "キャンプ バーナー ストーブ", name: "バーナー" },
+        { keyword: "虫除け キャンプ アウトドア", name: "虫除け" },
+      ],
+      summer: [
+        { keyword: "クーラーボックス キャンプ", name: "クーラーボックス" },
+        { keyword: "ポータブル扇風機 アウトドア", name: "ポータブル扇風機" },
+      ],
+      autumn: [
+        { keyword: "シュラフ 寝袋 キャンプ", name: "シュラフ" },
+        { keyword: "キャンプ 防寒 アウトドア", name: "防寒ウェア" },
+      ],
+      winter: [
+        { keyword: "シュラフ 寝袋 冬用", name: "冬用シュラフ" },
+        { keyword: "ストーブ キャンプ 暖房", name: "暖房器具" },
+      ],
+    },
+  },
+  doctor: {
+    base: [
+      { keyword: "血圧計 家庭用 人気", name: "血圧計" },
+      { keyword: "体組成計 スマホ連携", name: "体組成計" },
+      { keyword: "マッサージガン 筋膜リリース", name: "マッサージガン" },
+    ],
+    seasonal: {
+      spring: [{ keyword: "花粉対策グッズ 人気", name: "花粉対策" }],
+      summer: [{ keyword: "熱中症対策グッズ", name: "熱中症対策" }],
+      autumn: [{ keyword: "加湿器 卓上 人気", name: "加湿器" }],
+      winter: [{ keyword: "温熱治療器 家庭用", name: "温熱治療器" }],
+    },
+  },
+  ai: {
+    base: [
+      { keyword: "ワイヤレスキーボード 人気", name: "キーボード" },
+      { keyword: "モバイルモニター 人気", name: "モバイルモニター" },
+      { keyword: "USBハブ Type-C 人気", name: "USBハブ" },
+    ],
+    seasonal: {
+      spring: [{ keyword: "ノートPCスタンド 人気", name: "PCスタンド" }],
+      summer: [{ keyword: "ノートPC 冷却 ファン", name: "PC冷却" }],
+      autumn: [{ keyword: "デスクライト LED 調光", name: "デスクライト" }],
+      winter: [{ keyword: "USBブランケット ヒーター", name: "USBヒーター" }],
+    },
+  },
+  parenting: {
+    base: [
+      { keyword: "子供 キャンプ 寝袋 キッズ", name: "キッズ寝袋" },
+      { keyword: "キッズ リュック アウトドア", name: "キッズリュック" },
+      { keyword: "知育玩具 人気 ランキング", name: "知育玩具" },
+    ],
+    seasonal: {
+      spring: [{ keyword: "子供 水筒 アウトドア", name: "キッズ水筒" }],
+      summer: [{ keyword: "子供 プール 水遊び 人気", name: "水遊びグッズ" }],
+      autumn: [{ keyword: "子供 防寒着 アウトドア", name: "キッズ防寒" }],
+      winter: [{ keyword: "キッズ スキーウェア", name: "キッズスキー" }],
+    },
+  },
 };
 
 function getSeasonalCategories() {
@@ -68,7 +106,15 @@ function getSeasonalCategories() {
   else if (month >= 6 && month <= 8) season = "summer";
   else if (month >= 9 && month <= 11) season = "autumn";
   else season = "winter";
-  return [...BASE_CATEGORIES, ...SEASONAL_CATEGORIES[season]];
+
+  const all = [];
+  for (const [axis, config] of Object.entries(AXIS_CATEGORIES)) {
+    const cats = [...config.base, ...(config.seasonal[season] || [])];
+    for (const cat of cats) {
+      all.push({ ...cat, axis });
+    }
+  }
+  return all;
 }
 
 const GEAR_CATEGORIES = getSeasonalCategories();
@@ -223,6 +269,7 @@ JSON形式で出力:
             addedBy: "rakuten-brave",
             addedAt: today,
             sourceApi: "brave-rakuten",
+            axis: cat.axis || "camp",
           });
           addedProducts++;
         }
@@ -241,8 +288,8 @@ JSON形式で出力:
           theme: topic.theme,
           angle: topic.angle,
           hint: topic.hint,
-          axis: "camp",
-          types: ["outdoor_tip", "gear_thread", "article_promo"],
+          axis: cat.axis || "camp",
+          types: ["outdoor_tip", "gear_thread", "article_promo", "rakuten_room_pick"],
           season: [],
           used_count: 0,
           last_used: null,

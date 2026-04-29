@@ -273,9 +273,15 @@ ${tweetsText}
     "timing": "なぜこのタイミングで伸びたか（20文字以内）",
     "shareability": "RT/引用される理由 (utility/humor/identity/debate/emotional/FOMO)",
     "keyTechniques": ["使われている具体的テクニック（2-3個）"],
-    "adaptability": "ギア男（37歳医師キャンパー、AI開発者）のペルソナとの親和性 (high/medium/low)"
+    "adaptability": "ギア男（37歳医師キャンパー、AI開発者）のペルソナとの親和性 (high/medium/low)",
+    "mentionedProducts": [{"name": "商品名", "brand": "ブランド名"}]
   }
-]`,
+]
+
+**mentionedProducts**: 投稿内で言及されている具体的な商品・製品・サービスを抽出してください。
+- キャンプギア、ガジェット、健康グッズ、キッズ用品など全ジャンル対象
+- 具体的な商品名・型番がある場合のみ抽出（「テント」のような一般名詞は除外）
+- 該当なしなら空配列 []`,
           },
         ],
       });
@@ -644,6 +650,36 @@ async function runViralScout(opts) {
   console.log("\n[Phase 2] パターン分析...");
   const analyzedPosts = await analyzeViralPatterns(claude, scoutedPosts);
   const aggregate = aggregateAnalysis(analyzedPosts);
+
+  // Phase 2.8: Product Discovery（バイラル投稿から商品を自動発掘）
+  const allMentionedProducts = [];
+  for (const p of analyzedPosts) {
+    if (p.analysis?.mentionedProducts?.length > 0) {
+      for (const prod of p.analysis.mentionedProducts) {
+        if (prod.name && prod.name.length >= 3) {
+          allMentionedProducts.push({ ...prod, axis: p.axis });
+        }
+      }
+    }
+  }
+  if (allMentionedProducts.length > 0) {
+    console.log(`\n[Phase 2.8] バイラル投稿から ${allMentionedProducts.length}件の商品を検出`);
+    if (!opts.dryRun) {
+      try {
+        const { lookupAndRegisterProducts } = await import("./product-lookup.mjs");
+        const result = await lookupAndRegisterProducts(allMentionedProducts, {
+          source: "viral-scout",
+          dryRun: opts.dryRun,
+        });
+        console.log(`[Phase 2.8] 登録: ${result.added}件追加, ${result.skipped}件重複, ${result.notFound}件該当なし`);
+      } catch (err) {
+        console.warn(`[Phase 2.8] 商品登録エラー: ${err.message}`);
+      }
+    } else {
+      console.log("[Phase 2.8] DRY RUN: 商品登録をスキップ");
+      allMentionedProducts.forEach((p) => console.log(`  - ${p.name} (${p.brand || "?"}) [${p.axis}]`));
+    }
+  }
 
   // Phase 3: Generate
   console.log("\n[Phase 3] 引用投稿・リプライ生成...");
