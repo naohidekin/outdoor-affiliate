@@ -331,21 +331,28 @@ function saveProgress(progress) {
         }
       } catch {}
 
-      // 投稿ボタン検出: .collect-btn が複数ある場合、最後のものが実際の投稿ボタン
-      // （最初のものは画像編集の「完了」ボタンの場合がある）
+      // 投稿ボタン検出: evaluate()で直接DOMを操作（Playwright locatorより確実）
+      // .collect-btn が複数ある場合、最後のものが実際の投稿ボタン
       let posted = false;
       try {
-        const collectBtns = await targetPage.locator('.collect-btn').all();
-        if (collectBtns.length > 0) {
-          // 最後の .collect-btn を使用（実際の投稿送信ボタン）
-          const submitBtn = collectBtns[collectBtns.length - 1];
-          if (await submitBtn.isVisible({ timeout: 3000 })) {
-            const btnText = (await submitBtn.textContent()).trim();
-            console.log(`  🔘 投稿ボタン: "${btnText}" (${collectBtns.length}個中最後) → クリック`);
-            await submitBtn.click();
-            await targetPage.waitForTimeout(3000);
-            posted = true;
-          }
+        // まずボタンが描画されるのを待つ
+        await targetPage.waitForSelector('.collect-btn', { timeout: 8000 }).catch(() => null);
+        await targetPage.waitForTimeout(1000);
+
+        const clickResult = await targetPage.evaluate(() => {
+          const btns = document.querySelectorAll('.collect-btn');
+          if (btns.length === 0) return { ok: false, count: 0, text: '' };
+          // 最後の .collect-btn をクリック（最初のものは画像編集の完了ボタン）
+          const target = btns[btns.length - 1];
+          const text = (target.textContent || '').trim();
+          target.click();
+          return { ok: true, count: btns.length, text };
+        });
+
+        if (clickResult.ok) {
+          console.log(`  🔘 投稿ボタン: "${clickResult.text}" (${clickResult.count}個中最後) → クリック`);
+          await targetPage.waitForTimeout(3000);
+          posted = true;
         }
       } catch (err) {
         console.log(`  ⚠️  .collect-btn クリックエラー: ${err.message.substring(0, 80)}`);
@@ -353,24 +360,25 @@ function saveProgress(progress) {
 
       // フォールバック: .collect-btn がなかった場合
       if (!posted) {
-        const fallbackSelectors = [
-          'button:has-text("投稿")',
-          'button:has-text("コレ")',
-          'button[type="submit"]',
-        ];
-        for (const sel of fallbackSelectors) {
-          try {
-            const btn = targetPage.locator(sel).last();
-            if (await btn.isVisible({ timeout: 2000 })) {
-              const btnText = (await btn.textContent()).trim();
-              console.log(`  🔘 フォールバック: "${btnText}" → クリック`);
-              await btn.click();
-              await targetPage.waitForTimeout(2000);
-              posted = true;
-              break;
+        try {
+          const fallbackResult = await targetPage.evaluate(() => {
+            const selectors = ['button[type="submit"]', 'input[type="submit"]'];
+            for (const sel of selectors) {
+              const btn = document.querySelector(sel);
+              if (btn) {
+                const text = (btn.textContent || btn.value || '').trim();
+                btn.click();
+                return { ok: true, text };
+              }
             }
-          } catch { continue; }
-        }
+            return { ok: false, text: '' };
+          });
+          if (fallbackResult.ok) {
+            console.log(`  🔘 フォールバック: "${fallbackResult.text}" → クリック`);
+            await targetPage.waitForTimeout(2000);
+            posted = true;
+          }
+        } catch {}
       }
 
       if (!posted) {
