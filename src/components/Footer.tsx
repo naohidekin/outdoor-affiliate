@@ -56,7 +56,7 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
               商品リンクから購入いただくと運営費の一部になります。
             </p>
             <a
-              href="https://room.rakuten.co.jp/camp_gear_lab"
+              href="https://room.rakuten.co.jp/room_naomaru/items"
               target="_blank"
               rel="noopener noreferrer nofollow sponsored"
               className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs font-medium hover:bg-rose-100 transition"
