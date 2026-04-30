@@ -4077,5 +4077,65 @@
     "rating": 4.4,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-04-27T00:00:00+00:00"
+  },
+  {
+    "id": "growler-001",
+    "name": "スタンレー クラシック真空グロウラー 1.9L",
+    "brand": "STANLEY(スタンレー)",
+    "price": 8490,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/canpanera/cabinet/stanley/10-01941_01.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%AF%E3%83%A9%E3%82%B7%E3%83%83%E3%82%AF+%E7%9C%9F%E7%A9%BA+%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC+1.9L/",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BXKPKCW6?tag=nao78-22",
+    "categoryId": "cooler",
+    "specs": {
+      "capacity": "1.9L",
+      "weight": "約900g",
+      "insulation": "10℃以下/24時間",
+      "material": "18/8ステンレス",
+      "opening": "約60mm",
+      "carbonated": "対応"
+    },
+    "description": "世界トップクラスのビール消費国アメリカで開発されたグロウラー。真空断熱構造で保冷力が高く、キャンプでの氷の持ち運びに最適。炭酸飲料にも対応。",
+    "rating": 4.5
+  },
+  {
+    "id": "growler-002",
+    "name": "ドリンクタンクス グロウラー 64oz (1.9L)",
+    "brand": "DrinkTanks(ドリンクタンクス)",
+    "price": 12100,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/canpanera/cabinet/drinktanks/dt-g-64.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%83%89%E3%83%AA%E3%83%B3%E3%82%AF%E3%82%BF%E3%83%B3%E3%82%AF%E3%82%B9+%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC+64oz/",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07QDYYZ4B?tag=nao78-22",
+    "categoryId": "cooler",
+    "specs": {
+      "capacity": "1.9L (64oz)",
+      "weight": "約1100g",
+      "insulation": "24時間以上",
+      "material": "18/8ステンレス",
+      "opening": "約55mm",
+      "carbonated": "対応（ケグキャップ対応）"
+    },
+    "description": "オレゴン発のグロウラーブランド。別売りケグキャップでCO2加圧が可能で、クラフトビールの持ち帰りに最適。保冷力も高い。",
+    "rating": 4.3
+  },
+  {
+    "id": "growler-003",
+    "name": "スタンレー アイスフロー フリップストロー 真空ジャグ 1.9L",
+    "brand": "STANLEY(スタンレー)",
+    "price": 5500,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/canpanera/cabinet/stanley/10-09750_01.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L/",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L&tag=nao78-22",
+    "categoryId": "cooler",
+    "specs": {
+      "capacity": "1.9L",
+      "weight": "約680g",
+      "insulation": "10℃以下/18時間",
+      "material": "18/8ステンレス",
+      "opening": "ストロー式",
+      "carbonated": "非対応"
+    },
+    "description": "ストロー付きで直接飲める手軽さが魅力。日常使いとキャンプの兼用に向いている。軽量で持ち運びやすい。",
+    "rating": 4.2
   }
 ]
