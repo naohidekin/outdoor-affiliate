@@ -12,6 +12,8 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
+import MedicalAdvice from "@/components/MedicalAdvice";
+import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 
 export const revalidate = 3600; // ISR: 1時間
 
@@ -98,6 +100,18 @@ export default async function ArticlePage({
     .slice(0, 3);
 
   const faqs = article.faqs ?? [];
+
+  // 「医師から一言」セクションをまとめ直前に注入
+  const medicalAdvice = MEDICAL_ADVICE_MAP[article.slug] ?? null;
+  let contentBefore = article.content;
+  let contentSummaryOnward: string | null = null;
+  if (medicalAdvice) {
+    const idx = article.content.indexOf("\n## まとめ");
+    if (idx !== -1) {
+      contentBefore = article.content.slice(0, idx);
+      contentSummaryOnward = article.content.slice(idx + 1);
+    }
+  }
   const baseUrl = "https://camp-gear-lab.com";
 
   const articleJsonLd = {
@@ -109,8 +123,9 @@ export default async function ArticlePage({
     dateModified: article.updatedAt,
     author: {
       "@type": "Person",
-      name: "ギア男",
-      description: "長野在住・キャンプ歴10年・2児の父。医療系の仕事をしながらキャンプギアを徹底比較。",
+      name: "現役小児科開業医",
+      jobTitle: "小児科医",
+      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -313,10 +328,21 @@ export default async function ArticlePage({
             {article.title}
           </h1>
 
-          <div className="flex items-center gap-3 text-sm mb-10">
-            {article.publishedAt && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mb-10 pb-4 border-b border-line">
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-lake-600 transition"
+            >
+              <span>🩺</span>
+              <span className="font-medium">現役小児科開業医</span>
+              <span className="text-slate-400">監修・執筆</span>
+            </Link>
+            {(article.updatedAt ?? article.publishedAt) && (
               <time className="text-slate-500">
-                {new Date(article.publishedAt).toLocaleDateString("ja-JP", {
+                最終更新:{" "}
+                {new Date(
+                  article.updatedAt ?? article.publishedAt ?? ""
+                ).toLocaleDateString("ja-JP", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -334,7 +360,15 @@ export default async function ArticlePage({
           </div>
 
           {/* Article body */}
-          <ArticleContent content={article.content} products={products} />
+          {contentSummaryOnward ? (
+            <>
+              <ArticleContent content={contentBefore} products={products} />
+              <MedicalAdvice {...medicalAdvice!} />
+              <ArticleContent content={contentSummaryOnward} products={products} />
+            </>
+          ) : (
+            <ArticleContent content={article.content} products={products} />
+          )}
         </article>
 
         {/* FAQ section */}
