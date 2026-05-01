@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
 import {
   getOverrides,
   markDeleted,
   setStatus,
 } from "@/lib/viral-scout-overrides";
-import { runViralScout } from "@/lib/viral-scout-agent.mjs";
-
-export const maxDuration = 300;
 
 const DATA_PATH = path.join(process.cwd(), "data", "viral-scout-results.json");
+const LOCK_PATH = path.join(process.cwd(), "data", "viral-scout.lock");
 
 interface ViralPostGenerated {
   text?: string;
@@ -116,21 +115,52 @@ export async function DELETE(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
-  const opts = {
-    days: typeof body.days === "number" ? body.days : 2,
-    minScore: typeof body.minScore === "number" ? body.minScore : 20,
-    count: typeof body.count === "number" ? body.count : 50,
-    axis: body.axis || null,
-    dryRun: false,
-  };
-
-  try {
-    const result = await runViralScout(opts);
-    return NextResponse.json({ ok: true, ...result });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[viral-scout POST]", msg);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  // 既に実行中なら弾く
+  if (fs.existsSync(LOCK_PATH)) {
+    const lockAge = Date.now() - fs.statSync(LOCK_PATH).mtimeMs;
+    if (lockAge < 10 * 60 * 1000) {
+      return NextResponse.json({ ok: true, status: "running" });
+    }
+    // 10分以上前のロックは stale として削除
+    fs.unlinkSync(LOCK_PATH);
   }
+
+  const body = await req.json().catch(() => ({}));
+  const days = typeof body.days === "number" ? body.days : 1;
+  const minScore = typeof body.minScore === "number" ? body.minScore : 20;
+
+  // ロックファイルを作成
+  fs.writeFileSync(LOCK_PATH, new Date().toISOString());
+
+  // CLIスクリプトをバックグラウンドで起動
+  const child = spawn("node", [
+    "scripts/viral-scout-agent.js",
+    `--days=${days}`,
+    `--min-score=${minScore}`,
+  ], {
+    cwd: process.cwd(),
+    detached: true,
+    stdio: "ignore",
+  });
+  child.unref();
+
+  // 完了時にロック削除（子プロセスの終了を監視）
+  child.on("exit", () => {
+    try { fs.unlinkSync(LOCK_PATH); } catch {}
+  });
+
+  return NextResponse.json({ ok: true, status: "started", pid: child.pid });
+}
+
+// スカウト実行状態を返す
+export async function PUT() {
+  const running = fs.existsSync(LOCK_PATH);
+  if (running) {
+    const lockAge = Date.now() - fs.statSync(LOCK_PATH).mtimeMs;
+    if (lockAge > 10 * 60 * 1000) {
+      try { fs.unlinkSync(LOCK_PATH); } catch {}
+      return NextResponse.json({ running: false });
+    }
+  }
+  return NextResponse.json({ running });
 }
