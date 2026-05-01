@@ -40,7 +40,7 @@ run_step() {
 
 case "$MODE" in
   viral)
-    run_step "viral-scout-agent" scripts/viral-scout-agent.js --count=50 --min-score=50
+    run_step "viral-scout-agent" scripts/viral-scout-agent.js --days=1 --count=50 --min-score=50
     ;;
   weekly)
     run_step "youtube-researcher" scripts/youtube-researcher.js
@@ -48,7 +48,7 @@ case "$MODE" in
     run_step "rakuten-ranking" scripts/research-sources/rakuten-ranking.js
     ;;
   all)
-    run_step "viral-scout-agent" scripts/viral-scout-agent.js --count=50 --min-score=50
+    run_step "viral-scout-agent" scripts/viral-scout-agent.js --days=1 --count=50 --min-score=50
     run_step "youtube-researcher" scripts/youtube-researcher.js
     run_step "x-search" scripts/research-sources/x-search.js
     run_step "rakuten-ranking" scripts/research-sources/rakuten-ranking.js

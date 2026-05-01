@@ -215,7 +215,7 @@ export default function ViralScoutPage() {
       const res = await fetch("/api/viral-scout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days: 2, minScore: 20 }),
+        body: JSON.stringify({ days: 1, minScore: 20 }),
       });
       const data = await res.json();
       setScoutLog(data.ok ? "完了! データを再読込中..." : `エラー: ${data.output?.slice(-200) || "不明"}`);
@@ -375,7 +375,7 @@ export default function ViralScoutPage() {
             scouting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {scouting ? "スカウト中..." : "再スカウト (直近2日)"}
+          {scouting ? "スカウト中..." : "再スカウト (直近1日)"}
         </button>
       </div>
       {scoutLog && (
