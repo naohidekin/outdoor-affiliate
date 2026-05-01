@@ -9,16 +9,16 @@ import { getCategoryIcon } from "@/lib/category-icons";
 export const revalidate = 3600; // ISR: 1時間
 
 export const metadata: Metadata = {
-  title: "キャンプ・登山ギアおすすめ比較・レビュー | Outdoor Gear Lab",
+  title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
   description:
-    "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。スペック比較表・口コミ・ランキングで「どれ買えばいい？」を即解決。",
+    "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "キャンプ・登山ギアおすすめ比較・レビュー | Outdoor Gear Lab",
+    title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
     description:
-      "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。",
+      "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
     url: "/",
   },
 };
@@ -53,8 +53,8 @@ export default async function Home() {
     },
     author: {
       "@type": "Person",
-      name: "ギア男",
-      description: "長野在住・キャンプ歴10年・2児の父。医療系の仕事をしながらキャンプギアを徹底比較。",
+      name: "現役小児科開業医",
+      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -107,13 +107,25 @@ export default async function Home() {
               Gear Reviews & Comparisons
             </p>
             <h1 className="text-3xl md:text-5xl font-semibold mb-5 leading-tight tracking-tight">
-              買う前に、
-              <br className="md:hidden" />
-              徹底的に比較する。
+              現役小児科医が選ぶ、
+              <br />
+              家族で安全に楽しむアウトドアギア
             </h1>
             <p className="text-slate-300 text-base md:text-lg max-w-lg leading-relaxed">
-              テント・シュラフ・バーナー・チェア。キャンプギアのスペック比較と正直レビューで「どれ買えばいい？」を解決する。
+              カタログスペックではなく、医師の目線と10年のキャンプ経験から
+              本当に「家族で使える」ギアだけを比較・検証しています。
             </p>
+            <div className="flex flex-wrap items-center gap-2 mt-5 text-sm">
+              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
+                🩺 現役小児科医監修
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
+                🏕️ キャンプ歴10年
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
+                👨‍👩‍👧‍👦 2児の父
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2 mt-8">
               {categories.slice(0, 6).map((c) => (
                 <Link

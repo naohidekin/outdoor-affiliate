@@ -55,6 +55,12 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
               当サイトはアフィリエイトプログラムに参加しています。
               商品リンクから購入いただくと運営費の一部になります。
             </p>
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-1 mt-3 text-sm text-lake-600 hover:text-lake-700 transition font-medium"
+            >
+              運営者情報・編集ポリシー →
+            </Link>
             <a
               href="https://room.rakuten.co.jp/room_naomaru/items"
               target="_blank"

@@ -24,6 +24,12 @@ export default function Header({ categories }: { categories: Category[] }) {
                 {c.name}
               </Link>
             ))}
+            <Link
+              href="/about"
+              className="text-sm text-slate-600 hover:text-lake-600 transition px-3 py-2 rounded-lg hover:bg-lake-50 font-medium"
+            >
+              About
+            </Link>
           </nav>
           <MobileMenu categories={categories} />
         </div>
