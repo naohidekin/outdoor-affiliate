@@ -9,7 +9,8 @@ import {
 } from "@/lib/viral-scout-overrides";
 
 const DATA_PATH = path.join(process.cwd(), "data", "viral-scout-results.json");
-const LOCK_PATH = path.join(process.cwd(), "data", "viral-scout.lock");
+// Vercel の data/ は読み取り専用のため、書き込みは /tmp を使用
+const LOCK_PATH = "/tmp/viral-scout.lock";
 
 interface ViralPostGenerated {
   text?: string;

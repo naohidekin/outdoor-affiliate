@@ -241,7 +241,8 @@ export default function ViralScoutPage() {
         }
       }, 5000);
     } catch (err) {
-      setScoutLog("通信エラー: 接続を確認してください");
+      const msg = err instanceof Error ? err.message : String(err);
+      setScoutLog(`エラー: ${msg}`);
       setScouting(false);
     }
   }
