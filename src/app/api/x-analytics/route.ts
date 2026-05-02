@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import { google } from "googleapis";
-import fs from "fs";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const CLICKS_FILE = path.join(DATA_DIR, "affiliate-clicks.json");
+import { getSupabase } from "@/lib/supabase";
 
 function formatDate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -18,11 +14,19 @@ interface ClickEntry {
   timestamp: string;
 }
 
-function readAffiliateClicks(startDate: string): ClickEntry[] {
+async function readAffiliateClicks(startDate: string): Promise<ClickEntry[]> {
   try {
-    const raw = fs.readFileSync(CLICKS_FILE, "utf-8");
-    const clicks: ClickEntry[] = JSON.parse(raw);
-    return clicks.filter((c) => c.timestamp >= startDate);
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("affiliate_clicks")
+      .select("product_id, store, page_path, clicked_at")
+      .gte("clicked_at", startDate);
+    return (data || []).map((c) => ({
+      productId: c.product_id,
+      store: c.store,
+      path: c.page_path,
+      timestamp: c.clicked_at,
+    }));
   } catch {
     return [];
   }
@@ -34,7 +38,7 @@ async function queryGA4(days: number) {
 
   try {
     const credentials = JSON.parse(
-      process.env.INDEXING_CREDENTIALS || process.env.GOOGLE_CREDENTIALS || "{}"
+      process.env.GOOGLE_CREDENTIALS || "{}"
     );
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -165,7 +169,7 @@ export async function GET(req: NextRequest) {
   const ga4 = await queryGA4(days);
 
   // Affiliate clicks
-  const clicks = readAffiliateClicks(formatDate(start));
+  const clicks = await readAffiliateClicks(formatDate(start));
   const clicksByStore: Record<string, number> = {};
   const clicksByPage: Record<string, number> = {};
   const clicksByProduct: Record<string, { store: string; count: number }> = {};
