@@ -93,9 +93,9 @@ function parseArgs() {
     console.error(`有効なタイプ: ${Object.keys(POST_TYPES).join(", ")}`);
     process.exit(1);
   }
-  if (opts.axis && !["camp", "ai", "parenting", "doctor"].includes(opts.axis)) {
+  if (opts.axis && !["camp", "parenting", "doctor"].includes(opts.axis)) {
     console.error(`未知の軸: ${opts.axis}`);
-    console.error("有効な軸: camp, ai, parenting, doctor");
+    console.error("有効な軸: camp, parenting, doctor");
     process.exit(1);
   }
   return opts;

@@ -50,8 +50,8 @@ function parseArgs() {
       case "--days":      opts.days = parseInt(val, 10) || 2; if (eqIdx === -1) i++; break;
     }
   }
-  if (opts.axis && !["camp", "ai", "parenting", "doctor"].includes(opts.axis)) {
-    console.error(`未知の軸: ${opts.axis}。有効: camp, ai, parenting, doctor`);
+  if (opts.axis && !["camp", "parenting", "doctor"].includes(opts.axis)) {
+    console.error(`未知の軸: ${opts.axis}。有効: camp, parenting, doctor`);
     process.exit(1);
   }
   return opts;
@@ -90,8 +90,8 @@ const AXIS_QUERIES = {
 };
 
 // 各軸の目標件数（合計50件）
-// 2026-04-24 軸配分ピボット: camp40/doctor30/AI20/parenting10 (total 50)
-const AXIS_TARGETS = { camp: 20, doctor: 15, ai: 10, parenting: 5 };
+// 2026-05-02 軸配分更新: camp70/doctor20/parenting10 (AI軸廃止)
+const AXIS_TARGETS = { camp: 35, doctor: 10, parenting: 5 };
 
 // === エンゲージメントスコア ===
 

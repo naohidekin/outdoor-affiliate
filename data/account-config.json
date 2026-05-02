@@ -106,20 +106,14 @@
     {
       "id": "camp",
       "name": "キャンプ・ギア",
-      "ratio": 0.4,
+      "ratio": 0.7,
       "tone": "ですます調・友人目線"
     },
     {
       "id": "doctor",
       "name": "医師×健康",
-      "ratio": 0.3,
-      "tone": "ホームドクター目線。医療法・薬機法ガード必須。専門科・症例・医薬品名・医療機器名の具体は出さない"
-    },
-    {
-      "id": "ai",
-      "name": "AI・Claude Code",
       "ratio": 0.2,
-      "tone": "ですます調ベース・やや砕けた開発日記調。「非エンジニアの医者がAIでサイト作ってる」面白さを前面に"
+      "tone": "ホームドクター目線。医療法・薬機法ガード必須。専門科・症例・医薬品名・医療機器名の具体は出さない"
     },
     {
       "id": "parenting",
@@ -157,7 +151,7 @@
     },
     "ai_dev_log": {
       "axis": "ai",
-      "weeklyCount": 2,
+      "weeklyCount": 0,
       "approval": "auto"
     },
     "parenting_outdoor": {
@@ -167,7 +161,7 @@
     },
     "doc_health_tip": {
       "axis": "doctor",
-      "weeklyCount": 3,
+      "weeklyCount": 2,
       "approval": "manual"
     },
     "seasonal_hook": {
@@ -196,7 +190,6 @@
       "outdoor_tip",
       "poll_question",
       "failure_story",
-      "ai_dev_log",
       "parenting_outdoor",
       "news_comment"
     ],

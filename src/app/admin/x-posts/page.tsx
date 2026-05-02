@@ -165,8 +165,8 @@ export default function XPostsPage() {
   // 軸別の生成グループ定義。各ボタンはこのうちの1セットを順次APIに投げる。
   const GENERATE_GROUPS: Record<string, { label: string; types: string[] }> = {
     doctorAi: {
-      label: "🩺 医師+AI",
-      types: ["doc_health_tip", "ai_dev_log"],
+      label: "🩺 医師系",
+      types: ["doc_health_tip"],
     },
     camp: {
       label: "🏕️ キャンプ系",
@@ -459,10 +459,10 @@ export default function XPostsPage() {
           <button
             onClick={() => handleGenerate("doctorAi")}
             disabled={generating}
-            title="doc_health_tip (3件) + ai_dev_log (2件) = 約2分"
+            title="doc_health_tip (2件) = 約1分"
             className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
           >
-            🩺 医師+AI 生成
+            🩺 医師系 生成
           </button>
           <button
             onClick={() => handleGenerate("camp")}
