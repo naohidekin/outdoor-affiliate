@@ -1,14 +1,9 @@
 {
-  "enabled": true,
+  "enabled": false,
   "articleEnabled": false,
   "researchEnabled": false,
-  "reason": "手動投稿に切替（X投稿の品質改善のため自動投稿を一時停止）。研究（viral-scout等）は継続 - 2026-04-24",
-  "enabledAt": "2026-04-24T11:15:00+09:00",
-  "enabledBy": "manual",
-  "consecutiveErrors": [
-    {
-      "type": "agent-fail:supervisor-agent.js",
-      "at": "2026-04-27T00:00:08.390Z"
-    }
-  ]
+  "reason": "自動投稿を再開 - 2026-05-02（承認済み14本あり・軸配分 camp70/doctor20/parenting10 に更新済み）",
+  "disabledAt": "2026-05-02T17:00:00+09:00",
+  "disabledBy": "manual",
+  "consecutiveErrors": []
 }
