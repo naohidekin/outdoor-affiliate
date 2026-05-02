@@ -93,8 +93,8 @@ async function createArticlePromo(article) {
     // リンクは本文に入れない（インプレッション低下防止）
     // URLはE列に設定し、IFTTTリプライで投稿する想定
     const text = excerpt
-      ? `${article.title}\n\n${excerpt}\n\n#アウトドア #キャンプ`
-      : `${article.title}\n\n#アウトドア #キャンプ`;
+      ? `${article.title}\n\n${excerpt}`
+      : article.title;
 
     // 翌日をスケジュール日に設定
     const scheduledDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)
@@ -106,7 +106,7 @@ async function createArticlePromo(article) {
       text,                     // C: text
       article.slug,             // D: articleSlug
       url,                      // E: url
-      "#アウトドア #キャンプ",   // F: hashtags
+      "",                       // F: hashtags（ハッシュタグ禁止）
       "draft",                  // G: status (手動承認が必要)
       scheduledDate,            // H: scheduledDate
       now.toISOString(),        // I: generatedAt
