@@ -128,13 +128,20 @@ function fromProduct(product: Product): Record<string, unknown> {
 // ─── Categories ─────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
-  if (!isSupabaseConfigured()) return readLocalJson<Category>("categories.json");
+  const localCats = readLocalJson<Category>("categories.json");
+  const sceneCats = localCats.filter((c) => c.type === "scene");
+
+  if (!isSupabaseConfigured()) {
+    return localCats.slice().sort((a, b) => a.order - b.order);
+  }
   const { data, error } = await getSupabase()
     .from("categories")
     .select("*")
     .order("sort_order", { ascending: true });
   if (error) throw error;
-  return (data || []).map(toCategory);
+  const supaCats = (data || []).map(toCategory);
+  // シーン別カテゴリはローカルJSONから、通常カテゴリはSupabaseから
+  return [...sceneCats, ...supaCats].sort((a, b) => a.order - b.order);
 }
 
 export async function getCategoryBySlug(
@@ -306,6 +313,33 @@ export async function getArticleById(
 export async function getArticlesByCategory(
   categoryId: string
 ): Promise<Article[]> {
+  // シーン別カテゴリはarticleSlugで記事を特定
+  const localCats = readLocalJson<Category>("categories.json");
+  const sceneCategory = localCats.find(
+    (c) => (c.slug === categoryId || c.id === categoryId) && c.type === "scene"
+  );
+
+  if (sceneCategory?.articleSlugs?.length) {
+    const slugs = sceneCategory.articleSlugs;
+    if (!isSupabaseConfigured()) {
+      const all = readLocalJson<Article>("articles.json");
+      return slugs
+        .map((s) => all.find((a) => a.slug === s && a.status === "published"))
+        .filter((a): a is Article => a !== undefined);
+    }
+    const { data, error } = await getSupabase()
+      .from("articles")
+      .select("*")
+      .eq("status", "published")
+      .in("slug", slugs);
+    if (error) throw error;
+    const mapped = (data || []).map(toArticle);
+    return slugs
+      .map((s) => mapped.find((a) => a.slug === s))
+      .filter((a): a is Article => a !== undefined);
+  }
+
+  // 通常カテゴリ
   if (!isSupabaseConfigured()) {
     return readLocalJson<Article>("articles.json").filter(
       (a) => a.status === "published" && a.categoryId === categoryId

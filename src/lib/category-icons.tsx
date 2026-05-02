@@ -11,6 +11,10 @@ import {
   Shirt,
   Footprints,
   Cloudy,
+  Thermometer,
+  Wind,
+  Users,
+  CloudRain,
 } from "lucide-react";
 
 type IconSize = "sm" | "md" | "lg" | "xl";
@@ -38,6 +42,14 @@ const ICON_COMPONENTS: Record<
   wear: Shirt,
   firepit: Flame,
   tarp: Cloudy,
+  // シーン別カテゴリ
+  "heat-safety": Thermometer,
+  "cold-safety": Wind,
+  "family-first": Users,
+  "rain-safety": CloudRain,
+  // タンブラー（既存カテゴリ補完）
+  tumbler: ThermometerSnowflake,
+  "insect-repellent": Mountain,
 };
 
 export function getCategoryIcon(

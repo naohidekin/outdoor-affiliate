@@ -10,17 +10,17 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
 
   return (
     <div className="overflow-x-auto my-8 rounded-xl border border-line">
-      <table className="w-full border-collapse bg-white">
+      <table className="border-collapse bg-white" style={{ minWidth: `${Math.max(600, products.length * 160 + 120)}px` }}>
         {/* ヘッダー */}
         <thead>
           <tr>
-            <th className="bg-ink-strong text-white px-5 py-4 text-left text-sm font-semibold w-1/3">
+            <th className="bg-ink-strong text-white px-4 py-4 text-left text-sm font-semibold sticky left-0 z-10 w-[120px] min-w-[120px]">
               比較項目
             </th>
             {products.map((p) => (
               <th
                 key={p.id}
-                className="bg-ink text-white px-5 py-4 text-center text-sm font-semibold border-l border-white/10"
+                className="bg-ink text-white px-4 py-4 text-center text-sm font-semibold border-l border-white/10 min-w-[150px]"
               >
                 <div className="text-[11px] font-normal text-slate-400 mb-0.5 tracking-wide">
                   {p.brand}
@@ -36,11 +36,11 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
         <tbody>
           {/* 価格行 */}
           <tr className="border-b border-line bg-lake-50">
-            <td className="px-5 py-4 text-sm font-semibold text-ink-strong">
+            <td className="px-4 py-4 text-sm font-semibold text-ink-strong sticky left-0 bg-lake-50 z-[5]">
               価格
             </td>
             {products.map((p) => (
-              <td key={p.id} className="px-5 py-4 text-center border-l border-line-soft">
+              <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
                 <span className="text-xl font-semibold text-lake-700 tracking-tight">
                   ¥{p.price.toLocaleString()}
                 </span>
@@ -50,11 +50,11 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
 
           {/* 評価行 */}
           <tr className="border-b border-line bg-white">
-            <td className="px-5 py-4 text-sm font-semibold text-ink-strong">
+            <td className="px-4 py-4 text-sm font-semibold text-ink-strong sticky left-0 bg-white z-[5]">
               総合評価
             </td>
             {products.map((p) => (
-              <td key={p.id} className="px-5 py-4 text-center border-l border-line-soft">
+              <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
                 <div className="flex justify-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span
@@ -84,13 +84,13 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                 i % 2 === 0 ? "bg-white" : "bg-mist"
               }`}
             >
-              <td className="px-5 py-3.5 text-sm font-medium text-slate-600">
+              <td className={`px-4 py-3.5 text-sm font-medium text-slate-600 sticky left-0 z-[5] ${i % 2 === 0 ? "bg-white" : "bg-mist"}`}>
                 {key}
               </td>
               {products.map((p) => (
                 <td
                   key={p.id}
-                  className="px-5 py-3.5 text-sm text-center text-ink border-l border-line-soft"
+                  className="px-4 py-3.5 text-sm text-center text-ink border-l border-line-soft"
                 >
                   {p.specs[key] || (
                     <span className="text-slate-300">—</span>
@@ -102,13 +102,13 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
 
           {/* 購入リンク行 */}
           <tr className="bg-white border-t border-line">
-            <td className="px-5 py-4 text-sm font-semibold text-slate-600">
+            <td className="px-4 py-4 text-sm font-semibold text-slate-600 sticky left-0 bg-white z-[5]">
               購入する
             </td>
             {products.map((p) => (
               <td
                 key={p.id}
-                className="px-5 py-4 text-center border-l border-line-soft"
+                className="px-4 py-4 text-center border-l border-line-soft"
               >
                 <div className="flex flex-col gap-2 items-stretch">
                   {p.affiliateUrl ? (

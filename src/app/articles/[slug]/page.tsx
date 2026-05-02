@@ -13,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
 import MedicalAdvice from "@/components/MedicalAdvice";
+import RecommendationCTA from "@/components/RecommendationCTA";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 
 export const revalidate = 3600; // ISR: 1時間
@@ -358,6 +359,11 @@ export default async function ArticlePage({
               </Link>
             )}
           </div>
+
+          {/* 記事冒頭 購入導線 */}
+          {products.length > 0 && (
+            <RecommendationCTA products={products.slice(0, 3)} />
+          )}
 
           {/* Article body */}
           {contentSummaryOnward ? (

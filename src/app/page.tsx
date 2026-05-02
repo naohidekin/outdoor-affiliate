@@ -29,6 +29,17 @@ export default async function Home() {
     getPublishedArticles(),
   ]);
 
+  // 安全ガイド導線 4記事を特定
+  const SAFETY_GUIDE_SLUGS = [
+    "camp-insect-repellent-guide",
+    "summer-camp-cooler-tips",
+    "winter-camp-beginners-checklist",
+    "family-camp-first-time-guide",
+  ] as const;
+  const safetyGuideArticles = SAFETY_GUIDE_SLUGS
+    .map((slug) => articles.find((a) => a.slug === slug))
+    .filter((a): a is NonNullable<typeof a> => a !== undefined);
+
   // ArticleCard用: 全記事の商品を一括取得してサムネイルを引き当て
   const allProductIds = [...new Set(articles.flatMap((a) => a.productIds))];
   const allProducts = allProductIds.length > 0
@@ -45,7 +56,7 @@ export default async function Home() {
     alternateName: "キャンプギアラボ",
     url: baseUrl,
     description:
-      "テント・シュラフ・バーナー・バックパック・登山靴など、キャンプ・登山ギアを徹底比較。",
+      "現役小児科医・キャンプ歴10年の運営者が、虫・暑さ・寒さ・食中毒・一酸化炭素など子ども連れキャンプのリスク視点でアウトドアギアを比較・検証。",
     publisher: {
       "@type": "Organization",
       name: "Outdoor Gear Lab",
@@ -112,19 +123,22 @@ export default async function Home() {
               家族で安全に楽しむアウトドアギア
             </h1>
             <p className="text-slate-300 text-base md:text-lg max-w-lg leading-relaxed">
-              カタログスペックではなく、医師の目線と10年のキャンプ経験から
-              本当に「家族で使える」ギアだけを比較・検証しています。
+              虫・暑さ・寒さ・食中毒・一酸化炭素。子ども連れキャンプで本当に気をつけたいリスクからギアを選びます。
             </p>
-            <div className="flex flex-wrap items-center gap-2 mt-5 text-sm">
-              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
-                🩺 現役小児科医監修
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
-                🏕️ キャンプ歴10年
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 px-3 py-1.5 rounded-full border border-white/20">
-                👨‍👩‍👧‍👦 2児の父
-              </span>
+            {/* 3本柱カード */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-2xl">
+              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
+                <p className="text-lake-200 font-semibold text-sm mb-1">🩺 医師目線で安全性をチェック</p>
+                <p className="text-white/70 text-xs leading-relaxed">虫刺され、熱中症、低体温、食中毒、一酸化炭素など、本当に気をつけたいリスクからギアを選びます。</p>
+              </div>
+              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
+                <p className="text-lake-200 font-semibold text-sm mb-1">🏕️ キャンプ歴10年の実体験で選ぶ</p>
+                <p className="text-white/70 text-xs leading-relaxed">カタログスペックだけでなく、設営・撤収・収納・子どもの使いやすさまで確認します。</p>
+              </div>
+              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
+                <p className="text-lake-200 font-semibold text-sm mb-1">📋 迷ったらすぐ選べる比較表</p>
+                <p className="text-white/70 text-xs leading-relaxed">予算別・年齢別・季節別に、最初に買う候補を絞って紹介します。</p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-8">
               {categories.slice(0, 6).map((c) => (
@@ -141,6 +155,39 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* 安全ガイド導線 */}
+        {safetyGuideArticles.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 py-12 border-b border-line">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-ink-strong tracking-tight">
+                まず読むべき安全ギアガイド
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">子連れキャンプの入口として</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {safetyGuideArticles.map((article) => (
+                <Link
+                  key={article.id}
+                  href={`/articles/${article.slug}`}
+                  className="group bg-white rounded-xl border border-line hover:border-lake-200 hover:bg-lake-50/30 p-5 flex flex-col gap-2 transition-all"
+                >
+                  <p className="font-semibold text-sm text-ink-strong group-hover:text-lake-700 leading-snug transition">
+                    {article.title}
+                  </p>
+                  {article.excerpt && (
+                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  )}
+                  <span className="text-lake-600 text-xs font-medium mt-auto">
+                    読む →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Categories */}
         <section className="max-w-6xl mx-auto px-4 py-16">
           <div className="flex items-end justify-between mb-8">
@@ -153,9 +200,9 @@ export default async function Home() {
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {categories.map((c) => {
-              const articleCount = articles.filter(
-                (a) => a.categoryId === c.id
-              ).length;
+              const articleCount = c.articleSlugs
+                ? articles.filter((a) => c.articleSlugs!.includes(a.slug)).length
+                : articles.filter((a) => a.categoryId === c.id).length;
               return (
                 <Link
                   key={c.id}

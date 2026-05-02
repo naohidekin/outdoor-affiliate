@@ -4,6 +4,8 @@ export interface Category {
   slug: string;
   description: string;
   order: number;
+  type?: "scene" | "product";
+  articleSlugs?: string[];
 }
 
 export interface Product {

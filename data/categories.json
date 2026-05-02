@@ -1,5 +1,63 @@
 [
   {
+    "id": "heat-safety",
+    "name": "暑さ・熱中症・食中毒対策",
+    "slug": "heat-safety",
+    "description": "子連れ夏キャンプのクーラーボックス・保冷・日差し対策",
+    "order": -4,
+    "type": "scene",
+    "articleSlugs": [
+      "summer-camp-cooler-tips",
+      "cooler-box-ranking",
+      "soft-cooler-ranking",
+      "growler-comparison-summer-ice"
+    ]
+  },
+  {
+    "id": "cold-safety",
+    "name": "寒さ・低体温対策",
+    "slug": "cold-safety",
+    "description": "春秋冬キャンプのシュラフ・服装・暖房リスク管理",
+    "order": -3,
+    "type": "scene",
+    "articleSlugs": [
+      "winter-camp-beginners-checklist",
+      "kids-sleeping-bag-ranking",
+      "spring-sleeping-bag-guide",
+      "winter-sleeping-bag-ranking",
+      "spring-camp-clothing-guide"
+    ]
+  },
+  {
+    "id": "family-first",
+    "name": "初めてのファミリーキャンプ",
+    "slug": "family-first",
+    "description": "子連れ初キャンプの準備・持ち物・予算・失敗回避",
+    "order": -2,
+    "type": "scene",
+    "articleSlugs": [
+      "family-camp-first-time-guide",
+      "camping-beginner-gear-checklist",
+      "family-tent-ranking",
+      "gw-camp-guide-2026",
+      "gw-camping-gear-budget"
+    ]
+  },
+  {
+    "id": "rain-safety",
+    "name": "雨・撤収・安全管理",
+    "slug": "rain-safety",
+    "description": "雨天設営・撤収効率化・夜間照明・火器管理",
+    "order": -1,
+    "type": "scene",
+    "articleSlugs": [
+      "rain-camp-gear-essentials",
+      "tarp-ranking",
+      "tarp-setup-guide-for-beginners",
+      "rainwear-ranking"
+    ]
+  },
+  {
     "id": "insect-repellent",
     "name": "虫除け・虫対策",
     "slug": "insect-repellent",
