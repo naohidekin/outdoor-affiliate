@@ -33,7 +33,7 @@ export default function AffiliateLink({
         path: window.location.pathname,
         timestamp: new Date().toISOString(),
       });
-      navigator.sendBeacon("/api/track-click", data);
+      navigator.sendBeacon("/api/track-click", new Blob([data], { type: "application/json" }));
     } catch {
       // ignore
     }
