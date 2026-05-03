@@ -236,11 +236,11 @@ export default async function Home() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {[
-                { label: "夏キャンプ 虫対策セット", icon: "🦟", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
-                { label: "初めてのファミリーキャンプ一式", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
-                { label: "子ども連れ 暑さ対策", icon: "☀️", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
-                { label: "春秋キャンプ 寒さ対策", icon: "🧥", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
-                { label: "防災兼用 キャンプギア", icon: "🏕️", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+                { label: "夏キャンプ 虫対策セット", icon: "🦟", href: "https://room.rakuten.co.jp/room_naomaru/1800012289290411" },
+                { label: "初めてのファミリーキャンプ一式", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/room_naomaru/1800012289289365" },
+                { label: "子ども連れ 暑さ対策", icon: "☀️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289288356" },
+                { label: "春秋キャンプ 寒さ対策", icon: "🧥", href: "https://room.rakuten.co.jp/room_naomaru/1800012289286225" },
+                { label: "防災兼用 キャンプギア", icon: "🏕️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289285534" },
               ].map(({ label, icon, href }) => (
                 <a
                   key={label}
