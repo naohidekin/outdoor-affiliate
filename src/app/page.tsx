@@ -226,6 +226,38 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* 楽天ROOM まとめ買い導線 */}
+        <section className="max-w-6xl mx-auto px-4 pb-16">
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-8">
+            <div className="mb-6">
+              <span className="inline-block text-xs font-semibold tracking-widest text-red-500 uppercase mb-2">楽天ROOM</span>
+              <h2 className="text-xl font-semibold text-ink-strong">テーマ別ギアをまとめて見る</h2>
+              <p className="text-sm text-slate-500 mt-1">シーン・家族構成別にまとめたコレクション。気になるセットをチェック。</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {[
+                { label: "夏キャンプ 虫対策セット", icon: "🦟", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+                { label: "初めてのファミリーキャンプ一式", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+                { label: "子ども連れ 暑さ対策", icon: "☀️", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+                { label: "春秋キャンプ 寒さ対策", icon: "🧥", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+                { label: "防災兼用 キャンプギア", icon: "🏕️", href: "https://room.rakuten.co.jp/camp_gear_lab/items" },
+              ].map(({ label, icon, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-2 bg-white border border-red-100 rounded-xl p-4 text-center hover:border-red-300 hover:shadow-sm transition group"
+                >
+                  <span className="text-2xl">{icon}</span>
+                  <span className="text-xs font-medium text-slate-700 group-hover:text-red-600 leading-snug">{label}</span>
+                  <span className="text-xs text-red-400 font-medium">楽天ROOMで見る →</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Latest Articles */}
         {articles.length > 0 && (
           <section className="max-w-6xl mx-auto px-4 pb-20">
