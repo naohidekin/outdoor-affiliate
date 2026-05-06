@@ -1,71 +1,69 @@
 {
-  "week": "2026-W16",
-  "generatedAt": "2026-04-16T14:23:58.382Z",
+  "week": "2026-W19",
+  "generatedAt": "2026-05-06T00:00:26.140Z",
   "articles": [
     {
-      "themeId": "theme-2026-W16-01",
+      "themeId": "theme-2026-W19-01",
+      "categoryId": "insect-repellent",
+      "title": "子どもに使える虫除けグッズ完全ガイド【2026年版】",
+      "slug": "kids-insect-repellent-guide",
+      "angle": "ディート・イカリジン・天然成分の違いを年齢別に整理し、子連れキャンプで安心して使える虫除けアイテムを選定する",
+      "targetKeywords": [
+        "子ども 虫除け キャンプ",
+        "イカリジン 子供 虫除けスプレー",
+        "赤ちゃん キャンプ 虫対策"
+      ],
+      "seasonRelevance": "5月はブヨ・蚊が活発化し始める時期で、GW明けの週末キャンプ需要に直結する",
+      "priority": "high",
+      "reason": "insect-repellentは今月の季節カテゴリかつtrendがactiveで、既存3記事はいずれも成分比較や総合ロードマップ寄りのため、子ども安全視点の年齢別ガイドは未開拓の角度",
+      "scheduledPublishDate": "2026-05-08",
+      "productCount": 3,
+      "productIds": [
+        "insect-repellent-007",
+        "insect-repellent-008",
+        "insect-repellent-009"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W19-02",
       "categoryId": "tent",
-      "title": "春キャンプ向け前室付きテントおすすめ5選【2026年版】",
-      "slug": "tent-with-vestibule-ranking",
-      "angle": "前室の広さ・使い勝手に特化し、荷物収納や靴の置き場に困るファミリー・デュオキャンパーに向けた選び方を解説する。",
+      "title": "前室なしテントの選び方と弱点カバー術【2026年版】",
+      "slug": "tent-without-vestibule-guide",
+      "angle": "前室なし・最小限構造のテントを選ぶメリット・デメリットを整理し、タープ連携で弱点を補う実践レイアウトまで解説する",
       "targetKeywords": [
-        "前室付きテント おすすめ",
-        "テント 前室 広い",
-        "春キャンプ テント"
+        "前室なし テント",
+        "テント タープ 組み合わせ",
+        "ソロ ファミリー テント 前室 比較"
       ],
-      "seasonRelevance": "春は突然の雨も多く、前室で濡れた装備を一時保管できるテントへのニーズが高まる。",
+      "seasonRelevance": "5月の行楽シーズンに向けてテントカテゴリはsearchSessions 200と最高水準で需要が集中している",
       "priority": "high",
-      "reason": "tentカテゴリはPV・検索セッションともにトップで最もトラフィック獲得余地が大きく、既存記事（ファミリー・ソロ・デュオ別ランキング）と重複しない「前室」軸の切り口で差別化できるため。",
-      "scheduledPublishDate": "2026-04-17",
+      "reason": "tentはPV・searchSessionsともにサイト最高値で伸び代が大きく、既存記事は前室あり比較・ランキング系が多いため『前室なし』視点は差別化できる未執筆テーマ",
+      "scheduledPublishDate": "2026-05-10",
       "productCount": 3,
       "productIds": [
-        "tent-017",
-        "tent-018",
-        "tent-019"
+        "tent-020"
       ]
     },
     {
-      "themeId": "theme-2026-W16-02",
-      "categoryId": "tarp",
-      "title": "タープの張り方完全ガイド｜初心者でもできる基本〜応用5パターン【2026年版】",
-      "slug": "tarp-setup-guide-for-beginners",
-      "angle": "ヘキサ・レクタなど形状別に、ロープワーク不要の簡単な張り方から雨・日差しに強い応用アレンジまでを図解形式で紹介する。",
+      "themeId": "theme-2026-W19-03",
+      "categoryId": "wear",
+      "title": "春キャンプの重ね着レイヤリング完全攻略【2026年版】",
+      "slug": "spring-camp-layering-guide",
+      "angle": "朝晩の寒暖差が激しい春キャンプを快適に過ごすため、ベース・ミッド・アウターの具体的な組み合わせを予算帯別に提案する",
       "targetKeywords": [
-        "タープ 張り方 初心者",
-        "タープ 張り方 種類",
-        "タープ ロープ 結び方"
+        "春キャンプ 服装 重ね着",
+        "キャンプ レイヤリング 初心者",
+        "春キャンプ 寒暖差 対策 ウェア"
       ],
-      "seasonRelevance": "春〜GWにかけてキャンプデビューする初心者がタープの使い方を一から学ぶ需要がピークを迎える。",
-      "priority": "high",
-      "reason": "来月の季節カテゴリに含まれるtarpの先行コンテンツとして今から仕込む価値があり、既存のランキング・雨キャンプ記事と相互リンクできるハウツー記事が未整備のため。",
-      "scheduledPublishDate": "2026-04-19",
-      "productCount": 3,
-      "productIds": [
-        "tarp-011",
-        "tarp-012",
-        "tarp-013"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W16-03",
-      "categoryId": "chair",
-      "title": "ソロキャンプ向けローチェアおすすめ6選｜焚き火・地べたスタイルに合う選び方【2026年版】",
-      "slug": "solo-low-chair-ranking",
-      "angle": "焚き火台との相性・収納サイズ・座面高を軸に、ソロキャンプで映えるローチェアだけを厳選して比較する。",
-      "targetKeywords": [
-        "ローチェア ソロキャンプ おすすめ",
-        "焚き火 チェア 低い",
-        "ソロキャンプ 椅子 コンパクト"
-      ],
-      "seasonRelevance": "春の焚き火シーズンに合わせてローポジションでゆったり過ごしたいキャンパーからの需要が高まる。",
+      "seasonRelevance": "来月の季節カテゴリとして準備推奨されており、5月中に公開することで6月需要を先取りしSEO評価期間を確保できる",
       "priority": "medium",
-      "reason": "chairカテゴリはcamp-chair-ranking・compact-chair-rankingが既存だが「ソロ×焚き火×ロースタイル」の組み合わせ軸は未開拓であり、季節カテゴリ内で新たな検索意図を捉えられるため。",
-      "scheduledPublishDate": "2026-04-22",
+      "reason": "wearはsearchSessions 21・trendがactiveで伸び余地があり、既存のspring-camp-clothing-guideが総論的な内容のため『レイヤリング実践』という具体的手法記事で補完できる",
+      "scheduledPublishDate": "2026-05-13",
       "productCount": 3,
       "productIds": [
-        "chair-012",
-        "chair-013",
-        "chair-014"
+        "rw-001",
+        "rw-002",
+        "rw-003"
       ]
     }
   ]

@@ -4681,5 +4681,163 @@
     "addedBy": "viral-scout",
     "addedAt": "2026-05-01",
     "axis": "camp"
+  },
+  {
+    "id": "co-checker-001",
+    "name": "新コスモス電機 ポータブル一酸化炭素警報器 XC-2200",
+    "brand": "新コスモス電機",
+    "price": 2750,
+    "imageUrl": "",
+    "affiliateUrl": "https://item.rakuten.co.jp/e-safety/xc2200/",
+    "amazonUrl": "",
+    "categoryId": "cold-safety",
+    "specs": {
+      "電源": "単3電池×3本",
+      "警報濃度": "50ppm以上で警報",
+      "サイズ": "78×56×22mm"
+    },
+    "description": "キャンプ・車中泊の一酸化炭素中毒対策に定番の携帯型COチェッカー。50ppm以上で警報音が鳴る。",
+    "rating": 4.5,
+    "createdAt": "2026-05-05T12:00:00+09:00",
+    "updatedAt": "2026-05-05T12:00:00+09:00"
+  },
+  {
+    "id": "co-checker-002",
+    "name": "キャプテンスタッグ CO一酸化炭素警報器 M-8301",
+    "brand": "キャプテンスタッグ",
+    "price": 3080,
+    "imageUrl": "https://shop.r10s.jp/captainstagstore/cabinet/co/m8301.jpg",
+    "affiliateUrl": "https://item.rakuten.co.jp/captainstagstore/4516533231683/",
+    "amazonUrl": "",
+    "categoryId": "cold-safety",
+    "specs": {
+      "電源": "単3電池×2本",
+      "警報濃度": "70ppm以上",
+      "重量": "約80g"
+    },
+    "description": "キャンプ向けに設計されたコンパクトなCO警報器。電池式でテント内に置きやすい。",
+    "rating": 4.2,
+    "createdAt": "2026-05-05T12:00:00+09:00",
+    "updatedAt": "2026-05-05T12:00:00+09:00"
+  },
+  {
+    "id": "co-checker-003",
+    "name": "工進 一酸化炭素警報器 CO-20",
+    "brand": "工進",
+    "price": 1980,
+    "imageUrl": "",
+    "affiliateUrl": "https://item.rakuten.co.jp/koshin/co-20/",
+    "amazonUrl": "",
+    "categoryId": "cold-safety",
+    "specs": {
+      "電源": "単4電池×3本",
+      "警報濃度": "100ppm以上",
+      "重量": "約65g"
+    },
+    "description": "コンパクト・低価格なCO警報器。車中泊やテント泊の補助用途に。",
+    "rating": 3.8,
+    "createdAt": "2026-05-05T12:00:00+09:00",
+    "updatedAt": "2026-05-05T12:00:00+09:00"
+  },
+  {
+    "id": "insect-repellent-007",
+    "name": "虫除け オニヤンマ キッズ ベビー 《赤ちゃんOK!》 トンボ お出かけのお守り アウトドア バーベキュー キャンプ 登山 虫よけ 携帯 ストラップ 釣り ガーデニング 海水浴 防災グッズ ☆ プレゼ",
+    "brand": "自転車通販 スマートファクトリー",
+    "price": 888,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/smart-factory/cabinet/shohin18/hac3466_m.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r4sr6.wwmjsde4.g00r4sr6.wwmjt0c3/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsmart-factory%2Fhac3466%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsmart-factory%2Fi%2F10014903%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E8%99%AB%E9%99%A4%E3%81%91%20%E3%82%AA%E3%83%8B%E3%83%A4%E3%83%B3%E3%83%9E%20%E3%82%AD%E3%83%83%E3%82%BA%20%E3%83%99%E3%83%93%E3%83%BC%20%E3%80%8A%E8%B5%A4%E3%81%A1%E3%82%83%E3%82%93OK!%E3%80%8B%20%E3%83%88%E3%83%B3%E3%83%9C%20%E3%81%8A%E5%87%BA%E3%81%8B%E3%81%91%E3%81%AE%E3%81%8A%E5%AE%88%E3%82%8A%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%83%90%E3%83%BC%E3%83%99%E3%82%AD%E3%83%A5%E3%83%BC%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E7%99%BB%E5%B1%B1%20%E8%99%AB%E3%82%88%E3%81%91%20%E6%90%BA%E5%B8%AF%20%E3%82%B9%E3%83%88%E3%83%A9%E3%83%83%E3%83%97%20%E9%87%A3%E3%82%8A%20%E3%82%AC%E3%83%BC%E3%83%87%E3%83%8B%E3%83%B3%E3%82%B0%20%E6%B5%B7%E6%B0%B4%E6%B5%B4%20%E9%98%B2%E7%81%BD%E3%82%B0%E3%83%83%E3%82%BA%20%E2%98%86%20%E3%83%97%E3%83%AC%E3%82%BC%E3%83%B3%E3%83%88%20%E3%82%AE%E3%83%95%E3%83%88%20%E3%81%93%E3%81%A9%E3%82%82%E3%81%AE%E6%97%A5%20%E6%AF%8D%E3%81%AE%E6%97%A5%20%E6%96%B0%E7%94%9F%E6%B4%BB%20%E9%98%B2%E7%81%BD&tag=nao78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "トンボ型虫除けストラップ",
+      "有効成分": "",
+      "持続時間": "",
+      "対象害虫": "蚊、ハエなど",
+      "対象年齢": "赤ちゃんOK"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-05-06T00:00:27.930Z",
+    "updatedAt": "2026-05-06T00:00:27.931Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-05-06T00:00:27.931Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "insect-repellent-008",
+    "name": "【レビューでクーポン&プレゼント】Komons アウトドアスプレー 100ml / All La Glory ( コモンズ ボディスプレー 虫除けスプレー 虫よけスプレー アウトドア 虫除け 虫よけ ",
+    "brand": "Komons（コモンズ）",
+    "price": 1980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/redcabin/cabinet/item_images6/kom-100-0010_1sam.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00s1zg6.wwmjs0a4.g00s1zg6.wwmjt808/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fredcabin%2Fkom-100-0010%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fredcabin%2Fi%2F10003474%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%81%A7%E3%82%AF%E3%83%BC%E3%83%9D%E3%83%B3%26%E3%83%97%E3%83%AC%E3%82%BC%E3%83%B3%E3%83%88%E3%80%91Komons%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20100ml%20%2F%20All%20La%20Glory%20(%20%E3%82%B3%E3%83%A2%E3%83%B3%E3%82%BA%20%E3%83%9C%E3%83%87%E3%82%A3%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20%E8%99%AB%E9%99%A4%E3%81%91%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20%E8%99%AB%E3%82%88%E3%81%91%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E8%99%AB%E9%99%A4%E3%81%91%20%E8%99%AB%E3%82%88%E3%81%91%20%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20%E3%83%8F%E3%83%83%E3%82%AB%20100%25%E5%A4%A9%E7%84%B6%E6%88%90%E5%88%86%20%E6%95%8F%E6%84%9F%E8%82%8C%20%E4%BD%8E%E5%88%BA%E6%BF%80%20%E5%AD%90%E3%81%A9%E3%82%82%20%E8%B5%A4%E3%81%A1%E3%82%83%E3%82%93%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%82%AE%E3%83%95%E3%83%88%20)&tag=nao78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "アウトドアスプレー / ボディスプレー / 虫よけスプレー",
+      "有効成分": "シトロネラ、ハッカ、レモングラス、ユーカリシトリオドラ、パルマローザ精油（100%天然成分・植物由来）",
+      "持続時間": "",
+      "対象害虫": "蚊などの虫",
+      "対象年齢": "子ども、赤ちゃん、敏感肌対応"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-05-06T00:00:29.981Z",
+    "updatedAt": "2026-05-06T00:00:29.981Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-05-06T00:00:29.981Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "insect-repellent-009",
+    "name": "【あす楽対応】チケットトゥザムーン 【レビュー記載で10年保証】 ticket to the moon Mosquito net ハンモック モスキートネット 蚊よけ 虫よけ",
+    "brand": "Ticket to the Moon",
+    "price": 7480,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_gold/curiace-trading/tttm/img/mosquitonet_index01.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00srly6.wwmjsb42.g00srly6.wwmjt31c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcuriace-trading%2Ftttm-mosquitonet%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fcuriace-trading%2Fi%2F10000366%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%81%82%E3%81%99%E6%A5%BD%E5%AF%BE%E5%BF%9C%E3%80%91%E3%83%81%E3%82%B1%E3%83%83%E3%83%88%E3%83%88%E3%82%A5%E3%82%B6%E3%83%A0%E3%83%BC%E3%83%B3%20%E3%80%90%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E8%A8%98%E8%BC%89%E3%81%A710%E5%B9%B4%E4%BF%9D%E8%A8%BC%E3%80%91%20ticket%20to%20the%20moon%20Mosquito%20net%20%E3%83%8F%E3%83%B3%E3%83%A2%E3%83%83%E3%82%AF%20%E3%83%A2%E3%82%B9%E3%82%AD%E3%83%BC%E3%83%88%E3%83%8D%E3%83%83%E3%83%88%20%E8%9A%8A%E3%82%88%E3%81%91%20%E8%99%AB%E3%82%88%E3%81%91&tag=nao78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "モスキートネット",
+      "有効成分": "",
+      "持続時間": "",
+      "対象害虫": "蚊",
+      "対象年齢": ""
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-05-06T00:00:31.149Z",
+    "updatedAt": "2026-05-06T00:00:31.149Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-05-06T00:00:31.149Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "tent-020",
+    "name": "FUNDANGO パップテント ソロテント 軍幕 シェルターテント ポリエステル 簡易 軽量 コンパクト メッシュドア付き 日よけ 通気性 ゆったり前室 防水防風 収納バッグ付き ポールなし 登山 キ",
+    "brand": "FUNDANGO",
+    "price": 6850,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/kingcamp/cabinet/biiino/item/main-image-4/20260416194117_1.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u8gv6.wwmjs1a4.g00u8gv6.wwmjt83c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkingcamp%2F200010%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkingcamp%2Fi%2F10000489%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=FUNDANGO%20%E3%83%91%E3%83%83%E3%83%97%E3%83%86%E3%83%B3%E3%83%88%20%E3%82%BD%E3%83%AD%E3%83%86%E3%83%B3%E3%83%88%20%E8%BB%8D%E5%B9%95%20%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%BF%E3%83%BC%E3%83%86%E3%83%B3%E3%83%88%20%E3%83%9D%E3%83%AA%E3%82%A8%E3%82%B9%E3%83%86%E3%83%AB%20%E7%B0%A1%E6%98%93%20%E8%BB%BD%E9%87%8F%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E3%83%A1%E3%83%83%E3%82%B7%E3%83%A5%E3%83%89%E3%82%A2%E4%BB%98%E3%81%8D%20%E6%97%A5%E3%82%88%E3%81%91%20%E9%80%9A%E6%B0%97%E6%80%A7%20%E3%82%86%E3%81%A3%E3%81%9F%E3%82%8A%E5%89%8D%E5%AE%A4%20%E9%98%B2%E6%B0%B4%E9%98%B2%E9%A2%A8%20%E5%8F%8E%E7%B4%8D%E3%83%90%E3%83%83%E3%82%B0%E4%BB%98%E3%81%8D%20%E3%83%9D%E3%83%BC%E3%83%AB%E3%81%AA%E3%81%97%20%E7%99%BB%E5%B1%B1%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97&tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "収容人数": "1人",
+      "サイズ": "約210x125x115cm",
+      "重量": "約1.5kg",
+      "耐水圧": "3000MM",
+      "構造": "パップテント/シェルターテント",
+      "素材": "150Dオックスフォードクロス"
+    },
+    "description": "",
+    "rating": 4.29,
+    "createdAt": "2026-05-06T00:00:34.437Z",
+    "updatedAt": "2026-05-06T00:00:34.437Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-05-06T00:00:34.437Z",
+    "sourceApi": "rakuten"
   }
 ]
