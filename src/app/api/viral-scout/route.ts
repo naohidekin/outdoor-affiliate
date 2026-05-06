@@ -135,7 +135,7 @@ export async function POST(req: Request) {
   try {
     // spawn の代わりにモジュールを直接 import して実行（Vercel 対応）
     const { runViralScout } = await import("@/lib/viral-scout-agent.mjs");
-    await (runViralScout as (opts: Record<string, unknown>) => Promise<void>)({ days, minScore });
+    await (runViralScout as unknown as (opts: Record<string, unknown>) => Promise<unknown>)({ days, minScore });
 
     // 完了後に結果を読み取って返す（Vercel では /tmp、ローカルでは data/）
     const resultPath = process.env.VERCEL
