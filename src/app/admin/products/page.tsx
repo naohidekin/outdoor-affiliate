@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react";
 import { Product, Category } from "@/lib/types";
 
+interface AmazonSearchResult {
+  asin: string;
+  title: string;
+  brand: string;
+  price: number | null;
+  availability: string;
+  imageUrl: string;
+  features: string[];
+  amazonUrl: string;
+  isNew: boolean;
+}
+
 // AmazonのURLからASINを抽出してアソシエイトURLを生成
 function parseAmazonUrl(input: string): string {
   const m = input.match(/\/dp\/([A-Z0-9]{10})/);
   if (!m) return input;
-  return `https://www.amazon.co.jp/dp/${m[1]}/?tag=nao78-22-22`;
+  return `https://www.amazon.co.jp/dp/${m[1]}/?tag=nao78-22`;
 }
 
 export default function AdminProducts() {
@@ -20,6 +32,14 @@ export default function AdminProducts() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"list" | "search">("list");
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [autofilling, setAutofilling] = useState(false);
+  const [amazonSearch, setAmazonSearch] = useState("");
+  const [amazonResults, setAmazonResults] = useState<AmazonSearchResult[]>([]);
+  const [amazonSearching, setAmazonSearching] = useState(false);
+  const [amazonSearchError, setAmazonSearchError] = useState<string | null>(null);
 
   const emptyProduct: Omit<Product, "id" | "createdAt" | "updatedAt"> = {
     name: "", brand: "", price: 0,
@@ -105,6 +125,96 @@ export default function AdminProducts() {
     }
   }
 
+  async function handleAutofill() {
+    const asin = form.amazonUrl.match(/\/dp\/([A-Z0-9]{10})/)?.[1];
+    if (!asin) {
+      setSaveError("有効なAmazon URLを入力してください");
+      return;
+    }
+    setAutofilling(true);
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/products/autofill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ asin }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        name: data.name || prev.name,
+        brand: data.brand || prev.brand,
+        price: data.price ?? prev.price,
+        imageUrl: data.imageUrl || prev.imageUrl,
+        amazonUrl: data.amazonUrl || prev.amazonUrl,
+      }));
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "自動補完に失敗しました");
+    } finally {
+      setAutofilling(false);
+    }
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/products/sync");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { synced, total, changes } = await res.json();
+      const changeText = changes.length > 0
+        ? `（価格変更: ${changes.map((c: { name: string; oldPrice: number; newPrice: number }) => `${c.name} ¥${c.oldPrice.toLocaleString()}→¥${c.newPrice.toLocaleString()}`).join(", ")}）`
+        : "";
+      setSyncResult(`${total}件中 ${synced}件を更新しました${changeText}`);
+      fetchData();
+    } catch (err) {
+      setSyncResult(err instanceof Error ? err.message : "同期に失敗しました");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleAmazonSearch() {
+    if (!amazonSearch.trim()) return;
+    setAmazonSearching(true);
+    setAmazonResults([]);
+    setAmazonSearchError(null);
+    try {
+      const res = await fetch(`/api/products/amazon-search?q=${encodeURIComponent(amazonSearch)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { results } = await res.json();
+      setAmazonResults(results);
+    } catch (e) {
+      setAmazonSearchError(e instanceof Error ? e.message : "検索に失敗しました");
+    } finally {
+      setAmazonSearching(false);
+    }
+  }
+
+  async function handleAddFromSearch(item: AmazonSearchResult) {
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: item.title,
+        brand: item.brand,
+        price: item.price ?? 0,
+        imageUrl: item.imageUrl,
+        amazonUrl: item.amazonUrl,
+        affiliateUrl: "",
+        categoryId: "",
+        specs: {},
+        description: item.features.join("\n"),
+        rating: 0,
+      }),
+    });
+    if (res.ok) {
+      setAmazonResults((prev) => prev.map((r) => r.asin === item.asin ? { ...r, isNew: false } : r));
+      fetchData();
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("この商品を削除しますか？")) return;
     await fetch(`/api/products?id=${id}`, { method: "DELETE" });
@@ -125,10 +235,23 @@ export default function AdminProducts() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">商品管理</h1>
-        <button onClick={openNew} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-          + 新規登録
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleSync} disabled={syncing}
+            className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm transition">
+            {syncing && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {syncing ? "同期中…" : "価格・在庫を同期"}
+          </button>
+          <button onClick={openNew} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+            + 新規登録
+          </button>
+        </div>
       </div>
+
+      {syncResult && (
+        <div className={`mb-4 px-4 py-2.5 rounded-lg text-sm border ${syncing ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-green-50 border-green-200 text-green-700"}`}>
+          {syncResult}
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -187,9 +310,15 @@ export default function AdminProducts() {
                   Amazon URL
                   <span className="ml-1 text-blue-500 font-normal">（商品ページURLをそのまま貼ればOK）</span>
                 </label>
-                <input type="text" value={form.amazonUrl}
-                  onChange={(e) => handleAmazonUrlChange(e.target.value)}
-                  className={fieldClass} placeholder="https://www.amazon.co.jp/dp/B0XXXXXXXX/..." />
+                <div className="flex gap-2">
+                  <input type="text" value={form.amazonUrl}
+                    onChange={(e) => handleAmazonUrlChange(e.target.value)}
+                    className={`${fieldClass} flex-1`} placeholder="https://www.amazon.co.jp/dp/B0XXXXXXXX/..." />
+                  <button type="button" onClick={handleAutofill} disabled={autofilling || !form.amazonUrl.includes("/dp/")}
+                    className="shrink-0 px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-700 rounded-lg text-xs hover:bg-amber-100 disabled:opacity-40 transition whitespace-nowrap">
+                    {autofilling ? "取得中…" : "自動補完"}
+                  </button>
+                </div>
                 {form.amazonUrl && form.amazonUrl.includes("tag=nao78-22") && (
                   <p className="text-xs text-green-600 mt-1">✓ アソシエイトタグ付きURLに変換済み</p>
                 )}
@@ -246,8 +375,72 @@ export default function AdminProducts() {
         </div>
       )}
 
+      {/* タブ */}
+      <div className="flex gap-1 mb-4">
+        <button onClick={() => setActiveTab("list")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "list" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          商品一覧 ({products.length})
+        </button>
+        <button onClick={() => setActiveTab("search")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "search" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          Amazon検索・追加
+        </button>
+      </div>
+
+      {/* Amazon検索タブ */}
+      {activeTab === "search" && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="flex gap-2 mb-4">
+            <input type="text" value={amazonSearch}
+              onChange={(e) => setAmazonSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAmazonSearch()}
+              placeholder="例: テント ファミリー, タープ ヘキサ"
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <button onClick={handleAmazonSearch} disabled={amazonSearching || !amazonSearch.trim()}
+              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-5 py-2 rounded-lg text-sm transition">
+              {amazonSearching ? "検索中…" : "検索"}
+            </button>
+          </div>
+          {amazonResults.length > 0 && (
+            <div className="space-y-3">
+              {amazonResults.map((item) => (
+                <div key={item.asin} className="flex items-start gap-3 border border-gray-100 rounded-lg p-3">
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} alt={item.title} className="w-16 h-16 object-contain shrink-0 rounded" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{item.title}</p>
+                    <p className="text-xs text-gray-500">{item.brand}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-semibold text-gray-700">
+                        {item.price ? `¥${item.price.toLocaleString()}` : "価格不明"}
+                      </span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${item.availability === "InStock" ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-500"}`}>
+                        {item.availability === "InStock" ? "在庫あり" : item.availability === "OutOfStock" ? "在庫なし" : "不明"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddFromSearch(item)}
+                    disabled={!item.isNew}
+                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${item.isNew ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-100 text-gray-400 cursor-default"}`}>
+                    {item.isNew ? "+ 追加" : "登録済み"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {amazonSearchError && (
+            <p className="text-sm text-red-500 text-center py-6">{amazonSearchError}</p>
+          )}
+          {!amazonSearching && !amazonSearchError && amazonSearch && amazonResults.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6">検索結果がありません</p>
+          )}
+        </div>
+      )}
+
       {/* 商品一覧 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {activeTab === "list" && <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
           <span className="text-sm text-gray-500">{products.length}件</span>
           <input
@@ -283,7 +476,10 @@ export default function AdminProducts() {
                   <td className="px-5 py-3 text-sm text-gray-500">{p.brand}</td>
                   <td className="px-5 py-3 text-sm text-gray-500">{getCategoryName(p.categoryId)}</td>
                   <td className="px-5 py-3 text-sm text-gray-600">
-                    {p.price > 0 ? `¥${p.price.toLocaleString()}` : <span className="text-gray-300">-</span>}
+                    <div>{p.price > 0 ? `¥${p.price.toLocaleString()}` : <span className="text-gray-300">-</span>}</div>
+                    {p.availability === "OutOfStock" && (
+                      <span className="text-xs text-red-500">在庫なし</span>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-xs space-x-2">
                     {p.amazonUrl && <span className="inline-block bg-amber-50 text-amber-700 border border-amber-200 rounded px-1.5 py-0.5">Amazon</span>}
@@ -298,7 +494,7 @@ export default function AdminProducts() {
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
     </div>
   );
 }

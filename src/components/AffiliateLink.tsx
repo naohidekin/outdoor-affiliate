@@ -22,6 +22,7 @@ export default function AffiliateLink({
         product_id: productId,
         store,
         page_path: window.location.pathname,
+        link_url: href,
       });
     }
 
@@ -31,6 +32,7 @@ export default function AffiliateLink({
         productId,
         store,
         path: window.location.pathname,
+        link_url: href,
         timestamp: new Date().toISOString(),
       });
       navigator.sendBeacon("/api/track-click", new Blob([data], { type: "application/json" }));

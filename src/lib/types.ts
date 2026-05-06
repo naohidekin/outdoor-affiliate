@@ -27,6 +27,7 @@ export interface Product {
   addedBy?: string;
   addedAt?: string;
   sourceApi?: string;
+  availability?: "InStock" | "OutOfStock" | "Unknown";
 }
 
 export interface FAQ {

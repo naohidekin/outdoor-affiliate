@@ -100,6 +100,7 @@ function toProduct(row: Record<string, unknown>): Product {
     addedBy: row.added_by as string | undefined,
     addedAt: row.added_at as string | undefined,
     sourceApi: row.source_api as string | undefined,
+    availability: (row.availability as "InStock" | "OutOfStock" | "Unknown") ?? undefined,
   };
 }
 
@@ -122,6 +123,7 @@ function fromProduct(product: Product): Record<string, unknown> {
     added_by: product.addedBy ?? null,
     added_at: product.addedAt ?? null,
     source_api: product.sourceApi ?? null,
+    availability: product.availability ?? null,
   };
 }
 

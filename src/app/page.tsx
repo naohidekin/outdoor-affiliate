@@ -31,9 +31,9 @@ export default async function Home() {
 
   // 安全ガイド導線 4記事を特定
   const SAFETY_GUIDE_SLUGS = [
-    "camp-insect-repellent-guide",
-    "summer-camp-cooler-tips",
-    "winter-camp-beginners-checklist",
+    "camp-insect-repellent-roadmap",
+    "summer-camp-heat-food-safety",
+    "winter-camp-co-safety-guide",
     "family-camp-first-time-guide",
   ] as const;
   const safetyGuideArticles = SAFETY_GUIDE_SLUGS
