@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { spawn } from "child_process";
 import {
   getOverrides,
   markDeleted,
   setStatus,
 } from "@/lib/viral-scout-overrides";
+
+export const maxDuration = 300;
 
 const DATA_PATH = path.join(process.cwd(), "data", "viral-scout-results.json");
 // Vercel の data/ は読み取り専用のため、書き込みは /tmp を使用
@@ -130,27 +131,23 @@ export async function POST(req: Request) {
   const days = typeof body.days === "number" ? body.days : 1;
   const minScore = typeof body.minScore === "number" ? body.minScore : 20;
 
-  // ロックファイルを作成
   fs.writeFileSync(LOCK_PATH, new Date().toISOString());
+  try {
+    // spawn の代わりにモジュールを直接 import して実行（Vercel 対応）
+    const { runViralScout } = await import("@/lib/viral-scout-agent.mjs");
+    await (runViralScout as (opts: Record<string, unknown>) => Promise<void>)({ days, minScore });
 
-  // CLIスクリプトをバックグラウンドで起動
-  const child = spawn("node", [
-    "scripts/viral-scout-agent.js",
-    `--days=${days}`,
-    `--min-score=${minScore}`,
-  ], {
-    cwd: process.cwd(),
-    detached: true,
-    stdio: "ignore",
-  });
-  child.unref();
-
-  // 完了時にロック削除（子プロセスの終了を監視）
-  child.on("exit", () => {
+    // 完了後に結果を読み取って返す（Vercel では /tmp、ローカルでは data/）
+    const resultPath = process.env.VERCEL
+      ? "/tmp/viral-scout-results.json"
+      : DATA_PATH;
+    const data = JSON.parse(fs.readFileSync(resultPath, "utf-8"));
+    return NextResponse.json({ ok: true, status: "done", data });
+  } catch (e: unknown) {
+    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
+  } finally {
     try { fs.unlinkSync(LOCK_PATH); } catch {}
-  });
-
-  return NextResponse.json({ ok: true, status: "started", pid: child.pid });
+  }
 }
 
 // スカウト実行状態を返す

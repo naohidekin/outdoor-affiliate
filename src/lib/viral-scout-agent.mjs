@@ -26,8 +26,10 @@ import {
 import { checkXPostContent } from "./x-content-checks.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// src/lib/ から data/ までは2つ上がる
-const DATA_DIR = path.join(__dirname, "..", "..", "data");
+// Vercel では data/ が read-only のため /tmp に書き込む
+const DATA_DIR = process.env.VERCEL
+  ? "/tmp"
+  : path.join(__dirname, "..", "..", "data");
 
 // env はモジュールロード時に読み込む（Next.js経由の場合は冪等で既存値を保つ）
 loadEnv();

@@ -210,7 +210,7 @@ export default function ViralScoutPage() {
   async function runScout() {
     if (scouting) return;
     setScouting(true);
-    setScoutLog("スカウト開始中...");
+    setScoutLog("スカウト実行中... (数分かかります)");
     try {
       const res = await fetch("/api/viral-scout", {
         method: "POST",
@@ -223,23 +223,17 @@ export default function ViralScoutPage() {
         setScouting(false);
         return;
       }
-      setScoutLog("スカウト実行中... (3〜5分かかります)");
-      // ポーリングで完了を待つ
-      const poll = setInterval(async () => {
-        try {
-          const r = await fetch("/api/viral-scout", { method: "PUT" });
-          const s = await r.json();
-          if (!s.running) {
-            clearInterval(poll);
-            setScoutLog("完了! データを再読込中...");
-            loadData();
-            setScouting(false);
-            setTimeout(() => setScoutLog(""), 3000);
-          }
-        } catch {
-          // ポーリング中の一時的なエラーは無視
-        }
-      }, 5000);
+      // POST が完了するまで待機し、レスポンスのデータで直接更新
+      if (data.data?.viralPosts) {
+        setPosts(data.data.viralPosts || []);
+        setAggregate(data.data.aggregateAnalysis || null);
+        setScoutedAt(data.data.scoutedAt || "");
+      } else {
+        loadData();
+      }
+      setScoutLog("完了!");
+      setScouting(false);
+      setTimeout(() => setScoutLog(""), 3000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setScoutLog(`エラー: ${msg}`);
