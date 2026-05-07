@@ -1,39 +1,25 @@
 {
-  "updatedAt": "2026-05-06T01:00:05.840Z",
+  "updatedAt": "2026-05-07T01:00:09.776Z",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 52,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "oniyamma-shinrinka-review",
-      "categoryId": "insect-repellent",
-      "pv7d": 39,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camp-insect-repellent-guide",
-      "categoryId": "insect-repellent",
-      "pv7d": 23,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "family-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 14,
+      "pv7d": 64,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv7d": 12,
+      "pv7d": 18,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "family-tent-ranking",
+      "categoryId": "tent",
+      "pv7d": 16,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -47,7 +33,7 @@
     {
       "slug": "solo-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 12,
+      "pv7d": 9,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -80,6 +66,13 @@
       "ctr": 0
     },
     {
+      "slug": "oniyamma-shinrinka-review",
+      "categoryId": "insect-repellent",
+      "pv7d": 5,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "gw-camping-gear-budget",
       "categoryId": "tent",
       "pv7d": 4,
@@ -94,6 +87,13 @@
       "ctr": 0
     },
     {
+      "slug": "tarp-ranking",
+      "categoryId": "tarp",
+      "pv7d": 4,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "backpack-ranking",
       "categoryId": "backpack",
       "pv7d": 4,
@@ -101,29 +101,22 @@
       "ctr": 0
     },
     {
+      "slug": "camping-beginner-gear-checklist",
+      "categoryId": "tent",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "trekking-shoes-ranking",
       "categoryId": "shoes",
-      "pv7d": 4,
+      "pv7d": 3,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "camp-table-ranking",
       "categoryId": "table",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-3way-showdown",
-      "categoryId": "firepit",
       "pv7d": 2,
       "clicks7d": 0,
       "ctr": 0
@@ -141,28 +134,28 @@
       "pv7d": 2,
       "clicks7d": 0,
       "ctr": 0
+    },
+    {
+      "slug": "camp-insect-repellent-guide",
+      "categoryId": "insect-repellent",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 91,
+      "pv7d": 105,
       "clicks7d": 0,
-      "searchSessions": 68,
-      "trend": "active"
-    },
-    {
-      "categoryId": "insect-repellent",
-      "pv7d": 62,
-      "clicks7d": 0,
-      "searchSessions": 0,
+      "searchSessions": 81,
       "trend": "active"
     },
     {
       "categoryId": "cooler",
-      "pv7d": 24,
+      "pv7d": 30,
       "clicks7d": 0,
-      "searchSessions": 6,
+      "searchSessions": 12,
       "trend": "active"
     },
     {
@@ -176,7 +169,14 @@
       "categoryId": "sleeping-bag",
       "pv7d": 8,
       "clicks7d": 0,
-      "searchSessions": 8,
+      "searchSessions": 9,
+      "trend": "low"
+    },
+    {
+      "categoryId": "insect-repellent",
+      "pv7d": 6,
+      "clicks7d": 0,
+      "searchSessions": 0,
       "trend": "low"
     },
     {
@@ -187,35 +187,28 @@
       "trend": "low"
     },
     {
+      "categoryId": "tarp",
+      "pv7d": 4,
+      "clicks7d": 0,
+      "searchSessions": 3,
+      "trend": "low"
+    },
+    {
       "categoryId": "backpack",
       "pv7d": 4,
       "clicks7d": 0,
-      "searchSessions": 0,
+      "searchSessions": 1,
       "trend": "low"
     },
     {
       "categoryId": "shoes",
-      "pv7d": 4,
+      "pv7d": 3,
       "clicks7d": 0,
       "searchSessions": 0,
       "trend": "low"
     },
     {
       "categoryId": "table",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "searchSessions": 1,
-      "trend": "low"
-    },
-    {
-      "categoryId": "tarp",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "searchSessions": 2,
-      "trend": "low"
-    },
-    {
-      "categoryId": "firepit",
       "pv7d": 2,
       "clicks7d": 0,
       "searchSessions": 1,

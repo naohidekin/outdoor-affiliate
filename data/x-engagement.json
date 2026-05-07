@@ -1,19 +1,6 @@
 {
-  "lastUpdated": "2026-05-05T13:00:11.156Z",
+  "lastUpdated": "2026-05-06T13:00:08.484Z",
   "recentMetrics": [
-    {
-      "tweetId": "2046894570173297035",
-      "postType": "article_promo",
-      "textPreview": "春キャンプの服装、毎年失敗してたけどようやくコツ掴めた。昼は20度なのに夜は5度とか普通にある。レイヤリングでどうにかな",
-      "postedAt": "2026-04-22T10:11:09.354Z",
-      "likes": 0,
-      "retweets": 0,
-      "replies": 0,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 86,
-      "fetchedAt": "2026-05-05T13:00:11.155Z"
-    },
     {
       "tweetId": "2047254178750406978",
       "postType": "article_repost",
@@ -25,7 +12,7 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 95,
-      "fetchedAt": "2026-05-05T13:00:11.155Z"
+      "fetchedAt": "2026-05-06T13:00:08.481Z"
     }
   ],
   "topPosts": [
@@ -40,23 +27,28 @@
       "quotes": 0,
       "bookmarks": 0,
       "impressions": 95,
-      "fetchedAt": "2026-05-05T13:00:11.155Z"
-    },
-    {
-      "tweetId": "2046894570173297035",
-      "postType": "article_promo",
-      "textPreview": "春キャンプの服装、毎年失敗してたけどようやくコツ掴めた。昼は20度なのに夜は5度とか普通にある。レイヤリングでどうにかな",
-      "postedAt": "2026-04-22T10:11:09.354Z",
-      "likes": 0,
-      "retweets": 0,
-      "replies": 0,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 86,
-      "fetchedAt": "2026-05-05T13:00:11.155Z"
+      "fetchedAt": "2026-05-06T13:00:08.481Z"
     }
   ],
   "replyDigest": [
+    {
+      "tweetId": "2051990614284394551",
+      "text": "@camp_gear_lab 外来、入院受け持ち、訪問\n色々とやってるみたいなので\nまぁまぁ大変な感じがしますよねぇ。",
+      "createdAt": "2026-05-06T11:41:01.000Z",
+      "conversationId": "2051887200267370988"
+    },
+    {
+      "tweetId": "2051960823506260016",
+      "text": "@camp_gear_lab まぁ地域一般43床ですし\n規模感的にはこんなものなのかなぁと思ったり。\nどうなんでしょうかね～",
+      "createdAt": "2026-05-06T09:42:38.000Z",
+      "conversationId": "2051887200267370988"
+    },
+    {
+      "tweetId": "2051925203958272405",
+      "text": "@camp_gear_lab エレガントでスマートな診療憧れます！",
+      "createdAt": "2026-05-06T07:21:06.000Z",
+      "conversationId": "2051844281804210488"
+    },
     {
       "tweetId": "2051613211674497384",
       "text": "@camp_gear_lab もちろんAIで作成しました😳",
@@ -152,24 +144,6 @@
       "text": "@camp_gear_lab さんプレゼントのお受け取りありがとうございます！\n\nこちらのオープンチャットの「ノート」にあるので確認してくださいね。\n限定１日でお受け取りできなくなりますのでお急ぎください↓\n\nhttps://t.co/9y7pbuHL4m https://t.co/bJJZdWH5wd",
       "createdAt": "2026-05-02T18:18:30.000Z",
       "conversationId": "2050641092551577883"
-    },
-    {
-      "tweetId": "2050607656763810006",
-      "text": "@camp_gear_lab @mi_yu_ns じゃがいもがポテトをイジメる未来なら見える気がするけど…😅",
-      "createdAt": "2026-05-02T16:05:38.000Z",
-      "conversationId": "2050185969073070359"
-    },
-    {
-      "tweetId": "2050607373803467253",
-      "text": "@camp_gear_lab 物は試しだと思うのでプラスやってみようと思います！\nご丁寧にありがとうございました！",
-      "createdAt": "2026-05-02T16:04:31.000Z",
-      "conversationId": "2050597124191224109"
-    },
-    {
-      "tweetId": "2050605915544657939",
-      "text": "@camp_gear_lab 確かに伸びてますね！\n特に返信が伸びてそうですね！",
-      "createdAt": "2026-05-02T15:58:43.000Z",
-      "conversationId": "2050597124191224109"
     }
   ]
 }
