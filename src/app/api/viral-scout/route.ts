@@ -130,12 +130,15 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const days = typeof body.days === "number" ? body.days : 1;
   const minScore = typeof body.minScore === "number" ? body.minScore : 20;
+  // Vercel のサーバーレス関数タイムアウト対策: 最大10件に制限
+  // (50件フル処理は Claude API 100回 ≈ 5〜10分 → タイムアウト必至)
+  const count = 10;
 
   fs.writeFileSync(LOCK_PATH, new Date().toISOString());
   try {
     // spawn の代わりにモジュールを直接 import して実行（Vercel 対応）
     const { runViralScout } = await import("@/lib/viral-scout-agent.mjs");
-    await (runViralScout as unknown as (opts: Record<string, unknown>) => Promise<unknown>)({ days, minScore });
+    await (runViralScout as unknown as (opts: Record<string, unknown>) => Promise<unknown>)({ days, minScore, count });
 
     // 完了後に結果を読み取って返す（Vercel では /tmp、ローカルでは data/）
     const resultPath = process.env.VERCEL
