@@ -159,7 +159,7 @@ export function containsAffiliate(text) {
     text.includes("hb.afl.rakuten.co.jp") ||
     text.includes("amzn.to") ||
     text.includes("amazon.co.jp/dp/") ||
-    /tag=nao78-22/.test(text)
+    /tag=camp78-22/.test(text)
   );
 }
 

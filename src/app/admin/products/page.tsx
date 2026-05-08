@@ -19,7 +19,7 @@ interface AmazonSearchResult {
 function parseAmazonUrl(input: string): string {
   const m = input.match(/\/dp\/([A-Z0-9]{10})/);
   if (!m) return input;
-  return `https://www.amazon.co.jp/dp/${m[1]}/?tag=nao78-22`;
+  return `https://www.amazon.co.jp/dp/${m[1]}/?tag=camp78-22`;
 }
 
 export default function AdminProducts() {
@@ -319,7 +319,7 @@ export default function AdminProducts() {
                     {autofilling ? "取得中…" : "自動補完"}
                   </button>
                 </div>
-                {form.amazonUrl && form.amazonUrl.includes("tag=nao78-22") && (
+                {form.amazonUrl && form.amazonUrl.includes("tag=camp78-22") && (
                   <p className="text-xs text-green-600 mt-1">✓ アソシエイトタグ付きURLに変換済み</p>
                 )}
               </div>
