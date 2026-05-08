@@ -8,6 +8,7 @@ import {
 } from "@/lib/viral-scout-overrides";
 
 export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 const DATA_PATH = path.join(process.cwd(), "data", "viral-scout-results.json");
 // Vercel の data/ は読み取り専用のため、書き込みは /tmp を使用

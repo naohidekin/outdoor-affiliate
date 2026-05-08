@@ -181,7 +181,8 @@ async function scoutViralPosts(client, opts) {
   const bigAccountsOnly = opts.bigAccountsOnly || false;
   const minFollowers = opts.minFollowers > 0 ? opts.minFollowers : BIG_ACCOUNT_MIN_FOLLOWERS;
 
-  const targetAxes = opts.axis ? [opts.axis] : Object.keys(AXIS_QUERIES);
+  // VIRAL_TARGETS のキーを使うことでAI軸廃止が確実に反映される（AXIS_QUERIES には ai が残っているため）
+  const targetAxes = opts.axis ? [opts.axis] : Object.keys(VIRAL_TARGETS);
   const globalSeenIds = new Set(); // 全軸・全クエリ横断の重複除去
 
   // 全候補を1回のAPI呼び出しで収集（バイラル枠・ビッグアカウント枠を共用）

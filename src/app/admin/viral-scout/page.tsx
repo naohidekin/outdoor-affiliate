@@ -194,7 +194,7 @@ export default function ViralScoutPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function loadData() {
-    fetch("/api/viral-scout")
+    fetch("/api/viral-scout", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         setPosts(data.viralPosts || []);
