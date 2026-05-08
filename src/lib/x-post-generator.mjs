@@ -621,6 +621,38 @@ function buildAnalystHintsBlock(currentType = null) {
   return parts.length > 0 ? "\n" + parts.join("\n") : "";
 }
 
+// === ハイパフォーマーパターン few-shot injection ===
+
+function buildHighPerformerBlock() {
+  const filePath = path.join(DATA_DIR, "high-performer-patterns.json");
+  if (!fs.existsSync(filePath)) return "";
+
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } catch {
+    return "";
+  }
+
+  if (!data || !data.patterns || data.patterns.length === 0) return "";
+
+  const lines = [];
+  for (const p of data.patterns) {
+    if (!p.examples || p.examples.length === 0) continue;
+    lines.push(`### [${p.postType}] (平均スコア: ${p.avgEngagementScore})`);
+    for (const ex of p.examples) {
+      lines.push(`- 「${ex}」`);
+    }
+  }
+
+  if (lines.length === 0) return "";
+
+  const updatedAt = data.updatedAt ? data.updatedAt.slice(0, 10) : "?";
+  return `\n## 実績の高い書き出し例（${updatedAt}時点・上位${data.topN || "?"}件から抽出）
+同じ型・トーンを参考にしつつ、題材は今回のネタに置き換えること。そのまま転用禁止。
+${lines.join("\n")}`;
+}
+
 // === 生成プラン ===
 
 function determineGenerationPlan(opts) {
@@ -873,6 +905,7 @@ async function generatePosts(opts) {
     prompt += buildBuzzFirstLinesBlock(item.type);
     prompt += buildViralScoutBlock(item.axis);
     prompt += buildAnalystHintsBlock(item.type);
+    prompt += buildHighPerformerBlock();
     if (opts.research) {
       prompt += buildResearchBlock(item.axis === "all" || item.axis === "rotate" ? "camp" : item.axis);
     }

@@ -122,6 +122,11 @@ export default function XPostsPage() {
   const [batchLoading, setBatchLoading] = useState(false);
   const [mangaPicker, setMangaPicker] = useState<string | null>(null);
   const [mangaList, setMangaList] = useState<Array<{ name: string; path: string; createdAt: string }>>([]);
+  const [engagePosts, setEngagePosts] = useState<Array<{
+    rowIndex: number; status: string; postType: string; text: string;
+    sourceUrl: string; targetTweetId: string;
+  }>>([]);
+  const [engageLoading, setEngageLoading] = useState<Record<number, boolean>>({});
   // Phase1-B: 0件表示バグ診断用
   const [debug, setDebug] = useState<{
     fetchedAt: string;
@@ -160,7 +165,26 @@ export default function XPostsPage() {
       .then((r) => r.json())
       .then((data) => { if (!data.error) setAgentStatus(data); })
       .catch(() => {});
+
+    fetch("/api/x-posts/engage")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setEngagePosts(data); })
+      .catch(() => {});
   }, []);
+
+  async function handleEngageAction(rowIndex: number, status: "ready" | "skipped") {
+    setEngageLoading((prev) => ({ ...prev, [rowIndex]: true }));
+    try {
+      await fetch("/api/x-posts/engage", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rowIndex, status }),
+      });
+      setEngagePosts((prev) => prev.filter((p) => p.rowIndex !== rowIndex));
+    } finally {
+      setEngageLoading((prev) => ({ ...prev, [rowIndex]: false }));
+    }
+  }
 
   // 軸別の生成グループ定義。各ボタンはこのうちの1セットを順次APIに投げる。
   const GENERATE_GROUPS: Record<string, { label: string; types: string[] }> = {
@@ -976,6 +1000,65 @@ export default function XPostsPage() {
         <div className="text-center py-16 text-gray-400">
           <p className="text-lg mb-2">該当する投稿がありません</p>
           <p className="text-sm">「今すぐ生成」でポストを作成してください</p>
+        </div>
+      )}
+
+      {/* エンゲージ管理セクション */}
+      {engagePosts.length > 0 && (
+        <div className="mt-10 border-t pt-6">
+          <h2 className="text-base font-semibold text-gray-800 mb-4">
+            エンゲージ管理 — 承認待ち ({engagePosts.length}件)
+          </h2>
+          <p className="text-xs text-gray-400 mb-4">
+            承認 → status=ready → post-to-x.js が次回実行時に引用RT/リプライとして投稿します。
+          </p>
+          <div className="space-y-3">
+            {engagePosts.map((ep) => (
+              <div key={ep.rowIndex} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    ep.postType === "quote"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-purple-100 text-purple-700"
+                  }`}>
+                    {ep.postType === "quote" ? "引用RT" : "リプライ"}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    ep.status === "ready" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {ep.status}
+                  </span>
+                  {ep.sourceUrl && (
+                    <a
+                      href={ep.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-sky-500 hover:underline ml-auto"
+                    >
+                      引用元 →
+                    </a>
+                  )}
+                </div>
+                <p className="text-sm text-gray-800 whitespace-pre-wrap mb-3">{ep.text}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEngageAction(ep.rowIndex, "ready")}
+                    disabled={engageLoading[ep.rowIndex] || ep.status === "ready"}
+                    className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {engageLoading[ep.rowIndex] ? "処理中..." : "承認（ready）"}
+                  </button>
+                  <button
+                    onClick={() => handleEngageAction(ep.rowIndex, "skipped")}
+                    disabled={engageLoading[ep.rowIndex]}
+                    className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    却下
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

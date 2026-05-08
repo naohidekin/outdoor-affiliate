@@ -45,6 +45,7 @@ function jstDateStr(dateArg) {
 
 const QUEUE_SHEET = "X投稿管理";
 const DRAFT_SHEET = "下書き管理";
+const ENGAGE_SHEET = "エンゲージ管理";
 
 // ─── 安全装置（account-config.json から読み込み）───────
 
@@ -284,6 +285,30 @@ async function postToX() {
       console.warn(`[poster] Sheets読み取り失敗: ${err.message}。JSONフォールバック使用`);
       sheets = null;
     }
+
+    // エンゲージ管理シートからも ready を取得（quote/reply 投稿）
+    if (sheets) {
+      try {
+        const engageRes = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: `${ENGAGE_SHEET}!A2:J`,
+        });
+        const engageRows = engageRes.data.values || [];
+        for (let i = 0; i < engageRows.length; i++) {
+          const r = engageRows[i];
+          if (r[0] === "ready") {
+            readyRows.push({
+              rowIndex: i + 2,
+              data: r,
+              source: "engage",
+              targetTweetId: r[9] || null,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn(`[poster] エンゲージ管理シート読み取り失敗（続行）: ${err.message}`);
+      }
+    }
   }
 
   // Sheets失敗時: post-queue.json からready行を取得
@@ -327,6 +352,7 @@ async function postToX() {
 
   for (const target of targets) {
     const [, postType, rawText, imageUrl, sourceUrl, scheduledAt, , , selfReply] = target.data;
+    const targetTweetId = target.targetTweetId || null;
     // 本文からURL全除去（URLは必ずセルフリプライのみ — 本文掲載禁止）
     const text = (rawText || "")
       .replace(/https?:\/\/\S+/g, "")
@@ -342,8 +368,24 @@ async function postToX() {
       let postUrl;
       const postedAt = new Date().toISOString();
 
+      // ─── 引用RT（quote） ──────────────────────────────
+      if (postType === "quote" && targetTweetId) {
+        const result = await xClient.v2.tweet(text, { quote_tweet_id: targetTweetId });
+        tweetId = result.data.id;
+        postUrl = `https://x.com/camp_gear_lab/status/${tweetId}`;
+        console.log(`    → 引用RT完了: ${postUrl}`);
+
+      // ─── リプライ（reply） ─────────────────────────────
+      } else if (postType === "reply" && targetTweetId) {
+        const result = await xClient.v2.tweet(text, {
+          reply: { in_reply_to_tweet_id: targetTweetId },
+        });
+        tweetId = result.data.id;
+        postUrl = `https://x.com/camp_gear_lab/status/${tweetId}`;
+        console.log(`    → リプライ完了: ${postUrl}`);
+
       // ─── スレッド投稿（gear_thread） ─────────────────
-      if (text && text.startsWith("[THREAD]")) {
+      } else if (text && text.startsWith("[THREAD]")) {
         const tweetsJson = text.replace(/^\[THREAD\]\s*/, "");
         let tweets;
         try {
@@ -440,18 +482,34 @@ async function postToX() {
       // Sheets更新（接続可能な場合のみ）
       if (sheets && target.rowIndex > 0) {
         try {
-          await sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: `${QUEUE_SHEET}!A${target.rowIndex}:I${target.rowIndex}`,
-            valueInputOption: "RAW",
-            requestBody: {
-              values: [[
-                "posted", postType, text, imageUrl || "", sourceUrl || "",
-                scheduledAt || "", postedAt, postUrl, selfReply || "",
-              ]],
-            },
-          });
-          await syncDraftStatus(sheets, spreadsheetId, text, postedAt);
+          if (target.source === "engage") {
+            // エンゲージ管理シート: A〜H 列を更新（J列のtargetTweetIdは保持）
+            // schema: status | postType | text | imageUrl | sourceUrl | scheduledAt | postedAt | postUrl | _ | targetTweetId
+            await sheets.spreadsheets.values.update({
+              spreadsheetId,
+              range: `${ENGAGE_SHEET}!A${target.rowIndex}:H${target.rowIndex}`,
+              valueInputOption: "RAW",
+              requestBody: {
+                values: [[
+                  "posted", postType, text, imageUrl || "", sourceUrl || "",
+                  scheduledAt || "", postedAt, postUrl,
+                ]],
+              },
+            });
+          } else {
+            await sheets.spreadsheets.values.update({
+              spreadsheetId,
+              range: `${QUEUE_SHEET}!A${target.rowIndex}:I${target.rowIndex}`,
+              valueInputOption: "RAW",
+              requestBody: {
+                values: [[
+                  "posted", postType, text, imageUrl || "", sourceUrl || "",
+                  scheduledAt || "", postedAt, postUrl, selfReply || "",
+                ]],
+              },
+            });
+            await syncDraftStatus(sheets, spreadsheetId, text, postedAt);
+          }
         } catch (sheetErr) {
           console.warn(`    → Sheets更新失敗（投稿自体は成功）: ${sheetErr.message}`);
         }

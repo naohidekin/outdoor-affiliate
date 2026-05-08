@@ -274,6 +274,114 @@ function appendAnalystInsight(typeStats) {
   return feedback;
 }
 
+// === x-engagement.json 更新 ===
+
+function updateXEngagement(postedRows, metricsMap, dryRun) {
+  const engagementPath = path.join(DATA_DIR, "x-engagement.json");
+
+  // 既存データ読み込み（replyDigest を保持）
+  let existing = { replyDigest: [] };
+  if (fs.existsSync(engagementPath)) {
+    try {
+      existing = JSON.parse(fs.readFileSync(engagementPath, "utf-8"));
+    } catch {}
+  }
+
+  // recentMetrics: メトリクスが取得できた全投稿（新しい順）
+  const recentMetrics = postedRows
+    .filter((r) => metricsMap[r.tweetId])
+    .map((r) => ({
+      tweetId: r.tweetId,
+      postType: r.postType,
+      postedAt: r.postedAt,
+      postUrl: r.postUrl,
+      textPreview: r.text.slice(0, 80),
+      ...metricsMap[r.tweetId],
+    }))
+    .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
+
+  // topPosts: engagementScore 上位5件
+  const topPosts = [...recentMetrics]
+    .sort((a, b) => b.engagementScore - a.engagementScore)
+    .slice(0, 5);
+
+  const updated = {
+    lastUpdated: new Date().toISOString(),
+    recentMetrics,
+    topPosts,
+    replyDigest: existing.replyDigest || [],
+  };
+
+  if (dryRun) {
+    console.log(`[DRY RUN] x-engagement.json 更新スキップ (recentMetrics: ${recentMetrics.length}件, topPosts: ${topPosts.length}件)`);
+    return updated;
+  }
+
+  fs.writeFileSync(engagementPath, JSON.stringify(updated, null, 2) + "\n", "utf-8");
+  console.log(`x-engagement.json を更新 (recentMetrics: ${recentMetrics.length}件, topPosts: ${topPosts.length}件)`);
+  return updated;
+}
+
+// === high-performer-patterns.json 生成 ===
+
+function generateHighPerformerPatterns(postedRows, metricsMap, dryRun) {
+  // メトリクスあり投稿を engagementScore 降順ソート
+  const ranked = postedRows
+    .filter((r) => metricsMap[r.tweetId])
+    .map((r) => ({ ...r, ...metricsMap[r.tweetId] }))
+    .sort((a, b) => b.engagementScore - a.engagementScore);
+
+  if (ranked.length === 0) {
+    console.log("high-performer-patterns: 対象データなし");
+    return;
+  }
+
+  // 上位20%（最低1件）をハイパフォーマーとする
+  const topN = Math.max(1, Math.ceil(ranked.length * 0.2));
+  const topPosts = ranked.slice(0, topN);
+
+  // postType ごとにパターンを集約
+  const patternMap = {};
+  for (const post of topPosts) {
+    const type = post.postType || "unknown";
+    if (!patternMap[type]) {
+      patternMap[type] = { count: 0, totalScore: 0, examples: [] };
+    }
+    patternMap[type].count++;
+    patternMap[type].totalScore += post.engagementScore;
+    // 書き出し行（最初の60文字）を examples に追加（重複除去）
+    const firstLine = post.text.split("\n")[0].slice(0, 60);
+    if (firstLine && !patternMap[type].examples.includes(firstLine)) {
+      patternMap[type].examples.push(firstLine);
+    }
+  }
+
+  const patterns = Object.entries(patternMap).map(([postType, data]) => ({
+    postType,
+    avgEngagementScore: Math.round((data.totalScore / data.count) * 10) / 10,
+    count: data.count,
+    examples: data.examples.slice(0, 3), // 最大3件
+  }));
+
+  const result = {
+    updatedAt: new Date().toISOString(),
+    basedOnDays: 7,
+    totalAnalyzed: ranked.length,
+    topN,
+    patterns,
+  };
+
+  const patternsPath = path.join(DATA_DIR, "high-performer-patterns.json");
+
+  if (dryRun) {
+    console.log(`[DRY RUN] high-performer-patterns.json 生成スキップ (${patterns.length}パターン)`);
+    return;
+  }
+
+  fs.writeFileSync(patternsPath, JSON.stringify(result, null, 2) + "\n", "utf-8");
+  console.log(`high-performer-patterns.json を生成 (${patterns.length}パターン, 上位${topN}件)`);
+}
+
 // === メイン ===
 
 async function runAnalyze(opts) {
@@ -372,6 +480,12 @@ async function runAnalyze(opts) {
   const feedbackPath = path.join(DATA_DIR, "analyst-feedback.json");
   fs.writeFileSync(feedbackPath, JSON.stringify(feedback, null, 2) + "\n", "utf-8");
   console.log("analyst-feedback.json を更新（次回生成に反映）");
+
+  // x-engagement.json 更新（C-2）
+  updateXEngagement(postedRows, metricsMap, opts.dryRun);
+
+  // high-performer-patterns.json 生成（C-3）
+  generateHighPerformerPatterns(postedRows, metricsMap, opts.dryRun);
 }
 
 const opts = parseArgs();
