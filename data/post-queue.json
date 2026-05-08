@@ -74,13 +74,15 @@
       "postUrl": "https://x.com/camp_gear_lab/status/2052327610815033831"
     },
     {
-      "status": "ready",
+      "status": "posted",
       "type": "failure_story",
       "text": "息子8歳のキャンプデビュー時、張り切って「パパすごいでしょ」とドヤ顔でテント設営。完璧に立てて満足していたら、息子が「パパ、これ逆さまじゃない？」と一言。\n\nよく見たら本当に上下逆でした。入口が上、ベンチレーションが下という謎構造。\n\n子供の素直な指摘には勝てません。",
       "url": "",
       "selfReply": "子供に恥ずかしい姿を見せた経験、みなさんもありますか？笑",
       "scheduledDate": "2026-04-27",
-      "queuedAt": "2026-05-02T14:19:00.723Z"
+      "queuedAt": "2026-05-02T14:19:00.723Z",
+      "postedAt": "2026-05-07T23:00:16.913Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052523948307595505"
     },
     {
       "status": "ready",

@@ -1,36 +1,14 @@
 {
-  "lastUpdated": "2026-05-06T13:00:08.484Z",
-  "recentMetrics": [
-    {
-      "tweetId": "2047254178750406978",
-      "postType": "article_repost",
-      "textPreview": "今週よく読まれている2人用テント記事を改めて紹介🏕️\n\nカップルやデュオキャンプでテント選びに迷ってる人多いですよね。",
-      "postedAt": "2026-04-23T10:00:06.817Z",
-      "likes": 1,
-      "retweets": 0,
-      "replies": 1,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 95,
-      "fetchedAt": "2026-05-06T13:00:08.481Z"
-    }
-  ],
-  "topPosts": [
-    {
-      "tweetId": "2047254178750406978",
-      "postType": "article_repost",
-      "textPreview": "今週よく読まれている2人用テント記事を改めて紹介🏕️\n\nカップルやデュオキャンプでテント選びに迷ってる人多いですよね。",
-      "postedAt": "2026-04-23T10:00:06.817Z",
-      "likes": 1,
-      "retweets": 0,
-      "replies": 1,
-      "quotes": 0,
-      "bookmarks": 0,
-      "impressions": 95,
-      "fetchedAt": "2026-05-06T13:00:08.481Z"
-    }
-  ],
+  "lastUpdated": "2026-05-07T13:00:07.432Z",
+  "recentMetrics": [],
+  "topPosts": [],
   "replyDigest": [
+    {
+      "tweetId": "2052357728400810221",
+      "text": "@camp_gear_lab これが一番わかりやすいんじゃないですか･･･🥺",
+      "createdAt": "2026-05-07T11:59:48.000Z",
+      "conversationId": "2052356827871101173"
+    },
     {
       "tweetId": "2051990614284394551",
       "text": "@camp_gear_lab 外来、入院受け持ち、訪問\n色々とやってるみたいなので\nまぁまぁ大変な感じがしますよねぇ。",
@@ -138,12 +116,6 @@
       "text": "@camp_gear_lab 遅くなってしまいましたが、フォローさせていただきました！楽天の田草川と申します。今後たくさんやり取りさせていただけたら嬉しいです。何卒よろしくお願いいたします。",
       "createdAt": "2026-05-02T23:30:26.000Z",
       "conversationId": "2050716804285354340"
-    },
-    {
-      "tweetId": "2050641092551577883",
-      "text": "@camp_gear_lab さんプレゼントのお受け取りありがとうございます！\n\nこちらのオープンチャットの「ノート」にあるので確認してくださいね。\n限定１日でお受け取りできなくなりますのでお急ぎください↓\n\nhttps://t.co/9y7pbuHL4m https://t.co/bJJZdWH5wd",
-      "createdAt": "2026-05-02T18:18:30.000Z",
-      "conversationId": "2050641092551577883"
     }
   ]
 }

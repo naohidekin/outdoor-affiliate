@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "scoutedAt": "2026-05-06T22:36:48.640Z",
+  "scoutedAt": "2026-05-07T22:35:26.846Z",
   "config": {
     "minEngagementScore": 50,
     "targetCount": 50,
-    "actualCount": 43,
+    "actualCount": 32,
     "axes": [
       "ai",
       "camp",
@@ -13,166 +13,221 @@
     ]
   },
   "aggregateAnalysis": {
-    "totalAnalyzed": 43,
+    "totalAnalyzed": 32,
     "topHooks": [
-      {
-        "pattern": "self_disclosure",
-        "count": 11,
-        "pct": 26
-      },
-      {
-        "pattern": "conclusion_first",
-        "count": 8,
-        "pct": 19
-      },
       {
         "pattern": "other",
         "count": 8,
-        "pct": 19
+        "pct": 25
       },
       {
-        "pattern": "number_hook",
-        "count": 6,
-        "pct": 14
+        "pattern": "conclusion_first",
+        "count": 5,
+        "pct": 16
       },
       {
-        "pattern": "reveal",
+        "pattern": "self_disclosure",
+        "count": 5,
+        "pct": 16
+      },
+      {
+        "pattern": "contrast",
         "count": 3,
-        "pct": 7
+        "pct": 9
+      },
+      {
+        "pattern": "hot_take",
+        "count": 3,
+        "pct": 9
       }
     ],
     "topEmotionalTriggers": [
       {
         "pattern": "empathy",
-        "count": 10,
-        "pct": 23
-      },
-      {
-        "pattern": "utility",
         "count": 7,
-        "pct": 16
-      },
-      {
-        "pattern": "nostalgia",
-        "count": 6,
-        "pct": 14
+        "pct": 22
       },
       {
         "pattern": "controversy",
         "count": 5,
-        "pct": 12
+        "pct": 16
       },
       {
-        "pattern": "curiosity",
+        "pattern": "utility",
+        "count": 5,
+        "pct": 16
+      },
+      {
+        "pattern": "nostalgia",
+        "count": 5,
+        "pct": 16
+      },
+      {
+        "pattern": "humor",
         "count": 4,
-        "pct": 9
+        "pct": 13
       }
     ],
     "topFormats": [
       {
         "pattern": "experience_share",
-        "count": 17,
-        "pct": 40
+        "count": 13,
+        "pct": 41
       },
       {
-        "pattern": "one_liner",
-        "count": 7,
+        "pattern": "hot_take",
+        "count": 5,
         "pct": 16
       },
       {
-        "pattern": "story",
-        "count": 6,
-        "pct": 14
+        "pattern": "one_liner",
+        "count": 4,
+        "pct": 13
       },
       {
         "pattern": "data_point",
-        "count": 5,
-        "pct": 12
+        "count": 3,
+        "pct": 9
       },
       {
-        "pattern": "list",
-        "count": 4,
-        "pct": 9
+        "pattern": "story",
+        "count": 2,
+        "pct": 6
       }
     ],
     "topShareability": [
       {
-        "pattern": "utility",
-        "count": 12,
+        "pattern": "identity",
+        "count": 9,
         "pct": 28
       },
       {
-        "pattern": "identity",
-        "count": 11,
-        "pct": 26
-      },
-      {
-        "pattern": "emotional",
-        "count": 9,
-        "pct": 21
+        "pattern": "utility",
+        "count": 8,
+        "pct": 25
       },
       {
         "pattern": "debate",
         "count": 6,
-        "pct": 14
+        "pct": 19
+      },
+      {
+        "pattern": "emotional",
+        "count": 6,
+        "pct": 19
       },
       {
         "pattern": "humor",
         "count": 3,
-        "pct": 7
+        "pct": 9
       }
     ],
     "topTechniques": [
       {
         "technique": "ハッシュタグ活用",
-        "count": 4
+        "count": 3
       },
       {
-        "technique": "具体的数値提示",
+        "technique": "リアルタイム体験",
         "count": 2
       },
       {
-        "technique": "断定的表現",
-        "count": 2
-      },
-      {
-        "technique": "具体的体験談",
+        "technique": "業界内格差の暴露",
         "count": 1
       },
       {
-        "technique": "社会問題の構造的指摘",
+        "technique": "絵文字による親しみやすさ",
         "count": 1
       },
       {
-        "technique": "制度の盲点暴露",
+        "technique": "読者参加型の予想",
         "count": 1
       },
       {
-        "technique": "チェックリスト形式",
+        "technique": "重要情報の反復強調",
         "count": 1
       },
       {
-        "technique": "将来不安煽り",
+        "technique": "感嘆詞による興奮表現",
         "count": 1
       },
       {
-        "technique": "視覚的表現",
+        "technique": "制限事項の併記",
         "count": 1
       },
       {
-        "technique": "意外性のある事例",
+        "technique": "冷静な分析トーン",
+        "count": 1
+      },
+      {
+        "technique": "技術的洞察の提示",
         "count": 1
       }
     ],
     "byAxis": {
       "doctor": {
-        "count": 10,
-        "avgEngagement": 298,
+        "count": 7,
+        "avgEngagement": 660,
         "topHooks": [
           {
             "pattern": "reveal",
+            "count": 2,
+            "pct": 29
+          },
+          {
+            "pattern": "hot_take",
+            "count": 2,
+            "pct": 29
+          },
+          {
+            "pattern": "other",
+            "count": 1,
+            "pct": 14
+          }
+        ],
+        "topTriggers": [
+          {
+            "pattern": "controversy",
             "count": 3,
-            "pct": 30
+            "pct": 43
+          },
+          {
+            "pattern": "humor",
+            "count": 2,
+            "pct": 29
+          },
+          {
+            "pattern": "empathy",
+            "count": 1,
+            "pct": 14
+          }
+        ],
+        "topFormats": [
+          {
+            "pattern": "one_liner",
+            "count": 2,
+            "pct": 29
+          },
+          {
+            "pattern": "hot_take",
+            "count": 2,
+            "pct": 29
+          },
+          {
+            "pattern": "experience_share",
+            "count": 1,
+            "pct": 14
+          }
+        ]
+      },
+      "ai": {
+        "count": 10,
+        "avgEngagement": 509,
+        "topHooks": [
+          {
+            "pattern": "number_hook",
+            "count": 2,
+            "pct": 20
           },
           {
             "pattern": "conclusion_first",
@@ -187,86 +242,31 @@
         ],
         "topTriggers": [
           {
-            "pattern": "controversy",
-            "count": 5,
-            "pct": 50
-          },
-          {
-            "pattern": "empathy",
-            "count": 3,
-            "pct": 30
-          },
-          {
-            "pattern": "curiosity",
-            "count": 1,
-            "pct": 10
-          }
-        ],
-        "topFormats": [
-          {
-            "pattern": "experience_share",
-            "count": 3,
-            "pct": 30
-          },
-          {
-            "pattern": "story",
-            "count": 3,
-            "pct": 30
-          },
-          {
-            "pattern": "hot_take",
-            "count": 3,
-            "pct": 30
-          }
-        ]
-      },
-      "ai": {
-        "count": 10,
-        "avgEngagement": 208,
-        "topHooks": [
-          {
-            "pattern": "number_hook",
-            "count": 4,
-            "pct": 40
-          },
-          {
-            "pattern": "conclusion_first",
-            "count": 4,
-            "pct": 40
-          },
-          {
-            "pattern": "contrast",
-            "count": 1,
-            "pct": 10
-          }
-        ],
-        "topTriggers": [
-          {
-            "pattern": "FOMO",
-            "count": 3,
-            "pct": 30
-          },
-          {
             "pattern": "utility",
             "count": 3,
             "pct": 30
           },
           {
-            "pattern": "identity",
+            "pattern": "FOMO",
+            "count": 2,
+            "pct": 20
+          },
+          {
+            "pattern": "controversy",
             "count": 2,
             "pct": 20
           }
         ],
         "topFormats": [
           {
-            "pattern": "list",
+            "pattern": "hot_take",
             "count": 3,
             "pct": 30
           },
           {
-            "pattern": "data_point",
-            "count": 3,
-            "pct": 30
+            "pattern": "list",
+            "count": 2,
+            "pct": 20
           },
           {
             "pattern": "experience_share",
@@ -276,83 +276,66 @@
         ]
       },
       "camp": {
-        "count": 18,
-        "avgEngagement": 92,
+        "count": 10,
+        "avgEngagement": 74,
         "topHooks": [
           {
-            "pattern": "other",
-            "count": 8,
-            "pct": 44
-          },
-          {
             "pattern": "self_disclosure",
-            "count": 5,
-            "pct": 28
+            "count": 3,
+            "pct": 30
           },
           {
-            "pattern": "number_hook",
-            "count": 1,
-            "pct": 6
+            "pattern": "other",
+            "count": 3,
+            "pct": 30
+          },
+          {
+            "pattern": "conclusion_first",
+            "count": 2,
+            "pct": 20
           }
         ],
         "topTriggers": [
           {
             "pattern": "nostalgia",
-            "count": 5,
-            "pct": 28
+            "count": 3,
+            "pct": 30
           },
           {
             "pattern": "utility",
-            "count": 4,
-            "pct": 22
+            "count": 2,
+            "pct": 20
           },
           {
-            "pattern": "humor",
-            "count": 3,
-            "pct": 17
+            "pattern": "empathy",
+            "count": 2,
+            "pct": 20
           }
         ],
         "topFormats": [
           {
             "pattern": "experience_share",
-            "count": 9,
-            "pct": 50
+            "count": 7,
+            "pct": 70
           },
           {
             "pattern": "one_liner",
-            "count": 5,
-            "pct": 28
+            "count": 1,
+            "pct": 10
           },
           {
             "pattern": "story",
-            "count": 2,
-            "pct": 11
+            "count": 1,
+            "pct": 10
           }
         ]
       },
       "parenting": {
         "count": 5,
-        "avgEngagement": 88,
+        "avgEngagement": 87,
         "topHooks": [
           {
-            "pattern": "self_disclosure",
-            "count": 3,
-            "pct": 60
-          },
-          {
-            "pattern": "hot_take",
-            "count": 1,
-            "pct": 20
-          },
-          {
-            "pattern": "conclusion_first",
-            "count": 1,
-            "pct": 20
-          }
-        ],
-        "topTriggers": [
-          {
-            "pattern": "empathy",
+            "pattern": "other",
             "count": 4,
             "pct": 80
           },
@@ -362,6 +345,18 @@
             "pct": 20
           }
         ],
+        "topTriggers": [
+          {
+            "pattern": "empathy",
+            "count": 3,
+            "pct": 60
+          },
+          {
+            "pattern": "nostalgia",
+            "count": 2,
+            "pct": 40
+          }
+        ],
         "topFormats": [
           {
             "pattern": "experience_share",
@@ -369,494 +364,538 @@
             "pct": 60
           },
           {
-            "pattern": "hot_take",
+            "pattern": "comparison",
             "count": 1,
             "pct": 20
           },
           {
-            "pattern": "story",
+            "pattern": "data_point",
             "count": 1,
             "pct": 20
           }
         ]
       }
     },
-    "highAdaptability": 30
+    "highAdaptability": 23
   },
   "viralPosts": [
     {
-      "tweetId": "2051898846448599253",
-      "authorUsername": "dmnaika",
-      "authorName": "スラリソ",
-      "authorFollowers": 8395,
+      "tweetId": "2052247473108947438",
+      "authorUsername": "KirinMD",
+      "authorName": "きりん院長@株の外来🦒",
+      "authorFollowers": 14440,
       "axis": "doctor",
-      "text": "この前も知り合いの50代の開業医が心筋梗塞で死んで閉院してしまった。自殺した例も聞く。開業医は経営者なので労働基準法は適用されず、過労で死んだとしても過労死認定はされない。 https://t.co/JblwiyQ8C5",
-      "createdAt": "2026-05-06T05:36:22.000Z",
+      "text": "勤務医が読めなくて開業医が読める漢字\n\n「別添」🥺\n\n勤務医の大半は読めないとみた…",
+      "createdAt": "2026-05-07T04:41:41.000Z",
       "metrics": {
-        "likes": 917,
-        "retweets": 157,
-        "replies": 6,
-        "quotes": 8,
-        "bookmarks": 72,
-        "engagementScore": 1416
+        "likes": 2291,
+        "retweets": 14,
+        "replies": 87,
+        "quotes": 33,
+        "bookmarks": 215,
+        "engagementScore": 2573
       },
       "analysis": {
         "index": 1,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "empathy",
-        "format": "experience_share",
-        "topic": "開業医の過労死",
-        "timing": "医師の働き方改革議論中",
-        "shareability": "emotional",
+        "hook": "reveal",
+        "emotionalTrigger": "humor",
+        "format": "one_liner",
+        "topic": "医師業界ネタ",
+        "timing": "医師コミュニティでの共感",
+        "shareability": "identity",
         "keyTechniques": [
-          "具体的体験談",
-          "社会問題の構造的指摘",
-          "制度の盲点暴露"
+          "業界内格差の暴露",
+          "絵文字による親しみやすさ",
+          "読者参加型の予想"
         ],
         "adaptability": "high",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "本職柄、開業医の過労はリアルな問題だと感じます。法人化して分散経営を始めたのも、実はリスク軽減が目的の一つ。1人で全部背負う構造を変えないと、この問題は続く。僕はキャンプで強制的にオフタイムを作ってますが、それでも経営プレッシャーは消えませんね。",
+          "text": "本職柄、書類で「別添」は日常茶飯事だったのに、勤務医時代は確かに読めませんでした。開業してから事務方とのやり取りで覚えた漢字、他にもたくさんあります。医学部では習わない実務知識の一つですね。",
           "axis": "doctor",
-          "rationale": "体験談で構造的解決策提示",
+          "rationale": "勤務医→開業医の実体験",
           "status": "draft"
         },
         "reply": {
-          "text": "本職柄、この現実は重く受け止めています。僕も法人展開でリスク分散を図りましたが、それでも1人で抱え込みがちに。強制的にキャンプでオフを作っても、経営プレッシャーは消えない。開業医の働き方改革、業界全体で考える必要がありますね。",
+          "text": "開業してから覚えた漢字、本当に多いです。「別添」「請求」「控除」など、医学部では習わない実務の世界。僕も最初は事務スタッフに読み方を聞いて回っていました。",
           "axis": "doctor",
-          "rationale": "具体的対策と業界視点提供",
+          "rationale": "開業医としての実体験共有",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051901103030382606",
-      "authorUsername": "moriken0119",
-      "authorName": "森けんたろう《日本保守党》福岡支部長",
-      "authorFollowers": 31563,
+      "tweetId": "2052187963065614710",
+      "authorUsername": "k_matsumaru",
+      "authorName": "松丸 彗吾(keigo_matsumaru)",
+      "authorFollowers": 36091,
       "axis": "ai",
-      "text": "進撃の —— Claude 🔥\n✅ Claude Code\n✅ Claude Cowork\n✅ Claude Design\n✅ Claude Finance 🆕\n🔲 Claude Marketing\n🔲 Claude Sales\n🔲 Claude HR\n🔲 Claude Law\n...ホワイトカラーをAIがすごいスピードで埋めていく。\nいまの仕事、あと何年もつ？\n#AI従業員 #AI失業 #移民はいらん https://t.co/pzCL53ER6Z",
-      "createdAt": "2026-05-06T05:45:20.000Z",
+      "text": "きたああああ！！！\nClaude Code全プランレートリミット2倍！！！\nClaude Code全プランレートリミット2倍！！！\nClaude Code全プランレートリミット2倍！！！\n\n※ なお5時間レートリミットのみで週次は https://t.co/0WOxHN4FIZ",
+      "createdAt": "2026-05-07T00:45:12.000Z",
       "metrics": {
-        "likes": 303,
-        "retweets": 75,
-        "replies": 8,
-        "quotes": 1,
-        "bookmarks": 12,
-        "engagementScore": 546
+        "likes": 1777,
+        "retweets": 88,
+        "replies": 34,
+        "quotes": 16,
+        "bookmarks": 438,
+        "engagementScore": 2141
       },
       "analysis": {
         "index": 2,
         "hook": "number_hook",
         "emotionalTrigger": "FOMO",
-        "format": "list",
-        "topic": "AI職業代替",
-        "timing": "Claude新機能リリース後",
-        "shareability": "FOMO",
+        "format": "hot_take",
+        "topic": "Claude更新情報",
+        "timing": "AI開発者の関心事直撃",
+        "shareability": "utility",
         "keyTechniques": [
-          "チェックリスト形式",
-          "将来不安煽り",
-          "視覚的表現"
+          "重要情報の反復強調",
+          "感嘆詞による興奮表現",
+          "制限事項の併記"
         ],
         "adaptability": "high",
         "mentionedProducts": [
           {
-            "name": "Claude",
+            "name": "Claude Code",
             "brand": "Anthropic"
           }
         ]
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "医療現場でもAI活用が進んでますが、Claude Financeみたいな専門特化型は興味深い。僕はGASでサイト作りにハマってる非エンジニアですが、医療×AIの可能性をひしひし感じます。ただ、人との関係性が核の仕事は残ると思うんですよね。",
+          "text": "これは嬉しい！サイト作りでClaude Code使ってるんですが、レート制限でよく止まってました。医師の非エンジニアでも使えるツールがどんどん進化していて、趣味の開発が捗りそうです。",
           "axis": "ai",
-          "rationale": "医師×非エンジニア視点で差別化",
+          "rationale": "医師×非エンジニア視点",
           "status": "draft"
         },
         "reply": {
-          "text": "医療現場の非エンジニア医師として興味深く拝見。GASでサイト作りしてますが、専門特化型AIの進化は確かにすごい。ただ医療は診断だけでなく、患者さんとの関係性や共感が核になる部分も多いので、完全代替は難しそうですね。",
+          "text": "レート制限で開発が中断される辛さ、よく分かります。特に非エンジニアは試行錯誤が多いので、この改善は本当にありがたいですね。",
           "axis": "ai",
-          "rationale": "医療現場の実感を踏まえた見解",
-          "validationErrors": "[医療表現注意] \"診断\" を検出",
+          "rationale": "非エンジニア目線の共感",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051882170206310760",
-      "authorUsername": "nikkeibpITpro",
-      "authorName": "日経クロステック IT",
-      "authorFollowers": 90081,
+      "tweetId": "2052297960474681556",
+      "authorUsername": "otr_ut",
+      "authorName": "小鳥遊ヲトリ",
+      "authorFollowers": 4010,
       "axis": "ai",
-      "text": "AIエージェントをGoogle Apps Scriptで開発、幼稚園が挑む自動化\nhttps://t.co/leumWe5enX\n\n大きなIT予算を持たない中小の事業者や組織でも、自社にあったAIエージェントを開発し顧客サポート業務で活用できる。Google App Scriptsを使って低コストでAIエージェントを構築した幼稚園の事例を紹介。",
-      "createdAt": "2026-05-06T04:30:06.000Z",
+      "text": "記事内容が正しければ、生成禁止ではなく、生成AIシステムの流通自体を禁止する、とのこと\n現状、生成AIは開発元でも制御できておらずフィルタリングしても簡単に回避されるので、実現すれば生成AIはかなり追い詰められることになるかと https://t.co/00klnJljyU",
+      "createdAt": "2026-05-07T08:02:18.000Z",
       "metrics": {
-        "likes": 244,
-        "retweets": 46,
-        "replies": 1,
-        "quotes": 14,
-        "bookmarks": 112,
-        "engagementScore": 412
+        "likes": 1123,
+        "retweets": 305,
+        "replies": 3,
+        "quotes": 4,
+        "bookmarks": 102,
+        "engagementScore": 2052
       },
       "analysis": {
         "index": 3,
-        "hook": "contrast",
-        "emotionalTrigger": "utility",
+        "hook": "conclusion_first",
+        "emotionalTrigger": "controversy",
         "format": "data_point",
-        "topic": "低コストAI開発",
-        "timing": "中小企業DX注目時",
-        "shareability": "utility",
+        "topic": "AI規制法案",
+        "timing": "AI規制議論の高まり",
+        "shareability": "debate",
         "keyTechniques": [
-          "意外性のある事例",
-          "具体的コスト訴求",
-          "実用性重視"
+          "冷静な分析トーン",
+          "技術的洞察の提示",
+          "将来影響の予測"
         ],
         "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "Google Apps Script",
-            "brand": "Google"
-          }
-        ]
+        "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "これは参考になります！僕も非エンジニア医師でGASにハマってるので、幼稚園がAIエージェント開発する時代に驚き。医療現場でも低コストAI活用の余地は大きそう。予算制約ある中小クリニックこそ、こういうアプローチが有効かもしれませんね。",
-          "axis": "ai",
-          "rationale": "医師×非エンジニア体験で共感",
+          "text": "本職として、医療AI分野への影響も気になります。診断支援AIなど医療現場で活用が進む中、規制強化は技術発展と安全性のバランスをどう取るかの試金石になりそうですね。",
+          "axis": "doctor",
+          "rationale": "医師として医療AI視点",
+          "validationErrors": "[医療表現注意] \"診断\" を検出",
           "status": "draft"
         },
         "reply": {
-          "text": "非エンジニア医師としてとても参考になります。GASでのサイト作りにハマってますが、幼稚園がAIエージェント開発する時代なんですね。医療現場でも患者対応や事務作業の自動化に応用できそう。低コストで始められるのが魅力的です。",
-          "axis": "ai",
-          "rationale": "医療応用の可能性を具体的に",
+          "text": "医療分野でもAI活用が進んでいるので、この規制議論は他人事ではないですね。安全性確保と技術発展のバランス、慎重な検討が必要だと思います。",
+          "axis": "doctor",
+          "rationale": "医療現場からの視点提供",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051825242264441162",
-      "authorUsername": "tsurutacl",
-      "authorName": "ツチノコ在宅ケモ屋",
-      "authorFollowers": 4782,
+      "tweetId": "2052229818725642613",
+      "authorUsername": "efmania",
+      "authorName": "efmania",
+      "authorFollowers": 37637,
       "axis": "doctor",
-      "text": "開業医なら一度は知っておくべき話\n\nいわゆる「富山の個別指導開業医自殺事件」\n\n詳細は添付資料と下記HP参照下さい。\n\n保団連とともに個別指導改善をめざして | 富山県保険医協会 https://t.co/Hkt9ucBtd0\n\n個別指導は、日本の保険診療において https://t.co/oIdIu6jKHf https://t.co/NBm9MbidLK",
-      "createdAt": "2026-05-06T00:43:53.000Z",
+      "text": "『夫という存在を抜きにすれば、私は趣味も好きなこともある、ごく普通の女の子。誰もが歌手や医師、俳優、スポーツ選手になれるわけじゃないです。でも、だからといって人としての価値が少しでも下がるわけではありません』— アレクサンドラ・ルクレール https://t.co/hL7kC1uHcd",
+      "createdAt": "2026-05-07T03:31:32.000Z",
       "metrics": {
-        "likes": 201,
+        "likes": 921,
         "retweets": 48,
-        "replies": 0,
-        "quotes": 12,
-        "bookmarks": 114,
-        "engagementScore": 369
+        "replies": 4,
+        "quotes": 8,
+        "bookmarks": 72,
+        "engagementScore": 1089
       },
       "analysis": {
         "index": 4,
-        "hook": "reveal",
-        "emotionalTrigger": "curiosity",
-        "format": "story",
-        "topic": "医師自殺事件",
-        "timing": "医療制度問題関心高",
-        "shareability": "identity",
+        "hook": "other",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "人生観の名言",
+        "timing": "多様性への理解共感",
+        "shareability": "emotional",
         "keyTechniques": [
-          "専門知識共有",
-          "歴史的事例紹介",
-          "業界内情報"
+          "引用による権威性",
+          "普遍的価値観の表現",
+          "職業への言及"
         ],
-        "adaptability": "high",
+        "adaptability": "medium",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "本職柄、個別指導の重圧は他人事ではありません。真面目に診療していても指摘される理不尽さがある。この事件は開業医なら必ず知っておくべき。僕も法人化でリスク分散を図りましたが、制度自体の改善が必要だと感じます。",
+          "text": "職業柄、様々な人生を見てきましたが、本当にその通りだと思います。どんな立場の人も、それぞれの価値と尊厳がある。僕自身も医師である前に、一人の人間として日々を大切に生きたいです。",
           "axis": "doctor",
-          "rationale": "当事者視点で制度問題指摘",
-          "validationErrors": "[災害・事故・炎上] \"事件\" を検出",
-          "status": "needs_review"
+          "rationale": "医師として患者との関わり",
+          "status": "draft"
         },
         "reply": {
-          "text": "本職柄、この事件は重く受け止めています。個別指導の理不尽さは多くの開業医が感じるところ。真面目に診療していても指摘される現実がある。制度の透明性向上と、開業医を孤立させない仕組み作りが急務ですね。",
+          "text": "本職柄、色々な方の人生に触れる機会がありますが、皆さんそれぞれに価値のある人生を歩まれています。職業や立場に関係なく、一人ひとりの尊厳を大切にしたいですね。",
           "axis": "doctor",
-          "rationale": "制度改善の必要性を提起",
-          "validationErrors": "[災害・事故・炎上] \"事件\" を検出",
-          "status": "needs_review"
+          "rationale": "医師の患者観を控えめに",
+          "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2052023233420107786",
-      "authorUsername": "chinniisan",
-      "authorName": "ちんにい",
-      "authorFollowers": 45904,
+      "tweetId": "2052338192456839525",
+      "authorUsername": "oxomckoe",
+      "authorName": "オッカム",
+      "authorFollowers": 47522,
       "axis": "doctor",
-      "text": "学生時代にカテキョしてた親（開業医）も若くしてAMIで亡くなった。 https://t.co/cdVdQTvThy",
-      "createdAt": "2026-05-06T13:50:38.000Z",
+      "text": "母が送ってきた稚内の自宅の裏。いちおう我が家の土地なのだが、鹿に占拠されてます。左側のボロボロの建物は倒産した建築会社の社員寮。もう長いこと放置されてます。とうも東京の開業医が税金対策で購入しているらしいのだが。 https://t.co/yPVdkf770z",
+      "createdAt": "2026-05-07T10:42:10.000Z",
       "metrics": {
-        "likes": 229,
-        "retweets": 21,
-        "replies": 2,
-        "quotes": 2,
-        "bookmarks": 13,
-        "engagementScore": 300
+        "likes": 378,
+        "retweets": 90,
+        "replies": 3,
+        "quotes": 7,
+        "bookmarks": 30,
+        "engagementScore": 668
       },
       "analysis": {
         "index": 5,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "empathy",
-        "format": "experience_share",
-        "topic": "開業医早世",
-        "timing": "医師過労話題に便乗",
-        "shareability": "emotional",
+        "hook": "contrast",
+        "emotionalTrigger": "humor",
+        "format": "story",
+        "topic": "鹿と土地問題",
+        "timing": "田舎あるあるでの共感",
+        "shareability": "humor",
         "keyTechniques": [
-          "個人体験談",
-          "簡潔な表現",
-          "医療業界共感"
+          "視覚的インパクト",
+          "地方格差の皮肉",
+          "税金対策への言及"
         ],
-        "adaptability": "high",
+        "adaptability": "medium",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "本職柄、開業医の心筋梗塞は身近な問題です。経営プレッシャーと過労が重なる構造的な問題。僕はキャンプで強制的にオフを作り、法人化でリスク分散してますが、それでも完璧ではない。業界全体でこの現実と向き合う必要がありますね。",
+          "text": "同じ開業医として複雑な気持ちです。僕は地域医療に根ざした診療を心がけていますが、税金対策目的での不動産購入が地域に与える影響を考えると、医師の社会的責任についても考えさせられます。",
           "axis": "doctor",
-          "rationale": "構造問題と対策を実体験で",
+          "rationale": "同業者としての社会的責任",
           "status": "draft"
         },
         "reply": {
-          "text": "本職柄、身につまされる話です。開業医の過労と経営プレッシャーは本当に深刻。僕も予防として法人化やキャンプでの強制オフを心がけてますが、根本的には1人で全部背負う構造に問題がある。業界全体で考える時期ですね。",
+          "text": "同じ開業医として、税金対策目的の不動産投資には複雑な思いがあります。地域への貢献を考えた経営を心がけたいですね。",
           "axis": "doctor",
-          "rationale": "予防策と構造問題を両面提示",
+          "rationale": "同業者としての責任感",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051830334308925870",
-      "authorUsername": "EARL_med_tw",
-      "authorName": "EARLの医学&AIノート",
-      "authorFollowers": 151558,
-      "axis": "doctor",
-      "text": "大学・大学病院の魅力向上・人材確保のための調査・研究結果\n\n大学病院の助教、医員、専攻医、研修医の54.1%が「将来、大学病院以外の医療機関で勤務したい」と回答\n\n理由として、大学病院以外の方が「労働環境が良い」「給与が高い」が6割強\nhttps://t.co/AESywknHlw https://t.co/cuuRo6vY46",
-      "createdAt": "2026-05-06T01:04:07.000Z",
+      "tweetId": "2052170794005041499",
+      "authorUsername": "Lattice_Node",
+      "authorName": "Lattice | 個人開発",
+      "authorFollowers": 1122,
+      "axis": "ai",
+      "text": "🚨Anthropic大型アップデート🚨\n遂にClaudeのターンが来た！\n\n【Claude の上限引き上げ·即日適用】\n・Claude Code の5時間レート制限を 2倍 に\n・Pro / MaxのClaude Code、ピーク時制限を完全撤廃\n・Claude OpusのAPI レート制限を大幅に引き上げ\n\n【SpaceX とのコンピュート提携】\n・メンフィスの https://t.co/lxotCjtBIJ https://t.co/aRcb1A8Tlr",
+      "createdAt": "2026-05-06T23:36:59.000Z",
       "metrics": {
-        "likes": 143,
-        "retweets": 32,
-        "replies": 7,
-        "quotes": 4,
-        "bookmarks": 18,
-        "engagementScore": 261
+        "likes": 123,
+        "retweets": 20,
+        "replies": 9,
+        "quotes": 6,
+        "bookmarks": 30,
+        "engagementScore": 213
       },
       "analysis": {
         "index": 6,
         "hook": "number_hook",
-        "emotionalTrigger": "surprise",
-        "format": "data_point",
-        "topic": "大学病院離職",
-        "timing": "医師働き方改革議論",
-        "shareability": "utility",
-        "keyTechniques": [
-          "統計データ活用",
-          "具体的数値提示",
-          "業界課題可視化"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "開業して痛感するのは、大学病院時代の研究・教育経験が今めちゃくちゃ活きてること。僕もあの頃は「早く開業したい」って思ってたけど、今振り返ると無駄な経験なんて一つもなかった。ただ、労働環境と給与の問題は本当に深刻ですよね。",
-          "axis": "doctor",
-          "rationale": "開業医の視点で価値提供",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "僕も大学病院→開業組です。確かに当時は「早く出たい」と思ってましたが、今思えば症例数の豊富さや多職種連携の経験は開業後にすごく活かされてます。ただ本職柄、若手医師の疲弊ぶりを見ると環境改善は急務だと感じますね。",
-          "axis": "doctor",
-          "rationale": "体験談で共感と別視点",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051929929097584719",
-      "authorUsername": "MacopeninSUTABA",
-      "authorName": "かずなり | 生成AI活用×大喜利",
-      "authorFollowers": 113832,
-      "axis": "ai",
-      "text": "休日に読みたいClaude関連の有益記事まとめ\n\n① Claude Codeベストプラクティス（公式）\n② Claude Codeの仕組み（公式）\n③ Claude Codeチュートリアル\n④ CLAUDE.mdベストプラックティス\n⑤ AIに得意分野を持たせる20Skills\n⑥ Claude Skillsガイド\n\n続く👉",
-      "createdAt": "2026-05-06T07:39:52.000Z",
-      "metrics": {
-        "likes": 160,
-        "retweets": 15,
-        "replies": 4,
-        "quotes": 1,
-        "bookmarks": 185,
-        "engagementScore": 215
-      },
-      "analysis": {
-        "index": 7,
-        "hook": "number_hook",
-        "emotionalTrigger": "utility",
+        "emotionalTrigger": "FOMO",
         "format": "list",
-        "topic": "Claude学習記事",
-        "timing": "休日の学習需要",
+        "topic": "Claude大型更新",
+        "timing": "重要アップデート情報",
         "shareability": "utility",
         "keyTechniques": [
-          "まとめコンテンツ",
-          "学習リスト提供",
-          "継続示唆"
+          "緊急性を示すアイコン",
+          "箇条書きでの整理",
+          "企業提携情報"
         ],
         "adaptability": "high",
         "mentionedProducts": [
           {
-            "name": "Claude",
+            "name": "Claude Code",
+            "brand": "Anthropic"
+          },
+          {
+            "name": "Claude Opus",
             "brand": "Anthropic"
           }
         ]
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "Claude関連の情報ありがとうございます！僕は医師でありながらAIでサイト制作にハマってる非エンジニアなんですが、Claude Codeは本当に革新的ですね。特に④のCLAUDE.mdベストプラクティスが気になります。医療×AIの可能性を感じる日々です。",
+          "text": "Claudeの制限緩和、非エンジニアの僕には朗報です。診療サイトをAIで作ってるんですが、ピーク時の制限がネックでした。SpaceXとの提携も興味深い。宇宙開発の計算力がクリエイティブツールに流れ込む時代って、なんだかワクワクしますね。",
           "axis": "ai",
-          "rationale": "医師×AI視点で独自性",
+          "rationale": "非エンジニア医師の実体験",
           "status": "draft"
         },
         "reply": {
-          "text": "Claude Code、非エンジニアの僕には本当にありがたいツールです。特に①の公式ベストプラクティスは必読ですね。医療現場でも活用場面を模索中なので、⑤の20Skillsは参考になりそうです。まとめていただき感謝です！",
+          "text": "SpaceXのコンピュート力がClaude強化に使われるの、面白い流れですね。僕も診療関連のサイト作りでClaude使ってますが、制限で作業が止まるストレスから解放されそう。非エンジニアには本当にありがたいアップデートです。",
           "axis": "ai",
-          "rationale": "非エンジニア医師として感謝",
+          "rationale": "医師×非エンジニアの独自性",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051807401679213006",
-      "authorUsername": "acsakamoto2957",
-      "authorName": "ＡＣサカモト株式会社",
-      "authorFollowers": 4352,
-      "axis": "camp",
-      "text": "メスティン飯！\n3ヶ月ぶり😆\nやっぱり安定のカレー🍛\n今日ぐらいはゆっくりしたいけど色々やる事あるなぁ⋯(´～｀)ﾓｸﾞﾓｸﾞ\nカレーうんま😆\n#メスティン飯　#キャンプ飯　#カレー https://t.co/wkSKUfGN4m",
-      "createdAt": "2026-05-05T23:32:59.000Z",
-      "metrics": {
-        "likes": 201,
-        "retweets": 2,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 209
-      },
-      "analysis": {
-        "index": 8,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "nostalgia",
-        "format": "experience_share",
-        "topic": "メスティン料理",
-        "timing": "キャンプシーズン",
-        "shareability": "identity",
-        "keyTechniques": [
-          "日常共感",
-          "食事写真",
-          "親近感演出"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "メスティン",
-            "brand": ""
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "メスティンカレー、安定の美味しさですよね！僕はキャンプ歴10年ですが、3ヶ月空くと本当に恋しくなります。マカロニサラダを炒めるアイデア、今度真似させてください。家族キャンプでも子どもたちが喜びそうです。",
-          "axis": "camp",
-          "rationale": "キャンプ経験者として共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "3ヶ月ぶりのメスティン飯、分かります！僕もキャンプ間隔が空くとソワソワしちゃいます。マカロニサラダを炒めるの、目から鱗でした。次の家族キャンプで試してみます。やっぱりカレーは外さないですよね〜",
-          "axis": "camp",
-          "rationale": "キャンパー同士の共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051896741394551164",
-      "authorUsername": "ryota_oshilock",
-      "authorName": "りょうた | 推し活ガチ勢のためのアプリOshiLock開発中",
-      "authorFollowers": 301,
+      "tweetId": "2052291774446792936",
+      "authorUsername": "nekomiya_miia",
+      "authorName": "猫宮みいあ🐱💜",
+      "authorFollowers": 179,
       "axis": "ai",
-      "text": "ブルバつけました！\n推し活向けの絶対情報を逃さないアプリ開発してます！\n個人開発している方、推し活してる方、繋がりたいです！\nよろしくお願いします！\n#ブルバ100 #ブルバ #個人開発 #推し活",
-      "createdAt": "2026-05-06T05:28:00.000Z",
+      "text": "ゲーム開発メインに、\nクリエイティブなことしたり、\n面白いこといっぱい考えてる猫宮みいあです🐱✨\n\n個人開発やゲーム制作してる方、\nクリエイターさん達とたくさん交流したいにゃ💜\n気軽に仲良くしてくださいっ！\n\n#ゲーム開発\n#個人開発\n#ゲーム制作\n#クリエイターさんと繋がりたい https://t.co/tX9Z2t2CUA",
+      "createdAt": "2026-05-07T07:37:43.000Z",
       "metrics": {
-        "likes": 123,
-        "retweets": 0,
-        "replies": 32,
+        "likes": 152,
+        "retweets": 10,
+        "replies": 4,
         "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 187
+        "bookmarks": 7,
+        "engagementScore": 190
       },
       "analysis": {
-        "index": 9,
+        "index": 7,
         "hook": "self_disclosure",
         "emotionalTrigger": "identity",
         "format": "experience_share",
-        "topic": "個人開発繋がり",
-        "timing": "コミュニティ参加時",
+        "topic": "自己紹介投稿",
+        "timing": "コミュニティ形成欲求",
         "shareability": "identity",
         "keyTechniques": [
-          "コミュニティ参加",
-          "共通趣味アピール",
-          "つながり求める"
+          "キャラクター設定",
+          "ハッシュタグ活用",
+          "交流呼びかけ"
         ],
         "adaptability": "medium",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "推し活向けアプリ開発、面白そうですね！僕は医師でありながらAIでサイト制作にハマってる非エンジニアです。「情報を逃さない」って、推し活以外でも医療情報収集とかにも応用できそう。個人開発者同士、ぜひ繋がりましょう！",
+          "text": "ゲーム開発、いいですね！僕は医師なんですが、最近AIでサイト作りにハマってます。クリエイティブって職種問わず共通する部分がありそう。コードを書けない分、アイデアで勝負する感覚とか。ゲーム作りも同じなのかな？",
           "axis": "ai",
-          "rationale": "個人開発者として連帯感",
+          "rationale": "医師という異業種からの興味",
           "status": "draft"
         },
         "reply": {
-          "text": "推し活アプリ、斬新ですね！僕も非エンジニアで個人開発やってます（医師なんですが）。「絶対に情報を逃さない」仕組みって、医療情報の収集にも応用できそうで興味深いです。個人開発者同士、頑張りましょう！",
+          "text": "医師やってますが、最近AIでサイト作りにハマってる身として、ゲーム開発者さんの発想力すごく尊敬します。僕らは既存の枠組みで考えがちですが、ゲーム作りってゼロから世界を創る感覚なんでしょうね。交流したいです！",
           "axis": "ai",
-          "rationale": "同じ個人開発者として応援",
+          "rationale": "医師の立場から敬意表明",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051884146193313841",
-      "authorUsername": "rinyouta",
-      "authorName": "おぐりん",
-      "authorFollowers": 2268,
-      "axis": "camp",
-      "text": "最終日の朝食はホットサンド（はさんでないけど💧）でスタート🌅\nマカロニサラダを炒めて、のせて食べたらメチャウマです😋\n今度から炒めてから、つまみでいただきます🎶\n＃キャンプ\n＃焚き火\n＃アウトドア\n＃大自然\n＃ゴールデンウイーク\n＃朝食\n＃たまご\n＃ベーコン https://t.co/htzbiN2BEi",
-      "createdAt": "2026-05-06T04:37:57.000Z",
+      "tweetId": "2052232647565623604",
+      "authorUsername": "kouya_sns01",
+      "authorName": "Kouya ｜ AI×SNSマーケ自動化コンサルタント",
+      "authorFollowers": 6971,
+      "axis": "ai",
+      "text": "まさに目から鱗！📖→⚡\n\n読書は10代の「バフ」として最強。\nでもSNSで稼ぐ大人になった今、「ナイフを研ぐだけ」じゃ意味がない。\n\nAI×自動化で一瞬で「ナイフを使う」フェーズに切り替えましょう！\n\n私はAIツールで投稿・DM・分析を完全自動化して、 https://t.co/vBb70WhdW0",
+      "createdAt": "2026-05-07T03:42:46.000Z",
       "metrics": {
-        "likes": 174,
-        "retweets": 2,
+        "likes": 112,
+        "retweets": 4,
+        "replies": 3,
+        "quotes": 1,
+        "bookmarks": 4,
+        "engagementScore": 132
+      },
+      "analysis": {
+        "index": 8,
+        "hook": "contrast",
+        "emotionalTrigger": "utility",
+        "format": "hot_take",
+        "topic": "AI活用術",
+        "timing": "効率化への関心増加",
+        "shareability": "utility",
+        "keyTechniques": [
+          "読書からAIへの転換",
+          "具体的成果の提示",
+          "自動化の強調"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "読書とAI、面白い対比ですね。僕は37歳で今更AI触り始めた医師ですが、確かに「学ぶだけ」から「使う」への切り替えは重要。本職では経験がものを言うけど、AIの世界では行動量が差を生む気がします。",
+          "axis": "ai",
+          "rationale": "医師の立場から学びの本質",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "37歳でAI触り始めた医師です。確かに「ナイフを研ぐ」だけじゃダメですね。本職では慎重さが大事ですが、AIツールは実験しながら覚える方が早い。読書で得た知識をAIで即実行する流れ、参考にさせていただきます。",
+          "axis": "ai",
+          "rationale": "医師の学習観との対比",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052155256633741476",
+      "authorUsername": "yousu86",
+      "authorName": "ヨウス",
+      "authorFollowers": 26189,
+      "axis": "camp",
+      "text": "去年、キャンプ道具を買う時に必要ないと思ったけど念のために買ったウインドスクリーンが今1番活躍している。\nこれ無くして焚き火無し https://t.co/NwQ5undFDN",
+      "createdAt": "2026-05-06T22:35:15.000Z",
+      "metrics": {
+        "likes": 126,
+        "retweets": 1,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 180
+        "engagementScore": 129
+      },
+      "analysis": {
+        "index": 9,
+        "hook": "failure_open",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "キャンプ道具選び",
+        "timing": "キャンプシーズンでの学び",
+        "shareability": "utility",
+        "keyTechniques": [
+          "失敗からの学び",
+          "具体的道具への言及",
+          "実用性の強調"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "ウインドスクリーン",
+            "brand": "不明"
+          }
+        ]
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "ウインドスクリーン、僕も同じ体験あります！キャンプ10年やってて学んだのは「念のため」で買った道具ほど後から重宝すること。焚き火の風よけって、使ってみて初めてその価値がわかりますよね。今では必需品です。",
+          "axis": "camp",
+          "rationale": "同じ失敗からの共感体験",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "キャンプ10年の経験で言うと、ウインドスクリーンって「あって当然」の存在になりますよね。最初は「風なんて大丈夫」って思うんですが、一度風に煽られて火が安定しない経験をすると手放せなくなる。いい買い物でしたね！",
+          "axis": "camp",
+          "rationale": "経験者としての共感と後押し",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052340526444421542",
+      "authorUsername": "VgYnzITCmP93450",
+      "authorName": "ゆりかもめ@🪽👘🏹",
+      "authorFollowers": 272,
+      "axis": "parenting",
+      "text": "@arakawakappa25 年収のうちボーナスから取られる社会保険等がなかった時代です(めちゃくちゃ違う)\nなので手取りは余裕で500万程度有りました\nスマホ📱なし\n家電と家電のみ\nサブスク無しでレンタルビデオ\n休みは近隣のキャンプ場で楽しむ\n若しくは近くに釣りに行ったり安い動物園や水族館\n映画も家族で一緒",
+      "createdAt": "2026-05-07T10:51:26.000Z",
+      "metrics": {
+        "likes": 93,
+        "retweets": 11,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 3,
+        "engagementScore": 128
       },
       "analysis": {
         "index": 10,
-        "hook": "self_disclosure",
+        "hook": "nostalgia",
         "emotionalTrigger": "nostalgia",
+        "format": "comparison",
+        "topic": "昔の生活比較",
+        "timing": "現代生活への不安増加",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "過去との対比",
+          "具体的数値提示",
+          "ライフスタイル詳細"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "昔の生活、シンプルで良いですね。僕も家族でキャンプよく行きますが、スマホもWiFiもない環境で過ごすと、昔の家族時間ってこんな感じだったのかなって思います。レンタルビデオを家族で選ぶ時間とか、今思うと貴重でした。",
+          "axis": "parenting",
+          "rationale": "キャンプ体験からの共感",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "ボーナスから社会保険が引かれなかった時代、羨ましいです。僕も家族でキャンプやってますが、確かにシンプルな楽しみ方の方が子どもの反応が良かったりしますね。釣りや動物園、基本的な遊びが一番記憶に残るのかもしれません。",
+          "axis": "parenting",
+          "rationale": "家族体験からの共感",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052335911631978660",
+      "authorUsername": "pcen6EZJAngaYIN",
+      "authorName": "キャンプ好きオジサン",
+      "authorFollowers": 5398,
+      "axis": "camp",
+      "text": "最近、飯と求人活動のことしか呟いてないから、土日でキャンプしに行くか〜\n週1ぐらいのキャンプ&amp;焚き火を楽しむぐらいはいいよね、無職でも？\n#ソロキャンプ https://t.co/xGfGSHh8r1",
+      "createdAt": "2026-05-07T10:33:06.000Z",
+      "metrics": {
+        "likes": 110,
+        "retweets": 1,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 113
+      },
+      "analysis": {
+        "index": 1,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
         "format": "experience_share",
-        "topic": "キャンプ朝食",
-        "timing": "GW期間中",
+        "topic": "無職キャンプ",
+        "timing": "週末前の共感しやすい時間帯",
         "shareability": "identity",
         "keyTechniques": [
-          "料理アレンジ紹介",
-          "発見共有",
+          "自己開示による親近感",
+          "無職という弱み見せ",
           "ハッシュタグ活用"
         ],
         "adaptability": "high",
@@ -864,1624 +903,1045 @@
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "炒めマカロニサラダ、これは新発見ですね！キャンプ歴10年の僕も初耳です。確かにそのまま挟むより食感も味も変わりそう。今度の家族キャンプで子どもたちと試してみます。キャンプの朝食って、なぜあんなに美味しく感じるんでしょうね。",
+          "text": "僕も転職活動中にソロキャンプにハマった経験があります。焚き火って本当に頭の整理になるんですよね。週1ペースなら道具も軽量化したくなるし、平日キャンプ場なら人も少なくて静か。求職中だからこそ、この贅沢な時間を味わえるのかも",
           "axis": "camp",
-          "rationale": "新発見への驚きと共感",
+          "rationale": "医師の転職体験で共感と説得力",
           "status": "draft"
         },
         "reply": {
-          "text": "炒めマカロニサラダ、これは盲点でした！キャンプ歴10年ですが初めて聞きました。確かに炒めることで食感も変わって美味しそう。次の家族キャンプで絶対試します。キャンプの最終日って、なんだか寂しくもありますよね。",
+          "text": "焚き火の時間って、頭の中がリセットされる感覚ありませんか？僕は転職活動中によくソロキャンプしてましたが、炎を見てると不思議と次の一歩が見えてくるんですよね。平日キャンプ場は静かでおすすめです",
           "axis": "camp",
-          "rationale": "経験者として新発見に感動",
+          "rationale": "医師の転職体験で実用的共感",
+          "validationErrors": "[AI定型] \"おすすめ\" を検出",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051995417051820283",
-      "authorUsername": "kumi11117777",
-      "authorName": "💙Kumi1111𑁍 𑁍 𑁍🐈‍⬛💙🎐🇯🇵⛩️🐯🇺🇸",
-      "authorFollowers": 17385,
-      "axis": "doctor",
-      "text": "ハンタウィルス🦠💥\n御用学者の医師👨‍⚕️\nこれね\n台本通りに話すだけなんだよ\n2021年頃\n職場の仲間の母上の勤務先の\n東京巣鴨の耳鼻科医に\nフジテレビから電話があった\n耳鼻科医の医院長に\n番組に出てコロナウィルスに\nついて語って欲しいと。\n医院長は私はウィルス専門家でも内科医でもない\n耳鼻科医だ👇🏻 https://t.co/NQ3sFtEZXk",
-      "createdAt": "2026-05-06T12:00:06.000Z",
+      "tweetId": "2052172751327449341",
+      "authorUsername": "kemumaki0723",
+      "authorName": "KEMU",
+      "authorFollowers": 1050,
+      "axis": "parenting",
+      "text": "GWは本栖湖で家族サービス🗻\n楽しかったようで何より☺\n\n#キャンプ好きな人と繋がりたい  #お酒好きと繋がりたい https://t.co/HirfVPKyGN",
+      "createdAt": "2026-05-06T23:44:46.000Z",
       "metrics": {
-        "likes": 80,
-        "retweets": 27,
-        "replies": 7,
-        "quotes": 1,
-        "bookmarks": 2,
-        "engagementScore": 177
-      },
-      "analysis": {
-        "index": 1,
-        "hook": "reveal",
-        "emotionalTrigger": "controversy",
-        "format": "story",
-        "topic": "メディア裏話暴露",
-        "timing": "医療不信の高まり時期",
-        "shareability": "debate",
-        "keyTechniques": [
-          "内部告発風の体験談",
-          "専門性への疑問提起",
-          "メディア批判"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "医師の専門性って、思ってるより細分化されてるんですよね。僕も内科だけど、皮膚科のこと聞かれても正直分からない。メディア側も「医師なら何でも答えられる」と思いがちだけど、実際は違う。この院長先生の対応、すごく誠実だと思います。",
-          "axis": "doctor",
-          "rationale": "同業者として専門性の実態を説明",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "本職柄よく分かります。僕も内科医ですが、専門外のことを聞かれると困ることが多々あります。この院長先生のように「専門外です」と正直に答えるのが、実は一番患者さんのためになるんですよね。",
-          "axis": "doctor",
-          "rationale": "専門医としての共感と実体験",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051873417188753574",
-      "authorUsername": "noir_ism",
-      "authorName": "のわ🦋ASD精神科医",
-      "authorFollowers": 4573,
-      "axis": "doctor",
-      "text": "ワイ実家クリニックの隣の内科クリニックの院長は自死した\n\n躁うつ病（双極性障害）との噂だった\n\nそもそも自営業者には経営手腕を求められると同時に\n\n組織に馴染みにくい『一匹狼』タイプも少なくないというバイアスを意識できないと\n\n状況を読み誤る\n\nそもそも素養からして違うからね https://t.co/W9rq6Xac3K",
-      "createdAt": "2026-05-06T03:55:19.000Z",
-      "metrics": {
-        "likes": 111,
-        "retweets": 12,
-        "replies": 4,
-        "quotes": 0,
-        "bookmarks": 10,
-        "engagementScore": 155
-      },
-      "analysis": {
-        "index": 2,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "empathy",
-        "format": "experience_share",
-        "topic": "医師の自殺",
-        "timing": "医療従事者の労働環境議論",
-        "shareability": "emotional",
-        "keyTechniques": [
-          "重いテーマでの共感誘発",
-          "専門的分析の提示",
-          "身近な体験談"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "開業医って、医療技術だけじゃなく経営者としての判断も求められるんですよね。僕も法人運営してますが、スタッフマネジメントから資金繰りまで、医学部では習わないことばかり。一人で背負い込みやすい環境だからこそ、周りのサポートが大切だと痛感します。",
-          "axis": "doctor",
-          "rationale": "開業医の実情を体験ベースで共有",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "開業医の現実ですね。僕も訪問診療や美容系の法人運営してますが、医療以外のプレッシャーは想像以上でした。特に地域医療を担う先生方は責任も重く、本当に大変だと思います。",
-          "axis": "doctor",
-          "rationale": "同じ立場からの理解と共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2052109488472420625",
-      "authorUsername": "FABYMETAL4",
-      "authorName": "FabyΔ",
-      "authorFollowers": 53619,
-      "axis": "ai",
-      "text": "Anthropic が SpaceXとのパートナーシップに合意。Claude Codeならびに Claude API のレートリミットを大幅に緩和。 イーロンがxAI用に確保した大量の $NVDA GPUが活用されたか。新たな鉱脈。 https://t.co/zCmkWVgRxe",
-      "createdAt": "2026-05-06T19:33:23.000Z",
-      "metrics": {
-        "likes": 119,
-        "retweets": 8,
+        "likes": 108,
+        "retweets": 1,
         "replies": 1,
         "quotes": 0,
-        "bookmarks": 11,
-        "engagementScore": 145
-      },
-      "analysis": {
-        "index": 3,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "FOMO",
-        "format": "data_point",
-        "topic": "AI企業提携",
-        "timing": "AI業界の大型提携発表",
-        "shareability": "utility",
-        "keyTechniques": [
-          "速報性の強調",
-          "専門用語での権威付け",
-          "投資視点での分析"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "Claude Code",
-            "brand": "Anthropic"
-          },
-          {
-            "name": "Claude API",
-            "brand": "Anthropic"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "これは嬉しいニュース！僕もClaude Codeでクリニックのサイト作りにハマってるんですが、5時間制限にいつも引っかかってました。医療系のサイトって情報量多いから、コード生成に時間かかるんですよね。これで夜中の開発セッションが捗りそうです。",
-          "axis": "ai",
-          "rationale": "実用体験を交えた開発視点",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "Claude Code愛用者として朗報です！僕も制限に引っかかることが多くて困ってました。特に医療系のサイト開発は慎重にコード確認しながら進めるので、時間がかかるんですよね。これで心置きなく開発できます。",
-          "axis": "ai",
-          "rationale": "実際の利用体験からの共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2052078835848692117",
-      "authorUsername": "masahirochaen",
-      "authorName": "チャエン | デジライズ CEO《重要AIニュースを毎日最速で発信⚡️》",
-      "authorFollowers": 192745,
-      "axis": "ai",
-      "text": "【⚡️速報】AnthropicがSpaceXと大型提携\n\nSpaceXのColossus 1データセンターを活用し、Claudeの計算能力を一気に拡張。\n\nClaude Code使ってる人にはかなり朗報です。利用量が大幅に増えました。\n\n①Claude Codeの5時間上限が2倍\n②Pro/Maxのピーク時間制限を撤廃\n③Opus APIのレート上限も大幅増 https://t.co/xPhTNlj1fq",
-      "createdAt": "2026-05-06T17:31:34.000Z",
-      "metrics": {
-        "likes": 93,
-        "retweets": 7,
-        "replies": 5,
-        "quotes": 3,
-        "bookmarks": 17,
-        "engagementScore": 130
-      },
-      "analysis": {
-        "index": 4,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "utility",
-        "format": "list",
-        "topic": "AI速報解説",
-        "timing": "AI業界の大型提携発表",
-        "shareability": "utility",
-        "keyTechniques": [
-          "速報タグでの注目獲得",
-          "具体的な改善点リスト化",
-          "ユーザーメリット明示"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "Claude Code",
-            "brand": "Anthropic"
-          },
-          {
-            "name": "Colossus 1",
-            "brand": "SpaceX"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "Claude Code使いとして嬉しい限り！僕も非エンジニアながらクリニック関連のサイト作りでお世話になってるんですが、5時間制限がネックでした。医療系は法的チェックも慎重にやるので、時間かかるんですよね。これでじっくり開発に集中できそうです。",
-          "axis": "ai",
-          "rationale": "実際の利用場面での恩恵を説明",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "医療系サイト開発でClaude Code重宝してる身としては本当に朗報です。法的な表現チェックとか、慎重にコード確認しながら進めると、どうしても時間がかかってしまうので。制限緩和でより安心して開発できます。",
-          "axis": "ai",
-          "rationale": "医師×AI開発の独自体験",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051890299711152517",
-      "authorUsername": "yume_no_37",
-      "authorName": "ゆめの",
-      "authorFollowers": 807,
-      "axis": "parenting",
-      "text": "今日はね〜、昨日から家族でキャンプ来ててほぼ圏外なんだ〜ᯣ_ᯣ\n今から鍾乳洞行く🗻",
-      "createdAt": "2026-05-06T05:02:24.000Z",
-      "metrics": {
-        "likes": 109,
-        "retweets": 1,
-        "replies": 9,
-        "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 130
-      },
-      "analysis": {
-        "index": 5,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "nostalgia",
-        "format": "experience_share",
-        "topic": "家族キャンプ",
-        "timing": "週末キャンプシーズン",
-        "shareability": "identity",
-        "keyTechniques": [
-          "リアルタイム感の演出",
-          "絵文字での親しみやすさ",
-          "家族との時間共有"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "いいなあ、家族キャンプ！僕もキャンプ歴10年ですが、鍾乳洞探検は子供たちが一番盛り上がるスポットの一つです。圏外キャンプって、最初は不安だけど慣れると本当にリフレッシュできるんですよね。素敵な思い出作りになりそうです。",
-          "axis": "camp",
-          "rationale": "キャンプ経験者として共感と応援",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "家族キャンプ、素敵ですね！鍾乳洞は子供たちにとって最高の冒険になりそう。僕もキャンプ好きですが、圏外の環境って最初は戸惑うけど、家族との時間に集中できて本当にいいリフレッシュになりますよね。楽しんでください！",
-          "axis": "camp",
-          "rationale": "同じ家族キャンパーとしての共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051941728236810406",
-      "authorUsername": "siro_appdev",
-      "authorName": "Siro＠0からAIだけで個人開発",
-      "authorFollowers": 188,
-      "axis": "ai",
-      "text": "あと5人で100！！\n個人開発者の方々\nぜひ、よろしくお願いいたします🙇\n#個人開発 #Webアプリ開発 https://t.co/h6gsHEwraO",
-      "createdAt": "2026-05-06T08:26:45.000Z",
-      "metrics": {
-        "likes": 92,
-        "retweets": 0,
-        "replies": 17,
-        "quotes": 1,
-        "bookmarks": 0,
-        "engagementScore": 128
-      },
-      "analysis": {
-        "index": 6,
-        "hook": "number_hook",
-        "emotionalTrigger": "empathy",
-        "format": "one_liner",
-        "topic": "個人開発支援",
-        "timing": "個人開発者コミュニティ活動",
-        "shareability": "identity",
-        "keyTechniques": [
-          "数字による具体性",
-          "コミュニティへの貢献アピール",
-          "ハッシュタグでの拡散狙い"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "個人開発のフォロワー100人の壁、分かります。僕も医療×AIのサイト作りで同じ道を通りました。非エンジニアだからこそ、同じ境遇の仲間との繋がりが本当に支えになる。コミュニティの力って開発スキル以上に大切だと実感してます",
-          "axis": "ai",
-          "rationale": "非エンジニア医師の体験談で共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "フォロワー100人の壁、僕も経験しました！医療系サイトを個人開発してるんですが、エンジニア界隈って技術レベルが高すぎて最初は萎縮してました。でも同じような境遇の方と繋がれると、すごく励みになりますよね。応援してます",
-          "axis": "ai",
-          "rationale": "同じ個人開発者として共感体験",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051810694212030491",
-      "authorUsername": "nongohaaan",
-      "authorName": "のん",
-      "authorFollowers": 4175,
-      "axis": "camp",
-      "text": "・信玄餅ホットサンド\n・鶏むねソテー\n・トマト\n・レタス\n・ヨーグルト\n\n餅菓子をパンに挟むの好き♡\n信玄餅サンドもやっぱりおいしかったー！！\n\n#おうちごはん\n#朝ごはん https://t.co/elcZNUzGpq",
-      "createdAt": "2026-05-05T23:46:04.000Z",
-      "metrics": {
-        "likes": 127,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 127
-      },
-      "analysis": {
-        "index": 7,
-        "hook": "other",
-        "emotionalTrigger": "curiosity",
-        "format": "list",
-        "topic": "創作料理",
-        "timing": "朝食時間帯投稿",
-        "shareability": "utility",
-        "keyTechniques": [
-          "意外な組み合わせでの興味引き",
-          "視覚的魅力の活用",
-          "料理レシピシェア"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": [
-          {
-            "name": "信玄餅",
-            "brand": "桔梗信玄餅"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "信玄餅ホットサンド！これはキャンプでも試したくなる発想ですね。和菓子×ホットサンドの組み合わせ、家族キャンプの朝食レパートリーに加えさせてもらいます。子どもたちが喜びそうな予感しかしない",
-          "axis": "camp",
-          "rationale": "キャンプ応用の新しい視点提供",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "信玄餅ホットサンド、これはキャンプでも絶対やりたい！和菓子をアウトドア料理に取り入れる発想がなかったです。ホットサンドメーカーは必需品だから、次回のファミリーキャンプで子どもたちと試してみます",
-          "axis": "camp",
-          "rationale": "キャンプでの応用可能性を提案",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2052012362941763794",
-      "authorUsername": "chamu15",
-      "authorName": "メロンパン",
-      "authorFollowers": 191,
-      "axis": "parenting",
-      "text": "@apricot_candy_a 子育てを間違ったとかじゃなくて、子供だってそれぞれ好きな遊びがあって、インドアかアウトドアかも親とは違って当たり前ですよね。\nそれ考えず、子供に希望も聞かず、勝手に企画して感謝されなかったら怒るのは違うよ。",
-      "createdAt": "2026-05-06T13:07:26.000Z",
-      "metrics": {
-        "likes": 121,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 121
-      },
-      "analysis": {
-        "index": 8,
-        "hook": "hot_take",
-        "emotionalTrigger": "empathy",
-        "format": "hot_take",
-        "topic": "子育て論",
-        "timing": "子育て議論の盛り上がり",
-        "shareability": "debate",
-        "keyTechniques": [
-          "親目線での共感的意見",
-          "子供の個性尊重主張",
-          "親の自己反省促し"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "これ、本当にそう思います。僕も子どもにキャンプを勧めがちですが、インドア派の子にとっては苦痛かもしれませんね。本職柄、親の期待と子どもの個性のギャップをよく見かけます。まずは子どもの声を聞くことから始めたいと反省",
-          "axis": "parenting",
-          "rationale": "医師＋父親の視点で共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "キャンプ好きの父親として、これは耳が痛いです。僕も無意識に子どもをアウトドアに誘導してしまいがち。子どもにも好みがあって当然なのに、自分の趣味を押し付けてないか振り返る機会になりました",
-          "axis": "parenting",
-          "rationale": "キャンプ好き父親として自省",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051874688092275072",
-      "authorUsername": "buuuuunko333",
-      "authorName": "kayopi🛵",
-      "authorFollowers": 944,
-      "axis": "camp",
-      "text": "撤収！\n岡山県井原市、経が丸キャンプ場🏕️\nファミリー向けだけど、安心して使えました！\nグルキャンにも向いてそう👍\nまた来ます！！\n#エリミネーター\n#エリキャン\n#経ヶ丸オートキャンプ場 https://t.co/2HbL8eQQlj",
-      "createdAt": "2026-05-06T04:00:22.000Z",
-      "metrics": {
-        "likes": 103,
-        "retweets": 1,
-        "replies": 4,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 114
-      },
-      "analysis": {
-        "index": 9,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "utility",
-        "format": "experience_share",
-        "topic": "キャンプ場レビュー",
-        "timing": "キャンプシーズン真っ盛り",
-        "shareability": "utility",
-        "keyTechniques": [
-          "具体的な場所情報提供",
-          "実体験に基づく評価",
-          "キャンプコミュニティ向け"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "エリミネーター",
-            "brand": "カワサキ"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "経が丸キャンプ場、気になってました！中国地方のファミリー向けサイト、まだ未開拓なので参考になります。「安心して使える」という表現に、きっと管理が行き届いてるんだろうなと感じます。次の遠征候補に入れさせてもらいます",
-          "axis": "camp",
-          "rationale": "具体的なキャンプ場情報への反応",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "経が丸キャンプ場、以前から気になってました！中国地方はまだ未開拓エリアなので、ファミリー向けで安心できるという情報がありがたいです。長野からだと遠征になりますが、候補リストに加えさせてもらいます",
-          "axis": "camp",
-          "rationale": "同じファミリーキャンパー視点",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2052006284191571975",
-      "authorUsername": "lmt_swallow",
-      "authorName": "YONEUCHI, Takashi",
-      "authorFollowers": 5240,
-      "axis": "ai",
-      "text": "ついに Claude API に WIF!! ありがとうすぎる\nhttps://t.co/cIsmc0FUhr",
-      "createdAt": "2026-05-06T12:43:17.000Z",
-      "metrics": {
-        "likes": 75,
-        "retweets": 12,
-        "replies": 0,
-        "quotes": 1,
-        "bookmarks": 57,
         "engagementScore": 113
       },
       "analysis": {
-        "index": 10,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "FOMO",
-        "format": "one_liner",
-        "topic": "AI新機能",
-        "timing": "AI機能アップデート発表",
-        "shareability": "utility",
-        "keyTechniques": [
-          "感謝の気持ちでの共感獲得",
-          "専門用語での権威性",
-          "アップデート速報性"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "Claude API",
-            "brand": "Anthropic"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "Claude API のWIF対応、これは開発者にとって大きな変化ですね。僕みたいな非エンジニアでも、認証周りがシンプルになると医療系サイトの機能拡張がしやすくなりそう。技術の民主化が進んでる感じがします",
-          "axis": "ai",
-          "rationale": "非エンジニア視点での技術評価",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "WIF対応、非エンジニアの僕にとってもありがたい変化です！認証周りがシンプルになると、医療系のサイト開発でも API 連携のハードルが下がりそう。技術が身近になっていく感じがして、個人開発者には追い風ですね",
-          "axis": "ai",
-          "rationale": "非エンジニア開発者の視点",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051904321600782383",
-      "authorUsername": "tsunomaru_tech",
-      "authorName": "つのまる | エンジニア",
-      "authorFollowers": 542,
-      "axis": "ai",
-      "text": "「欲しかったから自分で作る」\nこれが個人開発の一番楽しいところかもしれない。\n\n今日もアプリ実装。\n少しずつ形になってきた。\n\n応援してくれる人、なにかに熱中して発信している人と繋がりたいです！\n\n#ブルバ100\n#ブルバ\n#個人開発\n#アプリ開発",
-      "createdAt": "2026-05-06T05:58:07.000Z",
-      "metrics": {
-        "likes": 74,
-        "retweets": 0,
-        "replies": 16,
-        "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 106
-      },
-      "analysis": {
-        "index": 1,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "identity",
-        "format": "experience_share",
-        "topic": "個人開発の楽しさ",
-        "timing": "開発者コミュニティが活発な時期",
-        "shareability": "identity",
-        "keyTechniques": [
-          "共感を呼ぶ体験談",
-          "コミュニティハッシュタグ活用",
-          "つながり求める呼びかけ"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "これ、めちゃくちゃわかります。僕も患者さんの声から「こんなツールあったらいいのに」と思ってAI使ったサイト作りを始めました。エンジニアじゃないからコード書けないけど、ノーコードツールと生成AIでなんとかなる時代になったのが嬉しい。",
-          "axis": "ai",
-          "rationale": "医師×非エンジニアの独自体験",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "患者さんとの会話から「こういうのあったらなあ」って思うこと、よくあります。本職柄、ITリテラシー高くない方でも使えるものを意識してるんですが、作り手側の視点だとつい機能盛り込みがちになりません？",
-          "axis": "doctor",
-          "rationale": "医師視点でのユーザー目線",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051937110786298206",
-      "authorUsername": "dp_qb_dp_qb",
-      "authorName": "ふ˝ りㄜ¨क॑ ᘧ¨🍭 ̖́-",
-      "authorFollowers": 4805,
-      "axis": "camp",
-      "text": "なんかごめんなさい😂\n\nキャンプ行けたのが嬉しくて いっぱい投稿上げちゃう😂\n\nキャンプくらいしかtweetせーへんからね☺️⛺️\n\n #キャンプ #焚き火 #キャンプ飯 #夕暮れ https://t.co/PlPGfYS8e2",
-      "createdAt": "2026-05-06T08:08:25.000Z",
-      "metrics": {
-        "likes": 94,
-        "retweets": 0,
-        "replies": 4,
-        "quotes": 1,
-        "bookmarks": 0,
-        "engagementScore": 104
-      },
-      "analysis": {
         "index": 2,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "empathy",
+        "hook": "other",
+        "emotionalTrigger": "nostalgia",
         "format": "experience_share",
-        "topic": "キャンプの楽しさ",
-        "timing": "GW明けのキャンプ投稿ラッシュ",
+        "topic": "家族キャンプ",
+        "timing": "GW直後の思い出共有タイム",
         "shareability": "emotional",
         "keyTechniques": [
-          "謝罪からの親近感演出",
+          "家族サービス共感",
           "絵文字で親しみやすさ",
-          "素直な感情表現"
+          "繋がりタグ"
         ],
-        "adaptability": "high",
+        "adaptability": "medium",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "わかりすぎて笑いました。うちも家族キャンプから帰ってくると、子どもたちが「パパ、写真見せて」って何度もせがんでくるんです。で、僕も嬉しくて同じような写真を大量投稿してしまう。キャンプの余韻って、なぜかSNSでも味わいたくなりますよね。",
+          "text": "本栖湖いいですね！家族キャンプ歴10年の僕から見ると、湖畔キャンプは子どもの反応が全然違います。特に朝の静けさと、夜の星空は都市部では味わえない。GWでも楽しめたということは、きっと良いサイト選びをされたんでしょうね",
           "axis": "parenting",
-          "rationale": "家族キャンプの共感体験",
+          "rationale": "キャンプ経験で具体的価値提供",
           "status": "draft"
         },
         "reply": {
-          "text": "めちゃくちゃわかります！僕も帰宅後は子どもたちと一緒に写真見返してるんですが、同じような構図の焚き火写真が20枚とかあって笑われます。でもキャンプの時間って特別だから、つい記録に残したくなっちゃいますよね😊",
+          "text": "本栖湖は家族キャンプの名所ですね！10年キャンプやってる僕の感覚だと、湖畔は子どもたちの表情が全然違います。水辺の安全管理さえしっかりしていれば、本当に良い思い出になりますよね。どちらのサイトを使われましたか？",
           "axis": "parenting",
-          "rationale": "家族との微笑ましい体験談",
+          "rationale": "経験豊富な親として具体的関心",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051930463431016814",
-      "authorUsername": "njshizako1960",
-      "authorName": "田中つや子",
-      "authorFollowers": 22208,
+      "tweetId": "2052314997582377231",
+      "authorUsername": "n_kata",
+      "authorName": "中田賢一郎/さくらライフグループ代表/医師x僧侶x経営者/",
+      "authorFollowers": 18569,
       "axis": "doctor",
-      "text": "ある整形外科医の開業医に患者の孫が足を骨折したからいったそうだ。\n\nこれからが整形外科などやめてしまえ！のエピソード\n\nその整形外科医の受付けで骨折は、いま混んでますからよそへ受診といわれたそうだ。\n\n待合室みたら高齢者ばかりかなりたくさんいた、",
-      "createdAt": "2026-05-06T07:42:00.000Z",
+      "text": "都市部の「開業規制」と経営戦略「コンビニより多い」と言われた都市部のクリニック。\n\n今月から実質的な開業抑制が始まり、もはや「立地さえ良ければ勝てる」時代は終わりました。\n\n 知事による夜間・救急対応の要請。これに従えないクリニックは公表され、社会的信用を失う。",
+      "createdAt": "2026-05-07T09:10:00.000Z",
       "metrics": {
-        "likes": 81,
-        "retweets": 5,
-        "replies": 0,
+        "likes": 82,
+        "retweets": 6,
+        "replies": 3,
         "quotes": 2,
-        "bookmarks": 4,
-        "engagementScore": 100
+        "bookmarks": 15,
+        "engagementScore": 110
       },
       "analysis": {
         "index": 3,
-        "hook": "reveal",
+        "hook": "conclusion_first",
         "emotionalTrigger": "controversy",
-        "format": "story",
-        "topic": "医療現場の問題",
-        "timing": "医療問題への関心が高まる中",
+        "format": "hot_take",
+        "topic": "開業規制",
+        "timing": "制度変更の話題性",
         "shareability": "debate",
         "keyTechniques": [
-          "実体験エピソード",
-          "問題提起型ストーリー",
-          "医療業界の内情暴露"
+          "時事性のある専門情報",
+          "業界の変化を解説",
+          "危機感の演出"
         ],
         "adaptability": "high",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "これは残念すぎる話ですね。本職柄思うのは、専門医として開業した以上「困った時に頼られる存在」であるべきだということ。特に整形外科で骨折を断るって、看板に偽りありというか。患者さんの信頼を失う前に、なんとかしてほしいものです。",
+          "text": "長野で訪問診療もやってる僕には身につまされる話です。確かに立地勝負の時代は終わりましたね。ただ夜間対応の義務化は、一人診療所には正直厳しい。地域医療への貢献と現実的な運営のバランスをどう取るか、悩ましいところです",
           "axis": "doctor",
-          "rationale": "医師としての職業倫理観",
+          "rationale": "当事者として現実的な課題共有",
           "status": "draft"
         },
         "reply": {
-          "text": "本職柄、こういう話を聞くと心が痛みます。確かに外来が混雑していても、緊急性のある外傷は診るのが筋だと思うんです。せめて「応急処置してから他院紹介」とか、患者さんに寄り添う姿勢があってもよかったのでは。",
+          "text": "長野で開業してる身としては、この流れは避けられないですね。ただ夜間対応の義務化は一人診療所には現実的に厳しい面も。地域のニーズに応えつつ、持続可能な診療体制をどう構築するかが課題になりそうです",
           "axis": "doctor",
-          "rationale": "同業者としての建設的批判",
+          "rationale": "当事者として建設的な課題提起",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051902435451699434",
-      "authorUsername": "yasutaketin",
-      "authorName": "シバイヌおやびん（投資系VTuber）",
-      "authorFollowers": 42576,
+      "tweetId": "2052173952110506433",
+      "authorUsername": "ryu_nosuke_0624",
+      "authorName": "松本龍之介｜駆け出し起業家",
+      "authorFollowers": 365,
       "axis": "ai",
-      "text": "ジェンスンの動画内の発言\n「生成AIから2年前の時点と比べて、今のエージェントAIで必要な計算量は1000%増加しました。\nなぜなら、AIは今やもっと多くのデータを読み込み、ツールを使い、推論し、大量のトークンを生成しなければならないからです。 https://t.co/VffGibpdpy",
-      "createdAt": "2026-05-06T05:50:37.000Z",
+      "text": "個人開発の方々！\nスマホアプリとwebアプリどちらを作ることが多いですか？\n\n#個人開発",
+      "createdAt": "2026-05-06T23:49:32.000Z",
       "metrics": {
-        "likes": 72,
-        "retweets": 8,
-        "replies": 1,
+        "likes": 57,
+        "retweets": 0,
+        "replies": 14,
         "quotes": 0,
-        "bookmarks": 11,
-        "engagementScore": 98
+        "bookmarks": 3,
+        "engagementScore": 85
       },
       "analysis": {
         "index": 4,
-        "hook": "number_hook",
-        "emotionalTrigger": "curiosity",
-        "format": "data_point",
-        "topic": "AI技術の進歩",
-        "timing": "AI技術への関心ピーク時",
+        "hook": "question",
+        "emotionalTrigger": "utility",
+        "format": "poll",
+        "topic": "個人開発選択",
+        "timing": "開発者の悩みに寄り添い",
         "shareability": "utility",
         "keyTechniques": [
-          "権威性のある発言引用",
-          "具体的数値提示",
-          "最新技術情報共有"
+          "直球の質問投げかけ",
+          "コミュニティ参加促進",
+          "実用的な情報収集"
         ],
         "adaptability": "high",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "1000%増加って聞くとすごい数字ですが、AI使ってサイト作りしてる身としては実感あります。最近のAIは確かに長文読み込んで、複数ツール連携して、めちゃくちゃ長い回答返してくる。便利になった分、裏側の計算負荷は膨大なんですね。",
+          "text": "非エンジニア医師の僕はwebアプリ派です。クリニック向けのちょっとした管理ツールを作る時、ブラウザで動けば院内のどのPCからでも使えるのが便利。アプリストア審査もないし、更新も楽。医療現場だと実用性重視になりがちですね",
           "axis": "ai",
-          "rationale": "実体験に基づく技術的洞察",
+          "rationale": "医師×非エンジニアの独自視点",
           "status": "draft"
         },
         "reply": {
-          "text": "非エンジニアでAI使ってサイト作ってる身としては、この計算量増加すごく実感あります。ChatGPTも最近、以前より「考え込む」時間が長くなった気がしてたんですが、こういう背景があったんですね。勉強になります。",
+          "text": "非エンジニア医師の僕はwebアプリ派です！クリニック向けの簡単な管理ツールを作る時、ブラウザで動けばどのPCからでもアクセスできるのが便利で。アプリストア審査を気にしなくていいのも楽ですね",
           "axis": "ai",
-          "rationale": "ユーザー体験からの気づき",
+          "rationale": "医療現場での実体験を共有",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051836362484240710",
-      "authorUsername": "station_tm",
-      "authorName": "小幡友美",
-      "authorFollowers": 6224,
+      "tweetId": "2052420144790651324",
+      "authorUsername": "ux6ovv",
+      "authorName": "新米オッさん兵士",
+      "authorFollowers": 2281,
       "axis": "camp",
-      "text": "GWファミリーキャンプしてきました！\n　\n自慢のヴォーゲルさんもフェアリーライトでファミキャン仕様に✌️✨ https://t.co/Wcg2N3Sbng",
-      "createdAt": "2026-05-06T01:28:04.000Z",
+      "text": "「「疲れたら異世界キャンプ ～秘密の焚き火で心をリセット～」 / 第30話　連休最終日と、焚き火の森カフェ」投稿しました！ https://t.co/Dtq8donWzd #narou #narouN8668LY",
+      "createdAt": "2026-05-07T16:07:49.000Z",
       "metrics": {
-        "likes": 91,
-        "retweets": 2,
+        "likes": 30,
+        "retweets": 16,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 97
+        "engagementScore": 78
       },
       "analysis": {
         "index": 5,
         "hook": "other",
-        "emotionalTrigger": "nostalgia",
-        "format": "experience_share",
-        "topic": "ファミリーキャンプ",
-        "timing": "GW明けの思い出共有タイミング",
-        "shareability": "emotional",
-        "keyTechniques": [
-          "家族での体験共有",
-          "ギアへのこだわり表現",
-          "視覚的な魅力"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": [
-          {
-            "name": "ヴォーゲル",
-            "brand": "不明"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "ヴォーゲル×フェアリーライト、めちゃくちゃ映えますね！うちも家族キャンプではヴォーゲル使ってるんですが、やっぱりファミキャンだと雰囲気作りって大事だなと。子どもたちもライトアップすると「わあ」って喜ぶし、写真映えもバッチリ✨",
-          "axis": "camp",
-          "rationale": "同じギアでの体験共有",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "ヴォーゲル仲間発見！うちも家族キャンプで愛用してます。フェアリーライトとの組み合わせ、今度真似させてもらいます。子どもたちがライトアップに喜ぶの、すごくわかります。GWキャンプ、お疲れさまでした！",
-          "axis": "parenting",
-          "rationale": "ギア共通点からの親近感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051824525453791425",
-      "authorUsername": "narumikz",
-      "authorName": "なるみ@レンクズ(東京・千葉)",
-      "authorFollowers": 6137,
-      "axis": "camp",
-      "text": "このGWにキャンプへ参加して来ましたわ✋️久しぶりに自然を感じて普段パチンコばかりしてる自分を滅しましたw\nいやはや夜は雨でテントの下が染みてしまい寝袋がびしょびしょ☂️うむ❗これも含めて\n最高の思い出だったべ✌️\n#ゴールデンウィーク\n#フォロバ１００ https://t.co/qohVcOYr4p",
-      "createdAt": "2026-05-06T00:41:02.000Z",
-      "metrics": {
-        "likes": 84,
-        "retweets": 3,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 93
-      },
-      "analysis": {
-        "index": 6,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "humor",
-        "format": "experience_share",
-        "topic": "キャンプ失敗談",
-        "timing": "GW明けの体験談シェア時期",
-        "shareability": "humor",
-        "keyTechniques": [
-          "失敗談での親近感",
-          "自虐ユーモア",
-          "ポジティブな失敗受容"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "テント浸水の洗礼、お疲れさまでした！僕も初回は雨でびしょ濡れになって、それからグランドシート+防水シームテープに目覚めました。でもあの「やらかした感」って妙に記憶に残るんですよね。パチンコより確実にアドレナリン出てそう。",
-          "axis": "camp",
-          "rationale": "失敗体験への共感と具体的対策",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "雨キャンプの洗礼、お疲れさまです！テント下浸水は通過儀礼みたいなものですよね。僕も初回で同じ目に遭って、それ以来グランドシートは必須になりました。意外と良い思い出になるのがキャンプの不思議なところです。",
-          "axis": "camp",
-          "rationale": "失敗体験への共感と対策提示",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051823823339786727",
-      "authorUsername": "mameco0919",
-      "authorName": "mame",
-      "authorFollowers": 1828,
-      "axis": "camp",
-      "text": "もさ海老のホットサンドとカニのホットサンド https://t.co/2gSuwQ7om8",
-      "createdAt": "2026-05-06T00:38:15.000Z",
-      "metrics": {
-        "likes": 84,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 84
-      },
-      "analysis": {
-        "index": 7,
-        "hook": "other",
-        "emotionalTrigger": "utility",
+        "emotionalTrigger": "curiosity",
         "format": "one_liner",
-        "topic": "キャンプ料理",
-        "timing": "キャンプ飯需要の高まり",
-        "shareability": "utility",
+        "topic": "小説更新",
+        "timing": "連休最終日の共感",
+        "shareability": "identity",
         "keyTechniques": [
-          "食欲をそそる料理写真",
-          "簡潔な料理説明",
-          "視覚インパクト重視"
+          "創作活動の宣伝",
+          "キャンプ要素との組み合わせ",
+          "小説サイト活用"
         ],
         "adaptability": "medium",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "海老とカニのホットサンド、贅沢すぎます！僕は普段ハムチーズばかりなので、こういう発想が参考になる。ホットサンドメーカーって意外と魚介系も美味しく仕上がりますよね。次回のファミキャンで真似させていただきます。",
+          "text": "異世界キャンプ小説、興味深いですね。僕も実際のキャンプで「日常リセット」効果は実感してます。焚き火を見てると確かに心が落ち着く。これを小説にするとどんな世界観になるのか、キャンプ好きとしては気になります",
           "axis": "camp",
-          "rationale": "具体的な食材への着目と応用",
+          "rationale": "キャンプ体験者として作品に興味",
           "status": "draft"
         },
         "reply": {
-          "text": "海老とカニのホットサンド、発想が素晴らしいです！僕はいつもハムチーズの定番パターンなので、こういう魚介系のアイデアは参考になります。キャンプ飯のレパートリーが広がりそう。",
+          "text": "「焚き火で心をリセット」というタイトルに惹かれました。実際のキャンプでも焚き火の効果は実感してるので、これを異世界設定でどう描かれてるのか気になります。キャンプ経験者が読むとまた違った楽しさがありそうですね",
           "axis": "camp",
-          "rationale": "具体的レシピへの関心表明",
+          "rationale": "実体験とフィクションの関連性",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051880453125414988",
-      "authorUsername": "comeka3",
-      "authorName": "こめ𓇢",
-      "authorFollowers": 3000,
-      "axis": "camp",
-      "text": "たっぷりチーズの\nハムチーズホットサンドダイジェスト👩‍🍳 https://t.co/euqf9YNi99",
-      "createdAt": "2026-05-06T04:23:16.000Z",
+      "tweetId": "2052334557379350584",
+      "authorUsername": "mikairvmest",
+      "authorName": "高橋美香",
+      "authorFollowers": 13290,
+      "axis": "parenting",
+      "text": "6/9（火）のトークでは、『シロくんとパレスチナの猫』の話とその後のジェニン難民キャンプの家族の話、今年訪問したガザからエジプトやフィリピンに避難されている方々から聞かせてもらった話などをする予定です。トークのお申込みは5/10より。 https://t.co/5u3oKY7Oub https://t.co/4Oy6WGp2cQ",
+      "createdAt": "2026-05-07T10:27:43.000Z",
       "metrics": {
-        "likes": 80,
-        "retweets": 0,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 82
-      },
-      "analysis": {
-        "index": 8,
-        "hook": "other",
-        "emotionalTrigger": "utility",
-        "format": "one_liner",
-        "topic": "ホットサンド",
-        "timing": "キャンプ料理への関心時期",
-        "shareability": "utility",
-        "keyTechniques": [
-          "料理動画での視覚訴求",
-          "シンプルな説明",
-          "作り方の実演"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "チーズたっぷりのホットサンド、見ているだけで幸せになりますね。僕はいつも「チーズ足りないかな」と控えめになってしまうのですが、この動画見てると思い切りの良さが大切だと気づかされます。次回は大胆にいきます！",
-          "axis": "camp",
-          "rationale": "調理への姿勢の気づき表現",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "チーズの量が絶妙ですね！僕はいつも「入れすぎかな」と遠慮してしまうのですが、この動画を見てると思い切りの良さが美味しさの秘訣なのかもしれません。次のキャンプで参考にさせていただきます。",
-          "axis": "camp",
-          "rationale": "調理のコツへの学び表現",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2052061528992723449",
-      "authorUsername": "njshizako1960",
-      "authorName": "田中つや子",
-      "authorFollowers": 22208,
-      "axis": "doctor",
-      "text": "ごく普通に開業医していたら、食べていけない時代、\n\n内科では、健診でガッツリ内視鏡検査やるか、健診でなにかしら病もどきをみ\nつけてサブスクにこさす\n90歳になっても内視鏡検査やりまくる。\n。",
-      "createdAt": "2026-05-06T16:22:48.000Z",
-      "metrics": {
-        "likes": 48,
-        "retweets": 9,
+        "likes": 35,
+        "retweets": 14,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 2,
-        "engagementScore": 75
-      },
-      "analysis": {
-        "index": 9,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "controversy",
-        "format": "hot_take",
-        "topic": "開業医の現実",
-        "timing": "医療問題への注目集中時",
-        "shareability": "debate",
-        "keyTechniques": [
-          "業界の厳しい現実暴露",
-          "具体的な問題点指摘",
-          "内部者視点の情報"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "医療現場の現実的な話ですね。本職柄、確かに健診+内視鏡の流れは多く見かけます。ただ高齢者の内視鏡は、リスクベネフィットを患者さんと丁寧に相談する時代かなと。開業って想像以上に経営センスが問われますよね。",
-          "axis": "doctor",
-          "rationale": "現場感のある冷静な視点提示",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "開業の現実的な側面ですね。本職柄、健診から内視鏡の流れは確かに多く見かけます。ただ高齢者の場合は特に、リスクとベネフィットを患者さんと丁寧に話し合うことが大切かなと感じています。",
-          "axis": "doctor",
-          "rationale": "現場経験に基づく補足視点",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051858281430483221",
-      "authorUsername": "usamin_camp",
-      "authorName": "うさみん",
-      "authorFollowers": 1072,
-      "axis": "camp",
-      "text": "GWがおわる\nさてここまでのソロキャンプの戦績を確認してみた\nうん9割雨キャンプだったね！\nだけどやまない雨はないでしょ\n#キャンプ #ソロキャンプ #野営 https://t.co/b55tEWMJp8",
-      "createdAt": "2026-05-06T02:55:10.000Z",
-      "metrics": {
-        "likes": 63,
-        "retweets": 3,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 74
-      },
-      "analysis": {
-        "index": 10,
-        "hook": "number_hook",
-        "emotionalTrigger": "humor",
-        "format": "experience_share",
-        "topic": "雨キャンプ体験",
-        "timing": "GW明けの体験振り返り時期",
-        "shareability": "humor",
-        "keyTechniques": [
-          "統計的な振り返り",
-          "前向きな失敗受容",
-          "ユーモアのある総括"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "GW雨キャンプ9割は強者すぎます！僕も雨に当たることが多いのですが、それでも続けてしまうのがキャンプの魔力ですよね。雨の音って意外と癒されるし、晴れた時の喜びも倍増する。雨キャンプマスターの域に達してますね。",
-          "axis": "camp",
-          "rationale": "数字への驚きと共感の表現",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "9割雨キャンプは相当な強者ですね！僕も雨に当たることが多いですが、それでも行ってしまうのがキャンプの不思議な魅力。雨音の癒し効果もありますし、次の晴れキャンプがより楽しみになりそうです。",
-          "axis": "camp",
-          "rationale": "高い雨率への驚きと共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051913869912945078",
-      "authorUsername": "toaruiryojimu",
-      "authorName": "春は綿飴やうやう白く",
-      "authorFollowers": 12,
-      "axis": "parenting",
-      "text": "@J71bYhBsUn82FQn 多家族の集まるBBQやキャンプはこれだけ大人が居るんだから誰か見てるだろうという心理があると聞いて割と怖いのです。きちんと「子どもを管理する担当者」を決めてもらわないと。見ていたのに忽然と行方不明になってしまった山梨キャンプの事例もあり怖いのです…",
-      "createdAt": "2026-05-06T06:36:03.000Z",
-      "metrics": {
-        "likes": 58,
-        "retweets": 5,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 3,
-        "engagementScore": 73
-      },
-      "analysis": {
-        "index": 1,
-        "hook": "conclusion_first",
-        "emotionalTrigger": "empathy",
-        "format": "experience_share",
-        "topic": "子供の安全管理",
-        "timing": "GW前のキャンプシーズン",
-        "shareability": "emotional",
-        "keyTechniques": [
-          "具体事例言及",
-          "恐怖感情訴求",
-          "責任の明確化"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "本職柄、複数家族のキャンプで「責任の分散」による事故を何度も聞いています。僕は必ず「今30分は○○さんが見る」と明確に役割分担を決めます。特に川や焚き火の近くでは。山梨の件も含め、みんなで共有すべき話だと思います。",
-          "axis": "doctor",
-          "rationale": "医師の専門性で安全管理の具体策提示",
-          "validationErrors": "[医療表現注意] \"すべき\" を検出",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "僕も複数家族キャンプでは「今30分は○○さんが見る」と明確に当番制にしてます。特に川遊びや焚き火の時は必須ですね。本職柄、責任の分散による事故例を聞くので、面倒でも毎回声に出して確認してます。",
-          "axis": "camp",
-          "rationale": "医師×キャンプ経験の具体的安全策",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051815082762633442",
-      "authorUsername": "masaomi17481343",
-      "authorName": "まさおみ",
-      "authorFollowers": 5824,
-      "axis": "camp",
-      "text": "ホットサンドなう\nレタス、ハム、チーズ https://t.co/8q8KCQCtOE",
-      "createdAt": "2026-05-06T00:03:31.000Z",
-      "metrics": {
-        "likes": 72,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 72
-      },
-      "analysis": {
-        "index": 2,
-        "hook": "other",
-        "emotionalTrigger": "nostalgia",
-        "format": "one_liner",
-        "topic": "ホットサンド",
-        "timing": "キャンプシーズンの食事投稿",
-        "shareability": "identity",
-        "keyTechniques": [
-          "現在進行形投稿",
-          "シンプルな食材紹介"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "ホットサンドの魅力って、このシンプルさですよね。僕もキャンプで定番にしてますが、子どもたちが自分で具材選んで作る楽しさが格別。レタスのシャキシャキ感がポイント高いです。朝の定番メニューとして10年愛用してます。",
-          "axis": "camp",
-          "rationale": "キャンプ経験からの具体的共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "レタス入りいいですね！僕もキャンプの朝食定番です。子どもたちが自分で具材選んで作るのが楽しくて、ハム+チーズの王道から始まって、今は変わり種にも挑戦してます。シンプルだからこそ飽きないんですよね。",
-          "axis": "parenting",
-          "rationale": "家族キャンプでの体験談で親近感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051817704307462245",
-      "authorUsername": "mirai_camp",
-      "authorName": "みらい🏔️山歩きキャンパー",
-      "authorFollowers": 11521,
-      "axis": "camp",
-      "text": "ソロキャンプするっていうから\n応援しようと思ったら\n\nテント  \nテーブル  \nクーラーボックス  \nバーナー  \nライト  \nコット \nタープ\n\n「貸してほしい」って\n\nそれほぼ私の道具\nなんですけど😤\n\nそれ、もはや\n“私の道具でキャンプ”\n\nじゃない？（笑）\n\n#バイクでソロキャンプ https://t.co/zUdivl205h",
-      "createdAt": "2026-05-06T00:13:56.000Z",
-      "metrics": {
-        "likes": 52,
-        "retweets": 0,
-        "replies": 7,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 66
-      },
-      "analysis": {
-        "index": 3,
-        "hook": "contrast",
-        "emotionalTrigger": "humor",
-        "format": "story",
-        "topic": "道具貸し出し問題",
-        "timing": "ソロキャンプブーム時期",
-        "shareability": "humor",
-        "keyTechniques": [
-          "リスト形式",
-          "ツッコミ形式",
-          "共感できるあるある"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "これ、僕の診療所でも似た現象が...「AI導入したい」と言うから話を聞くと、PC、ソフト、設定、運用まで全部こちら任せ。それ「僕がAIを使ってる」だけですよね（笑）道具への依存と自立のバランス、どの分野でも共通の課題ですね。",
-          "axis": "ai",
-          "rationale": "AI軸で類似体験の面白い切り口",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "分かります！僕もキャンプ道具貸すときあるあるです。「今度ソロやってみる」って言うから応援したら、テントから何から全部貸出...それもう僕の道具でのキャンプ体験ですよね。自分で揃える過程も楽しみの一部なのに。",
-          "axis": "camp",
-          "rationale": "キャンプ経験での共感でバズ投稿に乗る",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051944816993517907",
-      "authorUsername": "nishimoka0404",
-      "authorName": "西真岡こどもクリニック",
-      "authorFollowers": 21310,
-      "axis": "doctor",
-      "text": "もしこれからクリニック開業を考えている人は、絶対に経営コンサルタントにお願いしない方がいいですよ。と言う僕の考えを証明してくれた論文 https://t.co/A4yuddPAXO",
-      "createdAt": "2026-05-06T08:39:02.000Z",
-      "metrics": {
-        "likes": 36,
-        "retweets": 9,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 5,
-        "engagementScore": 65
-      },
-      "analysis": {
-        "index": 4,
-        "hook": "hot_take",
-        "emotionalTrigger": "controversy",
-        "format": "hot_take",
-        "topic": "経営コンサル批判",
-        "timing": "開業シーズンでの警鐘",
-        "shareability": "debate",
-        "keyTechniques": [
-          "論文による根拠提示",
-          "断定的表現",
-          "業界内部告発"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "開業3年目の実感として、この視点すごく分かります。コンサル頼りになりがちですが、結局は自分の地域性や患者層を一番理解してるのは自分。僕もAIツール導入で似た経験が。外部の「一般解」より現場の「個別解」が重要ですね。",
-          "axis": "doctor",
-          "rationale": "開業医としての実体験での共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "開業3年目ですが、まさにこの通りです。コンサルの提案は一般論が多くて、結局自分の地域性や患者層は自分が一番分かってる。論文での裏付けがあると説得力ありますね。現場の感覚と研究データ、両方大事だと実感してます。",
-          "axis": "doctor",
-          "rationale": "開業医の実体験で論文の価値確認",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051973082441785386",
-      "authorUsername": "erui_LE",
-      "authorName": "えるいー@ろーえんふぉーさー",
-      "authorFollowers": 12088,
-      "axis": "parenting",
-      "text": "子育て経験20年目くらいの意見で恐縮だけど、\nインドア・アウトドア・家遊び問わず、親がどれだけ面白い体験を提案して提供して一緒に楽しめるかも大事よねー🤔\n\n『出かけるまではだるいけど、出かけたらなんやかんや楽しい😆』\nみたいな経験積ませると無敵\n\n俺も子供の頃は出かけるの嫌だったなー🤣 https://t.co/tfxpXUXLQI https://t.co/z2CUSeXGR7",
-      "createdAt": "2026-05-06T10:31:21.000Z",
-      "metrics": {
-        "likes": 46,
-        "retweets": 6,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 64
-      },
-      "analysis": {
-        "index": 5,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "empathy",
-        "format": "experience_share",
-        "topic": "子育て経験談",
-        "timing": "GW前の家族活動計画時期",
-        "shareability": "emotional",
-        "keyTechniques": [
-          "経験年数アピール",
-          "具体的行動提案",
-          "自己体験開示"
-        ],
-        "adaptability": "high",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "これ、キャンプでも同じですね。子どもたちは準備段階では「面倒くさい」って言うけど、一緒にテント張りやら焚き火やらを体験すると目をキラキラさせて。親が楽しそうにやってるのを見せるのが一番効果的。僕も準備は正直だるいです（笑）",
-          "axis": "parenting",
-          "rationale": "キャンプ経験を通じた子育て共感",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "本当にそうですね！僕もキャンプ準備は面倒でだるいけど、子どもたちと一緒に設営したり焚き火したりすると結局楽しくなってる。親が楽しそうにやってる姿を見せるのが一番効果的ですよね。準備段階の「だるさ」込みで共感です。",
-          "axis": "camp",
-          "rationale": "キャンプでの親子体験で具体的共感",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051803703393538056",
-      "authorUsername": "momoko19760909",
-      "authorName": "アヒルＹＯＵ",
-      "authorFollowers": 386,
-      "axis": "camp",
-      "text": "#4月のキャンプを写真4枚で振り返る\n4月はfuji camp villageに1泊猫キャンプでした。\n帰りに洪庵近くに行き桜と富士山に癒され\nGW前にキャンプと思ってたが休み前にキャンプ道具詰んだまま車故障で修理工場に💦\n明日から仕事だけどキャンプ行きたい😭 https://t.co/4npt8gRaMz",
-      "createdAt": "2026-05-05T23:18:18.000Z",
-      "metrics": {
-        "likes": 62,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 62
+        "engagementScore": 77
       },
       "analysis": {
         "index": 6,
         "hook": "other",
         "emotionalTrigger": "empathy",
-        "format": "story",
-        "topic": "4月キャンプ振り返り",
-        "timing": "月末振り返り投稿",
+        "format": "experience_share",
+        "topic": "社会問題講演",
+        "timing": "社会情勢への関心",
         "shareability": "emotional",
         "keyTechniques": [
-          "ハッシュタグ活用",
-          "トラブル体験共有",
-          "感情表現"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": [
-          {
-            "name": "fuji camp village",
-            "brand": "キャンプ場"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "キャンプ道具積んだまま車故障...これ、意外とキャンパーあるあるかも。僕も以前、ルーフボックス満載でディーラー持ち込んで気まずい思いしました。修理の人に「キャンプですか？」って苦笑いされる😅 でも4月の富士キャンプ、桜と富士山の組み合わせは羨ましいです。",
-          "axis": "camp",
-          "rationale": "共感体験で親近感醸成",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "車故障でキャンプ道具が人質状態...これはつらい😅 僕も昔、ルーフボックス付けたまま修理に出して恥ずかしい思いをしたことがあります。洪庵の桜と富士山、写真だけでも癒やされますね。代車でもキャンプ行けそうですか？",
-          "axis": "camp",
-          "rationale": "共感体験で会話を盛り上げ",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051937371579642156",
-      "authorUsername": "sir_altria_jp",
-      "authorName": "Sir_Pendragon@自転車キャンプ&輪行&ミニベロカスタム",
-      "authorFollowers": 4121,
-      "axis": "camp",
-      "text": "本日のキャンプ地はココとする！\n今日はヘトヘト…\n#自転車キャンプ\n#もののふ道具店\n#トレンクル改造 https://t.co/CWa3unMm81",
-      "createdAt": "2026-05-06T08:09:27.000Z",
-      "metrics": {
-        "likes": 57,
-        "retweets": 1,
-        "replies": 0,
-        "quotes": 1,
-        "bookmarks": 0,
-        "engagementScore": 62
-      },
-      "analysis": {
-        "index": 7,
-        "hook": "other",
-        "emotionalTrigger": "identity",
-        "format": "one_liner",
-        "topic": "自転車キャンプ",
-        "timing": "疲労感の共感投稿",
-        "shareability": "identity",
-        "keyTechniques": [
-          "疲労感表現",
-          "ハッシュタグ活用",
-          "リアルタイム投稿"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": [
-          {
-            "name": "トレンクル改造",
-            "brand": "自転車"
-          }
-        ]
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "自転車キャンプ、憧れるけど荷物の取捨選択が究極ですよね。僕は車キャンプでも荷物を詰め込みすぎる派なので、自転車だと何を持っていくか1週間悩みそう。トレンクル改造の詳細、気になります。輪行袋のサイズとか変わるんでしょうか。",
-          "axis": "camp",
-          "rationale": "スペック厨視点で技術的関心",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "自転車キャンプ、憧れます！荷物の制限があると逆に本当に必要なものが見えてきそうですね。トレンクル改造の詳細、もしよろしければ教えてください。輪行のときのサイズ感とか変わりましたか？",
-          "axis": "camp",
-          "rationale": "技術的関心で会話促進",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051797786715365593",
-      "authorUsername": "wishiwereaswan",
-      "authorName": "ducklingduckling",
-      "authorFollowers": 1890,
-      "axis": "doctor",
-      "text": "証明書の性別欄と見た目が一致しないと日常生活が大変云々という立法事実は嘘であることが理解増進の結果、ばれてきました。医師らは男性に施術してもめったに女性としてパスしないことは最初から知ってたわけですから。だから思春期ブロッカーで子供の二次性徴を止めるという人体実験を始めて、今世界 https://t.co/wTQcWyH9C3 https://t.co/t837XZYnyC",
-      "createdAt": "2026-05-05T22:54:47.000Z",
-      "metrics": {
-        "likes": 24,
-        "retweets": 11,
-        "replies": 1,
-        "quotes": 1,
-        "bookmarks": 5,
-        "engagementScore": 61
-      },
-      "analysis": {
-        "index": 8,
-        "hook": "hot_take",
-        "emotionalTrigger": "controversy",
-        "format": "hot_take",
-        "topic": "性別証明書問題",
-        "timing": "社会問題への言及",
-        "shareability": "debate",
-        "keyTechniques": [
-          "断定的表現",
-          "専門知識披露",
-          "社会批判"
+          "社会貢献活動の紹介",
+          "具体的な日程提示",
+          "感情に訴える内容"
         ],
         "adaptability": "low",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "医療現場では様々な患者さんと向き合いますが、エビデンスに基づいた慎重な判断が求められるのは確かです。特に若年者の治療については、長期的な影響も含めて十分な検討が必要だと感じています。本職柄、この議論の行方を注視しています。",
+          "text": "こういう現地の声を聞く機会って貴重ですよね。僕も家族で難民支援について話すことがあるけど、実際に体験された方の話は重みが違う。本職柄、人の話を聞くことの大切さを日々感じているので、このようなトークイベントの価値を改めて感じます。",
           "axis": "doctor",
-          "rationale": "医師として慎重な立場表明",
+          "rationale": "医師視点で聞くことの重要性",
           "status": "draft"
         },
         "reply": {
-          "text": "本職柄、この分野の議論は注意深く見ています。医療現場では常にエビデンスと長期的な影響を天秤にかけた判断が求められますね。特に若年者に関わる治療については、より慎重な検討が必要だと感じています。",
-          "axis": "doctor",
-          "rationale": "専門性で議論に貢献",
+          "text": "現地の声を直接聞けるのは貴重な機会ですね。僕も家族と世界情勢について話すとき、やはり当事者の体験談が一番心に響きます。申し込み開始の5/10、覚えておきます。",
+          "axis": "parenting",
+          "rationale": "家族との対話で共感",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051944112124047800",
-      "authorUsername": "sumithee",
-      "authorName": "△🚲ⓈⓊⓂⒾ🚲△",
-      "authorFollowers": 4088,
-      "axis": "camp",
-      "text": "キャンプ道具買っちった。\nパロサント\nはて？パロサントは、キャンプ道具なのか？ https://t.co/zhcH7FR9Y8",
-      "createdAt": "2026-05-06T08:36:14.000Z",
+      "tweetId": "2052235665438605521",
+      "authorUsername": "tori29umai",
+      "authorName": "とりにく",
+      "authorFollowers": 12149,
+      "axis": "ai",
+      "text": "生成AIなんでも展示会、引きこもりオタクには5時間半の展示は体力が死んだ。\nでも私個人の開発物だから説明できる人が私しかいないんだよな。\n離席中に私の代わりに説明してくれるそれだけのLLMエージェントを配置したいけどプロンプトインジェクションのプロが集う場所でもあるからにしてぇ！！！！",
+      "createdAt": "2026-05-07T03:54:45.000Z",
       "metrics": {
-        "likes": 56,
-        "retweets": 0,
+        "likes": 53,
+        "retweets": 5,
         "replies": 2,
         "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 60
+        "bookmarks": 1,
+        "engagementScore": 72
       },
       "analysis": {
-        "index": 9,
-        "hook": "question",
-        "emotionalTrigger": "curiosity",
-        "format": "one_liner",
-        "topic": "パロサント購入",
-        "timing": "道具購入の疑問提起",
-        "shareability": "curiosity",
+        "index": 7,
+        "hook": "failure_open",
+        "emotionalTrigger": "humor",
+        "format": "experience_share",
+        "topic": "AI展示疲労",
+        "timing": "展示会参加者の共感",
+        "shareability": "humor",
         "keyTechniques": [
-          "自問自答形式",
-          "カテゴリー疑問",
-          "商品名言及"
+          "自虐的なユーモア",
+          "技術者あるある",
+          "プロンプトインジェクション知識"
         ],
-        "adaptability": "medium",
-        "mentionedProducts": [
-          {
-            "name": "パロサント",
-            "brand": "香木"
-          }
-        ]
+        "adaptability": "high",
+        "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "パロサント、キャンプ道具認定します！僕も焚き火の香りづけに使ってます。ただ、スペック厨としては「キャンプ道具」の定義が気になるところ。調理器具、設営道具、快適化アイテム...パロサントは「雰囲気作り道具」でしょうか😊",
-          "axis": "camp",
-          "rationale": "スペック厨らしい分析視点",
+          "text": "5時間半お疲れさまです！AIサイト作りしてる僕も展示会参加したくなりました。プロンプトインジェクション対策、確かに悩ましい。説明用エージェントには「開発者不在時は基本情報のみ」みたいな制限かけるしかないですかね。",
+          "axis": "ai",
+          "rationale": "AI開発者同士の課題共有",
           "status": "draft"
         },
         "reply": {
-          "text": "パロサント、完全にキャンプ道具だと思います！僕も焚き火の香りづけに愛用してます。スペック厨的には「雰囲気作り道具」カテゴリーですね。浄化作用があるとも言われてますし、キャンプの精神的な部分を担う大事なアイテムかも。",
-          "axis": "camp",
-          "rationale": "体験談でカテゴライズ提案",
+          "text": "5時間半の説明、本当にお疲れさまでした！僕もAIでサイト作ってるので展示会の様子気になります。プロンプトインジェクション対策は悩ましいですね。説明用エージェントの実装、今度試してみたいです。",
+          "axis": "ai",
+          "rationale": "同じAI開発者として共感",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051934999927013619",
-      "authorUsername": "KURE_campaign",
-      "authorName": "KURE",
-      "authorFollowers": 2290,
+      "tweetId": "2052250606535078276",
+      "authorUsername": "hibacope",
+      "authorName": "松上 隆道",
+      "authorFollowers": 1280,
       "axis": "camp",
-      "text": "キャンプ道具の動きが悪くなってきたときにはKURE 5-56！\n動きの悪い可動部にスプレーするだけで動きが良くなり、セッティングや撤収がスムーズになります！\n保管する際にスプレーしておくとサビの発生も防ぎます！\n#呉工業 \n#kure556 \n#キャンプ \n#キャンプ道具 \n#メンテナンス https://t.co/89EDNcNsMo",
-      "createdAt": "2026-05-06T08:00:01.000Z",
+      "text": "今日もココから🤭\nトランポ仕様に変更〜🏍️\nキャンプ道具やピザ窯降ろした✌️クーラーボックスとラダーレール積んで、後はカブちゃんと寝袋🤗\nやっぱN–VAN広いっすね https://t.co/pwwzlGhmC7",
+      "createdAt": "2026-05-07T04:54:08.000Z",
       "metrics": {
-        "likes": 45,
-        "retweets": 4,
-        "replies": 0,
+        "likes": 62,
+        "retweets": 0,
+        "replies": 5,
         "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 57
+        "bookmarks": 0,
+        "engagementScore": 72
       },
       "analysis": {
-        "index": 10,
-        "hook": "utility",
-        "emotionalTrigger": "utility",
-        "format": "data_point",
-        "topic": "道具メンテナンス",
-        "timing": "シーズン前のメンテ時期",
+        "index": 8,
+        "hook": "other",
+        "emotionalTrigger": "curiosity",
+        "format": "experience_share",
+        "topic": "車中泊準備",
+        "timing": "キャンプシーズンの準備",
         "shareability": "utility",
         "keyTechniques": [
-          "具体的使用方法",
-          "ハッシュタグ活用",
-          "企業アカウント"
+          "具体的な準備過程",
+          "車種の魅力アピール",
+          "実用的な情報提供"
         ],
         "adaptability": "high",
         "mentionedProducts": [
           {
-            "name": "KURE 5-56",
-            "brand": "呉工業"
+            "name": "N-VAN",
+            "brand": "ホンダ"
           }
         ]
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "KURE 5-56、キャンプでも重宝してます。特にペグハンマーの可動部とか、使用後のランタンスタンドの関節部分とか。ただ僕は撤収時より帰宅後のメンテナンスで使うことが多いかな。あと、意外とタープのスライダー部分にも効果的です。",
+          "text": "N-VAN、キャンパーには人気ですよね！僕もファミキャンで荷物の多さに悩んでるので、この積載力は羨ましい。カブちゃんも一緒とは、バイク×キャンプの組み合わせいいなあ。トランポ仕様への変更、具体的にどんな感じでされたんですか？",
           "axis": "camp",
-          "rationale": "実用的な使用例を追加",
+          "rationale": "キャンパー目線で積載力に注目",
           "status": "draft"
         },
         "reply": {
-          "text": "KURE 5-56、キャンプ道具のメンテナンスには欠かせませんね！ペグハンマーの可動部やランタンスタンドの関節部分、あとタープのスライダー部分にも重宝してます。帰宅後のメンテナンス時に使うと次回のセッティングがスムーズになりますね。",
+          "text": "N-VAN、キャンパーには人気車種ですね！ピザ窯まで積めるとは、さすがの積載力。僕もファミキャンの荷物量に悩んでるので羨ましいです。カブちゃんとのキャンプ、楽しそうですね。",
           "axis": "camp",
-          "rationale": "具体的使用例で実用性訴求",
+          "rationale": "同じキャンパーとして共感",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2052000218011635855",
-      "authorUsername": "kuro_nukocamp",
-      "authorName": "きゃんぷぬこฅ🐾໊",
-      "authorFollowers": 1602,
+      "tweetId": "2052209316707680267",
+      "authorUsername": "shoan_tigers",
+      "authorName": "shonan_tanaka🛵🚙@⛺️に行こうよ",
+      "authorFollowers": 1359,
       "axis": "camp",
-      "text": "今回も最高のキャンプです🏕✨\n丸太から薪やって、チェアつくって、焚き火やってハンモックで揺られて、、..._(　 _ *`ω､)_ *ﾟｽﾔｧ...\n #キャンプ  #ブッシュクラフト  #CAMP  #BushCraft https://t.co/lOX6jHrbLl",
-      "createdAt": "2026-05-06T12:19:10.000Z",
+      "text": "撤収完了。\n今日ものんびり、先週雨撤収で濡れたテントもバッチリ乾かし楽しい😀キャンプでした。\n\n＃ソロキャンプ\n＃白州・星影の森Camptown https://t.co/bUJ57BeQxY",
+      "createdAt": "2026-05-07T02:10:03.000Z",
       "metrics": {
-        "likes": 56,
+        "likes": 71,
         "retweets": 0,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
+        "engagementScore": 71
+      },
+      "analysis": {
+        "index": 9,
+        "hook": "other",
+        "emotionalTrigger": "nostalgia",
+        "format": "experience_share",
+        "topic": "キャンプ撤収",
+        "timing": "週末キャンプの締めくくり",
+        "shareability": "identity",
+        "keyTechniques": [
+          "完結感のある報告",
+          "前回の失敗からの回復",
+          "場所の具体的明記"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "白州でのキャンプ、お疲れさまでした！雨撤収したテントをちゃんと乾かすの、地味に大事ですよね。僕も先月のファミキャンで濡れたタープを自宅で乾燥させました。星影の森、名前からして素敵な場所ですね。長野からも行きやすそう。",
+          "axis": "camp",
+          "rationale": "同じキャンパーの経験共有",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "撤収お疲れさまでした！雨撤収したテントをちゃんと乾かすの、地味に重要ですよね。僕も先月濡れたタープの乾燥に苦労しました。白州・星影の森、名前からして良い雰囲気が伝わってきます。",
+          "axis": "camp",
+          "rationale": "テント乾燥の体験談で共感",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052367913496215851",
+      "authorUsername": "goyasumachi",
+      "authorName": "後安町ささみ",
+      "authorFollowers": 175,
+      "axis": "doctor",
+      "text": "@KirinMD 別添なんて普通の言葉だよ。\n医療業界の言葉でもないし特殊な読みするわけでもないし勤務医だろうが開業医だろうが医学部出た人間が読めないわけない。",
+      "createdAt": "2026-05-07T12:40:16.000Z",
+      "metrics": {
+        "likes": 69,
+        "retweets": 0,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 3,
+        "engagementScore": 71
+      },
+      "analysis": {
+        "index": 10,
+        "hook": "hot_take",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "医療業界論争",
+        "timing": "専門用語論争への参戦",
+        "shareability": "debate",
+        "keyTechniques": [
+          "強い反論口調",
+          "専門知識のアピール",
+          "業界内の常識主張"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "確かに「別添」は一般的な用語ですね。本職柄、日々書類作成してますが、業界問わず使われる言葉だと思います。ただ、専門用語と一般用語の境界って、意外と人によって感覚が違うのも事実かも。普段使わない人には馴染みがないのかもしれません。",
+          "axis": "doctor",
+          "rationale": "医師として書類経験で同意",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "確かに別添は一般的な用語ですね。本職柄よく使いますが、業界関係なく使われる言葉だと思います。ただ、普段事務作業をしない人には馴染みがない可能性もありますね。",
+          "axis": "doctor",
+          "rationale": "医師視点で冷静に同意",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052363096338087963",
+      "authorUsername": "daiki15036604",
+      "authorName": "daka | Microsoft | AI",
+      "authorFollowers": 2191,
+      "axis": "ai",
+      "text": "社内で使っていいMCP Server /Skillsを用意するカタログとしてAPI Center の Plugin Marketplace が登場！\n\n- プラットフォームチームが公式カタログを整備\n- 開発者はClaude Code / Copilot CLIから2コマンドで導入\n- 認証はAPI Center Portalと同じモデル https://t.co/ZTgG6tlyjG",
+      "createdAt": "2026-05-07T12:21:07.000Z",
+      "metrics": {
+        "likes": 42,
+        "retweets": 7,
+        "replies": 0,
+        "quotes": 3,
+        "bookmarks": 27,
+        "engagementScore": 69
+      },
+      "analysis": {
+        "index": 1,
+        "hook": "conclusion_first",
+        "emotionalTrigger": "utility",
+        "format": "list",
+        "topic": "MCP Server導入",
+        "timing": "開発者向け新機能リリース直後",
+        "shareability": "utility",
+        "keyTechniques": [
+          "具体的な手順説明",
+          "開発者向け専門用語",
+          "公式情報の要約"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "Claude Code",
+            "brand": "Anthropic"
+          },
+          {
+            "name": "Copilot CLI",
+            "brand": "GitHub"
+          },
+          {
+            "name": "API Center",
+            "brand": "Microsoft"
+          }
+        ]
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "僕のクリニックシステムにも導入したい機能だな。今はClaude Desktopで診療記録の整理とかやってるけど、組織全体でMCP Serverを管理する仕組みがあると、スタッフ間での運用も統一できそう。医療現場でのAI活用はセキュリティと標準化が鍵になる。",
+          "axis": "doctor",
+          "rationale": "医師視点で実用性を語る",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "クリニック運営でも同じ課題感じてます。スタッフそれぞれが勝手にAIツール使い始めると管理が大変で...プラットフォーム側で統制取れる仕組みは本当に助かります。認証周りの仕様詳細気になりますね。",
+          "axis": "doctor",
+          "rationale": "実務者の共感と質問で参加",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052177770533589099",
+      "authorUsername": "nomadicdevx",
+      "authorName": "へっぽこプログラマー@個人開発・アプリ開発",
+      "authorFollowers": 4130,
+      "axis": "ai",
+      "text": "個人開発あるある、GWは例年とおり思ったように開発できなかった泣。",
+      "createdAt": "2026-05-07T00:04:42.000Z",
+      "metrics": {
+        "likes": 63,
+        "retweets": 0,
+        "replies": 1,
+        "quotes": 1,
+        "bookmarks": 0,
+        "engagementScore": 67
+      },
+      "analysis": {
+        "index": 2,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "one_liner",
+        "topic": "GW開発失敗談",
+        "timing": "GW明け直後の共感タイミング",
+        "shareability": "identity",
+        "keyTechniques": [
+          "あるある共感",
+          "失敗の自己開示",
+          "季節ネタ"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "GWは家族キャンプで全然コード触れなかった。でも子供とファイヤースターター練習したり、焚き火の火力調整考えてる時間も、なんか開発と通じるものがあるんだよね。デバッグと同じで試行錯誤の連続だし、意外とリフレッシュになった。",
+          "axis": "camp",
+          "rationale": "キャンプ体験から開発への気づき",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "分かります！僕もGWはキャンプ三昧で開発予定全滅でした。でも焚き火眺めながら考えた機能アイデアが後で役立つことよくあります。家族時間も大事な投資ですよね。",
+          "axis": "camp",
+          "rationale": "同じ状況での共感と経験談",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052405498058866764",
+      "authorUsername": "miwa_ensan",
+      "authorName": "Miwa - azooKeyの開発者",
+      "authorFollowers": 2869,
+      "axis": "ai",
+      "text": "どんどん「コーディングは趣味でやれ、仕事なんだからAI使え」の世界観になってきていて、コーディングに限らずあらゆる場面でこうなっていくんだろうなーと思う",
+      "createdAt": "2026-05-07T15:09:37.000Z",
+      "metrics": {
+        "likes": 46,
+        "retweets": 7,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 6,
+        "engagementScore": 67
+      },
+      "analysis": {
+        "index": 3,
+        "hook": "hot_take",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "AI時代の働き方",
+        "timing": "AI普及による職業観変化の議論時期",
+        "shareability": "debate",
+        "keyTechniques": [
+          "未来予測",
+          "働き方への問題提起",
+          "技術トレンド言及"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "医療現場でも同じ流れを感じる。電子カルテはシステム任せ、診断支援はAI活用が当たり前になりつつある。でも手技や患者との会話は人間にしかできない部分。効率化できる部分はAIに任せて、人間らしい医療に集中する時代かも。",
+          "axis": "doctor",
+          "rationale": "医療現場での同様の変化を紹介",
+          "validationErrors": "[医療表現注意] \"診断\" を検出",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "本職柄、カルテ作成でAI使うようになってから患者さんとの対話時間が確実に増えました。効率化で浮いた時間を本当に人間がやるべきことに使えるのは良い流れだと思います。",
+          "axis": "doctor",
+          "rationale": "具体的な職業体験で説得力",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052259178606207283",
+      "authorUsername": "makocub1",
+      "authorName": "makocub",
+      "authorFollowers": 933,
+      "axis": "camp",
+      "text": "山はまだ寒い❄️\nもう少し厚着してくればよかった…\n#カブ　#ソロキャンプ https://t.co/x6ZNZrofce",
+      "createdAt": "2026-05-07T05:28:11.000Z",
+      "metrics": {
+        "likes": 61,
+        "retweets": 0,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 63
+      },
+      "analysis": {
+        "index": 4,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "山キャンプ体験",
+        "timing": "GW中のリアルタイム体験共有",
+        "shareability": "identity",
+        "keyTechniques": [
+          "リアルタイム体験",
+          "失敗談の共有",
+          "ハッシュタグ活用"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "カブ",
+            "brand": "Honda"
+          }
+        ]
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "カブでのソロキャンプ、憧れます。僕は家族キャンプでワゴン車だけど、バイクキャンプは装備の制約があるからこそ面白そう。寒さ対策も車と違って慎重になりますよね。本職柄、低体温症のリスクも気になってしまう...",
+          "axis": "camp",
+          "rationale": "家族キャンパーからの憧れと医師視点",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "カブキャンプ良いですね！積載制限があるからこそ装備選びが楽しそう。この時期の山は気温差が大きいので、レイヤリングが重要ですよね。どんな防寒装備使ってるか教えてもらえると参考になります。",
+          "axis": "camp",
+          "rationale": "装備への関心と具体的質問",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052309052345221162",
+      "authorUsername": "kashiwaninuki",
+      "authorName": "かしわにぬき🐓🥚",
+      "authorFollowers": 18,
+      "axis": "parenting",
+      "text": "@mimeko_f お返事ありがとうございます！\n\n旅館とか観光じゃなくてキャンプとか車中泊な感じなんですね！？大層なことじゃなくても非日常を家族と共有するのがいいのかもしれませんね〜。我が家もたくさん思い出作っていきたいです☺️",
+      "createdAt": "2026-05-07T08:46:22.000Z",
+      "metrics": {
+        "likes": 63,
+        "retweets": 0,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 1,
+        "engagementScore": 63
+      },
+      "analysis": {
+        "index": 5,
+        "hook": "other",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "家族旅行相談返信",
+        "timing": "GW中の家族時間を意識する時期",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "丁寧なリプライ",
+          "家族愛の表現",
+          "体験談シェア"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "本当にこれ。僕も家族キャンプ始めて10年になるけど、高級な旅館より子供たちの記憶に残ってるのはテント設営を一緒にやった夜や、焚き火で焼いたマシュマロの話。非日常は距離じゃなくて、いつもと違う体験の質なんだよね。",
+          "axis": "parenting",
+          "rationale": "10年の家族キャンプ経験談",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "家族の非日常体験、本当に大切ですよね。うちも車中泊から始めましたが、子供が「今度はどこ行く？」って聞いてくる顔が一番の収穫でした。思い出作り、応援してます！",
+          "axis": "parenting",
+          "rationale": "親同士の共感と応援メッセージ",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052211455005724806",
+      "authorUsername": "reo724",
+      "authorName": "DJリョウ",
+      "authorFollowers": 37711,
+      "axis": "doctor",
+      "text": "北海道にはいません\n開業医は60までにみんな死んでます https://t.co/oHVTv2AgMQ",
+      "createdAt": "2026-05-07T02:18:33.000Z",
+      "metrics": {
+        "likes": 52,
+        "retweets": 2,
+        "replies": 2,
+        "quotes": 0,
+        "bookmarks": 3,
+        "engagementScore": 62
+      },
+      "analysis": {
+        "index": 6,
+        "hook": "hot_take",
+        "emotionalTrigger": "surprise",
+        "format": "one_liner",
+        "topic": "開業医の現実",
+        "timing": "医療従事者の労働環境議論時期",
+        "shareability": "debate",
+        "keyTechniques": [
+          "衝撃的な事実",
+          "専門職の内情暴露",
+          "地域格差の指摘"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "北海道の過酷さを痛感します。僕の地域でも開業医の先生方を見ていると、本当に激務で。特に地方は患者さんとの距離が近い分、責任も重いですからね。医療過疎の問題は想像以上に深刻かもしれません。",
+          "axis": "doctor",
+          "rationale": "同業者として共感と現状分析",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "長野でも似た状況を感じます。地方の開業医は24時間365日が当たり前で、休む暇もないですよね。本職柄、この現実は本当に切実な問題だと思います。医療を支える仕組み自体を見直す時期かもしれませんね。",
+          "axis": "doctor",
+          "rationale": "地域医療の現実を共有",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052336974502256889",
+      "authorUsername": "VMNAJfXktUqlyMg",
+      "authorName": "ケムリ@岡山の五目ルアーマン",
+      "authorFollowers": 978,
+      "axis": "camp",
+      "text": "いろんな意味で心に残るGWになりました👍\n\n○鳥山＆ナブラに翻弄された山陰釣行\n○ファミリーキャンプで大雨＆爆風で曲がったテントポールとぶっ千切れたタープのループ\n\nいい経験をさせていただきました😆 https://t.co/JXKVTZXBkL",
+      "createdAt": "2026-05-07T10:37:19.000Z",
+      "metrics": {
+        "likes": 42,
+        "retweets": 0,
+        "replies": 7,
+        "quotes": 0,
+        "bookmarks": 0,
         "engagementScore": 56
+      },
+      "analysis": {
+        "index": 7,
+        "hook": "contrast",
+        "emotionalTrigger": "humor",
+        "format": "story",
+        "topic": "GW失敗体験談",
+        "timing": "GW直後の体験談シェア時期",
+        "shareability": "humor",
+        "keyTechniques": [
+          "失敗を前向きに表現",
+          "具体的な災難描写",
+          "経験価値への昇華"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "これぞリアルキャンプ！テントポール曲がり＆タープ破損は通過儀礼ですね。僕も息子と初キャンプで暴風雨に見舞われ、設営からやり直した思い出が。こういう「失敗」が後から一番いい話になるんですよね。",
+          "axis": "camp",
+          "rationale": "失敗体験の共感で親近感",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "テントポール曲がりは僕も経験済みです！最初はショックでしたが、今思えばそこから本格的にギア選びにハマったきっかけでした。大雨キャンプの洗礼、お疲れさまでした。次はきっと楽しいキャンプになりますよ。",
+          "axis": "camp",
+          "rationale": "失敗からの学びを共有",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052254458357452832",
+      "authorUsername": "nomodon",
+      "authorName": "ノモ",
+      "authorFollowers": 1944,
+      "axis": "camp",
+      "text": "キャンプ用品の軽量化は永遠のテーマ\n個人的には道は2つ\nULキャンプギア購入\n必要最小限まで絞る\n財力があれば前者だけど\n簡単には買えない\n最小限にすると移動は楽だけど\nキャンプが楽しくない\n夏場ならハンモック+蚊帳+タープが\n自転車キャンプ最適解かなと思う(⁠*⁠´⁠ω⁠｀⁠*⁠)\n#キャンプギア https://t.co/duCe0Mxh0p https://t.co/Uz6lCfZpm2",
+      "createdAt": "2026-05-07T05:09:26.000Z",
+      "metrics": {
+        "likes": 50,
+        "retweets": 1,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 1,
+        "engagementScore": 55
+      },
+      "analysis": {
+        "index": 8,
+        "hook": "conclusion_first",
+        "emotionalTrigger": "utility",
+        "format": "comparison",
+        "topic": "軽量化の悩み",
+        "timing": "夏キャンプシーズン前の準備時期",
+        "shareability": "utility",
+        "keyTechniques": [
+          "具体的な解決策提示",
+          "コスト意識の共有",
+          "季節対応の提案"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "まさにその通りです！僕は家族キャンプなので軽量化は諦めて、車の積載効率を極めています。子供がいると「最小限」の基準が大人だけの時と全然違うんですよね。安全性も考慮すると、ある程度の重量は必要かなと。",
+          "axis": "camp",
+          "rationale": "家族キャンプ視点で差別化",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "ハンモック+蚊帳の組み合わせ、良さそうですね！僕はファミリーキャンプ中心なので軽量化は難しいですが、ソロなら試してみたい組み合わせです。自転車キャンプだと本当にグラム単位の勝負になりそうですね。",
+          "axis": "camp",
+          "rationale": "異なるスタイルへの興味",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052302079767851208",
+      "authorUsername": "DcNVDqxgKv3OZRT",
+      "authorName": "evo+ファン",
+      "authorFollowers": 699,
+      "axis": "parenting",
+      "text": "帰宅中の皆さま、ガザの120家族を助けて下さい。もう何処にも避難しないで良いように、やっと辿り着いた善の雲キャンプに必要なだけ留まれるように助けて下さい🆘🆘一家族に必要なのは17ドル3000円ほどです。キャンプに住むのは親を殺された子、怪我人や高齢者を抱えるご家族です。助けて🆘🆘🆘 https://t.co/lIVIZEasGD",
+      "createdAt": "2026-05-07T08:18:40.000Z",
+      "metrics": {
+        "likes": 12,
+        "retweets": 13,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 1,
+        "engagementScore": 53
+      },
+      "analysis": {
+        "index": 9,
+        "hook": "other",
+        "emotionalTrigger": "empathy",
+        "format": "data_point",
+        "topic": "ガザ支援呼びかけ",
+        "timing": "帰宅ラッシュ時間の拡散狙い",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "緊急性の演出",
+          "具体的金額提示",
+          "感情に訴える表現"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "医師として、そして親として、このような状況に心が痛みます。本職柄、医療支援の重要性も感じますが、まずは基本的な生活環境を整えることが何より大切ですね。子供たちの安全が一番心配です。",
+          "axis": "doctor",
+          "rationale": "医師＋親の立場で共感",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "医師として、また親として、子供たちの状況が特に心配です。基本的な医療や衛生環境も含めて、支援の方法を考えていきたいと思います。",
+          "axis": "doctor",
+          "rationale": "医療従事者として貢献意識",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052243486188163086",
+      "authorUsername": "kumaneko5545",
+      "authorName": "熊猫工業Co., Ltd.",
+      "authorFollowers": 932,
+      "axis": "camp",
+      "text": "皆さんお忙しい中色々コメント（お付き合い）ありがとうございます🐼🏕️\n僕は自然を満喫してます🐼🍻🍗🤤\n\n#ソロキャンプ \n#jb23 \n#ジムニー https://t.co/tFviWWhEWt",
+      "createdAt": "2026-05-07T04:25:50.000Z",
+      "metrics": {
+        "likes": 49,
+        "retweets": 1,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 52
+      },
+      "analysis": {
+        "index": 10,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "nostalgia",
+        "format": "experience_share",
+        "topic": "ソロキャンプ満喫",
+        "timing": "GW中のリアルタイム体験共有",
+        "shareability": "identity",
+        "keyTechniques": [
+          "感謝の表現",
+          "リアルタイム体験",
+          "車種アピール"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "jb23",
+            "brand": "Suzuki"
+          },
+          {
+            "name": "ジムニー",
+            "brand": "Suzuki"
+          }
+        ]
+      },
+      "generatedContent": {
+        "quoteTweet": {
+          "text": "JB23でのソロキャンプ、いいですね！僕はファミリーキャンプが中心ですが、たまには一人で自然と向き合う時間も必要だなと思います。ジムニーならどこでも行けそうで羨ましいです。",
+          "axis": "camp",
+          "rationale": "ソロキャンプへの憧れ表現",
+          "status": "draft"
+        },
+        "reply": {
+          "text": "JB23でのソロキャンプ、憧れます！僕は家族キャンプばかりなので、たまにはこういう一人の時間も欲しくなります。ジムニーなら行ける場所の幅が広がりそうですね。どちらの方面に行かれたんですか？",
+          "axis": "camp",
+          "rationale": "会話を広げる質問で参加",
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2052270738917495104",
+      "authorUsername": "shoan_tigers",
+      "authorName": "shonan_tanaka🛵🚙@⛺️に行こうよ",
+      "authorFollowers": 1359,
+      "axis": "camp",
+      "text": "帰宅しました。\n\n「家に帰るまでが⛺️」\n\n途中休憩、いつもの談合坂SAでラーメン。\nキャンプで結局4回続けて張ったTOMOUNTモトバイクテントTCお疲れ様でした。\n\n来週はテンマクデザイン　サーカスコンフォートソロTC、面倒なので🚙によいしょです。\n\n＃ソロキャンプ https://t.co/KtGJXlfciP",
+      "createdAt": "2026-05-07T06:14:08.000Z",
+      "metrics": {
+        "likes": 50,
+        "retweets": 0,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 50
       },
       "analysis": {
         "index": 1,
         "hook": "conclusion_first",
         "emotionalTrigger": "nostalgia",
         "format": "experience_share",
-        "topic": "ブッシュクラフト体験",
-        "timing": "キャンプシーズンの体験共有",
+        "topic": "ソロキャンプ終了",
+        "timing": "キャンプ帰りの充実感共有",
         "shareability": "identity",
         "keyTechniques": [
-          "体験の時系列描写",
-          "絵文字による感情表現",
-          "専門ハッシュタグ活用"
+          "実体験の詳細描写",
+          "具体的な商品名言及",
+          "次回予告による継続感"
         ],
         "adaptability": "high",
-        "mentionedProducts": []
+        "mentionedProducts": [
+          {
+            "name": "TOMOUNTモトバイクテントTC",
+            "brand": "TOMOUNT"
+          },
+          {
+            "name": "サーカスコンフォートソロTC",
+            "brand": "テンマクデザイン"
+          }
+        ]
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "ブッシュクラフトの魅力って、道具に頼らず自然と対話することですよね。僕も丸太割りから始めるスタイルにハマってますが、ナイフ選びだけで3ヶ月悩んだ過去が...😅 装備は最小限でも、選ぶ過程は最大限というジレンマ。",
+          "text": "分かります！僕も家族キャンプで帰り道のSAが楽しみの一つです。TOMOUNTのモトバイクテント、4回も活躍したなら相当信頼できるギアですね。来週のサーカスコンフォートソロTCも気になります。ソロとファミリー両方やる人のテント選びって参考になるんですよね。",
           "axis": "camp",
-          "rationale": "スペック厨の自虐で親近感演出",
+          "rationale": "ギア愛と体験共有でつながる",
           "status": "draft"
         },
         "reply": {
-          "text": "40代の体力問題、本職柄よく相談受けます。GW後の疲労回復には水分と睡眠が一番ですが、家族キャンプの思い出作りたい気持ち、すごく分かります。僕も子どもが小さい頃は無理してテント泊してました。今思えば良い思い出です。",
+          "text": "本職柄、発達障害のお子さんを診る機会も多いのですが、この診療報酬の構造は本当に問題だと思います。継続的な関係性が重要な分野なのに、それを支える仕組みが整っていない。結果的に専門性の高い先生方が疲弊してしまう現実を目の当たりにしています。",
           "axis": "doctor",
-          "rationale": "医師の知見で会話に貢献",
+          "rationale": "医師同士の共感と現場視点",
           "status": "draft"
         }
       }
     },
     {
-      "tweetId": "2051861206579998880",
-      "authorUsername": "maincampsubturi",
-      "authorName": "未来永劫⁉️スタッフ師匠",
-      "authorFollowers": 370,
-      "axis": "camp",
-      "text": "#今まで撮影した最高のキャンプ写真の中から4枚だけ選んで見せびらかしてください\n\n今までで…って難しいお題なんですね…😅\n割に最近のもので選んでみました^ ^\n最高のキャンプには最高のロケーションと焚き火🔥をやっぱり選んじゃうな〜😊 https://t.co/yMXFsiTCRu",
-      "createdAt": "2026-05-06T03:06:48.000Z",
+      "tweetId": "2052341314134626644",
+      "authorUsername": "2030mirai",
+      "authorName": "発達障害のニュースと資料⭐️",
+      "authorFollowers": 31141,
+      "axis": "doctor",
+      "text": "発達障害の診療に力を入れて来た開業医（小児科医）が、５年・１０年の長きにわたって同じ患者さんを診て行く医療を続けるには\n\n①精神保健指定医の資格を取る（精神科病院での数年間の勤務が必要）\n②通院精神療法４割減に耐え忍ぶ\n\nのいずれかしか無いようだ\n\n発達障害を診る医師ほど減収が大きい",
+      "createdAt": "2026-05-07T10:54:34.000Z",
       "metrics": {
-        "likes": 53,
-        "retweets": 0,
-        "replies": 0,
+        "likes": 24,
+        "retweets": 6,
+        "replies": 4,
         "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 53
+        "bookmarks": 1,
+        "engagementScore": 50
       },
       "analysis": {
         "index": 2,
-        "hook": "other",
-        "emotionalTrigger": "identity",
-        "format": "experience_share",
-        "topic": "写真コンテスト参加",
-        "timing": "ハッシュタグチャレンジ参加",
-        "shareability": "identity",
+        "hook": "reveal",
+        "emotionalTrigger": "controversy",
+        "format": "data_point",
+        "topic": "発達障害診療問題",
+        "timing": "医療制度への関心高まり",
+        "shareability": "debate",
         "keyTechniques": [
-          "コミュニティハッシュタグ参加",
-          "謙遜表現で親しみやすさ演出",
-          "理想のキャンプ要素提示"
-        ],
-        "adaptability": "medium",
-        "mentionedProducts": []
-      },
-      "generatedContent": {
-        "quoteTweet": {
-          "text": "写真選びの基準が「ロケーション×焚き火」って、キャンパーあるあるですね。僕も気がつくと焚き火写真ばかり撮ってる...。長野の山間部だと朝霧と焚き火の組み合わせが幻想的で、ついシャッター切りすぎてスマホの容量が危険です。",
-          "axis": "camp",
-          "rationale": "地域性と体験談で差別化",
-          "status": "draft"
-        },
-        "reply": {
-          "text": "焚き火写真って、なぜあんなに魅力的なんでしょうね。僕も長野でキャンプすることが多いんですが、標高が高いと炎の色が微妙に違って見えるのも面白いです。最近はAIで写真整理してるので、焚き火タグだけで数百枚出てきます。",
-          "axis": "ai",
-          "rationale": "AI活用で独自性をアピール",
-          "status": "draft"
-        }
-      }
-    },
-    {
-      "tweetId": "2051968725860188170",
-      "authorUsername": "color_snow1101",
-      "authorName": "あきつん@愛国時々ご機嫌ママ🇯🇵",
-      "authorFollowers": 5233,
-      "axis": "parenting",
-      "text": "結局今日は無理が祟って体調崩して1日中寝込んでました😂\n40代、GW無理しすぎました🤣\n\nキャンプって楽しいのだけど、パワー使うのよね😂\n\nでも子ども達と一緒に家族キャンプができる日々は有限✨\n疲れても頑張りたいところ✨\nこの為に一生懸命働いてる🥹",
-      "createdAt": "2026-05-06T10:14:02.000Z",
-      "metrics": {
-        "likes": 46,
-        "retweets": 1,
-        "replies": 2,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 53
-      },
-      "analysis": {
-        "index": 3,
-        "hook": "self_disclosure",
-        "emotionalTrigger": "empathy",
-        "format": "story",
-        "topic": "40代の体調管理",
-        "timing": "GW明けの疲労タイミング",
-        "shareability": "emotional",
-        "keyTechniques": [
-          "年代特有の悩み共有",
-          "家族愛の表現",
-          "働く理由の明確化"
+          "専門知識による権威性",
+          "構造化された選択肢提示",
+          "社会問題の具体化"
         ],
         "adaptability": "high",
         "mentionedProducts": []
       },
       "generatedContent": {
         "quoteTweet": {
-          "text": "「子どもと過ごせる時間は有限」この言葉、胸に刺さります。僕も開業医として忙しい中、家族キャンプの時間を大切にしてきました。疲れた体にムチ打ってでも行く価値がある。10年後に振り返ったとき、きっと宝物の記憶になってますね。",
-          "axis": "parenting",
-          "rationale": "共感と職業背景で説得力",
+          "text": "これ、地域医療全体の課題ですよね。僕も内科で発達特性のある患者さんを長期で診ることがありますが、継続的なケアが必要な分野ほど診療報酬上の制約が大きい。専門性を活かしたい医師のモチベーションと制度設計のミスマッチを感じます。",
+          "axis": "doctor",
+          "rationale": "同業者として制度課題を指摘",
           "status": "draft"
         },
         "reply": {
-          "text": "GW明けの疲労、本当にお疲れさまでした。本職柄申し上げると、40代は回復に時間がかかりがちですが、無理は禁物です。でも家族キャンプへの思い、すごく分かります。僕も子どもが「またキャンプ行こう」と言ってくれる今を大切にしたいです。",
+          "text": "まさにおっしゃる通りです。発達障害の診療は時間をかけた丁寧な関係構築が必要なのに、制度がそれを評価しない構造になっている。結果として専門性の高い先生方が他の領域に流れてしまうのも理解できます。患者さんにとって大きな損失ですね。",
           "axis": "doctor",
-          "rationale": "医療知識と父親視点で共感",
+          "rationale": "医療現場の構造的問題への共感",
           "status": "draft"
         }
       }
