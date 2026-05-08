@@ -38,18 +38,20 @@ loadEnv();
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { axis: null, dryRun: false, count: 50, minScore: 50, days: 2 };
+  const opts = { axis: null, dryRun: false, count: 50, minScore: 50, days: 2, bigAccountsOnly: false, minFollowers: 0 };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const eqIdx = arg.indexOf("=");
     const key = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg;
     const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : args[i + 1];
     switch (key) {
-      case "--axis":      opts.axis = val; if (eqIdx === -1) i++; break;
-      case "--dry-run":   opts.dryRun = true; break;
-      case "--count":     opts.count = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
-      case "--min-score": opts.minScore = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
-      case "--days":      opts.days = parseInt(val, 10) || 2; if (eqIdx === -1) i++; break;
+      case "--axis":           opts.axis = val; if (eqIdx === -1) i++; break;
+      case "--dry-run":        opts.dryRun = true; break;
+      case "--count":          opts.count = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
+      case "--min-score":      opts.minScore = parseInt(val, 10) || 50; if (eqIdx === -1) i++; break;
+      case "--days":           opts.days = parseInt(val, 10) || 2; if (eqIdx === -1) i++; break;
+      case "--big-accounts":   opts.bigAccountsOnly = true; break;
+      case "--min-followers":  opts.minFollowers = parseInt(val, 10) || 0; if (eqIdx === -1) i++; break;
     }
   }
   if (opts.axis && !["camp", "parenting", "doctor"].includes(opts.axis)) {
@@ -93,7 +95,11 @@ const AXIS_QUERIES = {
 
 // 各軸の目標件数（合計50件）
 // 2026-05-02 軸配分更新: camp70/doctor20/parenting10 (AI軸廃止)
-const AXIS_TARGETS = { camp: 35, doctor: 10, parenting: 5 };
+// 2026-05-08 並行スロット方式: バイラル枠35件 + ビッグアカウント枠15件
+const VIRAL_TARGETS       = { camp: 25, doctor: 7, parenting: 3 }; // 35件: エンゲージメント上位
+const BIG_ACCOUNT_TARGETS = { camp: 10, doctor: 4, parenting: 1 }; // 15件: フォロワー1万以上優先
+const BIG_ACCOUNT_MIN_FOLLOWERS = 10_000;
+const BIG_ACCOUNT_MIN_SCORE     = 10; // バイラル枠(50)より大幅に緩める
 
 // === エンゲージメントスコア ===
 
@@ -172,16 +178,20 @@ async function searchRecentTweets(client, query, maxResults = 100, days = 2) {
 // === Phase 1: Scout ===
 
 async function scoutViralPosts(client, opts) {
+  const bigAccountsOnly = opts.bigAccountsOnly || false;
+  const minFollowers = opts.minFollowers > 0 ? opts.minFollowers : BIG_ACCOUNT_MIN_FOLLOWERS;
+
   const targetAxes = opts.axis ? [opts.axis] : Object.keys(AXIS_QUERIES);
-  const allPosts = [];
-  const seenIds = new Set();
+  const globalSeenIds = new Set(); // 全軸・全クエリ横断の重複除去
+
+  // 全候補を1回のAPI呼び出しで収集（バイラル枠・ビッグアカウント枠を共用）
+  const candidatesByAxis = {};
 
   for (const axis of targetAxes) {
     const queries = AXIS_QUERIES[axis];
-    const target = AXIS_TARGETS[axis] || 10;
-    const axisPosts = [];
+    const axisAll = [];
 
-    console.log(`\n[${axis}] 検索開始（目標: ${target}件）...`);
+    console.log(`\n[${axis}] 検索開始（軸全候補収集）...`);
 
     for (const query of queries) {
       try {
@@ -189,17 +199,15 @@ async function scoutViralPosts(client, opts) {
         let added = 0;
 
         for (const tweet of tweets) {
-          if (seenIds.has(tweet.id)) continue;
-          if (tweet.metrics.engagementScore < opts.minScore) continue;
-          // 自分のアカウントを除外
+          if (globalSeenIds.has(tweet.id)) continue;
           if (tweet.authorUsername === "camp_gear_lab") continue;
 
-          seenIds.add(tweet.id);
-          axisPosts.push({ ...tweet, axis });
+          globalSeenIds.add(tweet.id);
+          axisAll.push({ ...tweet, axis });
           added++;
         }
 
-        console.log(`  「${query.slice(0, 50)}...」→ ${tweets.length}件取得, ${added}件採用`);
+        console.log(`  「${query.slice(0, 50)}...」→ ${tweets.length}件取得, ${added}件追加`);
 
         // レート制限対策（1.5秒間隔）
         await new Promise((r) => setTimeout(r, 1500));
@@ -217,16 +225,56 @@ async function scoutViralPosts(client, opts) {
       }
     }
 
-    // エンゲージメント順にソートして目標件数まで絞る
-    axisPosts.sort((a, b) => b.metrics.engagementScore - a.metrics.engagementScore);
-    const selected = axisPosts.slice(0, target);
-    allPosts.push(...selected);
-
-    console.log(`  [${axis}] 結果: ${axisPosts.length}件中 ${selected.length}件を採用（top engagement: ${selected[0]?.metrics.engagementScore || 0}）`);
+    candidatesByAxis[axis] = axisAll;
+    console.log(`  [${axis}] 候補収集完了: ${axisAll.length}件`);
   }
 
-  // 全体をエンゲージメント順に再ソート
-  allPosts.sort((a, b) => b.metrics.engagementScore - a.metrics.engagementScore);
+  // Pass 1: バイラル枠（エンゲージメントスコア >= minScore、フォロワー制限なし）
+  const viralSelected = [];
+  const viralIds = new Set();
+
+  if (!bigAccountsOnly) {
+    console.log("\n[Pass 1] バイラル枠 選定中...");
+    for (const axis of targetAxes) {
+      const target = VIRAL_TARGETS[axis] || 5;
+      const selected = (candidatesByAxis[axis] || [])
+        .filter((t) => t.metrics.engagementScore >= opts.minScore)
+        .sort((a, b) => b.metrics.engagementScore - a.metrics.engagementScore)
+        .slice(0, target)
+        .map((t) => ({ ...t, slotType: "viral" }));
+
+      for (const p of selected) viralIds.add(p.id);
+      viralSelected.push(...selected);
+      console.log(`  [${axis}] バイラル枠: ${selected.length}/${target}件採用（スコア>=${opts.minScore}）`);
+    }
+  }
+
+  // Pass 2: ビッグアカウント枠（フォロワー >= minFollowers、スコア >= BIG_ACCOUNT_MIN_SCORE）
+  console.log(`\n[Pass 2] ビッグアカウント枠 選定中（フォロワー>=${minFollowers.toLocaleString()}）...`);
+  const bigSelected = [];
+
+  for (const axis of targetAxes) {
+    const target = BIG_ACCOUNT_TARGETS[axis] || 2;
+    const selected = (candidatesByAxis[axis] || [])
+      .filter(
+        (t) =>
+          !viralIds.has(t.id) &&
+          t.authorFollowers >= minFollowers &&
+          t.metrics.engagementScore >= BIG_ACCOUNT_MIN_SCORE
+      )
+      .sort((a, b) => b.authorFollowers - a.authorFollowers) // フォロワー数降順
+      .slice(0, target)
+      .map((t) => ({ ...t, slotType: "big_account" }));
+
+    bigSelected.push(...selected);
+    const topFollowers = selected[0]?.authorFollowers?.toLocaleString() || "–";
+    console.log(`  [${axis}] ビッグアカウント枠: ${selected.length}/${target}件採用（top followers: ${topFollowers}）`);
+  }
+
+  const allPosts = [...viralSelected, ...bigSelected];
+  console.log(
+    `\n[Scout 完了] バイラル枠: ${viralSelected.length}件 / ビッグアカウント枠: ${bigSelected.length}件 / 合計: ${allPosts.length}件`
+  );
   return allPosts.slice(0, opts.count);
 }
 
@@ -713,6 +761,7 @@ async function runViralScout(opts) {
       authorName: p.authorName,
       authorFollowers: p.authorFollowers,
       axis: p.axis,
+      slotType: p.slotType || "viral",
       text: p.text,
       createdAt: p.createdAt,
       metrics: p.metrics,
