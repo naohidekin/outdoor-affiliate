@@ -1,11 +1,11 @@
 {
-  "updatedAt": "2026-05-08T01:00:07.866Z",
+  "updatedAt": "2026-05-09T01:00:08.363Z",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 73,
+      "pv7d": 72,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -19,6 +19,13 @@
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
+      "pv7d": 15,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "backpack-ranking",
+      "categoryId": "backpack",
       "pv7d": 14,
       "clicks7d": 0,
       "ctr": 0
@@ -33,20 +40,6 @@
     {
       "slug": "led-tent-light-ranking",
       "categoryId": "light",
-      "pv7d": 6,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "spring-camp-clothing-guide",
-      "categoryId": "wear",
-      "pv7d": 6,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gw-camp-guide-2026",
-      "categoryId": "tent",
       "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
@@ -59,16 +52,16 @@
       "ctr": 0
     },
     {
-      "slug": "growler-comparison-summer-ice",
-      "categoryId": "cooler",
+      "slug": "spring-camp-clothing-guide",
+      "categoryId": "wear",
       "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "backpack-ranking",
-      "categoryId": "backpack",
-      "pv7d": 5,
+      "slug": "gw-camp-guide-2026",
+      "categoryId": "tent",
+      "pv7d": 4,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -141,39 +134,46 @@
       "pv7d": 1,
       "clicks7d": 0,
       "ctr": 0
+    },
+    {
+      "slug": "multi-burner-ranking",
+      "categoryId": "burner",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 115,
+      "pv7d": 113,
       "clicks7d": 0,
-      "searchSessions": 90,
+      "searchSessions": 86,
       "trend": "active"
     },
     {
       "categoryId": "cooler",
-      "pv7d": 19,
+      "pv7d": 15,
       "clicks7d": 0,
-      "searchSessions": 9,
+      "searchSessions": 10,
+      "trend": "active"
+    },
+    {
+      "categoryId": "backpack",
+      "pv7d": 14,
+      "clicks7d": 0,
+      "searchSessions": 1,
       "trend": "active"
     },
     {
       "categoryId": "wear",
-      "pv7d": 9,
+      "pv7d": 8,
       "clicks7d": 0,
       "searchSessions": 3,
       "trend": "low"
     },
     {
       "categoryId": "light",
-      "pv7d": 6,
-      "clicks7d": 0,
-      "searchSessions": 2,
-      "trend": "low"
-    },
-    {
-      "categoryId": "backpack",
       "pv7d": 5,
       "clicks7d": 0,
       "searchSessions": 1,
@@ -205,6 +205,13 @@
       "pv7d": 1,
       "clicks7d": 0,
       "searchSessions": 0,
+      "trend": "low"
+    },
+    {
+      "categoryId": "burner",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "searchSessions": 2,
       "trend": "low"
     }
   ],

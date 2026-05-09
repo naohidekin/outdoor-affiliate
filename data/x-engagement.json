@@ -1,8 +1,166 @@
 {
-  "lastUpdated": "2026-05-07T13:00:07.432Z",
-  "recentMetrics": [],
-  "topPosts": [],
+  "lastUpdated": "2026-05-08T22:00:06.017Z",
+  "recentMetrics": [
+    {
+      "tweetId": "2052690006456856618",
+      "postType": "parenting_outdoor",
+      "postedAt": "2026-05-08T10:00:08.148Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052690006456856618",
+      "textPreview": "息子（小3）が焚き火を初体験した時の話。「火って生きてるの？」と真剣に聞いてきました。薪をくべると大きくなって、水をかけると小さくなるのを見て、本当に不思議そう",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 28,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 3
+    },
+    {
+      "tweetId": "2052523948307595505",
+      "postType": "failure_story",
+      "postedAt": "2026-05-07T23:00:16.913Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052523948307595505",
+      "textPreview": "息子8歳のキャンプデビュー時、張り切って「パパすごいでしょ」とドヤ顔でテント設営。完璧に立てて満足していたら、息子が「パパ、これ逆さまじゃない？」と一言。\n\nよ",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 32,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 7
+    },
+    {
+      "tweetId": "2052327610815033831",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-07T10:00:06.065Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052327610815033831",
+      "textPreview": "ガスカートリッジの残量、振って音で判断してませんか？実は重さで測るのが正確です。新品時の重量から現在の重量を引くと、使用量が分かります。250g缶なら新品時約3",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 23,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 5
+    },
+    {
+      "tweetId": "2051969767792341412",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T10:18:09.948Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051969767792341412",
+      "textPreview": "【ブクマ推奨】テントの乾燥、3つの優先度順位です。①フロアシート（カビやすい）②フライシート裏面（結露水分）③インナーテント（最後でOK）。僕は以前、見た目が乾",
+      "likes": 4,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 79,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 9
+    },
+    {
+      "tweetId": "2051834865151320520",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T01:22:07.528Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051834865151320520",
+      "textPreview": "【保存版】テント設営の時短術、慣れても意外と見落とすポイントです。①ペグを打つ前にテント全体を仮置きして向きを確認②風向きを見てフライシートの入口を決める③ガイ",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 57,
+      "linkClicks": 0,
+      "userProfileClicks": 2,
+      "engagementScore": 7
+    }
+  ],
+  "topPosts": [
+    {
+      "tweetId": "2051969767792341412",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T10:18:09.948Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051969767792341412",
+      "textPreview": "【ブクマ推奨】テントの乾燥、3つの優先度順位です。①フロアシート（カビやすい）②フライシート裏面（結露水分）③インナーテント（最後でOK）。僕は以前、見た目が乾",
+      "likes": 4,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 79,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 9
+    },
+    {
+      "tweetId": "2052523948307595505",
+      "postType": "failure_story",
+      "postedAt": "2026-05-07T23:00:16.913Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052523948307595505",
+      "textPreview": "息子8歳のキャンプデビュー時、張り切って「パパすごいでしょ」とドヤ顔でテント設営。完璧に立てて満足していたら、息子が「パパ、これ逆さまじゃない？」と一言。\n\nよ",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 32,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 7
+    },
+    {
+      "tweetId": "2051834865151320520",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T01:22:07.528Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051834865151320520",
+      "textPreview": "【保存版】テント設営の時短術、慣れても意外と見落とすポイントです。①ペグを打つ前にテント全体を仮置きして向きを確認②風向きを見てフライシートの入口を決める③ガイ",
+      "likes": 3,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 57,
+      "linkClicks": 0,
+      "userProfileClicks": 2,
+      "engagementScore": 7
+    },
+    {
+      "tweetId": "2052327610815033831",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-07T10:00:06.065Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052327610815033831",
+      "textPreview": "ガスカートリッジの残量、振って音で判断してませんか？実は重さで測るのが正確です。新品時の重量から現在の重量を引くと、使用量が分かります。250g缶なら新品時約3",
+      "likes": 2,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 23,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 5
+    },
+    {
+      "tweetId": "2052690006456856618",
+      "postType": "parenting_outdoor",
+      "postedAt": "2026-05-08T10:00:08.148Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052690006456856618",
+      "textPreview": "息子（小3）が焚き火を初体験した時の話。「火って生きてるの？」と真剣に聞いてきました。薪をくべると大きくなって、水をかけると小さくなるのを見て、本当に不思議そう",
+      "likes": 1,
+      "retweets": 0,
+      "replies": 1,
+      "bookmarks": 0,
+      "impressions": 28,
+      "linkClicks": 0,
+      "userProfileClicks": 0,
+      "engagementScore": 3
+    }
+  ],
   "replyDigest": [
+    {
+      "tweetId": "2052570381714907452",
+      "text": "@camp_gear_lab @yousu86 本当にその通りですよね！私も最初はなくてもいいかなって思ってたのに、一度使うと手放せなくなっちゃいました。キャンプの必需品、すごく共感します✨🏕️",
+      "createdAt": "2026-05-08T02:04:48.000Z",
+      "conversationId": "2052155256633741476"
+    },
     {
       "tweetId": "2052357728400810221",
       "text": "@camp_gear_lab これが一番わかりやすいんじゃないですか･･･🥺",
@@ -110,12 +268,6 @@
       "text": "@camp_gear_lab @mi_yu_ns お邪魔します。\n「ナースのお仕事」みたいに、「ポテト娘〜！」「あ、じゃがいもセンパ〜イ！」みたいになってたら楽しいですねw",
       "createdAt": "2026-05-03T01:55:44.000Z",
       "conversationId": "2050185969073070359"
-    },
-    {
-      "tweetId": "2050719594114130032",
-      "text": "@camp_gear_lab 遅くなってしまいましたが、フォローさせていただきました！楽天の田草川と申します。今後たくさんやり取りさせていただけたら嬉しいです。何卒よろしくお願いいたします。",
-      "createdAt": "2026-05-02T23:30:26.000Z",
-      "conversationId": "2050716804285354340"
     }
   ]
 }

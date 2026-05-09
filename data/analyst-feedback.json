@@ -40,8 +40,8 @@
   },
   "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
   "writerHints": [
+    "[2026-05-08] outdoor_tipが高エンゲージ(avg score: 7)。このタイプの構成を優先すること。",
     "高スコアパターン: product_compare, seasonal_start",
-    "NG率が高いタイプ: outdoor_tip, failure_story, doc_health_tip — 表現を見直す",
     "X経由PVが高い記事を article_promo で優先的に紹介する",
     "直近トップ投稿: [article_promo]「焚き火台3台買い替えた人間の結論\n\n1台目：軽さ重視→薪が落ちる\n2台目：頑丈系→重すぎて車から出すの億劫\n3台目：やっ」(♥4 🔖0) → 似た切り口を再活用",
     "読者の反応/質問: @camp_gear_lab まずは増やすこと大事ですよね(๑•̀ㅂ•́)و✧ | @camp_gear_lab ありがとうございます！！笑 | @camp_gear_lab ギア男さん！🥹ありがとうございます‼️\n大台突破目指して、頑張ります🥹‼️"
@@ -289,5 +289,36 @@
     "weakPatterns": [],
     "totalAnalyzed": 41
   },
-  "writerDirectives": []
+  "writerDirectives": [],
+  "performanceStats": {
+    "2026-05-08": {
+      "outdoor_tip": {
+        "count": 3,
+        "avgImpressions": 53,
+        "avgLikes": 3,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 7
+      },
+      "failure_story": {
+        "count": 1,
+        "avgImpressions": 32,
+        "avgLikes": 3,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 7
+      },
+      "parenting_outdoor": {
+        "count": 1,
+        "avgImpressions": 28,
+        "avgLikes": 1,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 3
+      }
+    }
+  }
 }

@@ -1,0 +1,136 @@
+{
+  "date": "2026-05-08",
+  "analyzedDays": 7,
+  "totalPosts": 6,
+  "metricsAvailable": 5,
+  "byType": {
+    "outdoor_tip": {
+      "count": 3,
+      "avgImpressions": 53,
+      "avgLikes": 3,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 7
+    },
+    "failure_story": {
+      "count": 1,
+      "avgImpressions": 32,
+      "avgLikes": 3,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 7
+    },
+    "parenting_outdoor": {
+      "count": 1,
+      "avgImpressions": 28,
+      "avgLikes": 1,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 3
+    }
+  },
+  "mediaEffect": {
+    "withMedia": {
+      "count": 4,
+      "avgEngagement": 6,
+      "avgImpressions": 41
+    },
+    "noMedia": {
+      "count": 1,
+      "avgEngagement": 7,
+      "avgImpressions": 57
+    }
+  },
+  "posts": [
+    {
+      "tweetId": "2050515941084287340",
+      "postType": "ai_dev_log",
+      "postedAt": "2026-05-02T10:01:11.402Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2050515941084287340",
+      "metrics": null
+    },
+    {
+      "tweetId": "2051834865151320520",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T01:22:07.528Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051834865151320520",
+      "metrics": {
+        "likes": 3,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 57,
+        "linkClicks": 0,
+        "userProfileClicks": 2,
+        "engagementScore": 7
+      }
+    },
+    {
+      "tweetId": "2051969767792341412",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T10:18:09.948Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051969767792341412",
+      "metrics": {
+        "likes": 4,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 79,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 9
+      }
+    },
+    {
+      "tweetId": "2052327610815033831",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-07T10:00:06.065Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052327610815033831",
+      "metrics": {
+        "likes": 2,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 23,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 5
+      }
+    },
+    {
+      "tweetId": "2052523948307595505",
+      "postType": "failure_story",
+      "postedAt": "2026-05-07T23:00:16.913Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052523948307595505",
+      "metrics": {
+        "likes": 3,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 32,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 7
+      }
+    },
+    {
+      "tweetId": "2052690006456856618",
+      "postType": "parenting_outdoor",
+      "postedAt": "2026-05-08T10:00:08.148Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052690006456856618",
+      "metrics": {
+        "likes": 1,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 28,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 3
+      }
+    }
+  ]
+}
