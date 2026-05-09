@@ -189,6 +189,7 @@ export default function ViralScoutPage() {
   const [loading, setLoading] = useState(true);
   const [scouting, setScouting] = useState(false);
   const [scoutLog, setScoutLog] = useState("");
+  const [scoutError, setScoutError] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -210,6 +211,7 @@ export default function ViralScoutPage() {
   async function runScout() {
     if (scouting) return;
     setScouting(true);
+    setScoutError(false);
     setScoutLog("スカウト実行中... (数分かかります)");
     try {
       const res = await fetch("/api/viral-scout", {
@@ -219,7 +221,8 @@ export default function ViralScoutPage() {
       });
       const data = await res.json();
       if (!data.ok) {
-        setScoutLog(`エラー: ${data.error || "不明"}`);
+        setScoutError(true);
+        setScoutLog(data.error || "不明なエラー");
         setScouting(false);
         return;
       }
@@ -236,7 +239,8 @@ export default function ViralScoutPage() {
       setTimeout(() => setScoutLog(""), 3000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setScoutLog(`エラー: ${msg}`);
+      setScoutError(true);
+      setScoutLog(msg);
       setScouting(false);
     }
   }
@@ -390,7 +394,10 @@ export default function ViralScoutPage() {
         </button>
       </div>
       {scoutLog && (
-        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${scouting ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"}`}>
+        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
+          scoutError ? "bg-red-50 text-red-700" :
+          scouting ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"
+        }`}>
           {scoutLog}
         </div>
       )}

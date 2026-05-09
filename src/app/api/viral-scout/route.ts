@@ -118,6 +118,14 @@ export async function DELETE(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // 本番（Vercel）ではタイムアウト・/tmp制限のためスカウト実行不可
+  if (process.env.VERCEL) {
+    return NextResponse.json({
+      ok: false,
+      error: "本番環境ではスカウトを実行できません。ローカルの launchd（毎日 07:30）で自動実行されます。",
+    }, { status: 400 });
+  }
+
   // 既に実行中なら弾く
   if (fs.existsSync(LOCK_PATH)) {
     const lockAge = Date.now() - fs.statSync(LOCK_PATH).mtimeMs;
