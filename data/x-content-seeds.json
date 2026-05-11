@@ -204,8 +204,8 @@
         9,
         10
       ],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-11",
       "hint": "テント選びで最初に重視すべきは？①広さ②設営の簡単さ③耐水圧④ブランド"
     },
     {
@@ -1043,8 +1043,8 @@
         8,
         9
       ],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-11",
       "hint": "テント内に水たまり。設営場所の微妙な傾斜を見抜けなかった後悔"
     },
     {
@@ -1159,8 +1159,8 @@
         8,
         9
       ],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-11",
       "hint": "ブヨに足首を10箇所刺されて2週間腫れた。長靴下の大事さを学んだ夏"
     },
     {
@@ -4661,8 +4661,8 @@
         9,
         10
       ],
-      "used_count": 1,
-      "last_used": "2026-04-13",
+      "used_count": 2,
+      "last_used": "2026-05-11",
       "hint": "子連れキャンプ何歳からがベスト？①2歳②3歳③5歳④小学生から"
     },
     {
@@ -8016,6 +8016,3384 @@
       "last_used": "2026-04-24",
       "addedAt": "2026-04-22",
       "freshUntil": "2026-05-22",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-9z33",
+      "axis": "doctor",
+      "theme": "seasonal_illness",
+      "angle": "具体的な栄養素",
+      "types": [
+        "health_tip",
+        "prevention_guide"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "夏バテ対策の栄養素3つ：①ビタミンB1（糖質をエネルギーに変換）②ビタミンC（ストレスで消耗される）③アリシン（ニンニク・ネギ類、B1の吸収を助ける）。5月から始める体づくりが重要。",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Evw3pOsUpt4",
+        "XBUQSz4QyWE",
+        "2TXrWop7qRg"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-3wk3",
+      "axis": "doctor",
+      "theme": "seasonal_illness",
+      "angle": "季節別感染症カレンダー",
+      "types": [
+        "medical_knowledge",
+        "prevention_guide"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "感染症の季節パターン：春→はしか、夏→プール熱・手足口病、秋→マイコプラズマ肺炎、冬→インフルエンザ・ノロ。流行時期を知っておくと予防に役立つ医師の豆知識。",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Evw3pOsUpt4",
+        "XBUQSz4QyWE",
+        "2TXrWop7qRg"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-njfd",
+      "axis": "doctor",
+      "theme": "seasonal_illness",
+      "angle": "バテ症状チェックリスト",
+      "types": [
+        "health_checklist",
+        "self_diagnosis"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "夏バテの症状7つ：①寝ても疲れが取れない②眠気③立ちくらみ④イライラ⑤食欲不振⑥体のだるさ⑦下痢・便秘を繰り返す。5月のうちから要注意。当てはまる数で判定できる。",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Evw3pOsUpt4",
+        "XBUQSz4QyWE",
+        "2TXrWop7qRg"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-vysc",
+      "axis": "doctor",
+      "theme": "seasonal_illness",
+      "angle": "意外な事実",
+      "types": [
+        "medical_knowledge",
+        "trivia"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "冬にウイルス感染が多い理由：空気の乾燥でウイルスが空中に長時間漂う＋気温低下で免疫力低下＋鼻・喉の粘膜乾燥でバリア機能低下。3つの条件が重なる医学的根拠。",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Evw3pOsUpt4",
+        "XBUQSz4QyWE",
+        "2TXrWop7qRg"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-o3oy",
+      "axis": "doctor",
+      "theme": "日焼け止め選び",
+      "angle": "豆知識・医学的根拠",
+      "types": [
+        "medical_knowledge",
+        "gear_selection"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "【皮膚科医が教える】日焼け止めをSPFだけで選ぶのはNG！実は「色付き日焼け止め」が最強な理由とは？可視光線（400-450nm）による色素沈着リスクを酸化鉄が防ぐメカニズム",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "lLQtVGZLRv8",
+        "vAZDGcEjPyo",
+        "nydgr2uLF2U"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-0l5n",
+      "axis": "doctor",
+      "theme": "アウトドア用日焼け止め",
+      "angle": "重ね塗りテクニック",
+      "types": [
+        "outdoor_tip",
+        "skincare_method"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "【5月から始める紫外線対策】アウトドアでは「二層式日焼け止め」が鉄則！スキンケア→SPF50日焼け止め→化粧下地の順番で重ねる理由と効果的な塗り方",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "lLQtVGZLRv8",
+        "vAZDGcEjPyo",
+        "nydgr2uLF2U"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-sc6l",
+      "axis": "doctor",
+      "theme": "敏感肌向け日焼け止め",
+      "angle": "比較・選び方",
+      "types": [
+        "gear_comparison",
+        "medical_advice"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "【敏感肌×アウトドア】皮膚科医推奨の日焼け止め7選！紫外線吸収剤不使用で石鹸で落とせるタイプ vs 耐水性重視タイプの使い分け方法",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "lLQtVGZLRv8",
+        "vAZDGcEjPyo",
+        "nydgr2uLF2U"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-q2sd",
+      "axis": "doctor",
+      "theme": "日焼け止め塗り直し",
+      "angle": "実用テクニック",
+      "types": [
+        "outdoor_tip",
+        "maintenance_method"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "【アウトドア中の塗り直し問題解決】パウダー日焼け止め×スプレータイプの使い分けマニュアル。メイクの上から2時間おきに塗り直せる最強コンビ",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "lLQtVGZLRv8",
+        "vAZDGcEjPyo",
+        "nydgr2uLF2U"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-9s3z",
+      "axis": "doctor",
+      "theme": "キャンプ場選び",
+      "angle": "注意点・チェックリスト",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "無料キャンプ場の落とし穴：霞の森公園は駐車場近くでアクセス良好、水洗トイレも綺麗だが水場なし。事前の水場確認は必須チェック項目",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "bZABaIapp8g",
+        "Jm_zGTTWIGQ",
+        "DD9dZ2N4-Gw"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-hmpl",
+      "axis": "doctor",
+      "theme": "特殊食材",
+      "angle": "コスパ・豆知識",
+      "types": [
+        "gear_thread",
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "オーストラリア産養殖ワニ肉：手5本で3500円、高タンパクで鶏胸肉に近い食感。BBQのサプライズ食材として話題性抜群だが日常使いは厳しいコスパ",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "bZABaIapp8g",
+        "Jm_zGTTWIGQ",
+        "DD9dZ2N4-Gw"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-n5h6",
+      "axis": "doctor",
+      "theme": "キャンプ料理",
+      "angle": "失敗談・注意点",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "特殊肉のBBQ失敗談：ワニ肉は見た目のインパクト大だが、生臭さと独特の食感で子供ウケ×。家族キャンプでのチャレンジ系食材は事前リサーチ必須",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "bZABaIapp8g",
+        "Jm_zGTTWIGQ",
+        "DD9dZ2N4-Gw"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-ws0r",
+      "axis": "doctor",
+      "theme": "日焼け対策",
+      "angle": "コスパ・段階的導入",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "春山の日焼け対策、実は1万円で完結。帽子4700円+ネックガード1900円+レッグカバー3410円のスターター3点で「頭から足まで焼けやすい露出をかなり減らせる」。全部いきなり揃えなくてOK",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "HPfKV-AQtXs",
+        "aPnIjSWm4vY",
+        "oR-gQw4vHwk"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-a88p",
+      "axis": "doctor",
+      "theme": "日焼け対策",
+      "angle": "豆知識・失敗あるある",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "山の日焼けが厄介な理由「暑い＝焼けている」が一致しない。曇りでも紫外線あり、稜線の風で涼しく感じて焼けてる実感が鈍る→帰宅後に「やばい」となりがち。焼ける前提で先に露出を減らすのが正解",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "HPfKV-AQtXs",
+        "aPnIjSWm4vY",
+        "oR-gQw4vHwk"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-kbh7",
+      "axis": "doctor",
+      "theme": "日焼け対策",
+      "angle": "豆知識・数値比較",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "UPF50の正しい理解。「20分で日焼けする人が16時間（20×50倍）に延ばせる」という意味で、焼けないわけではない。登山で日中ずっと紫外線を浴びる人は日焼け止め併用が必須。UPF神話に注意",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "HPfKV-AQtXs",
+        "aPnIjSWm4vY",
+        "oR-gQw4vHwk"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-ra61",
+      "axis": "doctor",
+      "theme": "日焼け対策",
+      "angle": "素材比較・豆知識",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "意外と知らない生地のUVカット率。ポリエステル90%以上、リネン・コットンは50-60%程度。普通の服でもポリエステルなら結構防げる。特殊加工でさらにUP。素材選びで日焼け対策レベルが変わる",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "HPfKV-AQtXs",
+        "aPnIjSWm4vY",
+        "oR-gQw4vHwk"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-5xni",
+      "axis": "doctor",
+      "theme": "登山ギア",
+      "angle": "重量・スペック比較",
+      "types": [
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "モンベル新作カーボンポール125g vs アルミ150g（25g軽量化）vs 激安ヒーリング128g。継数の違い（4本vs5本）、継目カーボン厚（1.5mm vs 1mm）で強度差。価格と安全性のトレードオフ検証",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "HPfKV-AQtXs",
+        "aPnIjSWm4vY",
+        "oR-gQw4vHwk"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-716p",
+      "axis": "camp",
+      "theme": "バッテリー",
+      "angle": "安全性・温度対応",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "車載用ジャンプスターター選び方：リチウム電池は-10℃まで、ナトリウムイオン電池なら-40℃〜80℃対応。夏の車内放置もOK",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Dmc18adICFY",
+        "Sqj8KLRN4LQ",
+        "sttG7AQ2uKI"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-u4d7",
+      "axis": "camp",
+      "theme": "クーラーボックス",
+      "angle": "コスパ・価格破壊",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "6面真空パネルクーラーボックスが1万円切り：12L→8,800円、34L→15,800円。日本シェア1位メーカーの新作",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Dmc18adICFY",
+        "Sqj8KLRN4LQ",
+        "sttG7AQ2uKI"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-3lxx",
+      "axis": "camp",
+      "theme": "焚き火台",
+      "angle": "多機能・オーブン機能",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "上で焚き火、下でピザが焼けるオーブン一体型焚き火台。トヨタエンジン部品メーカーが作る異色ギア",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Dmc18adICFY",
+        "Sqj8KLRN4LQ",
+        "sttG7AQ2uKI"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-9okg",
+      "axis": "camp",
+      "theme": "テント",
+      "angle": "セール・コスパ",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "楽天最大69%オフセール情報：DODワンポールテント55%オフで6,680円、大型タープテント69%オフ",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Dmc18adICFY",
+        "Sqj8KLRN4LQ",
+        "sttG7AQ2uKI"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-1p2m",
+      "axis": "camp",
+      "theme": "コット",
+      "angle": "サイズ・快適性",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "コットテント選びのポイント：一般的なコット幅60-70cm、快適性重視なら80cm幅を選ぶべし",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "Dmc18adICFY",
+        "Sqj8KLRN4LQ",
+        "sttG7AQ2uKI"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-allf",
+      "axis": "camp",
+      "theme": "100均キャンプギア",
+      "angle": "コスパ",
+      "types": [
+        "outdoor_tip",
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "hint": "ダイソーの充電式センサー付きヘッドライト500円、手をかざすだけでON/OFF、USB-C充電対応。「100均のレベルじゃない」神ギア",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "qu0SUXOtOwo",
+        "1QEioYs7-8c",
+        "WCGx03A5N6I"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-l8o6",
+      "axis": "camp",
+      "theme": "焚き火",
+      "angle": "あるある",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "セリアのファイヤースターター、マッチ感覚で使えて燃焼5分、5本入り110円。ただし折れやすいのでライターと併用が安心",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "qu0SUXOtOwo",
+        "1QEioYs7-8c",
+        "WCGx03A5N6I"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-bck7",
+      "axis": "camp",
+      "theme": "キャンプ収納",
+      "angle": "豆知識",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "hint": "セリアのバックルボックスで細かいギア管理。調味料・焚き火道具・電池を用途別に分けて入れておくと現地で「あれどこ？」がなくなる",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "qu0SUXOtOwo",
+        "1QEioYs7-8c",
+        "WCGx03A5N6I"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-f8e8",
+      "axis": "camp",
+      "theme": "IGTテーブル",
+      "angle": "比較",
+      "types": [
+        "gear_thread"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "コメリのアウトドアシステムテーブル5kg、高さ43.5-53cm調整可能。IGT規格対応でストーブ組み込み可、拡張天板で作業スペース倍増",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "qu0SUXOtOwo",
+        "1QEioYs7-8c",
+        "WCGx03A5N6I"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-g2bw",
+      "axis": "camp",
+      "theme": "調味料",
+      "angle": "あるある",
+      "types": [
+        "outdoor_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "キャンプに調味料そのまま持参は「にぎつ無駄」。セリアのシーズニングボトル15-60mlで必要分だけ小分け、液漏れしにくいパッキン付き",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "qu0SUXOtOwo",
+        "1QEioYs7-8c",
+        "WCGx03A5N6I"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-vujr",
+      "axis": "ai",
+      "theme": "AI開発コスパ",
+      "angle": "価格性能比較",
+      "types": [
+        "ai_tip",
+        "cost_comparison"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "DeepSeek R1：671億パラメータなのに推論時は37億だけ活性化でコスト激安。しかもMITライセンスで商用利用無料という衝撃",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "oyIsW19uU5M",
+        "bn-FQwSUh_A",
+        "tngeIp9ITlY"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-nuf3",
+      "axis": "ai",
+      "theme": "AIツール評価基準",
+      "angle": "選び方チェックリスト",
+      "types": [
+        "ai_tip",
+        "selection_guide"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "AIツール選びの5つの指標：①性能（ベンチマーク）②ユーザー規模③実用性（対応タスク幅）④コスパ⑤独自性。100点満点で数値化すると失敗しない",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "oyIsW19uU5M",
+        "bn-FQwSUh_A",
+        "tngeIp9ITlY"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-sk2c",
+      "axis": "ai",
+      "theme": "資料作成自動化",
+      "angle": "時短ワークフロー",
+      "types": [
+        "ai_workflow",
+        "productivity_tip"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "資料作成を10分で終わらせる黄金パターン：①ChatGPTで構成案作成→②イルシルでデザイン自動生成→③人間が最終チェック。数時間→10分の革命",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "oyIsW19uU5M",
+        "bn-FQwSUh_A",
+        "tngeIp9ITlY"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "yt-20260511-qgay",
+      "axis": "ai",
+      "theme": "AIハルシネーション対策",
+      "angle": "精度向上テクニック",
+      "types": [
+        "ai_tip",
+        "accuracy_improvement"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "NotebookLMが最強な理由：アップした資料だけを元に回答するからハルシネーション激減。ネットから適当に持ってこない安心感",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "oyIsW19uU5M",
+        "bn-FQwSUh_A",
+        "tngeIp9ITlY"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "yt-20260511-9uax",
+      "axis": "ai",
+      "theme": "Microsoft Copilot",
+      "angle": "コスパ問題",
+      "types": [
+        "ai_tool_review",
+        "cost_analysis"
+      ],
+      "season": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "used_count": 0,
+      "last_used": null,
+      "hint": "Microsoft Copilot：月30ドル+Office365ライセンス必要でコスパ最悪。単体AIとしては弱いのに統合力だけで7位の現実",
+      "source": "youtube",
+      "sourceVideoIds": [
+        "oyIsW19uU5M",
+        "bn-FQwSUh_A",
+        "tngeIp9ITlY"
+      ],
+      "fetchedAt": "2026-05-11",
+      "freshUntil": "2026-08-09",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457722494-k82",
+      "source": "brave",
+      "theme": "チタン製クッカーの用途拡大",
+      "angle": "既成概念の打破",
+      "hint": "「チタン=湯沸かし専用」というイメージを覆す軽量クッカーの調理性能。登山・キャンプでの活躍シーンを具体的に紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457722495-bz0",
+      "source": "brave",
+      "theme": "SOTO2026年新作6連発",
+      "angle": "注目新商品の先取り情報",
+      "hint": "初回数量限定セットなど買い足し案件になる新作の紹介。4月17日発売予定という時間軸もニュース性がある",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457722495-4lj",
+      "source": "brave",
+      "theme": "イワタニ『イザまる』の1台2役機能",
+      "angle": "防災×キャンプの多機能性",
+      "hint": "カセットこんろとストーブの兼用モデル。非常時の活躍と普段使いのデュアルユーティリティを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457726193-txt",
+      "source": "brave",
+      "theme": "スノーピーク焚火台Lの長期使用レビュー",
+      "angle": "2年愛用してわかった良い点・悪い点",
+      "hint": "定番ギアの現実的なメリット・デメリットを具体的に紹介。信頼度の高い長期レビュー",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457726194-p0j",
+      "source": "brave",
+      "theme": "2025年バズったキャンプギアTOP10",
+      "angle": "ページ閲覧数ベースの流行アイテムランキング",
+      "hint": "今トレンドのギアを一気チェック。年始のキャンプ準備計画に最適なコンテンツ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457726194-err",
+      "source": "brave",
+      "theme": "DODエアボーンテントの爆速設営体験",
+      "angle": "革新的なエアテント技術による時間短縮の実感",
+      "hint": "設営時間の短縮というキャンパーの悩みを解決する最新ギア。実用性で判断",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457731520-0fr",
+      "source": "brave",
+      "theme": "デイキャンプからのステップアップ戦略",
+      "angle": "初心者向けの段階的アプローチ",
+      "hint": "泊まりキャンプのハードルが高い家族向けに、デイキャンプから始めるメリットと実践方法を紹介。心理的な準備段階の重要性をアピール",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457731520-43i",
+      "source": "brave",
+      "theme": "車への積載テクニック＆収納術",
+      "angle": "ファミリーキャンプの実務的な困り事解決",
+      "hint": "キャンプギアと家族の荷物をスマートに詰める工夫。「あるあるの積み込みミス」から学ぶ実践的なコツを視覚的に紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457731520-im0",
+      "source": "brave",
+      "theme": "春秋シーズン選択の重要性",
+      "angle": "初心者が失敗しないための季節戦略",
+      "hint": "過ごしやすい気温の春秋をすすめる理由と、季節別の寝具選びなど。最適な時期の選択が成功率を大きく左右することを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457735872-jf0",
+      "source": "brave",
+      "theme": "ソロキャンプ初心者向け必須道具",
+      "angle": "最小限の道具で始める",
+      "hint": "初心者が揃えるべき8つの道具を厳選紹介。何から買えばいいか迷っている層への実践的なアドバイス",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457735872-qah",
+      "source": "brave",
+      "theme": "道具選びを通じたソロキャンプの楽しみ",
+      "angle": "自分好みのギア選択が趣味の一部",
+      "hint": "機能性だけでなく、自分のスタイルに合った道具を選ぶプロセス自体が醍醐味であることを強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457735872-d85",
+      "source": "brave",
+      "theme": "軽量・多用途ギアの活用",
+      "angle": "500g以下の道具でトレッキングにも対応",
+      "hint": "ソロキャンプだけでなく他のアウトドア活動にも流用できる汎用性の高いギア選びのコツ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457740339-baw",
+      "source": "brave",
+      "theme": "東京都内の穴場キャンプ場：城南島海浜公園キャンプ場",
+      "angle": "都市部での非日常体験",
+      "hint": "羽田空港の飛行機を眺めながらキャンプできる、東京都内唯一級のユニークなキャンプ場という珍しさをアピール。都市部在住者向け",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457740339-zx8",
+      "source": "brave",
+      "theme": "初心者向け穴場キャンプ場の選び方・手ぶらでOKの施設",
+      "angle": "キャンプ初心者の不安解消",
+      "hint": "山梨の体験型キャンプ場での『山菜採り・魚のつかみどり・そば打ち体験』など、手ぶらバーベキュー対応で、アウトドア初心者でも楽しめる工夫を紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457740339-h9l",
+      "source": "brave",
+      "theme": "穴場キャンプ場の最新トレンド：信越自然郷の隠れた施設",
+      "angle": "定番エリア外の新しい発見",
+      "hint": "首都圏から少し距離のある長野・新潟エリアの未開拓キャンプ場群。混雑回避と自然体験の両立を求める層へアプローチ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457745485-gge",
+      "source": "brave",
+      "theme": "Claude Codeの自動実行フロー",
+      "angle": "自然言語指示だけでコード実行まで自動化",
+      "hint": "従来のコーディングとの違いを強調。『ターミナルに指示→ファイル読込→コマンド実行→確認』までの一連の自動化が開発効率をどう変えるか、実例を交えて解説",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457745485-9go",
+      "source": "brave",
+      "theme": "Claude Codeの思考プロセス",
+      "angle": "『作らせる』から『考えさせる』へのパラダイムシフト",
+      "hint": "Anthropicの公式ドキュメントが示す使い方：単なるコード生成ではなく、要望を伝えてClaudeに『探索→計画→実装』させるアプローチ。開発者の役割の変化を論じる",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457745485-09s",
+      "source": "brave",
+      "theme": "Claude Codeの思考整理機能",
+      "angle": "曖昧なアイデアを具体的なアクションプランへ変換",
+      "hint": "雑なメモや箇条書き、音声入力を読ませるだけで整理・提案してくれる活用法。エンジニア以外の利用者にも価値がある使い方を紹介",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457750476-8df",
+      "source": "brave",
+      "theme": "生成AIドリブン開発のコスト最適化",
+      "angle": "個人開発者が生成AIを活用して低コストでサービス構築する方法",
+      "hint": "Next.jsやGoogle Colabなどの無料/低コストツール組み合わせで、従来の1/10のコストで開発できる実例紹介",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457750476-exc",
+      "source": "brave",
+      "theme": "個人開発の真の課題は『売る』にある",
+      "angle": "AIで『作る』は簡単になったが、マネタイズ・販路構築に課題が集中する現実",
+      "hint": "開発難易度の低下とビジネス難易度のギャップに着目し、起業志向の開発者への警告メッセージ",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457750476-1pj",
+      "source": "brave",
+      "theme": "生成AI時代の個人開発に必須のスキル",
+      "angle": "ゼロからモデル構築ではなく、ChatGPT/Claude/Gemini APIを使いこなすスキルシフト",
+      "hint": "OpenAI APIやHugging Faceの活用で、機械学習の専門知識がなくてもAI機能を組み込める時代への適応方法",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457756127-x93",
+      "source": "brave",
+      "theme": "自治体の業務効率化にAIが貢献",
+      "angle": "富山県の事例から学ぶ、バラバラな文書管理の課題解決",
+      "hint": "電子化したPDFや画像をAIに学習させることで、横断検索が可能に。資料特定までの時間を大幅短縮。行政DXの具体例として、自治体職員や市民の関心を引く内容",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457756128-tuc",
+      "source": "brave",
+      "theme": "ChatGPTが社内ナレッジシステムに組み込まれる時代へ",
+      "angle": "自然言語検索で、企業内の膨大な事例データから最適な情報を瞬時に発見",
+      "hint": "従来の索引検索の限界を、生成AIの自然言語処理で解決。『カイゼンGAI』として外部ソリューション化も予定。企業のDX推進担当者や経営層への訴求力が高い",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457756128-t8d",
+      "source": "brave",
+      "theme": "市民向けにAIプロンプト807例を公開した南陽市の取り組み",
+      "angle": "専門知識がなくても使える生成AI。行政サービスの透明性と市民参加を同時実現",
+      "hint": "2023年の実証実験から2024年の正式運用へ。自治体のAI活用モデルケースとして、他の地域への波及効果も期待。民主的で開かれたAI活用の事例",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457760598-beh",
+      "source": "brave",
+      "theme": "子連れキャンプの必需品",
+      "angle": "子どもならではの持ち物に焦点",
+      "hint": "大人だけのキャンプとの違いを強調し、親が見落としやすい子ども専用アイテムをリストアップ。チェックリスト形式で実用的に",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457760598-un7",
+      "source": "brave",
+      "theme": "季節別キャンプの持ち物の選び方",
+      "angle": "季節ごとの準備ポイント",
+      "hint": "春夏秋冬で必要なアイテムが異なることを解説。季節の変わり目キャンプの落とし穴や、親が準備に失敗しやすいポイント",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457760598-w8y",
+      "source": "brave",
+      "theme": "アウトドアチェアの子連れキャンプでの役割",
+      "angle": "快適さが家族時間の質を変える",
+      "hint": "食事や焚き火、お昼寝など、キャンプの時間を過ごす場所の質が親子の疲労度やストレスに与える影響。投資の価値",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457764865-bbn",
+      "source": "brave",
+      "theme": "ファミキャン初心者が陥りやすい失敗と対策",
+      "angle": "キャンプ場選びの重要性",
+      "hint": "初めてのファミキャンは『キャンプ場選び』が成功の鍵。設備が充実した場所を選ぶことで、子どもも親も快適に過ごせるという先輩ママの経験談を活かしたTips",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457764866-isr",
+      "source": "brave",
+      "theme": "ファミキャンを始める前に知っておきたい段階的準備法",
+      "angle": "5STEPでの無理のない準備プロセス",
+      "hint": "最初からすべて揃える必要はない。5つのステップでギアを段階的に選ぶことで、親の心理的ハードルを下げ、家族全体で楽しむためのマインドセット提案",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457764866-j8v",
+      "source": "brave",
+      "theme": "親子の絆を深めるファミキャンの価値",
+      "angle": "家族が一つになれる体験としてのキャンプ",
+      "hint": "単なる『アウトドア活動』ではなく、親子や家族の絆を深める機会としてのファミキャンの価値。パレンティングの観点から、子どもの成長機会としての意義を伝える",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457768726-ex5",
+      "source": "brave",
+      "theme": "親子キャンプを通じた親子コミュニケーション",
+      "angle": "現代の親子間コミュニケーション減少への対策",
+      "hint": "親がアウトドアを楽しむ姿を子どもに見せることの重要性、親の背中を見せる時間の価値",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457768727-gu4",
+      "source": "brave",
+      "theme": "子どもの自主性と自信を育むアウトドア体験",
+      "angle": "自然体験を通じた子どもの成長変化",
+      "hint": "キャンプやアウトドアを通じて、子どもが自主的に判断できるようになり、自信を持って物事に取り組めるようになるプロセス",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457768727-mw2",
+      "source": "brave",
+      "theme": "夏休みの体験型レジャー選びのコツ",
+      "angle": "親の体験談から学ぶ「想像以上に楽しめた」レジャー",
+      "hint": "川・海・山など様々なジャンルの中から、実際のママパパの口コミで子どもが喜んだ体験の共有",
+      "axis": "parenting",
+      "types": [
+        "parenting_outdoor"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457773786-yq0",
+      "source": "brave",
+      "theme": "キャンプでの捻挫対応：RICEの法則",
+      "angle": "整形外科的怪我への正しい応急処置",
+      "hint": "トレッキング中の足の捻挫は頻発する。Rest（安静）→Icing（冷却）→Compression（圧迫）→Elevation（挙上）の4ステップを図解や動画で紹介し、実践的なノウハウとして展開できる",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457773786-lsk",
+      "source": "brave",
+      "theme": "ソロキャンプで大怪我した時の判断基準",
+      "angle": "素人応急処置の限界と救急車の呼び方",
+      "hint": "複数の怪我が重なった実例から、『自分で対応できる怪我 vs 病院/救急車が必要な怪我』の見分け方を教訓化。孤立無援状態での適切な判断が重要というメッセージ性",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457773786-j8m",
+      "source": "brave",
+      "theme": "キャンプの立地条件による医療アクセスの準備",
+      "angle": "山奥・休日営業外の病院問題への事前対策",
+      "hint": "キャンプ場が山奥や休日営業外であるリスクを指摘。出発前に最寄り救急病院の位置確認、応急箱の充実度を事前チェックするチェックリスト形式で実用的に展開可能",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457778353-thq",
+      "source": "brave",
+      "theme": "腰やベルト装着型ファンの活用",
+      "angle": "doctor",
+      "hint": "医学的観点から、アウトドアでの効率的な体温低下メカニズムを解説。従来の首掛け扇風機との負担差や、服を選ばない利便性を医師目線で検証",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457778353-z41",
+      "source": "brave",
+      "theme": "アウトドア活動前の熱中症知識習得の重要性",
+      "angle": "doctor",
+      "hint": "予防医学の観点から、事前学習が熱中症リスクをどの程度低減させるか、医学的根拠に基づいた啓発コンテンツ。症状の初期段階での判断基準を医師が解説",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457778353-74n",
+      "source": "brave",
+      "theme": "アウトドアでの応急処置と脱水症状の見分け方",
+      "angle": "doctor",
+      "hint": "熱中症と脱水症状の症状の違いを医学的に解説。キャンプやBBQの現場で、素人でも判断・対応できる医学的ガイドラインを提供",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-brave-1778457782526-zxk",
+      "source": "brave",
+      "theme": "虫刺されの痕から虫の種類を特定できる",
+      "angle": "皮膚科医による診断知識",
+      "hint": "痕や症状の特徴パターンを図解で紹介し、『刺された虫が何かわかれば対処法も変わる』という医学的アプローチ",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457782526-52r",
+      "source": "brave",
+      "theme": "虫刺されで腫れがひどくなるのはアレルギー体質が関係",
+      "angle": "体質による症状の違いと医学的背景",
+      "hint": "同じ虫に刺されても腫れの程度が異なる理由を解説し、『症状が強い場合はオンライン診療の活用』まで言及",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-brave-1778457782526-1h9",
+      "source": "brave",
+      "theme": "虫刺され後の『かきこわし』が二次感染（とびひ）を招く",
+      "angle": "子どもの予防ケアの重要性",
+      "hint": "医学的リスクを明示しながら、パッチタイプ薬の活用など実用的な対策を提案",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-07-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457787116-new",
+      "source": "x-search",
+      "theme": "多機能ギア（モバイルバッテリー×温熱ギア）",
+      "angle": "1つで複数の役割を果たすキャンプギアの活用法",
+      "hint": "温度調節機能とモバイルバッテリー機能を兼ねた製品の実用性やキャンプでの利便性をレビュー・比較する投稿",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457787117-lma",
+      "source": "x-search",
+      "theme": "焚き火台の選び方（コスパ・初心者向け）",
+      "angle": "焚き火デビュー向けの低予算で高機能なギア選定のコツ",
+      "hint": "BUNDOK製品のようなコスパ最強ギアの特徴（シンプル構造・扱いやすさ・サイズ感）を掘り下げた初心者向けガイド投稿",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457787117-g7w",
+      "source": "x-search",
+      "theme": "コンテナボックスの多用途活用",
+      "angle": "キャンプギア収納＋日常使いの二重活用法",
+      "hint": "THORのようなコンテナボックスをキャンプだけでなく日常生活（書類保管・小物整理）でも活用する工夫や、サイズ選びのポイント",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457792126-5hy",
+      "source": "x-search",
+      "theme": "ソロキャンプと心身のリセット",
+      "angle": "仕事のストレスから自然へ。定期的なキャンプが心の充電になる理由",
+      "hint": "投資家など高ストレス職の人が、ソロキャンプを心身のリセット手段として活用する実例。数字を追う日々との対比が響く",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457792127-sl0",
+      "source": "x-search",
+      "theme": "キャンプ沼へのハマり方",
+      "angle": "キャンプ未経験→道具購入→実践 の段階的なハマり過程。きっかけは意外な体験（満月など）",
+      "hint": "メディア影響（ゆるキャンなど）と実体験の組み合わせで興味が加速する。初心者が道具を揃える心理",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457792127-bea",
+      "source": "x-search",
+      "theme": "キャンプ道具の選び方・こだわり",
+      "angle": "薪割り道具（斧 vs ナイフ）など、同じ目的でも人によって選択が分かれる理由。道具への愛着と使い手の個性",
+      "hint": "ノウハウ系より『道具選びの哲学』。キャンプ愛好家のコミュニティで掘り下げやすい",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457796941-yho",
+      "source": "x-search",
+      "theme": "穴場キャンプ場の選び方・特徴",
+      "angle": "ロケーション×設備×混雑度のバランス",
+      "hint": "湖畔・山奥・星空など自然環境と、電源サイト・手入れの良さなど実用性を兼ね備えたキャンプ場の見つけ方。実際の訪問体験をもとに具体的な選定基準を紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457796941-5z4",
+      "source": "x-search",
+      "theme": "地域別キャンプ場選びのコツ",
+      "angle": "野生動物リスクと自由度の関係性",
+      "hint": "熊被害が少ない四国のキャンプ場メリット、無料キャンプ場の多さ、孤独なキャンプが実現しやすい理由など、地域特性を踏まえた穴場キャンプ地の提案",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457796941-3ri",
+      "source": "x-search",
+      "theme": "キャンピングカー×朝時間の使い方",
+      "angle": "理想と現実のギャップを活用した創作ネタ",
+      "hint": "穴場キャンプ場での朝日・コーヒー・自然食というシーンの魅力を、妄想と日常のコントラストで表現。キャンプ欲を刺激するライフスタイル発信",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457802007-jor",
+      "source": "x-search",
+      "theme": "焚き火台の当選・開封体験",
+      "angle": "新製品パイロキューブの抽選当選から実際の使用レビューまでの一連の体験ストーリー",
+      "hint": "イベント会場での偶然の当選、サイズ感への満足、実際のデイキャンでの使用レビュー予告など、フォロワーの共感を呼びやすいリアルな体験談",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457802007-ujy",
+      "source": "x-search",
+      "theme": "焚き火台の詳細レビュー",
+      "angle": "実際に使用して「良かった」と判断した焚き火台の具体的な使用感・メリット・推奨ポイント",
+      "hint": "投稿者が長文でレビュー作成するほど満足度が高い製品。実際のキャンプシーンでの活用法や他製品との比較など、購入検討者向けの実践的な情報",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457802007-h37",
+      "source": "x-search",
+      "theme": "ソロキャンプに最適な焚き火台の選定",
+      "angle": "ソロキャンプに特化した焚き火台の価格帯・サイズ・機能性の検証",
+      "hint": "5000円前後の価格帯でソロキャンプに適した焚き火台の実践的な評価。コンパクト性や携帯性、一人での操作性など、ソロキャンパー特有のニーズを満たす製品情報",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "seasonal_hook"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457807541-g8v",
+      "source": "x-search",
+      "theme": "Claude Codeのレート上限拡大による個人開発への影響",
+      "angle": "コスト低下で実現可能になった開発スタイルの変化",
+      "hint": "2026年のアップデートで5時間レート上限が2倍になった事実をベースに、個人開発者の『叩き台を一気に作る』ワークフローがどう変わったかを具体例（家計簿アプリなど）を交えて解説",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457807542-fqw",
+      "source": "x-search",
+      "theme": "Claude Codeでのアプリ開発時のエラーハンドリング・失敗通知の重要性",
+      "angle": "AIに『動く形を作らせる』だけでは不十分な実装課題",
+      "hint": "Claude Codeに任せるべき部分と人間が責任を持つべき部分の棲み分け。エラーハンドリングやユーザーへの失敗通知といった『見落としやすい実装』について個人開発者向けの教訓を発信",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457807542-ktv",
+      "source": "x-search",
+      "theme": "Claude Codeを使う個人開発者コミュニティの形成と相互支援",
+      "angle": "同じツールで開発する者同士のネットワーク構築による成長加速",
+      "hint": "『Claude Codeでアプリ開発してる人と語りたい』という需要を背景に、個人開発者が成果をシェアしたりコメント交流することで伸びる仕組みや、コミュニティ運営のポイントを考察",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457812000-uah",
+      "source": "x-search",
+      "theme": "生成AI導入時の選択基準",
+      "angle": "複数の生成AIサービスを比較する際の評価軸",
+      "hint": "ChatGPT、Claude等の主要サービスの料金・機能・得意領域を比較し、自社/個人の用途に最適なツール選びのフレームワークを紹介する",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457812000-jye",
+      "source": "x-search",
+      "theme": "生成AIの現実的な活用制約",
+      "angle": "生成AIの能力と限界を理解した上での使い方",
+      "hint": "生成AIのアウトプットは『人間の判断』を前提としており、その判断に必要な知識・リテラシーの重要性を指摘。AIの得意/不得意を理解した運用方法を提示",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457812000-cpu",
+      "source": "x-search",
+      "theme": "職種別のAIスキル市場価値",
+      "angle": "WEBデザイナーなど特定職種におけるAI活用スキルの必須化",
+      "hint": "生成AIツールの使いこなしが職人的スキルと同等の市場価値を持つようになった時代背景と、職種ごとのAI活用で差がつくポイントを具体化",
+      "axis": "ai",
+      "types": [
+        "ai_dev_log"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457816653-oa6",
+      "source": "x-search",
+      "theme": "キャンプ中の予期しないトラブル対応",
+      "angle": "医療的対処ではなく、参加者の協力による応急処置の人間ドラマ",
+      "hint": "バイクトラブルを仲間が協力して応急処置した経験から、チームワークと思い出の価値を語る。医療知識より『人の温かさ』に焦点。",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457816653-9am",
+      "source": "x-search",
+      "theme": "キャンプギアの破損と野外での即時対応",
+      "angle": "結束バンドなどの身近な道具を使った応急修理テクニック",
+      "hint": "テントポール破損時の実践的な修理方法（結束バンド活用など）を、実体験に基づいて紹介。DIY/サバイバルスキル的な視点。",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457816653-q5f",
+      "source": "x-search",
+      "theme": "アウトドア活動における応急処置スキルの必要性",
+      "angle": "キャンプで役立つ防災・搬送・応急処置の学習機会",
+      "hint": "キャンプイベントでの応急処置体験学習から、日常の防災意識向上への接続。実践的スキル習得の重要性。",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457821020-g7t",
+      "source": "x-search",
+      "theme": "アウトドア時の熱中症対策グッズの選び方",
+      "angle": "医学的観点から見た保冷剤の効果的な使用方法",
+      "hint": "保冷剤の長時間保冷能力と熱中症予防の関係性、アイシングとの違い、医師が推奨する使用時間・冷却方法などを解説",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-x-1778457821057-p56",
+      "source": "x-search",
+      "theme": "停電時・屋外での熱中症対応",
+      "angle": "医師が教える緊急時の対処法と予防策",
+      "hint": "電源がない状況での体温低下方法、携帯型冷却グッズの有効性、熱中症の初期症状認識と応急処置のポイント",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-x-1778457821057-iiq",
+      "source": "x-search",
+      "theme": "繰り返し使える保冷グッズのメリット",
+      "angle": "医療現場での活用実績から見た有用性",
+      "hint": "病院や医療現場で使われている再利用型保冷剤、衛生管理面での安全性、長期的なコスト効率と環境への配慮面での医学的見解",
+      "axis": "doctor",
+      "types": [
+        "doc_health_tip"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-05-25",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457829053-59f",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプの始め方",
+      "angle": "初心者向けガイド",
+      "hint": "「テント選びで迷ったら？」というクエスチョンで、コンパクトテントのメリット（持ち運び、設営の簡単さ、防災グッズとしても使える）をアピール",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457829053-9ml",
+      "source": "rakuten-brave",
+      "theme": "4シーズンキャンプの魅力",
+      "angle": "季節別キャンプ提案",
+      "hint": "冬キャンプ、雨キャンプなど季節限定の楽しさと、対応テントの機能性（防水、通気性、耐風性）を紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457829053-c4d",
+      "source": "rakuten-brave",
+      "theme": "防災グッズの活用",
+      "angle": "非常時の備え",
+      "hint": "「キャンプ用テントは災害対策にもなる」という視点で、防水・コンパクト性能をアピール",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457836817-uk2",
+      "source": "rakuten-brave",
+      "theme": "防災備蓄の新常識",
+      "angle": "明るさの違いで生まれる安心感",
+      "hint": "1500ルーメンの圧倒的明るさと長時間点灯で、停電時の不安を解消。家族の防災グッズ選びの重要なポイントとして提示",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457836817-llf",
+      "source": "rakuten-brave",
+      "theme": "キャンプの相棒選び",
+      "angle": "充電式vs電池式どっちが正解？",
+      "hint": "充電式の利便性と電池式の信頼性を比較。用途や環境に応じた選択肢を提案し、キャンパーの意思決定を支援",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457836817-slj",
+      "source": "rakuten-brave",
+      "theme": "アウトドア照明トレンド",
+      "angle": "調色機能で雰囲気が変わる",
+      "hint": "調色調光できるランタンがキャンプの質を上げる話。インスタ映えと機能性の両立を強調",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457836817-mbv",
+      "source": "rakuten-brave",
+      "theme": "災害時の光の大切さ",
+      "angle": "最大50時間連続点灯の実力",
+      "hint": "長時間点灯できるランタンの価値を、実際の災害シーンで活躍する具体例とともに紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457844932-fh2",
+      "source": "rakuten-brave",
+      "theme": "キャンプギア選びの失敗あるある",
+      "angle": "重いチェアを買って後悔している人へのソリューション提示",
+      "hint": "「#キャンプチェア選びで大事なのは軽さ！めざましテレビで紹介された商品なら間違いなし」",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457844932-9h8",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプの快適性アップ術",
+      "angle": "チェアの質がキャンプ体験を左右することの発見",
+      "hint": "「良いチェア=キャンプ時間の質向上。楽天1位商品で沼にハマる人続出🏕️」",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457844932-dsf",
+      "source": "rakuten-brave",
+      "theme": "アウトドアシーズン到来の準備情報",
+      "angle": "今買うべきチェアのトレンド情報",
+      "hint": "「春キャンプシーズン前に！テレビ紹介の実績あり商品が今狙い目」",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457852714-oy6",
+      "source": "rakuten-brave",
+      "theme": "ソロキャンプの相棒選び",
+      "angle": "軽量×組立の手軽さ",
+      "hint": "初心者がInstagramで発見するべき日本製焚き火台。組立30秒動画で魅力発信",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457852715-x80",
+      "source": "rakuten-brave",
+      "theme": "焚き火台×映え投稿",
+      "angle": "素材の質感比較（軽量vs鋳物）",
+      "hint": "SNS映えを狙うなら？用途別・素材別で使い分けるプロのこだわり紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457852715-atq",
+      "source": "rakuten-brave",
+      "theme": "庭キャンプ×タレント愛用",
+      "angle": "有名人コラボ効果",
+      "hint": "とろサーモン村田様愛用品をレビュー。家での焚き火の始め方ガイド",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457852715-yvf",
+      "source": "rakuten-brave",
+      "theme": "焚き火台購入ガイド",
+      "angle": "コスパ×機能性",
+      "hint": "ソロvs家族向けの予算配分。実際の使用シーン別おすすめランキング",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457861223-pjm",
+      "source": "rakuten-brave",
+      "theme": "素材選びで変わるキャンプ体験",
+      "angle": "ポリエステル vs ポリコットン",
+      "hint": "タープ選びの決定版ガイド。素材ごとのメリット・デメリットを比較して、キャンパーの「どっちを選ぶ？」に答える",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457861224-d64",
+      "source": "rakuten-brave",
+      "theme": "焚き火周辺のタープ選び安全性",
+      "angle": "火の粉対策は素材で決まる",
+      "hint": "ポリコットンタープなら焚き火対応。一般的なポリエステルとの違いを強調し、安全にキャンプを楽しむコツ",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457861224-o9p",
+      "source": "rakuten-brave",
+      "theme": "設営時間で選ぶタープ",
+      "angle": "ワンタッチ vs 本格派",
+      "hint": "初心者向けのワンタッチと、こだわり派の本格タープ。キャンプスタイル別の選び方",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457861224-ss6",
+      "source": "rakuten-brave",
+      "theme": "タープサイズ選びの迷い",
+      "angle": "1TC vs 2TC vs 4TCの実際のサイズ感",
+      "hint": "タトンカの4TCが「ちょうどいい」理由。テントとの組み合わせで最適なサイズを解説",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457868187-9di",
+      "source": "rakuten-brave",
+      "theme": "キャンプバーナー選びの悩み",
+      "angle": "初心者向けガイド",
+      "hint": "SOTOとプリムスの違いを比較。どちらを選ぶ？という問いかけで引き付ける",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457868187-uhg",
+      "source": "rakuten-brave",
+      "theme": "シングルバーナーの活用シーン",
+      "angle": "実体験・口コミ視点",
+      "hint": "登山での調理、キャンプでの朝食作り、フェスでの活躍など場面別紹介",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457868188-vu0",
+      "source": "rakuten-brave",
+      "theme": "アウトドア沼への誘い",
+      "angle": "ユーモア・親近感",
+      "hint": "「バーナー1つでキャンプ沼へようこそ」など軽妙な表現で話題性を狙う",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457868188-ycm",
+      "source": "rakuten-brave",
+      "theme": "コンパクト性・携帯性",
+      "angle": "機能面の強調",
+      "hint": "登山時の荷物軽量化、収納性をビジュアルで表現",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457876144-m3u",
+      "source": "rakuten-brave",
+      "theme": "夏キャンプの虫対策革命",
+      "angle": "360度虫バリアの利便性",
+      "hint": "今年の夏キャンプは虫知らず。どこまでも持ち運べる最新虫除けアイテムで快適なアウトドアを実現。設営した瞬間、虫たちが逃げていく…🦟✨",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457876145-zco",
+      "source": "rakuten-brave",
+      "theme": "防虫ランタンの一石二鳥",
+      "angle": "照明と虫除けの同時実現",
+      "hint": "明かりが必要なシーン＝虫が集まるシーン。SOTOのランタンなら照明と防虫が同時解決。ソロキャンパーの夜の相棒になる🏕️💡",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 2,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457876145-t2k",
+      "source": "rakuten-brave",
+      "theme": "アウトドア虫除けの多様性",
+      "angle": "シーン別アイテム比較",
+      "hint": "ランタン型、ポータブル型、置型…目的別に選べる虫除けアイテムが楽天市場に豊富。あなたのアウトドアスタイルに合わせて最適解を見つけよう🎣⛰️",
+      "axis": "camp",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 1,
+      "last_used": "2026-05-11",
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457882973-hg1",
+      "source": "rakuten-brave",
+      "theme": "健康寿命を伸ばす",
+      "angle": "日々の血圧測定の習慣化",
+      "hint": "毎日の測定がいかに大事か、手首式なら続けやすいというメッセージ。前年の自分との比較など",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457882973-s4q",
+      "source": "rakuten-brave",
+      "theme": "プレゼント企画",
+      "angle": "親世代への贈り物",
+      "hint": "敬老の日・父の日・母の日に血圧計を贈るメリット。愛する人への健康管理サポート",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457882973-w66",
+      "source": "rakuten-brave",
+      "theme": "働き世代の健康課題",
+      "angle": "出張・移動が多い人向け",
+      "hint": "持ち運びやすい手首式で、どこでも測定できる。仕事のストレスと血圧の関係性",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457882973-2ei",
+      "source": "rakuten-brave",
+      "theme": "スマート健康管理",
+      "angle": "テクノロジー活用",
+      "hint": "スマホ連動血圧計の活用法。データ管理で見える化、健康意識向上のきっかけ",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457891006-v0i",
+      "source": "rakuten-brave",
+      "theme": "新年の健康管理スタート",
+      "angle": "スマホ連動で続く習慣化",
+      "hint": "「4秒で測定完了」など手軽さを強調。毎日のルーティンに組み込みやすさをアピール",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457891007-pjb",
+      "source": "rakuten-brave",
+      "theme": "自宅でジムレベルの診断",
+      "angle": "多項目測定の凄さ",
+      "hint": "51項目測定や部位別脂肪量など、詳細データが取れることで自己管理意識を高める層へ訴求",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457891007-7y0",
+      "source": "rakuten-brave",
+      "theme": "楽天ポイント+健康投資",
+      "angle": "ポイ活×ウェルネス",
+      "hint": "毎日貯まるポイントで体重管理が『実質お得』という視点。節約志向層へのアプローチ",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457891008-srf",
+      "source": "rakuten-brave",
+      "theme": "充電式でエコ＆経済的",
+      "angle": "電池交換の手間削減",
+      "hint": "Type-C充電式で環境配慮。長期使用コストを削減できる実用性をアピール",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457896944-icl",
+      "source": "rakuten-brave",
+      "theme": "疲労回復・セルフケア",
+      "angle": "在宅ワークの肩こり・腰痛対策",
+      "hint": "#デスクワークあるある #セルフケア #疲労回復 など、オフィスワーカーの痛みに共感を呼ぶ投稿",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457896944-7nm",
+      "source": "rakuten-brave",
+      "theme": "軽量・コンパクト性能",
+      "angle": "筋トレ後のリカバリーツール",
+      "hint": "#筋トレ #リカバリー #ジムのお供 など、フィットネス層へのアプローチ",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457896944-z89",
+      "source": "rakuten-brave",
+      "theme": "価格競争力",
+      "angle": "クーポン・セール活用術",
+      "hint": "#楽天セール #節約グッズ #最大70%OFF など、お得感を前面に出した投稿",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457905197-0dp",
+      "source": "rakuten-brave",
+      "theme": "花粉対策の最新トレンド",
+      "angle": "従来のマスクから卒業できる時代へ",
+      "hint": "電動鼻洗浄器や吸着スプレーなど、新しいアプローチの花粉対策グッズを紹介。ビフォーアフターや使用感の体験投稿で高エンゲージメント期待。",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457905197-5u4",
+      "source": "rakuten-brave",
+      "theme": "敏感肌さんの花粉対策",
+      "angle": "肌荒れを防ぎながら花粉をブロック",
+      "hint": "天然成分100%のスプレーなど肌優しい商品に焦点。アレルギー肌やアトピーの方向けの優しい対策法として提案。",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457905198-2pd",
+      "source": "rakuten-brave",
+      "theme": "子育て世代の花粉対策",
+      "angle": "赤ちゃんから使える安全な選択肢",
+      "hint": "医療機器認証の電動洗浄器など、親子で使える信頼できる製品をピックアップ。親の不安払拭をテーマに。",
+      "axis": "doctor",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457911428-qod",
+      "source": "rakuten-brave",
+      "theme": "マルチデバイス対応キーボードの便利さ",
+      "angle": "仕事効率化視点",
+      "hint": "スマホ・タブレット・PCを同時に使うときの作業効率が劇的に上がる！という体験談や比較ネタ",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457911428-x81",
+      "source": "rakuten-brave",
+      "theme": "高機能キーボードの選び方",
+      "angle": "製品比較・選定ガイド",
+      "hint": "ロジクール上位モデルの機能差（MX KEYS Sの最新機能など）を分かりやすく解説する情報系投稿",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457911428-7xd",
+      "source": "rakuten-brave",
+      "theme": "リモートワーク・在宅勤務の快適化",
+      "angle": "ライフスタイル提案",
+      "hint": "使いやすいキーボード選びで生産性UP＆疲労軽減という実体験シェア",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457918779-14b",
+      "source": "rakuten-brave",
+      "theme": "テレワーク効率化",
+      "angle": "デュアルディスプレイのメリット",
+      "hint": "「モバイルモニター1台で作業効率が○倍に」という体験談や、在宅勤務での活用シーンを具体的に紹介",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457918779-sq5",
+      "source": "rakuten-brave",
+      "theme": "出張・移動時の必需品",
+      "angle": "軽量化トレンド",
+      "hint": "325gの超軽量モデルに注目。「荷物を減らしたい出張族向け」というセグメント訴求",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457918779-5qe",
+      "source": "rakuten-brave",
+      "theme": "クリエイター向けツール",
+      "angle": "画面拡張の可能性",
+      "hint": "動画編集・デザイン作業での複数画面の重要性。「プロも使っている」という信頼感演出",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457918779-wl6",
+      "source": "rakuten-brave",
+      "theme": "ライフスタイル提案",
+      "angle": "ノマドワーク",
+      "hint": "カフェやコワーキングスペースでの活用イメージ。おしゃれな使用シーンの投稿で認知拡大",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457928470-ald",
+      "source": "rakuten-brave",
+      "theme": "テレワーク・リモート環境の効率化",
+      "angle": "MacBook利用者必見のポータビリティ",
+      "hint": "「MacBookを持ち運ぶなら、これ1つで解決。複数ポート搭載で出先の作業環境がガラッと変わる」といった仕事効率化の視点",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457928470-gfn",
+      "source": "rakuten-brave",
+      "theme": "周辺機器の断捨離・デスク整理",
+      "angle": "複数アダプタ→1つのハブで統一",
+      "hint": "「バラバラなケーブルとアダプタはもう卒業。6-in-1ハブなら配線もスッキリ、デスク周りもスマートに」という整理整頓の提案",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457928470-tmz",
+      "source": "rakuten-brave",
+      "theme": "大容量ファイル転送・クリエイター向け",
+      "angle": "4K映像出力 × 高速データ転送の両立",
+      "hint": "「動画編集や写真加工をするなら4K HDMI出力は必須。SDカードリーダーで素材取り込みもワンステップ」という創作活動の効率化",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457935089-41n",
+      "source": "rakuten-brave",
+      "theme": "テレワークの姿勢改善",
+      "angle": "腰痛・肩こりの悩み解決",
+      "hint": "デスクワーク中心の層へ「正しい姿勢で健康的に」というメッセージで訴求。ビフォーアフター的な投稿",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457935089-i9v",
+      "source": "rakuten-brave",
+      "theme": "出張・カフェ作業に最適",
+      "angle": "携帯性・コンパクト性",
+      "hint": "ノマドワーカーやフリーランスに向けて「どこでも快適な作業環境」を実現する利便性を強調",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457935089-4jm",
+      "source": "rakuten-brave",
+      "theme": "アルミ素材の質感",
+      "angle": "デスク周りのインテリア性",
+      "hint": "高級感あるアルミ製スタンドをミニマルなデスク環境の一部として紹介。MacBook等との相性をアピール",
+      "axis": "ai",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457942993-vf9",
+      "source": "rakuten-brave",
+      "theme": "親子キャンプの準備",
+      "angle": "子どもの寝心地と親の負担軽減",
+      "hint": "「子どもが喜ぶ可愛いキッズ寝袋で、親子キャンプがもっと快適に🏕️」親子で使える寝袋の選び方やメリットを紹介",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457942994-y25",
+      "source": "rakuten-brave",
+      "theme": "防災の日常化",
+      "angle": "子どもも参加できる防災準備",
+      "hint": "「我が家の防災セットに子ども用寝袋を追加。もしもの時も、キャンプも使える一石二鳥アイテム✅」実用性と備え意識の啓発",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457942995-vn9",
+      "source": "rakuten-brave",
+      "theme": "秋冬キャンプの悩み解決",
+      "angle": "子どもの寒冷対策の実体験",
+      "hint": "「キッズ寝袋の-7℃対応で、真冬キャンプも快適。子どもの『寒い』がなくなった🔥」実際の使用感や温かさの実感を共有",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457952356-xpz",
+      "source": "rakuten-brave",
+      "theme": "子どもの成長段階別リュック選び",
+      "angle": "入園・入学の時期ごとにピッタリなリュックサイズ",
+      "hint": "「○歳はB5サイズ」「学年が上がったら容量UP」など、成長とともに選び直す提案",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457952356-pj2",
+      "source": "rakuten-brave",
+      "theme": "キッズリュックのブランド比較",
+      "angle": "アウトドアプロダクツ・モメンタムなど人気ブランド3選",
+      "hint": "機能性（ハーネス、軽量）とデザイン性を兼ね備えた選定基準の紹介",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457952356-o0c",
+      "source": "rakuten-brave",
+      "theme": "遠足・アウトドア準備特集",
+      "angle": "子どもが喜ぶ可愛い&かっこいいリュック探し",
+      "hint": "親が選ぶのではなく「本人が使いたくなるデザイン」を重視する視点",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457952356-nzz",
+      "source": "rakuten-brave",
+      "theme": "防災・非常用にも活躍",
+      "angle": "日常使いと防災の二役で選ぶリュック",
+      "hint": "容量拡張機能やハーネス付きなど、安全性と実用性を兼ね備えた商品推し",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457958885-0m1",
+      "source": "rakuten-brave",
+      "theme": "木のおもちゃの知育効果",
+      "angle": "脳科学的アプローチ",
+      "hint": "パズル・迷路遊びが空間認識能力を高める仕組みを解説。成長段階別の選び方。",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457958885-rx9",
+      "source": "rakuten-brave",
+      "theme": "誕生日プレゼント選びの失敗談",
+      "angle": "親のリアルな体験談",
+      "hint": "「すぐ飽きるおもちゃ」vs「長く遊べる知育玩具」の違い。木製おもちゃの長期的なメリット。",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457958885-6s7",
+      "source": "rakuten-brave",
+      "theme": "室内遊びの充実度",
+      "angle": "親の時短・手軽さ",
+      "hint": "雨の日でも集中力が続く知育玩具。親も一緒に楽しめるポイント。",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457958885-j31",
+      "source": "rakuten-brave",
+      "theme": "クーポン・セール情報",
+      "angle": "お得な買い方",
+      "hint": "お買い物マラソン50%OFFクーポン情報。シーズン別のセール時期。",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457968160-0ja",
+      "source": "rakuten-brave",
+      "theme": "登校時間が短いキッズの新常識",
+      "angle": "小容量水筒の便利さ",
+      "hint": "280mlサイズなら軽い・かさばらない・毎日使いやすいというメリットを推し。朝の準備時間短縮の提案",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457968160-uxc",
+      "source": "rakuten-brave",
+      "theme": "親子で選べる水筒コーディネート",
+      "angle": "キッズ向けレトロデザイン",
+      "hint": "スターゲイズなどのレトログデザインを親子でお揃いにするトレンド提案。インスタジェニックな視点",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "high"
+    },
+    {
+      "id": "seed-rakuten-1778457968160-wag",
+      "source": "rakuten-brave",
+      "theme": "真夏の部活対策、保冷力勝負",
+      "angle": "真空断熱の性能比較",
+      "hint": "600mlと280mlで保冷時間の違いを体感レビュー。小学生の部活やスポーツシーンでの活躍ぶり",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
+      "bookmarkPotential": "medium"
+    },
+    {
+      "id": "seed-rakuten-1778457968160-827",
+      "source": "rakuten-brave",
+      "theme": "学校に持って行く水筒は何ml？",
+      "angle": "容量選びの新基準",
+      "hint": "従来の1Lサイズから小容量へのシフト。重さ・扱いやすさ・毎日の学校生活での現実的なニーズ",
+      "axis": "parenting",
+      "types": [
+        "outdoor_tip",
+        "gear_thread",
+        "article_promo",
+        "rakuten_room_pick"
+      ],
+      "season": [],
+      "used_count": 0,
+      "last_used": null,
+      "addedAt": "2026-05-11",
+      "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
     }
   ]

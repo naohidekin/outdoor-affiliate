@@ -40,7 +40,7 @@
   },
   "seasonalInsight": "X経由PVトップ: multi-burner-ranking (3PV)",
   "writerHints": [
-    "[2026-05-08] outdoor_tipが高エンゲージ(avg score: 7)。このタイプの構成を優先すること。",
+    "[2026-05-10] outdoor_tipが高エンゲージ(avg score: 6)。このタイプの構成を優先すること。",
     "高スコアパターン: product_compare, seasonal_start",
     "X経由PVが高い記事を article_promo で優先的に紹介する",
     "直近トップ投稿: [article_promo]「焚き火台3台買い替えた人間の結論\n\n1台目：軽さ重視→薪が落ちる\n2台目：頑丈系→重すぎて車から出すの億劫\n3台目：やっ」(♥4 🔖0) → 似た切り口を再活用",
@@ -313,6 +313,82 @@
       "parenting_outdoor": {
         "count": 1,
         "avgImpressions": 28,
+        "avgLikes": 1,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 3
+      }
+    },
+    "2026-05-09": {
+      "outdoor_tip": {
+        "count": 3,
+        "avgImpressions": 54,
+        "avgLikes": 3,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 7
+      },
+      "failure_story": {
+        "count": 1,
+        "avgImpressions": 34,
+        "avgLikes": 3,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 7
+      },
+      "parenting_outdoor": {
+        "count": 1,
+        "avgImpressions": 35,
+        "avgLikes": 1,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 3
+      },
+      "poll_question": {
+        "count": 1,
+        "avgImpressions": 39,
+        "avgLikes": 1,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 3
+      }
+    },
+    "2026-05-10": {
+      "outdoor_tip": {
+        "count": 4,
+        "avgImpressions": 61,
+        "avgLikes": 2.5,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 6
+      },
+      "failure_story": {
+        "count": 1,
+        "avgImpressions": 36,
+        "avgLikes": 3,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 7
+      },
+      "parenting_outdoor": {
+        "count": 1,
+        "avgImpressions": 37,
+        "avgLikes": 1,
+        "avgRT": 0,
+        "avgBookmarks": 0,
+        "avgLinkClicks": 0,
+        "avgEngagementScore": 3
+      },
+      "poll_question": {
+        "count": 1,
+        "avgImpressions": 43,
         "avgLikes": 1,
         "avgRT": 0,
         "avgBookmarks": 0,

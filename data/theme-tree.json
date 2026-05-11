@@ -6,8 +6,8 @@
         "gear": {
           "children": {
             "tent": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 1,
+              "last_used": "2026-05-11"
             },
             "burner": {
               "used_count": 0,
@@ -54,12 +54,12 @@
               "last_used": null
             },
             "fire": {
-              "used_count": 1,
-              "last_used": "2026-04-13"
+              "used_count": 3,
+              "last_used": "2026-05-11"
             },
             "cooking": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 2,
+              "last_used": "2026-05-11"
             },
             "rain_camp": {
               "used_count": 0,
@@ -158,8 +158,8 @@
               "last_used": null
             },
             "workflow": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 1,
+              "last_used": "2026-05-11"
             }
           }
         },
@@ -170,8 +170,8 @@
               "last_used": null
             },
             "github_copilot": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 1,
+              "last_used": "2026-05-11"
             },
             "v0": {
               "used_count": 0,
@@ -282,8 +282,8 @@
               "last_used": null
             },
             "sun_protection": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 8,
+              "last_used": "2026-05-11"
             }
           }
         },
@@ -318,8 +318,8 @@
               "last_used": "2026-04-13"
             },
             "seasonal_illness": {
-              "used_count": 0,
-              "last_used": null
+              "used_count": 4,
+              "last_used": "2026-05-11"
             }
           }
         }

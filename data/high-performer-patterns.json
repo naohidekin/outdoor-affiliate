@@ -1,15 +1,16 @@
 {
-  "updatedAt": "2026-05-08T22:00:06.019Z",
+  "updatedAt": "2026-05-10T22:00:54.609Z",
   "basedOnDays": 7,
-  "totalAnalyzed": 5,
-  "topN": 1,
+  "totalAnalyzed": 7,
+  "topN": 2,
   "patterns": [
     {
       "postType": "outdoor_tip",
-      "avgEngagementScore": 9,
-      "count": 1,
+      "avgEngagementScore": 8,
+      "count": 2,
       "examples": [
-        "【ブクマ推奨】テントの乾燥、3つの優先度順位です。①フロアシート（カビやすい）②フライシート裏面（結露水分）③インナーテ"
+        "【ブクマ推奨】テントの乾燥、3つの優先度順位です。①フロアシート（カビやすい）②フライシート裏面（結露水分）③インナーテ",
+        "【保存版】テント設営の時短術、慣れても意外と見落とすポイントです。①ペグを打つ前にテント全体を仮置きして向きを確認②風向"
       ]
     }
   ]

@@ -5,5 +5,10 @@
   "reason": "自動投稿を再開 - 2026-05-02（承認済み14本あり・軸配分 camp70/doctor20/parenting10 に更新済み）",
   "disabledAt": "2026-05-02T17:00:00+09:00",
   "disabledBy": "manual",
-  "consecutiveErrors": []
+  "consecutiveErrors": [
+    {
+      "type": "agent-fail:analyst-agent.js",
+      "at": "2026-05-11T00:06:11.109Z"
+    }
+  ]
 }
