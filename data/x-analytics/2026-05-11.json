@@ -1,0 +1,170 @@
+{
+  "date": "2026-05-11",
+  "analyzedDays": 7,
+  "totalPosts": 7,
+  "metricsAvailable": 7,
+  "byType": {
+    "outdoor_tip": {
+      "count": 4,
+      "avgImpressions": 66,
+      "avgLikes": 2.5,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 6
+    },
+    "failure_story": {
+      "count": 1,
+      "avgImpressions": 37,
+      "avgLikes": 3,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 7
+    },
+    "parenting_outdoor": {
+      "count": 1,
+      "avgImpressions": 38,
+      "avgLikes": 1,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 3
+    },
+    "poll_question": {
+      "count": 1,
+      "avgImpressions": 44,
+      "avgLikes": 1,
+      "avgRT": 0,
+      "avgBookmarks": 0,
+      "avgLinkClicks": 0,
+      "avgEngagementScore": 3
+    }
+  },
+  "mediaEffect": {
+    "withMedia": {
+      "count": 6,
+      "avgEngagement": 5,
+      "avgImpressions": 53
+    },
+    "noMedia": {
+      "count": 1,
+      "avgEngagement": 7,
+      "avgImpressions": 61
+    }
+  },
+  "posts": [
+    {
+      "tweetId": "2051834865151320520",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T01:22:07.528Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051834865151320520",
+      "metrics": {
+        "likes": 3,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 61,
+        "linkClicks": 0,
+        "userProfileClicks": 2,
+        "engagementScore": 7
+      }
+    },
+    {
+      "tweetId": "2051969767792341412",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-06T10:18:09.948Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2051969767792341412",
+      "metrics": {
+        "likes": 4,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 87,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 9
+      }
+    },
+    {
+      "tweetId": "2052327610815033831",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-07T10:00:06.065Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052327610815033831",
+      "metrics": {
+        "likes": 2,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 26,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 5
+      }
+    },
+    {
+      "tweetId": "2052523948307595505",
+      "postType": "failure_story",
+      "postedAt": "2026-05-07T23:00:16.913Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052523948307595505",
+      "metrics": {
+        "likes": 3,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 37,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 7
+      }
+    },
+    {
+      "tweetId": "2052690006456856618",
+      "postType": "parenting_outdoor",
+      "postedAt": "2026-05-08T10:00:08.148Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052690006456856618",
+      "metrics": {
+        "likes": 1,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 38,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 3
+      }
+    },
+    {
+      "tweetId": "2052926571821117860",
+      "postType": "poll_question",
+      "postedAt": "2026-05-09T01:40:09.346Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2052926571821117860",
+      "metrics": {
+        "likes": 1,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 44,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 3
+      }
+    },
+    {
+      "tweetId": "2053414789637140941",
+      "postType": "outdoor_tip",
+      "postedAt": "2026-05-10T10:00:09.573Z",
+      "postUrl": "https://x.com/camp_gear_lab/status/2053414789637140941",
+      "metrics": {
+        "likes": 1,
+        "retweets": 0,
+        "replies": 1,
+        "bookmarks": 0,
+        "impressions": 88,
+        "linkClicks": 0,
+        "userProfileClicks": 0,
+        "engagementScore": 3
+      }
+    }
+  ]
+}

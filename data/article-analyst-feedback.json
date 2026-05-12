@@ -1,25 +1,18 @@
 {
-  "updatedAt": "2026-05-09T01:00:08.363Z",
+  "updatedAt": "2026-05-12T01:00:09.641Z",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 72,
+      "pv7d": 69,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 15,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "cooler-box-ranking",
-      "categoryId": "cooler",
-      "pv7d": 15,
+      "pv7d": 19,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -31,71 +24,36 @@
       "ctr": 0
     },
     {
-      "slug": "solo-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 8,
+      "slug": "cooler-box-ranking",
+      "categoryId": "cooler",
+      "pv7d": 13,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "led-tent-light-ranking",
-      "categoryId": "light",
+      "slug": "firepit-solo-ranking",
+      "categoryId": "firepit",
       "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gw-camping-gear-budget",
-      "categoryId": "tent",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "spring-camp-clothing-guide",
-      "categoryId": "wear",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gw-camp-guide-2026",
-      "categoryId": "tent",
-      "pv7d": 4,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "camping-beginner-gear-checklist",
       "categoryId": "tent",
+      "pv7d": 5,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "solo-tent-ranking",
+      "categoryId": "tent",
       "pv7d": 4,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "oniyamma-shinrinka-review",
-      "categoryId": "insect-repellent",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "kids-sleeping-bag-ranking",
-      "categoryId": "sleeping-bag",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "rainwear-ranking",
-      "categoryId": "wear",
+      "slug": "gw-camping-gear-budget",
+      "categoryId": "tent",
       "pv7d": 3,
       "clicks7d": 0,
       "ctr": 0
@@ -108,6 +66,55 @@
       "ctr": 0
     },
     {
+      "slug": "firepit-3way-showdown",
+      "categoryId": "firepit",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "spring-sleeping-bag-guide",
+      "categoryId": "sleeping-bag",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "kids-sleeping-bag-ranking",
+      "categoryId": "sleeping-bag",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "gas-lantern-ranking",
+      "categoryId": "light",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "nanga-sleeping-bag-comparison",
+      "categoryId": "sleeping-bag",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "rainwear-ranking",
+      "categoryId": "wear",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-ranking",
+      "categoryId": "tarp",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "duo-tent-ranking",
       "categoryId": "tent",
       "pv7d": 2,
@@ -115,8 +122,15 @@
       "ctr": 0
     },
     {
-      "slug": "camp-insect-repellent-guide",
-      "categoryId": "insect-repellent",
+      "slug": "led-tent-light-ranking",
+      "categoryId": "light",
+      "pv7d": 1,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "spring-camp-clothing-guide",
+      "categoryId": "wear",
       "pv7d": 1,
       "clicks7d": 0,
       "ctr": 0
@@ -127,77 +141,63 @@
       "pv7d": 1,
       "clicks7d": 0,
       "ctr": 0
-    },
-    {
-      "slug": "nanga-sleeping-bag-comparison",
-      "categoryId": "sleeping-bag",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "multi-burner-ranking",
-      "categoryId": "burner",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 113,
+      "pv7d": 105,
       "clicks7d": 0,
-      "searchSessions": 86,
-      "trend": "active"
-    },
-    {
-      "categoryId": "cooler",
-      "pv7d": 15,
-      "clicks7d": 0,
-      "searchSessions": 10,
+      "searchSessions": 82,
       "trend": "active"
     },
     {
       "categoryId": "backpack",
       "pv7d": 14,
       "clicks7d": 0,
-      "searchSessions": 1,
+      "searchSessions": 3,
       "trend": "active"
     },
     {
-      "categoryId": "wear",
+      "categoryId": "cooler",
+      "pv7d": 13,
+      "clicks7d": 0,
+      "searchSessions": 11,
+      "trend": "active"
+    },
+    {
+      "categoryId": "firepit",
       "pv7d": 8,
       "clicks7d": 0,
       "searchSessions": 3,
       "trend": "low"
     },
     {
+      "categoryId": "sleeping-bag",
+      "pv7d": 8,
+      "clicks7d": 0,
+      "searchSessions": 8,
+      "trend": "low"
+    },
+    {
       "categoryId": "light",
-      "pv7d": 5,
+      "pv7d": 3,
+      "clicks7d": 0,
+      "searchSessions": 3,
+      "trend": "low"
+    },
+    {
+      "categoryId": "wear",
+      "pv7d": 3,
       "clicks7d": 0,
       "searchSessions": 1,
       "trend": "low"
     },
     {
-      "categoryId": "insect-repellent",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "searchSessions": 0,
-      "trend": "low"
-    },
-    {
-      "categoryId": "sleeping-bag",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "searchSessions": 6,
-      "trend": "low"
-    },
-    {
       "categoryId": "tarp",
-      "pv7d": 4,
+      "pv7d": 2,
       "clicks7d": 0,
-      "searchSessions": 3,
+      "searchSessions": 2,
       "trend": "low"
     },
     {
@@ -205,13 +205,6 @@
       "pv7d": 1,
       "clicks7d": 0,
       "searchSessions": 0,
-      "trend": "low"
-    },
-    {
-      "categoryId": "burner",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "searchSessions": 2,
       "trend": "low"
     }
   ],
