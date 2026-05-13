@@ -1,210 +1,217 @@
 {
-  "updatedAt": "2026-05-12T01:00:09.641Z",
-  "period": "7d",
+  "updatedAt": "2026-05-13T00:00:09.394Z",
+  "period": "28d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 69,
-      "clicks7d": 0,
+      "pv28d": 172,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 19,
-      "clicks7d": 0,
+      "pv28d": 49,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
-      "slug": "backpack-ranking",
-      "categoryId": "backpack",
-      "pv7d": 14,
-      "clicks7d": 0,
+      "slug": "gw-camp-guide-2026",
+      "categoryId": "tent",
+      "pv28d": 39,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "oniyamma-shinrinka-review",
+      "categoryId": "insect-repellent",
+      "pv28d": 39,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv7d": 13,
-      "clicks7d": 0,
+      "pv28d": 33,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
-      "slug": "firepit-solo-ranking",
-      "categoryId": "firepit",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camping-beginner-gear-checklist",
-      "categoryId": "tent",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "solo-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gw-camping-gear-budget",
-      "categoryId": "tent",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "family-camp-first-time-guide",
-      "categoryId": "tent",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "firepit-3way-showdown",
-      "categoryId": "firepit",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "spring-sleeping-bag-guide",
-      "categoryId": "sleeping-bag",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "kids-sleeping-bag-ranking",
-      "categoryId": "sleeping-bag",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "gas-lantern-ranking",
-      "categoryId": "light",
-      "pv7d": 2,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "nanga-sleeping-bag-comparison",
-      "categoryId": "sleeping-bag",
-      "pv7d": 2,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "rainwear-ranking",
-      "categoryId": "wear",
-      "pv7d": 2,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
-      "pv7d": 2,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "duo-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 2,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "led-tent-light-ranking",
-      "categoryId": "light",
-      "pv7d": 1,
-      "clicks7d": 0,
+      "slug": "backpack-ranking",
+      "categoryId": "backpack",
+      "pv28d": 30,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
       "slug": "spring-camp-clothing-guide",
       "categoryId": "wear",
-      "pv7d": 1,
-      "clicks7d": 0,
+      "pv28d": 25,
+      "clicks28d": 0,
       "ctr": 0
     },
     {
-      "slug": "camp-chair-ranking",
-      "categoryId": "chair",
-      "pv7d": 1,
-      "clicks7d": 0,
+      "slug": "camp-insect-repellent-guide",
+      "categoryId": "insect-repellent",
+      "pv28d": 24,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "spring-sleeping-bag-guide",
+      "categoryId": "sleeping-bag",
+      "pv28d": 19,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "solo-tent-ranking",
+      "categoryId": "tent",
+      "pv28d": 17,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "kids-sleeping-bag-ranking",
+      "categoryId": "sleeping-bag",
+      "pv28d": 14,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "camping-beginner-gear-checklist",
+      "categoryId": "tent",
+      "pv28d": 13,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "growler-comparison-summer-ice",
+      "categoryId": "cooler",
+      "pv28d": 13,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "family-camp-first-time-guide",
+      "categoryId": "tent",
+      "pv28d": 12,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "rainwear-ranking",
+      "categoryId": "wear",
+      "pv28d": 11,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-ranking",
+      "categoryId": "tarp",
+      "pv28d": 10,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tumbler-camp-daily-ranking",
+      "categoryId": "tumbler",
+      "pv28d": 9,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "trekking-shoes-ranking",
+      "categoryId": "shoes",
+      "pv28d": 9,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "firepit-3way-showdown",
+      "categoryId": "firepit",
+      "pv28d": 8,
+      "clicks28d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "budget-sleeping-bag-ranking",
+      "categoryId": "sleeping-bag",
+      "pv28d": 7,
+      "clicks28d": 0,
       "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 105,
-      "clicks7d": 0,
-      "searchSessions": 82,
+      "pv28d": 302,
+      "clicks28d": 0,
+      "searchSessions": 256,
       "trend": "active"
     },
     {
-      "categoryId": "backpack",
-      "pv7d": 14,
-      "clicks7d": 0,
-      "searchSessions": 3,
+      "categoryId": "insect-repellent",
+      "pv28d": 63,
+      "clicks28d": 0,
+      "searchSessions": 0,
       "trend": "active"
     },
     {
       "categoryId": "cooler",
-      "pv7d": 13,
-      "clicks7d": 0,
+      "pv28d": 46,
+      "clicks28d": 0,
+      "searchSessions": 24,
+      "trend": "active"
+    },
+    {
+      "categoryId": "sleeping-bag",
+      "pv28d": 40,
+      "clicks28d": 0,
+      "searchSessions": 35,
+      "trend": "active"
+    },
+    {
+      "categoryId": "wear",
+      "pv28d": 36,
+      "clicks28d": 0,
+      "searchSessions": 21,
+      "trend": "active"
+    },
+    {
+      "categoryId": "backpack",
+      "pv28d": 30,
+      "clicks28d": 0,
       "searchSessions": 11,
       "trend": "active"
     },
     {
-      "categoryId": "firepit",
-      "pv7d": 8,
-      "clicks7d": 0,
-      "searchSessions": 3,
-      "trend": "low"
-    },
-    {
-      "categoryId": "sleeping-bag",
-      "pv7d": 8,
-      "clicks7d": 0,
-      "searchSessions": 8,
-      "trend": "low"
-    },
-    {
-      "categoryId": "light",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "searchSessions": 3,
-      "trend": "low"
-    },
-    {
-      "categoryId": "wear",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "searchSessions": 1,
-      "trend": "low"
-    },
-    {
       "categoryId": "tarp",
-      "pv7d": 2,
-      "clicks7d": 0,
+      "pv28d": 10,
+      "clicks28d": 0,
+      "searchSessions": 7,
+      "trend": "low"
+    },
+    {
+      "categoryId": "tumbler",
+      "pv28d": 9,
+      "clicks28d": 0,
+      "searchSessions": 0,
+      "trend": "low"
+    },
+    {
+      "categoryId": "shoes",
+      "pv28d": 9,
+      "clicks28d": 0,
       "searchSessions": 2,
       "trend": "low"
     },
     {
-      "categoryId": "chair",
-      "pv7d": 1,
-      "clicks7d": 0,
-      "searchSessions": 0,
+      "categoryId": "firepit",
+      "pv28d": 8,
+      "clicks28d": 0,
+      "searchSessions": 6,
       "trend": "low"
     }
   ],

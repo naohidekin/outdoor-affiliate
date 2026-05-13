@@ -1,22 +1,44 @@
 {
-  "week": "2026-W19",
-  "generatedAt": "2026-05-06T00:00:26.140Z",
+  "week": "2026-W20",
+  "generatedAt": "2026-05-13T00:00:29.466Z",
   "articles": [
     {
-      "themeId": "theme-2026-W19-01",
-      "categoryId": "insect-repellent",
-      "title": "子どもに使える虫除けグッズ完全ガイド【2026年版】",
-      "slug": "kids-insect-repellent-guide",
-      "angle": "ディート・イカリジン・天然成分の違いを年齢別に整理し、子連れキャンプで安心して使える虫除けアイテムを選定する",
+      "themeId": "theme-2026-W20-01",
+      "categoryId": "tent",
+      "title": "キャンプ初心者向け！2人用テントの選び方と人気おすすめ10選【2026年版】",
+      "slug": "2-person-tent-ranking",
+      "angle": "「duo-tent-ranking」とは切り口を変え、カップル・夫婦だけでなく親子2人・友人ペアなど多様な2人ユースを想定した選び方ガイド＋ランキング形式で初心者の購入判断をサポート。",
       "targetKeywords": [
-        "子ども 虫除け キャンプ",
-        "イカリジン 子供 虫除けスプレー",
-        "赤ちゃん キャンプ 虫対策"
+        "2人用テント おすすめ",
+        "テント 初心者 2人",
+        "カップル テント 選び方"
       ],
-      "seasonRelevance": "5月はブヨ・蚊が活発化し始める時期で、GW明けの週末キャンプ需要に直結する",
+      "seasonRelevance": "5月のゴールデンウィーク明けから梅雨前にかけて2人キャンプの需要が高まる最旬タイミング。",
       "priority": "high",
-      "reason": "insect-repellentは今月の季節カテゴリかつtrendがactiveで、既存3記事はいずれも成分比較や総合ロードマップ寄りのため、子ども安全視点の年齢別ガイドは未開拓の角度",
-      "scheduledPublishDate": "2026-05-08",
+      "reason": "tentカテゴリはPV302・検索セッション256とサイト最高水準のトレンド継続中で、デュオテント記事はあるが初心者向け選び方ガイドの角度がまだ空いているため即効性が高い。",
+      "scheduledPublishDate": "2026-05-15",
+      "productCount": 3,
+      "productIds": [
+        "tent-020",
+        "tent-021",
+        "tent-022"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W20-02",
+      "categoryId": "insect-repellent",
+      "title": "子どもに使える虫除けスプレー・シールおすすめ9選【2026年版】",
+      "slug": "kids-insect-repellent-ranking",
+      "angle": "DEET濃度・天然成分・肌への安心度を軸に、乳幼児から小学生まで年齢別に使える製品を比較し、ファミリーキャンパーが迷わず選べる実用ガイド。",
+      "targetKeywords": [
+        "子ども 虫除けスプレー おすすめ",
+        "赤ちゃん 虫除け キャンプ",
+        "子供 虫除け 安全"
+      ],
+      "seasonRelevance": "5月下旬から蚊・ブヨのシーズンが本格化し、家族キャンプ前に子ども向け虫除けを探す検索が急増するタイミング。",
+      "priority": "high",
+      "reason": "insect-repellentは季節カテゴリかつトレンドactiveで、既存記事の一般ガイド・鬼ヤンマレビューに続く「ファミリー×子ども安全」という未着手の高需要切り口を抑えられる。",
+      "scheduledPublishDate": "2026-05-17",
       "productCount": 3,
       "productIds": [
         "insect-repellent-007",
@@ -25,45 +47,23 @@
       ]
     },
     {
-      "themeId": "theme-2026-W19-02",
-      "categoryId": "tent",
-      "title": "前室なしテントの選び方と弱点カバー術【2026年版】",
-      "slug": "tent-without-vestibule-guide",
-      "angle": "前室なし・最小限構造のテントを選ぶメリット・デメリットを整理し、タープ連携で弱点を補う実践レイアウトまで解説する",
-      "targetKeywords": [
-        "前室なし テント",
-        "テント タープ 組み合わせ",
-        "ソロ ファミリー テント 前室 比較"
-      ],
-      "seasonRelevance": "5月の行楽シーズンに向けてテントカテゴリはsearchSessions 200と最高水準で需要が集中している",
-      "priority": "high",
-      "reason": "tentはPV・searchSessionsともにサイト最高値で伸び代が大きく、既存記事は前室あり比較・ランキング系が多いため『前室なし』視点は差別化できる未執筆テーマ",
-      "scheduledPublishDate": "2026-05-10",
-      "productCount": 3,
-      "productIds": [
-        "tent-020"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W19-03",
+      "themeId": "theme-2026-W20-03",
       "categoryId": "wear",
-      "title": "春キャンプの重ね着レイヤリング完全攻略【2026年版】",
-      "slug": "spring-camp-layering-guide",
-      "angle": "朝晩の寒暖差が激しい春キャンプを快適に過ごすため、ベース・ミッド・アウターの具体的な組み合わせを予算帯別に提案する",
+      "title": "登山・トレッキング向け速乾Tシャツおすすめ10選【2026年版】",
+      "slug": "quick-dry-tshirt-ranking",
+      "angle": "来月の季節カテゴリ先取りとして、春夏キャンプ・低山ハイキングで必需品となる速乾インナー・Tシャツをムレ・臭い・コスパの3軸で徹底比較。",
       "targetKeywords": [
-        "春キャンプ 服装 重ね着",
-        "キャンプ レイヤリング 初心者",
-        "春キャンプ 寒暖差 対策 ウェア"
+        "速乾Tシャツ 登山 おすすめ",
+        "アウトドア 速乾インナー",
+        "キャンプ 服装 夏 Tシャツ"
       ],
-      "seasonRelevance": "来月の季節カテゴリとして準備推奨されており、5月中に公開することで6月需要を先取りしSEO評価期間を確保できる",
+      "seasonRelevance": "5月後半〜6月は気温上昇で速乾ウェアの検索が急増し、来月のwear季節カテゴリへの流入基盤を今月のうちに構築できる。",
       "priority": "medium",
-      "reason": "wearはsearchSessions 21・trendがactiveで伸び余地があり、既存のspring-camp-clothing-guideが総論的な内容のため『レイヤリング実践』という具体的手法記事で補完できる",
-      "scheduledPublishDate": "2026-05-13",
+      "reason": "wearカテゴリはPV36・トレンドactiveで成長余地があり、既存のspring-camp-clothing-guide・rainwear-rankingとは異なる「速乾Tシャツ単品比較」の切り口で夏需要を先取りしつつ来月の季節カテゴリ強化に先行投資できる。",
+      "scheduledPublishDate": "2026-05-20",
       "productCount": 3,
       "productIds": [
-        "rw-001",
-        "rw-002",
-        "rw-003"
+        "wear-001"
       ]
     }
   ]
