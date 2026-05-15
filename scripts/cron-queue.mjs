@@ -20,6 +20,7 @@ import dns from "dns/promises";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.join(__dirname, "..");
 const LOG_DIR = path.join(PROJECT_DIR, "logs");
+const KS_PATH = path.join(process.env.HOME || "", ".claude/context/kill_switch.json");
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 
@@ -52,6 +53,19 @@ function isOffDay() {
   return isWeekend() || isHoliday();
 }
 
+function readKillSwitch() {
+  try {
+    return JSON.parse(fs.readFileSync(KS_PATH, "utf-8"));
+  } catch {
+    return {};
+  }
+}
+
+function isKSEnabled(business, platform) {
+  const ks = readKillSwitch();
+  return ks.global === true || ks.businesses?.[business]?.[platform] === true;
+}
+
 // スロット判定
 const hour = today.getHours();
 const forceSlot = process.env.FORCE_SLOT;
@@ -78,13 +92,9 @@ if (slot === "morning_holiday" && !isOffDay()) {
 }
 
 // Kill switch チェック
-const killSwitchPath = path.join(PROJECT_DIR, "data/kill-switch.json");
-if (fs.existsSync(killSwitchPath)) {
-  const ks = JSON.parse(fs.readFileSync(killSwitchPath, "utf-8"));
-  if (ks.enabled) {
-    log("KILL SWITCH 有効。投稿をスキップします。");
-    process.exit(0);
-  }
+if (isKSEnabled("gearman", "x")) {
+  log("KILL SWITCH 有効。投稿をスキップします。");
+  process.exit(0);
 }
 
 // ネットワーク待機（スリープ復帰直後のDNS失敗対策）
