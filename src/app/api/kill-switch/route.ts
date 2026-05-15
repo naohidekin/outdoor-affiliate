@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 const KILL_SWITCH_PATH = path.join(process.env.HOME || "", ".claude/context/kill_switch.json");
 
 type BusinessName = "gearman" | "amble" | "kodomo" | "jsh";
-type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit";
+type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit" | "pinterest";
 
 type KillSwitchState = {
   businesses: {
@@ -28,6 +28,9 @@ type KillSwitchState = {
     jsh: {
       x: boolean;
       reddit: boolean;
+      threads: boolean;
+      article: boolean;
+      pinterest: boolean;
     };
   };
   global: boolean;
@@ -56,7 +59,7 @@ const DEFAULT_STATE: KillSwitchState = {
     gearman: { x: false, article: false, research: false },
     amble: { x: false },
     kodomo: { x: false, note: false, threads: false },
-    jsh: { x: false, reddit: false },
+    jsh: { x: false, reddit: false, threads: false, article: false, pinterest: false },
   },
   global: false,
   updatedAt: "",

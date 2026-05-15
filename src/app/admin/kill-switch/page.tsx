@@ -20,6 +20,9 @@ type KillSwitchState = {
     jsh: {
       x: boolean;
       reddit: boolean;
+      threads: boolean;
+      article: boolean;
+      pinterest: boolean;
     };
   };
   global: boolean;
@@ -28,14 +31,14 @@ type KillSwitchState = {
 };
 
 type BusinessName = keyof KillSwitchState["businesses"];
-type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit";
+type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit" | "pinterest";
 
 const DEFAULT_STATE: KillSwitchState = {
   businesses: {
     gearman: { x: false, article: false, research: false },
     amble: { x: false },
     kodomo: { x: false, note: false, threads: false },
-    jsh: { x: false, reddit: false },
+    jsh: { x: false, reddit: false, threads: false, article: false, pinterest: false },
   },
   global: false,
   updatedAt: "",
@@ -72,6 +75,9 @@ const BUSINESS_SECTIONS = [
     items: [
       { platform: "x", label: "X投稿" },
       { platform: "reddit", label: "Reddit" },
+      { platform: "threads", label: "Threads" },
+      { platform: "article", label: "記事生成" },
+      { platform: "pinterest", label: "Pinterest" },
     ],
   },
 ] as const;
@@ -95,7 +101,7 @@ function normalizeState(payload: Partial<KillSwitchState> | undefined): KillSwit
       },
       jsh: {
         ...DEFAULT_STATE.businesses.jsh,
-        ...payload?.businesses?.jsh,
+        ...(payload?.businesses?.jsh ?? {}),
       },
     },
   };
