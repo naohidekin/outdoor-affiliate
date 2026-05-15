@@ -7,8 +7,8 @@ export const runtime = "nodejs";
 
 const KILL_SWITCH_PATH = path.join(process.env.HOME || "", ".claude/context/kill_switch.json");
 
-type BusinessName = "gearman" | "amble" | "kodomo";
-type PlatformName = "x" | "article" | "research" | "note" | "threads";
+type BusinessName = "gearman" | "amble" | "kodomo" | "jsh";
+type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit";
 
 type KillSwitchState = {
   businesses: {
@@ -24,6 +24,10 @@ type KillSwitchState = {
       x: boolean;
       note: boolean;
       threads: boolean;
+    };
+    jsh: {
+      x: boolean;
+      reddit: boolean;
     };
   };
   global: boolean;
@@ -52,6 +56,7 @@ const DEFAULT_STATE: KillSwitchState = {
     gearman: { x: false, article: false, research: false },
     amble: { x: false },
     kodomo: { x: false, note: false, threads: false },
+    jsh: { x: false, reddit: false },
   },
   global: false,
   updatedAt: "",
@@ -78,6 +83,10 @@ function normalizeState(input: Partial<KillSwitchState> | undefined): KillSwitch
       kodomo: {
         ...DEFAULT_STATE.businesses.kodomo,
         ...input?.businesses?.kodomo,
+      },
+      jsh: {
+        ...DEFAULT_STATE.businesses.jsh,
+        ...input?.businesses?.jsh,
       },
     },
   };
