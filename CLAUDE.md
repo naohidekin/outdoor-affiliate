@@ -59,7 +59,7 @@
 
 - **楽天アフィリエイト**: products.jsonの `affiliateUrl` フィールドに `hb.afl.rakuten.co.jp` 形式のURLを設定
 - **Amazonアソシエイト**: アソシエイトID `nao78-22`
-  - リンク形式: `https://www.amazon.co.jp/dp/[ASIN]/?tag=nao78-22-22`
+  - リンク形式: `https://www.amazon.co.jp/dp/[ASIN]/?tag=nao78-22`
   - products.jsonの `amazonUrl` フィールドに設定する
   - ASINはAmazon商品ページURLの `/dp/` 以降の10桁英数字
 
