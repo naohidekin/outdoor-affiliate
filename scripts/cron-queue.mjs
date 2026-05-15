@@ -5,7 +5,7 @@
  *
  * 08:00 → 平日かつ非祝日のみ実行
  * 10:00 → 土日 or 祝日のみ実行
- * 19:00 → 毎日実行（FORCE_SLOT=evening）
+ * 20:00 → 毎日実行（FORCE_SLOT=evening）
  *
  * 環境変数:
  *   FORCE_SLOT=morning|morning_holiday|evening  強制実行
@@ -15,6 +15,7 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dns from "dns/promises";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.join(__dirname, "..");
@@ -59,7 +60,7 @@ if (forceSlot) {
   slot = forceSlot;
 } else if (hour < 9) {
   slot = "morning_weekday";   // 08:00 トリガー
-} else if (hour < 12) {
+} else if (hour < 11) {
   slot = "morning_holiday";   // 10:00 トリガー
 } else {
   slot = "evening";           // 19:00 トリガー
@@ -86,13 +87,34 @@ if (fs.existsSync(killSwitchPath)) {
   }
 }
 
+// ネットワーク待機（スリープ復帰直後のDNS失敗対策）
+async function waitForNetwork(maxRetries = 5, intervalMs = 10000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await dns.lookup("oauth2.googleapis.com");
+      if (i > 0) log(`ネットワーク接続確認（${i + 1}回目で成功）`);
+      return true;
+    } catch {
+      if (i < maxRetries - 1) {
+        log(`ネットワーク未接続（${i + 1}/${maxRetries}）。${intervalMs / 1000}秒後に再試行...`);
+        await new Promise(r => setTimeout(r, intervalMs));
+      }
+    }
+  }
+  log(`ネットワーク接続失敗（${maxRetries}回試行）。スキップします。`);
+  return false;
+}
+
+const networkOk = await waitForNetwork();
+if (!networkOk) process.exit(0);
+
 const NODE = process.execPath;
 
 // Step 1: queue-to-sheets
-log("queue-to-sheets.js 実行開始（--max=1 --random-delay=59）");
+log("queue-to-sheets.js 実行開始（--max=1 --random-delay=29）");
 try {
   const out = execSync(
-    `"${NODE}" scripts/queue-to-sheets.js --max=1 --random-delay=59`,
+    `"${NODE}" scripts/queue-to-sheets.js --max=1 --random-delay=29`,
     { cwd: PROJECT_DIR, encoding: "utf-8" }
   );
   process.stdout.write(out);

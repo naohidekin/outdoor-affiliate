@@ -430,9 +430,49 @@ function aggregateAnalysis(posts) {
   };
 }
 
-// === Phase 3: Generate ===
+// === Phase 3a: アカウントプロフィール取得 ===
 
-async function generateContent(client, posts) {
+async function fetchAccountProfiles(xClient, posts) {
+  const usernames = [...new Set(posts.map((p) => p.authorUsername).filter(Boolean))].slice(0, 35);
+  console.log(`  ${usernames.length}件のアカウントプロフィールを取得中...`);
+
+  let usersRes = null;
+  try {
+    usersRes = await xClient.v2.usersByUsernames(usernames, {
+      "user.fields": ["description", "public_metrics"],
+    });
+  } catch (err) {
+    console.warn(`  ユーザー取得エラー: ${err.message}`);
+    return new Map();
+  }
+
+  const profileMap = new Map();
+  for (const user of usersRes?.data || []) {
+    let recentTexts = [];
+    try {
+      const tweets = await xClient.v2.userTimeline(user.id, {
+        max_results: 10,
+        "tweet.fields": ["public_metrics"],
+      });
+      recentTexts = (tweets?.data?.data || []).map((t) => t.text.slice(0, 60));
+    } catch {
+      // レート制限等は無視してスキップ
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+    profileMap.set(user.username.toLowerCase(), {
+      bio: user.description || "",
+      followers: user.public_metrics?.followers_count || 0,
+      recentTexts,
+    });
+  }
+
+  console.log(`  プロフィール取得完了: ${profileMap.size}件`);
+  return profileMap;
+}
+
+// === Phase 3b: ライター（引用投稿・リプライ草案生成）===
+
+async function generateContentWithProfiles(client, posts, accountProfiles) {
   console.log(`\n[生成] ${posts.length}件の引用投稿・リプライを生成中...`);
   const results = [];
   const batchSize = 5;
@@ -451,6 +491,14 @@ async function generateContent(client, posts) {
   - parenting軸: ほっこり〜自虐
   - doctor軸: 「本職柄〜」「診療していて〜」の控えめ匂わせ（専門科・症例・薬品名は出さない）`;
 
+  // high-performer-patterns.json を注入（あれば）
+  const patterns = readJson("high-performer-patterns.json");
+  const patternBlock = patterns?.patterns?.length
+    ? `## 参考：自分の高エンゲージ投稿パターン\n${patterns.patterns
+        .map((p) => `- ${p.postType}: 「${(p.examples?.[0] || "").slice(0, 50)}...」`)
+        .join("\n")}\n\n`
+    : "";
+
   for (let i = 0; i < posts.length; i += batchSize) {
     const batch = posts.slice(i, i + batchSize);
     const batchNum = Math.floor(i / batchSize) + 1;
@@ -459,10 +507,13 @@ async function generateContent(client, posts) {
     console.log(`  バッチ ${batchNum}/${totalBatches} (${batch.length}件)...`);
 
     const tweetsText = batch
-      .map(
-        (p, idx) =>
-          `[${idx + 1}] @${p.authorUsername} (軸: ${p.axis})\n投稿: ${p.text}\nいいね${p.metrics.likes} RT${p.metrics.retweets}\nバズ要因: ${p.analysis?.hook || "不明"} / ${p.analysis?.emotionalTrigger || "不明"}`
-      )
+      .map((p, idx) => {
+        const profile = accountProfiles?.get(p.authorUsername?.toLowerCase());
+        const profileSection = profile
+          ? `\nアカウント傾向: bio="${profile.bio.slice(0, 60)}" / フォロワー${profile.followers} / 最近の投稿: "${profile.recentTexts[0] || "不明"}"`
+          : "";
+        return `[${idx + 1}] @${p.authorUsername} (軸: ${p.axis})\n投稿: ${p.text}\nいいね${p.metrics.likes} RT${p.metrics.retweets}\nバズ要因: ${p.analysis?.hook || "不明"} / ${p.analysis?.emotionalTrigger || "不明"}${profileSection}`;
+      })
       .join("\n\n");
 
     try {
@@ -474,13 +525,14 @@ async function generateContent(client, posts) {
             role: "user",
             content: `${personaPreamble}
 
-## タスク
+${patternBlock}## タスク
 以下のバイラル投稿に対して、(A) バズる引用投稿 と (B) バズるリプライ を作ってください。
+相手アカウントの傾向を読んで、その人の文脈に合った返しをしてください。
 
 ## ルール
 - 引用投稿: 200文字以内。ギア男の独自視点・体験・知見を追加。「すごい！」等の空っぽな賞賛は禁止
 - リプライ: 200文字以内。会話への貢献（体験談, データ, 質問, 別視点）。宣伝・リンク貼りなし
-- 軸クロスの視点を活かす（例: AI投稿にキャンプ好き医師として反応 → 印象に残る）
+- 軸クロスの視点を活かす（例: 育児投稿に医師父として反応 → 印象に残る）
 - 絵文字は0〜1個。顔文字は使わない
 - 以下のNGワードは使用禁止: 最高, 最強, 絶対, 神, 革命, 奇跡, ヤバい
 - 医療系の断言（治る, 効く, 改善する等）は禁止
@@ -493,7 +545,7 @@ ${tweetsText}
   {
     "index": 1,
     "quoteTweet": "引用投稿テキスト",
-    "quoteAxis": "この引用投稿の軸 (camp/ai/parenting/doctor)",
+    "quoteAxis": "この引用投稿の軸 (camp/parenting/doctor)",
     "quoteRationale": "なぜこのアプローチか（20文字以内）",
     "reply": "リプライテキスト",
     "replyAxis": "このリプライの軸",
@@ -512,10 +564,6 @@ ${tweetsText}
           const g = generated[j];
           const post = batch[j];
 
-          // NG検証
-          const quoteCheck = checkXPostContent(g.quoteTweet || "");
-          const replyCheck = checkXPostContent(g.reply || "");
-
           results.push({
             ...post,
             generatedContent: {
@@ -523,15 +571,13 @@ ${tweetsText}
                 text: g.quoteTweet || "",
                 axis: g.quoteAxis || post.axis,
                 rationale: g.quoteRationale || "",
-                validationErrors: [...quoteCheck.errors, ...quoteCheck.warnings].join(" / ") || undefined,
-                status: quoteCheck.ok ? "draft" : "needs_review",
+                status: "draft_raw",
               },
               reply: {
                 text: g.reply || "",
                 axis: g.replyAxis || post.axis,
                 rationale: g.replyRationale || "",
-                validationErrors: [...replyCheck.errors, ...replyCheck.warnings].join(" / ") || undefined,
-                status: replyCheck.ok ? "draft" : "needs_review",
+                status: "draft_raw",
               },
             },
           });
@@ -545,6 +591,154 @@ ${tweetsText}
       console.warn(`  生成エラー (バッチ${batchNum}): ${err.message}`);
       for (const p of batch) {
         results.push({ ...p, generatedContent: null });
+      }
+    }
+
+    if (i + batchSize < posts.length) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+
+  return results;
+}
+
+// === Phase 3c: エディター（草案ブラッシュアップ）===
+
+async function editGeneratedContent(client, posts) {
+  console.log(`\n[編集] ${posts.length}件の草案をブラッシュアップ中...`);
+  const config = readJson("account-config.json") || {};
+  const ngWords = [
+    ...(config.ngWords?.hype || []),
+    ...(config.ngWords?.template || []),
+    ...(config.ngWords?.medical || []),
+    ...(config.ngWords?.landmark || []),
+  ];
+  const toneRules = config.tone?.rules || [];
+
+  const editorPrompt = `あなたは厳格な編集者です。以下のルールでX投稿の草案をチェック・修正してください。
+
+## チェック観点
+1. NGワード禁止: ${ngWords.join(", ")}
+2. 文体ルール: ${toneRules.join(" / ")}
+3. 200文字以内
+4. 体験談・データ・質問・別視点のいずれか1つ以上含む
+5. 具体性がある（「〜らしい」「〜ではないでしょうか」は禁止）
+
+## 修正方針
+- NG語があれば別の表現に置き換える
+- 200字超過なら削る（意味を変えない）
+- 具体性が低ければ「個人的には〜」「3年使って〜」型の体験談に変える
+- 問題なければそのままでOK（changedをfalseにする）`;
+
+  const results = [...posts];
+  const batchSize = 5;
+
+  for (let i = 0; i < posts.length; i += batchSize) {
+    const batch = posts.slice(i, i + batchSize);
+    const batchNum = Math.floor(i / batchSize) + 1;
+    const totalBatches = Math.ceil(posts.length / batchSize);
+
+    console.log(`  編集バッチ ${batchNum}/${totalBatches} (${batch.length}件)...`);
+
+    const draftsText = batch
+      .filter((p) => p.generatedContent)
+      .map((p, idx) => {
+        const gc = p.generatedContent;
+        return `[${i + idx + 1}] 引用: "${gc.quoteTweet.text}" / リプライ: "${gc.reply.text}"`;
+      })
+      .join("\n");
+
+    if (!draftsText.trim()) continue;
+
+    try {
+      const response = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        messages: [
+          {
+            role: "user",
+            content: `${editorPrompt}
+
+## 草案
+${draftsText}
+
+## 出力（JSON配列）
+[
+  {
+    "index": ${i + 1},
+    "quoteTweet": "修正後の引用投稿（変更なしは元のまま）",
+    "reply": "修正後のリプライ（変更なしは元のまま）",
+    "changed": true
+  }
+]`,
+          },
+        ],
+      });
+
+      const text = response.content[0].text;
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const edited = JSON.parse(jsonMatch[0]);
+        for (const e of edited) {
+          const postIdx = e.index - 1;
+          if (postIdx < 0 || postIdx >= results.length) continue;
+          const post = results[postIdx];
+          if (!post.generatedContent) continue;
+
+          const rawQuote = post.generatedContent.quoteTweet.text;
+          const rawReply = post.generatedContent.reply.text;
+          const newQuote = e.quoteTweet || rawQuote;
+          const newReply = e.reply || rawReply;
+
+          // 最終NG検証
+          const quoteCheck = checkXPostContent(newQuote);
+          const replyCheck = checkXPostContent(newReply);
+
+          results[postIdx] = {
+            ...post,
+            generatedContent: {
+              quoteTweet: {
+                ...post.generatedContent.quoteTweet,
+                text: newQuote,
+                _raw: e.changed ? rawQuote : undefined,
+                validationErrors: [...quoteCheck.errors, ...quoteCheck.warnings].join(" / ") || undefined,
+                status: quoteCheck.ok ? "draft" : "needs_review",
+              },
+              reply: {
+                ...post.generatedContent.reply,
+                text: newReply,
+                _raw: e.changed ? rawReply : undefined,
+                validationErrors: [...replyCheck.errors, ...replyCheck.warnings].join(" / ") || undefined,
+                status: replyCheck.ok ? "draft" : "needs_review",
+              },
+            },
+          };
+        }
+      }
+    } catch (err) {
+      console.warn(`  編集エラー (バッチ${batchNum}): ${err.message}`);
+      // エラー時は草案をそのまま残してステータスだけ付与
+      for (let j = 0; j < batch.length; j++) {
+        const postIdx = i + j;
+        const post = results[postIdx];
+        if (!post?.generatedContent) continue;
+        const quoteCheck = checkXPostContent(post.generatedContent.quoteTweet.text);
+        const replyCheck = checkXPostContent(post.generatedContent.reply.text);
+        results[postIdx] = {
+          ...post,
+          generatedContent: {
+            quoteTweet: {
+              ...post.generatedContent.quoteTweet,
+              validationErrors: [...quoteCheck.errors, ...quoteCheck.warnings].join(" / ") || undefined,
+              status: quoteCheck.ok ? "draft" : "needs_review",
+            },
+            reply: {
+              ...post.generatedContent.reply,
+              validationErrors: [...replyCheck.errors, ...replyCheck.warnings].join(" / ") || undefined,
+              status: replyCheck.ok ? "draft" : "needs_review",
+            },
+          },
+        };
       }
     }
 
@@ -730,9 +924,15 @@ async function runViralScout(opts) {
     }
   }
 
-  // Phase 3: Generate
-  console.log("\n[Phase 3] 引用投稿・リプライ生成...");
-  const finalPosts = await generateContent(claude, analyzedPosts);
+  // Phase 3: Generate (3a → 3b → 3c)
+  console.log("\n[Phase 3a] アカウントプロフィール取得...");
+  const accountProfiles = await fetchAccountProfiles(xClient, analyzedPosts);
+
+  console.log("\n[Phase 3b] 引用投稿・リプライ草案生成...");
+  const draftPosts = await generateContentWithProfiles(claude, analyzedPosts, accountProfiles);
+
+  console.log("\n[Phase 3c] 草案ブラッシュアップ...");
+  const finalPosts = await editGeneratedContent(claude, draftPosts);
 
   // レポート出力
   printReport(finalPosts, aggregate);

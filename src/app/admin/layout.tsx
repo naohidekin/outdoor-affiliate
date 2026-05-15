@@ -4,16 +4,33 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const navItems = [
-  { href: "/admin", label: "ダッシュボード", icon: "📊" },
-  { href: "/admin/articles", label: "記事管理", icon: "📝" },
-  { href: "/admin/products", label: "商品管理", icon: "📦" },
-  { href: "/admin/categories", label: "カテゴリ管理", icon: "🏷️" },
-  { href: "/admin/x-posts", label: "X 投稿管理", icon: "𝕏" },
-  { href: "/admin/threads", label: "Threads 投稿管理", icon: "🧵" },
-  { href: "/admin/x-analytics", label: "X Analytics", icon: "📈" },
-  { href: "/admin/viral-scout", label: "Viral Scout", icon: "🔍" },
-  { href: "/admin/4koma", label: "4コマ漫画", icon: "🎨" },
+type NavLinkItem = {
+  type: "link";
+  href: string;
+  label: string;
+  icon: string;
+};
+
+type NavSectionItem = {
+  type: "section";
+  label: string;
+};
+
+type NavItem = NavLinkItem | NavSectionItem;
+
+const navItems: NavItem[] = [
+  { type: "link", href: "/admin", label: "ホーム", icon: "🏠" },
+  { type: "section", label: "ギア男" },
+  { type: "link", href: "/admin/x-posts", label: "X投稿管理", icon: "𝕏" },
+  { type: "link", href: "/admin/viral-scout", label: "Viral Scout", icon: "🔍" },
+  { type: "link", href: "/admin/articles", label: "記事管理", icon: "📝" },
+  { type: "link", href: "/admin/4koma", label: "4コマ漫画", icon: "🎨" },
+  { type: "section", label: "SNS管理" },
+  { type: "link", href: "/admin/amble", label: "アンブロ", icon: "📣" },
+  { type: "link", href: "/admin/kodomo", label: "こどもケアラボ", icon: "👨‍👩‍👧" },
+  { type: "section", label: "管理" },
+  { type: "link", href: "/admin/kill-switch", label: "KILL_SWITCH", icon: "🛑" },
+  { type: "link", href: "/admin/launchd", label: "launchdジョブ", icon: "⚙️" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -62,21 +79,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm ${
-                pathname === item.href
-                  ? "bg-green-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800"
-              }`}
-            >
-              <span>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            if (item.type === "section") {
+              return (
+                <div
+                  key={item.label}
+                  className="px-4 pt-4 pb-1 text-xs text-gray-500 uppercase tracking-[0.2em]"
+                >
+                  {item.label}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm ${
+                  pathname === item.href
+                    ? "bg-green-600 text-white"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="p-4 border-t border-gray-700">
           <button

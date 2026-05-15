@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
 	<key>Label</key>
 	<string>com.outdoor-affiliate.analyze-x</string>
 	<key>ProgramArguments</key>
@@ -9,9 +14,14 @@
 		<string>/opt/homebrew/bin/node</string>
 		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/analyze-x.js</string>
 	</array>
+	<key>StandardErrorPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyze-x-error.log</string>
+	<key>StandardInputPath</key>
+	<string>/dev/null</string>
+	<key>StandardOutPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyze-x.log</string>
 	<key>StartCalendarInterval</key>
 	<dict>
-		<!-- 毎日 07:00 JST: 前日の投稿メトリクスを収集してフィードバックループに流す -->
 		<key>Hour</key>
 		<integer>7</integer>
 		<key>Minute</key>
@@ -19,14 +29,5 @@
 	</dict>
 	<key>WorkingDirectory</key>
 	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
-	<key>StandardOutPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyze-x.log</string>
-	<key>StandardErrorPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-analyze-x-error.log</string>
-	<key>EnvironmentVariables</key>
-	<dict>
-		<key>PATH</key>
-		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
-	</dict>
 </dict>
 </plist>

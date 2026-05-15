@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
+import { NextRequest } from "next/server";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const SESSION_TOKEN = "outdoor-admin-session";
@@ -34,6 +35,15 @@ export async function isAuthenticated(): Promise<boolean> {
   // 後方互換: 旧トークン "authenticated" も一時的に許可（次回ログインで置き換え）
   if (value === "authenticated") return true;
   return verifyToken(value);
+}
+
+export function isAuthenticatedRequest(req: NextRequest): boolean {
+  const token = req.headers.get("x-admin-token");
+  if (token && token === process.env.ADMIN_API_TOKEN) return true;
+  const cookieValue = req.cookies.get(SESSION_TOKEN)?.value;
+  if (!cookieValue) return false;
+  if (cookieValue === "authenticated") return true;
+  return verifyToken(cookieValue);
 }
 
 export function verifyPassword(password: string): boolean {

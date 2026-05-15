@@ -303,8 +303,8 @@ function saveProgress(progress) {
             const btnText = (await btn.textContent()).trim();
             console.log(`  ✅ 投稿ボタン発見: "${btnText}" → クリック`);
             await btn.click();
-            await targetPage.waitForTimeout(2000);
-            posted = true;
+            posted = true; // ページ遷移前にフラグをセット（waitForTimeoutが例外を投げても成功扱い）
+            await targetPage.waitForTimeout(2000).catch(() => {});
             break;
           }
         } catch { continue; }
