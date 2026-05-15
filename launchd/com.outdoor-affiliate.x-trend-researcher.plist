@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.outdoor-affiliate.x-trend-researcher</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/node</string>
+		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/x-trend-researcher.js</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>7</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+	<key>StandardInputPath</key>
+	<string>/dev/null</string>
+	<key>WorkingDirectory</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<key>StandardOutPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-trend-researcher.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-trend-researcher-error.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+		<key>HOME</key>
+		<string>/Users/NaohideKin</string>
+	</dict>
+</dict>
+</plist>
