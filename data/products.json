@@ -4213,5 +4213,87 @@
     "rating": 4.6,
     "createdAt": "2026-05-18T16:42:19.364Z",
     "updatedAt": "2026-05-18T16:42:19.364Z"
+  },
+  {
+    "id": "tent-sp-amenity-dome-m",
+    "name": "スノーピーク アメニティドームM",
+    "brand": "Snow Peak",
+    "price": 44000,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09NBJH22W/?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "3人",
+      "重量": "約8kg",
+      "室内高": "120cm",
+      "設営": "クロスフレーム",
+      "通気性": "メッシュ少なめ",
+      "耐風性": "低重心で強い"
+    },
+    "rating": 4.2,
+    "createdAt": "2026-05-18T16:52:46.767Z",
+    "updatedAt": "2026-05-18T16:52:46.770Z"
+  },
+  {
+    "id": "tent-sp-landnest-dome-m",
+    "name": "スノーピーク ランドネストドームM",
+    "brand": "Snow Peak",
+    "price": 38280,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DTNVMLHW/?tag=nao78-22",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "4人",
+      "重量": "約7.7kg",
+      "室内高": "145cm",
+      "設営": "対称構造",
+      "通気性": "メッシュ2+ベンチレーション2",
+      "耐風性": "十分"
+    },
+    "rating": 4.5,
+    "createdAt": "2026-05-18T16:52:46.770Z",
+    "updatedAt": "2026-05-18T16:52:46.770Z"
+  },
+  {
+    "id": "firepit-picogrill-398",
+    "name": "ピコグリル398",
+    "brand": "Picogrill",
+    "price": 14000,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07ZHQ2NCS/?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約450g",
+      "収納": "A4サイズ",
+      "火床": "38.5×26cm",
+      "素材": "ステンレス",
+      "組立": "3パーツ"
+    },
+    "rating": 4.3,
+    "createdAt": "2026-05-18T16:52:46.770Z",
+    "updatedAt": "2026-05-18T16:52:46.770Z"
+  },
+  {
+    "id": "firepit-tokyocamp",
+    "name": "Tokyo Camp焚火台",
+    "brand": "Tokyo Camp",
+    "price": 4980,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08NVFR3WZ/?tag=nao78-22",
+    "categoryId": "firepit",
+    "specs": {
+      "重量": "約965g",
+      "収納": "36×18cm",
+      "火床": "36×22cm",
+      "素材": "ステンレス",
+      "組立": "3パーツ"
+    },
+    "rating": 4.5,
+    "createdAt": "2026-05-18T16:52:46.770Z",
+    "updatedAt": "2026-05-18T16:52:46.770Z"
   }
 ]
