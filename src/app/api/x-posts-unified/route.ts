@@ -35,7 +35,6 @@ async function getKodomoStats() {
       process.cwd(),
       "..",
       "..",
-      "..",
       "parent-child-medical",
       "data",
       "x",
