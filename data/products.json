@@ -4146,5 +4146,72 @@
     "rating": 4.4,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-04-27T00:00:00+00:00"
+  },
+  {
+    "id": "tent-circus-tc-dx",
+    "name": "テンマクデザイン サーカスTC DX",
+    "brand": "tent-Mark DESIGNS",
+    "price": 43780,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "3〜4人",
+      "構造": "ワンポール",
+      "素材": "TC（ポリコットン）",
+      "重量": "約12.3kg",
+      "スカート": "あり",
+      "薪ストーブ": "煙突穴なし",
+      "展開サイズ": "442×420×280cm"
+    },
+    "rating": 4.5,
+    "createdAt": "2026-05-18T16:42:19.364Z",
+    "updatedAt": "2026-05-18T16:42:19.364Z"
+  },
+  {
+    "id": "tent-waq-alpha-tc",
+    "name": "WAQ Alpha TC/FT",
+    "brand": "WAQ",
+    "price": 29800,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "2〜3人",
+      "構造": "ワンポール",
+      "素材": "TC（ポリコットン）",
+      "重量": "約10.5kg",
+      "スカート": "あり",
+      "薪ストーブ": "使用報告多数",
+      "展開サイズ": "390×390×250cm"
+    },
+    "rating": 4.3,
+    "createdAt": "2026-05-18T16:42:19.364Z",
+    "updatedAt": "2026-05-18T16:42:19.364Z"
+  },
+  {
+    "id": "tent-ogawa-twin-piltz",
+    "name": "ogawa ツインピルツフォーク T/C",
+    "brand": "ogawa",
+    "price": 76780,
+    "imageUrl": "",
+    "affiliateUrl": "",
+    "amazonUrl": "",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "4〜6人",
+      "構造": "2ポールシェルター",
+      "素材": "TC（ポリコットン）",
+      "重量": "約13.6kg",
+      "スカート": "あり",
+      "薪ストーブ": "煙突穴なし",
+      "展開サイズ": "630×355×210cm",
+      "インナーテント": "別売り"
+    },
+    "rating": 4.6,
+    "createdAt": "2026-05-18T16:42:19.364Z",
+    "updatedAt": "2026-05-18T16:42:19.364Z"
   }
 ]
