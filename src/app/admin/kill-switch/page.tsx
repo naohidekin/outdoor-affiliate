@@ -24,6 +24,9 @@ type KillSwitchState = {
       article: boolean;
       pinterest: boolean;
     };
+    drAuto: {
+      x: boolean;
+    };
   };
   global: boolean;
   updatedAt: string;
@@ -39,6 +42,7 @@ const DEFAULT_STATE: KillSwitchState = {
     amble: { x: false },
     kodomo: { x: false, note: false, threads: false },
     jsh: { x: false, reddit: false, threads: false, article: false, pinterest: false },
+    drAuto: { x: true },
   },
   global: false,
   updatedAt: "",
@@ -80,6 +84,11 @@ const BUSINESS_SECTIONS = [
       { platform: "pinterest", label: "Pinterest" },
     ],
   },
+  {
+    title: "Dr.auto",
+    business: "drAuto",
+    items: [{ platform: "x", label: "X投稿（API取得後に有効化）" }],
+  },
 ] as const;
 
 function normalizeState(payload: Partial<KillSwitchState> | undefined): KillSwitchState {
@@ -102,6 +111,10 @@ function normalizeState(payload: Partial<KillSwitchState> | undefined): KillSwit
       jsh: {
         ...DEFAULT_STATE.businesses.jsh,
         ...(payload?.businesses?.jsh ?? {}),
+      },
+      drAuto: {
+        ...DEFAULT_STATE.businesses.drAuto,
+        ...(payload?.businesses?.drAuto ?? {}),
       },
     },
   };

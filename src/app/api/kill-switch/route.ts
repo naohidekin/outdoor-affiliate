@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 const KILL_SWITCH_PATH = path.join(process.env.HOME || "", ".claude/context/kill_switch.json");
 
-type BusinessName = "gearman" | "amble" | "kodomo" | "jsh";
+type BusinessName = "gearman" | "amble" | "kodomo" | "jsh" | "drAuto";
 type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit" | "pinterest";
 
 type KillSwitchState = {
@@ -31,6 +31,9 @@ type KillSwitchState = {
       threads: boolean;
       article: boolean;
       pinterest: boolean;
+    };
+    drAuto: {
+      x: boolean;
     };
   };
   global: boolean;
@@ -60,6 +63,7 @@ const DEFAULT_STATE: KillSwitchState = {
     amble: { x: false },
     kodomo: { x: false, note: false, threads: false },
     jsh: { x: false, reddit: false, threads: false, article: false, pinterest: false },
+    drAuto: { x: true },
   },
   global: false,
   updatedAt: "",
@@ -90,6 +94,10 @@ function normalizeState(input: Partial<KillSwitchState> | undefined): KillSwitch
       jsh: {
         ...DEFAULT_STATE.businesses.jsh,
         ...input?.businesses?.jsh,
+      },
+      drAuto: {
+        ...DEFAULT_STATE.businesses.drAuto,
+        ...input?.businesses?.drAuto,
       },
     },
   };
