@@ -67,3 +67,31 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "更新に失敗しました" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  if (!isAuthenticatedRequest(req)) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
+  try {
+    const body = (await req.json()) as { id?: string };
+    if (!body.id) {
+      return NextResponse.json({ error: "id が必要です" }, { status: 400 });
+    }
+
+    const posts = await readPosts();
+    const index = posts.findIndex((post) => post.id === body.id);
+    if (index === -1) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const deleted = posts[index];
+    posts.splice(index, 1);
+    await fs.writeFile(AMBLE_POSTS_PATH, `${JSON.stringify(posts, null, 2)}\n`, "utf8");
+
+    return NextResponse.json({ success: true, deleted });
+  } catch (error) {
+    console.error("Amble posts DELETE error:", error);
+    return NextResponse.json({ error: "削除に失敗しました" }, { status: 500 });
+  }
+}

@@ -94,6 +94,29 @@ export default function KodomoPage() {
     }
   }
 
+  async function deletePost(post: KodomoPost) {
+    if (!confirm(`本当に削除しますか？\n\n${post.body.substring(0, 50)}...`)) {
+      return;
+    }
+    setUpdatingId(post.id);
+    try {
+      const response = await fetch("/api/kodomo/posts", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: post.id }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "削除に失敗しました");
+      }
+      setPosts((current) => current.filter((item) => item.id !== post.id));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "削除に失敗しました");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <div className="-m-4 min-h-full bg-gray-950 px-4 py-6 text-gray-100 lg:-m-8 lg:px-8 lg:py-8">
       <div className="mb-6">
@@ -139,16 +162,26 @@ export default function KodomoPage() {
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{post.id}</p>
                   <p className="mt-3 max-w-4xl whitespace-pre-wrap text-sm leading-7 text-gray-200">{post.body}</p>
                 </div>
-                {post.status === "reviewed" ? (
+                <div className="flex gap-2">
+                  {post.status === "reviewed" ? (
+                    <button
+                      type="button"
+                      onClick={() => approvePost(post)}
+                      disabled={updatingId === post.id}
+                      className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingId === post.id ? "承認中..." : "承認する"}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
-                    onClick={() => approvePost(post)}
+                    onClick={() => deletePost(post)}
                     disabled={updatingId === post.id}
-                    className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {updatingId === post.id ? "承認中..." : "承認する"}
+                    {updatingId === post.id ? "削除中..." : "削除"}
                   </button>
-                ) : null}
+                </div>
               </div>
 
               {post._wiseScores && (
