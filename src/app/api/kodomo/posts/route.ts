@@ -16,6 +16,14 @@ type KodomoPost = {
   status: KodomoStatus;
   humanApprovedBy?: string | null;
   humanApprovedAt?: string | null;
+  _wiseScores?: {
+    w: number;
+    i: number;
+    s: number;
+    e: number;
+    ai: number;
+  } | null;
+  // Legacy fields
   claimRisk?: string | null;
   score?: number | null;
   _scores?: Record<string, number | null | undefined>;

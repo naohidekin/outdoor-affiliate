@@ -8,8 +8,10 @@ type AmblePost = {
   id: string;
   text: string;
   status: AmbleStatus;
-  score_persona?: number | null;
-  score_buzz?: number | null;
+  score_a?: number | null;
+  score_b?: number | null;
+  score_c?: number | null;
+  score_d?: number | null;
   score_ai?: number | null;
 };
 
@@ -130,16 +132,32 @@ export default function AmblePage() {
                 ) : null}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs ${scoreTone(post.score_persona)}`}>
-                  persona {post.score_persona ?? "-"}
-                </span>
-                <span className={`rounded-full px-3 py-1 text-xs ${scoreTone(post.score_buzz)}`}>
-                  buzz {post.score_buzz ?? "-"}
-                </span>
-                <span className={`rounded-full px-3 py-1 text-xs ${scoreTone(post.score_ai)}`}>
-                  ai {post.score_ai ?? "-"}
-                </span>
+              <div className="mt-4 flex flex-wrap gap-1.5 text-[11px]">
+                {post.score_a != null && (
+                  <span className={`rounded px-2 py-1 font-mono ${post.score_a >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    W:{post.score_a}
+                  </span>
+                )}
+                {post.score_b != null && (
+                  <span className={`rounded px-2 py-1 font-mono ${post.score_b >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    I:{post.score_b}
+                  </span>
+                )}
+                {post.score_c != null && (
+                  <span className={`rounded px-2 py-1 font-mono ${post.score_c >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    S:{post.score_c}
+                  </span>
+                )}
+                {post.score_d != null && (
+                  <span className={`rounded px-2 py-1 font-mono ${post.score_d >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    E:{post.score_d}
+                  </span>
+                )}
+                {post.score_ai != null && (
+                  <span className={`rounded px-2 py-1 font-mono ${post.score_ai >= 3 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    AI:{post.score_ai}
+                  </span>
+                )}
               </div>
             </article>
           ))

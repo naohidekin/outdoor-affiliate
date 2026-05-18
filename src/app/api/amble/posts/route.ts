@@ -14,8 +14,10 @@ type AmblePost = {
   id: string;
   text: string;
   status: AmbleStatus;
-  score_persona?: number | null;
-  score_buzz?: number | null;
+  score_a?: number | null;
+  score_b?: number | null;
+  score_c?: number | null;
+  score_d?: number | null;
   score_ai?: number | null;
 };
 

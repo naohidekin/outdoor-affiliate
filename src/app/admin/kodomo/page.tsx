@@ -8,10 +8,18 @@ type KodomoPost = {
   id: string;
   body: string;
   status: KodomoStatus;
-  score?: number | null;
-  claimRisk?: "low" | "medium" | "high" | string | null;
   humanApprovedBy?: string | null;
   humanApprovedAt?: string | null;
+  _wiseScores?: {
+    w: number;
+    i: number;
+    s: number;
+    e: number;
+    ai: number;
+  } | null;
+  // Legacy fields (no longer displayed)
+  score?: number | null;
+  claimRisk?: "low" | "medium" | "high" | string | null;
   _scores?: Record<string, number | null | undefined>;
 };
 
@@ -143,17 +151,25 @@ export default function KodomoPage() {
                 ) : null}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs ${scoreTone(post.score)}`}>score {post.score ?? "-"}</span>
-                <span className={`rounded-full px-3 py-1 text-xs ${claimRiskTone(post.claimRisk)}`}>
-                  claimRisk {post.claimRisk ?? "low"}
-                </span>
-                {Object.entries(post._scores || {}).map(([key, value]) => (
-                  <span key={key} className={`rounded-full px-3 py-1 text-xs ${scoreTone(value)}`}>
-                    {key} {value ?? "-"}
+              {post._wiseScores && (
+                <div className="mt-4 flex flex-wrap gap-1.5 text-[11px]">
+                  <span className={`rounded px-2 py-1 font-mono ${post._wiseScores.w >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    W:{post._wiseScores.w}
                   </span>
-                ))}
-              </div>
+                  <span className={`rounded px-2 py-1 font-mono ${post._wiseScores.i >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    I:{post._wiseScores.i}
+                  </span>
+                  <span className={`rounded px-2 py-1 font-mono ${post._wiseScores.s >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    S:{post._wiseScores.s}
+                  </span>
+                  <span className={`rounded px-2 py-1 font-mono ${post._wiseScores.e >= 2 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    E:{post._wiseScores.e}
+                  </span>
+                  <span className={`rounded px-2 py-1 font-mono ${post._wiseScores.ai >= 3 ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    AI:{post._wiseScores.ai}
+                  </span>
+                </div>
+              )}
             </article>
           ))
         )}
