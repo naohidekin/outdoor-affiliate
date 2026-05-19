@@ -58,7 +58,7 @@ ${content}
 変換後の記事本文のみ出力してください。余計な説明・コメントは不要です。`;
 
   const res = await client.messages.create({
-    model: "claude-opus-4-6",
+    model: "claude-sonnet-4-6",
     max_tokens: 8192,
     messages: [{ role: "user", content: prompt }],
   });
