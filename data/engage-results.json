@@ -1,0 +1,421 @@
+{
+  "version": 2,
+  "engine": "viral-engage-core",
+  "account": "camp_gear_lab",
+  "scoutedAt": "2026-05-23T00:39:47.227Z",
+  "config": {
+    "minEngagementScore": 30,
+    "targetCount": 5,
+    "actualCount": 5,
+    "axes": [
+      "camp",
+      "doctor",
+      "parenting"
+    ]
+  },
+  "aggregateAnalysis": {
+    "totalAnalyzed": 5,
+    "topHooks": [
+      {
+        "pattern": "self_disclosure",
+        "count": 2,
+        "pct": 40
+      },
+      {
+        "pattern": "other",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "contrast",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "surprise",
+        "count": 1,
+        "pct": 20
+      }
+    ],
+    "topEmotionalTriggers": [
+      {
+        "pattern": "identity",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "humor",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "surprise",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "nostalgia",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "empathy",
+        "count": 1,
+        "pct": 20
+      }
+    ],
+    "topFormats": [
+      {
+        "pattern": "experience_share",
+        "count": 2,
+        "pct": 40
+      },
+      {
+        "pattern": "one_liner",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "comparison",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "story",
+        "count": 1,
+        "pct": 20
+      }
+    ],
+    "topShareability": [
+      {
+        "pattern": "emotional",
+        "count": 2,
+        "pct": 40
+      },
+      {
+        "pattern": "identity",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "humor",
+        "count": 1,
+        "pct": 20
+      },
+      {
+        "pattern": "utility",
+        "count": 1,
+        "pct": 20
+      }
+    ],
+    "byAxis": {
+      "camp": {
+        "count": 5,
+        "avgEngagement": 505,
+        "topHooks": [
+          {
+            "pattern": "self_disclosure",
+            "count": 2,
+            "pct": 40
+          },
+          {
+            "pattern": "other",
+            "count": 1,
+            "pct": 20
+          },
+          {
+            "pattern": "contrast",
+            "count": 1,
+            "pct": 20
+          }
+        ],
+        "topTriggers": [
+          {
+            "pattern": "identity",
+            "count": 1,
+            "pct": 20
+          },
+          {
+            "pattern": "humor",
+            "count": 1,
+            "pct": 20
+          },
+          {
+            "pattern": "surprise",
+            "count": 1,
+            "pct": 20
+          }
+        ],
+        "topFormats": [
+          {
+            "pattern": "experience_share",
+            "count": 2,
+            "pct": 40
+          },
+          {
+            "pattern": "one_liner",
+            "count": 1,
+            "pct": 20
+          },
+          {
+            "pattern": "comparison",
+            "count": 1,
+            "pct": 20
+          }
+        ]
+      }
+    },
+    "highAdaptability": 3
+  },
+  "viralPosts": [
+    {
+      "tweetId": "2057778513244234072",
+      "authorUsername": "nagiyamasan",
+      "authorName": "ナギヤマスギ6/7コミティアな36a",
+      "authorFollowers": 58326,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "ソロキャンプ女子 https://t.co/2rSWqDCRf3",
+      "createdAt": "2026-05-22T11:00:03.000Z",
+      "metrics": {
+        "likes": 1529,
+        "retweets": 111,
+        "replies": 2,
+        "quotes": 0,
+        "bookmarks": 815,
+        "engagementScore": 1866
+      },
+      "analysis": {
+        "index": 1,
+        "hook": "other",
+        "emotionalTrigger": "identity",
+        "format": "one_liner",
+        "topic": "ソロキャンプ女子",
+        "timing": "女性キャンパー人気と憧れ",
+        "shareability": "identity",
+        "keyTechniques": [
+          "シンプルなキーワード",
+          "ビジュアル訴求",
+          "アイデンティティ表現"
+        ],
+        "adaptability": "high"
+      },
+      "generatedContent": {
+        "reply": {
+          "text": "僕の知人の女性キャンパーの話を聞くと「自分時間の確保」が共通しています。意外にも体調面より精神的リフレッシュを求める方が多くて、ソロ活動の心理的効果を実感しています。",
+          "axis": "doctor",
+          "style": "different_angle",
+          "rationale": "医師視点でソロキャンプの心理効果を考察",
+          "scores": {
+            "w": 3,
+            "i": 2,
+            "s": 2,
+            "e": 2,
+            "ai": 3
+          },
+          "status": "needs_review",
+          "_raw": "医師的には、女性のソロキャンプで診察に来る方の話を聞くと「自分時間の確保」が共通してます。意外にも体調不良より精神的リフレッシュで来院される比率が高くて、ソロ活動の心理的効果を実感してます。",
+          "validationErrors": "NGワード検出"
+        }
+      }
+    },
+    {
+      "tweetId": "2057647767435329619",
+      "authorUsername": "mado_pino",
+      "authorName": "mado@ソロキャンプ/車中泊",
+      "authorFollowers": 5566,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "平民 → セレブ → ブルジョア → 石油王\n\n#キャンプギア\n#キャンプ道具\n#勝手な妄想 https://t.co/oy1SSyRZTS",
+      "createdAt": "2026-05-22T02:20:31.000Z",
+      "metrics": {
+        "likes": 168,
+        "retweets": 1,
+        "replies": 12,
+        "quotes": 2,
+        "bookmarks": 1,
+        "engagementScore": 199
+      },
+      "analysis": {
+        "index": 2,
+        "hook": "contrast",
+        "emotionalTrigger": "humor",
+        "format": "comparison",
+        "topic": "ギアの格差構造",
+        "timing": "装備格差への共感時期",
+        "shareability": "humor",
+        "keyTechniques": [
+          "段階的比較",
+          "自虐的ユーモア",
+          "ハッシュタグ活用"
+        ],
+        "adaptability": "high"
+      },
+      "generatedContent": {
+        "reply": {
+          "text": "補足すると、この階層には隠れた「時短ステージ」があります。僕も子どもが小さい頃は設営15分以内が必須条件で、むしろ制約があった方がギア選びの本質が見えました。不便を楽しむ余裕と、効率重視の必要性は別物ですね。",
+          "axis": "camp",
+          "style": "add_info",
+          "rationale": "ファミリー視点でギア進化の別階層を追加",
+          "scores": {
+            "w": 3,
+            "i": 3,
+            "s": 2,
+            "e": 3,
+            "ai": 3
+          },
+          "status": "draft",
+          "_raw": "補足すると、この階層には隠れた「時短ステージ」があります。僕も子どもが小さい頃は設営15分以内が絶対条件で、むしろ制約があった方がギア選びの本質が見えました。不便を楽しむ余裕と、効率重視の必要性は別物ですね。"
+        }
+      }
+    },
+    {
+      "tweetId": "2057784493336092698",
+      "authorUsername": "report6",
+      "authorName": "かねこ",
+      "authorFollowers": 414,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "ガチャガチャのぬい用寝袋、いつもにちょうどいいのでは！？と思ったのだけど…ぎゅうぎゅうに詰められて虚無の表情になってしまった…（でもかわいい）\n封筒型寝袋も、おでんの巾着みたいでかわいい。 https://t.co/ngUKfrHGV3",
+      "createdAt": "2026-05-22T11:23:49.000Z",
+      "metrics": {
+        "likes": 147,
+        "retweets": 14,
+        "replies": 2,
+        "quotes": 1,
+        "bookmarks": 7,
+        "engagementScore": 195
+      },
+      "analysis": {
+        "index": 3,
+        "hook": "surprise",
+        "emotionalTrigger": "surprise",
+        "format": "experience_share",
+        "topic": "ガチャ寝袋活用",
+        "timing": "意外な発見の共有欲求",
+        "shareability": "utility",
+        "keyTechniques": [
+          "意外な組み合わせ",
+          "失敗談込み",
+          "かわいさ要素"
+        ],
+        "adaptability": "medium"
+      },
+      "generatedContent": {
+        "reply": {
+          "text": "まさにそれ。うちの娘のぬいぐるみも同じ表情になっています。実際の寝袋選びでも「ジャストサイズ＝窮屈」を何度か体験して、今は身長+30cmを基準にしています。ぬい用でもゆとりは大事かもしれませんね。",
+          "axis": "parenting",
+          "style": "agreement_plus",
+          "rationale": "親目線で寝袋選びの実体験を重ねる",
+          "scores": {
+            "w": 3,
+            "i": 3,
+            "s": 2,
+            "e": 3,
+            "ai": 3
+          },
+          "status": "draft",
+          "_raw": "まさにそれ。うちの娘のぬいぐるみも同じ表情になってます。実際の寝袋選びでも「ジャストサイズ＝窮屈」を何度か体験して、今は身長+30cmを基準にしてます。ぬい用でもゆとりは大事かもしれませんね。"
+        }
+      }
+    },
+    {
+      "tweetId": "2057809355135959442",
+      "authorUsername": "solocamper1",
+      "authorName": "ひろ＠ソロキャンパー",
+      "authorFollowers": 2934,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "3月並みの寒さで、焚き火がありがたい🔥☺️\n#焚き火 #ソロキャンプ https://t.co/gAY26AQzB3",
+      "createdAt": "2026-05-22T13:02:37.000Z",
+      "metrics": {
+        "likes": 137,
+        "retweets": 0,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 139
+      },
+      "analysis": {
+        "index": 4,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "nostalgia",
+        "format": "experience_share",
+        "topic": "寒さと焚き火",
+        "timing": "季節外れの寒さ体験",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "季節感共有",
+          "焚き火の温かみ",
+          "リアルタイム感"
+        ],
+        "adaptability": "high"
+      },
+      "generatedContent": {
+        "reply": {
+          "text": "以前3月のキャンプで薪が湿っていて、焚き火がなかなか起きずに苦労した時がありました。あの時の「やっと火がついた瞬間」の安堵感は忘れられません。寒い日ほど焚き火の価値を実感しますね。",
+          "axis": "camp",
+          "style": "experience_share",
+          "rationale": "寒さと焚き火の関連体験を共有",
+          "scores": {
+            "w": 3,
+            "i": 3,
+            "s": 2,
+            "e": 3,
+            "ai": 3
+          },
+          "status": "draft"
+        }
+      }
+    },
+    {
+      "tweetId": "2057771405648003205",
+      "authorUsername": "NANOVA007",
+      "authorName": "なのばちゃん",
+      "authorFollowers": 628,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "母が、懸賞で当てた\n焼きそばUFOのホットサンドメーカー\nをプレゼントしてくれた。\n明日の朝は、これでホットサンドを作る👊 https://t.co/BUDBYU81lH",
+      "createdAt": "2026-05-22T10:31:49.000Z",
+      "metrics": {
+        "likes": 111,
+        "retweets": 0,
+        "replies": 8,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 127
+      },
+      "analysis": {
+        "index": 5,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "story",
+        "topic": "母からの贈り物",
+        "timing": "家族愛と実用性の両立",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "家族エピソード",
+          "懸賞当選話",
+          "実用予定の共有"
+        ],
+        "adaptability": "medium"
+      },
+      "generatedContent": {
+        "reply": {
+          "text": "逆に考えると、UFO焼きそばブランドのホットサンドメーカーで普通のサンドイッチを作る背徳感も面白いかもしれません。お母様の懸賞運、うらやましいです。僕は応募しても全然当たらないタイプなので。",
+          "axis": "parenting",
+          "style": "different_angle",
+          "rationale": "ユーモア交えた逆転の発想で返し",
+          "scores": {
+            "w": 3,
+            "i": 3,
+            "s": 2,
+            "e": 3,
+            "ai": 3
+          },
+          "status": "draft"
+        }
+      }
+    }
+  ]
+}

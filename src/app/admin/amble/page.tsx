@@ -2,23 +2,44 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type AmbleStatus = "draft" | "approved" | "posted" | "skip" | "rejected";
+const NOTION_DB_URL = "https://www.notion.so/60f5162434c44ada951165a88cf6e6d4";
+
+type AmbleStatus = "draft" | "cross_reviewed" | "evidence_ok" | "reviewed" | "approved" | "posted" | "rejected" | "dead_letter";
+
+type ABCDScores = {
+  a?: number | null;
+  b?: number | null;
+  c?: number | null;
+  d?: number | null;
+  ai?: number | null;
+};
 
 type AmblePost = {
   id: string;
   text: string;
+  body?: string;
+  type?: string;
   status: AmbleStatus;
   score_a?: number | null;
   score_b?: number | null;
   score_c?: number | null;
   score_d?: number | null;
   score_ai?: number | null;
+  wiseScores?: ABCDScores | null;
+  gptScores?: ABCDScores | null;
+  claimRisk?: string | null;
+  _voiceSource?: string;
+  _format?: string;
 };
 
-const TABS: Array<{ key: AmbleStatus; label: string }> = [
-  { key: "draft", label: "承認待ち" },
-  { key: "approved", label: "キュー" },
-  { key: "posted", label: "投稿済み" },
+// "承認待ち" = reviewed（5段階パイプライン通過済み）→ 承認はNotionで行う
+const PENDING_STATUSES: AmbleStatus[] = ["reviewed", "draft"];
+
+const TABS: Array<{ key: string; label: string; filter: (p: AmblePost) => boolean }> = [
+  { key: "pending", label: "承認待ち", filter: (p) => PENDING_STATUSES.includes(p.status) },
+  { key: "approved", label: "キュー", filter: (p) => p.status === "approved" },
+  { key: "posted", label: "投稿済み", filter: (p) => p.status === "posted" },
+  { key: "rejected", label: "却下", filter: (p) => p.status === "rejected" },
 ];
 
 function scoreTone(value: number | null | undefined) {
@@ -30,7 +51,7 @@ function scoreTone(value: number | null | undefined) {
 
 export default function AmblePage() {
   const [posts, setPosts] = useState<AmblePost[]>([]);
-  const [activeTab, setActiveTab] = useState<AmbleStatus>("draft");
+  const [activeTab, setActiveTab] = useState<string>("pending");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -50,30 +71,10 @@ export default function AmblePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredPosts = useMemo(
-    () => posts.filter((post) => post.status === activeTab),
-    [activeTab, posts]
-  );
-
-  async function updateStatus(id: string, status: AmbleStatus) {
-    setUpdatingId(id);
-    try {
-      const response = await fetch("/api/amble/posts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status }),
-      });
-      const payload = (await response.json()) as AmblePost & { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error || "更新に失敗しました");
-      }
-      setPosts((current) => current.map((post) => (post.id === id ? payload : post)));
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "更新に失敗しました");
-    } finally {
-      setUpdatingId(null);
-    }
-  }
+  const filteredPosts = useMemo(() => {
+    const tab = TABS.find((t) => t.key === activeTab);
+    return tab ? posts.filter(tab.filter) : [];
+  }, [activeTab, posts]);
 
   async function deletePost(post: AmblePost) {
     if (!confirm(`本当に削除しますか？\n\n${post.text.substring(0, 50)}...`)) {
@@ -103,7 +104,15 @@ export default function AmblePage() {
       <div className="mb-6">
         <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">SNS管理</p>
         <h1 className="mt-2 text-3xl font-semibold">アンブロ</h1>
-        <p className="mt-2 text-sm text-gray-400">X投稿候補の承認フローをここから操作します。</p>
+        <p className="mt-2 text-sm text-gray-400">パイプライン生成結果のモニター。承認・却下は Notion で行います。</p>
+        <a
+          href={NOTION_DB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-400"
+        >
+          Notion で承認する →
+        </a>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-3">
@@ -120,7 +129,7 @@ export default function AmblePage() {
           >
             {tab.label}
             <span className="ml-2 rounded-full bg-black/20 px-2 py-0.5 text-xs">
-              {posts.filter((post) => post.status === tab.key).length}
+              {posts.filter(tab.filter).length}
             </span>
           </button>
         ))}
@@ -139,21 +148,38 @@ export default function AmblePage() {
           filteredPosts.map((post) => (
             <article key={post.id} className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{post.id}</p>
-                  <p className="mt-3 line-clamp-4 max-w-4xl text-sm leading-7 text-gray-200">{post.text}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{post.id}</p>
+                    {post.type ? <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-gray-400">{post.type}</span> : null}
+                    {post._format ? <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-gray-400">{post._format}</span> : null}
+                  </div>
+                  <p className="mt-3 max-w-4xl whitespace-pre-wrap text-sm leading-7 text-gray-200">{post.text}</p>
+                  {(post.score_a != null || post.gptScores) ? (
+                    <div className="mt-3 flex flex-wrap gap-4 text-xs">
+                      {post.score_a != null ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-500">Claude:</span>
+                          {["A","B","C","D","AI"].map((label, i) => {
+                            const val = [post.score_a, post.score_b, post.score_c, post.score_d, post.score_ai][i];
+                            return <span key={label} className={`rounded px-1.5 py-0.5 ${scoreTone(val)}`}>{label}:{val ?? "-"}</span>;
+                          })}
+                        </div>
+                      ) : null}
+                      {post.gptScores ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-500">GPT:</span>
+                          {["A","B","C","D","AI"].map((label) => {
+                            const key = label === "AI" ? "ai" : label.toLowerCase();
+                            const val = (post.gptScores as Record<string, number | null>)?.[key];
+                            return <span key={label} className={`rounded px-1.5 py-0.5 ${scoreTone(val)}`}>{label}:{val ?? "-"}</span>;
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
-                  {post.status === "draft" ? (
-                    <button
-                      type="button"
-                      onClick={() => updateStatus(post.id, "approved")}
-                      disabled={updatingId === post.id}
-                      className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {updatingId === post.id ? "承認中..." : "承認する"}
-                    </button>
-                  ) : null}
                   <button
                     type="button"
                     onClick={() => deletePost(post)}
