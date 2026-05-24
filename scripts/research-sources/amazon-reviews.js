@@ -10,7 +10,7 @@
  * 必要な環境変数:
  *   AMAZON_ACCESS_KEY — PA-API アクセスキー
  *   AMAZON_SECRET_KEY — PA-API シークレットキー
- *   AMAZON_PARTNER_TAG — アソシエイトタグ (nao78-22)
+ *   AMAZON_PARTNER_TAG — アソシエイトタグ (camp78-22)
  *
  * 使い方:
  *   node scripts/research-sources/amazon-reviews.js
@@ -41,7 +41,7 @@ async function main() {
 
   const accessKey = process.env.AMAZON_ACCESS_KEY;
   const secretKey = process.env.AMAZON_SECRET_KEY;
-  const partnerTag = process.env.AMAZON_PARTNER_TAG || "nao78-22";
+  const partnerTag = process.env.AMAZON_PARTNER_TAG || "camp78-22";
 
   if (!accessKey || !secretKey) {
     console.log("[amazon-reviews] AMAZON_ACCESS_KEY / SECRET_KEY 未設定。スキップ。");

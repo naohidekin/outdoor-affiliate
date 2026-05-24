@@ -8,7 +8,7 @@
  * 必要な環境変数:
  *   AMAZON_ACCESS_KEY   — PA-API アクセスキー
  *   AMAZON_SECRET_KEY   — PA-API シークレットキー
- *   AMAZON_PARTNER_TAG  — アソシエイトタグ (例: nao78-22)
+ *   AMAZON_PARTNER_TAG  — アソシエイトタグ (例: camp78-22)
  *
  * 使い方:
  *   node scripts/price-monitor.js
@@ -37,7 +37,7 @@ if (fs.existsSync(envPath)) {
 
 const ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
 const SECRET_KEY = process.env.AMAZON_SECRET_KEY;
-const PARTNER_TAG = process.env.AMAZON_PARTNER_TAG || "nao78-22";
+const PARTNER_TAG = process.env.AMAZON_PARTNER_TAG || "camp78-22";
 const THRESHOLD = parseInt(
   process.argv.find((a) => a.startsWith("--threshold="))?.split("=")[1] || "10"
 );
@@ -166,7 +166,7 @@ async function main() {
     console.log("以下を .env.local に追加してください:");
     console.log("  AMAZON_ACCESS_KEY=your_access_key");
     console.log("  AMAZON_SECRET_KEY=your_secret_key");
-    console.log("  AMAZON_PARTNER_TAG=nao78-22");
+    console.log("  AMAZON_PARTNER_TAG=camp78-22");
     console.log("");
     console.log("PA-APIのアクセスキーの取得方法:");
     console.log("  1. https://affiliate.amazon.co.jp/ にログイン");

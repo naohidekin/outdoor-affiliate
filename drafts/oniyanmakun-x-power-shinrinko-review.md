@@ -90,7 +90,7 @@
 
 > 「子供のリュックに付けたら喜んで背負って歩くようになった。アクセサリーとしても気に入っている」（30代女性・親子ハイキング）
 
-[楽天で口コミをもっと見る →](https://hb.afl.rakuten.co.jp/ichiba/2c5765b6.587a5da6.2c5765b7.cfd3e7ac/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2581%258A%25E3%2581%25AB%25E3%2582%2584%25E3%2582%2593%25E3%2581%25BE%25E5%2590%259B%2F&link_type=text&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJhcnRpY2xlIiwiY29sIjoxLCJjYXQiOiIxIiwiYmFuIjoiMjI2NjczMiIsImFtcCI6ZmFsc2V9) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B084L1JYHB?tag=nao78-22)
+[楽天で口コミをもっと見る →](https://hb.afl.rakuten.co.jp/ichiba/2c5765b6.587a5da6.2c5765b7.cfd3e7ac/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2581%258A%25E3%2581%25AB%25E3%2582%2584%25E3%2582%2593%25E3%2581%25BE%25E5%2590%259B%2F&link_type=text&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJhcnRpY2xlIiwiY29sIjoxLCJjYXQiOiIxIiwiYmFuIjoiMjI2NjczMiIsImFtcCI6ZmFsc2V9) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22)
 
 {{product:insect-repellent-001}}
 
@@ -144,7 +144,7 @@
 
 セット購入（10巻＋携帯防虫器）で約1,000円なので、初めて買う方はセットがお得ですよ。
 
-[楽天で携帯防虫器セットを見る →](https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkodamaichiba%2Fp-sinrinkou-keitai%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkodamaichiba%2Fi%2F10000010%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B001A4KL86?tag=nao78-22)
+[楽天で携帯防虫器セットを見る →](https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkodamaichiba%2Fp-sinrinkou-keitai%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkodamaichiba%2Fi%2F10000010%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B001A4KL86?tag=camp78-22)
 
 **口コミ（要約）**
 
@@ -154,7 +154,7 @@
 
 > 「煙がすごいので人も寄り付かない（笑）。でも虫はマジで来なくなる。腰に吊るして草刈りしている」（40代男性・農作業）
 
-[楽天で口コミをもっと見る →](https://hb.afl.rakuten.co.jp/ichiba/2c5765b6.587a5da6.2c5765b7.cfd3e7ac/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2591%25E3%2583%25AF%25E3%2583%25BC%25E6%25A3%25AE%25E6%259E%2597%25E9%25A6%2599%2F&link_type=text&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJhcnRpY2xlIiwiY29sIjoxLCJjYXQiOiIxIiwiYmFuIjoiMjI2NjczMiIsImFtcCI6ZmFsc2V9) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B001A4SC7I?tag=nao78-22)
+[楽天で口コミをもっと見る →](https://hb.afl.rakuten.co.jp/ichiba/2c5765b6.587a5da6.2c5765b7.cfd3e7ac/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2591%25E3%2583%25AF%25E3%2583%25BC%25E6%25A3%25AE%25E6%259E%2597%25E9%25A6%2599%2F&link_type=text&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJhcnRpY2xlIiwiY29sIjoxLCJjYXQiOiIxIiwiYmFuIjoiMjI2NjczMiIsImFtcCI6ZmFsc2V9) ｜ [Amazonで見る →](https://www.amazon.co.jp/dp/B001A4SC7I?tag=camp78-22)
 
 {{product:insect-repellent-002}}
 

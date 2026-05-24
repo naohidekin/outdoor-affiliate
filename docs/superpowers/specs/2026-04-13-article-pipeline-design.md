@@ -61,7 +61,7 @@ article-orchestrate.js
 - スペック構造化: `itemCaption` をClaude APIで構造化（`data/category-specs.json` の項目に準拠）
 - 既存products.jsonとの重複チェック（商品名の類似度で判定）
 - 価格帯バランスで3商品選定（エントリー / ミドル / ハイエンド）
-- Amazon URL: `https://www.amazon.co.jp/s?k={商品名}&tag=nao78-22`（検索リンク）
+- Amazon URL: `https://www.amazon.co.jp/s?k={商品名}&tag=camp78-22`（検索リンク）
 - 画像URL: ASINがあればAmazon画像、なければ楽天画像を使用
 
 **必要な環境変数**: `RAKUTEN_APP_ID`（楽天APIアプリID）

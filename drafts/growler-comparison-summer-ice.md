@@ -92,7 +92,7 @@
 
 **こんな人に**：夏キャンプの氷入れを探している人全般。迷ったらこれを選んでおけば間違いないと思います。
 
-[Amazonで見る →](https://www.amazon.co.jp/dp/B0BXKPKCW6?tag=nao78-22)
+[Amazonで見る →](https://www.amazon.co.jp/dp/B0BXKPKCW6?tag=camp78-22)
 
 [楽天で口コミを見る →](https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%AF%E3%83%A9%E3%82%B7%E3%83%83%E3%82%AF+%E7%9C%9F%E7%A9%BA+%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC+1.9L/)
 
@@ -110,7 +110,7 @@
 
 **こんな人に**：キャンプでクラフトビールを楽しみたい人。氷入れだけならオーバースペックかもしれません。
 
-[Amazonで見る →](https://www.amazon.co.jp/dp/B07QDYYZ4B?tag=nao78-22)
+[Amazonで見る →](https://www.amazon.co.jp/dp/B07QDYYZ4B?tag=camp78-22)
 
 ---
 
@@ -126,7 +126,7 @@
 
 **こんな人に**：冷たいドリンクをキャンプでも日常でも使いたい人。氷の保存ではなく「冷たい飲み物を持ち運ぶ」のが目的ならこれ。
 
-[Amazonで見る →](https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L&tag=nao78-22)
+[Amazonで見る →](https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L&tag=camp78-22)
 
 ---
 

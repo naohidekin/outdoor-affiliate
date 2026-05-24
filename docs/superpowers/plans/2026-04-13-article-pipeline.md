@@ -760,7 +760,7 @@ import {
 loadEnv();
 
 const RAKUTEN_API_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
-const AMAZON_ASSOCIATE_TAG = "nao78-22";
+const AMAZON_ASSOCIATE_TAG = "camp78-22";
 
 // ─── CLI ─────────────────────────────────────────────
 

@@ -63,7 +63,7 @@ Amazonで7,600件以上のレビューがついて4.5点。この数字だけで
 
 14,000円は高いけれど、「軽さに1万円」ではなく「軽さ+携帯性+デザインに1万円」と考えれば、徒歩キャンプの人には十分に元が取れる投資です。
 
-[Amazonで見る →](https://www.amazon.co.jp/dp/B07ZQB2NR4?tag=nao78-22)
+[Amazonで見る →](https://www.amazon.co.jp/dp/B07ZQB2NR4?tag=camp78-22)
 
 [楽天で口コミを見る →](https://search.rakuten.co.jp/search/mall/%E3%83%94%E3%82%B3%E3%82%B0%E3%83%AA%E3%83%AB398/)
 
@@ -83,7 +83,7 @@ Tokyo Campの強みは「安くて丈夫で、調理面が広い」こと。約2
 
 965gという重量は、車移動なら全く気にならないレベル。むしろこの重さが安定感に直結していて、風が強い日でも倒れにくい。ただし徒歩キャンプには向きません。ここだけはハッキリ分かれます。
 
-[Amazonで見る →](https://www.amazon.co.jp/dp/B08JLYR3QK?tag=nao78-22)
+[Amazonで見る →](https://www.amazon.co.jp/dp/B08JLYR3QK?tag=camp78-22)
 
 [楽天で口コミを見る →](https://search.rakuten.co.jp/search/mall/Tokyo+Camp+%E7%84%9A%E7%81%AB%E5%8F%B0/)
 

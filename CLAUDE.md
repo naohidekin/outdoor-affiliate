@@ -58,8 +58,8 @@
 ## アフィリエイト設定
 
 - **楽天アフィリエイト**: products.jsonの `affiliateUrl` フィールドに `hb.afl.rakuten.co.jp` 形式のURLを設定
-- **Amazonアソシエイト**: アソシエイトID `nao78-22`
-  - リンク形式: `https://www.amazon.co.jp/dp/[ASIN]/?tag=nao78-22`
+- **Amazonアソシエイト**: アソシエイトID `camp78-22`
+  - リンク形式: `https://www.amazon.co.jp/dp/[ASIN]/?tag=camp78-22`
   - products.jsonの `amazonUrl` フィールドに設定する
   - ASINはAmazon商品ページURLの `/dp/` 以降の10桁英数字
 
@@ -96,7 +96,7 @@
 - **`imageUrl` も必ず設定する**（空欄は原則NG）
 - アフィリエイトURLの構成:
   - 楽天アフィリエイト: `https://hb.afl.rakuten.co.jp/ichiba/{アフィリエイトID}/?pc={エンコード済み商品URL}&link_type=text&ut={トラッキングパラメータ}`
-  - Amazonアソシエイト: `https://www.amazon.co.jp/dp/{ASIN}?tag=nao78-22`
+  - Amazonアソシエイト: `https://www.amazon.co.jp/dp/{ASIN}?tag=camp78-22`
   - アフィリエイトIDは既存製品で使用済みのものを再利用する（新規IDは生成しない）
 
 ## SNS運用ペルソナ（X / 楽天ROOM等）
