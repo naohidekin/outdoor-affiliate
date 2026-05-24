@@ -34,16 +34,32 @@ const PROJECT_ROOT = path.join(__dirname, "..");
 const MODEL = process.env.ARTICLE_WRITER_MODEL || "claude-sonnet-4-6";
 const MAX_RETRIES = 1;
 
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
+
 // ─── CLI ─────────────────────────────────────────────
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { dryRun: false, themeIndex: null, retryArticleId: null };
+  const opts = { dryRun: false, themeIndex: null, retryArticleId: null, feedbackJson: null };
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case "--dry-run":      opts.dryRun = true; break;
       case "--theme-index":  opts.themeIndex = parseInt(args[++i], 10); break;
       case "--retry":        opts.retryArticleId = args[++i]; break;
+      case "--feedback-json":
+        try {
+          opts.feedbackJson = JSON.parse(args[++i] || "{}");
+        } catch {
+          opts.feedbackJson = null;
+        }
+        break;
     }
   }
   return opts;
@@ -57,6 +73,14 @@ function loadWritingGuidelines() {
     // 記事執筆ガイドラインセクションを抽出
     const match = claudeMd.match(/# 記事執筆ガイドライン[\s\S]*?(?=\n# [^#]|$)/);
     return match ? match[0] : "";
+  } catch {
+    return "";
+  }
+}
+
+function loadWiseSkill() {
+  try {
+    return fs.readFileSync(path.join(PROJECT_ROOT, "SKILL.md"), "utf-8");
   } catch {
     return "";
   }
@@ -80,7 +104,7 @@ const SCORING_CRITERIA = [
 async function scoreArticle(anthropic, content, theme) {
   try {
     const response = await anthropic.messages.create({
-      model: process.env.ARTICLE_SCORER_MODEL || "claude-haiku-4-5-20251001",
+      model: process.env.ARTICLE_SCORER_MODEL || "claude-sonnet-4-6",
       max_tokens: 500,
       messages: [{
         role: "user",
@@ -123,7 +147,17 @@ function getRelatedArticleSlugs(categoryId, allArticles) {
     .slice(0, 5);
 }
 
-async function generateArticle(anthropic, theme, products, analystFeedback, guidelines, allArticles) {
+function getWordCountTarget(formatRecommendation) {
+  return {
+    ranking: "5000〜8000字",
+    comparison: "5000〜8000字",
+    guide: "3000〜5000字",
+    "how-to": "3000〜5000字",
+    review: "2000〜3500字",
+  }[formatRecommendation] || "3000〜5000字";
+}
+
+async function generateArticle(anthropic, theme, products, analystFeedback, guidelines, allArticles, wiseFeedback = null) {
   const productInfo = products.map((p, i) => `
 ### 商品${i + 1}: ${p.name}
 - ブランド: ${p.brand}
@@ -141,23 +175,37 @@ async function generateArticle(anthropic, theme, products, analystFeedback, guid
   const internalLinkSection = relatedArticles.length > 0
     ? `\n内部リンク候補（同カテゴリの既存記事）:\n${relatedArticles.map((a) => `- [${a.title}](/articles/${a.slug})`).join("\n")}\n記事内に2〜3箇所、自然な文脈で上記記事へのリンクを入れてください。`
     : "";
+  const wiseFeedbackSection = wiseFeedback
+    ? `\n前回レビュー（wise_scores）:\n${JSON.stringify(wiseFeedback, null, 2)}\n不足スコアを優先改善してください。`
+    : "";
+  const supervisorFeedbackSection = Array.isArray(wiseFeedback?.feedback) && wiseFeedback.feedback.length
+    ? `\nSupervisor指摘:\n- ${wiseFeedback.feedback.join("\n- ")}\n指摘を解消してください。`
+    : "";
+  const wordCountTarget = getWordCountTarget(theme.format_recommendation);
+  const amazonTag = process.env.AMAZON_PARTNER_TAG;
+  if (!amazonTag) {
+    throw new Error("AMAZON_PARTNER_TAG 未設定（例: cmap78-22）");
+  }
 
   const systemPrompt = `あなたはアウトドア・キャンプ用品アフィリエイトサイト「camp-gear-lab.com」の記事ライターです。
 ペルソナ「ギア男」として記事を書きます。
 
 ${guidelines}
+${loadWiseSkill()}
 ${feedbackSection}
+${wiseFeedbackSection}
+${supervisorFeedbackSection}
 
-【脱AI・感情注入ルール（最重要）】
-1. 体温注入: ギア男の実体験（失敗→感情→行動の変化→現在）を必ず盛り込む。AI が知識だけで書いた文章は不合格。
-2. 脱形式: AI特有の硬い表現を全カット。「〜することができます」「〜と言えるでしょう」「〜において」「〜に関して」「〜が期待できます」「それでは〜を見ていきましょう」→ 口語・断定に置き換える。
-3. 仕上げ: 本物の発信者がプライドかけて世に出す最終稿レベルに。自信と覚悟が滲むトーンで、読んだ人の心が動くレベルに仕上げる。「これAIが書いたな」と思われたら不合格。
+【AFFILIATE_RULES（必須）】
+- 比較/ランキング記事は {{comparison:${products.map((p) => p.id).join(",")}}} を必ず含める
+- Amazonボタンを含める（AMAZON_PARTNER_TAG=${amazonTag || "未設定"} を参照し、ハードコード禁止）
+- 楽天ボタンを含める（全商品対象）
+- 内部リンクを /articles/[slug] 形式で2〜3本入れる
 
 重要ルール:
-- 比較表は {{comparison:${products.map((p) => p.id).join(",")}}} タグを使う
 - 商品へのリンクは文中に自然に入れる（アフィリエイトURLは使わず、本文内では「気になる方はチェックを」程度）
 - Markdown形式で出力する
-- 2000〜4000文字を目安にする（最低2000文字は必須）
+- ${wordCountTarget} を目安にする
 ${internalLinkSection}`;
 
   const userPrompt = `以下のテーマで記事を生成してください。
@@ -257,6 +305,10 @@ async function main() {
       process.exit(1);
     }
     const target = articles[targetIdx];
+    if (target.status === "published") {
+      console.error("[article-writer] published 記事は --retry で更新できません");
+      process.exit(1);
+    }
     console.log(`[article-writer] リトライ: ${target.title}`);
 
     const allProducts = readJson("products.json") || [];
@@ -270,7 +322,7 @@ async function main() {
     }
 
     const { content, meta } = await generateArticle(
-      anthropic, target, products, analystFeedback, guidelines, articles
+      anthropic, target, products, analystFeedback, guidelines, articles, opts.feedbackJson || null
     );
     const scoring = await scoreArticle(anthropic, content, target);
     console.log(`[article-writer] リトライスコア: ${scoring.total.toFixed(1)}`);
@@ -283,11 +335,11 @@ async function main() {
         metaDescription: meta?.metaDescription || target.metaDescription,
         faqs: meta?.faqs?.length > 0 ? meta.faqs : target.faqs,
         qualityScore: scoring.total,
-        updatedAt: new Date().toISOString(),
+        updatedAt: jstIsoString(),
         generationMeta: {
           ...target.generationMeta,
           retryCount: (target.generationMeta?.retryCount || 0) + 1,
-          generatedAt: new Date().toISOString(),
+          generatedAt: jstIsoString(),
         },
       };
       writeJson("articles.json", articles);
@@ -336,7 +388,7 @@ async function main() {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       const { content, meta } = await generateArticle(
-        anthropic, theme, products, analystFeedback, guidelines, articles
+        anthropic, theme, products, analystFeedback, guidelines, articles, opts.feedbackJson || null
       );
 
       const scoring = await scoreArticle(anthropic, content, theme);
@@ -358,7 +410,7 @@ async function main() {
     }
 
     // Fix 1: Writer は常に draft。Publisher が qualityScore + scheduledPublishDate で公開判定する
-    const now = new Date().toISOString();
+    const now = jstIsoString();
 
     const article = {
       id: uuidv4(),

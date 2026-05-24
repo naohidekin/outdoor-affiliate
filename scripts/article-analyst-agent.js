@@ -13,6 +13,7 @@
  */
 
 import { google } from "googleapis";
+import Anthropic from "@anthropic-ai/sdk";
 import {
   loadEnv,
   readJson,
@@ -21,6 +22,68 @@ import {
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
+
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
+
+async function generateEffectivePatterns(topArticles, articles) {
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey || !topArticles?.length) return [];
+    const client = new Anthropic({ apiKey });
+    const payload = topArticles.slice(0, 5).map((t) => {
+      const src = articles.find((a) => a.slug === t.slug);
+      return {
+        title: src?.title || t.slug,
+        angle: src?.generationMeta?.angle || "",
+        categoryId: t.categoryId,
+        pv: t[Object.keys(t).find((k) => k.startsWith("pv"))] || 0,
+      };
+    });
+    const res = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 800,
+      messages: [{
+        role: "user",
+        content: `次の上位記事データから共通の成功パターンを3〜5個のルールで抽出してください。JSON配列のみで返答。\n${JSON.stringify(payload, null, 2)}`,
+      }],
+    });
+    const text = res.content?.[0]?.text || "";
+
+    // Claude応答のJSONブロック（配列またはオブジェクト）を抽出
+    const bracketMatch = text.match(/\[[\s\S]*\]/);
+    const braceMatch = text.match(/\{[\s\S]*\}/);
+    const jsonText = bracketMatch?.[0] || braceMatch?.[0];
+    if (!jsonText) return [];
+
+    const parsed = JSON.parse(jsonText);
+
+    // パターンA: { patterns: [{text: "..."}] } 形式
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Array.isArray(parsed.patterns)) {
+      return parsed.patterns
+        .map((p) => (typeof p === "string" ? p : p?.text || p?.description || JSON.stringify(p)))
+        .filter((p) => typeof p === "string" && p.trim().length > 0)
+        .slice(0, 5);
+    }
+
+    // パターンB: JSON.parse後が配列
+    return Array.isArray(parsed)
+      ? parsed
+          .map((p) => (typeof p === "string" ? p : JSON.stringify(p)))
+          .filter((p) => typeof p === "string" && p.trim().length > 0)
+          .slice(0, 5)
+      : [];
+  } catch (err) {
+    console.warn(`[article-analyst] effectivePatterns生成スキップ: ${err.message}`);
+    return [];
+  }
+}
 
 // ─── CLI ─────────────────────────────────────────────
 
@@ -57,7 +120,7 @@ async function getArticlePVFromGA4(days) {
 
     const today = new Date();
     const startDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
-    const formatDate = (d) => d.toISOString().slice(0, 10);
+    const formatDate = (d) => jstDateString(d);
 
     // 記事ページ別 PV + セッション
     const res = await analyticsData.properties.runReport({
@@ -132,7 +195,7 @@ async function getArticlePVFromGA4(days) {
 
 // ─── 分析メイン ──────────────────────────────────────
 
-function analyze(articles, ga4Data, clicks, days) {
+async function analyze(articles, ga4Data, clicks, days) {
   const now = new Date();
 
   // 記事別PVマップ
@@ -205,6 +268,8 @@ function analyze(articles, ga4Data, clicks, days) {
       `CTR >= 2.0% の記事: ${highPerf.map((a) => a.slug).join(", ")}`
     );
   }
+  const llmPatterns = await generateEffectivePatterns(topArticles, articles);
+  effectivePatterns.push(...llmPatterns);
 
   const suggestions = [];
   // 季節マップを読んで来月の推奨カテゴリを提案
@@ -218,7 +283,7 @@ function analyze(articles, ga4Data, clicks, days) {
   }
 
   return {
-    updatedAt: now.toISOString(),
+    updatedAt: jstIsoString(now),
     period: `${days}d`,
     topArticles,
     categoryTrends,
@@ -242,7 +307,7 @@ async function main() {
 
   const articles = readJson("articles.json") || [];
   const allClicks = readJson("affiliate-clicks.json") || [];
-  const startDate = new Date(Date.now() - opts.days * 24 * 60 * 60 * 1000).toISOString();
+  const startDate = jstIsoString(new Date(Date.now() - opts.days * 24 * 60 * 60 * 1000));
   const clicks = allClicks.filter((c) => c.timestamp >= startDate);
 
   const ga4Data = await getArticlePVFromGA4(opts.days);
@@ -252,7 +317,7 @@ async function main() {
     console.log(`[article-analyst] GA4記事PVデータ: ${ga4Data.articlePV.length}件`);
   }
 
-  const feedback = analyze(articles, ga4Data, clicks, opts.days);
+  const feedback = await analyze(articles, ga4Data, clicks, opts.days);
 
   console.log("\n[article-analyst] フィードバックサマリ:");
   console.log(`  Top記事: ${feedback.topArticles.slice(0, 5).map((a) => a.slug).join(", ") || "なし"}`);

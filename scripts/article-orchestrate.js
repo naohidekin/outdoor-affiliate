@@ -22,6 +22,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
 const NODE = process.argv[0];
 
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstDateTimeString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return shifted.toISOString().slice(0, 19).replace("T", " ");
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
+
 // ─── CLI ─────────────────────────────────────────────
 
 function parseArgs() {
@@ -117,13 +131,89 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
       const ks = readJson("kill-switch.json") || {};
       ks.articleEnabled = true;
       ks.reason = `記事パイプライン連続エラー${articleConsecutiveFailures}回（最後: ${script}）`;
-      ks.enabledAt = new Date().toISOString();
+      ks.enabledAt = jstIsoString();
       ks.enabledBy = "auto-article-orchestrate";
       writeJson("kill-switch.json", ks);
     }
 
     return { success: false, error: err.message };
   }
+}
+
+async function runCodexReviewer(articleId) {
+  const reviewed = await runAgent("article-codex-reviewer.js", ["--article-id", articleId], { timeout: 300_000 });
+  if (!reviewed.success || !reviewed.stdout) return null;
+  const match = reviewed.stdout.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  return JSON.parse(match[0]);
+}
+
+async function runSupervisorGate(articleId, cycle) {
+  const result = await runAgent("supervisor-agent.js", ["--evaluate-article", articleId, "--cycle", String(cycle)]);
+  if (!result.success || !result.stdout) return null;
+  const match = result.stdout.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  return JSON.parse(match[0]);
+}
+
+function extractWriterArticleIdsFromStdout(stdout = "") {
+  const ids = [];
+  if (!stdout) return ids;
+  const regex = /\{[\s\S]*?\}/g;
+  const chunks = stdout.match(regex) || [];
+  for (const chunk of chunks) {
+    try {
+      const parsed = JSON.parse(chunk);
+      if (typeof parsed?.articleId === "string" && parsed.articleId) ids.push(parsed.articleId);
+      if (Array.isArray(parsed?.articleIds)) {
+        for (const id of parsed.articleIds) {
+          if (typeof id === "string" && id) ids.push(id);
+        }
+      }
+    } catch {
+      // ignore non-JSON chunks
+    }
+  }
+  return [...new Set(ids)];
+}
+
+function pickLatestDraftArticleId({ excludedIds = new Set(), beforeTimeMs = 0 } = {}) {
+  const all = readJson("articles.json") || [];
+  let latest = null;
+  for (const article of all) {
+    if (!article || article.status !== "draft" || !article.id || excludedIds.has(article.id)) continue;
+    const tsRaw = article.updatedAt || article.createdAt;
+    const ts = tsRaw ? Date.parse(tsRaw) : NaN;
+    if (Number.isNaN(ts) || ts < beforeTimeMs) continue;
+    if (!latest) {
+      latest = article;
+      continue;
+    }
+    const latestTs = Date.parse(latest.updatedAt || latest.createdAt || "");
+    if (Number.isNaN(latestTs) || ts > latestTs) latest = article;
+  }
+  return latest?.id || null;
+}
+
+function appendRejectedArticle(articleId, gate, cycle = 2) {
+  const articles = readJson("articles.json") || [];
+  const article = articles.find((a) => a.id === articleId);
+  if (!article) return;
+
+  const rejected = readJson("rejected.json") || [];
+  const duplicate = rejected.some((r) => r?.id === articleId && Number(r?.cycle) === Number(cycle));
+  if (duplicate) return;
+
+  rejected.push({
+    id: article.id,
+    slug: article.slug,
+    title: article.title,
+    cycle: Number(cycle),
+    score: Number(gate?.score || 0),
+    feedback: Array.isArray(gate?.feedback) ? gate.feedback : [],
+    rejectedAt: jstIsoString(),
+  });
+  writeJson("rejected.json", rejected);
 }
 
 // パイプライン実行内の連続失敗カウンタ
@@ -139,7 +229,7 @@ function resetArticleFailures() {
 async function weeklyPipeline(dryRun) {
   console.log("\n╔══════════════════════════════════════════════╗");
   console.log("║     記事パイプライン（週次）開始              ║");
-  console.log(`║     ${new Date().toISOString().slice(0, 19)}           ║`);
+  console.log(`║     ${jstDateTimeString()} JST      ║`);
   console.log("╚══════════════════════════════════════════════╝\n");
 
   // 0. Git pull（最新取得）
@@ -183,9 +273,97 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
-  // 6. Writer → 記事生成（長時間かかる可能性）
+  // 6. Writer + Codex Reviewer + Supervisor（max 2 cycles）
+  const writerStartMs = Date.now();
+  const beforeArticles = readJson("articles.json") || [];
+  const beforeIds = new Set(beforeArticles.map((a) => a.id));
   const writerArgs = dryRun ? ["--dry-run"] : [];
-  await runAgent("article-writer-agent.js", writerArgs, { timeout: 600_000 });
+  const writerRun = await runAgent("article-writer-agent.js", writerArgs, { timeout: 600_000 });
+  if (!writerRun.success) {
+    console.error("[article-orchestrate] Writer失敗。中止。");
+    return false;
+  }
+
+  if (!dryRun) {
+    const reviewerTargets = [];
+    const idsFromWriter = extractWriterArticleIdsFromStdout(writerRun.stdout || "");
+    for (const id of idsFromWriter) reviewerTargets.push(id);
+
+    if (reviewerTargets.length === 0) {
+      const latestId = pickLatestDraftArticleId({ excludedIds: beforeIds, beforeTimeMs: writerStartMs });
+      if (latestId) reviewerTargets.push(latestId);
+    }
+
+    if (reviewerTargets.length === 0) {
+      const afterFirst = readJson("articles.json") || [];
+      const newArticles = afterFirst.filter((a) => !beforeIds.has(a.id));
+      for (const article of newArticles) reviewerTargets.push(article.id);
+    }
+
+    const uniqueReviewerTargets = [...new Set(reviewerTargets)];
+    for (const articleId of uniqueReviewerTargets) {
+      const article = (readJson("articles.json") || []).find((a) => a.id === articleId);
+      if (!article || article.status === "published") continue;
+
+      let cycle = 1;
+      let gate = null;
+      let feedbackPayload = null;
+
+      try {
+        const codexResult = await runCodexReviewer(articleId);
+        if (codexResult) {
+          const latest = readJson("articles.json") || [];
+          const idx = latest.findIndex((x) => x.id === articleId);
+          if (idx >= 0) {
+            if (typeof codexResult.revised_content === "string" && codexResult.revised_content.trim()) {
+              latest[idx].content = codexResult.revised_content;
+            }
+            latest[idx].wise_scores = codexResult.wise_scores || null;
+            latest[idx].updatedAt = jstIsoString();
+            writeJson("articles.json", latest);
+          }
+        }
+      } catch (e) {
+        console.warn("[orchestrate] Codex Reviewer スキップ:", e.message);
+      }
+
+      gate = await runSupervisorGate(articleId, cycle);
+      const cycle1Passed = gate?.passed === true && Number(gate?.score || 0) >= 7.5;
+      if (!cycle1Passed) {
+        cycle = 2;
+        feedbackPayload = {
+          wise_scores: (readJson("articles.json") || []).find((x) => x.id === articleId)?.wise_scores || null,
+          feedback: gate.feedback || [],
+        };
+        await runAgent("article-writer-agent.js", ["--retry", articleId, "--feedback-json", JSON.stringify(feedbackPayload)], { timeout: 600_000 });
+
+        try {
+          const codexResultCycle2 = await runCodexReviewer(articleId);
+          if (codexResultCycle2) {
+            const latest = readJson("articles.json") || [];
+            const idx = latest.findIndex((x) => x.id === articleId);
+            if (idx >= 0) {
+              if (typeof codexResultCycle2.revised_content === "string" && codexResultCycle2.revised_content.trim()) {
+                latest[idx].content = codexResultCycle2.revised_content;
+              }
+              latest[idx].wise_scores = codexResultCycle2.wise_scores || null;
+              latest[idx].updatedAt = jstIsoString();
+              writeJson("articles.json", latest);
+            }
+          }
+        } catch (e) {
+          console.warn("[orchestrate] Codex Reviewer(2nd) スキップ:", e.message);
+        }
+
+        gate = await runSupervisorGate(articleId, cycle);
+        const cycle2Passed = gate?.passed === true && Number(gate?.score || 0) >= 7.5;
+        if (!cycle2Passed) {
+          appendRejectedArticle(articleId, gate, 2);
+          console.warn(`[article-orchestrate] articleId=${articleId} を rejected.json に記録しました`);
+        }
+      }
+    }
+  }
 
   // 7. Publisher → 即日公開分を処理
   if (!dryRun) {
@@ -219,7 +397,7 @@ async function weeklyPipeline(dryRun) {
 async function dailyPipeline(dryRun) {
   console.log("\n┌──────────────────────────────────────────────┐");
   console.log("│     記事パイプライン（日次）開始              │");
-  console.log(`│     ${new Date().toISOString().slice(0, 19)}           │`);
+  console.log(`│     ${jstDateTimeString()} JST      │`);
   console.log("└──────────────────────────────────────────────┘\n");
 
   // 0. Git pull（最新取得）

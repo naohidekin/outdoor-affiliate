@@ -29,11 +29,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
 const DRAFT_SHEET = "下書き管理";
 
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
+
 // ─── CLI パーサ ──────────────────────────────────────
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { action: null, reason: "" };
+  const opts = { action: null, reason: "", cycle: 1, articleId: null };
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case "--check":
@@ -55,9 +64,97 @@ function parseArgs() {
       case "--weekly-report":
         opts.action = "weekly-report";
         break;
+      case "--evaluate-article":
+        opts.action = "evaluate-article";
+        opts.articleId = args[++i];
+        break;
+      case "--cycle":
+        opts.cycle = Number(args[++i] || 1);
+        break;
     }
   }
   return opts;
+}
+
+const WISE_PASS_THRESHOLD = 7.5;
+const WISE_CRITERIA = [
+  "wise_w", "wise_i", "wise_s", "wise_e", "wise_ai",
+  "affiliate_links", "comparison_table", "internal_links", "faq", "word_count",
+];
+
+function appendRejected(record) {
+  const rejected = readJson("rejected.json") || [];
+  rejected.push(record);
+  writeJson("rejected.json", rejected);
+}
+
+function scoreWiseArticle(article, topic) {
+  const content = article.content || "";
+  const wordCount = content.length;
+  const faqCount = Array.isArray(article.faqs) ? article.faqs.length : 0;
+  const linkCount = (content.match(/\[[^\]]+\]\(\/articles\/[^)]+\)/g) || []).length;
+  const hasComparisonTag = /\{\{comparison:[^}]+\}\}/.test(content);
+  const hasAmazon = /amazon\./i.test(content);
+  const hasRakuten = /rakuten\./i.test(content);
+  const banned = [
+    "することができます", "と言えるでしょう", "という点で優れています", "ぜひ参考にしてみてください",
+    "まとめると", "総合的に判断すると", "非常に重要です", "詳しく解説します",
+    "しっかりと確認しましょう", "という選択肢もあります", "といった特徴があります",
+  ];
+  const bannedHits = banned.filter((p) => content.includes(p)).length;
+  const wise = article.wise_scores || {};
+  const wf = topic?.format_recommendation || "guide";
+  const minMax = {
+    ranking: [5000, 8000], comparison: [5000, 8000],
+    guide: [3000, 5000], "how-to": [3000, 5000], review: [2000, 3500],
+  }[wf] || [3000, 5000];
+
+  const criterionScores = {
+    wise_w: Math.max(1, Math.min(10, Math.round(((wise.w || 3) / 5) * 10))),
+    wise_i: Math.max(1, Math.min(10, Math.round(((wise.i || 3) / 5) * 10))),
+    wise_s: Math.max(1, Math.min(10, Math.round(((wise.s || 3) / 5) * 10))),
+    wise_e: Math.max(1, Math.min(10, Math.round(((wise.e || 3) / 5) * 10))),
+    wise_ai: Math.max(1, Math.min(10, Math.round(((wise.ai || 3) / 5) * 10))),
+    affiliate_links: hasAmazon && hasRakuten ? 10 : (hasAmazon || hasRakuten ? 6 : 2),
+    comparison_table: hasComparisonTag ? 10 : 2,
+    internal_links: linkCount >= 2 && linkCount <= 3 ? 10 : (linkCount >= 1 ? 6 : 2),
+    faq: faqCount >= 3 && faqCount <= 5 ? 10 : (faqCount >= 2 ? 6 : 2),
+    word_count: wordCount >= minMax[0] && wordCount <= minMax[1] ? 10 : (wordCount >= 2000 && wordCount <= 8000 ? 6 : 2),
+  };
+
+  const average = WISE_CRITERIA.reduce((s, k) => s + criterionScores[k], 0) / 10;
+  const score = Number(average.toFixed(2));
+  const passed = score >= WISE_PASS_THRESHOLD;
+  const feedback = WISE_CRITERIA
+    .filter((k) => criterionScores[k] < 8)
+    .map((k) => `${k} が不足 (${criterionScores[k]}/10)`);
+  if (bannedHits > 0) feedback.push(`禁止フレーズ検出 ${bannedHits}件`);
+
+  return { passed, score, criterionScores, feedback };
+}
+
+function evaluateArticle(articleId, cycle = 1) {
+  const articles = readJson("articles.json") || [];
+  const plan = readJson("article-weekly-plan.json") || {};
+  const article = articles.find((a) => a.id === articleId);
+  const topic = (plan.articles || []).find((t) => t.slug === article?.slug);
+  if (!article) {
+    console.log(JSON.stringify({ passed: false, score: 0, feedback: ["article not found"] }));
+    return;
+  }
+  const result = scoreWiseArticle(article, topic);
+  if (!result.passed && Number(cycle) >= 2) {
+    appendRejected({
+      id: article.id,
+      slug: article.slug,
+      title: article.title,
+      cycle: Number(cycle),
+      score: result.score,
+      feedback: result.feedback,
+      rejectedAt: jstIsoString(),
+    });
+  }
+  console.log(JSON.stringify(result));
 }
 
 // ─── Sheets 接続 ─────────────────────────────────────
@@ -79,7 +176,7 @@ function enableKillSwitch(reason, triggeredBy = "manual") {
     ...existing,
     enabled: true,
     reason,
-    enabledAt: new Date().toISOString(),
+    enabledAt: jstIsoString(),
     enabledBy: triggeredBy,
   });
   console.log(`[supervisor] KILL SWITCH 有効化 (by ${triggeredBy}): ${reason}`);
@@ -91,7 +188,7 @@ function enableKillSwitch(reason, triggeredBy = "manual") {
 function recordError(errorType) {
   const ks = readJson("kill-switch.json") || {};
   const errors = ks.consecutiveErrors || [];
-  errors.push({ type: errorType, at: new Date().toISOString() });
+  errors.push({ type: errorType, at: jstIsoString() });
 
   // 直近3件のみ保持
   const recent = errors.slice(-3);
@@ -174,7 +271,7 @@ async function runAnomalyCheck() {
       range: `${DRAFT_SHEET}!A2:N`,
     });
     const rows = res.data.values || [];
-    const today = new Date().toISOString().split("T")[0];
+    const today = jstDateString();
 
     // scheduledDate < today かつ status != posted の件数
     let overdueCount = 0;
@@ -279,7 +376,7 @@ async function runBackup() {
     }
 
     const backup = {
-      createdAt: new Date().toISOString(),
+      createdAt: jstIsoString(),
       sheets: {
         "下書き管理": draftRes.data.values || [],
         "X投稿管理": postRes.data.values || [],
@@ -323,7 +420,7 @@ function runQualityCheck() {
   }
 
   console.log(`[supervisor] 品質サマリ (直近${recent.length}件):`);
-  console.log(`  ���均スコア: ${avgScore.toFixed(1)}`);
+  console.log(`  平均スコア: ${avgScore.toFixed(1)}`);
   console.log(`  最大連続低スコア(<5.0): ${maxConsecutiveLow}件`);
 
   if (maxConsecutiveLow >= 3) {
@@ -363,7 +460,7 @@ async function generateWeeklyReport() {
     const rows = res.data.values || [];
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const cutoff = oneWeekAgo.toISOString().split("T")[0];
+    const cutoff = jstDateString(oneWeekAgo);
 
     for (const r of rows) {
       if (!r[0]) continue;
@@ -430,7 +527,7 @@ async function generateWeeklyReport() {
       const clicks = JSON.parse(fs.readFileSync(clicksPath, "utf-8"));
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const cutoff = oneWeekAgo.toISOString().slice(0, 10);
+      const cutoff = jstDateString(oneWeekAgo);
       const recentClicks = clicks.filter(
         (c) => (c.timestamp || c.clicked_at || "") >= cutoff &&
                 (c.source === "x" || (c.utm_source === "x"))
@@ -455,7 +552,7 @@ async function generateWeeklyReport() {
 
   const report = {
     week: getWeekLabel(),
-    generatedAt: new Date().toISOString(),
+    generatedAt: jstIsoString(),
     summary: {
       totalGenerated: sheetsSummary.total,
       approved: sheetsSummary.approved,
@@ -489,7 +586,7 @@ async function generateWeeklyReport() {
 const opts = parseArgs();
 
 if (!opts.action) {
-  console.log("使い方: --check | --kill <reason> | --resume | --backup | --quality-check | --weekly-report");
+  console.log("使い方: --check | --kill <reason> | --resume | --backup | --quality-check | --weekly-report | --evaluate-article <id> [--cycle n]");
   process.exit(0);
 }
 
@@ -511,5 +608,8 @@ switch (opts.action) {
     break;
   case "weekly-report":
     await generateWeeklyReport();
+    break;
+  case "evaluate-article":
+    evaluateArticle(opts.articleId, opts.cycle);
     break;
 }

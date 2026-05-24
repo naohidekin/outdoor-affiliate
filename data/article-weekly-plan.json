@@ -1,69 +1,27 @@
 {
-  "week": "2026-W20",
-  "generatedAt": "2026-05-13T00:00:29.466Z",
+  "week": "2026-W21",
+  "generatedAt": "2026-05-24T22:52:11+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W20-01",
-      "categoryId": "tent",
-      "title": "キャンプ初心者向け！2人用テントの選び方と人気おすすめ10選【2026年版】",
-      "slug": "2-person-tent-ranking",
-      "angle": "「duo-tent-ranking」とは切り口を変え、カップル・夫婦だけでなく親子2人・友人ペアなど多様な2人ユースを想定した選び方ガイド＋ランキング形式で初心者の購入判断をサポート。",
-      "targetKeywords": [
-        "2人用テント おすすめ",
-        "テント 初心者 2人",
-        "カップル テント 選び方"
-      ],
-      "seasonRelevance": "5月のゴールデンウィーク明けから梅雨前にかけて2人キャンプの需要が高まる最旬タイミング。",
-      "priority": "high",
-      "reason": "tentカテゴリはPV302・検索セッション256とサイト最高水準のトレンド継続中で、デュオテント記事はあるが初心者向け選び方ガイドの角度がまだ空いているため即効性が高い。",
-      "scheduledPublishDate": "2026-05-15",
-      "productCount": 3,
-      "productIds": [
-        "tent-020",
-        "tent-021",
-        "tent-022"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W20-02",
+      "themeId": "theme-2026-W21-01",
       "categoryId": "insect-repellent",
-      "title": "子どもに使える虫除けスプレー・シールおすすめ9選【2026年版】",
-      "slug": "kids-insect-repellent-ranking",
-      "angle": "DEET濃度・天然成分・肌への安心度を軸に、乳幼児から小学生まで年齢別に使える製品を比較し、ファミリーキャンパーが迷わず選べる実用ガイド。",
+      "title": "キャンプの虫除けスプレーおすすめランキング【2026年版】ディート・イカリジン徹底比較",
+      "slug": "insect-repellent-spray-ranking",
+      "angle": "成分（ディート vs イカリジン）・効果時間・子ども対応を軸に、初心者でも選びやすいスプレー型虫除けを比較ランキング形式で紹介する",
       "targetKeywords": [
-        "子ども 虫除けスプレー おすすめ",
-        "赤ちゃん 虫除け キャンプ",
-        "子供 虫除け 安全"
+        "キャンプ 虫除けスプレー おすすめ",
+        "ディート イカリジン 違い",
+        "虫除けスプレー 子供 キャンプ"
       ],
-      "seasonRelevance": "5月下旬から蚊・ブヨのシーズンが本格化し、家族キャンプ前に子ども向け虫除けを探す検索が急増するタイミング。",
+      "seasonRelevance": "5月の連休明けから蚊・ブヨが本格化する時期で、キャンプシーズン到来と同時に虫対策需要が急上昇するタイミング",
       "priority": "high",
-      "reason": "insect-repellentは季節カテゴリかつトレンドactiveで、既存記事の一般ガイド・鬼ヤンマレビューに続く「ファミリー×子ども安全」という未着手の高需要切り口を抑えられる。",
-      "scheduledPublishDate": "2026-05-17",
+      "reason": "5月の季節カテゴリかつAnalystデータでinsect-repellentは既存記事2本が存在するもスプレー製品比較ランキングは未作成で、成分別比較という新角度で差別化しつつ検索ニーズを取り込める",
+      "scheduledPublishDate": "2026-05-27",
       "productCount": 3,
       "productIds": [
         "insect-repellent-007",
         "insect-repellent-008",
         "insect-repellent-009"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W20-03",
-      "categoryId": "wear",
-      "title": "登山・トレッキング向け速乾Tシャツおすすめ10選【2026年版】",
-      "slug": "quick-dry-tshirt-ranking",
-      "angle": "来月の季節カテゴリ先取りとして、春夏キャンプ・低山ハイキングで必需品となる速乾インナー・Tシャツをムレ・臭い・コスパの3軸で徹底比較。",
-      "targetKeywords": [
-        "速乾Tシャツ 登山 おすすめ",
-        "アウトドア 速乾インナー",
-        "キャンプ 服装 夏 Tシャツ"
-      ],
-      "seasonRelevance": "5月後半〜6月は気温上昇で速乾ウェアの検索が急増し、来月のwear季節カテゴリへの流入基盤を今月のうちに構築できる。",
-      "priority": "medium",
-      "reason": "wearカテゴリはPV36・トレンドactiveで成長余地があり、既存のspring-camp-clothing-guide・rainwear-rankingとは異なる「速乾Tシャツ単品比較」の切り口で夏需要を先取りしつつ来月の季節カテゴリ強化に先行投資できる。",
-      "scheduledPublishDate": "2026-05-20",
-      "productCount": 3,
-      "productIds": [
-        "wear-001"
       ]
     }
   ]

@@ -13,6 +13,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { google } from "googleapis";
 import {
   loadEnv,
   readJson,
@@ -21,6 +22,15 @@ import {
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
+
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
 
 // ─── CLI ─────────────────────────────────────────────
 
@@ -34,6 +44,59 @@ function parseArgs() {
     }
   }
   return opts;
+}
+
+async function fetchGscOpportunityQueries() {
+  try {
+    const siteUrl = process.env.GSC_SITE_URL;
+    const propertyUrl = process.env.GSC_PROPERTY_URL;
+    const credentials = JSON.parse(process.env.INDEXING_CREDENTIALS || process.env.GOOGLE_CREDENTIALS || "{}");
+    if (!siteUrl && !propertyUrl) return [];
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ["https://www.googleapis.com/auth/webmasters.readonly"],
+    });
+    const webmasters = google.webmasters({ version: "v3", auth });
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const site = siteUrl || propertyUrl;
+    const res = await webmasters.searchanalytics.query({
+      siteUrl: site,
+      requestBody: {
+        startDate: jstDateString(startDate),
+        endDate: jstDateString(endDate),
+        dimensions: ["query"],
+        rowLimit: 100,
+      },
+    });
+    return (res.data.rows || [])
+      .map((r) => ({ query: r.keys?.[0] || "", impressions: r.impressions || 0, position: r.position || 0 }))
+      .filter((r) => r.impressions >= 100 && r.position >= 11 && r.position <= 30)
+      .slice(0, 20);
+  } catch (err) {
+    console.warn(`[article-researcher] GSC取得スキップ: ${err.message}`);
+    return [];
+  }
+}
+
+async function fetchBraveInsights(keywords) {
+  try {
+    const apiKey = process.env.BRAVE_API_KEY;
+    if (!apiKey || !Array.isArray(keywords) || keywords.length === 0) return [];
+    const results = [];
+    for (const keyword of keywords.slice(0, 5)) {
+      const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(keyword)}&count=5&country=JP`;
+      const res = await fetch(url, { headers: { Accept: "application/json", "X-Subscription-Token": apiKey } });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const topTitles = (data.web?.results || []).slice(0, 3).map((r) => r.title);
+      results.push({ keyword, resultCount: data.web?.results?.length || 0, topTitles });
+    }
+    return results;
+  } catch (err) {
+    console.warn(`[article-researcher] Brave取得スキップ: ${err.message}`);
+    return [];
+  }
 }
 
 // ─── 週番号算出 ──────────────────────────────────────
@@ -59,7 +122,7 @@ function getPublishDates(count) {
   for (let i = 1; dates.length < count; i++) {
     const d = new Date(today.getTime() + i * 86400000); // 毎回新規Date生成で月跨ぎ安全
     if (targetDays.includes(d.getDay())) {
-      dates.push(d.toISOString().slice(0, 10));
+      dates.push(jstDateString(d));
     }
     if (i > 30) break; // safety
   }
@@ -87,6 +150,8 @@ async function main() {
 
   const month = String(new Date().getMonth() + 1);
   const seasonCategories = seasonMap[month] || categories.map((c) => c.id);
+  const gscOpportunities = await fetchGscOpportunityQueries();
+  const braveInsights = await fetchBraveInsights((feedback?.suggestions || []).flatMap((s) => String(s).split(/[、,\s]+/)).filter(Boolean));
 
   // 既存記事のスラッグ・カテゴリ分布
   const existingSlugs = articles.map((a) => a.slug);
@@ -124,6 +189,12 @@ ${seasonInfo}
 既存記事（重複を避けること）:
 ${existingArticleInfo}
 ${analystInfo}
+
+GSC Opportunity Queries（rank 11-30 / 100imp+）:
+${JSON.stringify(gscOpportunities, null, 2)}
+
+Brave Search Trends（候補キーワード上位記事）:
+${JSON.stringify(braveInsights, null, 2)}
 
 ルール:
 - 季節カテゴリを優先するが、データドリブンな判断も加味する
@@ -182,7 +253,7 @@ ${analystInfo}
 
   const plan = {
     week: weekLabel,
-    generatedAt: new Date().toISOString(),
+    generatedAt: jstIsoString(),
     articles: themes.slice(0, opts.count).map((t, i) => ({
       themeId: `theme-${weekLabel}-${String(i + 1).padStart(2, "0")}`,
       ...t,

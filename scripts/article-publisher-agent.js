@@ -24,6 +24,15 @@ loadEnv();
 
 const SITE_URL = "https://camp-gear-lab.com";
 
+function jstDateString(d = new Date()) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function jstIsoString(d = new Date()) {
+  const shifted = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${shifted.toISOString().slice(0, 19)}+09:00`;
+}
+
 // ─── CLI ─────────────────────────────────────────────
 
 function parseArgs() {
@@ -82,7 +91,7 @@ async function createArticlePromo(article) {
     const sheets = google.sheets({ version: "v4", auth });
 
     const now = new Date();
-    const id = `xp-${now.toISOString().slice(0, 10).replace(/-/g, "")}-art-${Math.random().toString(36).slice(2, 6)}`;
+    const id = `xp-${jstDateString(now).replace(/-/g, "")}-art-${Math.random().toString(36).slice(2, 6)}`;
     const url = `${SITE_URL}/articles/${article.slug}?utm_source=x&utm_medium=social&utm_campaign=article_promo`;
 
     const rawExcerpt = article.excerpt || article.content?.slice(0, 120) || "";
@@ -97,8 +106,7 @@ async function createArticlePromo(article) {
       : article.title;
 
     // 翌日をスケジュール日に設定
-    const scheduledDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-      .toISOString().slice(0, 10);
+    const scheduledDate = jstDateString(new Date(now.getTime() + 24 * 60 * 60 * 1000));
 
     const row = [
       id,                       // A: id
@@ -109,7 +117,7 @@ async function createArticlePromo(article) {
       "",                       // F: hashtags（ハッシュタグ禁止）
       "draft",                  // G: status (手動承認が必要)
       scheduledDate,            // H: scheduledDate
-      now.toISOString(),        // I: generatedAt
+      jstIsoString(now),        // I: generatedAt
       "",                       // J: postedAt
       "camp",                   // K: axis
       "",                       // L: seedId
@@ -143,7 +151,7 @@ async function main() {
 
   const articles = readJson("articles.json") || [];
   // JST (UTC+9) で日付を取得（UTC基準だと日付がずれる）
-  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const today = jstDateString();
   let updated = false;
 
   // 強制公開モード
@@ -155,7 +163,7 @@ async function main() {
     }
     console.log(`[article-publisher] 強制公開: ${target.title}`);
     target.status = "published";
-    target.publishedAt = new Date().toISOString();
+    target.publishedAt = jstIsoString();
     updated = true;
 
     if (!opts.dryRun) {
@@ -185,7 +193,9 @@ async function main() {
 
       // 外部指標チェック（AI採点に加えて機械的に検証）
       const contentLen = (article.content || "").length;
-      const hasInternalLink = (article.content || "").includes("/articles/");
+      const hasInternalLink =
+        /\[.+?\]\(\/articles\//.test(article.content || "") ||
+        /\{\{(comparison|ranking|product):/.test(article.content || "");
       const hasProductTag = /\{\{(comparison|ranking|product):/.test(article.content || "");
       const faqCount = (article.faqs || []).length;
       const hasMeta = (article.metaDescription || "").length >= 50;
@@ -193,6 +203,7 @@ async function main() {
       const checks = [];
       if (contentLen < 2000) checks.push(`文字数不足(${contentLen})`);
       if (!hasInternalLink) checks.push("内部リンクなし");
+      if (!hasProductTag) checks.push("商品タグなし(comparison/ranking/product)");
       if (faqCount < 2) checks.push(`FAQ不足(${faqCount}問)`);
       if (!hasMeta) checks.push("metaDescription短い");
 
@@ -204,7 +215,7 @@ async function main() {
       console.log(`  ✓ 品質チェック合格: ${contentLen}文字, FAQ${faqCount}問, 内部リンクあり`);
 
       article.status = "published";
-      article.publishedAt = new Date().toISOString();
+      article.publishedAt = jstIsoString();
       updated = true;
 
       if (!opts.dryRun) {
