@@ -154,7 +154,7 @@ function getXClient(credsKey) {
     appSecret: apiSecret,
     accessToken,
     accessSecret,
-  }).readWrite;
+  });
 }
 
 // ─── 投稿処理 ─────────────────────────────────────────
@@ -234,7 +234,9 @@ async function processDb(dbConfig, { dryRun }, token) {
     try {
       let result;
       if (type === "reply") {
-        result = await xClient.v2.reply(text, replyToTweetId);
+        result = await xClient.v2.tweet(text, {
+          reply: { in_reply_to_tweet_id: replyToTweetId },
+        });
       } else {
         result = await xClient.v2.tweet(text);
       }
