@@ -30,6 +30,7 @@ const navItems: NavItem[] = [
   { type: "section", label: "SNS管理" },
   { type: "link", href: "/admin/x-posts-unified", label: "X投稿統合", icon: "📊" },
   { type: "link", href: "/admin/amble", label: "アンブロ", icon: "📣" },
+  { type: "link", href: "/admin/notion-queue", label: "Notionキュー", icon: "📬" },
   { type: "link", href: "/admin/kodomo", label: "こどもケアラボ", icon: "👨‍👩‍👧" },
   { type: "section", label: "管理" },
   { type: "link", href: "/admin/kill-switch", label: "KILL_SWITCH", icon: "🛑" },

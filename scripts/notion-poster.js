@@ -202,8 +202,9 @@ async function processDb(dbConfig, { dryRun }, token) {
 
     // リプライ: 元ポスト URL から tweet ID を取得
     let replyToTweetId = null;
+    let sourceUrl = null;
     if (type === "reply") {
-      const sourceUrl = extractUrl(props[urlField]);
+      sourceUrl = extractUrl(props[urlField]);
       replyToTweetId = extractTweetId(sourceUrl);
       if (!replyToTweetId) {
         console.warn(
@@ -213,6 +214,10 @@ async function processDb(dbConfig, { dryRun }, token) {
         continue;
       }
     }
+
+    // 投稿タイプ: "引用" なら引用ポスト、それ以外はリプライ
+    const postTypeName = props["投稿タイプ"]?.select?.name ?? null;
+    const isQuote = postTypeName === "引用";
 
     // プレビュー表示
     const preview = text.slice(0, 60).replace(/\n/g, " ");
@@ -233,7 +238,10 @@ async function processDb(dbConfig, { dryRun }, token) {
     let postUrl;
     try {
       let result;
-      if (type === "reply") {
+      if (type === "reply" && isQuote && sourceUrl) {
+        // 引用ポスト: テキスト + 元ポストURL
+        result = await xClient.v2.tweet(`${text}\n${sourceUrl}`);
+      } else if (type === "reply" && !isQuote) {
         result = await xClient.v2.tweet(text, {
           reply: { in_reply_to_tweet_id: replyToTweetId },
         });
