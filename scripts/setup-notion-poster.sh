@@ -38,16 +38,17 @@ else
   echo "   https://www.notion.so/my-integrations"
   echo ""
   echo "   取得後、.env.local に以下を追加:"
-  echo "   NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  echo "   NOTION_TOKEN=ntn_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  echo "   ※ 新形式は ntn_、旧形式は secret_ で始まります"
   echo ""
   read -r -p "   今すぐ入力して追加しますか？ [y/N] " yn
   if [[ "${yn:-N}" =~ ^[Yy]$ ]]; then
     read -r -p "   NOTION_TOKEN の値: " notion_token
-    if [[ "$notion_token" == secret_* ]]; then
+    if [[ "$notion_token" == secret_* ]] || [[ "$notion_token" == ntn* ]]; then
       echo "NOTION_TOKEN=$notion_token" >> "$ENV_FILE"
       echo "✅ .env.local に追記しました"
     else
-      echo "❌ 値が 'secret_' で始まっていません。手動で追加してください。"
+      echo "❌ 値が 'ntn' または 'secret_' で始まっていません。手動で追加してください。"
       exit 1
     fi
   else
