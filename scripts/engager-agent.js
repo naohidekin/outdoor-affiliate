@@ -96,15 +96,37 @@ async function run(opts) {
     process.exit(1);
   }
 
-  // viral-scout-results.json を読み込む
+  // engage-results.json を優先し、なければ viral-scout-results.json にフォールバック
+  const engagePath = path.join(DATA_DIR, "engage-results.json");
   const scoutPath = path.join(DATA_DIR, "viral-scout-results.json");
-  if (!fs.existsSync(scoutPath)) {
-    console.error("viral-scout-results.json が見つかりません");
+
+  let allPosts = [];
+
+  if (fs.existsSync(engagePath)) {
+    const engageData = JSON.parse(fs.readFileSync(engagePath, "utf-8"));
+    const engagePosts = engageData.viralPosts || engageData.posts || [];
+    allPosts = allPosts.concat(engagePosts);
+    console.log(`engage-results.json から ${engagePosts.length} 件読み込み`);
+  }
+
+  if (fs.existsSync(scoutPath)) {
+    const scoutData = JSON.parse(fs.readFileSync(scoutPath, "utf-8"));
+    const scoutPosts = scoutData.viralPosts || scoutData.posts || [];
+    // engage-results と重複しない tweetId のみ追加
+    const existingIds = new Set(allPosts.map((p) => p.tweetId));
+    const newPosts = scoutPosts.filter((p) => !existingIds.has(p.tweetId));
+    allPosts = allPosts.concat(newPosts);
+    if (newPosts.length > 0) {
+      console.log(`viral-scout-results.json から ${newPosts.length} 件追加読み込み`);
+    }
+  }
+
+  if (allPosts.length === 0) {
+    console.error("engage-results.json も viral-scout-results.json も見つかりません");
     process.exit(1);
   }
 
-  const scoutData = JSON.parse(fs.readFileSync(scoutPath, "utf-8"));
-  const posts = scoutData.viralPosts || scoutData.posts || [];
+  const posts = allPosts;
 
   // camp/doctor/parenting 軸のみ、draft な generatedContent が存在する投稿を収集
   // generatedContent は { quoteTweet: {text, status}, reply: {text, status} } の形式
@@ -187,22 +209,46 @@ async function run(opts) {
   await appendToEngageSheet(sheets, spreadsheetId, sheetRows);
   console.log(`\nエンゲージ管理シートに ${sheetRows.length} 件追加 (status=pending)`);
 
-  // viral-scout-results.json の status を "queued" に更新（重複投入防止）
-  let updatedCount = 0;
-  for (const { post, suggestion, postType } of targets) {
-    const targetPost = posts.find((p) => p.tweetId === post.tweetId);
-    if (!targetPost?.generatedContent) continue;
-    const gcKey = postType === "quote" ? "quoteTweet" : "reply";
-    const entry = targetPost.generatedContent[gcKey];
-    if (entry && entry.text === suggestion.text) {
-      entry.status = "queued";
-      updatedCount++;
+  // 各ソースファイルの status を "queued" に更新（重複投入防止）
+  let engageUpdated = 0;
+  let scoutUpdated = 0;
+
+  if (fs.existsSync(engagePath)) {
+    const engageData = JSON.parse(fs.readFileSync(engagePath, "utf-8"));
+    const engagePosts = engageData.viralPosts || engageData.posts || [];
+    for (const { post, suggestion, postType } of targets) {
+      const tp = engagePosts.find((p) => p.tweetId === post.tweetId);
+      if (!tp?.generatedContent) continue;
+      const gcKey = postType === "quote" ? "quoteTweet" : "reply";
+      const entry = tp.generatedContent[gcKey];
+      if (entry && entry.text === suggestion.text) {
+        entry.status = "queued";
+        engageUpdated++;
+      }
+    }
+    if (engageUpdated > 0) {
+      fs.writeFileSync(engagePath, JSON.stringify(engageData, null, 2) + "\n", "utf-8");
+      console.log(`engage-results.json の ${engageUpdated}件を queued に更新`);
     }
   }
 
-  if (updatedCount > 0) {
-    fs.writeFileSync(scoutPath, JSON.stringify(scoutData, null, 2) + "\n", "utf-8");
-    console.log(`viral-scout-results.json の ${updatedCount}件を queued に更新`);
+  if (fs.existsSync(scoutPath)) {
+    const scoutData = JSON.parse(fs.readFileSync(scoutPath, "utf-8"));
+    const scoutPosts = scoutData.viralPosts || scoutData.posts || [];
+    for (const { post, suggestion, postType } of targets) {
+      const tp = scoutPosts.find((p) => p.tweetId === post.tweetId);
+      if (!tp?.generatedContent) continue;
+      const gcKey = postType === "quote" ? "quoteTweet" : "reply";
+      const entry = tp.generatedContent[gcKey];
+      if (entry && entry.text === suggestion.text) {
+        entry.status = "queued";
+        scoutUpdated++;
+      }
+    }
+    if (scoutUpdated > 0) {
+      fs.writeFileSync(scoutPath, JSON.stringify(scoutData, null, 2) + "\n", "utf-8");
+      console.log(`viral-scout-results.json の ${scoutUpdated}件を queued に更新`);
+    }
   }
 }
 

@@ -14,6 +14,10 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+// FIXME: viral-engage-core.mjs はリポジトリ外のローカル共有ライブラリを参照している。
+// ローカルMac では ~/Desktop/AI関連/claude/lib/viral-engage-core.mjs に存在するが
+// このリポジトリには含まれていないため、クラウド環境ではこのスクリプトは実行不可。
+// 解決策: viral-engage-core.mjs を src/lib/ に移動してリポジトリ管理下に置く。
 import { runViralEngage, parseArgs } from "../../lib/viral-engage-core.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
