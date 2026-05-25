@@ -39,6 +39,7 @@ PLISTS=(
   "com.outdoor-affiliate.article-weekly.plist"
   "com.outdoor-affiliate.article-daily.plist"
   "com.outdoor-affiliate.price-monitor.plist"
+  "com.outdoor-affiliate.notion-poster.plist"
 )
 
 if [ "${1:-}" = "--unload" ]; then
