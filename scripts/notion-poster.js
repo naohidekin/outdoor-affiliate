@@ -246,7 +246,8 @@ async function processDb(dbConfig, { dryRun }, token) {
       }
       console.log(`    ✓ 投稿完了 (tweet_id: ${tweetId})`);
     } catch (err) {
-      console.error(`    ✗ X 投稿失敗: ${err.message}`);
+      const detail = err.data ? JSON.stringify(err.data) : err.message;
+      console.error(`    ✗ X 投稿失敗 (${err.code ?? "?"}): ${detail}`);
       errors++;
       continue;
     }
