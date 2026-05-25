@@ -99,6 +99,7 @@ function GeneratedItem({
   item,
   copyKey,
   copiedId,
+  tweetUrl,
   onCopy,
   onSetStatus,
 }: {
@@ -106,19 +107,29 @@ function GeneratedItem({
   item: GeneratedItemType;
   copyKey: string;
   copiedId: string | null;
+  tweetUrl: string;
   onCopy: (text: string, id: string) => void;
   onSetStatus: (status: string) => void;
 }) {
   const isPosted = item.status === "posted";
   const isSkipped = item.status === "skipped";
   const muted = isPosted || isSkipped;
+  const isCopied = copiedId === copyKey;
+
+  function handleCopyAndOpen() {
+    onCopy(item.text, copyKey);
+    // モバイルでは X アプリが開く。PCでは新タブ
+    window.open(tweetUrl, "_blank", "noopener,noreferrer");
+  }
+
   return (
-    <div className={`px-4 py-3 transition-opacity ${muted ? "opacity-60" : ""}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+    <div className={`p-4 transition-opacity ${muted ? "opacity-60" : ""}`}>
+      {/* ラベル + ステータス */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
         <div className="flex items-center gap-2">
           {item.postedAt && (
-            <span className="text-[10px] text-gray-400" title={new Date(item.postedAt).toLocaleString("ja-JP")}>
+            <span className="text-[10px] text-gray-400">
               {timeAgo(item.postedAt)}
             </span>
           )}
@@ -127,54 +138,70 @@ function GeneratedItem({
           </span>
         </div>
       </div>
-      <p className={`text-sm whitespace-pre-wrap mb-2 ${isPosted ? "line-through decoration-gray-300" : ""}`}>
+
+      {/* 生成テキスト */}
+      <p className={`text-[15px] leading-relaxed whitespace-pre-wrap mb-4 ${isPosted ? "line-through decoration-gray-300 text-gray-400" : "text-gray-900"}`}>
         {item.text}
       </p>
+
       {item.validationErrors && (
-        <p className="text-xs text-red-500 mb-2">{item.validationErrors}</p>
+        <p className="text-xs text-red-500 mb-3">{item.validationErrors}</p>
       )}
-      <div className="flex gap-1 flex-wrap items-center">
-        <button
-          onClick={() => onCopy(item.text, copyKey)}
-          className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200"
-        >
-          {copiedId === copyKey ? "コピー完了" : "📋 コピー"}
-        </button>
-        {!isPosted ? (
-          <>
+
+      {/* アクションボタン */}
+      {!isPosted ? (
+        <div className="space-y-2">
+          {/* 主アクション: コピー＋Xを開く（スマホ最重要） */}
+          <button
+            onClick={handleCopyAndOpen}
+            className="w-full flex items-center justify-center gap-2 min-h-[52px] bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-semibold rounded-xl text-base transition"
+          >
+            {isCopied ? "コピー完了 ✓" : "📋 コピー＋Xで開く"}
+          </button>
+
+          <div className="flex gap-2">
+            {/* コピーのみ */}
             <button
-              onClick={() => onSetStatus("posted")}
-              className="text-xs px-3 py-1 bg-green-600 text-white font-medium rounded hover:bg-green-700"
-              title="Xで投稿した後、このボタンで完了マーク"
+              onClick={() => onCopy(item.text, copyKey)}
+              className="flex-1 min-h-[44px] border border-gray-300 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-50 active:bg-gray-100 transition"
             >
-              ✓ 投稿済みにする
+              {isCopied ? "コピー済み ✓" : "コピーのみ"}
             </button>
-            {!isSkipped && (
+
+            {/* スキップ / 未対応に戻す */}
+            {!isSkipped ? (
               <button
                 onClick={() => onSetStatus("skipped")}
-                className="text-xs px-2 py-1 text-gray-500 rounded hover:bg-gray-100"
+                className="flex-1 min-h-[44px] border border-gray-300 text-gray-400 font-medium rounded-xl text-sm hover:bg-gray-50 active:bg-gray-100 transition"
               >
                 スキップ
               </button>
-            )}
-            {isSkipped && (
+            ) : (
               <button
                 onClick={() => onSetStatus("draft")}
-                className="text-xs px-2 py-1 text-gray-500 underline hover:text-gray-700"
+                className="flex-1 min-h-[44px] border border-gray-300 text-gray-500 font-medium rounded-xl text-sm hover:bg-gray-50 active:bg-gray-100 transition"
               >
                 未対応に戻す
               </button>
             )}
-          </>
-        ) : (
+          </div>
+
+          {/* 投稿済みにする（Xで投稿後に押す） */}
           <button
-            onClick={() => onSetStatus("draft")}
-            className="text-xs px-2 py-1 text-gray-500 underline hover:text-gray-700"
+            onClick={() => onSetStatus("posted")}
+            className="w-full min-h-[48px] bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl text-base transition"
           >
-            元に戻す
+            ✓ 投稿済みにする
           </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => onSetStatus("draft")}
+          className="w-full min-h-[44px] border border-gray-300 text-gray-500 font-medium rounded-xl text-sm hover:bg-gray-50 transition"
+        >
+          未対応に戻す
+        </button>
+      )}
     </div>
   );
 }
@@ -184,7 +211,6 @@ export default function ViralScoutPage() {
   const [aggregate, setAggregate] = useState<AggregateAnalysis | null>(null);
   const [scoutedAt, setScoutedAt] = useState("");
   const [filterAxis, setFilterAxis] = useState("all");
-  // デフォルトは「未対応のみ」— 投稿済み・スキップを隠してキューを綺麗に保つ
   const [filterStatus, setFilterStatus] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [scouting, setScouting] = useState(false);
@@ -193,6 +219,8 @@ export default function ViralScoutPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  // スマホ向け: 分析データは折りたたみ
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   function loadData() {
     fetch("/api/viral-scout", { cache: "no-store" })
@@ -226,7 +254,6 @@ export default function ViralScoutPage() {
         setScouting(false);
         return;
       }
-      // POST が完了するまで待機し、レスポンスのデータで直接更新
       if (data.data?.viralPosts) {
         setPosts(data.data.viralPosts || []);
         setAggregate(data.data.aggregateAnalysis || null);
@@ -272,7 +299,7 @@ export default function ViralScoutPage() {
   function copyText(text: string, id: string) {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
+    setTimeout(() => setCopiedId(null), 2000);
   }
 
   function toggleSelect(tweetId: string) {
@@ -288,7 +315,6 @@ export default function ViralScoutPage() {
     setSelectedIds((prev) => {
       const allSelected = visibleIds.every((id) => prev.has(id));
       if (allSelected) {
-        // 全て選択済なら解除
         const next = new Set(prev);
         for (const id of visibleIds) next.delete(id);
         return next;
@@ -327,7 +353,6 @@ export default function ViralScoutPage() {
   function matchStatusFilter(qs: string | undefined, rs: string | undefined): boolean {
     if (filterStatus === "all") return true;
     if (filterStatus === "pending") {
-      // 未対応 = draft or approved（どちらかが該当すればカード表示）
       return qs === "draft" || qs === "approved" || rs === "draft" || rs === "approved";
     }
     return qs === filterStatus || rs === filterStatus;
@@ -342,12 +367,12 @@ export default function ViralScoutPage() {
   });
 
   if (loading) {
-    return <div className="p-8 text-gray-500">読み込み中...</div>;
+    return <div className="p-6 text-gray-500 text-center">読み込み中...</div>;
   }
 
   if (posts.length === 0) {
     return (
-      <div className="p-8">
+      <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Viral Scout</h1>
         <p className="text-gray-500">
           データがありません。<code>npm run x:viral-scout</code> を実行してください。
@@ -356,14 +381,10 @@ export default function ViralScoutPage() {
     );
   }
 
-  // Stats — quote+reply両方を個別に数える（各カードで2件の生成コンテンツがある）
+  // ステータス集計
   const axisCounts: Record<string, number> = {};
   const statusCounts: Record<string, number> = {
-    draft: 0,
-    approved: 0,
-    posted: 0,
-    needs_review: 0,
-    skipped: 0,
+    draft: 0, approved: 0, posted: 0, needs_review: 0, skipped: 0,
   };
   for (const p of posts) {
     axisCounts[p.axis] = (axisCounts[p.axis] || 0) + 1;
@@ -375,26 +396,29 @@ export default function ViralScoutPage() {
   const pendingCount = statusCounts.draft + statusCounts.approved;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-2xl mx-auto">
+
+      {/* ─── ヘッダー ─── */}
+      <div className="flex items-center justify-between mb-4 gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Viral Scout</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {scoutedAt && `最終実行: ${new Date(scoutedAt).toLocaleString("ja-JP")}`} / {posts.length}件
+          <h1 className="text-xl font-bold">Viral Scout</h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {scoutedAt && `${new Date(scoutedAt).toLocaleString("ja-JP")} 実行`} · {posts.length}件
           </p>
         </div>
         <button
           onClick={runScout}
           disabled={scouting}
-          className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition ${
-            scouting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          className={`shrink-0 min-h-[44px] px-4 rounded-xl text-sm font-medium text-white transition ${
+            scouting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
           }`}
         >
-          {scouting ? "スカウト中..." : "再スカウト (直近1日)"}
+          {scouting ? "実行中..." : "再スカウト"}
         </button>
       </div>
+
       {scoutLog && (
-        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
+        <div className={`mb-4 px-4 py-3 rounded-xl text-sm ${
           scoutError ? "bg-red-50 text-red-700" :
           scouting ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"
         }`}>
@@ -402,212 +426,214 @@ export default function ViralScoutPage() {
         </div>
       )}
 
-      {/* Progress Stats — 作業状況の見える化 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <p className="text-xs text-gray-500">未対応</p>
-          <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-          <p className="text-[10px] text-gray-400 mt-1">これから投稿する分</p>
+      {/* ─── 進捗サマリー（スマホ向け: 2列） ─── */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center">
+          <p className="text-xs text-yellow-700 font-medium">未対応</p>
+          <p className="text-3xl font-bold text-yellow-600 mt-1">{pendingCount}</p>
         </div>
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <p className="text-xs text-gray-500">投稿済み</p>
-          <p className="text-2xl font-bold text-green-600">{statusCounts.posted}</p>
-          <p className="text-[10px] text-gray-400 mt-1">手動投稿完了分</p>
-        </div>
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <p className="text-xs text-gray-500">スキップ</p>
-          <p className="text-2xl font-bold text-gray-400">{statusCounts.skipped}</p>
-        </div>
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <p className="text-xs text-gray-500">収集全体</p>
-          <p className="text-2xl font-bold">{posts.length}</p>
-          <p className="text-[10px] text-gray-400 mt-1">投稿 × 2（引用+リプ）</p>
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+          <p className="text-xs text-green-700 font-medium">投稿済み</p>
+          <p className="text-3xl font-bold text-green-600 mt-1">{statusCounts.posted}</p>
         </div>
       </div>
 
+      {/* ─── 分析データ（折りたたみ、スマホでは隠す） ─── */}
       {aggregate && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white rounded-lg p-3 shadow-sm border">
-            <p className="text-xs text-gray-500">適応性「高」</p>
-            <p className="text-lg font-bold text-green-600">{aggregate.highAdaptability}</p>
-          </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm border">
-            <p className="text-xs text-gray-500">トップフック</p>
-            <p className="text-sm font-medium">{aggregate.topHooks?.[0]?.pattern || "-"}</p>
-          </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm border">
-            <p className="text-xs text-gray-500">トップ感情</p>
-            <p className="text-sm font-medium">{aggregate.topEmotionalTriggers?.[0]?.pattern || "-"}</p>
-          </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm border">
-            <p className="text-xs text-gray-500">トップ形式</p>
-            <p className="text-sm font-medium">{aggregate.topFormats?.[0]?.pattern || "-"}</p>
-          </div>
+        <div className="mb-4">
+          <button
+            onClick={() => setShowAnalytics((v) => !v)}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+          >
+            分析データ {showAnalytics ? "▲" : "▼"}
+          </button>
+          {showAnalytics && (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="bg-white rounded-lg p-3 shadow-sm border text-center">
+                <p className="text-xs text-gray-500">適応性「高」</p>
+                <p className="text-lg font-bold text-green-600">{aggregate.highAdaptability}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border text-center">
+                <p className="text-xs text-gray-500">トップフック</p>
+                <p className="text-sm font-medium">{aggregate.topHooks?.[0]?.pattern || "-"}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border text-center">
+                <p className="text-xs text-gray-500">トップ感情</p>
+                <p className="text-sm font-medium">{aggregate.topEmotionalTriggers?.[0]?.pattern || "-"}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border text-center">
+                <p className="text-xs text-gray-500">トップ形式</p>
+                <p className="text-sm font-medium">{aggregate.topFormats?.[0]?.pattern || "-"}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Axis breakdown */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {Object.entries(axisCounts).map(([axis, count]) => (
-          <span key={axis} className={`text-xs px-2 py-1 rounded-full ${AXIS_COLORS[axis] || "bg-gray-100"}`}>
-            {AXIS_LABELS[axis] || axis}: {count}件
-          </span>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3 mb-6">
+      {/* ─── フィルター（スマホ: 縦並び） ─── */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <select
           value={filterAxis}
           onChange={(e) => setFilterAxis(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm"
+          className="w-full sm:w-auto border rounded-xl px-3 py-3 text-sm bg-white"
         >
           <option value="all">全軸</option>
-          <option value="ai">AI</option>
-          <option value="camp">Camp</option>
-          <option value="parenting">子育て</option>
-          <option value="doctor">医師</option>
+          {Object.entries(axisCounts).map(([axis, count]) => (
+            <option key={axis} value={axis}>
+              {AXIS_LABELS[axis] || axis} ({count}件)
+            </option>
+          ))}
         </select>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm"
+          className="w-full sm:w-auto border rounded-xl px-3 py-3 text-sm bg-white"
         >
           <option value="pending">未対応のみ ({pendingCount})</option>
           <option value="posted">投稿済み ({statusCounts.posted})</option>
           <option value="skipped">スキップ ({statusCounts.skipped})</option>
-          <option value="draft">Draft ({statusCounts.draft})</option>
-          <option value="approved">承認済み ({statusCounts.approved})</option>
           <option value="needs_review">要レビュー ({statusCounts.needs_review})</option>
-          <option value="all">全て ({posts.length * 2}件)</option>
+          <option value="all">全て</option>
         </select>
-        <span className="text-sm text-gray-500 self-center">{filtered.length}件表示</span>
-        <button
-          onClick={() => selectAllVisible(filtered.map((p) => p.tweetId))}
-          className="ml-auto text-sm px-3 py-2 border rounded-lg hover:bg-gray-50"
-        >
-          {filtered.length > 0 && filtered.every((p) => selectedIds.has(p.tweetId))
-            ? "表示中の選択を解除"
-            : "表示中を全選択"}
-        </button>
+        <div className="flex items-center justify-between sm:ml-auto gap-2">
+          <span className="text-sm text-gray-500">{filtered.length}件</span>
+          <button
+            onClick={() => selectAllVisible(filtered.map((p) => p.tweetId))}
+            className="text-sm px-3 py-2 border rounded-xl hover:bg-gray-50"
+          >
+            {filtered.length > 0 && filtered.every((p) => selectedIds.has(p.tweetId))
+              ? "選択解除"
+              : "全選択"}
+          </button>
+        </div>
       </div>
 
-      {/* 一括操作バー（1件以上選択時のみ表示） */}
+      {/* ─── 一括削除バー ─── */}
       {selectedIds.size > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-          <span className="text-sm text-blue-900 font-medium">
-            {selectedIds.size}件選択中
-          </span>
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between gap-3">
+          <span className="text-sm text-blue-900 font-medium">{selectedIds.size}件選択中</span>
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="text-sm px-3 py-1.5 text-gray-600 hover:bg-white rounded"
+              className="text-sm px-3 py-2 text-gray-600 hover:bg-white rounded-lg"
             >
-              選択解除
+              解除
             </button>
             <button
               onClick={bulkDelete}
               disabled={bulkBusy}
-              className={`text-sm px-4 py-1.5 font-medium rounded text-white ${
+              className={`text-sm px-4 py-2 font-medium rounded-lg text-white ${
                 bulkBusy ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
               }`}
             >
-              {bulkBusy ? "削除中..." : `🗑 一括削除 (${selectedIds.size})`}
+              {bulkBusy ? "削除中..." : `🗑 削除 (${selectedIds.size})`}
             </button>
           </div>
         </div>
       )}
 
-      {/* Post Cards */}
+      {/* ─── 投稿カード ─── */}
       <div className="space-y-4">
-        {filtered.map((post) => (
-          <div
-            key={post.tweetId}
-            className={`bg-white rounded-lg shadow-sm border overflow-hidden ${
-              selectedIds.has(post.tweetId) ? "ring-2 ring-blue-400" : ""
-            }`}
-          >
-            {/* Header */}
-            <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(post.tweetId)}
-                  onChange={() => toggleSelect(post.tweetId)}
-                  className="w-4 h-4 mr-1 cursor-pointer"
-                  aria-label="この投稿を選択"
-                />
-                <span className={`text-xs px-2 py-0.5 rounded-full ${AXIS_COLORS[post.axis] || ""}`}>
-                  {AXIS_LABELS[post.axis] || post.axis}
-                </span>
-                <a
-                  href={`https://x.com/${post.authorUsername}/status/${post.tweetId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-sm text-blue-600 hover:underline"
-                >
-                  @{post.authorUsername}
-                </a>
-                <span className="text-xs text-gray-400">
-                  {post.authorFollowers.toLocaleString()} followers
-                </span>
-                <span className="text-xs text-gray-400">
-                  {post.createdAt ? timeAgo(post.createdAt) : ""}
-                </span>
+        {filtered.map((post) => {
+          const tweetUrl = `https://x.com/${post.authorUsername}/status/${post.tweetId}`;
+          return (
+            <div
+              key={post.tweetId}
+              className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
+                selectedIds.has(post.tweetId) ? "ring-2 ring-blue-400" : ""
+              }`}
+            >
+              {/* カードヘッダー */}
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(post.tweetId)}
+                      onChange={() => toggleSelect(post.tweetId)}
+                      className="w-5 h-5 shrink-0 cursor-pointer"
+                      aria-label="この投稿を選択"
+                    />
+                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${AXIS_COLORS[post.axis] || ""}`}>
+                      {AXIS_LABELS[post.axis] || post.axis}
+                    </span>
+                    <a
+                      href={tweetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-sm text-blue-600 hover:underline truncate"
+                    >
+                      @{post.authorUsername}
+                    </a>
+                  </div>
+                  <a
+                    href={tweetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs text-blue-500 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition"
+                  >
+                    元ポスト →
+                  </a>
+                </div>
+                {/* メトリクス（スマホでも1行で収まるよう簡略化） */}
+                <div className="flex gap-3 mt-1.5 text-xs text-gray-400">
+                  <span>{post.authorFollowers.toLocaleString()} F</span>
+                  <span>score {post.metrics.engagementScore}</span>
+                  <span>♥{post.metrics.likes}</span>
+                  <span>RT{post.metrics.retweets}</span>
+                  {post.createdAt && <span>{timeAgo(post.createdAt)}</span>}
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span>score: {post.metrics.engagementScore}</span>
-                <span>♥ {post.metrics.likes}</span>
-                <span>RT {post.metrics.retweets}</span>
-                <a
-                  href={`https://x.com/${post.authorUsername}/status/${post.tweetId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  元ポスト →
-                </a>
-              </div>
-            </div>
 
-            {/* Original tweet */}
-            <div className="px-4 py-3 border-b">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{post.text}</p>
-              {post.analysis && (
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{post.analysis.hook}</span>
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{post.analysis.emotionalTrigger}</span>
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{post.analysis.format}</span>
-                  {post.analysis.adaptability === "high" && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">適応性:高</span>
-                  )}
+              {/* 元ツイート本文 */}
+              <div className="px-4 py-3 border-b bg-gray-50/50">
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap line-clamp-4">
+                  {post.text}
+                </p>
+                {post.analysis && post.analysis.adaptability === "high" && (
+                  <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    適応性:高
+                  </span>
+                )}
+              </div>
+
+              {/* 生成コンテンツ（縦並び） */}
+              {post.generatedContent ? (
+                <div className="divide-y">
+                  <GeneratedItem
+                    label="リプライ"
+                    item={post.generatedContent.reply}
+                    copyKey={`rp-${post.tweetId}`}
+                    copiedId={copiedId}
+                    tweetUrl={tweetUrl}
+                    onCopy={(text, id) => copyText(text, id)}
+                    onSetStatus={(status) => updateStatus(post.tweetId, "reply", status)}
+                  />
+                  <GeneratedItem
+                    label="引用投稿"
+                    item={post.generatedContent.quoteTweet}
+                    copyKey={`qt-${post.tweetId}`}
+                    copiedId={copiedId}
+                    tweetUrl={tweetUrl}
+                    onCopy={(text, id) => copyText(text, id)}
+                    onSetStatus={(status) => updateStatus(post.tweetId, "quoteTweet", status)}
+                  />
+                </div>
+              ) : (
+                <div className="px-4 py-4 text-sm text-gray-400">
+                  生成コンテンツなし
                 </div>
               )}
             </div>
+          );
+        })}
 
-            {/* Generated content */}
-            {post.generatedContent && (
-              <div className="grid md:grid-cols-2 divide-x">
-                <GeneratedItem
-                  label="引用投稿"
-                  item={post.generatedContent.quoteTweet}
-                  copyKey={`qt-${post.tweetId}`}
-                  copiedId={copiedId}
-                  onCopy={(text, id) => copyText(text, id)}
-                  onSetStatus={(status) => updateStatus(post.tweetId, "quoteTweet", status)}
-                />
-                <GeneratedItem
-                  label="リプライ"
-                  item={post.generatedContent.reply}
-                  copyKey={`rp-${post.tweetId}`}
-                  copiedId={copiedId}
-                  onCopy={(text, id) => copyText(text, id)}
-                  onSetStatus={(status) => updateStatus(post.tweetId, "reply", status)}
-                />
-              </div>
-            )}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <p className="text-lg">✓ 対応済み</p>
+            <p className="text-sm mt-1">未対応のリプライはありません</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

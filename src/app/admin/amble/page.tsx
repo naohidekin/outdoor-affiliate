@@ -55,6 +55,14 @@ export default function AmblePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyPost(id: string, text: string) {
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }
 
   useEffect(() => {
     fetch("/api/amble/posts")
@@ -105,23 +113,25 @@ export default function AmblePage() {
         <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">SNS管理</p>
         <h1 className="mt-2 text-3xl font-semibold">アンブロ</h1>
         <p className="mt-2 text-sm text-gray-400">パイプライン生成結果のモニター。承認・却下は Notion で行います。</p>
+        {/* スマホ: 全幅・大きめ CTA */}
         <a
           href={NOTION_DB_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-400"
+          className="mt-4 flex items-center justify-center gap-2 w-full sm:w-auto sm:inline-flex rounded-2xl bg-cyan-500 px-6 py-4 sm:py-2 text-base sm:text-sm font-semibold text-gray-950 transition hover:bg-cyan-400 active:bg-cyan-600 min-h-[52px]"
         >
           Notion で承認する →
         </a>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-3">
+      {/* タブ: スマホでも押しやすいサイズ */}
+      <div className="mb-6 flex flex-wrap gap-2">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-4 py-2 text-sm transition ${
+            className={`rounded-xl px-4 min-h-[44px] text-sm font-medium transition ${
               activeTab === tab.key
                 ? "bg-cyan-500 text-gray-950"
                 : "bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10"
@@ -179,12 +189,19 @@ export default function AmblePage() {
                     </div>
                   ) : null}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => copyPost(post.id, post.text)}
+                    className="rounded-xl bg-white/10 px-4 min-h-[44px] text-sm font-medium text-gray-200 transition hover:bg-white/20 active:bg-white/30"
+                  >
+                    {copiedId === post.id ? "✓" : "コピー"}
+                  </button>
                   <button
                     type="button"
                     onClick={() => deletePost(post)}
                     disabled={updatingId === post.id}
-                    className="rounded-full bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-rose-500/20 px-4 min-h-[44px] text-sm font-medium text-rose-300 transition hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {updatingId === post.id ? "削除中..." : "削除"}
                   </button>
