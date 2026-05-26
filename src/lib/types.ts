@@ -110,6 +110,7 @@ export interface Article {
   faqs?: FAQ[];
   metaDescription?: string;
   tags?: string[];
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;

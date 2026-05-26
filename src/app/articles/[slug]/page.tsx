@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -359,6 +360,23 @@ export default async function ArticlePage({
               </Link>
             )}
           </div>
+
+          {/* アイキャッチ画像 */}
+          {(() => {
+            const eyecatch = article.imageUrl || products.find((p) => p.imageUrl)?.imageUrl;
+            return eyecatch ? (
+              <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-8 border border-line">
+                <Image
+                  src={eyecatch}
+                  alt={article.title}
+                  fill
+                  priority
+                  sizes="(max-width: 896px) 100vw, 896px"
+                  className="object-cover"
+                />
+              </div>
+            ) : null;
+          })()}
 
           {/* 記事冒頭 購入導線 */}
           {products.length > 0 && (
