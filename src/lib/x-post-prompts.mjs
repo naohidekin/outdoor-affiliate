@@ -246,7 +246,7 @@ export function buildRakutenSalePrompt({ saleEvent, articles, categories, count 
 - 「絶対安い」「100%最安」のような断定はしない
 - 候補記事から1つ選び articleSlug にスラッグを入れる。**本文にURLを含めず**、「詳細はリプ欄へ。」と書き、urlフィールドにURLを入れる
 - ハッシュタグは付けない（# 一切使わない）
-- 文末に「(*広告を含みます)」と入れる
+- 広告表記は不要
 
 候補記事:
 ${articleInfoList}
@@ -270,7 +270,7 @@ Amazon「${dealEvent.name}」（${dealEvent.startDate} 〜 ${dealEvent.endDate}�
 - セール感を出しすぎない。「気になってた○○、これくらい下がってきたら買い時かな」程度
 - 候補記事から1つ選び articleSlug にスラッグを入れる。**本文にURLを含めず**、「詳細はリプ欄へ。」と書き、urlフィールドにURLを入れる
 - ハッシュタグは付けない（# 一切使わない）
-- 文末に「(*広告を含みます)」と入れる
+- 広告表記は不要
 
 候補記事:
 ${articleInfoList}
@@ -542,7 +542,7 @@ export function buildSeasonalHookPrompt({ count, month, seed, articles, categori
     ? `\n## 今月の楽天セール情報（投稿ネタ候補）
 ${sales.map((s) => `- 楽天${s.name}（${month}月${s.around}頃）`).join("\n")}
 - セール時期なら「${count}件のうち1件は楽天セール×キャンプギアのネタにしてもよい」
-- その場合: urlフィールドに「${RAKUTEN_ROOM_URL}」を入れ、末尾に「楽天ROOMはリプ欄に。(*広告を含みます)」と書く
+- その場合: urlフィールドに「${RAKUTEN_ROOM_URL}」を入れ、末尾に「楽天ROOMはリプ欄に。」と書く
 - セール投稿は押しつけない。「この時期に買い回るなら」「僕もマラソンで補充した」程度のトーン`
     : "";
 
@@ -625,7 +625,7 @@ export function buildRakutenRoomPickPrompt({ count, month, seed, roomProducts })
   const seasonContext = SEASON_CONTEXT[month];
   const productList = (roomProducts || [])
     .slice(0, 10)
-    .map((p, i) => `${i + 1}. ${p.name}${p.price ? ` (¥${p.price.toLocaleString()})` : ""}`)
+    .map((p, i) => `${i + 1}. ${p.name}${p.price ? ` (¥${p.price.toLocaleString()})` : ""}${p.productUrl ? ` [URL: ${p.productUrl}]` : ""}`)
     .join("\n");
 
   return `${PERSONA_PREAMBLE}
@@ -640,10 +640,10 @@ ${seedBlock(seed)}
 - type は全て "rakuten_room_pick"
 - トーン: 「最近ROOMに追加した○○、実際に使ってるけど△△なところが気に入ってる」「ずっと楽天で買い回ってるギアたち、ROOMにまとめ始めた」など自然な語り口
 - **本文にURLを含めない**。末尾に「楽天ROOMはリプ欄に。」と書く
-- urlフィールドに「${RAKUTEN_ROOM_URL}」を入れる（ROOMマイページリンク）
-- selfReply: 「ROOM覗いてみて、他のギアも載せてます」「フォローしてくれたら嬉しい」系の軽い誘導
+- urlフィールドに紹介した商品の URL（上記一覧の [URL]）を入れる。なければ「${RAKUTEN_ROOM_URL}」
+- selfReply: 紹介した商品の URL（上記一覧の [URL] フィールド）を末尾に入れる。例：「このチェア、楽天で見てみて→ {URL}」。URL がない場合は ${RAKUTEN_ROOM_URL} を使う
 - ハッシュタグは付けない（# 一切使わない）
-- 文末に「(*広告を含みます)」と入れる（アフィリエイト表記）
+- 広告表記は不要
 - 商品の具体的な感想・スペック比較・使用シーンを盛り込むこと
 - 1投稿で1〜2商品に絞る（詰め込まない）
 

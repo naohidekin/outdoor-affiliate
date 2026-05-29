@@ -30,6 +30,7 @@ const navItems: NavItem[] = [
   { type: "section", label: "SNS管理" },
   { type: "link", href: "/admin/x-posts-unified", label: "X投稿統合", icon: "📊" },
   { type: "link", href: "/admin/amble", label: "アンブロ", icon: "📣" },
+  { type: "link", href: "/admin/notion-queue", label: "Notionキュー", icon: "📬" },
   { type: "link", href: "/admin/kodomo", label: "こどもケアラボ", icon: "👨‍👩‍👧" },
   { type: "section", label: "管理" },
   { type: "link", href: "/admin/kill-switch", label: "KILL_SWITCH", icon: "🛑" },
@@ -138,8 +139,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             ☰
           </button>
-          <Link href="/" className="text-base font-bold text-green-400">
+          <Link href="/" className="text-base font-bold text-green-400 flex-1">
             🏕️ Outdoor Affiliate
+          </Link>
+          {/* スマホ: Viral Scout ショートカット */}
+          <Link
+            href="/admin/viral-scout"
+            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium transition shrink-0"
+          >
+            🔍 返信
           </Link>
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>

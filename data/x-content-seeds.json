@@ -135,8 +135,8 @@
         9,
         10
       ],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "hint": "初テント泊で張り綱を省略→夜中に突風でテントごと転がった話"
     },
     {
@@ -390,8 +390,8 @@
         11,
         12
       ],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "hint": "テーブルの上でバーナー使って輻射熱でテーブル焦がした話"
     },
     {
@@ -1486,8 +1486,8 @@
         9,
         10
       ],
-      "used_count": 1,
-      "last_used": "2026-04-13",
+      "used_count": 2,
+      "last_used": "2026-05-27",
       "hint": "写真映えで選んだキャンプ場が傾斜地で寝返り打てなかった話"
     },
     {
@@ -1836,8 +1836,8 @@
         11,
         12
       ],
-      "used_count": 1,
-      "last_used": "2026-04-13",
+      "used_count": 2,
+      "last_used": "2026-05-27",
       "hint": "スキレットをシーズニングせず使って全面サビ。復活までの全工程"
     },
     {
@@ -1912,8 +1912,8 @@
         11,
         12
       ],
-      "used_count": 1,
-      "last_used": "2026-04-22",
+      "used_count": 2,
+      "last_used": "2026-05-27",
       "hint": "初キャンプの夕食、作りすぎ問題あるある。あなたは？①カレー②BBQ③鍋④パスタ"
     },
     {
@@ -3246,8 +3246,8 @@
         11,
         12
       ],
-      "used_count": 1,
-      "last_used": "2026-04-22",
+      "used_count": 2,
+      "last_used": "2026-05-27",
       "hint": "ChatGPT vs Claude vs Gemini。コード生成で最も使えるのは？体感比較"
     },
     {
@@ -3819,8 +3819,8 @@
         11,
         12
       ],
-      "used_count": 1,
-      "last_used": "2026-04-16",
+      "used_count": 2,
+      "last_used": "2026-05-25",
       "hint": "AI開発ツールの利用料金を月次比較。コスパ最強の組み合わせは？"
     },
     {
@@ -5040,8 +5040,8 @@
         9,
         10
       ],
-      "used_count": 1,
-      "last_used": "2026-04-13",
+      "used_count": 2,
+      "last_used": "2026-05-25",
       "hint": "子連れキャンプ最大の悩みは？①夜泣き②荷物の量③トイレ④天候"
     },
     {
@@ -9392,8 +9392,8 @@
         "parenting_outdoor"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-07-10",
       "bookmarkPotential": "high"
@@ -9409,8 +9409,8 @@
         "parenting_outdoor"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-07-10",
       "bookmarkPotential": "high"
@@ -9426,8 +9426,8 @@
         "parenting_outdoor"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-07-10",
       "bookmarkPotential": "medium"
@@ -9443,8 +9443,8 @@
         "parenting_outdoor"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-07-10",
       "bookmarkPotential": "high"
@@ -9756,8 +9756,8 @@
         "seasonal_hook"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9774,8 +9774,8 @@
         "seasonal_hook"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -9792,8 +9792,8 @@
         "seasonal_hook"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -9810,8 +9810,8 @@
         "seasonal_hook"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9863,8 +9863,8 @@
         "ai_dev_log"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9880,8 +9880,8 @@
         "ai_dev_log"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9897,8 +9897,8 @@
         "ai_dev_log"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -9914,8 +9914,8 @@
         "ai_dev_log"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9965,8 +9965,8 @@
         "doc_health_tip"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "high"
@@ -9982,8 +9982,8 @@
         "doc_health_tip"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -9999,8 +9999,8 @@
         "doc_health_tip"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -10033,8 +10033,8 @@
         "doc_health_tip"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-05-25",
       "bookmarkPotential": "medium"
@@ -10210,8 +10210,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-28",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10230,8 +10230,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-28",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10250,8 +10250,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
@@ -10270,8 +10270,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10290,8 +10290,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10310,8 +10310,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
@@ -10330,8 +10330,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
@@ -10350,8 +10350,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-27",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10370,8 +10370,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10390,8 +10390,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
@@ -10410,8 +10410,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"
@@ -10430,8 +10430,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10450,8 +10450,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "high"
@@ -10470,8 +10470,8 @@
         "rakuten_room_pick"
       ],
       "season": [],
-      "used_count": 0,
-      "last_used": null,
+      "used_count": 1,
+      "last_used": "2026-05-25",
       "addedAt": "2026-05-11",
       "freshUntil": "2026-06-10",
       "bookmarkPotential": "medium"

@@ -170,13 +170,9 @@ export function containsAffiliate(text) {
  * @returns {{ text: string, prLabel: boolean }}
  */
 export function ensurePrLabel(text, opts = {}) {
-  const hasAffiliate =
-    opts.hasAffiliate ?? containsAffiliate(text + (opts.articleUrl || ""));
-  if (!hasAffiliate) return { text, prLabel: false };
-  if (text.includes("広告を含みます") || text.includes("*広告")) {
-    return { text, prLabel: true };
-  }
-  return { text: text + "\n\n*広告を含みます", prLabel: true };
+  // 広告表記の自動付与は廃止。既存の表記があれば除去する。
+  const cleaned = text.replace(/\n*\*?広告を含みます/g, "").replace(/\n*\(\*広告を含みます\)/g, "").trimEnd();
+  return { text: cleaned, prLabel: false };
 }
 
 /**

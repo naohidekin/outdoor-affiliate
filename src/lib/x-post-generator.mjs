@@ -1,7 +1,7 @@
 /**
  * X投稿自動生成モジュール（4軸10タイプ対応）
  *
- * Claude APIを使ってX投稿を生成し、Google Sheets「下書き管理」に保存する。
+ * Claude APIを使ってX投稿を生成し、Notion「ギア男 X Posts」DBに保存する。
  * CLI からは scripts/generate-x-posts.js 経由で呼び出される。
  * Next.js API route からは直接 import して呼べる。
  *
@@ -11,7 +11,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { google } from "googleapis";
+import https from "https";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -48,7 +48,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // src/lib/ から data/ はルート直下なので 2つ上がる
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 
-const DRAFT_SHEET = "下書き管理";
+// ギア男 WISE定義（docs/WISE-GEARMAN.md）
+const WISE_GEARMAN_PATH = path.join(__dirname, "..", "..", "docs", "WISE-GEARMAN.md");
+const WISE_GEARMAN_TEXT = fs.existsSync(WISE_GEARMAN_PATH)
+  ? fs.readFileSync(WISE_GEARMAN_PATH, "utf-8")
+  : "";
+
+// ギア男 X Posts Notion DB ID
+const GEARMAN_POSTS_DB_ID = "1d9bbe0c-30a5-4bfd-86b3-ced628cf05eb";
 
 // フォロワー増加フェーズ: article_promo（サイト誘導型）を生成対象から除外
 const FOLLOWER_GROWTH_MODE = true;
@@ -174,51 +181,70 @@ function getScheduledDates(count) {
   return dates;
 }
 
-// === Google Sheets ===
+// === Notion ===
 
-async function getSheets() {
-  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+function notionRequest(method, path, body, token) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: "api.notion.com",
+      port: 443,
+      path,
+      method,
+      family: 4,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json",
+        ...(data ? { "Content-Length": Buffer.byteLength(data) } : {}),
+      },
+    };
+    const req = https.request(options, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => {
+        const text = Buffer.concat(chunks).toString("utf-8");
+        try { resolve({ status: res.statusCode, body: JSON.parse(text) }); }
+        catch { resolve({ status: res.statusCode, body: text }); }
+      });
+    });
+    req.on("error", reject);
+    if (data) req.write(data);
+    req.end();
   });
-  return google.sheets({ version: "v4", auth });
 }
 
-async function getExistingPosts() {
-  const sheets = await getSheets();
-  const spreadsheetId = process.env.X_SHEET_ID;
-  try {
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${DRAFT_SHEET}!A2:R`,
-    });
-    const rows = res.data.values || [];
-    return rows
-      .filter((r) => r[0])
-      .map((r) => ({
-        id: r[0],
-        type: r[1],
-        text: r[2],
-        articleSlug: r[3] || null,
-        url: r[4] || null,
-        hashtags: r[5] || "",
-        status: r[6],
-        scheduledDate: r[7],
-        generatedAt: r[8],
-        postedAt: r[9] || null,
-        axis: r[10] || null,
-        seedId: r[11] || null,
-        validationErrors: r[12] || null,
-        autoApproved: r[13] || null,
-        selfScore: r[14] ? parseFloat(r[14]) : null,
-        firstLinePattern: r[15] || null,
-        similarityScore: r[16] ? parseFloat(r[16]) : null,
-        retryCount: r[17] ? parseInt(r[17], 10) : null,
-      }));
-  } catch {
-    return [];
+async function createNotionPost(post, token) {
+  const properties = {
+    "投稿ID": { title: [{ text: { content: post.id } }] },
+    "本文":   { rich_text: [{ text: { content: post.text.slice(0, 2000) } }] },
+    "ステータス": { select: { name: post.status } },
+    "タイプ": { select: { name: post.type } },
+    "生成日時": { date: { start: post.generatedAt } },
+    "スコア": { number: post.selfScore ?? null },
+  };
+  if (post.url) properties["リンク"] = { url: post.url };
+  // WISEスコア・Codexメモを WISE プロパティに格納（DB に存在する場合）
+  if (post.wiseScores) {
+    const { w, i, s, e, ai } = post.wiseScores;
+    const wiseStr = `W${w} I${i} S${s} E${e} AI${ai}`;
+    const codexNote = post.codexNotes ? ` | Codex: ${post.codexNotes}` : "";
+    properties["WISE"] = { rich_text: [{ text: { content: wiseStr + codexNote } }] };
   }
+  if (post.selfReply) {
+    properties["自己返信"] = { rich_text: [{ text: { content: post.selfReply.slice(0, 2000) } }] };
+  }
+
+  const res = await notionRequest(
+    "POST",
+    "/v1/pages",
+    { parent: { database_id: GEARMAN_POSTS_DB_ID }, properties },
+    token
+  );
+  if (res.status !== 200) {
+    throw new Error(`Notion page create failed (status: ${res.status}): ${JSON.stringify(res.body)}`);
+  }
+  return res.body;
 }
 
 // === シード管理 ===
@@ -301,50 +327,154 @@ function formatThreadForSheets(tweets) {
   return `[THREAD] ${JSON.stringify(tweets)}`;
 }
 
-// === 自己採点 ===
+// === WISE自己採点（Claude Haiku） ===
 
-async function selfScorePost(client, { type, axis, text }) {
-  const prompt = `あなたは X 投稿の品質審査員です。
-以下の投稿を10基準で採点してください（各0〜10点）。
-**平均6.5未満は不合格**。ペルソナ一致度(#5)・軸適合(#9)・フック(#1)は特に意識して採点。
-全体に厳しすぎず、6点台の標準的な投稿は通過させる方針。お世辞は不要。
+const WISE_PASS = { w: 2, i: 2, s: 2, e: 2, ai: 3 };
+
+async function wiseScorePost(client, { type, axis, text }) {
+  const prompt = `あなたはギア男（@camp_gear_lab）のX投稿品質審査員です。
+以下の投稿をWISE-GEARMANフレームワークで採点してください。
 
 ## 投稿
-タイプ: ${type}
-軸: ${axis}
-テキスト:
+タイプ: ${type} / 軸: ${axis}
+"""
 ${text}
+"""
 
-## 採点基準（各0〜10点）
-1. フックの強さ: 1行目で「読み進めたい」と思わせる力。スクロールを止められるか
-2. 有益性: 読者にとって実用的な価値があるか。「知ってよかった」と思えるか
-3. 具体性: 数値・製品名・状況・体験の具体性。抽象的な一般論になっていないか
-4. テンポ感: 文のリズム・読みやすさ。句読点の間隔、改行のバランス
-5. ペルソナ一致度: 「ギア男」のキャラ（37歳・長野・キャンプ歴10年・2児の父）に合致しているか
-6. オリジナリティ: 既視感がないか。テンプレ的・どこかで見た投稿になっていないか
-7. ブクマ誘発力: 「あとで見返したい」「保存しておきたい」と思わせる情報密度
-8. アクション誘発: いいね・RT・リプライしたくなる衝動を生むか
-9. 軸適合: 発信軸（${axis}）のトーン・ターゲット層に合致しているか
-10. 文字数・構成: 280文字以内に収まり、導入→本題→締めの構成バランスが取れているか
+## WISE-GEARMANフレームワーク
+${WISE_GEARMAN_TEXT}
 
-## 出力形式（JSONのみ）
-{ "scores": [8, 7, 9, 8, 7, 8, 9, 6, 7, 8], "total": 7.7, "comment": "改善ポイントを1文で" }`;
+## 採点指示
+W/I/S/E/AI の5軸を各1〜4点で採点してください。
+AIは「AI臭さのなさ」です（4が最も人間らしい）。
+各軸に理由を1文で添えてください。
+
+## 出力形式（JSONのみ、他テキスト禁止）
+{ "w": 3, "i": 2, "s": 3, "e": 3, "ai": 3, "comment": "改善ポイントを1文で" }`;
 
   try {
-    // 自己採点は Haiku（軽量・高速）で十分。生成本体は Sonnet のまま。
-    // Vercel Hobby 300s 上限でのタイムアウトを避けるため、採点のみ速度優先に切り替え。
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 500,
+      max_tokens: 300,
       messages: [{ role: "user", content: prompt }],
     });
-    const jsonMatch = response.content[0].text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { total: 0, scores: [], comment: "JSON parse failed" };
+    const jsonMatch = response.content[0].text.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) return { w: 0, i: 0, s: 0, e: 0, ai: 0, comment: "parse failed" };
     return JSON.parse(jsonMatch[0]);
   } catch (err) {
-    console.warn(`[self-score] 採点失敗: ${err.message}`);
-    return { total: 7.0, scores: [], comment: "scoring failed, default pass" };
+    console.warn(`[wise-score] 採点失敗: ${err.message}`);
+    return { w: 2, i: 2, s: 2, e: 2, ai: 3, comment: "scoring failed, default pass" };
   }
+}
+
+function wisePass(scores) {
+  return (
+    scores.w >= WISE_PASS.w &&
+    scores.i >= WISE_PASS.i &&
+    scores.s >= WISE_PASS.s &&
+    scores.e >= WISE_PASS.e &&
+    scores.ai >= WISE_PASS.ai
+  );
+}
+
+// === Codexクロスレビュー（GPT-4o） ===
+
+async function reviewWithCodex(text) {
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) {
+    console.warn("[codex-review] OPENAI_API_KEY未設定 — スキップ");
+    return { pass: true, scores: {}, notes: "skipped (no key)", reviewer: "skipped" };
+  }
+
+  const prompt = `以下のX投稿をWISE-GEARMANフレームワークで独立レビューしてください。
+
+## ペルソナ情報
+アカウント: ギア男（@camp_gear_lab）
+属性: 37歳・長野在住・開業医・キャンプ歴10年・2児の父
+スタイル: ですます調・一人称「僕」・ハッシュタグなし・友人に話しかける温かさ
+
+## 投稿文
+"""
+${text}
+"""
+
+## WISE-GEARMANフレームワーク
+${WISE_GEARMAN_TEXT}
+
+## 採点指示
+1. W/I/S/E/AI の5軸を各1〜4で独立採点
+2. AI軸では特にチェック:
+   - Claude特有の丁寧すぎる文体・「〜と言えるでしょう」等の定型句
+   - 不自然な完璧さ・敬語の過剰使用・文末パターンの単調さ
+3. この投稿はClaudeが生成したものです。独立した立場から厳しく採点すること
+
+## 出力形式（JSONのみ、他テキスト禁止）
+{ "scores": { "w": N, "i": N, "s": N, "e": N, "ai": N }, "pass": true/false, "notes": "総合所見（日本語2文）" }
+
+合格基準: W>=2 AND I>=2 AND S>=2 AND E>=2 AND AI>=3`;
+
+  const body = JSON.stringify({
+    model: "gpt-4o",
+    max_tokens: 400,
+    temperature: 0.3,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are reviewing an X post written by Claude. Assess quality using WISE-GEARMAN framework. " +
+          "Be especially critical about AI-generated text patterns. Output ONLY valid JSON.",
+      },
+      { role: "user", content: prompt },
+    ],
+  });
+
+  return new Promise((resolve) => {
+    const req = https.request(
+      {
+        hostname: "api.openai.com",
+        path: "/v1/chat/completions",
+        method: "POST",
+        family: 4,
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          try {
+            const data = JSON.parse(Buffer.concat(chunks).toString("utf-8"));
+            const content = data.choices?.[0]?.message?.content || "";
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+              console.warn("[codex-review] JSON parse失敗 — draft扱い");
+              resolve({ pass: false, scores: {}, notes: "parse error", reviewer: "gpt-4o" });
+              return;
+            }
+            const result = JSON.parse(jsonMatch[0]);
+            // サーバー側で合否を再計算（GPTの判定を盲信しない）
+            const s = result.scores || {};
+            const pass =
+              (s.w ?? 0) >= 2 && (s.i ?? 0) >= 2 && (s.s ?? 0) >= 2 &&
+              (s.e ?? 0) >= 2 && (s.ai ?? 0) >= 3;
+            resolve({ pass, scores: s, notes: result.notes || "", reviewer: "gpt-4o" });
+          } catch (err) {
+            console.warn(`[codex-review] エラー: ${err.message}`);
+            resolve({ pass: true, scores: {}, notes: "error — default pass", reviewer: "gpt-4o" });
+          }
+        });
+      }
+    );
+    req.on("error", (err) => {
+      console.warn(`[codex-review] 接続エラー: ${err.message}`);
+      resolve({ pass: true, scores: {}, notes: "connection error — default pass", reviewer: "gpt-4o" });
+    });
+    req.write(body);
+    req.end();
+  });
 }
 
 // === 類似チェック ===
@@ -754,8 +884,8 @@ async function generatePosts(opts) {
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY が設定されていません");
   }
-  if (!opts.dryRun && !process.env.X_SHEET_ID) {
-    throw new Error("X_SHEET_ID が設定されていません");
+  if (!opts.dryRun && !process.env.NOTION_TOKEN) {
+    throw new Error("NOTION_TOKEN が設定されていません");
   }
 
   // 品質ゲートでの再生成回数を追跡（API経由で呼ばれた時に返す）
@@ -775,15 +905,8 @@ async function generatePosts(opts) {
   const SIMILARITY_THRESHOLD = safetyConfig.similarityThreshold || 0.85;
   const MAX_RETRIES = safetyConfig.maxRetries || 2;
 
-  // 既存投稿（repost_rewrite 用 + 重複回避用）
-  let existingPosts = [];
-  if (!opts.dryRun) {
-    try {
-      existingPosts = await getExistingPosts();
-    } catch {
-      console.warn("既存投稿の取得に失敗（初回 or 認証エラー）。続行します。");
-    }
-  }
+  // 既存投稿（repost_rewrite 用 + 重複回避用）— post-history.json で管理
+  const existingPosts = [];
 
   // 記事選択（article_promo, gear_thread 用）
   const recentSlugs = new Set(
@@ -1012,38 +1135,37 @@ async function generatePosts(opts) {
           continue;
         }
 
-        // 自己採点
-        const scoreResult = await selfScorePost(client, {
+        // WISE自己採点（Claude Haiku）
+        const wiseResult = await wiseScorePost(client, {
           type: item.type,
           axis: postAxis,
           text: plainText,
         });
+        const wisePassed = wisePass(wiseResult);
 
-        // カテゴリ別最低点（persona=#5,軸=#9 / engagement=#1,#7,#8 / compliance=残り）
-        const s = scoreResult.scores || [];
-        const personaMin = s.length >= 9 ? Math.min(s[4], s[8]) : null;
-        const engagementMin = s.length >= 8 ? Math.min(s[0], s[6], s[7]) : null;
-        const PERSONA_MIN_THRESHOLD = 5;
-        const ENGAGEMENT_MIN_THRESHOLD = 5;
-
-        console.log(`[${item.type}] selfScore: ${scoreResult.total} (persona最低=${personaMin ?? "N/A"}, engagement最低=${engagementMin ?? "N/A"})`);
-        if (scoreResult.comment) {
-          console.log(`  └ 改善ポイント: ${scoreResult.comment}`);
+        console.log(`[${item.type}] WISE: W=${wiseResult.w} I=${wiseResult.i} S=${wiseResult.s} E=${wiseResult.e} AI=${wiseResult.ai} → ${wisePassed ? "✓" : "✗"}`);
+        if (wiseResult.comment) {
+          console.log(`  └ ${wiseResult.comment}`);
         }
 
-        const totalBelow = scoreResult.total < QUALITY_THRESHOLD;
-        const personaBelow = personaMin !== null && personaMin < PERSONA_MIN_THRESHOLD;
-        const engagementBelow = engagementMin !== null && engagementMin < ENGAGEMENT_MIN_THRESHOLD;
-
-        if ((totalBelow || personaBelow || engagementBelow) && attempt < MAX_RETRIES) {
-          const reasons = [];
-          if (totalBelow) reasons.push(`total<${QUALITY_THRESHOLD}`);
-          if (personaBelow) reasons.push(`persona<${PERSONA_MIN_THRESHOLD}`);
-          if (engagementBelow) reasons.push(`engagement<${ENGAGEMENT_MIN_THRESHOLD}`);
-          console.log(`[${item.type}] 品質不足 (${reasons.join(", ")}) → 再生成`);
+        if (!wisePassed && attempt < MAX_RETRIES) {
+          const fails = [];
+          if (wiseResult.w < WISE_PASS.w) fails.push(`W=${wiseResult.w}`);
+          if (wiseResult.i < WISE_PASS.i) fails.push(`I=${wiseResult.i}`);
+          if (wiseResult.s < WISE_PASS.s) fails.push(`S=${wiseResult.s}`);
+          if (wiseResult.e < WISE_PASS.e) fails.push(`E=${wiseResult.e}`);
+          if (wiseResult.ai < WISE_PASS.ai) fails.push(`AI=${wiseResult.ai}`);
+          console.log(`[${item.type}] WISE不合格 (${fails.join(", ")}) → 再生成`);
           qualityRetries++;
           needsRetry = true;
           continue;
+        }
+
+        // Codexクロスレビュー（GPT-4o）— WISE合格 or リトライ上限時のみ実行
+        let codexResult = { pass: true, scores: {}, notes: "", reviewer: "skipped" };
+        if (wisePassed && !opts.dryRun) {
+          codexResult = await reviewWithCodex(plainText);
+          console.log(`[${item.type}] Codex(${codexResult.reviewer}): ${codexResult.pass ? "✓" : "✗"} — ${codexResult.notes}`);
         }
 
         // 書き出しパターン分類
@@ -1051,15 +1173,25 @@ async function generatePosts(opts) {
 
         // ステータス判定
         let status;
-        if (scoreResult.total < QUALITY_THRESHOLD && attempt >= MAX_RETRIES) {
+        if (!wisePassed && attempt >= MAX_RETRIES) {
           status = "discarded";
         } else if (!g._checkOk) {
           status = "draft";
+        } else if (!codexResult.pass) {
+          status = "draft"; // Codex不合格 → 手動確認
         } else if (opts.autoApprove || approvalLevel === "auto") {
           status = "approved";
         } else {
           status = "draft";
         }
+
+        // scoreResult互換（既存ログ・Notion保存に使う総合スコア）
+        const wiseTotal = wiseResult.w + wiseResult.i + wiseResult.s + wiseResult.e;
+        const scoreResult = {
+          total: Math.round((wiseTotal / 16) * 10 * 10) / 10, // 16点満点→10点換算
+          scores: [wiseResult.w, wiseResult.i, wiseResult.s, wiseResult.e, wiseResult.ai],
+          comment: wiseResult.comment,
+        };
 
         if (similarityScore > SIMILARITY_THRESHOLD) {
           g.validationErrors = [g.validationErrors, "類似投稿あり"].filter(Boolean).join(" / ");
@@ -1106,6 +1238,8 @@ async function generatePosts(opts) {
           retryCount: attempt,
           selfReply: g.selfReply || "",
           formatPattern: g.formatPattern || "",
+          wiseScores: wiseResult,
+          codexNotes: codexResult.notes || "",
         });
       }
 
@@ -1146,70 +1280,46 @@ async function generatePosts(opts) {
 
   // 保存
   if (opts.dryRun) {
-    console.log("\n[DRY RUN] Sheets書き込み・seeds.json更新をスキップしました");
+    console.log("\n[DRY RUN] Notion書き込み・seeds.json更新をスキップしました");
   } else {
-    // Google Sheets 書き込み（A:R 18列）
-    const sheets = await getSheets();
-    const rows = allPosts.map((p) => [
-      p.id,                                                // A
-      p.type,                                              // B
-      p.text,                                              // C
-      p.articleSlug,                                       // D
-      p.url,                                               // E
-      p.hashtags,                                          // F
-      p.status,                                            // G
-      p.scheduledDate,                                     // H
-      p.generatedAt,                                       // I
-      p.postedAt,                                          // J
-      p.axis,                                              // K
-      p.seedId,                                            // L
-      p.validationErrors,                                  // M
-      p.autoApproved,                                      // N
-      p.selfScore != null ? String(p.selfScore) : "",      // O
-      p.firstLinePattern || "",                            // P
-      p.similarityScore != null ? String(p.similarityScore) : "", // Q
-      String(p.retryCount || 0),                           // R
-      p.selfReply || "",                                   // S
-      p.formatPattern || "",                               // T
-      p.imageUrl || "",                                    // U
-    ]);
+    const token = process.env.NOTION_TOKEN;
 
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.X_SHEET_ID,
-      range: `${DRAFT_SHEET}!A:U`,
-      valueInputOption: "RAW",
-      // INSERT_ROWS: 必ず新規行として挿入（既存データの「table」検出に
-      // 引きずられて変な列に書き込まれるのを防ぐ）
-      insertDataOption: "INSERT_ROWS",
-      requestBody: { values: rows },
-    });
+    // Notion にページ作成（discarded は除外）
+    const postsToSave = allPosts.filter((p) => p.status !== "discarded");
+    let notionSaved = 0;
+    for (const p of postsToSave) {
+      try {
+        await createNotionPost(p, token);
+        notionSaved++;
+      } catch (err) {
+        console.warn(`  [Notion] 保存失敗 (${p.id}): ${err.message}`);
+      }
+    }
 
     // seeds.json 書き戻し
     saveSeeds(seedData);
 
     // post-history.json に追記
-    for (const p of allPosts) {
-      if (p.status !== "discarded") {
-        appendToPostHistory({
-          id: p.id,
-          type: p.type,
-          axis: p.axis,
-          text: p.text,
-          articleSlug: p.articleSlug || null,
-          firstLinePattern: p.firstLinePattern || null,
-          formatPattern: p.formatPattern || null,
-          selfScore: p.selfScore != null ? p.selfScore : null,
-          postedAt: null,
-          seedId: p.seedId || null,
-          engagements: null,
-        });
-      }
+    for (const p of postsToSave) {
+      appendToPostHistory({
+        id: p.id,
+        type: p.type,
+        axis: p.axis,
+        text: p.text,
+        articleSlug: p.articleSlug || null,
+        firstLinePattern: p.firstLinePattern || null,
+        formatPattern: p.formatPattern || null,
+        selfScore: p.selfScore != null ? p.selfScore : null,
+        postedAt: null,
+        seedId: p.seedId || null,
+        engagements: null,
+      });
     }
 
     // news_comment: 使用済みニュースをマーク
     if (usedNewsItems.length > 0) markNewsUsed(usedNewsItems);
 
-    console.log(`\nSheets に ${allPosts.length}件を保存しました`);
+    console.log(`\nNotion に ${notionSaved}件を保存しました`);
   }
 
   const blocked = allPosts.filter((p) => p.validationErrors).length;
