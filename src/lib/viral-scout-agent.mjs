@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Viral Scout Agent — バイラル投稿の発見・分析・引用投稿/リプライ生成（モジュール）
  *

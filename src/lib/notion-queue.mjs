@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Notion REST API ヘルパー — notion-poster.js 専用
  *

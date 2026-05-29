@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Dynamic import since notion-queue is ESM .mjs
-async function getNotionLib() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NotionLib = Record<string, (...args: any[]) => any>;
+async function getNotionLib(): Promise<NotionLib> {
   const mod = await import("../../../lib/notion-queue.mjs");
-  return mod;
+  return mod as NotionLib;
 }
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN ?? "";

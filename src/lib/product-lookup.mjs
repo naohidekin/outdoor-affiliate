@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Product Lookup 共通モジュール
  *

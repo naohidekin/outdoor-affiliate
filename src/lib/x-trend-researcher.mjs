@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * X Trend Researcher — 毎日のトレンド収集 → 投稿草案生成 → Sheets 追記
  *
