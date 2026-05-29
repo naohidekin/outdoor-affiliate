@@ -99,6 +99,7 @@ const SCORING_CRITERIA = [
   "文字数適正（2000〜4000文字、最低2000文字必須）",
   "内部リンク（同カテゴリ既存記事への自然なリンクが2〜3箇所）",
   "FAQ充実度（読者が検索しそうな質問3〜5問と的確な回答）",
+  "センス（読者の半歩先を行く提案・文章の品格と洗練度・camp-gear-labの世界観・具体的で記憶に残る言葉選び）",
 ];
 
 async function scoreArticle(anthropic, content, theme) {

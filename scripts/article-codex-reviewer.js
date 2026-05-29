@@ -40,7 +40,7 @@ function loadSkillDoc() {
 
 function fallbackResult(content) {
   return {
-    wise_scores: { w: 3, i: 3, s: 3, e: 3, ai: 3 },
+    wise_scores: { w: 3, i: 3, s: 3, e: 3, ai: 3, sense: 3 },
     issues: [{ criterion: "AI", severity: "minor", note: "review skipped" }],
     revised_content: content,
   };
@@ -66,8 +66,8 @@ ${content}
 
 出力はJSONのみ。必ず以下の形式:
 {
-  "wise_scores": { "w": 1-5, "i": 1-5, "s": 1-5, "e": 1-5, "ai": 1-5 },
-  "issues": [{ "criterion": "W|I|S|E|AI", "severity": "major|minor", "note": "具体的な問題点" }],
+  "wise_scores": { "w": 1-5, "i": 1-5, "s": 1-5, "e": 1-5, "ai": 1-5, "sense": 1-5 },
+  "issues": [{ "criterion": "W|I|S|E|AI|Sense", "severity": "major|minor", "note": "具体的な問題点" }],
   "revised_content": "修正済みMarkdown"
 }
 
@@ -131,7 +131,7 @@ async function main() {
   try {
     const reviewed = await reviewWithClaude(inputContent, topicBrief || {});
     const safe = {
-      wise_scores: reviewed.wise_scores || { w: 3, i: 3, s: 3, e: 3, ai: 3 },
+      wise_scores: reviewed.wise_scores || { w: 3, i: 3, s: 3, e: 3, ai: 3, sense: 3 },
       issues: Array.isArray(reviewed.issues) ? reviewed.issues : [],
       revised_content: reviewed.revised_content || inputContent,
     };

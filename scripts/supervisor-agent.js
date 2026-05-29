@@ -78,7 +78,7 @@ function parseArgs() {
 
 const WISE_PASS_THRESHOLD = 7.5;
 const WISE_CRITERIA = [
-  "wise_w", "wise_i", "wise_s", "wise_e", "wise_ai",
+  "wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sense",
   "affiliate_links", "comparison_table", "internal_links", "faq", "word_count",
 ];
 
@@ -115,6 +115,7 @@ function scoreWiseArticle(article, topic) {
     wise_s: Math.max(1, Math.min(10, Math.round(((wise.s || 3) / 5) * 10))),
     wise_e: Math.max(1, Math.min(10, Math.round(((wise.e || 3) / 5) * 10))),
     wise_ai: Math.max(1, Math.min(10, Math.round(((wise.ai || 3) / 5) * 10))),
+    wise_sense: Math.max(1, Math.min(10, Math.round(((wise.sense || 3) / 5) * 10))),
     affiliate_links: hasAmazon && hasRakuten ? 10 : (hasAmazon || hasRakuten ? 6 : 2),
     comparison_table: hasComparisonTag ? 10 : 2,
     internal_links: linkCount >= 2 && linkCount <= 3 ? 10 : (linkCount >= 1 ? 6 : 2),
@@ -122,7 +123,7 @@ function scoreWiseArticle(article, topic) {
     word_count: wordCount >= minMax[0] && wordCount <= minMax[1] ? 10 : (wordCount >= 2000 && wordCount <= 8000 ? 6 : 2),
   };
 
-  const average = WISE_CRITERIA.reduce((s, k) => s + criterionScores[k], 0) / 10;
+  const average = WISE_CRITERIA.reduce((s, k) => s + criterionScores[k], 0) / WISE_CRITERIA.length;
   const score = Number(average.toFixed(2));
   const passed = score >= WISE_PASS_THRESHOLD;
   const feedback = WISE_CRITERIA
