@@ -103,7 +103,7 @@ function scoreWiseArticle(article, topic) {
   ];
   const bannedHits = banned.filter((p) => content.includes(p)).length;
   const wise = article.wise_scores || {};
-  const wf = topic?.format_recommendation || "guide";
+  const wf = article.format || topic?.format_recommendation || "guide";
   const minMax = {
     ranking: [5000, 8000], comparison: [5000, 8000],
     guide: [3000, 5000], "how-to": [3000, 5000], review: [2000, 3500],
@@ -118,9 +118,9 @@ function scoreWiseArticle(article, topic) {
     wise_sense: Math.max(1, Math.min(10, Math.round(((wise.sense || 3) / 5) * 10))),
     affiliate_links: hasAmazon && hasRakuten ? 10 : (hasAmazon || hasRakuten ? 6 : 2),
     comparison_table: hasComparisonTag ? 10 : 2,
-    internal_links: linkCount >= 2 && linkCount <= 3 ? 10 : (linkCount >= 1 ? 6 : 2),
+    internal_links: linkCount >= 2 ? 10 : (linkCount >= 1 ? 6 : 2),
     faq: faqCount >= 3 && faqCount <= 5 ? 10 : (faqCount >= 2 ? 6 : 2),
-    word_count: wordCount >= minMax[0] && wordCount <= minMax[1] ? 10 : (wordCount >= 2000 && wordCount <= 8000 ? 6 : 2),
+    word_count: wordCount >= minMax[0] ? 10 : (wordCount >= 2000 ? 6 : 2),
   };
 
   const average = WISE_CRITERIA.reduce((s, k) => s + criterionScores[k], 0) / WISE_CRITERIA.length;
