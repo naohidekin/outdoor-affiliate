@@ -9,20 +9,26 @@ interface Props {
   products: Product[];
 }
 
+// 楽天マーケット出品者画像（バッジ・加工入り）はヒーローに不適
+function isCleanImage(url: string): boolean {
+  return !url.includes("thumbnail.image.rakuten.co.jp");
+}
+
 export default function HeroImage({ article, products }: Props) {
   const type = getHeroType(article.slug);
   const withImages = products.filter((p) => p.imageUrl);
+  const cleanImages = withImages.filter((p) => isCleanImage(p.imageUrl));
 
-  if (type === "tile" && withImages.length >= 2) {
-    return <HeroTile products={withImages} />;
+  if (type === "tile" && cleanImages.length >= 2) {
+    return <HeroTile products={cleanImages} />;
   }
 
-  if (type === "split" && withImages.length >= 2) {
-    return <HeroSplit productA={withImages[0]} productB={withImages[1]} />;
+  if (type === "split" && cleanImages.length >= 2) {
+    return <HeroSplit productA={cleanImages[0]} productB={cleanImages[1]} />;
   }
 
-  // photo / フォールバック: eyecatch → 最初の製品画像
-  const src = article.eyecatch ?? withImages[0]?.imageUrl;
+  // photo / フォールバック: eyecatch → クリーンな製品画像
+  const src = article.eyecatch ?? cleanImages[0]?.imageUrl;
   if (src) {
     return <HeroPhoto src={src} alt={article.title} />;
   }
