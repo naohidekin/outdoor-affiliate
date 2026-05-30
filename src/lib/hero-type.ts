@@ -7,7 +7,7 @@ export type HeroType = "tile" | "split" | "photo";
  * photo: ガイド・チェックリスト系（18件）
  */
 export function getHeroType(slug: string): HeroType {
-  if (/ranking|budget/.test(slug)) return "tile";
+  if (/ranking|budget|checklist/.test(slug)) return "tile";
   if (/-vs-|-showdown-|-comparison-|-alternatives/.test(slug)) return "split";
   return "photo";
 }
