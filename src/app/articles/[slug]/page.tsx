@@ -15,6 +15,7 @@ import ArticleContent from "@/components/ArticleContent";
 import MedicalAdvice from "@/components/MedicalAdvice";
 import RecommendationCTA from "@/components/RecommendationCTA";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
+import HeroImage from "@/components/HeroImage";
 
 export const revalidate = 3600; // ISR: 1時間
 
@@ -324,6 +325,8 @@ export default async function ArticlePage({
               </>
             )}
           </nav>
+
+          <HeroImage article={article} products={products} />
 
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong leading-tight mb-5">
             {article.title}

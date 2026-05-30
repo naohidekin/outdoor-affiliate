@@ -123,4 +123,6 @@ export interface Article {
     retryCount: number;
     generatedAt: string;
   };
+  // --- ヒーロー画像 ---
+  eyecatch?: string;
 }

@@ -35,6 +35,7 @@ function toArticle(row: Record<string, unknown>): Article {
     qualityScore: row.quality_score as number | undefined,
     scheduledPublishDate: row.scheduled_publish_date as string | undefined,
     generationMeta: row.generation_meta as Article["generationMeta"],
+    eyecatch: (row.eyecatch as string) || undefined,
   };
 }
 
@@ -58,6 +59,7 @@ function fromArticle(article: Article): Record<string, unknown> {
     quality_score: article.qualityScore ?? null,
     scheduled_publish_date: article.scheduledPublishDate ?? null,
     generation_meta: article.generationMeta ?? null,
+    eyecatch: article.eyecatch ?? null,
   };
 }
 
