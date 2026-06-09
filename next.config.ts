@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // /category と /articles は page.tsx が存在せず 404 になるため恒久リダイレクト
+      { source: "/category", destination: "/", permanent: true },
+      { source: "/articles", destination: "/", permanent: true },
+    ];
+  },
   // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。
   // Vercel の自動 file tracing は動的読み込みを検出できないため、明示的に
   // bundle に含める。これがないと本番で ENOENT エラーになる。
