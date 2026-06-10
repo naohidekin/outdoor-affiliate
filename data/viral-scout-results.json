@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "scoutedAt": "2026-06-09T22:32:34.585Z",
+  "scoutedAt": "2026-06-10T22:33:51.383Z",
   "config": {
     "minEngagementScore": 20,
     "targetCount": 50,
-    "actualCount": 39,
+    "actualCount": 42,
     "axes": [
       "ai",
       "camp",
@@ -12,317 +12,1200 @@
       "doctor"
     ]
   },
-  "aggregateAnalysis": null,
+  "aggregateAnalysis": {
+    "totalAnalyzed": 42,
+    "topHooks": [
+      {
+        "pattern": "other",
+        "count": 14,
+        "pct": 33
+      },
+      {
+        "pattern": "self_disclosure",
+        "count": 10,
+        "pct": 24
+      },
+      {
+        "pattern": "reveal",
+        "count": 4,
+        "pct": 10
+      },
+      {
+        "pattern": "number_hook",
+        "count": 3,
+        "pct": 7
+      },
+      {
+        "pattern": "question",
+        "count": 3,
+        "pct": 7
+      }
+    ],
+    "topEmotionalTriggers": [
+      {
+        "pattern": "utility",
+        "count": 8,
+        "pct": 19
+      },
+      {
+        "pattern": "controversy",
+        "count": 8,
+        "pct": 19
+      },
+      {
+        "pattern": "curiosity",
+        "count": 6,
+        "pct": 14
+      },
+      {
+        "pattern": "empathy",
+        "count": 6,
+        "pct": 14
+      },
+      {
+        "pattern": "humor",
+        "count": 4,
+        "pct": 10
+      }
+    ],
+    "topFormats": [
+      {
+        "pattern": "experience_share",
+        "count": 24,
+        "pct": 57
+      },
+      {
+        "pattern": "hot_take",
+        "count": 6,
+        "pct": 14
+      },
+      {
+        "pattern": "one_liner",
+        "count": 5,
+        "pct": 12
+      },
+      {
+        "pattern": "data_point",
+        "count": 3,
+        "pct": 7
+      },
+      {
+        "pattern": "story",
+        "count": 2,
+        "pct": 5
+      }
+    ],
+    "topShareability": [
+      {
+        "pattern": "utility",
+        "count": 11,
+        "pct": 26
+      },
+      {
+        "pattern": "emotional",
+        "count": 9,
+        "pct": 21
+      },
+      {
+        "pattern": "debate",
+        "count": 8,
+        "pct": 19
+      },
+      {
+        "pattern": "FOMO",
+        "count": 4,
+        "pct": 10
+      },
+      {
+        "pattern": "identity",
+        "count": 4,
+        "pct": 10
+      }
+    ],
+    "topTechniques": [
+      {
+        "technique": "季節感の演出",
+        "count": 2
+      },
+      {
+        "technique": "料理写真",
+        "count": 2
+      },
+      {
+        "technique": "時間指定による緊急性演出",
+        "count": 1
+      },
+      {
+        "technique": "企画コンテストの結果発表予告",
+        "count": 1
+      },
+      {
+        "technique": "絵文字による親しみやすさ",
+        "count": 1
+      },
+      {
+        "technique": "極限まで削ったシンプル投稿",
+        "count": 1
+      },
+      {
+        "technique": "食べ物の視覚的訴求",
+        "count": 1
+      },
+      {
+        "technique": "絵文字による情報補完",
+        "count": 1
+      },
+      {
+        "technique": "当選報告による成功体験共有",
+        "count": 1
+      },
+      {
+        "technique": "商品の圧倒的インパクト描写",
+        "count": 1
+      }
+    ],
+    "byAxis": {
+      "camp": {
+        "count": 28,
+        "avgEngagement": 86,
+        "topHooks": [
+          {
+            "pattern": "other",
+            "count": 10,
+            "pct": 36
+          },
+          {
+            "pattern": "self_disclosure",
+            "count": 8,
+            "pct": 29
+          },
+          {
+            "pattern": "number_hook",
+            "count": 3,
+            "pct": 11
+          }
+        ],
+        "topTriggers": [
+          {
+            "pattern": "utility",
+            "count": 6,
+            "pct": 21
+          },
+          {
+            "pattern": "curiosity",
+            "count": 6,
+            "pct": 21
+          },
+          {
+            "pattern": "humor",
+            "count": 4,
+            "pct": 14
+          }
+        ],
+        "topFormats": [
+          {
+            "pattern": "experience_share",
+            "count": 18,
+            "pct": 64
+          },
+          {
+            "pattern": "one_liner",
+            "count": 5,
+            "pct": 18
+          },
+          {
+            "pattern": "hot_take",
+            "count": 1,
+            "pct": 4
+          }
+        ]
+      },
+      "doctor": {
+        "count": 11,
+        "avgEngagement": 557,
+        "topHooks": [
+          {
+            "pattern": "conclusion_first",
+            "count": 2,
+            "pct": 18
+          },
+          {
+            "pattern": "question",
+            "count": 2,
+            "pct": 18
+          },
+          {
+            "pattern": "other",
+            "count": 2,
+            "pct": 18
+          }
+        ],
+        "topTriggers": [
+          {
+            "pattern": "controversy",
+            "count": 7,
+            "pct": 64
+          },
+          {
+            "pattern": "empathy",
+            "count": 2,
+            "pct": 18
+          },
+          {
+            "pattern": "utility",
+            "count": 1,
+            "pct": 9
+          }
+        ],
+        "topFormats": [
+          {
+            "pattern": "hot_take",
+            "count": 5,
+            "pct": 45
+          },
+          {
+            "pattern": "experience_share",
+            "count": 4,
+            "pct": 36
+          },
+          {
+            "pattern": "data_point",
+            "count": 2,
+            "pct": 18
+          }
+        ]
+      },
+      "parenting": {
+        "count": 3,
+        "avgEngagement": 85,
+        "topHooks": [
+          {
+            "pattern": "other",
+            "count": 2,
+            "pct": 67
+          },
+          {
+            "pattern": "self_disclosure",
+            "count": 1,
+            "pct": 33
+          }
+        ],
+        "topTriggers": [
+          {
+            "pattern": "FOMO",
+            "count": 1,
+            "pct": 33
+          },
+          {
+            "pattern": "nostalgia",
+            "count": 1,
+            "pct": 33
+          },
+          {
+            "pattern": "utility",
+            "count": 1,
+            "pct": 33
+          }
+        ],
+        "topFormats": [
+          {
+            "pattern": "experience_share",
+            "count": 2,
+            "pct": 67
+          },
+          {
+            "pattern": "story",
+            "count": 1,
+            "pct": 33
+          }
+        ]
+      }
+    },
+    "highAdaptability": 19
+  },
   "viralPosts": [
     {
-      "tweetId": "2064121307214889327",
-      "authorUsername": "japancapsuletoy",
-      "authorName": "ガチャガチャサラリーマン｜最新ガチャ情報",
-      "authorFollowers": 827981,
+      "tweetId": "2064663874347876759",
+      "authorUsername": "hitoricamp5",
+      "authorName": "【公式】ヒロシのひとりキャンプのすすめ",
+      "authorFollowers": 61644,
       "axis": "camp",
       "slotType": "viral",
-      "text": "【SKZOO めじるしアクセサリー ソロキャンプ】\n6月第4週より順次。 https://t.co/FOQ9VyghjJ",
-      "createdAt": "2026-06-08T23:04:03.000Z",
+      "text": "6月11日(木)深夜0時15分放送！\nヒロシのひとりキャンプのすすめ\n\n島キャンと大和が開拓したキャンロクパークへ！\nそして視聴者から47作品の応募のあった「ミニチュア焚き火選手権」の審査会がスタート！\nヒロシ驚愕の作品が続々登場！\n\nお楽しみに✨\n\n#ヒロシのひとりキャンプのすすめ https://t.co/Dw76Jz86kx",
+      "createdAt": "2026-06-10T11:00:01.000Z",
       "metrics": {
-        "likes": 204,
-        "retweets": 20,
+        "likes": 219,
+        "retweets": 35,
         "replies": 4,
-        "quotes": 4,
-        "bookmarks": 19,
-        "engagementScore": 280
+        "quotes": 1,
+        "bookmarks": 2,
+        "engagementScore": 334
       },
-      "analysis": null,
+      "analysis": {
+        "index": 1,
+        "hook": "number_hook",
+        "emotionalTrigger": "FOMO",
+        "format": "experience_share",
+        "topic": "番組告知",
+        "timing": "深夜放送前の期待値醸成",
+        "shareability": "FOMO",
+        "keyTechniques": [
+          "時間指定による緊急性演出",
+          "企画コンテストの結果発表予告",
+          "絵文字による親しみやすさ"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064244328105722255",
-      "authorUsername": "HELLO_SP500",
-      "authorName": "フィール",
-      "authorFollowers": 51279,
+      "tweetId": "2064581693550604637",
+      "authorUsername": "kumasukisan",
+      "authorName": "白鳥ゆずき",
+      "authorFollowers": 13885,
       "axis": "camp",
       "slotType": "viral",
-      "text": "母「ソロキャンに行くの？」\n宗介「うん」\n\n母「防寒具は？」\n宗介「過剰なくらい持った」\n\n母「火の始末は？」\n宗介「確実に消火する」\n\n母「大事なことは？」\n宗介「自然へのリスペクト」\n\n母「夜中にテントの外でガサガサ音がしたら？」\n宗介「気にせず寝袋の奥深くに潜り込む」 https://t.co/98UjXQUOqM",
-      "createdAt": "2026-06-09T07:12:54.000Z",
+      "text": "ホットサンド🍞 https://t.co/0huNLAUWkW",
+      "createdAt": "2026-06-10T05:33:28.000Z",
       "metrics": {
-        "likes": 140,
-        "retweets": 11,
+        "likes": 235,
+        "retweets": 14,
+        "replies": 5,
+        "quotes": 4,
+        "bookmarks": 2,
+        "engagementScore": 295
+      },
+      "analysis": {
+        "index": 2,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "one_liner",
+        "topic": "ホットサンド",
+        "timing": "シンプルな料理投稿の普遍的魅力",
+        "shareability": "utility",
+        "keyTechniques": [
+          "極限まで削ったシンプル投稿",
+          "食べ物の視覚的訴求",
+          "絵文字による情報補完"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064662545097757135",
+      "authorUsername": "3W3XyOj1qHU1xgw",
+      "authorName": "ちろさん",
+      "authorFollowers": 8182,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "※当選報告(Instagram)\n\n総合スーパーマーケット🏬PLANT (プラント)様のキャンペーンに当選🎁\nPLANTオリジナルBBQメニュー「マグナムステーキ約1.3kg相当」\nをいただきました😃\n\n店舗受け取りだったのですが、みた瞬間のお肉の塊にびっくり🫢‼️ https://t.co/YxryXXvBuR",
+      "createdAt": "2026-06-10T10:54:44.000Z",
+      "metrics": {
+        "likes": 49,
+        "retweets": 37,
         "replies": 1,
         "quotes": 0,
-        "bookmarks": 2,
-        "engagementScore": 175
+        "bookmarks": 3,
+        "engagementScore": 162
       },
-      "analysis": null,
+      "analysis": {
+        "index": 3,
+        "hook": "reveal",
+        "emotionalTrigger": "surprise",
+        "format": "experience_share",
+        "topic": "当選報告",
+        "timing": "当選の喜び共有による共感獲得",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "当選報告による成功体験共有",
+          "商品の圧倒的インパクト描写",
+          "絵文字による感情表現"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": [
+          {
+            "name": "マグナムステーキ約1.3kg",
+            "brand": "PLANT"
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064167003179663372",
-      "authorUsername": "MaryPoppin_s",
-      "authorName": "りりつく",
-      "authorFollowers": 1012,
+      "tweetId": "2064685965164306484",
+      "authorUsername": "suke767174",
+      "authorName": "suke",
+      "authorFollowers": 212,
       "axis": "camp",
       "slotType": "viral",
-      "text": "梅雨時のソロキャンプ⛺️ https://t.co/LlVep5Wiz3",
-      "createdAt": "2026-06-09T02:05:38.000Z",
+      "text": "素晴らしいガチャガチャに出会ってしまった。ぬい用の寝袋。スンスンがすっぽり入って、持ち運びにも便利。たまらなく可愛いすぎる！\n#パペットスンスン　#寝袋ですやすや💤 https://t.co/aEInTImtb8",
+      "createdAt": "2026-06-10T12:27:48.000Z",
       "metrics": {
-        "likes": 146,
-        "retweets": 6,
-        "replies": 0,
+        "likes": 147,
+        "retweets": 1,
+        "replies": 2,
         "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 164
+        "bookmarks": 11,
+        "engagementScore": 154
       },
-      "analysis": null,
+      "analysis": {
+        "index": 4,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "surprise",
+        "format": "experience_share",
+        "topic": "ぬい用寝袋",
+        "timing": "可愛さによる癒し需要",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "意外性のあるガチャ商品紹介",
+          "可愛さの連続強調",
+          "機能性との両立アピール"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": [
+          {
+            "name": "ぬい用寝袋",
+            "brand": "不明"
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064186840912109703",
-      "authorUsername": "KazuhiroCurry",
-      "authorName": "Kazuhiro Curry",
-      "authorFollowers": 444,
+      "tweetId": "2064545739032907804",
+      "authorUsername": "cloud_hotel",
+      "authorName": "クラウド",
+      "authorFollowers": 1423,
       "axis": "camp",
       "slotType": "viral",
-      "text": "昼は茄子チーズのホットサンド\n茄子 トマト 玉ねぎ 椎茸を煮込んだソースと\nモッツァレラチーズを挟んでホットサンド\nなんだかグチャとした感じになってしまったけど\n食べてみると結構美味しかった^ ^\n#パン作り #食パン #ホットサンド https://t.co/2jTpvikArR",
-      "createdAt": "2026-06-09T03:24:28.000Z",
+      "text": "サテンでホットサンドを食べている https://t.co/mBwifNHSTO",
+      "createdAt": "2026-06-10T03:10:36.000Z",
       "metrics": {
-        "likes": 122,
+        "likes": 142,
         "retweets": 1,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 125
+        "engagementScore": 145
       },
-      "analysis": null,
+      "analysis": {
+        "index": 5,
+        "hook": "other",
+        "emotionalTrigger": "curiosity",
+        "format": "one_liner",
+        "topic": "サテンで食事",
+        "timing": "日常の意外な瞬間切り取り",
+        "shareability": "curiosity",
+        "keyTechniques": [
+          "シチュエーションの意外性",
+          "極限まで削った文章",
+          "想像を掻き立てる表現"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064157120380170409",
-      "authorUsername": "koyapu",
-      "authorName": "小山健",
-      "authorFollowers": 79462,
+      "tweetId": "2064502875175456916",
+      "authorUsername": "izuizu0831",
+      "authorName": "HANA(はな)",
+      "authorFollowers": 58,
       "axis": "camp",
       "slotType": "viral",
-      "text": "無料公開中…！\n第26話 激突！因縁のファミリーキャンプ\n敵対するミネタとパーマネント大佐だが\n戦場をキャンプ場に移しテントを建てたりとかする…！\n\nhttps://t.co/fTb3Y1LPam https://t.co/A4qYOdb4iB",
-      "createdAt": "2026-06-09T01:26:22.000Z",
+      "text": "@yukitichqn このご時世トータル7万って安いと思うけど？\n隣接県の温泉って町内の老人会の旅行じゃないw\nにしても家族12人(どういう家族構成なんだ？)で食べ放題道具あり13万の旅行って何？キャンプとか？\nなんか子供がディズニー行くの気に入らない気持ちが透けて見えて嫌だわ",
+      "createdAt": "2026-06-10T00:20:16.000Z",
       "metrics": {
-        "likes": 61,
-        "retweets": 8,
-        "replies": 2,
-        "quotes": 3,
-        "bookmarks": 3,
-        "engagementScore": 95
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064184774252744923",
-      "authorUsername": "kubyo_nagi",
-      "authorName": "九猫なぎ🐈🔥超ゲーマー猫獣人Vtuber",
-      "authorFollowers": 718,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "こんなぎです☀️🐈\n今日は少し冷えますね😶‍🌫️\nツナホットサンドとホットコーヒーで暖まってます☕️\n\n本日は22:45〜\nNintendoDirectの同時視聴🎮✨\n\n今日も皆さにとって平和な一日になりますように(🌸*ﾟ▽ﾟ*)🌈\n#おはようVtuber https://t.co/8NYTMBf5qD",
-      "createdAt": "2026-06-09T03:16:15.000Z",
-      "metrics": {
-        "likes": 38,
-        "retweets": 5,
-        "replies": 6,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 65
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064296306026353137",
-      "authorUsername": "ponnkotsu_camp",
-      "authorName": "𝓜 camp*",
-      "authorFollowers": 955,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "ずぅーっと悩んでたﾐﾆ焚き火台遂に購入𖤐´-\n自分のｷｬﾝﾌﾟｽﾀｲﾙやこれからやりたいことなど、色々考えた結果ﾎﾟﾁﾘました(⸝⸝ᵒ̴̶̷̤ꇴᵒ̴̶̷̤⸝⸝)\n買って眠ったままのｷﾞｱの仲間入りしませんように｡｡ꉂ꒰笑꒱\n#キャンプ #キャンプ女子 #キャンプ初心者 #キャンプ好きな人と繋がりたい https://t.co/JlunsLRbTQ",
-      "createdAt": "2026-06-09T10:39:26.000Z",
-      "metrics": {
-        "likes": 56,
-        "retweets": 0,
-        "replies": 2,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 60
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064269982960431153",
-      "authorUsername": "FUTUREFOXJP",
-      "authorName": "FUTURE FOX OUTDOOR",
-      "authorFollowers": 32432,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "📽️【動画公開】焚き火台がオーブンに！？\n新ギア2つで作る「究極のとろ〜りカレードリア」🍛🧀\n\nこんばんは、FUTURE FOXです！\n本日は、6/19(金)に同時発売となる2つの最新ギアを組み合わせた、包丁いらずの激ウマキャンプ飯動画を公開します！\n\n実は、新しくなった『焚き火台 https://t.co/FB0jInk2Sp",
-      "createdAt": "2026-06-09T08:54:50.000Z",
-      "metrics": {
-        "likes": 35,
-        "retweets": 4,
-        "replies": 0,
-        "quotes": 3,
-        "bookmarks": 3,
-        "engagementScore": 53
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064159354962747606",
-      "authorUsername": "BetsukaiCamp",
-      "authorName": "別海町ふれあいキャンプ場",
-      "authorFollowers": 2234,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "おはようございます、ベロ・牛山です\n今朝のキャンプ場は10時位に雨もやみ\n今は曇です、気温は17℃迄上がる予報朝風は有りましたが、納まりました\n明日からは少し晴れ間が出て気温も上がりそうで\nキャンプには最高の気候です\n焚き火でもやりながら、のんびり夜を過ごしませんか\nでは楽しい旅をご安全に https://t.co/iPcHvMiWyo",
-      "createdAt": "2026-06-09T01:35:15.000Z",
-      "metrics": {
-        "likes": 41,
-        "retweets": 3,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 50
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064301876469026862",
-      "authorUsername": "Z58633894",
-      "authorName": "🐻ウラジミールZ🇷🇺",
-      "authorFollowers": 13989,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "ロシアによる誘拐、連れ去り🇺🇦🤡\n\nアブハジア共和国にて\n「明後日の家族キャンプ」を開催\n🇷🇺👦👧 https://t.co/6Utx3RP9uD",
-      "createdAt": "2026-06-09T11:01:34.000Z",
-      "metrics": {
-        "likes": 23,
-        "retweets": 8,
-        "replies": 0,
-        "quotes": 1,
-        "bookmarks": 1,
-        "engagementScore": 49
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064181903352275383",
-      "authorUsername": "bonnucamptv",
-      "authorName": "ボンヌキャンプTV",
-      "authorFollowers": 8280,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "個室なので音出してクソゲーし放題です。\n#キャンプ\n#ソロキャンプ https://t.co/vsaLTqpxYJ",
-      "createdAt": "2026-06-09T03:04:51.000Z",
-      "metrics": {
-        "likes": 47,
-        "retweets": 0,
+        "likes": 112,
+        "retweets": 1,
         "replies": 1,
         "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 49
+        "bookmarks": 1,
+        "engagementScore": 117
       },
-      "analysis": null,
+      "analysis": {
+        "index": 6,
+        "hook": "hot_take",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "旅行費用論争",
+        "timing": "家計感覚の違いによる議論喚起",
+        "shareability": "debate",
+        "keyTechniques": [
+          "他人の金銭感覚への意見表明",
+          "家族構成への疑問提起",
+          "透けて見える本音指摘"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064310937641947595",
-      "authorUsername": "hondatsubame",
-      "authorName": "Honda Cars 新潟県央 燕店 山崎【非公認】",
-      "authorFollowers": 330,
+      "tweetId": "2064685263142736244",
+      "authorUsername": "IPX1VnLZeaXkZ0s",
+      "authorName": "つぁーん@アウトドア垢",
+      "authorFollowers": 4770,
       "axis": "camp",
       "slotType": "viral",
-      "text": "㈱ホンダカーズ新潟県央はBSNラジオ⁡⁡。⁡キャンプ・アウトドア専門プログラム【A Laid-back Life-旅するテント】の⁡⁡スポンサーに加わる事になりました。⁡⁡⁡\n⁡⁡⁡\n【遊びの真ん中にHondaを】\n⁡アウトドア✕Hondaの魅力を⁡リスナー様にお届けできるよう\n企画していきます。\n⁡⁡⁡\nA https://t.co/SvhvTMpdbi",
-      "createdAt": "2026-06-09T11:37:35.000Z",
+      "text": "つぁーんさんたちの、今日のごはん🍚✨！\n\nチーズインミートボール＆ジャガコーンバターのトマトソース煮込み🍲！\n\n＆焚き火で炒めたピラフもおすそ分けされちゃいました( ﾟдﾟ)ｳﾏｰｰ‼️\n\nさあ…\nではそろそろメインミッションへと向かいますか…📸🐺\n\n#徒歩キャンプ\n#ようやく念願が叶いそう https://t.co/gfaEhBD1XM",
+      "createdAt": "2026-06-10T12:25:01.000Z",
       "metrics": {
-        "likes": 31,
-        "retweets": 3,
+        "likes": 104,
+        "retweets": 1,
+        "replies": 2,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 111
+      },
+      "analysis": {
+        "index": 7,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "キャンプ料理",
+        "timing": "手の込んだ料理による憧れ喚起",
+        "shareability": "utility",
+        "keyTechniques": [
+          "豪華な料理の詳細描写",
+          "絵文字による臨場感演出",
+          "次への期待値醸成"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064665326646870357",
+      "authorUsername": "tokyopachipro",
+      "authorName": "亀田真二郎",
+      "authorFollowers": 6108,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "脚本が上がったのでソロキャンプに来てる。焚き火最高！\nしかもテントの近くにホタルが飛んでる！！八角さーーーん！！！ https://t.co/bJOwU8FAjf",
+      "createdAt": "2026-06-10T11:05:48.000Z",
+      "metrics": {
+        "likes": 72,
+        "retweets": 9,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 99
+      },
+      "analysis": {
+        "index": 8,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "nostalgia",
+        "format": "experience_share",
+        "topic": "ソロキャンプ",
+        "timing": "仕事完了後のご褒美体験共有",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "仕事と趣味の両立アピール",
+          "自然体験の感動表現",
+          "キャラクター言及による親近感"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064669254239293773",
+      "authorUsername": "sm_d26",
+      "authorName": "しょーご",
+      "authorFollowers": 1177,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "#どうしてタイプR買ったん\nFK7が10万キロ目前車検が近づいてきたタイミングで実はWRXで動いてた\nでもキャンプ道具や工具箱積んだりするのにセダンだとちょっと使い勝手悪いなと思い\nそういえば今中古の青タイプRはどうかな〜って連日見ているうちに無限パーツ付ワンオーナーのこいつが出てきて即決🕺 https://t.co/ExbHj5lXfM",
+      "createdAt": "2026-06-10T11:21:24.000Z",
+      "metrics": {
+        "likes": 83,
+        "retweets": 0,
+        "replies": 2,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 87
+      },
+      "analysis": {
+        "index": 9,
+        "hook": "question",
+        "emotionalTrigger": "identity",
+        "format": "story",
+        "topic": "車選び体験談",
+        "timing": "購入プロセス共有による共感獲得",
+        "shareability": "identity",
+        "keyTechniques": [
+          "ハッシュタグによる話題参加",
+          "購入理由の詳細説明",
+          "即決エピソードの面白さ"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": [
+          {
+            "name": "FK7",
+            "brand": "ホンダ"
+          },
+          {
+            "name": "WRX",
+            "brand": "スバル"
+          },
+          {
+            "name": "タイプR",
+            "brand": "ホンダ"
+          }
+        ]
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064661371065909380",
+      "authorUsername": "Mai_Hinomoto",
+      "authorName": "日ノ本マイ☀🍙",
+      "authorFollowers": 20042,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "バイクのマフラーの熱でホットサンド作ってドヤってた自分が恥ずかしい https://t.co/bHsmLpCHwv",
+      "createdAt": "2026-06-10T10:50:05.000Z",
+      "metrics": {
+        "likes": 55,
+        "retweets": 7,
         "replies": 3,
         "quotes": 1,
-        "bookmarks": 1,
-        "engagementScore": 48
+        "bookmarks": 3,
+        "engagementScore": 84
       },
-      "analysis": null,
+      "analysis": {
+        "index": 10,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "humor",
+        "format": "one_liner",
+        "topic": "過去の失敗談",
+        "timing": "自虐による親しみやすさ演出",
+        "shareability": "humor",
+        "keyTechniques": [
+          "過去の自分への自虐",
+          "意外な調理方法への言及",
+          "恥ずかしさの素直な表現"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064273860971880794",
-      "authorUsername": "HideHideKh",
-      "authorName": "ぴで",
-      "authorFollowers": 8844,
+      "tweetId": "2064691778817786360",
+      "authorUsername": "pcen6EZJAngaYIN",
+      "authorName": "キャンプ好きオジサン",
+      "authorFollowers": 5405,
       "axis": "camp",
       "slotType": "viral",
-      "text": "この前初めてキャンプ行ってハマった。\nまた行きたすぎて動画とかキャンプ道具ずっと見てる https://t.co/rrQ8Ar6UeO",
-      "createdAt": "2026-06-09T09:10:15.000Z",
+      "text": "焚き火とキャンプしに行きたいね。蝉時雨が聞きたいな…。\n#ソロキャンプ\n#焚き火 https://t.co/kjeSTGNq0v",
+      "createdAt": "2026-06-10T12:50:54.000Z",
       "metrics": {
-        "likes": 38,
-        "retweets": 0,
+        "likes": 72,
+        "retweets": 2,
         "replies": 1,
         "quotes": 0,
-        "bookmarks": 1,
-        "engagementScore": 40
+        "bookmarks": 0,
+        "engagementScore": 80
       },
-      "analysis": null,
+      "analysis": {
+        "index": 1,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "nostalgia",
+        "format": "experience_share",
+        "topic": "焚き火への憧れ",
+        "timing": "夏季の蝉時雨への郷愁",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "季節感の演出",
+          "五感への訴求",
+          "憧れの表現"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064171654939582661",
-      "authorUsername": "chisa818125",
-      "authorName": "chisa",
-      "authorFollowers": 10093,
+      "tweetId": "2064668114554609905",
+      "authorUsername": "DDNN702MHz",
+      "authorName": "いなり",
+      "authorFollowers": 1370,
       "axis": "camp",
       "slotType": "viral",
-      "text": "おかえりNANGAのシュラフ。永久保証。修理無料。往復送料のみ自己負担。 #NANGA https://t.co/HU11Ou9rpl",
-      "createdAt": "2026-06-09T02:24:07.000Z",
+      "text": "今夜は寝袋でねんねしようね🙂‍↕️ https://t.co/CEGd1NSO7b",
+      "createdAt": "2026-06-10T11:16:52.000Z",
       "metrics": {
-        "likes": 34,
+        "likes": 64,
+        "retweets": 3,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 73
+      },
+      "analysis": {
+        "index": 2,
+        "hook": "other",
+        "emotionalTrigger": "humor",
+        "format": "one_liner",
+        "topic": "寝袋での就寝",
+        "timing": "キャンプシーズン中",
+        "shareability": "humor",
+        "keyTechniques": [
+          "親しみやすい表現",
+          "絵文字活用",
+          "日常との対比"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064554127733243976",
+      "authorUsername": "shoan_tigers",
+      "authorName": "shonan_tanaka🛵🚙@⛺️に行こうよ",
+      "authorFollowers": 1377,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "お昼はお蕎麦。陽が強いのでビールが…。\n\n＃ソロキャンプ\n＃neguracampground https://t.co/kXmb0OOh1j",
+      "createdAt": "2026-06-10T03:43:56.000Z",
+      "metrics": {
+        "likes": 70,
+        "retweets": 0,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 1,
+        "engagementScore": 70
+      },
+      "analysis": {
+        "index": 3,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "ソロキャンプ飯",
+        "timing": "昼食時間帯の投稿",
+        "shareability": "identity",
+        "keyTechniques": [
+          "リアルタイム投稿",
+          "暑さとビールの関連性",
+          "具体的場所情報"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064478396370092491",
+      "authorUsername": "VcjiGzPT3K97992",
+      "authorName": "みずか",
+      "authorFollowers": 203,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "(｡•◡•｡)⸝ꕤｵﾊﾖｰｺﾞｻﾞｲﾏｽꕤ\nホットサンド作りました！！！！！\n\n知らない間に梅雨入りしてる(・・*)。。oＯ？？\n\n#モーニング  #おうちごはん  #ホットサンド https://t.co/GMSDIIzRk9",
+      "createdAt": "2026-06-09T22:43:00.000Z",
+      "metrics": {
+        "likes": 58,
+        "retweets": 2,
+        "replies": 0,
+        "quotes": 1,
+        "bookmarks": 0,
+        "engagementScore": 66
+      },
+      "analysis": {
+        "index": 4,
+        "hook": "other",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "ホットサンド作り",
+        "timing": "朝食時間帯投稿",
+        "shareability": "identity",
+        "keyTechniques": [
+          "親しみやすい顔文字",
+          "季節感の言及",
+          "料理完成の達成感"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064575683024818198",
+      "authorUsername": "K1705880186",
+      "authorName": "クルップK17",
+      "authorFollowers": 1004,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "#全日本AFV積み荷選手権\n雑嚢でシュラフを吊っているのと赤味の強い布がエジプト風。アリスパックは使っていない模様。 https://t.co/SnrlY7LvvF",
+      "createdAt": "2026-06-10T05:09:35.000Z",
+      "metrics": {
+        "likes": 56,
+        "retweets": 2,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 62
+      },
+      "analysis": {
+        "index": 5,
+        "hook": "other",
+        "emotionalTrigger": "curiosity",
+        "format": "data_point",
+        "topic": "ミリタリーギア",
+        "timing": "ニッチな趣味での投稿",
+        "shareability": "identity",
+        "keyTechniques": [
+          "専門用語使用",
+          "観察眼の披露",
+          "コミュニティ参加"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": [
+          {
+            "name": "アリスパック",
+            "brand": "US軍"
+          }
+        ]
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064670587289759778",
+      "authorUsername": "wish_camp",
+      "authorName": "Wish｜🏕️",
+      "authorFollowers": 7092,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "今週末は久しぶりのソロキャンプ🏕️\n\nキャンプ準備してみたけれど\n忘れ物してる自信しかない🤣\n\nさて、今回は何を忘れるかな🤣 https://t.co/SkGt9Yxjf1",
+      "createdAt": "2026-06-10T11:26:42.000Z",
+      "metrics": {
+        "likes": 43,
+        "retweets": 2,
+        "replies": 3,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 55
+      },
+      "analysis": {
+        "index": 6,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "humor",
+        "format": "experience_share",
+        "topic": "キャンプ準備あるある",
+        "timing": "週末前の準備タイミング",
+        "shareability": "empathy",
+        "keyTechniques": [
+          "あるある感の演出",
+          "自己言及的ユーモア",
+          "共感を誘う失敗談"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064502320403300503",
+      "authorUsername": "shoan9696",
+      "authorName": "まきちゃんメモ",
+      "authorFollowers": 134,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "🍙コンビニキャンプ飯図鑑 #1\nツナマヨおにぎり、 そのまま食べてない？👀\n🏕️焼きツナマヨ 🧀チーズツナマヨ 🍵ツナマヨ茶漬け 🥣ツナマヨリゾット\nコンビニで買ったおにぎりが、 \n立派なキャンプ飯になる。\nあなたならどれ食べる？\n#キャンプ飯 #キャンプ #ソロキャンプ #ほのキャン https://t.co/LuVWkTvCAe",
+      "createdAt": "2026-06-10T00:18:04.000Z",
+      "metrics": {
+        "likes": 27,
+        "retweets": 5,
+        "replies": 1,
+        "quotes": 1,
+        "bookmarks": 3,
+        "engagementScore": 46
+      },
+      "analysis": {
+        "index": 7,
+        "hook": "number_hook",
+        "emotionalTrigger": "utility",
+        "format": "list",
+        "topic": "コンビニキャンプ飯",
+        "timing": "実用的アイデア提供",
+        "shareability": "utility",
+        "keyTechniques": [
+          "シリーズ化",
+          "具体的レシピ提案",
+          "質問での参加誘導"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064641314139037964",
+      "authorUsername": "TsukiakariBASE",
+      "authorName": "つきあかり商店【公式】車中泊キャンパー",
+      "authorFollowers": 3314,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "キャンプ飯、豚汁ともつ煮込みどっちが魅力的やろ🧐\n\n#つきあかりBASE #車中泊キャンパー #車中泊キャンプ #キャンプ好き ＃焚き火 #キャンプ #camping #車中泊 ＃キャンプ好きな人と繋がりたい #焚き火好き ＃薪割り好き #庭焚き火 #キャンプ飯 #焚き火飯 #つきあかり商店 https://t.co/qb2tNrMYJi",
+      "createdAt": "2026-06-10T09:30:23.000Z",
+      "metrics": {
+        "likes": 29,
+        "retweets": 2,
+        "replies": 4,
+        "quotes": 1,
+        "bookmarks": 0,
+        "engagementScore": 45
+      },
+      "analysis": {
+        "index": 8,
+        "hook": "poll",
+        "emotionalTrigger": "curiosity",
+        "format": "poll",
+        "topic": "キャンプ飯選択",
+        "timing": "食事決定のタイミング",
+        "shareability": "debate",
+        "keyTechniques": [
+          "二択での選択誘導",
+          "料理への食欲刺激",
+          "コミュニティ参加促進"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064577852125933901",
+      "authorUsername": "ondokeinocamp",
+      "authorName": "温度計",
+      "authorFollowers": 4951,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "設営完了です🏕\nキャンプ道具を紛失(家の中で)してしまい急遽ブルーシート\n久しぶりに来たキャンプ場、課長が亡くなっていて悲しい🐱 https://t.co/yOS1VFTr1F",
+      "createdAt": "2026-06-10T05:18:12.000Z",
+      "metrics": {
+        "likes": 39,
+        "retweets": 0,
+        "replies": 3,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 45
+      },
+      "analysis": {
+        "index": 9,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "キャンプ場での出来事",
+        "timing": "キャンプ現地からの報告",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "失敗談の共有",
+          "感情的エピソード",
+          "現実感のある描写"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064657395801059660",
+      "authorUsername": "konnamono__",
+      "authorName": "こなもん",
+      "authorFollowers": 2841,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "これは、過去にホットサンドメーカーで作ったおこ https://t.co/ijjK43cnlE",
+      "createdAt": "2026-06-10T10:34:17.000Z",
+      "metrics": {
+        "likes": 45,
+        "retweets": 0,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 0,
+        "engagementScore": 45
+      },
+      "analysis": {
+        "index": 10,
+        "hook": "reveal",
+        "emotionalTrigger": "curiosity",
+        "format": "experience_share",
+        "topic": "ホットサンド活用",
+        "timing": "過去の成功例紹介",
+        "shareability": "utility",
+        "keyTechniques": [
+          "過去作品の振り返り",
+          "道具活用法の提示",
+          "簡潔な説明"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064543072353202323",
+      "authorUsername": "V1models427",
+      "authorName": "V1models_kurage@72lab",
+      "authorFollowers": 2717,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "行ってみたいなソロキャンプ！そんな夢を込めた「1/32ソロキャンプセット」近日予約開始です！ #楽プラ #V1car https://t.co/NeFZYGmcMO",
+      "createdAt": "2026-06-10T03:00:00.000Z",
+      "metrics": {
+        "likes": 20,
+        "retweets": 7,
+        "replies": 0,
+        "quotes": 0,
+        "bookmarks": 2,
+        "engagementScore": 41
+      },
+      "analysis": {
+        "index": 1,
+        "hook": "reveal",
+        "emotionalTrigger": "curiosity",
+        "format": "experience_share",
+        "topic": "ソロキャンプ模型",
+        "timing": "新商品予告で期待感醸成",
+        "shareability": "FOMO",
+        "keyTechniques": [
+          "商品予告",
+          "ハッシュタグ活用",
+          "夢への共感"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": [
+          {
+            "name": "1/32ソロキャンプセット",
+            "brand": "V1models"
+          }
+        ]
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064641947227377743",
+      "authorUsername": "shoan_tigers",
+      "authorName": "shonan_tanaka🛵🚙@⛺️に行こうよ",
+      "authorFollowers": 1377,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "南瓜、ズッキーニ、茄子、パプリカを素揚げしての夏野菜カレー。\n\n＃ソロキャンプ\n＃neguracampground https://t.co/PZUyRY74ml",
+      "createdAt": "2026-06-10T09:32:54.000Z",
+      "metrics": {
+        "likes": 35,
         "retweets": 1,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 37
+        "engagementScore": 38
       },
-      "analysis": null,
+      "analysis": {
+        "index": 2,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "夏野菜カレー",
+        "timing": "夏野菜の旬な時期",
+        "shareability": "utility",
+        "keyTechniques": [
+          "具体的食材列挙",
+          "季節感",
+          "料理写真"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064148998567649740",
-      "authorUsername": "shiroponpon1",
-      "authorName": "shiropon",
-      "authorFollowers": 772,
+      "tweetId": "2064525815589847515",
+      "authorUsername": "diesirae0010",
+      "authorName": "蒼の軌跡@キャンプ初心者△",
+      "authorFollowers": 131,
       "axis": "camp",
       "slotType": "viral",
-      "text": "おはようございます☁\n休日恒例モーニング、ホットサンドモーニング700円。ホットサンドが切れておらず「？」と思いながら割ってみるとまさかのナポリタン入り、これはかなり珍しい。ボリューム満点で大満足しました✨😊\n#ぴーぷる https://t.co/L4hDtvhubb",
-      "createdAt": "2026-06-09T00:54:05.000Z",
+      "text": "撤収完了❗️\nかなり天気良かったのでいつも以上に楽しめました😊\n虫も少なかったし、また来たいですな\n\n#キャンプ　#ソロキャンプ https://t.co/Xluh8s9WRT",
+      "createdAt": "2026-06-10T01:51:26.000Z",
       "metrics": {
-        "likes": 30,
+        "likes": 21,
         "retweets": 1,
-        "replies": 1,
+        "replies": 6,
+        "quotes": 0,
+        "bookmarks": 1,
+        "engagementScore": 36
+      },
+      "analysis": {
+        "index": 3,
+        "hook": "conclusion_first",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "キャンプ撤収報告",
+        "timing": "好天候での満足体験",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "感情表現",
+          "天候言及",
+          "リピート意欲"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064577603818963084",
+      "authorUsername": "kaizen_kng",
+      "authorName": "改善王 / すべてを改善する人",
+      "authorFollowers": 3143,
+      "axis": "camp",
+      "slotType": "viral",
+      "text": "今日のお昼はホットサンドとハチミツたっぷりヨーグルトです♪\n\nホットサンドの中身はキャベツと鶏ハム🥪\nヨーグルトの賞味期限が5/28だったけど大丈夫かな？ここはサバイバル力で切り抜けますw https://t.co/ZLdXbjbbFz",
+      "createdAt": "2026-06-10T05:17:13.000Z",
+      "metrics": {
+        "likes": 16,
+        "retweets": 1,
+        "replies": 8,
         "quotes": 0,
         "bookmarks": 0,
         "engagementScore": 35
       },
-      "analysis": null,
+      "analysis": {
+        "index": 4,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "humor",
+        "format": "experience_share",
+        "topic": "キャンプ飯",
+        "timing": "ランチタイムの投稿",
+        "shareability": "humor",
+        "keyTechniques": [
+          "賞味期限ネタ",
+          "サバイバル要素",
+          "親近感"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064259362005422285",
-      "authorUsername": "400X81837437",
-      "authorName": "鬼瓦@400X",
-      "authorFollowers": 195,
+      "tweetId": "2064658502220665068",
+      "authorUsername": "konnamono__",
+      "authorName": "こなもん",
+      "authorFollowers": 2841,
       "axis": "camp",
       "slotType": "viral",
-      "text": "初ソロキャンプはじまた！はじまた！ https://t.co/ZuTuAqnfmO",
-      "createdAt": "2026-06-09T08:12:38.000Z",
+      "text": "これは過去にホットサンドメーカーで作った何とかサンド https://t.co/6a2syswqbW",
+      "createdAt": "2026-06-10T10:38:41.000Z",
       "metrics": {
         "likes": 34,
         "retweets": 0,
@@ -331,467 +1214,642 @@
         "bookmarks": 0,
         "engagementScore": 34
       },
-      "analysis": null,
+      "analysis": {
+        "index": 5,
+        "hook": "other",
+        "emotionalTrigger": "curiosity",
+        "format": "experience_share",
+        "topic": "ホットサンド",
+        "timing": "料理写真の訴求力",
+        "shareability": "utility",
+        "keyTechniques": [
+          "過去作品紹介",
+          "ミステリアス表現",
+          "料理写真"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064165232482886128",
-      "authorUsername": "EDC51550745",
-      "authorName": "EDC🪼",
-      "authorFollowers": 442,
-      "axis": "camp",
+      "tweetId": "2064622306673262740",
+      "authorUsername": "kyousei____888",
+      "authorName": "おまる🐖",
+      "authorFollowers": 91,
+      "axis": "doctor",
       "slotType": "viral",
-      "text": "うちの会社はアウトドア好きが多い\n暇になるといつも熱源の話になるが答えは出ない🤣\nCB缶派、OD缶派、アルコール派、ホワイトガソリン派、固形燃料派\n焚き火派、炭派\n好みあるよね〜☺️",
-      "createdAt": "2026-06-09T01:58:36.000Z",
+      "text": "もう終わってる\n\n日常的な痴漢や盗撮、強姦だけでなく\n\n小学校に通えば教師に精液を給食に入れられ\n歯医者に行けば医師に目隠しの状態で性器を口に入れて射精され\n出産のため病院行けば医師から盗撮され\n仕事すれば職場で飲み物に精液混入され\n銭湯行けば女装した男性がいて\n\nいくら自衛しても防げない https://t.co/jbBgVHvdVl",
+      "createdAt": "2026-06-10T08:14:51.000Z",
       "metrics": {
-        "likes": 21,
-        "retweets": 1,
-        "replies": 3,
+        "likes": 1516,
+        "retweets": 321,
+        "replies": 13,
+        "quotes": 17,
+        "bookmarks": 55,
+        "engagementScore": 2539
+      },
+      "analysis": {
+        "index": 6,
+        "hook": "conclusion_first",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "社会問題告発",
+        "timing": "医師関連事件の社会的関心",
+        "shareability": "debate",
+        "keyTechniques": [
+          "強い断言",
+          "具体例列挙",
+          "社会問題提起"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064542156803752140",
+      "authorUsername": "k_amenoko",
+      "authorName": "かめのこ",
+      "authorFollowers": 149,
+      "axis": "doctor",
+      "slotType": "viral",
+      "text": "これ男性からしたらそんなに男を信用できないのかよ！と思うだろうけど信用できないのよ。私は今まで男性産婦人科医のことを疑ったことなかったけど最近勤務先で盗撮した産婦人科医逮捕されてから考え変わった。99人がまともでも1人性犯罪者が紛れ込んだら信用はなくなる。 https://t.co/WhEJSPBlpA",
+      "createdAt": "2026-06-10T02:56:22.000Z",
+      "metrics": {
+        "likes": 880,
+        "retweets": 127,
+        "replies": 1,
+        "quotes": 5,
+        "bookmarks": 8,
+        "engagementScore": 1273
+      },
+      "analysis": {
+        "index": 7,
+        "hook": "contrast",
+        "emotionalTrigger": "controversy",
+        "format": "experience_share",
+        "topic": "医師への不信",
+        "timing": "医師事件への社会的関心",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "男性視点との対比",
+          "実体験",
+          "信頼失墜論"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064629051462168831",
+      "authorUsername": "cobta",
+      "authorName": "藤井セイラ",
+      "authorFollowers": 75236,
+      "axis": "doctor",
+      "slotType": "viral",
+      "text": "男性は日常でも盗撮していたのに、「勉強目的」が出産の盗撮理由になるのはなぜ？この人が医師になれるのがこわい。\n\n昨年8月、腕時計型カメラを使い、手術室で出産直前の妊婦を動画で盗撮した疑い。男性は今年2月、大阪市の商業施設で、女子高校生のスカート内をスマホで撮影しようとした疑いで逮捕。 https://t.co/PC5EGx6vD4",
+      "createdAt": "2026-06-10T08:41:39.000Z",
+      "metrics": {
+        "likes": 301,
+        "retweets": 80,
+        "replies": 10,
         "quotes": 1,
-        "bookmarks": 1,
-        "engagementScore": 32
+        "bookmarks": 5,
+        "engagementScore": 563
       },
-      "analysis": null,
+      "analysis": {
+        "index": 8,
+        "hook": "question",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "医師盗撮事件",
+        "timing": "事件報道への反応",
+        "shareability": "debate",
+        "keyTechniques": [
+          "矛盾指摘",
+          "具体的事実",
+          "問題提起"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064223262620655730",
-      "authorUsername": "Domi1652416",
-      "authorName": "Domi Outdoor",
-      "authorFollowers": 22,
-      "axis": "camp",
+      "tweetId": "2064661482537722274",
+      "authorUsername": "dokushingisou",
+      "authorName": "ひな@悪徳医師図鑑🗒️",
+      "authorFollowers": 56479,
+      "axis": "doctor",
       "slotType": "viral",
-      "text": "今週のキャンプ、ロケーションが最高すぎる…！\n\nテントを開けたら目の前がブルーの湖。ワンコも特等席でお気に入りみたい🐶🐾\n\n風が通り抜けてめちゃくちゃ気持ちいい。 完全に日常のストレス溶けた。\n\n#キャンプ #アウトドア #ソロキャンプ #キャンプ好きな人と繋がりたい #犬連れキャンプ #推し活 https://t.co/BKzEM31WGq",
-      "createdAt": "2026-06-09T05:49:11.000Z",
+      "text": "【NO,333】\n病院名：プライムクリニック※埼玉\n名前：田代茂\n年齢：61歳 \nジャンル：整形外科医/日本医科大学卒\n罪名：猥褻\n罪：自分が所有するマンションで寝ている男性(20代)の体を触る。 https://t.co/bsfRAbEwov",
+      "createdAt": "2026-06-10T10:50:31.000Z",
       "metrics": {
-        "likes": 18,
-        "retweets": 3,
-        "replies": 2,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 31
+        "likes": 244,
+        "retweets": 77,
+        "replies": 3,
+        "quotes": 10,
+        "bookmarks": 14,
+        "engagementScore": 501
       },
-      "analysis": null,
+      "analysis": {
+        "index": 9,
+        "hook": "other",
+        "emotionalTrigger": "controversy",
+        "format": "data_point",
+        "topic": "医師犯罪データ",
+        "timing": "医師事件への社会的関心",
+        "shareability": "utility",
+        "keyTechniques": [
+          "データベース形式",
+          "具体的情報",
+          "継続投稿"
+        ],
+        "adaptability": "low",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064179611513360691",
-      "authorUsername": "ken__oji",
-      "authorName": "けんおーじ｜小遣い制キャンパー5年生",
-      "authorFollowers": 2514,
-      "axis": "camp",
+      "tweetId": "2064496514509230553",
+      "authorUsername": "JMSDF_SDF",
+      "authorName": "海上自衛隊　自衛艦隊（公式）",
+      "authorFollowers": 52968,
+      "axis": "doctor",
       "slotType": "viral",
-      "text": "簡単！男のソロキャンプ飯レシピ\nある日の博多豚骨ズバーン トッピングアレンジ\n\n#キャンプ　#ソロキャンプ　#キャンプ飯　#ソロキャンプ飯 https://t.co/33e3GI2KNU",
-      "createdAt": "2026-06-09T02:55:44.000Z",
+      "text": "６月４日から１０日は ＃歯と口の健康週間 です。 ということで、海自の歯科医官についてご紹介します。\n歯科医官は、各地の自衛隊病院で勤務するほか、艦の長期出港や災害派遣の際、艦上で診療に従事します。臨床業務に加え国際会議や学会にも出席するなど、国内外で活躍しています。🦷🪥 https://t.co/dkxY5sqbMe",
+      "createdAt": "2026-06-09T23:55:00.000Z",
       "metrics": {
-        "likes": 21,
-        "retweets": 2,
-        "replies": 2,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 31
+        "likes": 323,
+        "retweets": 38,
+        "replies": 3,
+        "quotes": 3,
+        "bookmarks": 6,
+        "engagementScore": 449
       },
-      "analysis": null,
+      "analysis": {
+        "index": 10,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "海自歯科医官",
+        "timing": "歯と口の健康週間",
+        "shareability": "utility",
+        "keyTechniques": [
+          "啓発週間活用",
+          "職業紹介",
+          "公式アカウント"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064145379592175899",
-      "authorUsername": "everyday_tfm",
-      "authorName": "🌈てつ母ンヌ🌈TFMスカロケ社員(食堂係)&BOオーシャンヌ",
-      "authorFollowers": 717,
-      "axis": "camp",
+      "tweetId": "2064632503667724361",
+      "authorUsername": "s19790511",
+      "authorName": "伊藤 俊一郎/アグリグループ",
+      "authorFollowers": 2829,
+      "axis": "doctor",
       "slotType": "viral",
-      "text": "たまご料理といえばたまごのホットサンド大好きです〜😍先日、たまごサンドを持ってピクニックしました🥪☀️\n\nちなみに私は月見そばの黄身はすぐ崩しちゃうタイプです🤣\n\n #アンナミラクル https://t.co/VVEhNDnzyh",
-      "createdAt": "2026-06-09T00:39:43.000Z",
+      "text": "もうこの流れは止まらないよ。保険診療で「査定」や「個別指導」に怯えながら「薄利多売」でクリニック経営を続けるより、自由診療で「マンジャロ」や「睡眠薬」などの「危険薬剤」をほぼ国からは「ノーチェック」で処方する方が断然儲かるし、経営的なリスクは少ないのが事実だろう。 https://t.co/bw1skVnmQ3",
+      "createdAt": "2026-06-10T08:55:22.000Z",
       "metrics": {
-        "likes": 31,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 31
+        "likes": 192,
+        "retweets": 50,
+        "replies": 11,
+        "quotes": 10,
+        "bookmarks": 25,
+        "engagementScore": 384
       },
-      "analysis": null,
+      "analysis": {
+        "index": 1,
+        "hook": "conclusion_first",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "医療業界の構造問題",
+        "timing": "医療制度改革議論の高まり",
+        "shareability": "debate",
+        "keyTechniques": [
+          "業界内部の暴露",
+          "経済的インセンティブの対比",
+          "カギ括弧での強調"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "マンジャロ",
+            "brand": ""
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064260241647452171",
-      "authorUsername": "ken__oji",
-      "authorName": "けんおーじ｜小遣い制キャンパー5年生",
-      "authorFollowers": 2514,
-      "axis": "camp",
+      "tweetId": "2064521718803349754",
+      "authorUsername": "qu1ckm0t1on",
+      "authorName": "ある美容皮膚科の中の人",
+      "authorFollowers": 46008,
+      "axis": "doctor",
       "slotType": "viral",
-      "text": "⛺️写真の主なキャンプ道具⛺️\n\n「キャプテンスタッグ」 カマド b6\n詳細をチェックする\n▶️ https://t.co/Vpq9B74crf\n\n小さくても、焚き火も調理もしっかりこなします👍\n\n「SOLA」ステンレスクッカーセット\n詳細をチェックする\n▶️ https://t.co/b4nsRcRkxP\n\n初めて買ったクッカーセット。 https://t.co/jG8EfpaHIf",
-      "createdAt": "2026-06-09T08:16:08.000Z",
+      "text": "オンダプロが売りのある美容クリニックのステマが激しいね。\nものすごく手が込んでる。\nたぶん、チームがいるんだろうね。あるいは業者さんかな。業者と医者が一体となって経営してるのかな。\n流行るところには流行るだけの理由がある。\n\n施術は下手クソなんだろうね。",
+      "createdAt": "2026-06-10T01:35:09.000Z",
       "metrics": {
-        "likes": 18,
-        "retweets": 4,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 30
+        "likes": 187,
+        "retweets": 9,
+        "replies": 1,
+        "quotes": 9,
+        "bookmarks": 73,
+        "engagementScore": 234
       },
-      "analysis": null,
+      "analysis": {
+        "index": 2,
+        "hook": "reveal",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "美容医療のステマ",
+        "timing": "美容医療トラブル報道増加",
+        "shareability": "debate",
+        "keyTechniques": [
+          "業界の裏側暴露",
+          "推測による疑問提起",
+          "技術力への皮肉"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064192877136400515",
-      "authorUsername": "sakamox_camp",
-      "authorName": "sakamox_camp",
-      "authorFollowers": 130,
-      "axis": "camp",
+      "tweetId": "2064671255660495332",
+      "authorUsername": "hbb_info",
+      "authorName": "HAMBURGER BOYS -ハンバーガーボーイズ",
+      "authorFollowers": 9986,
+      "axis": "parenting",
       "slotType": "viral",
-      "text": "こんな盛り上がる？😍\n\n #キャンプ好き\n #キャンプ料理\n #ソロキャンプ\n #デュオキャンプ\n #camping https://t.co/0lPQtK27pO",
-      "createdAt": "2026-06-09T03:48:27.000Z",
+      "text": "【6/13 HOKKAIどーなつFES】 \nいよいよ今週末\n天気予報は晴れ！24℃\n最高！！\n\nタイムテーブル決定しました \n僕らは18:10〜出演です  \n\n個人的にはドッグランで犬を眺めるのが楽しみ\nあと、ドローンショーも！\n\n音楽好きも、家族も、わんちゃんも共に楽しめるイベント\nみんなで創るMADE IN https://t.co/3eSOiJncA3",
+      "createdAt": "2026-06-10T11:29:21.000Z",
+      "metrics": {
+        "likes": 90,
+        "retweets": 9,
+        "replies": 1,
+        "quotes": 1,
+        "bookmarks": 2,
+        "engagementScore": 121
+      },
+      "analysis": {
+        "index": 3,
+        "hook": "other",
+        "emotionalTrigger": "FOMO",
+        "format": "experience_share",
+        "topic": "北海道イベント告知",
+        "timing": "週末直前の最終告知",
+        "shareability": "FOMO",
+        "keyTechniques": [
+          "天気予報での安心感",
+          "多様な楽しみ方提示",
+          "絵文字での親しみやすさ"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064715110787256474",
+      "authorUsername": "magmit1228",
+      "authorName": "まぐ 6/28東3ろ04b",
+      "authorFollowers": 839,
+      "axis": "parenting",
+      "slotType": "viral",
+      "text": "ｺﾞｸﾄﾞｳ🐯♀(28)とDK5⃣(15)\n小学生二年生の暑い暑い終業式。明日から夏休み。ワクワクとウキウキを背中にランドセルと背負って家へ走った。明日から何をしよう、友達とどこへ行こう、家族でキャンプするって話してた、プールだって花火だって夏祭りだって...やることはたくさんある。\n↓",
+      "createdAt": "2026-06-10T14:23:37.000Z",
+      "metrics": {
+        "likes": 86,
+        "retweets": 1,
+        "replies": 1,
+        "quotes": 0,
+        "bookmarks": 26,
+        "engagementScore": 91
+      },
+      "analysis": {
+        "index": 4,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "nostalgia",
+        "format": "story",
+        "topic": "夏休みの思い出",
+        "timing": "夏休みシーズン到来",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "子ども視点での描写",
+          "ワクワク感の演出",
+          "未完結での想像喚起"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
+      "generatedContent": null
+    },
+    {
+      "tweetId": "2064535521439719437",
+      "authorUsername": "carnavi_hbc",
+      "authorName": "カーナビラジオ午後一番！",
+      "authorFollowers": 13629,
+      "axis": "parenting",
+      "slotType": "viral",
+      "text": "毎週水曜は「サッポロクラシックpresents THE HOKKAIDO LOVE」\n\n6月のテーマは\n「北海道の初夏、家族で楽しむ外時間」\n気持ちいい季節！\nBBQ…キャンプ…運動会…\n家族の“外時間”どどんとお待ちしています✨\n\n毎月抽選で1名にサッポロクラシック🎁\ncarnavi@hbc.co.jp\n\n#hbcradio   #carnaviradio",
+      "createdAt": "2026-06-10T02:30:00.000Z",
       "metrics": {
         "likes": 30,
-        "retweets": 0,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 30
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064328481559962092",
-      "authorUsername": "axela_BM5FS",
-      "authorName": "楓〜⛰️～🚙@JTP赤城勢",
-      "authorFollowers": 968,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "カインズで\nキャンプの荷物入れるのに良さそうな物を見つけたのだが\n\n購入はしていない\n\n食器\nライト\nテント、タープ\n寝袋、防寒\n焚き火\n食料\n冷蔵品\n椅子、テーブル\n\n登山だと絞って軽量化60Lに全て突っ込むけど\n車だと、ついつい荷物が増える\n\n考えている時が一番楽しくもあり😍 https://t.co/dEUysfAwrn",
-      "createdAt": "2026-06-09T12:47:18.000Z",
-      "metrics": {
-        "likes": 25,
-        "retweets": 0,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 27
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064327170290491600",
-      "authorUsername": "outdoortankyu",
-      "authorName": "アウトドア探求隊△",
-      "authorFollowers": 9284,
-      "axis": "camp",
-      "slotType": "viral",
-      "text": "【ロゴス新作】無限に連結できるテント「コネクトベース」に大型4.4mドーム＆4人用ベッドルームが登場！ファミリー・グループキャンプのレイアウトが自由自在に！ - アウトドア探求隊△\nhttps://t.co/oQa5ZTE5D9\n#ロゴステント #コネクトベース #ヘキサドーム440 #連結テント #ファミリーキャンプ2026",
-      "createdAt": "2026-06-09T12:42:05.000Z",
-      "metrics": {
-        "likes": 13,
         "retweets": 4,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 25
+        "engagementScore": 42
       },
-      "analysis": null,
+      "analysis": {
+        "index": 5,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "ラジオ番組告知",
+        "timing": "番組放送日の告知",
+        "shareability": "utility",
+        "keyTechniques": [
+          "季節感の演出",
+          "プレゼント企画",
+          "参加型コンテンツ"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": [
+          {
+            "name": "サッポロクラシック",
+            "brand": "サッポロビール"
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064324396811239776",
-      "authorUsername": "gaokeisuke",
-      "authorName": "がお",
-      "authorFollowers": 294,
+      "tweetId": "2064543104858780071",
+      "authorUsername": "T_HotBox",
+      "authorName": "アウトドアギアPRESS-田中 / 焚き火大好き・キャンプごはん、DIY挑戦中",
+      "authorFollowers": 20488,
       "axis": "camp",
-      "slotType": "viral",
-      "text": "ソロキャンプ中毒になってます\n新しいもの買ったらすぐ使いたい\n早く行きたいのループが起きてる…\nテント買って設営15分くらいで出来るって書いてあったのに汗だくで1時間かかってもなんだか楽しい…\n時おり聴こえるヤンキーのバイク音すら心地よい！ https://t.co/AWColck3Mz",
-      "createdAt": "2026-06-09T12:31:04.000Z",
+      "slotType": "big_account",
+      "text": "【14％off‼️】VICTORINOX ワークチャンプ\nキャンプの道具、あれこれ持っていきたいけど、かさばるのが悩み…。\nそんな時、このビクトリノックスがあれば安心。\nラージブレードはもちろん、金属のこぎりやプライヤーまで、21もの機能がこの一台に！\nちょっとした修理や、食材の下ごしらえにも便利です。 https://t.co/B7r5idFncb",
+      "createdAt": "2026-06-10T03:00:08.000Z",
       "metrics": {
-        "likes": 22,
+        "likes": 8,
         "retweets": 1,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 25
+        "engagementScore": 11
       },
-      "analysis": null,
+      "analysis": {
+        "index": 6,
+        "hook": "number_hook",
+        "emotionalTrigger": "utility",
+        "format": "one_liner",
+        "topic": "キャンプツール紹介",
+        "timing": "キャンプシーズンの需要",
+        "shareability": "utility",
+        "keyTechniques": [
+          "割引率での訴求",
+          "問題解決提示",
+          "多機能性の強調"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "ワークチャンプ",
+            "brand": "VICTORINOX"
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064277183456301249",
-      "authorUsername": "kaitoDr1",
-      "authorName": "しがない医師",
-      "authorFollowers": 6361,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "ブルーバッジつけて積極的に行動始めてから、医療系界隈の人たちとめちゃくちゃ繋がれた‼️\n\n開業医の先生、勤務医の先生、選考医、研修医、医学生、看護師さん、薬剤師さん、理学療法士さんなどなど\n漏れがあったらごめんなさい💦\n\nこれ普通にめちゃくちゃ嬉しい☺️\nもっとみんなお互い繋がりましょ♩",
-      "createdAt": "2026-06-09T09:23:27.000Z",
+      "tweetId": "2064483428725317830",
+      "authorUsername": "rusutsuitter",
+      "authorName": "ルスツリゾート",
+      "authorFollowers": 15975,
+      "axis": "camp",
+      "slotType": "big_account",
+      "text": "⛺ルスツ山はともだちキャンプ場🏕️\n6/13(土)より今シーズンの営業を開始！\nhttps://t.co/P1m3yXGTEW\n\nアウトドアを満喫するのはもちろん、\nリゾート1日券付きキャンプ場プランなら\n遊園地とキャンプを楽しむことも。🎢\n\nただいま絶賛予約受付中✨\nルスツで爽快なキャンプを楽しもう🌿\n\n⁠#hokkaido https://t.co/8AjTGRphgA",
+      "createdAt": "2026-06-09T23:03:00.000Z",
       "metrics": {
-        "likes": 147,
-        "retweets": 4,
-        "replies": 33,
+        "likes": 8,
+        "retweets": 2,
+        "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 225
+        "engagementScore": 14
       },
-      "analysis": null,
+      "analysis": {
+        "index": 7,
+        "hook": "other",
+        "emotionalTrigger": "FOMO",
+        "format": "experience_share",
+        "topic": "キャンプ場営業開始",
+        "timing": "キャンプシーズン開始",
+        "shareability": "FOMO",
+        "keyTechniques": [
+          "営業開始の緊急性",
+          "複合体験の提案",
+          "予約受付中の行動喚起"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064153112093585477",
-      "authorUsername": "arusu752",
-      "authorName": "アルス",
-      "authorFollowers": 4465,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "維新吉村氏\n「維新奈良県候補、平氏みたいな子供の命を救ってきた心臓外科医が収入少ないからバイト。大学病院の勤務医辞めて開業医やる方が儲かる。間違ってる。こういう医師の方が給料高くあるべき。保険の原理を取り戻したい」\n\nまあ、医者も激務の救急医や心臓外科医いくより美容整形医に行くよな https://t.co/baN5SmtLdP https://t.co/Ap9bJ2cbkx",
-      "createdAt": "2026-06-09T01:10:26.000Z",
+      "tweetId": "2064583238681780652",
+      "authorUsername": "UMAMICOLA",
+      "authorName": "UMAMI COLA（ウマミコーラ）【公式】｜発酵×スパイスの100%天然エナジードリンク",
+      "authorFollowers": 13047,
+      "axis": "camp",
+      "slotType": "big_account",
+      "text": "【販売店舗情報📍】\nHATTORI FIELD #広島県 \n広島県福山市にある農園キャンプ場「HATTORI FIELD」さんでもUMAMI COLA販売いただいております🥤✨\n\n自然に囲まれた里山でのキャンプやBBQ、農業体験。\n\nそんな特別な時間のお供にUMAMI COLAを。\n\nキャンプのあとに。\nサウナのあとに。 https://t.co/CRMqYGWRn7",
+      "createdAt": "2026-06-10T05:39:36.000Z",
       "metrics": {
-        "likes": 99,
-        "retweets": 23,
-        "replies": 0,
-        "quotes": 2,
-        "bookmarks": 6,
-        "engagementScore": 172
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064303623325278596",
-      "authorUsername": "n_kata",
-      "authorName": "中田賢一郎/さくらライフグループ代表/医師x僧侶x経営者/",
-      "authorFollowers": 19492,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "クリニック経営者・開業医の先生方へ。\n厚生局の個別指導は「いつ来るかわからない」恐怖です。 私は病院再生の現場で何度も見てきましたが、準備次第で全く結果が変わります。 https://t.co/0uETA71VkR",
-      "createdAt": "2026-06-09T11:08:31.000Z",
-      "metrics": {
-        "likes": 87,
-        "retweets": 13,
-        "replies": 5,
-        "quotes": 0,
-        "bookmarks": 98,
-        "engagementScore": 136
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064301502760694242",
-      "authorUsername": "rihazousan99",
-      "authorName": "リハゾウ",
-      "authorFollowers": 3198,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "病院で働いて気づいた。\n\n医療従事者の偏見、\n異論は認めます。\n\n【職種ごとに、“なぜか集まりがち”】\n\n・医師\n→ 気づいたら症例の話してる\n\n・看護師\n→ 美味しいご飯屋の情報交換始まる\n\n・男性看護師\n→ 筋トレ話で盛り上がる\n\n・薬剤師\n→ アニメかゲームの話になる\n\n・理学療法士\n→ https://t.co/SfmGs58FJk",
-      "createdAt": "2026-06-09T11:00:05.000Z",
-      "metrics": {
-        "likes": 53,
-        "retweets": 3,
-        "replies": 21,
-        "quotes": 2,
-        "bookmarks": 4,
-        "engagementScore": 108
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064243276207845861",
-      "authorUsername": "bomber_bookworm",
-      "authorName": "ボマー",
-      "authorFollowers": 363,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "何度でも言うけど、二世議員のことは、私は「親が開業医やっててその跡を継ぐことを期待されてる若い医師」に重ねて見てしまう。\n\nある種の優位があったのは間違いないが、他の人にはない不自由やプレッシャーも確実にあって。\nそれでも本人が地元に貢献する、という覚悟に辿り着けないと成立しない。",
-      "createdAt": "2026-06-09T07:08:43.000Z",
-      "metrics": {
-        "likes": 45,
-        "retweets": 20,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 2,
-        "engagementScore": 107
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064127426259825080",
-      "authorUsername": "ii_haNet",
-      "authorName": "【公式】 🪥新潟市歯科医師会 広報情報部🥼",
-      "authorFollowers": 3610,
-      "axis": "doctor",
-      "slotType": "viral",
-      "text": "おはようございます！\n歯と口の健康フェアも終わり、日常が戻ってきていますが\n歯と口の健康期間は明日までとなっております😁🦷\nお口は健康のはじまりの場所。\n皆さん、毎日の歯ブラシと定期的な歯医者さんでの健診、\nとってもとっても大切ですよ✨\n#定期健診\n#Befcoばかうけ展望台\n#新潟市歯科医師会 https://t.co/EUjhAn86ZC",
-      "createdAt": "2026-06-08T23:28:22.000Z",
-      "metrics": {
-        "likes": 107,
+        "likes": 10,
         "retweets": 0,
         "replies": 0,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 107
+        "engagementScore": 10
       },
-      "analysis": null,
+      "analysis": {
+        "index": 8,
+        "hook": "other",
+        "emotionalTrigger": "utility",
+        "format": "experience_share",
+        "topic": "商品販売店舗紹介",
+        "timing": "キャンプシーズンの需要",
+        "shareability": "utility",
+        "keyTechniques": [
+          "体験シーンの提案",
+          "商品と体験の組み合わせ",
+          "地域情報の提供"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": [
+          {
+            "name": "UMAMI COLA",
+            "brand": ""
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064208619340775596",
-      "authorUsername": "seikeikaigyoui",
-      "authorName": "整形外科キモ医のつぶやき",
-      "authorFollowers": 3499,
+      "tweetId": "2064612149004263567",
+      "authorUsername": "HRiTgmLlSSkwY3b",
+      "authorName": "鬼嫁が怖い🍥",
+      "authorFollowers": 76443,
       "axis": "doctor",
-      "slotType": "viral",
-      "text": "@ganka1212 昔は開業医の娘で\n・医学部に行くにはおツムか気合がちょっと足りない\n・血が苦手\nな感じの子は薬学部目指していましたね\n\n最近は大学に看護学部がたくさんできたせいか、開業医娘で看護学部ってパターンもまあまあ聞きます。（母親が看護師なのかも？）",
-      "createdAt": "2026-06-09T04:51:00.000Z",
-      "metrics": {
-        "likes": 84,
-        "retweets": 6,
-        "replies": 1,
-        "quotes": 0,
-        "bookmarks": 4,
-        "engagementScore": 104
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064168218491826192",
-      "authorUsername": "joshin_info",
-      "authorName": "ジョーシン【公式】",
-      "authorFollowers": 138635,
-      "axis": "camp",
       "slotType": "big_account",
-      "text": "✨💡ジョーシンのイチオシ💡✨\n／\n　今回は アイリスオーヤマ\n　マルチサンドメーカー ダブルサイズ IMS-902 🍴\n　おうちで熱々のホットサンドを作りませんか🥪💕\n＼\n.\nたったの3ステップで完成🤤✨\nホットサンドはもちろん、ワッフルや、\n別売りプレートを使えばいろんなものが作れちゃう🍩💗\n. https://t.co/Sgcw3LHVtE",
-      "createdAt": "2026-06-09T02:10:28.000Z",
+      "text": "【禁酒以外で肝臓を復活させられるのか？】東京で仕事してた時、接待飲みの連続と休日も飲酒してγgtpが200超えて医者から禁酒を指示された。しかし接待飲みは続けねばならず、シジミエキスを会社の冷蔵庫に常備して仕事を続けたが、結果的に数値は下がらず。この問いに答えはあるのか？#酒カス速報",
+      "createdAt": "2026-06-10T07:34:29.000Z",
       "metrics": {
-        "likes": 15,
-        "retweets": 3,
-        "replies": 0,
-        "quotes": 0,
-        "bookmarks": 0,
-        "engagementScore": 24
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064323231608398232",
-      "authorUsername": "TVer_info",
-      "authorName": "TVer新着",
-      "authorFollowers": 98001,
-      "axis": "camp",
-      "slotType": "big_account",
-      "text": "TOKYO MX「ふたりソロキャンプ」\n第5話\n\n#TVer #ふたりソロキャンプ\nhttps://t.co/BT2hU3LCNX",
-      "createdAt": "2026-06-09T12:26:26.000Z",
-      "metrics": {
-        "likes": 7,
-        "retweets": 1,
-        "replies": 0,
-        "quotes": 1,
-        "bookmarks": 2,
-        "engagementScore": 12
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064279741147033652",
-      "authorUsername": "bepal_staff",
-      "authorName": "BE-PAL(ビーパル)編集部⛺",
-      "authorFollowers": 51824,
-      "axis": "camp",
-      "slotType": "big_account",
-      "text": "ソロキャンパーが行きつく頂点！「アルコン」で至高のキャンプを味わう | バーナー・燃焼器具 【BE-PAL】キャンプ、アウトドア、自然派生活の情報源ビーパル https://t.co/pltbSiw85d",
-      "createdAt": "2026-06-09T09:33:37.000Z",
-      "metrics": {
-        "likes": 15,
+        "likes": 42,
         "retweets": 0,
-        "replies": 0,
+        "replies": 6,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 15
+        "engagementScore": 54
       },
-      "analysis": null,
+      "analysis": {
+        "index": 9,
+        "hook": "question",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "肝機能改善の悩み",
+        "timing": "健康診断シーズン",
+        "shareability": "empathy",
+        "keyTechniques": [
+          "具体的数値での説得力",
+          "実体験の共有",
+          "未解決問題の提示"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": [
+          {
+            "name": "シジミエキス",
+            "brand": ""
+          }
+        ]
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064162928950218768",
-      "authorUsername": "fukushima36",
-      "authorName": "福嶋広",
-      "authorFollowers": 125516,
+      "tweetId": "2064711396168749551",
+      "authorUsername": "russianblue2009",
+      "authorName": "russianblue",
+      "authorFollowers": 27114,
       "axis": "doctor",
       "slotType": "big_account",
-      "text": "歯周病になったら体に悪い問題点とは https://t.co/7LBx4O2qGG \n\n歯科治療  ·  09日 6月 2026\n歯周病になったら体に悪い問題点とは\n歯周病は痛い症状がほとんどない病気です。若い方には、自然に歯が抜けたら入れ歯にすれば良いと考えている方もいらっしゃるのではないでしょうか？",
-      "createdAt": "2026-06-09T01:49:27.000Z",
+      "text": "体調不良の子どもを保護者の約7割がすぐに医療機関へ連れて行く、という調査結果が今日発表されました。健康保険組合連合会(健保連)のアンケートです。成人では同じ状況で受診する人が約3割にとどまる中、子どもとの差が際立ちます。 https://t.co/X5wNzFlcVp",
+      "createdAt": "2026-06-10T14:08:51.000Z",
       "metrics": {
-        "likes": 18,
-        "retweets": 1,
-        "replies": 0,
-        "quotes": 0,
+        "likes": 30,
+        "retweets": 11,
+        "replies": 2,
+        "quotes": 5,
         "bookmarks": 2,
-        "engagementScore": 21
+        "engagementScore": 77
       },
-      "analysis": null,
+      "analysis": {
+        "index": 10,
+        "hook": "data_point",
+        "emotionalTrigger": "surprise",
+        "format": "data_point",
+        "topic": "子どもの受診行動",
+        "timing": "調査結果発表当日",
+        "shareability": "debate",
+        "keyTechniques": [
+          "統計データでの客観性",
+          "対比による驚き",
+          "信頼できる情報源の明示"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064183259886731520",
-      "authorUsername": "doctor_bru",
-      "authorName": "ドクターbru",
-      "authorFollowers": 77156,
+      "tweetId": "2064488749975974177",
+      "authorUsername": "JunichiSeike",
+      "authorName": "清家純一",
+      "authorFollowers": 15482,
       "axis": "doctor",
       "slotType": "big_account",
-      "text": "病院待合室で患者さんと大谷トーク→「先生、二刀流って体持つんですか？」って聞かれる（笑）\n\n歴史的意義：\n・100年ぶりの真の二刀流\n・投げて6回無失点＋打って5出塁みたいな「1試合で2人分」の活躍\n・怪我克服しながらの復活劇 https://t.co/YUaBnvdTyi",
-      "createdAt": "2026-06-09T03:10:14.000Z",
+      "text": "@tekutoman @H0ATyDBdPG5hqwJ ほんとそのとおりです。開業医の知り合いと話すことがたまにありますがクソな奴ばかりでウンザリしています。",
+      "createdAt": "2026-06-09T23:24:08.000Z",
       "metrics": {
-        "likes": 7,
-        "retweets": 2,
-        "replies": 1,
-        "quotes": 1,
-        "bookmarks": 0,
-        "engagementScore": 17
-      },
-      "analysis": null,
-      "generatedContent": null
-    },
-    {
-      "tweetId": "2064176085722702035",
-      "authorUsername": "doctor_bru",
-      "authorName": "ドクターbru",
-      "authorFollowers": 77156,
-      "axis": "doctor",
-      "slotType": "big_account",
-      "text": "医者しながら10年で150億円資産築いた方法\n\n・29社62棟1054室\n・年9.8億円家賃収入\n・本業崩さず週末物件巡りすらしない\n\n「医師は忙しいから無理」って言う人へ。\n最初の一歩はこれだけ↓\n\n皆さんの投資初体験は何歳？ \nRTで拡散希望！\n#不動産投資 #ギガ大家 #医師の副業",
-      "createdAt": "2026-06-09T02:41:44.000Z",
-      "metrics": {
-        "likes": 11,
-        "retweets": 2,
+        "likes": 8,
+        "retweets": 0,
         "replies": 1,
         "quotes": 0,
         "bookmarks": 0,
-        "engagementScore": 19
+        "engagementScore": 10
       },
-      "analysis": null,
+      "analysis": {
+        "index": 1,
+        "hook": "hot_take",
+        "emotionalTrigger": "controversy",
+        "format": "hot_take",
+        "topic": "開業医批判",
+        "timing": "医療従事者の不満が共感を呼ぶ",
+        "shareability": "debate",
+        "keyTechniques": [
+          "直接的な批判表現",
+          "内部者視点の暴露",
+          "感情的な表現"
+        ],
+        "adaptability": "medium",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     },
     {
-      "tweetId": "2064143246910255423",
-      "authorUsername": "NMonl",
-      "authorName": "日経メディカル",
-      "authorFollowers": 43086,
+      "tweetId": "2064652169861841102",
+      "authorUsername": "karuuuuuuuua",
+      "authorName": "現役へたれナース",
+      "authorFollowers": 14911,
       "axis": "doctor",
       "slotType": "big_account",
-      "text": "1～2年前と比べると生成AIのハルシネーションは減りましたが、今でもしれっと存在しない文献を示すことがあります。我々医師が日常的に論文を読み、引用し、総説を書き、教育資料を作成する以上、この問題は他人事ではありません。 https://t.co/ypmQ9F4jUT",
-      "createdAt": "2026-06-09T00:31:14.000Z",
+      "text": "私たち看護師が日常生活の介助をして交代制で24時間患者さんを見ているのに『普段から〇〇なんです』と医師に報告すると『いや、そんなことないでしょ』とか言ってくるのなんなの？いつ患者のとこ行ったの？関わってる時間が違うと思うんですが。言い返せないのが悔しいです。",
+      "createdAt": "2026-06-10T10:13:31.000Z",
       "metrics": {
-        "likes": 5,
-        "retweets": 2,
-        "replies": 1,
+        "likes": 32,
+        "retweets": 0,
+        "replies": 3,
         "quotes": 0,
         "bookmarks": 1,
-        "engagementScore": 13
+        "engagementScore": 38
       },
-      "analysis": null,
+      "analysis": {
+        "index": 2,
+        "hook": "self_disclosure",
+        "emotionalTrigger": "empathy",
+        "format": "experience_share",
+        "topic": "医師看護師関係",
+        "timing": "職場の権力構造への共感が拡散",
+        "shareability": "emotional",
+        "keyTechniques": [
+          "具体的な体験談",
+          "権力格差の描写",
+          "感情的な結び"
+        ],
+        "adaptability": "high",
+        "mentionedProducts": []
+      },
       "generatedContent": null
     }
   ]
