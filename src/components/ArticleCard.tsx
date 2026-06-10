@@ -21,9 +21,9 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
     >
       {/* Thumbnail */}
       <div className="relative aspect-[16/10] bg-mist border-b border-line-soft overflow-hidden">
-        {thumbProduct ? (
+        {article.eyecatch || thumbProduct ? (
           <Image
-            src={thumbProduct.imageUrl}
+            src={article.eyecatch || thumbProduct!.imageUrl}
             alt={article.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

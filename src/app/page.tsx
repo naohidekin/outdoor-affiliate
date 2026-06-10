@@ -47,6 +47,11 @@ export default async function Home() {
     : [];
   const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
+  // 新着記事: publishedAt 降順で最新6件
+  const latestArticles = [...articles]
+    .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
+    .slice(0, 6);
+
   const baseUrl = "https://camp-gear-lab.com";
 
   const webSiteJsonLd = {
@@ -154,6 +159,31 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* 新着記事 */}
+        {latestArticles.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 py-12 border-b border-line">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-ink-strong tracking-tight">新着記事</h2>
+              <p className="text-sm text-slate-500 mt-1">最近追加されたギアレビュー・ガイド</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestArticles.map((article) => {
+                const cat = categories.find((c) => c.id === article.categoryId);
+                const thumbPid = article.productIds[0];
+                const thumbProduct = thumbPid ? productMap.get(thumbPid) : undefined;
+                return (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    category={cat}
+                    thumbnailProduct={thumbProduct}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* 安全ガイド導線 */}
         {safetyGuideArticles.length > 0 && (
