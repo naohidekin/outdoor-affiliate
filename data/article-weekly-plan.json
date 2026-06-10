@@ -1,27 +1,71 @@
 {
-  "week": "2026-W21",
-  "generatedAt": "2026-05-24T22:52:11+09:00",
+  "week": "2026-W24",
+  "generatedAt": "2026-06-10T09:00:47+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W21-01",
+      "themeId": "theme-2026-W24-01",
       "categoryId": "insect-repellent",
-      "title": "キャンプの虫除けスプレーおすすめランキング【2026年版】ディート・イカリジン徹底比較",
-      "slug": "insect-repellent-spray-ranking",
-      "angle": "成分（ディート vs イカリジン）・効果時間・子ども対応を軸に、初心者でも選びやすいスプレー型虫除けを比較ランキング形式で紹介する",
+      "title": "キャンプの虫除けブレスレット・バンドおすすめランキング【2026年版】",
+      "slug": "insect-repellent-bracelet-ranking",
+      "angle": "スプレーが苦手な子どもや肌に直接塗りたくない人向けに、ブレスレット・バンド型虫除けを比較ランキング形式で紹介する。",
       "targetKeywords": [
-        "キャンプ 虫除けスプレー おすすめ",
-        "ディート イカリジン 違い",
-        "虫除けスプレー 子供 キャンプ"
+        "虫除けブレスレット キャンプ",
+        "虫除けバンド おすすめ",
+        "子ども 虫除け スプレー以外"
       ],
-      "seasonRelevance": "5月の連休明けから蚊・ブヨが本格化する時期で、キャンプシーズン到来と同時に虫対策需要が急上昇するタイミング",
+      "seasonRelevance": "6月は蚊・ブヨの活動が本格化する時期で、肌に優しい虫除け手段への需要が急増する。",
       "priority": "high",
-      "reason": "5月の季節カテゴリかつAnalystデータでinsect-repellentは既存記事2本が存在するもスプレー製品比較ランキングは未作成で、成分別比較という新角度で差別化しつつ検索ニーズを取り込める",
-      "scheduledPublishDate": "2026-05-27",
+      "reason": "6月の季節カテゴリかつ既存記事（スプレーランキング・ガイド）と重複しない新切り口で、夏本番前の検索増加タイミングを捉えられる。",
+      "scheduledPublishDate": "2026-06-12",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-007",
-        "insect-repellent-008",
-        "insect-repellent-009"
+        "insect-repellent-010",
+        "insect-repellent-011",
+        "insect-repellent-012"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W24-02",
+      "categoryId": "backpack",
+      "title": "登山・ハイキング用30Lバックパックおすすめランキング【2026年版】",
+      "slug": "hiking-backpack-30l-ranking",
+      "angle": "日帰り〜1泊ハイキングで最も使いやすい30L前後のバックパックを、フィット感・収納力・コスパの3軸で比較する。",
+      "targetKeywords": [
+        "バックパック 30L おすすめ",
+        "ハイキング ザック 30リットル",
+        "登山 バックパック 初心者"
+      ],
+      "seasonRelevance": "6月は梅雨の合間を狙った日帰り登山・ハイキング需要が高まり、バックパック選びの検索が増える時期。",
+      "priority": "high",
+      "reason": "6月の季節カテゴリで既存記事（backpack-ranking）は総合ランキングのみのため、容量帯に絞った切り口で検索意図をより細かく拾える。",
+      "scheduledPublishDate": "2026-06-14",
+      "productCount": 3,
+      "productIds": [
+        "backpack-001",
+        "backpack-002",
+        "backpack-003"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W24-03",
+      "categoryId": "light",
+      "title": "キャンプ用LEDランタンおすすめランキング【2026年版】充電式・乾電池式を徹底比較",
+      "slug": "led-lantern-ranking",
+      "angle": "充電式と乾電池式の違いを整理しつつ、明るさ・連続点灯時間・防水性で絞った実用的なLEDランタンのランキングを提供する。",
+      "targetKeywords": [
+        "LEDランタン キャンプ おすすめ",
+        "充電式ランタン 比較",
+        "キャンプ ランタン 明るい"
+      ],
+      "seasonRelevance": "7月の季節カテゴリ（light）への移行に備えた先行コンテンツとして、夏キャンプシーズン直前の需要を先取りできる。",
+      "priority": "medium",
+      "reason": "lightカテゴリはPV・検索セッションともに上位でトレンドがactiveだが、既存記事はガスランタンとテント用ライトのみのためLEDランタン全般の記事が空白になっている。",
+      "scheduledPublishDate": "2026-06-17",
+      "productCount": 3,
+      "productIds": [
+        "light-006",
+        "light-007",
+        "light-008"
       ]
     }
   ]
