@@ -117,6 +117,35 @@ function readLocal(filename) {
   }
 }
 
+function readSyncState() {
+  try {
+    return JSON.parse(
+      fs.readFileSync(path.join(DATA_DIR, "_sync-state.json"), "utf8")
+    );
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Supabase版でローカルを上書きしつつ、「まだ一度も同期されていない
+ * ローカル新規アイテム」だけは残す。
+ *
+ * 背景: 週次パイプラインが商品をローカルJSONに追加 → 同期前に異常終了
+ * すると、次回のauto-pullがDB状態で全上書きして新規アイテムが消える
+ * 事故があった（2026-06-11: insect-repellent-010〜012 等9商品が消失）。
+ * _sync-state.json に記録がない && DBにも無い ID は「push待ちの新規」
+ * とみなして保持する。DB側で削除された同期済みアイテムは従来どおり消える。
+ */
+function mergeKeepUnsynced(remote, local, syncedIds) {
+  const remoteIds = new Set(remote.map((r) => r.id));
+  const synced = new Set(syncedIds || []);
+  const pending = local.filter(
+    (item) => item && item.id && !remoteIds.has(item.id) && !synced.has(item.id)
+  );
+  return { merged: [...remote, ...pending], kept: pending.length };
+}
+
 // ─── メイン ─────────────────────────────────────────
 
 async function main() {
@@ -128,19 +157,28 @@ async function main() {
     fetchAll("articles"),
   ]);
 
-  const categories = catsRaw.map(rowToCategory).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const products = prodsRaw.map(rowToProduct);
-  const articles = artsRaw.map(rowToArticle);
+  const remoteCats = catsRaw.map(rowToCategory).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const remoteProds = prodsRaw.map(rowToProduct);
+  const remoteArts = artsRaw.map(rowToArticle);
 
-  // 差分確認用
+  // ローカル新規（未同期）アイテムは消さずに残す
   const localCats = readLocal("categories.json");
   const localProds = readLocal("products.json");
   const localArts = readLocal("articles.json");
+  const syncState = readSyncState();
 
-  const diff = (cur, next) => `${cur.length} → ${next.length}`;
-  console.log(`[pull] categories: ${diff(localCats, categories)}`);
-  console.log(`[pull] products:   ${diff(localProds, products)}`);
-  console.log(`[pull] articles:   ${diff(localArts, articles)}`);
+  const cats = mergeKeepUnsynced(remoteCats, localCats, syncState.categories);
+  const prods = mergeKeepUnsynced(remoteProds, localProds, syncState.products);
+  const arts = mergeKeepUnsynced(remoteArts, localArts, syncState.articles);
+  const categories = cats.merged;
+  const products = prods.merged;
+  const articles = arts.merged;
+
+  const diff = (cur, next, kept) =>
+    `${cur.length} → ${next.length}${kept > 0 ? `（未同期${kept}件保持）` : ""}`;
+  console.log(`[pull] categories: ${diff(localCats, categories, cats.kept)}`);
+  console.log(`[pull] products:   ${diff(localProds, products, prods.kept)}`);
+  console.log(`[pull] articles:   ${diff(localArts, articles, arts.kept)}`);
 
   if (dryRun) {
     console.log("[pull] DRY RUN: 書き込みなし");

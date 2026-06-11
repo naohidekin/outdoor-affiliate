@@ -49,7 +49,7 @@
     "price": 43780,
     "imageUrl": "https://shop.r10s.jp/wild-1/cabinet/12074233/imgrc0108485583.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07XB5WX89?tag=camp78-22",
     "categoryId": "tent",
     "specs": {
       "定員": "3〜4人",
@@ -63,7 +63,7 @@
     "description": "",
     "rating": 4.5,
     "createdAt": "2026-05-18T16:42:19.364+00:00",
-    "updatedAt": "2026-05-18T16:42:19.364+00:00"
+    "updatedAt": "2026-06-11T14:17:57.216Z"
   },
   {
     "id": "tent-ogawa-twin-piltz",
@@ -72,7 +72,7 @@
     "price": 76780,
     "imageUrl": "https://p1-16efdeae.imageflux.jp/default/item/image/image/836919372109036576/item_pc_TPFtc_main.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07HZ6H8VG?tag=camp78-22",
     "categoryId": "tent",
     "specs": {
       "定員": "4〜6人",
@@ -87,7 +87,7 @@
     "description": "",
     "rating": 4.6,
     "createdAt": "2026-05-18T16:42:19.364+00:00",
-    "updatedAt": "2026-05-18T16:42:19.364+00:00"
+    "updatedAt": "2026-06-11T14:17:57.217Z"
   },
   {
     "id": "tent-sp-amenity-dome-l",
@@ -119,7 +119,7 @@
     "price": 29800,
     "imageUrl": "https://shop.r10s.jp/waqoutdoor/cabinet/tent/cartimg/imgrc0080747575.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B7S4GJ7P?tag=camp78-22",
     "categoryId": "tent",
     "specs": {
       "定員": "2〜3人",
@@ -133,7 +133,7 @@
     "description": "",
     "rating": 4.3,
     "createdAt": "2026-05-18T16:42:19.364+00:00",
-    "updatedAt": "2026-05-18T16:42:19.364+00:00"
+    "updatedAt": "2026-06-11T14:17:57.217Z"
   },
   {
     "id": "tent-duo-003",
@@ -227,7 +227,7 @@
     "brand": "STANLEY(スタンレー)",
     "price": 8490,
     "imageUrl": "https://m.media-amazon.com/images/I/51AHvcGKkcL._AC_SL1500_.jpg",
-    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%AF%E3%83%A9%E3%82%B7%E3%83%83%E3%82%AF+%E7%9C%9F%E7%A9%BA+%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC+1.9L/",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%25B3%25E3%2583%25AC%25E3%2583%25BC%2B%25E3%2582%25AF%25E3%2583%25A9%25E3%2582%25B7%25E3%2583%2583%25E3%2582%25AF%2B%25E7%259C%259F%25E7%25A9%25BA%2B%25E3%2582%25B0%25E3%2583%25AD%25E3%2582%25A6%25E3%2583%25A9%25E3%2583%25BC%2B1.9L%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0BXKPKCW6?tag=nao78-22",
     "categoryId": "cooler",
     "specs": {
@@ -241,7 +241,7 @@
     "description": "真空断熱構造で保冷力が高く、キャンプでの氷の持ち運びに最適。炭酸飲料にも対応。",
     "rating": 4.5,
     "createdAt": "2026-04-30T04:27:58.296191+00:00",
-    "updatedAt": "2026-04-30T04:27:58.296191+00:00",
+    "updatedAt": "2026-06-11T14:36:09.082Z",
     "autoAdded": false
   },
   {
@@ -418,7 +418,7 @@
     "brand": "STANLEY(スタンレー)",
     "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/61oSrWFnmiL._AC_SL1500_.jpg",
-    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L/",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%25B3%25E3%2583%25AC%25E3%2583%25BC%2B%25E3%2582%25A2%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%2595%25E3%2583%25AD%25E3%2583%25BC%2B%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%2B1.9L%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L&tag=nao78-22",
     "categoryId": "cooler",
     "specs": {
@@ -432,7 +432,7 @@
     "description": "ストロー付きで直接飲める手軽さが魅力。日常使いとキャンプの兼用に向いている。",
     "rating": 4.2,
     "createdAt": "2026-04-30T04:27:58.296191+00:00",
-    "updatedAt": "2026-04-30T04:27:58.296191+00:00",
+    "updatedAt": "2026-06-11T14:36:09.083Z",
     "autoAdded": false
   },
   {
@@ -631,13 +631,13 @@
     "price": 0,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fglv%2Fttk-0007-000%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08W56LSJ2?tag=camp78-22",
     "categoryId": "タープ",
     "specs": {},
     "description": "ポリコットン素材で防水・遮光性が高く、焚き火にも強い高機能タープ",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:25.73+00:00",
-    "updatedAt": "2026-04-22T14:36:25.73+00:00",
+    "updatedAt": "2026-06-11T14:17:57.217Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
@@ -780,13 +780,13 @@
     "price": 0,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fglv%2Fttk-0007-000%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08W56LSJ2?tag=camp78-22",
     "categoryId": "テント",
     "specs": {},
     "description": "ポリコットン素材の軽量タープ。撥水・遮光性に優れ、ソロキャンプから焚火まで対応",
     "rating": 0,
     "createdAt": "2026-04-22T14:35:33.555+00:00",
-    "updatedAt": "2026-04-22T14:35:33.555+00:00",
+    "updatedAt": "2026-06-11T14:17:57.217Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
@@ -1193,13 +1193,13 @@
     "price": 0,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwhatnot%2F4953571093208%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B088DZTFS9?tag=camp78-22",
     "categoryId": "バーナー",
     "specs": {},
     "description": "コンパクト設計のSOTOシングルバーナー。キャンプ・登山・BBQに最適",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:17.715+00:00",
-    "updatedAt": "2026-04-22T14:36:17.716+00:00",
+    "updatedAt": "2026-06-11T14:17:57.217Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
@@ -1318,7 +1318,7 @@
     "brand": "DrinkTanks(ドリンクタンクス)",
     "price": 12100,
     "imageUrl": "https://m.media-amazon.com/images/I/517plCZhWlL._AC_SL1500_.jpg",
-    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%83%89%E3%83%AA%E3%83%B3%E3%82%AF%E3%82%BF%E3%83%B3%E3%82%AF%E3%82%B9+%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC+64oz/",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2589%25E3%2583%25AA%25E3%2583%25B3%25E3%2582%25AF%25E3%2582%25BF%25E3%2583%25B3%25E3%2582%25AF%25E3%2582%25B9%2B%25E3%2582%25B0%25E3%2583%25AD%25E3%2582%25A6%25E3%2583%25A9%25E3%2583%25BC%2B64oz%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07QDYYZ4B?tag=nao78-22",
     "categoryId": "cooler",
     "specs": {
@@ -1332,7 +1332,7 @@
     "description": "別売りケグキャップでCO2加圧が可能。クラフトビールの持ち帰りに最適。",
     "rating": 4.3,
     "createdAt": "2026-04-30T04:27:58.296191+00:00",
-    "updatedAt": "2026-04-30T04:27:58.296191+00:00",
+    "updatedAt": "2026-06-11T14:36:09.083Z",
     "autoAdded": false
   },
   {
@@ -1583,7 +1583,7 @@
     "brand": "Iwatani",
     "price": 3800,
     "imageUrl": "https://www.forewinds.iwatani.co.jp/wp-content/themes/forewinds/assets/img/product/04/product01.png",
-    "affiliateUrl": "https://item.rakuten.co.jp/plywood/40483099/",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fplywood%2F40483099%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B001C9Y8PG/?tag=nao78-22",
     "categoryId": "light",
     "specs": {
@@ -1597,7 +1597,7 @@
     "description": "イワタニのCB缶ガスランタン。カセットコンロと同じ缶が使えるため燃料の統一管理ができる。家族でキャンプするとき、バーナーとランタンを同じ缶で賄えるのは実用的。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-04-01T00:00:00+00:00"
+    "updatedAt": "2026-06-11T14:36:09.083Z"
   },
   {
     "id": "tarp-005",
@@ -2272,7 +2272,7 @@
     "brand": "Captain Stag",
     "price": 1980,
     "imageUrl": "https://image.rakuten.co.jp/captainstagstore/cabinet/06/4560464237764.jpg",
-    "affiliateUrl": "https://item.rakuten.co.jp/captainstagstore/4560464237764/",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcaptainstagstore%2F4560464237764%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B000AR4VZ8/?tag=nao78-22",
     "categoryId": "light",
     "specs": {
@@ -2286,7 +2286,7 @@
     "description": "2,000円以下の最安値クラスガスランタン。明るさは抑えめだが、テーブルの手元照明やトイレへの道しるべランタンとして使うなら十分。サブ機として持つ価値がある。",
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-04-01T00:00:00+00:00"
+    "updatedAt": "2026-06-11T14:36:09.084Z"
   },
   {
     "id": "gas-lantern-013",
@@ -3713,13 +3713,13 @@
     "price": 0,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcanpanera%2Fp11021%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B092YGCD6B?tag=camp78-22",
     "categoryId": "バーナー",
     "specs": {},
     "description": "正規品のプリムスストーブ。安定性と使いやすさが特徴",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:17.716+00:00",
-    "updatedAt": "2026-04-22T14:36:17.716+00:00",
+    "updatedAt": "2026-06-11T14:17:57.217Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
@@ -4427,5 +4427,179 @@
     "rating": 4.7,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-04-27T00:00:00+00:00"
+  },
+  {
+    "id": "insect-repellent-010",
+    "name": "金鳥 虫よけブレスレット 7本入り",
+    "brand": "金鳥（大日本除虫菊株式会社）",
+    "price": 375,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/s-plaza/cabinet/w1/w-5/imgrc0085669738.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00s2un6.wwmjs10b.g00s2un6.wwmjt5b7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fs-plaza%2F10015786%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fs-plaza%2Fi%2F10015786%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E9%87%91%E9%B3%A5%20%E8%99%AB%E3%82%88%E3%81%91%E3%83%96%E3%83%AC%E3%82%B9%E3%83%AC%E3%83%83%E3%83%88%207%E6%9C%AC%E5%85%A5%E3%82%8A&tag=camp78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "虫よけブレスレット",
+      "有効成分": "天然精油",
+      "持続時間": "約12時間",
+      "対象害虫": "ユスリカ、チョウバエ、アリ、ヒアリ",
+      "対象年齢": "子どもから大人"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-10T00:00:49.976Z",
+    "updatedAt": "2026-06-11T14:16:05.231Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:00:49.978Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "insect-repellent-011",
+    "name": "lipaco 赤ちゃん用 蚊除けリング（天然花エキス・リフィル式）",
+    "brand": "lipaco",
+    "price": 1200,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/lipaco/cabinet/11460206/11730728/imgrc0105738207.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uk9w6.wwmjs3a3.g00uk9w6.wwmjte45/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flipaco%2F1h1e-001%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Flipaco%2Fi%2F10000208%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=lipaco%20%E8%B5%A4%E3%81%A1%E3%82%83%E3%82%93%E7%94%A8%20%E8%9A%8A%E9%99%A4%E3%81%91%E3%83%AA%E3%83%B3%E3%82%B0%EF%BC%88%E5%A4%A9%E7%84%B6%E8%8A%B1%E3%82%A8%E3%82%AD%E3%82%B9%E3%83%BB%E3%83%AA%E3%83%95%E3%82%A3%E3%83%AB%E5%BC%8F%EF%BC%89&tag=camp78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "虫よけリング（ブレスレット型）",
+      "有効成分": "天然花エキス（植物成分）",
+      "対象年齢": "赤ちゃんから使用可",
+      "特徴": "サイズ調整可・リフィル式"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-06-10T00:00:49.978Z",
+    "updatedAt": "2026-06-11T14:16:05.232Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:00:49.978Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "insect-repellent-012",
+    "name": "USB充電式 虫除けリング IPX4防水",
+    "brand": "ノーブランド",
+    "price": 2232,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/a-and-d1212/cabinet/fwsh0111.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00upl86.wwmjs982.g00upl86.wwmjt1e9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fa-and-d1212%2Ffwsh001%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fa-and-d1212%2Fi%2F10000108%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=USB%E5%85%85%E9%9B%BB%E5%BC%8F%20%E8%99%AB%E9%99%A4%E3%81%91%E3%83%AA%E3%83%B3%E3%82%B0%20IPX4%E9%98%B2%E6%B0%B4&tag=camp78-22",
+    "categoryId": "insect-repellent",
+    "specs": {
+      "種別": "虫除けリング（ウェアラブルデバイス）",
+      "有効成分": "音波式（薬剤不使用）",
+      "持続時間": "最大6日間（フル充電時）",
+      "対象害虫": "蚊",
+      "対象年齢": "子供、妊婦対応"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-10T00:00:53.305Z",
+    "updatedAt": "2026-06-11T14:16:05.232Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:00:53.305Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "backpack-002",
+    "name": "ELMU 登山リュック 30L（レインカバー付属）",
+    "brand": "ELMU",
+    "price": 5980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/elmu/cabinet/biiino/item/main-image-2/20260508221700_1.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ujt66.wwmjs1c5.g00ujt66.wwmjtf45/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Felmu%2Fbb003%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Felmu%2Fi%2F10001179%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=ELMU%20%E7%99%BB%E5%B1%B1%E3%83%AA%E3%83%A5%E3%83%83%E3%82%AF%2030L%EF%BC%88%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%AB%E3%83%90%E3%83%BC%E4%BB%98%E5%B1%9E%EF%BC%89&tag=camp78-22",
+    "categoryId": "backpack",
+    "specs": {
+      "容量": "30L",
+      "重量": "約450g",
+      "背面長": "",
+      "素材": "ナイロン",
+      "レインカバー": "付属"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-06-10T00:00:58.377Z",
+    "updatedAt": "2026-06-11T14:16:05.232Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:00:58.377Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "backpack-003",
+    "name": "マムート リチウム30（Lithium 30）",
+    "brand": "MAMMUT",
+    "price": 19635,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/sportsaomori/cabinet/images2944/742ed550dcae3a18c_1.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qyi66.wwmjsbcd.g00qyi66.wwmjt5f3/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsportsaomori%2Fmam-253003152-50430%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsportsaomori%2Fi%2F11812790%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%9E%E3%83%A0%E3%83%BC%E3%83%88%20%E3%83%AA%E3%83%81%E3%82%A6%E3%83%A030%EF%BC%88Lithium%2030%EF%BC%89&tag=camp78-22",
+    "categoryId": "backpack",
+    "specs": {
+      "容量": "30L",
+      "重量": "930g",
+      "背面長": "46cm",
+      "素材": "100polyamide/210D Nylon Dragon recycled・100D Nylon Robic recycled",
+      "レインカバー": "付属"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-06-10T00:01:00.523Z",
+    "updatedAt": "2026-06-11T14:16:05.232Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:01:00.523Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "light-006",
+    "name": "フェーリアランタン LEDランタン（乾電池式）",
+    "brand": "ウォームウール",
+    "price": 990,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/f-craft/cabinet/outdoor/4006919_210531_2.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tjow6.wwmjs606.g00tjow6.wwmjt513/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ff-craft%2F4006919_%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ff-craft%2Fi%2F10000511%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%95%E3%82%A7%E3%83%BC%E3%83%AA%E3%82%A2%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20LED%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%EF%BC%88%E4%B9%BE%E9%9B%BB%E6%B1%A0%E5%BC%8F%EF%BC%89&tag=camp78-22",
+    "categoryId": "light",
+    "specs": {
+      "明るさ": "42ルーメン",
+      "点灯時間": "約10時間",
+      "電源": "単3電池2本使用(別売り)",
+      "防水": "",
+      "重量": ""
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-06-10T00:01:03.382Z",
+    "updatedAt": "2026-06-11T14:16:05.233Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:01:03.382Z",
+    "sourceApi": "rakuten"
+  },
+  {
+    "id": "light-007",
+    "name": "WILMART USB・ソーラー充電式 LEDランタン",
+    "brand": "WILMART",
+    "price": 2680,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/wilmart/cabinet/picture01/picture02/picture25/pt1-039-01.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00q5o06.wwmjsf3d.g00q5o06.wwmjtdf6/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwilmart%2Fpt1-039%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fwilmart%2Fi%2F10033175%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=WILMART%20USB%E3%83%BB%E3%82%BD%E3%83%BC%E3%83%A9%E3%83%BC%E5%85%85%E9%9B%BB%E5%BC%8F%20LED%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3&tag=camp78-22",
+    "categoryId": "light",
+    "specs": {
+      "明るさ": "",
+      "点灯時間": "",
+      "電源": "USB充電/ソーラー充電式",
+      "防水": "防水仕様（完全防水ではない）",
+      "重量": "316g"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-06-10T00:01:05.390Z",
+    "updatedAt": "2026-06-11T14:16:05.234Z",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-06-10T00:01:05.390Z",
+    "sourceApi": "rakuten"
   }
 ]

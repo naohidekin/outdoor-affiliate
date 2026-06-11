@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
       // /category と /articles は page.tsx が存在せず 404 になるため恒久リダイレクト
       { source: "/category", destination: "/", permanent: true },
       { source: "/articles", destination: "/", permanent: true },
+      // 重複記事の統合（2026-06-11）: 6/8公開の刷新版を、GSC順位資産のある
+      // 旧スラッグへ移植したため、新スラッグ側を301で正規URLへ集約する
+      {
+        source: "/articles/landrock-vs-landnest-shelter",
+        destination: "/articles/landlock-vs-landnest-shelter",
+        permanent: true,
+      },
     ];
   },
   // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。

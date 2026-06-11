@@ -9,109 +9,61 @@ const articles = readJson("articles.json");
 
 // 追加するリンクのマッピング: targetSlug の記事に fromSlug からリンクを追加
 const linkAdditions = [
-  // solo-tarp-ranking へのリンク
+  // 2026-06-11: リンクグラフ実測で発見した孤立記事（被リンク0/発リンク0）の解消
   {
     fromSlug: "tarp-ranking",
     addLink: {
-      text: "ソロキャンプ向けタープおすすめ4選｜ウイング・レクタ・車連結タイプ別に比較",
-      slug: "solo-tarp-ranking",
+      text: "タープの種類と選び方完全ガイド！形状・素材・サイズ別に徹底解説【2026年版】",
+      slug: "tarp-buying-guide",
     },
   },
-  // compact-chair-ranking へのリンク
+  {
+    fromSlug: "tarp-buying-guide",
+    addLink: {
+      text: "タープとテントの連結レイアウト実例集【2026年版】サイト別おすすめ配置パターン",
+      slug: "tarp-tent-layout-site-guide",
+    },
+  },
+  {
+    fromSlug: "tarp-tent-layout-site-guide",
+    addLink: {
+      text: "タープの張り方完全ガイド｜初心者でもできる基本〜応用5パターン【2026年版】",
+      slug: "tarp-setup-guide-for-beginners",
+    },
+  },
+  {
+    fromSlug: "firepit-solo-ranking",
+    addLink: {
+      text: "ピコグリル398 vs Tokyo Camp焚火台｜1万円の差は\"軽さ\"だけか？正直比較",
+      slug: "picogrill-vs-tokyocamp-bonfire",
+    },
+  },
+  {
+    fromSlug: "picogrill-vs-tokyocamp-bonfire",
+    addLink: {
+      text: "焚き火台3大定番ガチ比較｜スノーピーク焚火台L vs ユニフレーム ファイアグリル vs コールマン",
+      slug: "firepit-3way-showdown",
+    },
+  },
+  {
+    fromSlug: "amenity-dome-vs-landnest-dome",
+    addLink: {
+      text: "スノーピーク アメニティドームL を10年使った正直レビュー【2026年】",
+      slug: "snow-peak-amenity-dome-l-10year-review",
+    },
+  },
   {
     fromSlug: "camp-chair-ranking",
     addLink: {
-      text: "軽量・コンパクトアウトドアチェアおすすめ5選｜ソロキャン・登山兼用で選ぶ",
-      slug: "compact-chair-ranking",
+      text: "キャンプチェア コンパクト・軽量モデルおすすめ3選【2026年版】持ち運びやすさ徹底比較",
+      slug: "compact-lightweight-chair-ranking",
     },
   },
   {
-    fromSlug: "rainwear-ranking",
+    fromSlug: "tent-with-vestibule-ranking",
     addLink: {
-      text: "軽量・コンパクトアウトドアチェアおすすめ5選｜ソロキャン・登山兼用で選ぶ",
-      slug: "compact-chair-ranking",
-    },
-  },
-  // summer-camp-cooler-tips へのリンク
-  {
-    fromSlug: "cooler-box-ranking",
-    addLink: {
-      text: "夏キャンプのクーラーボックス選び【保冷力・容量・予算別】失敗しない選び方と使い方",
-      slug: "summer-camp-cooler-tips",
-    },
-  },
-  {
-    fromSlug: "soft-cooler-ranking",
-    addLink: {
-      text: "夏キャンプのクーラーボックス選び【保冷力・容量・予算別】失敗しない選び方と使い方",
-      slug: "summer-camp-cooler-tips",
-    },
-  },
-  // winter-camp-beginners-checklist へのリンク
-  {
-    fromSlug: "camping-beginner-gear-checklist",
-    addLink: {
-      text: "冬キャンプ初心者の持ち物チェックリスト【防寒・安全対策を徹底解説】",
-      slug: "winter-camp-beginners-checklist",
-    },
-  },
-  {
-    fromSlug: "nanga-sleeping-bag-comparison",
-    addLink: {
-      text: "冬キャンプ初心者の持ち物チェックリスト【防寒・安全対策を徹底解説】",
-      slug: "winter-camp-beginners-checklist",
-    },
-  },
-  // winter-sleeping-bag-ranking へのリンク
-  {
-    fromSlug: "nanga-sleeping-bag-comparison",
-    addLink: {
-      text: "冬キャンプ用シュラフおすすめ比較【NANGA vs モンベル vs コスパ系】快適温度の見方も解説",
-      slug: "winter-sleeping-bag-ranking",
-    },
-  },
-  {
-    fromSlug: "budget-sleeping-bag-ranking",
-    addLink: {
-      text: "冬キャンプ用シュラフおすすめ比較【NANGA vs モンベル vs コスパ系】快適温度の見方も解説",
-      slug: "winter-sleeping-bag-ranking",
-    },
-  },
-  {
-    fromSlug: "spring-sleeping-bag-guide",
-    addLink: {
-      text: "冬キャンプ用シュラフおすすめ比較【NANGA vs モンベル vs コスパ系】快適温度の見方も解説",
-      slug: "winter-sleeping-bag-ranking",
-    },
-  },
-  // gw-camp-checklist-2026 へのリンク
-  {
-    fromSlug: "gw-camp-guide-2026",
-    addLink: {
-      text: "GWキャンプ直前チェックリスト｜忘れ物ゼロで出発する15項目",
-      slug: "gw-camp-checklist-2026",
-    },
-  },
-  {
-    fromSlug: "gw-camping-gear-budget",
-    addLink: {
-      text: "GWキャンプ直前チェックリスト｜忘れ物ゼロで出発する15項目",
-      slug: "gw-camp-checklist-2026",
-    },
-  },
-  // family-camp-first-time-guide へのリンク
-  {
-    fromSlug: "family-tent-ranking",
-    addLink: {
-      text: "初めてのファミリーキャンプ完全ガイド｜子連れで失敗しない7つのコツ",
-      slug: "family-camp-first-time-guide",
-    },
-  },
-  {
-    fromSlug: "camping-beginner-gear-checklist",
-    addLink: {
-      text: "初めてのファミリーキャンプ完全ガイド｜子連れで失敗しない7つのコツ",
-      slug: "family-camp-first-time-guide",
+      text: "春キャンプのテント選び「前室の広さ」で選ぶおすすめ3選【2026年版】",
+      slug: "tent-vestibule-size-ranking",
     },
   },
 ];
