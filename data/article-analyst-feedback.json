@@ -1,25 +1,25 @@
 {
-  "updatedAt": "2026-06-10T10:00:09+09:00",
+  "updatedAt": "2026-06-11T10:00:09+09:00",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 34,
+      "pv7d": 33,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 26,
+      "pv7d": 27,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv7d": 19,
+      "pv7d": 17,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -33,48 +33,48 @@
     {
       "slug": "backpack-ranking",
       "categoryId": "backpack",
-      "pv7d": 7,
+      "pv7d": 8,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "duo-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 7,
+      "pv7d": 8,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "tarp-buying-guide",
       "categoryId": "tarp",
-      "pv7d": 6,
+      "pv7d": 7,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "solo-tent-ranking",
+      "categoryId": "tent",
+      "pv7d": 7,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-tent-layout-site-guide",
+      "categoryId": "tarp",
+      "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "kids-sleeping-bag-ranking",
       "categoryId": "sleeping-bag",
-      "pv7d": 6,
+      "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "camping-beginner-gear-checklist",
       "categoryId": "tent",
-      "pv7d": 6,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camp-insect-repellent-guide",
-      "categoryId": "insect-repellent",
-      "pv7d": 5,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
       "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
@@ -87,16 +87,9 @@
       "ctr": 0
     },
     {
-      "slug": "tarp-setup-guide-for-beginners",
-      "categoryId": "tarp",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "multi-burner-ranking",
-      "categoryId": "burner",
-      "pv7d": 4,
+      "slug": "snow-peak-amenity-dome-l-10year-review",
+      "categoryId": "tent",
+      "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -108,16 +101,23 @@
       "ctr": 0
     },
     {
-      "slug": "snow-peak-amenity-dome-l-10year-review",
-      "categoryId": "tent",
+      "slug": "tarp-ranking",
+      "categoryId": "tarp",
       "pv7d": 4,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "solo-tent-ranking",
-      "categoryId": "tent",
+      "slug": "rainwear-ranking",
+      "categoryId": "wear",
       "pv7d": 4,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-setup-guide-for-beginners",
+      "categoryId": "tarp",
+      "pv7d": 3,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -129,16 +129,16 @@
       "ctr": 0
     },
     {
-      "slug": "tarp-tent-layout-site-guide",
-      "categoryId": "tarp",
+      "slug": "multi-burner-ranking",
+      "categoryId": "burner",
       "pv7d": 3,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "rainwear-ranking",
-      "categoryId": "wear",
-      "pv7d": 3,
+      "slug": "camp-insect-repellent-guide",
+      "categoryId": "insect-repellent",
+      "pv7d": 2,
       "clicks7d": 0,
       "ctr": 0
     }
@@ -146,23 +146,23 @@
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 81,
+      "pv7d": 85,
       "clicks7d": 0,
-      "searchSessions": 68,
-      "trend": "active"
-    },
-    {
-      "categoryId": "cooler",
-      "pv7d": 19,
-      "clicks7d": 0,
-      "searchSessions": 16,
+      "searchSessions": 72,
       "trend": "active"
     },
     {
       "categoryId": "tarp",
-      "pv7d": 18,
+      "pv7d": 19,
       "clicks7d": 0,
-      "searchSessions": 17,
+      "searchSessions": 18,
+      "trend": "active"
+    },
+    {
+      "categoryId": "cooler",
+      "pv7d": 17,
+      "clicks7d": 0,
+      "searchSessions": 13,
       "trend": "active"
     },
     {
@@ -173,31 +173,17 @@
       "trend": "active"
     },
     {
-      "categoryId": "sleeping-bag",
-      "pv7d": 9,
-      "clicks7d": 0,
-      "searchSessions": 12,
-      "trend": "low"
-    },
-    {
       "categoryId": "backpack",
-      "pv7d": 7,
-      "clicks7d": 0,
-      "searchSessions": 5,
-      "trend": "low"
-    },
-    {
-      "categoryId": "insect-repellent",
-      "pv7d": 5,
+      "pv7d": 8,
       "clicks7d": 0,
       "searchSessions": 6,
       "trend": "low"
     },
     {
-      "categoryId": "burner",
-      "pv7d": 4,
+      "categoryId": "sleeping-bag",
+      "pv7d": 8,
       "clicks7d": 0,
-      "searchSessions": 4,
+      "searchSessions": 10,
       "trend": "low"
     },
     {
@@ -209,18 +195,32 @@
     },
     {
       "categoryId": "wear",
-      "pv7d": 3,
+      "pv7d": 4,
       "clicks7d": 0,
       "searchSessions": 1,
+      "trend": "low"
+    },
+    {
+      "categoryId": "burner",
+      "pv7d": 3,
+      "clicks7d": 0,
+      "searchSessions": 3,
+      "trend": "low"
+    },
+    {
+      "categoryId": "insect-repellent",
+      "pv7d": 2,
+      "clicks7d": 0,
+      "searchSessions": 4,
       "trend": "low"
     }
   ],
   "effectivePatterns": [
-    "{\"rule\":\"具体的な比較軸を明示する\",\"description\":\"タイトルに「vs」「ハード vs ソフト」「OD缶・CB缶別」など比較の切り口を明示することで、読者が記事の価値を瞬時に判断できる\",\"examples\":[\"ランドロック vs ランドネストシェルター\",\"ハード vs ソフト\"]}",
-    "{\"rule\":\"数字で具体性を担保する\",\"description\":\"「5選」「7選」「4〜6人」「4万円の差」など数字を入れることで、記事のスコープが明確になり、クリック意欲が高まる\",\"examples\":[\"おすすめ5選\",\"おすすめ7選\",\"4万円の差\",\"4〜6人\"]}",
-    "{\"rule\":\"年版・最新性を明記する\",\"description\":\"「2026年版」を付けることで検索者に最新情報であることを伝え、CTRと信頼性を向上させる\",\"examples\":[\"【2026年版】\",\"【2026年】\"]}",
-    "{\"rule\":\"読者の使用シーンや用途を限定する\",\"description\":\"「ファミリー」「日帰り〜小屋泊」「家族4〜6人」など利用シーンを絞ることで、ターゲット読者の共感と検索意図へのマッチ度が上がる\",\"examples\":[\"ファミリーテント\",\"日帰り〜小屋泊の容量別\",\"家族4〜6人で快適に\"]}",
-    "{\"rule\":\"「徹底比較」「正直比較」など信頼感ワードを添える\",\"description\":\"単なるまとめではなく深く検証した記事であることを示すワードを加えることで、読者の期待値と信頼感を高める\",\"examples\":[\"徹底比較\",\"正直比較\",\"選び方と比較\"]}"
+    "{\"rule\":\"具体的な数字で選択肢を明示する\",\"description\":\"「5選」「7選」のように記事内で紹介するアイテム数をタイトルに含める。読者が情報量を事前に把握でき、クリック率が上がる。\",\"examples\":[\"おすすめ5選\",\"おすすめ7選\"]}",
+    "{\"rule\":\"年版を明記して鮮度を担保する\",\"description\":\"「【2026年版】」のように年号をタイトルに入れることで最新情報であることをアピールし、検索意図にマッチさせる。\",\"examples\":[\"【2026年版】\",\"【2026年】\"]}",
+    "{\"rule\":\"比較軸・対立構造をタイトルで提示する\",\"description\":\"「vs」「ハード vs ソフト」「OD缶・CB缶別」のように比較の切り口を明示する。読者の選択課題を代弁し、最も高PVの記事で顕著に効果が出ている。\",\"examples\":[\"ランドロック vs ランドネストシェルター\",\"ハード vs ソフト\",\"OD缶・CB缶別\"]}",
+    "{\"rule\":\"ターゲット読者・用途を具体的に絞り込む\",\"description\":\"「家族4〜6人」「日帰り〜小屋泊」のように対象ユーザーや使用シーンを限定することで、ニーズにピンポイントで刺さりCTRが向上する。\",\"examples\":[\"家族4〜6人で快適に\",\"日帰り〜小屋泊の容量別\"]}",
+    "{\"rule\":\"正直・徹底などの信頼性ワードで差別化する\",\"description\":\"「正直比較」「徹底比較」といった言葉を加えることで、広告臭を排除し読者の信頼を獲得する。最高PV記事の「正直比較」が典型例。\",\"examples\":[\"正直比較\",\"徹底比較\"]}"
   ],
   "suggestions": [
     "来月の季節カテゴリ: cooler, light, chair, insect-repellent — 準備推奨"
