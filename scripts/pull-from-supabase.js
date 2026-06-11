@@ -19,7 +19,7 @@
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
-import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+import { loadEnv, readJson } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
 
@@ -117,33 +117,49 @@ function readLocal(filename) {
   }
 }
 
-function readSyncState() {
-  try {
-    return JSON.parse(
-      fs.readFileSync(path.join(DATA_DIR, "_sync-state.json"), "utf8")
-    );
-  } catch {
-    return {};
-  }
-}
-
 /**
- * Supabase版でローカルを上書きしつつ、「まだ一度も同期されていない
- * ローカル新規アイテム」だけは残す。
+ * Supabase版とローカル版をマージする。原則はSupabase優先（管理画面の
+ * 編集・削除を正とする）だが、以下の2種類のローカル変更は保持する:
  *
- * 背景: 週次パイプラインが商品をローカルJSONに追加 → 同期前に異常終了
- * すると、次回のauto-pullがDB状態で全上書きして新規アイテムが消える
- * 事故があった（2026-06-11: insect-repellent-010〜012 等9商品が消失）。
- * _sync-state.json に記録がない && DBにも無い ID は「push待ちの新規」
- * とみなして保持する。DB側で削除された同期済みアイテムは従来どおり消える。
+ * 1. push待ちの新規アイテム — _sync-state.json に記録がなく、DBにも
+ *    存在しないID。週次パイプラインが商品をローカルJSONに追加した直後に
+ *    異常終了すると、従来の全上書きpullで消失する事故があった
+ *    （2026-06-11: insect-repellent-010〜012 等9商品が消失）。
+ * 2. push待ちのローカル更新 — 両方に存在するIDで、ローカルの updatedAt
+ *    がリモートより新しい行。git経由で取り込んだ記事リライト・ステータス
+ *    変更・URL修正などが該当する。従来は pull→push の順序のため、
+ *    push前のauto-pullで旧版に巻き戻り、変更が永久に失われていた。
+ *
+ * updatedAt がどちらか欠けている／パース不能な場合はリモートを採用する
+ * （安全側 = 管理画面優先）。DB側で削除された同期済みIDは従来どおり消える。
  */
-function mergeKeepUnsynced(remote, local, syncedIds) {
-  const remoteIds = new Set(remote.map((r) => r.id));
+function mergeWithLocal(remote, local, syncedIds) {
+  const localById = new Map(
+    local.filter((i) => i && i.id).map((i) => [i.id, i])
+  );
   const synced = new Set(syncedIds || []);
-  const pending = local.filter(
+  let keptModified = 0;
+
+  const merged = remote.map((r) => {
+    const l = localById.get(r.id);
+    if (!l) return r;
+    const lt = Date.parse(l.updatedAt ?? "");
+    const rt = Date.parse(r.updatedAt ?? "");
+    if (Number.isFinite(lt) && Number.isFinite(rt) && lt > rt) {
+      keptModified++;
+      return l; // ローカルの方が新しい → push待ち更新として保持
+    }
+    return r;
+  });
+
+  const remoteIds = new Set(remote.map((r) => r.id));
+  const pendingNew = local.filter(
     (item) => item && item.id && !remoteIds.has(item.id) && !synced.has(item.id)
   );
-  return { merged: [...remote, ...pending], kept: pending.length };
+  return {
+    merged: [...merged, ...pendingNew],
+    kept: pendingNew.length + keptModified,
+  };
 }
 
 // ─── メイン ─────────────────────────────────────────
@@ -161,21 +177,28 @@ async function main() {
   const remoteProds = prodsRaw.map(rowToProduct);
   const remoteArts = artsRaw.map(rowToArticle);
 
-  // ローカル新規（未同期）アイテムは消さずに残す
+  // ローカルの push待ち変更（新規・更新）は消さずに残す
   const localCats = readLocal("categories.json");
   const localProds = readLocal("products.json");
   const localArts = readLocal("articles.json");
-  const syncState = readSyncState();
+  const syncState = readJson("_sync-state.json") || {};
+  if (!syncState.lastSyncAt) {
+    console.warn(
+      "[pull] ⚠ _sync-state.json がありません。削除済み判定ができないため、" +
+        "ローカルのみに存在するアイテムは全て保持されます（管理画面で削除した" +
+        "アイテムが復活する可能性あり）。"
+    );
+  }
 
-  const cats = mergeKeepUnsynced(remoteCats, localCats, syncState.categories);
-  const prods = mergeKeepUnsynced(remoteProds, localProds, syncState.products);
-  const arts = mergeKeepUnsynced(remoteArts, localArts, syncState.articles);
+  const cats = mergeWithLocal(remoteCats, localCats, syncState.categories);
+  const prods = mergeWithLocal(remoteProds, localProds, syncState.products);
+  const arts = mergeWithLocal(remoteArts, localArts, syncState.articles);
   const categories = cats.merged;
   const products = prods.merged;
   const articles = arts.merged;
 
   const diff = (cur, next, kept) =>
-    `${cur.length} → ${next.length}${kept > 0 ? `（未同期${kept}件保持）` : ""}`;
+    `${cur.length} → ${next.length}${kept > 0 ? `（push待ち${kept}件保持）` : ""}`;
   console.log(`[pull] categories: ${diff(localCats, categories, cats.kept)}`);
   console.log(`[pull] products:   ${diff(localProds, products, prods.kept)}`);
   console.log(`[pull] articles:   ${diff(localArts, articles, arts.kept)}`);
