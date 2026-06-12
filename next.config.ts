@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
     "/api/viral-scout": ["./data/**/*"],
   },
   images: {
+    // 2026-06-12: Vercel無料枠の画像最適化クォータ超過で全画像が402になったため、
+    // 最適化を無効化して元画像を直接配信する（楽天/Amazon/Unsplash側のCDNが
+    // 適切なサイズで返すため実用上の影響は小さい）。Proプラン移行時はこの行を
+    // 削除すれば最適化が復活する。
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "**.r10s.jp" },
       { protocol: "https", hostname: "**.rakuten.co.jp" },
