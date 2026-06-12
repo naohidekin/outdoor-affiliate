@@ -8,13 +8,11 @@
  * このためステータスチェックでは検出できず、サイト上では「画像が表示されない」
  * 状態になる（◯選記事のタイルヒーローに穴が開く実害が出た）。
  *
- * 処理:
- * 1. imageUrl が m.media-amazon の全商品について画像を実取得し、
- *    Content-Type が image でない or 2KB未満 のものを「空白」と判定
- * 2. 空白だった商品は、affiliateUrl から楽天商品ページURLを取り出し、
- *    og:image を取得して差し替え（item.rakuten.co.jp のページに限る）
- * 3. og:image も実取得して画像であることを検証してから書き込む
- * 4. 変更した商品は updatedAt を更新（syncで確実に反映させるため）
+ * 修復の優先順位（楽天への直接スクレイプ連発はブロックされるためAPI優先）:
+ *   1. 楽天Ichiba API itemCode直引き（affiliateUrlの商品URLから shop:code を抽出）
+ *   2. 楽天Ichiba API キーワード検索（商品名・先頭1件 → ログに「要確認」表示）
+ *   3. 商品ページの og:image（API不可時のフォールバック）
+ * いずれも差し替え前に実画像として取得検証する。
  *
  * 使い方:
  *   node scripts/fix-blank-amazon-images.mjs --dry-run   # 検出のみ
@@ -24,14 +22,25 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+
+loadEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PRODUCTS_PATH = path.join(__dirname, "..", "data", "products.json");
 const dryRun = process.argv.includes("--dry-run");
 
+const RAKUTEN_API_URL =
+  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const APP_ID = process.env.RAKUTEN_APP_ID;
+const ACCESS_KEY = process.env.RAKUTEN_ACCESS_KEY;
+const AFFILIATE_ID =
+  process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
+
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36";
 const MIN_IMAGE_BYTES = 2048; // 空白GIFは約40B、実画像は数KB以上
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchBytes(url) {
   try {
@@ -71,6 +80,40 @@ function extractRakutenItemUrl(affiliateUrl) {
   return affiliateUrl.includes("item.rakuten.co.jp") ? affiliateUrl : null;
 }
 
+function parseItemCode(itemUrl) {
+  const m = itemUrl.match(/item\.rakuten\.co\.jp\/([^/]+)\/([^/?#]+)/);
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+
+async function rakutenApi(extraParams) {
+  if (!APP_ID || !ACCESS_KEY) return null;
+  const params = new URLSearchParams({
+    applicationId: APP_ID,
+    accessKey: ACCESS_KEY,
+    affiliateId: AFFILIATE_ID,
+    hits: "1",
+    imageFlag: "1",
+    formatVersion: "2",
+    ...extraParams,
+  });
+  try {
+    const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
+      headers: {
+        Origin: "https://camp-gear-lab.com",
+        Referer: "https://camp-gear-lab.com/",
+      },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const item = (data.Items || [])[0];
+    if (!item) return null;
+    const img = (item.mediumImageUrls && item.mediumImageUrls[0]) || "";
+    return img || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOgImage(url) {
   try {
     const controller = new AbortController();
@@ -96,50 +139,74 @@ async function fetchOgImage(url) {
   }
 }
 
+function upsize(url) {
+  return url.replace(/_ex=\d+x\d+/, "_ex=600x600");
+}
+
 const products = JSON.parse(fs.readFileSync(PRODUCTS_PATH, "utf8"));
 const now = new Date().toISOString();
 const targets = products.filter((p) =>
   (p.imageUrl || "").includes("m.media-amazon.com/images/P/")
 );
-console.log(`Amazon P/形式の画像: ${targets.length}件を検査します\n`);
+console.log(`Amazon P/形式の画像: ${targets.length}件を検査します`);
+console.log(
+  `楽天API: ${APP_ID && ACCESS_KEY ? "利用可能" : "キー未設定（og:imageのみで修復試行）"}\n`
+);
 
 let blank = 0;
 let fixed = 0;
-let unresolved = [];
+const unresolved = [];
 
 for (const p of targets) {
   const check = await fetchBytes(p.imageUrl);
   if (check.ok) continue;
   blank++;
   console.log(
-    `空白/取得不能: ${p.id} | ${p.name.slice(0, 30)} (${check.bytes ?? ""}B ${check.status})`
+    `空白/取得不能: ${p.id} | ${p.name.slice(0, 32)} (${check.bytes ?? ""}B ${check.status})`
   );
 
-  // 楽天商品ページの og:image から代替画像を取得
   const itemUrl = extractRakutenItemUrl(p.affiliateUrl);
-  if (!itemUrl) {
-    unresolved.push(p.id + " (楽天商品URLなし)");
+  let candidate = null;
+  let via = "";
+
+  // 1) 楽天API itemCode 直引き
+  if (itemUrl) {
+    const itemCode = parseItemCode(itemUrl);
+    if (itemCode) {
+      candidate = await rakutenApi({ itemCode });
+      via = "API:itemCode";
+      await sleep(1100); // 楽天APIは1req/秒制限
+    }
+  }
+  // 2) 楽天API キーワード検索（商品名）
+  if (!candidate) {
+    candidate = await rakutenApi({ keyword: p.name.slice(0, 60) });
+    via = "API:keyword(要確認)";
+    await sleep(1100);
+  }
+  // 3) og:image フォールバック
+  if (!candidate && itemUrl) {
+    candidate = await fetchOgImage(itemUrl);
+    via = "og:image";
+    await sleep(1100);
+  }
+
+  if (!candidate) {
+    unresolved.push(`${p.id} | ${p.name.slice(0, 32)}`);
     continue;
   }
-  const og = await fetchOgImage(itemUrl);
-  if (!og) {
-    unresolved.push(p.id + " (og:image取得失敗)");
-    continue;
-  }
-  // 楽天サムネ形式ならサイズを上げる
-  const candidate = og.replace(/_ex=\d+x\d+/, "_ex=600x600");
+  candidate = upsize(candidate);
   const verify = await fetchBytes(candidate);
   if (!verify.ok) {
-    unresolved.push(p.id + " (og:image検証失敗: " + candidate.slice(0, 50) + ")");
+    unresolved.push(`${p.id} | ${p.name.slice(0, 32)} (検証失敗: ${candidate.slice(0, 50)})`);
     continue;
   }
-  console.log(`  → 差し替え: ${candidate.slice(0, 70)}`);
+  console.log(`  → 差し替え[${via}]: ${candidate.slice(0, 72)}`);
   if (!dryRun) {
     p.imageUrl = candidate;
     p.updatedAt = now;
   }
   fixed++;
-  await new Promise((r) => setTimeout(r, 300)); // 楽天への連続アクセスを抑制
 }
 
 if (!dryRun && fixed > 0) {
