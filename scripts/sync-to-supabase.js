@@ -57,6 +57,7 @@ function articleToRow(a) {
     quality_score: a.qualityScore ?? null,
     scheduled_publish_date: a.scheduledPublishDate ?? null,
     generation_meta: a.generationMeta ?? null,
+    eyecatch: a.eyecatch ?? null,
   };
 }
 

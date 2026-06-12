@@ -57,6 +57,7 @@ function rowToArticle(row) {
     qualityScore: row.quality_score ?? undefined,
     scheduledPublishDate: row.scheduled_publish_date ?? undefined,
     generationMeta: row.generation_meta ?? undefined,
+    eyecatch: row.eyecatch ?? undefined,
   };
 }
 
