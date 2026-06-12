@@ -55,6 +55,20 @@
 - 新しく製品をproducts.jsonに追加する際は、同時に imageUrl も調査・設定する
 - 既存の imageUrl 空欄製品も、記事に掲載する際は必ず画像を付ける
 
+## アイキャッチ・ヒーロー画像の方針（2026-06-12策定）
+
+- **基本は商品画像を使う**。eyecatch（無料素材）は商品画像が「無い」か
+  「画質が悪い」場合だけの代替手段
+- 画質が悪い＝楽天マーケット出品者画像（`thumbnail.image.rakuten.co.jp`、
+  バッジ・セール文言入り）。これはカード・ヒーローに使わない
+- クリーンな商品画像（公式サイト・Amazon・`shop.r10s.jp`等）が1枚でもある
+  記事には **eyecatchを設定しない**（設定するとeyecatchが商品画像より
+  優先表示されてしまうため）
+- eyecatchを使う場合、**Unsplash写真のサイト内重複は禁止**（1写真=1記事）
+- 運用は `scripts/fetch-unsplash-eyecatch.mjs` がこのルールを自動適用する
+  （商品画像あり→eyecatch削除 / なし→ユニーク写真を割当）
+- eyecatchを変更したら必ず updatedAt も更新する（syncで反映させるため）
+
 ## アフィリエイト設定
 
 - **楽天アフィリエイト**: products.jsonの `affiliateUrl` フィールドに `hb.afl.rakuten.co.jp` 形式のURLを設定
