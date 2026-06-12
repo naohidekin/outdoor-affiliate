@@ -273,6 +273,20 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
+  // 5.5 商品画像の空白検出・修復（非ブロッキング）
+  // Amazon P/{ASIN} 形式は画像未登録でも200で空白GIFを返すため、
+  // 新規収集分を含む全商品を実バイト数で検査し、楽天API画像へ差し替える。
+  // 失敗しても記事生成には影響しないため警告のみで続行する。
+  {
+    const fixArgs = dryRun ? ["--dry-run"] : [];
+    const imageFixResult = await runAgent("fix-blank-amazon-images.mjs", fixArgs, {
+      timeout: 600_000,
+    });
+    if (!imageFixResult.success) {
+      console.warn("[article-orchestrate] 商品画像修復に失敗しましたが続行します");
+    }
+  }
+
   // 6. Writer + Codex Reviewer + Supervisor（max 2 cycles）
   const writerStartMs = Date.now();
   const beforeArticles = readJson("articles.json") || [];

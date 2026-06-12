@@ -23,6 +23,11 @@
     - 楽天APIで商品収集
   |
   v
+[3.5] Image Fixer（非ブロッキング）
+    - Amazon P/形式の空白画像（200+空白GIF）を実バイト数で検出
+    - 楽天API（itemCode→keyword→og:image）で画像を差し替え
+  |
+  v
 +---------------- QUALITY LOOP (max 2 cycles) ----------------+
 | [4] Writer (WISE prompt + affiliate rules)                  |
 |     -> draft article                                         |
