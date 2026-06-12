@@ -164,6 +164,9 @@ async function main() {
     console.log(`[article-publisher] 強制公開: ${target.title}`);
     target.status = "published";
     target.publishedAt = jstIsoString();
+    // updatedAtを進めないと、sync時のauto-pullがDB側のdraft状態で
+    // 公開フラグを巻き戻す（pull-from-supabase.jsのupdatedAt比較が効かない）
+    target.updatedAt = new Date().toISOString();
     updated = true;
 
     if (!opts.dryRun) {
@@ -216,6 +219,9 @@ async function main() {
 
       article.status = "published";
       article.publishedAt = jstIsoString();
+      // updatedAtを進めないと、sync時のauto-pullがDB側のdraft状態で
+      // 公開フラグを巻き戻す（pull-from-supabase.jsのupdatedAt比較が効かない）
+      article.updatedAt = new Date().toISOString();
       updated = true;
 
       if (!opts.dryRun) {
