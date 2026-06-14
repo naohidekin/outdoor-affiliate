@@ -1,46 +1,39 @@
 {
-  "updatedAt": "2026-06-13T10:00:12+09:00",
+  "updatedAt": "2026-06-14T10:00:12+09:00",
   "period": "7d",
   "topArticles": [
     {
-      "slug": "landlock-vs-landnest-shelter",
-      "categoryId": "tent",
-      "pv7d": 29,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 27,
+      "pv7d": 24,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "cooler-box-ranking",
-      "categoryId": "cooler",
-      "pv7d": 20,
+      "slug": "landlock-vs-landnest-shelter",
+      "categoryId": "tent",
+      "pv7d": 22,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "solo-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 17,
+      "pv7d": 22,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "cooler-box-ranking",
+      "categoryId": "cooler",
+      "pv7d": 19,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "gas-lantern-ranking",
       "categoryId": "light",
-      "pv7d": 10,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "tarp-buying-guide",
-      "categoryId": "tarp",
-      "pv7d": 9,
+      "pv7d": 11,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -48,6 +41,13 @@
       "slug": "duo-tent-ranking",
       "categoryId": "tent",
       "pv7d": 9,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-buying-guide",
+      "categoryId": "tarp",
+      "pv7d": 8,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -73,15 +73,15 @@
       "ctr": 0
     },
     {
-      "slug": "kids-sleeping-bag-ranking",
-      "categoryId": "sleeping-bag",
-      "pv7d": 6,
+      "slug": "snow-peak-amenity-dome-l-10year-review",
+      "categoryId": "tent",
+      "pv7d": 7,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "snow-peak-amenity-dome-l-10year-review",
-      "categoryId": "tent",
+      "slug": "kids-sleeping-bag-ranking",
+      "categoryId": "sleeping-bag",
       "pv7d": 6,
       "clicks7d": 0,
       "ctr": 0
@@ -94,6 +94,13 @@
       "ctr": 0
     },
     {
+      "slug": "tarp-setup-guide-for-beginners",
+      "categoryId": "tarp",
+      "pv7d": 5,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "rainwear-ranking",
       "categoryId": "wear",
       "pv7d": 5,
@@ -101,15 +108,8 @@
       "ctr": 0
     },
     {
-      "slug": "tarp-setup-guide-for-beginners",
-      "categoryId": "tarp",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camp-table-ranking",
-      "categoryId": "table",
+      "slug": "multi-burner-ranking",
+      "categoryId": "burner",
       "pv7d": 3,
       "clicks7d": 0,
       "ctr": 0
@@ -122,13 +122,6 @@
       "ctr": 0
     },
     {
-      "slug": "tarp-ranking",
-      "categoryId": "tarp",
-      "pv7d": 3,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
       "slug": "spring-camp-clothing-guide",
       "categoryId": "wear",
       "pv7d": 3,
@@ -136,9 +129,16 @@
       "ctr": 0
     },
     {
-      "slug": "multi-burner-ranking",
-      "categoryId": "burner",
+      "slug": "firepit-solo-ranking",
+      "categoryId": "firepit",
       "pv7d": 3,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "oniyamma-shinrinka-review",
+      "categoryId": "insect-repellent",
+      "pv7d": 2,
       "clicks7d": 0,
       "ctr": 0
     }
@@ -146,37 +146,37 @@
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 96,
+      "pv7d": 92,
       "clicks7d": 0,
-      "searchSessions": 72,
-      "trend": "active"
-    },
-    {
-      "categoryId": "tarp",
-      "pv7d": 22,
-      "clicks7d": 0,
-      "searchSessions": 21,
+      "searchSessions": 66,
       "trend": "active"
     },
     {
       "categoryId": "cooler",
-      "pv7d": 20,
+      "pv7d": 19,
+      "clicks7d": 0,
+      "searchSessions": 14,
+      "trend": "active"
+    },
+    {
+      "categoryId": "light",
+      "pv7d": 19,
       "clicks7d": 0,
       "searchSessions": 15,
       "trend": "active"
     },
     {
-      "categoryId": "light",
-      "pv7d": 18,
+      "categoryId": "tarp",
+      "pv7d": 19,
       "clicks7d": 0,
-      "searchSessions": 14,
+      "searchSessions": 20,
       "trend": "active"
     },
     {
       "categoryId": "sleeping-bag",
       "pv7d": 9,
       "clicks7d": 0,
-      "searchSessions": 10,
+      "searchSessions": 11,
       "trend": "low"
     },
     {
@@ -194,26 +194,33 @@
       "trend": "low"
     },
     {
-      "categoryId": "table",
+      "categoryId": "burner",
       "pv7d": 3,
       "clicks7d": 0,
-      "searchSessions": 4,
+      "searchSessions": 3,
       "trend": "low"
     },
     {
-      "categoryId": "burner",
+      "categoryId": "firepit",
       "pv7d": 3,
+      "clicks7d": 0,
+      "searchSessions": 3,
+      "trend": "low"
+    },
+    {
+      "categoryId": "insect-repellent",
+      "pv7d": 2,
       "clicks7d": 0,
       "searchSessions": 3,
       "trend": "low"
     }
   ],
   "effectivePatterns": [
-    "{\"rule\":\"具体的な数字で選択肢を明示する\",\"description\":\"「5選」「7選」など選択肢の数をタイトルに含めることで、読者が得られる情報量を事前に把握でき、クリック率が上がる\",\"evidence\":\"ファミリーテント5選(27PV)、クーラーボックス5選(20PV)、ソロテント5選(17PV)、ガスランタン7選(10PV)\"}",
-    "{\"rule\":\"年版(西暦)を明記して鮮度を担保する\",\"description\":\"「2026年版」と記載することで情報の最新性をアピールし、SEO的にも時事性のあるクエリにヒットしやすくなる\",\"evidence\":\"上位4記事中4記事が【2026年版】または【2026年】を含む\"}",
-    "{\"rule\":\"比較軸を副題で明示する\",\"description\":\"「ハード vs ソフト」「OD缶・CB缶別」「軽量・設営簡単」など、何を基準に比較するかをタイトル内で示すことで検索意図とのマッチ度が上がる\",\"evidence\":\"クーラーボックス(ハード vs ソフト)、ガスランタン(OD缶・CB缶別)、ソロテント(軽量・設営簡単)\"}",
-    "{\"rule\":\"読者の悩み・ベネフィットを感情的な言葉で補足する\",\"description\":\"「3晩悩んだ結論」「失敗しない選び方」「快適に過ごせる」など、読者が抱える不安や期待を言語化することで共感を生みクリックを誘発する\",\"evidence\":\"ランドロック比較(3晩悩んだ結論/29PV最高)、ガスランタン(失敗しない選び方)、ファミリーテント(快適に過ごせる)\"}",
-    "{\"rule\":\"具体的な対象ユーザーまたは用途をタイトルに含める\",\"description\":\"「ファミリー」「4〜6人」「ソロキャンプ用」など、誰向けかを明示することでターゲット読者の自己同一視を促し、ページ滞在率・CVRが向上する\",\"evidence\":\"ファミリーテント(家族4〜6人/27PV)、ソロキャンプ用テント(17PV)\"}"
+    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年版】や【2026年】のように年号を明記する。検索者に最新情報であることを示し、クリック率を高める。\"}",
+    "{\"rule\":\"具体的な選択肢数の提示ルール\",\"description\":\"「5選」「7選」など具体的な本数をタイトルに含める。コンテンツの範囲が一目でわかり、離脱率を下げる。\"}",
+    "{\"rule\":\"比較軸の明示ルール\",\"description\":\"「保冷力・容量別」「OD缶・CB缶別」「ハード vs ソフト」のように比較の軸をタイトルに示す。何を基準に選べるかが伝わり、検索意図に合致しやすい。\"}",
+    "{\"rule\":\"ターゲット・用途の具体化ルール\",\"description\":\"「家族4〜6人」「ソロキャンプ用」など対象ユーザーや使用シーンを限定する。ペルソナが明確になり、刺さる読者を絞り込める。\"}",
+    "{\"rule\":\"感情・体験の付加ルール\",\"description\":\"「3晩悩んだ結論」「失敗しない選び方」のようにリアルな体験や感情ワードを加える。情報の信頼性と共感を高め、高PVの差別化要因になる。\"}"
   ],
   "suggestions": [
     "来月の季節カテゴリ: cooler, light, chair, insect-repellent — 準備推奨"
