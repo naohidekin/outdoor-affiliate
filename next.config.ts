@@ -13,6 +13,29 @@ const nextConfig: NextConfig = {
         destination: "/articles/landlock-vs-landnest-shelter",
         permanent: true,
       },
+      // ─── 孤立URL救済（2026-06-15）: draft/削除済み記事 → 最も近い公開記事へ301 ───
+      // draft記事
+      { source: "/articles/insect-repellent-bracelet-ranking", destination: "/articles/insect-repellent-gear-roundup", permanent: true },
+      { source: "/articles/led-lantern-ranking", destination: "/articles/gas-lantern-ranking", permanent: true },
+      { source: "/articles/hiking-backpack-30l-ranking", destination: "/articles/backpack-ranking", permanent: true },
+      // 削除済み記事
+      { source: "/articles/camp-insect-repellent-roadmap", destination: "/articles/camp-insect-repellent-guide", permanent: true },
+      { source: "/articles/camp-night-toilet-light-guide", destination: "/articles/led-tent-light-ranking", permanent: true },
+      { source: "/articles/family-camp-budget-guide", destination: "/articles/family-camp-first-time-guide", permanent: true },
+      { source: "/articles/family-camp-chair-ranking", destination: "/articles/camp-chair-ranking", permanent: true },
+      { source: "/articles/kids-insect-repellent-guide", destination: "/articles/insect-repellent-gear-roundup", permanent: true },
+      { source: "/articles/kids-insect-repellent-ranking", destination: "/articles/insect-repellent-spray-ranking", permanent: true },
+      { source: "/articles/quick-dry-tshirt-ranking", destination: "/category/wear", permanent: true },
+      { source: "/articles/rain-proof-tent-ranking", destination: "/articles/rain-camp-gear-essentials", permanent: true },
+      { source: "/articles/solo-camp-chair-ranking", destination: "/articles/solo-low-chair-ranking", permanent: true },
+      { source: "/articles/spring-camp-cold-kids-guide", destination: "/articles/spring-camp-clothing-guide", permanent: true },
+      { source: "/articles/spring-camp-tent-guide", destination: "/articles/tent-setup-tips-spring", permanent: true },
+      { source: "/articles/summer-camp-heat-food-safety", destination: "/articles/summer-camp-heat-gear-guide", permanent: true },
+      { source: "/articles/tarp-setup-patterns-guide", destination: "/articles/tarp-setup-guide-for-beginners", permanent: true },
+      { source: "/articles/tarp-tent-connection-setup-guide", destination: "/articles/tarp-tent-layout-site-guide", permanent: true },
+      { source: "/articles/tent-without-vestibule-guide", destination: "/articles/tent-vestibule-size-ranking", permanent: true },
+      { source: "/articles/winter-camp-co-safety-guide", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
+      { source: "/articles/2-person-tent-ranking", destination: "/articles/duo-tent-ranking", permanent: true },
     ];
   },
   // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。
