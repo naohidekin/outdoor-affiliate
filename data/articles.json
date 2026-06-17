@@ -3001,5 +3001,50 @@
     "status": "draft",
     "createdAt": "2026-06-17T22:08:15.792458+09:00",
     "updatedAt": "2026-06-17T22:08:15.792458+09:00"
+  },
+  {
+    "id": "article-030",
+    "title": "テント用ポータブルクーラー・冷風機おすすめ比較【2026年】真夏キャンプを涼しくする方法",
+    "slug": "portable-cooler-fan-guide",
+    "categoryId": "fan",
+    "format": "guide",
+    "targetKeywords": [
+      "ポータブルクーラー テント",
+      "キャンプ ポータブルクーラー",
+      "テント エアコン"
+    ],
+    "status": "draft",
+    "createdAt": "2026-06-17T22:16:06.576188+09:00",
+    "updatedAt": "2026-06-17T22:16:06.576188+09:00"
+  },
+  {
+    "id": "article-031",
+    "title": "コット vs インフレーターマット どっちがいい？キャンプの寝心地比較【2026年版】",
+    "slug": "cot-vs-mat-comparison",
+    "categoryId": "sleeping-bag",
+    "format": "comparison",
+    "targetKeywords": [
+      "コット マット どっち",
+      "キャンプ コット おすすめ",
+      "インフレーターマット おすすめ"
+    ],
+    "status": "draft",
+    "createdAt": "2026-06-17T22:16:06.576188+09:00",
+    "updatedAt": "2026-06-17T22:16:06.576188+09:00"
+  },
+  {
+    "id": "article-032",
+    "title": "夏キャンプの暑さ対策ネッククーラーおすすめ5選【2026年】電動・PCM・タオルを比較",
+    "slug": "neck-cooler-ranking",
+    "categoryId": "fan",
+    "format": "ranking",
+    "targetKeywords": [
+      "ネッククーラー キャンプ",
+      "ネッククーラー おすすめ 2026",
+      "キャンプ 暑さ対策 首"
+    ],
+    "status": "draft",
+    "createdAt": "2026-06-17T22:16:06.576188+09:00",
+    "updatedAt": "2026-06-17T22:16:06.576188+09:00"
   }
 ]
