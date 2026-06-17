@@ -96,5 +96,19 @@
     "slug": "tumbler",
     "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
     "order": 13
+  },
+  {
+    "id": "fan",
+    "name": "扇風機・冷却ギア",
+    "slug": "fan",
+    "description": "夏キャンプを快適にする扇風機・ポータブルクーラー・冷感グッズ",
+    "order": 14
+  },
+  {
+    "id": "portable-power",
+    "name": "ポータブル電源",
+    "slug": "portable-power",
+    "description": "キャンプで家電を使うためのポータブル電源・ソーラーパネル",
+    "order": 15
   }
 ]
