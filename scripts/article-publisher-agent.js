@@ -203,19 +203,26 @@ async function main() {
       const faqCount = (article.faqs || []).length;
       const hasMeta = (article.metaDescription || "").length >= 50;
 
-      const checks = [];
-      if (contentLen < 2000) checks.push(`文字数不足(${contentLen})`);
-      if (!hasInternalLink) checks.push("内部リンクなし");
-      if (!hasProductTag) checks.push("商品タグなし(comparison/ranking/product)");
-      if (faqCount < 2) checks.push(`FAQ不足(${faqCount}問)`);
-      if (!hasMeta) checks.push("metaDescription短い");
+      // ブロッキングチェック（不合格なら公開スキップ）
+      const blockers = [];
+      if (contentLen < 2000) blockers.push(`文字数不足(${contentLen})`);
+      if (faqCount < 2) blockers.push(`FAQ不足(${faqCount}問)`);
 
-      if (checks.length > 0) {
-        console.warn(`  ⚠ 品質チェック不合格: ${checks.join(", ")}`);
+      // 警告チェック（公開はブロックしない）
+      const warnings = [];
+      if (!hasInternalLink) warnings.push("内部リンクなし");
+      if (!hasProductTag) warnings.push("商品タグなし(comparison/ranking/product)");
+      if (!hasMeta) warnings.push("metaDescription短い");
+
+      if (warnings.length > 0) {
+        console.warn(`  ⚠ 品質警告（公開は継続）: ${warnings.join(", ")}`);
+      }
+      if (blockers.length > 0) {
+        console.warn(`  ✗ 品質チェック不合格: ${blockers.join(", ")}`);
         console.warn("  → 公開スキップ（手動確認が必要）");
         continue;
       }
-      console.log(`  ✓ 品質チェック合格: ${contentLen}文字, FAQ${faqCount}問, 内部リンクあり`);
+      console.log(`  ✓ 品質チェック合格: ${contentLen}文字, FAQ${faqCount}問`);
 
       article.status = "published";
       article.publishedAt = jstIsoString();

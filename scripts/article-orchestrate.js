@@ -62,8 +62,21 @@ async function gitPull() {
     console.log(`[article-orchestrate] ${stdout.trim() || "Already up to date."}`);
     return true;
   } catch (err) {
-    console.error(`[article-orchestrate] git pull 失敗: ${err.message}`);
-    return false;
+    console.warn(`[article-orchestrate] git pull --ff-only 失敗。stash → pull → pop で再試行...`);
+    try {
+      await execFileAsync("git", ["stash"], { cwd: PROJECT_ROOT, timeout: 10_000 });
+      await execFileAsync("git", ["pull", "--ff-only"], { cwd: PROJECT_ROOT, timeout: 30_000 });
+      try {
+        await execFileAsync("git", ["stash", "pop"], { cwd: PROJECT_ROOT, timeout: 10_000 });
+      } catch {
+        console.warn("[article-orchestrate] stash pop で競合。stashは保持。");
+      }
+      console.log("[article-orchestrate] git pull（stash経由）成功");
+      return true;
+    } catch (retryErr) {
+      console.error(`[article-orchestrate] git pull 再試行も失敗: ${retryErr.message}`);
+      return false;
+    }
   }
 }
 
@@ -143,17 +156,49 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
 async function runCodexReviewer(articleId) {
   const reviewed = await runAgent("article-codex-reviewer.js", ["--article-id", articleId], { timeout: 300_000 });
   if (!reviewed.success || !reviewed.stdout) return null;
-  const match = reviewed.stdout.match(/\{[\s\S]*\}/);
+  // stdoutの各行を末尾から走査し、最初にパースできるJSONを返す
+  const lines = reviewed.stdout.trim().split("\n");
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!line.startsWith("{")) continue;
+    try {
+      return JSON.parse(line);
+    } catch {
+      // この行はJSONではない — 次の行を試す
+    }
+  }
+  // 行単位で見つからなければ従来方式（非貪欲マッチ）でフォールバック
+  const match = reviewed.stdout.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
   if (!match) return null;
-  return JSON.parse(match[0]);
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    console.warn("[article-orchestrate] Codex Reviewer JSON解析失敗");
+    return null;
+  }
 }
 
 async function runSupervisorGate(articleId, cycle) {
   const result = await runAgent("supervisor-agent.js", ["--evaluate-article", articleId, "--cycle", String(cycle)]);
   if (!result.success || !result.stdout) return null;
-  const match = result.stdout.match(/\{[\s\S]*\}/);
+  // stdoutの各行を末尾から走査し、最初にパースできるJSONを返す
+  const lines = result.stdout.trim().split("\n");
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!line.startsWith("{")) continue;
+    try {
+      return JSON.parse(line);
+    } catch {
+      // この行はJSONではない
+    }
+  }
+  const match = result.stdout.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
   if (!match) return null;
-  return JSON.parse(match[0]);
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
 }
 
 function extractWriterArticleIdsFromStdout(stdout = "") {
