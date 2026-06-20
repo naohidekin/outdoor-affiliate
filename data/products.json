@@ -991,7 +991,7 @@
     "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
     "brand": "Iwatani",
     "price": 3850,
-    "imageUrl": "https://www.iwatani.co.jp/jpn/consumer/products/cg/burner/cb-jcb/images/product.png",
+    "imageUrl": "https://m.media-amazon.com/images/P/B01J59SGCK.01._SCLZZZZZZZ_SX300_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fec760cf420d666ac2a740c8238b720a6%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
     "categoryId": "burner",
@@ -1006,7 +1006,7 @@
     "description": "イワタニのCB缶対応シングルバーナー。スーパーやコンビニで手に入るCB缶が使えるため、遠征先でも燃料に困らない。圧電着火で着火も簡単で、家族キャンプのファーストバーナーに最適。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-06-21T00:00:00+09:00"
   },
   {
     "id": "burner-s-010",
@@ -3228,23 +3228,24 @@
   },
   {
     "id": "fp-003",
-    "name": "スノーピーク 焚火台 M",
+    "name": "スノーピーク 焚火台L",
     "brand": "スノーピーク",
-    "price": 17160,
-    "imageUrl": "https://m.media-amazon.com/images/P/B000AR4TJQ.01._SCLZZZZZZZ_SX300_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnb-shop%2Fst-033r%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR4TJQ?tag=camp78-22",
+    "price": 25300,
+    "imageUrl": "https://m.media-amazon.com/images/P/B08HMPH45X.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnb-shop%2Fst-032rs%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08HMPH45X?tag=camp78-22",
     "categoryId": "firepit",
     "specs": {
-      "素材": "ステンレス（1.5mm厚）",
-      "重量": "約3.5kg",
-      "サイズ": "35×35×24.8cm",
+      "素材": "ステンレス（2.5mm厚）",
+      "重量": "約5.5kg",
+      "サイズ": "45.5×45.5×31.5cm",
+      "収納サイズ": "56×64×3.2cm",
       "付属品": "収納ケース"
     },
-    "description": "スノーピークの永久保証付き焚き火台。1.5mm厚ステンレスで一生使える堅牢さ。開くだけの簡単設営。",
+    "description": "スノーピークの永久保証付き焚き火台Lサイズ。2.5mm厚ステンレスで一生使える堅牢さ。3〜4人のファミリーキャンプに最適なサイズ感。開くだけの簡単設営。",
     "rating": 4.7,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-06-21T00:00:00+09:00"
   },
   {
     "id": "tent-018",
@@ -3833,7 +3834,7 @@
     "brand": "Snow Peak",
     "price": 44000,
     "imageUrl": "https://shop.r10s.jp/snowpeak-official/cabinet/newthumb202403_p/sde-001rh_p10.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25A2%25E3%2583%25A1%25E3%2583%258B%25E3%2583%2586%25E3%2582%25A3%25E3%2583%2589%25E3%2583%25BC%25E3%2583%25A0M%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DFG51JMQ?tag=camp78-22",
     "categoryId": "tent",
     "specs": {
@@ -3847,7 +3848,7 @@
     "description": "",
     "rating": 4.2,
     "createdAt": "2026-05-18T16:52:46.767+00:00",
-    "updatedAt": "2026-06-12T03:11:09.834+00:00"
+    "updatedAt": "2026-06-21T00:00:00+09:00"
   },
   {
     "id": "tent-010",
@@ -5302,5 +5303,52 @@
     "rating": 4.1,
     "createdAt": "2026-06-20T14:29:48.757Z",
     "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "chair-015",
+    "name": "Moon Lence アウトドアチェア",
+    "brand": "Moon Lence",
+    "price": 4999,
+    "imageUrl": "https://m.media-amazon.com/images/P/B08868DWCG.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fairkey%2Fmlkby%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08868DWCG?tag=camp78-22",
+    "categoryId": "chair",
+    "specs": {
+      "重量": "約907g",
+      "座面高": "35cm",
+      "耐荷重": "150kg",
+      "フレーム": "A7075アルミ合金",
+      "収納サイズ": "約47×10×10cm",
+      "生地": "600Dオックスフォード"
+    },
+    "description": "Amazonで大人気の格安コンパクトチェア。約907gとヘリノックスと同等重量ながら価格は約5000円。コスパ重視派に刺さる一台。",
+    "rating": 4.2,
+    "createdAt": "2026-06-20T15:00:00+09:00",
+    "updatedAt": "2026-06-21T00:00:00+09:00"
+  },
+  {
+    "id": "tent-coleman-toughwide",
+    "name": "コールマン タフワイドドームV/300 スタートパッケージ",
+    "brand": "Coleman",
+    "price": 52800,
+    "imageUrl": "https://m.media-amazon.com/images/P/B08P5GD96X.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhimaraya%2F0000000972448%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08P5GD96X/?tag=camp78-22",
+    "categoryId": "tent",
+    "specs": {
+      "定員": "5〜6人",
+      "設営": "アシストクリップ（ひとりでも設営可）",
+      "重量": "約11kg",
+      "室内高": "185cm",
+      "本体サイズ": "495×300×195cm",
+      "インナーサイズ": "300×300×185cm",
+      "収納サイズ": "23×25×72cm",
+      "耐水圧": "約2,000mm（フロア:約2,000mm）",
+      "付属品": "インナーシート・グランドシート付"
+    },
+    "description": "ファミリーキャンプのド定番。5〜6人が使えるゆったりインナー（300×300cm）と大きな前室が魅力。インナーシート・グランドシート付きのスタートパッケージで初心者でもすぐ使い始められる。アルミフレームで耐風性も確保。",
+    "rating": 4.3,
+    "createdAt": "2026-06-20T12:00:00+09:00",
+    "updatedAt": "2026-06-21T00:00:00+09:00"
   }
 ]
