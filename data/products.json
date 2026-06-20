@@ -4958,5 +4958,349 @@
     "description": "",
     "createdAt": "2026-06-20T10:53:28.965Z",
     "updatedAt": "2026-06-20T12:36:22.732Z"
+  },
+  {
+    "id": "cooler-corona-pa-f85a",
+    "name": "コロナ OUTFIELD BREEZE BOX PA-F85A",
+    "brand": "コロナ",
+    "price": 59800,
+    "imageUrl": "https://makeshop-multi-images.akamaized.net/CORONASTORE/itemimages/000000002537_DXGqChs.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%AD%E3%83%8A%20OUTFIELD%20BREEZE%20BOX%20PA-F85A%2F&link_type=text&ut=",
+    "amazonUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%AD%E3%83%8A%20OUTFIELD%20BREEZE%20BOX%20PA-F85A%2F&link_type=text&ut=",
+    "categoryId": "portable-cooler",
+    "specs": {
+      "冷却方式": "コンプレッサー式",
+      "消費電力": "180W",
+      "サイズ": "315×264×580mm",
+      "重量": "13.6kg",
+      "電源": "AC100V"
+    },
+    "description": "",
+    "rating": 0,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cooler-ecoflow-wave3",
+    "name": "EcoFlow WAVE 3",
+    "brand": "EcoFlow",
+    "price": 149930,
+    "imageUrl": "https://tshop.r10s.jp/ecoflow/cabinet/13481950/13481951/wave3.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FEcoFlow%20WAVE%203%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DX7594CS?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "specs": {
+      "冷却方式": "コンプレッサー式",
+      "消費電力": "690W",
+      "サイズ": "519×297×336mm",
+      "重量": "15.6kg",
+      "電源": "AC/DC/ポータブル電源"
+    },
+    "description": "",
+    "rating": 4.2,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cooler-ecoflow-wave2",
+    "name": "EcoFlow WAVE 2",
+    "brand": "EcoFlow",
+    "price": 110000,
+    "imageUrl": "https://tshop.r10s.jp/ecoflow/cabinet/09911521/09924959/imgrc0082834845.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FEcoFlow%20WAVE%202%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B9VY33KD?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "specs": {
+      "冷却方式": "コンプレッサー式",
+      "消費電力": "700W",
+      "サイズ": "518×297×336mm",
+      "重量": "14.5kg",
+      "電源": "AC/DC/ポータブル電源"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cooler-yamazen-yec-m03",
+    "name": "山善 YEC-M03",
+    "brand": "山善",
+    "price": 32000,
+    "imageUrl": "https://m.media-amazon.com/images/I/81RVGQCZ5SL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E5%B1%B1%E5%96%84%20YEC-M03%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09WTRZQWQ?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "specs": {
+      "冷却方式": "コンプレッサー式",
+      "消費電力": "170W",
+      "サイズ": "270×266×432mm",
+      "重量": "10kg",
+      "電源": "AC100V"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cot-helinox-cot-one",
+    "name": "Helinox コットワン コンバーチブル",
+    "brand": "Helinox",
+    "price": 44550,
+    "imageUrl": "https://m.media-amazon.com/images/I/71QrJbEwH0L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FHelinox%20%E3%82%B3%E3%83%83%E3%83%88%E3%83%AF%E3%83%B3%20%E3%82%B3%E3%83%B3%E3%83%90%E3%83%BC%E3%83%81%E3%83%96%E3%83%AB%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B095PZP4ZM?tag=camp78-22",
+    "categoryId": "cot",
+    "specs": {
+      "サイズ": "190×65.5×16.5cm",
+      "収納": "55×16×16cm",
+      "重量": "2.51kg",
+      "耐荷重": "145kg"
+    },
+    "description": "",
+    "rating": 4.2,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cot-waq-2way",
+    "name": "WAQ 2WAYフォールディングコット",
+    "brand": "WAQ",
+    "price": 15800,
+    "imageUrl": "https://m.media-amazon.com/images/I/71uHaBv7cML._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ%202WAY%E3%83%95%E3%82%A9%E3%83%BC%E3%83%AB%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%B3%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B083ZWDCXN?tag=camp78-22",
+    "categoryId": "cot",
+    "specs": {
+      "サイズ": "190×65×37/17cm",
+      "収納": "60×18×18cm",
+      "重量": "3.2kg",
+      "耐荷重": "150kg"
+    },
+    "description": "",
+    "rating": 4.6,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cot-dod-baginbed",
+    "name": "DOD バッグインベッド",
+    "brand": "DOD",
+    "price": 12980,
+    "imageUrl": "https://m.media-amazon.com/images/I/71mMBMdPZhL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%20%E3%83%90%E3%83%83%E3%82%B0%E3%82%A4%E3%83%B3%E3%83%99%E3%83%83%E3%83%89%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01NBXZXI9?tag=camp78-22",
+    "categoryId": "cot",
+    "specs": {
+      "サイズ": "183×72×15.5cm",
+      "収納": "51×13×16cm",
+      "重量": "2.6kg",
+      "耐荷重": "120kg"
+    },
+    "description": "",
+    "rating": 4.2,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "cot-naturehike-greenfield",
+    "name": "Naturehike Greenfield コット",
+    "brand": "Naturehike",
+    "price": 9990,
+    "imageUrl": "https://tshop.r10s.jp/naturehike-direct/cabinet/08949969/09022959/lvye20230520/001.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNaturehike%20Greenfield%20%E3%82%B3%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B088K9B7CV?tag=camp78-22",
+    "categoryId": "cot",
+    "specs": {
+      "サイズ": "190×65×15cm",
+      "収納": "φ16×46cm",
+      "重量": "2.3kg",
+      "耐荷重": "150kg"
+    },
+    "description": "",
+    "rating": 4.4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "mat-coleman-highpeak",
+    "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
+    "brand": "Coleman",
+    "price": 12800,
+    "imageUrl": "https://m.media-amazon.com/images/I/81DqJqOGE4L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%83%BC%E3%82%A4%E3%83%B3%E3%83%95%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%9E%E3%83%83%E3%83%88%20%E3%83%8F%E3%82%A4%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22",
+    "categoryId": "mat",
+    "specs": {
+      "サイズ": "198×68cm",
+      "厚さ": "10cm",
+      "重量": "2.7kg",
+      "収納": "72×21cm"
+    },
+    "description": "",
+    "rating": 4.3,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "mat-waq-8cm",
+    "name": "WAQ インフレータブル式マット 8cm",
+    "brand": "WAQ",
+    "price": 6980,
+    "imageUrl": "https://m.media-amazon.com/images/I/71qqBaHRmvL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ%20%E3%82%A4%E3%83%B3%E3%83%95%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB%E5%BC%8F%E3%83%9E%E3%83%83%E3%83%88%208cm%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08WPRC6Y1?tag=camp78-22",
+    "categoryId": "mat",
+    "specs": {
+      "サイズ": "190×65cm",
+      "厚さ": "8cm",
+      "重量": "2.5kg",
+      "収納": "65×20cm"
+    },
+    "description": "",
+    "rating": 4.5,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "mat-waq-10cm",
+    "name": "WAQ リラクシングキャンプマット 10cm",
+    "brand": "WAQ",
+    "price": 16980,
+    "imageUrl": "https://tshop.r10s.jp/waqoutdoor/cabinet/tent/cartimg/waq-rcms1_cart_2.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ%20%E3%83%AA%E3%83%A9%E3%82%AF%E3%82%B7%E3%83%B3%E3%82%B0%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%9E%E3%83%83%E3%83%88%2010cm%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BG7QP5T6?tag=camp78-22",
+    "categoryId": "mat",
+    "specs": {
+      "サイズ": "200×70cm",
+      "厚さ": "10cm",
+      "重量": "3.0kg",
+      "収納": "74×21cm"
+    },
+    "description": "",
+    "rating": 4.4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "mat-thermarest-prolite",
+    "name": "サーマレスト プロライト",
+    "brand": "Therm-a-Rest",
+    "price": 13619,
+    "imageUrl": "https://m.media-amazon.com/images/I/61VJ8iW5bVL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88%20%E3%83%97%E3%83%AD%E3%83%A9%E3%82%A4%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B06XPKC68M?tag=camp78-22",
+    "categoryId": "mat",
+    "specs": {
+      "サイズ": "51×183cm",
+      "厚さ": "2.5cm",
+      "重量": "460g",
+      "収納": "φ10×28cm"
+    },
+    "description": "",
+    "rating": 4.3,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "neck-thanko-lite",
+    "name": "THANKO ネッククーラーLite",
+    "brand": "THANKO",
+    "price": 5980,
+    "imageUrl": "https://m.media-amazon.com/images/I/51z-CKXRFiL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FTHANKO%20%E3%83%8D%E3%83%83%E3%82%AF%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BCLite%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0GK7GH9ML?tag=camp78-22",
+    "categoryId": "neck-cooler",
+    "specs": {
+      "冷却方式": "電動ペルチェ式",
+      "重量": "140g",
+      "持続時間": "約5.5時間",
+      "最大冷却": "-17℃"
+    },
+    "description": "",
+    "rating": 2.9,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "neck-sony-reonpocket5",
+    "name": "Sony REON POCKET 5",
+    "brand": "Sony",
+    "price": 17600,
+    "imageUrl": "https://m.media-amazon.com/images/I/61-rTPo8cnL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSony%20REON%20POCKET%205%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CXCLTCPN?tag=camp78-22",
+    "categoryId": "neck-cooler",
+    "specs": {
+      "冷却方式": "電動ペルチェ式",
+      "重量": "116g",
+      "持続時間": "4〜17時間",
+      "冷温両対応": "対応"
+    },
+    "description": "",
+    "rating": 3.4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "neck-suo-ring",
+    "name": "SUO RING 28°ICE",
+    "brand": "SUO",
+    "price": 3190,
+    "imageUrl": "https://m.media-amazon.com/images/I/61Q9RlQnL2L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSUO%20RING%2028%C2%B0ICE%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CYWXNQH1?tag=camp78-22",
+    "categoryId": "neck-cooler",
+    "specs": {
+      "冷却方式": "PCMリング",
+      "重量": "105g",
+      "持続時間": "60〜120分",
+      "再凍結": "冷凍庫10分"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "neck-suo-ring-plus",
+    "name": "SUO RING Plus 28°ICE",
+    "brand": "SUO",
+    "price": 4290,
+    "imageUrl": "https://m.media-amazon.com/images/I/61Bl7sR1ySL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSUO%20RING%20Plus%2028%C2%B0ICE%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CYLCJC6M?tag=camp78-22",
+    "categoryId": "neck-cooler",
+    "specs": {
+      "冷却方式": "PCMリング大容量",
+      "重量": "165g",
+      "持続時間": "90〜150分",
+      "再凍結": "冷凍庫10分"
+    },
+    "description": "",
+    "rating": 4.2,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
+  },
+  {
+    "id": "neck-mizuno-cooling-towel",
+    "name": "ミズノ クーリングタオル",
+    "brand": "MIZUNO",
+    "price": 1100,
+    "imageUrl": "https://m.media-amazon.com/images/I/71C8Bp7lL3L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%9F%E3%82%BA%E3%83%8E%20%E3%82%AF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E3%82%BF%E3%82%AA%E3%83%AB%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CBJBTF5K?tag=camp78-22",
+    "categoryId": "neck-cooler",
+    "specs": {
+      "冷却方式": "気化熱冷却",
+      "重量": "約80g",
+      "サイズ": "14×100cm",
+      "素材": "ポリエステル"
+    },
+    "description": "",
+    "rating": 4.1,
+    "createdAt": "2026-06-20T14:29:48.757Z",
+    "updatedAt": "2026-06-20T14:29:48.757Z"
   }
 ]
