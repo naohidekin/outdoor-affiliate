@@ -4754,7 +4754,7 @@
     "name": "コールマン タフスクリーンタープ/400+",
     "brand": "Coleman",
     "price": 59800,
-    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000033116/2000033116_1.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/31ijZ6mZd4L._AC_SL1500_.jpg",
     "rating": 3.9,
     "specs": {
       "サイズ": "約400×360×210cm",
@@ -4768,14 +4768,14 @@
     "categoryId": "screen-tarp",
     "description": "",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "updatedAt": "2026-06-20T10:53:28.965Z"
+    "updatedAt": "2026-06-20T12:36:22.722Z"
   },
   {
     "id": "screen-tarp-coleman-400",
     "name": "コールマン タフスクリーンタープ/400",
     "brand": "Coleman",
     "price": 44800,
-    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMAN/itemimage/2000031577/2000031577_1.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/61KfEMKzHqL._AC_SL1500_.jpg",
     "rating": 4.5,
     "specs": {
       "サイズ": "約400×360×210cm",
@@ -4789,7 +4789,7 @@
     "categoryId": "screen-tarp",
     "description": "",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "updatedAt": "2026-06-20T10:53:28.965Z"
+    "updatedAt": "2026-06-20T12:36:22.732Z"
   },
   {
     "id": "screen-tarp-quickcamp-3m",
@@ -4817,7 +4817,7 @@
     "name": "FIELDOOR ワンタッチスクリーンテント 遮光PU",
     "brand": "FIELDOOR",
     "price": 13860,
-    "imageUrl": "https://fieldoor.com/img/products/products_onetouchscreententpucoating_main_01.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/61lGlGx0ZpL._AC_SL1500_.jpg",
     "rating": 4,
     "specs": {
       "サイズ": "約285×285×208cm",
@@ -4831,7 +4831,7 @@
     "categoryId": "screen-tarp",
     "description": "",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "updatedAt": "2026-06-20T10:53:28.965Z"
+    "updatedAt": "2026-06-20T12:36:22.732Z"
   },
   {
     "id": "screen-tarp-captainstag-lanny",
@@ -4943,7 +4943,7 @@
     "name": "BLUETTI EB3A",
     "brand": "BLUETTI",
     "price": 22980,
-    "imageUrl": "https://tshop.r10s.jp/bluettijapan/cabinet/12874450/13384011/13392807/imgrc0143720098.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/71u5E3sOQUL._AC_SL1500_.jpg",
     "rating": 4.2,
     "specs": {
       "容量": "268Wh",
@@ -4957,6 +4957,6 @@
     "categoryId": "portable-power",
     "description": "",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "updatedAt": "2026-06-20T10:53:28.965Z"
+    "updatedAt": "2026-06-20T12:36:22.732Z"
   }
 ]
