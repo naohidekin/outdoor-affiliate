@@ -4601,5 +4601,152 @@
     "rating": 4.7,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-06-12T03:09:31.626+00:00"
+  },
+  {
+    "id": "fan-claymore-v600plus",
+    "name": "CLAYMORE FAN V600+",
+    "brand": "CLAYMORE",
+    "price": 7103,
+    "imageUrl": "https://shop.r10s.jp/claymore2024/cabinet/productimg/clfn-v610wg-p/clfn-v610wg-p_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FCLAYMORE%2520FAN%2520V600%2B%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BRTZPWSF?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "約600g",
+      "バッテリー": "7800mAh",
+      "稼働時間": "最大32時間（弱）/ 7時間（強）",
+      "充電": "USB-C",
+      "サイズ": "243×226×350mm"
+    },
+    "description": "",
+    "rating": 3.3,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-lumena-prime2",
+    "name": "LUMENA FAN PRIME2",
+    "brand": "LUMENA",
+    "price": 13200,
+    "imageUrl": "https://shop.r10s.jp/rakuten24/cabinet/862/4589901332862.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FLUMENA%2520FAN%2520PRIME2%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "約950g",
+      "バッテリー": "8000mAh",
+      "稼働時間": "最大30時間",
+      "充電": "USB-C（QC3.0対応）",
+      "サイズ": "203×162×350mm"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-hagoogi-ot-f12",
+    "name": "HAGOOGI キャンプ扇風機 OT-F12",
+    "brand": "HAGOOGI",
+    "price": 6980,
+    "imageUrl": "https://tshop.r10s.jp/hagoogi/cabinet/10787269/imgrc0093683389.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FHAGOOGI%2520%25E6%2589%2587%25E9%25A2%25A8%25E6%25A9%259F%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BYYPXS8J?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "約900g",
+      "バッテリー": "10000mAh",
+      "稼働時間": "最大35時間",
+      "充電": "USB-C",
+      "サイズ": "直径約230×奥行140mm"
+    },
+    "description": "",
+    "rating": 3.6,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-socool",
+    "name": "Socool fan キャンプ扇風機",
+    "brand": "Socool fan",
+    "price": 5679,
+    "imageUrl": "https://shop.r10s.jp/variety-world/cabinet/10547065/10547162/10761535/main02.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSocool%2520fan%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0C4KG77YJ?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "約1600g",
+      "バッテリー": "20000mAh",
+      "稼働時間": "最大60時間（弱）/ 16時間（強）",
+      "充電": "USB-C",
+      "サイズ": "約210×100×270mm"
+    },
+    "description": "",
+    "rating": 3.6,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-powerarq-fanlight",
+    "name": "PowerArq Fan Light",
+    "brand": "PowerArq",
+    "price": 7700,
+    "imageUrl": "https://shop.r10s.jp/kashima-tokeiten/cabinet/hp1061/230210_hp1061_01.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FPowerArq%2520Fan%2520Light%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B4NNJNM2?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "640g",
+      "バッテリー": "8000mAh",
+      "稼働時間": "最大20時間（弱）/ 6時間（強）",
+      "充電": "USB-C",
+      "サイズ": "200×200×139mm"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-makita-cf102dz",
+    "name": "マキタ CF102DZ",
+    "brand": "マキタ",
+    "price": 7682,
+    "imageUrl": "https://shop.r10s.jp/auc-goodtools/cabinet/product/cf102dz_01.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%259E%25E3%2582%25AD%25E3%2582%25BF%2520CF102DZ%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07CPFPT2P?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "1.3kg（本体のみ）",
+      "バッテリー": "別売（14.4V/18V Li-ion）",
+      "稼働時間": "最大約21時間（BL1860B使用時）",
+      "充電": "ACアダプタ / バッテリー充電器別売",
+      "サイズ": "272×185×284mm"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
+  },
+  {
+    "id": "fan-coleman-rechargeable",
+    "name": "Coleman アウトドアリチャージャブルファン",
+    "brand": "Coleman",
+    "price": 8766,
+    "imageUrl": "https://shop.r10s.jp/himaraya/cabinet/0000001028e/0000001028919_r1_01.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FColeman%2520%25E3%2583%25AA%25E3%2583%2581%25E3%2583%25A3%25E3%2583%25BC%25E3%2582%25B8%25E3%2583%25A3%25E3%2583%2596%25E3%2583%25AB%25E3%2583%2595%25E3%2582%25A1%25E3%2583%25B3%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09HGBR242?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {
+      "重量": "約2.1kg",
+      "バッテリー": "内蔵充電池",
+      "稼働時間": "最大8時間（Low）/ 4.5時間（High）",
+      "充電": "AC / シガーソケットDC",
+      "サイズ": "約Φ390×170×500mm"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T07:29:02.634Z",
+    "updatedAt": "2026-06-20T07:29:02.634Z"
   }
 ]
