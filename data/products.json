@@ -135,7 +135,7 @@
     "name": "ヘリノックス チェアワン",
     "brand": "ヘリノックス",
     "price": 16500,
-    "imageUrl": "https://m.media-amazon.com/images/P/B00U72QEFQ.01._SCLZZZZZZZ_SX300_.jpg",
+    "imageUrl": "https://s3-ap-northeast-1.amazonaws.com/aandfjp/helinox/web/2016ss/600/19750028001000.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2F2756573%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00U72QEFQ?tag=camp78-22",
     "categoryId": "chair",
@@ -149,7 +149,7 @@
     "description": "アウトドアチェアの革命児。890gの超軽量で座り心地は抜群。全キャンパー必携の名作。",
     "rating": 4.7,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-06-21T09:00:37.890Z"
   },
   {
     "id": "chair-002",
@@ -5309,7 +5309,7 @@
     "name": "Moon Lence アウトドアチェア",
     "brand": "Moon Lence",
     "price": 4999,
-    "imageUrl": "https://m.media-amazon.com/images/P/B08868DWCG.01._SCLZZZZZZZ_SX300_.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/P/B08868DWCG.01._SCLZZZZZZZ_SX1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fairkey%2Fmlkby%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08868DWCG?tag=camp78-22",
     "categoryId": "chair",
@@ -5324,7 +5324,7 @@
     "description": "Amazonで大人気の格安コンパクトチェア。約907gとヘリノックスと同等重量ながら価格は約5000円。コスパ重視派に刺さる一台。",
     "rating": 4.2,
     "createdAt": "2026-06-20T15:00:00+09:00",
-    "updatedAt": "2026-06-21T00:00:00+09:00"
+    "updatedAt": "2026-06-21T09:00:37.892Z"
   },
   {
     "id": "tent-coleman-toughwide",
@@ -5411,7 +5411,7 @@
       "表示": "リアルタイム数値表示"
     },
     "description": "CO・CO₂・温度・湿度を同時測定できる多機能チェッカー。日本製センサー搭載でNDIR方式のCO₂測定精度が高い。テント内の空気環境を総合的に把握したい人向け。USB Type-C充電式。",
-    "rating": 4.0,
+    "rating": 4,
     "createdAt": "2026-06-21T17:44:41+09:00",
     "updatedAt": "2026-06-21T17:44:41+09:00"
   },
@@ -5472,7 +5472,7 @@
       "ポイント": "口器近くを掴んでまっすぐ引き抜く設計"
     },
     "description": "マダニが皮膚に食いついたとき、安全に除去するための専用ツール。細型ピンセットでマダニの頭部（口器）に近い位置をつかみ、ゆっくりまっすぐ引き抜く。普通のピンセットより口器が残りにくく、体液が押し出されにくい設計。",
-    "rating": 4.0,
+    "rating": 4,
     "createdAt": "2026-06-21T17:44:41+09:00",
     "updatedAt": "2026-06-21T17:44:41+09:00"
   },
@@ -5493,7 +5493,7 @@
       "重量": "軽量設計"
     },
     "description": "子ども用のコンパクトな電動ネッククーラー。ペルティエ素子で首に直接冷風を当てる仕組み。USB充電式で繰り返し使える。Sサイズで子どもの細い首にもフィット。夏のキャンプ・イベントに最適。",
-    "rating": 4.0,
+    "rating": 4,
     "createdAt": "2026-06-21T17:44:41+09:00",
     "updatedAt": "2026-06-21T17:44:41+09:00"
   },
