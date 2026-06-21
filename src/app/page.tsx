@@ -31,10 +31,10 @@ export default async function Home() {
 
   // 安全ガイド導線 4記事を特定
   const SAFETY_GUIDE_SLUGS = [
-    "camp-insect-repellent-roadmap",
-    "summer-camp-heat-food-safety",
-    "winter-camp-co-safety-guide",
-    "family-camp-first-time-guide",
+    "family-camp-safety-guide",
+    "camp-insect-repellent-guide",
+    "summer-camp-heat-gear-guide",
+    "winter-camp-beginners-checklist",
   ] as const;
   const safetyGuideArticles = SAFETY_GUIDE_SLUGS
     .map((slug) => articles.find((a) => a.slug === slug))
