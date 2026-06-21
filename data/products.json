@@ -5350,5 +5350,191 @@
     "rating": 4.3,
     "createdAt": "2026-06-20T12:00:00+09:00",
     "updatedAt": "2026-06-21T00:00:00+09:00"
+  },
+  {
+    "id": "co-detector-coalan-cl715",
+    "name": "新コスモス電機 アウトドア用一酸化炭素アラーム COALAN CL-715",
+    "brand": "新コスモス電機",
+    "price": 7980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B0CQ1SN7T1.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CQ1SN7T1/?tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "センサー": "電気化学式（日本製）",
+      "検知基準": "25ppm×15分 / 100ppm即時警報",
+      "防水性": "IP54（防塵・防滴）",
+      "電源": "単4アルカリ乾電池2本",
+      "音声": "日本語音声案内付き",
+      "付属品": "カラビナ・テスト用ガス点眼器"
+    },
+    "description": "ガス警報器国内トップメーカーの新コスモス電機が開発したアウトドア専用COアラーム。日本製電気化学式センサーで25ppm×15分の早期検知が可能。IP54防水、日本語音声案内付き。キャンプコミュニティでも信頼性No.1の評価。",
+    "rating": 4.5,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "co-detector-dod-cg1559",
+    "name": "DOD キャンプ用一酸化炭素チェッカー2 CG1-559",
+    "brand": "DOD",
+    "price": 4950,
+    "imageUrl": "https://m.media-amazon.com/images/P/B09LYJMHXN.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09LYJMHXN/?tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "センサー": "日本製センサー搭載",
+      "表示": "CO濃度数値リアルタイム表示",
+      "電源": "単4乾電池3本",
+      "連続使用": "約12時間",
+      "サイズ": "手のひらサイズ・コンパクト"
+    },
+    "description": "アウトドアブランドDODのキャンプ専用COチェッカー。日本製センサーを搭載し、CO濃度を数値で常時表示。警報が鳴る前に濃度上昇傾向を把握できる。4,000〜5,000円前後の手頃な価格でコスパ重視の人に人気。",
+    "rating": 4.2,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "co-detector-4in1",
+    "name": "4in1 一酸化炭素測定器 CO+CO₂+温度+湿度チェッカー 日本製センサー",
+    "brand": "汎用",
+    "price": 5980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B0DSJN2G8M.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DSJN2G8M/?tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "センサー": "日本製COセンサー+NDIR方式CO₂センサー",
+      "測定": "CO・CO₂・温度・湿度 同時測定",
+      "充電": "USB Type-C充電式",
+      "測定範囲": "CO 0〜1000ppm",
+      "表示": "リアルタイム数値表示"
+    },
+    "description": "CO・CO₂・温度・湿度を同時測定できる多機能チェッカー。日本製センサー搭載でNDIR方式のCO₂測定精度が高い。テント内の空気環境を総合的に把握したい人向け。USB Type-C充電式。",
+    "rating": 4.0,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "first-aid-poison-remover",
+    "name": "ポイズンリムーバー エクストラクター 毒吸引器 キャンプ・虫刺され用",
+    "brand": "Reccely",
+    "price": 1280,
+    "imageUrl": "https://m.media-amazon.com/images/P/B07XDWVHMF.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07XDWVHMF/?tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "用途": "ハチ・ブヨ・ムカデ刺されの毒吸引",
+      "仕組み": "注射器型・陰圧で毒液吸引",
+      "カップ": "4サイズ付属",
+      "付属品": "携帯ケース付き",
+      "サイズ": "コンパクト・軽量"
+    },
+    "description": "ハチ・ブヨ・ムカデなどに刺されたとき、傷口から毒液を吸引する救急アイテム。注射器型で陰圧をかける仕組み。キャンプの救急セット定番品。カップ4サイズ付属で傷口の大きさに合わせて使い分け可能。",
+    "rating": 4.1,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "first-aid-burn-aid",
+    "name": "バーンエイド やけど用救急絆創膏 湿潤ドレッシング材",
+    "brand": "バーンエイド",
+    "price": 1980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B000FI9IQA.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000FI9IQA/?tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "用途": "軽度〜中等度のやけど保護",
+      "素材": "湿潤ドレッシング材（非固着性）",
+      "サイズ": "複数サイズ入り",
+      "特徴": "傷口に貼り付かない・治癒促進"
+    },
+    "description": "やけど専用湿潤ドレッシング材。冷却後の患部を保護し、適度な湿潤環境を保ちながら治癒を促す。一般的なガーゼと違い傷口に貼り付かず、交換時の痛みが少ない。キャンプ救急セットの必携品。",
+    "rating": 4.3,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "first-aid-tick-remover",
+    "name": "マダニ除去ツール ティックリムーバー 細型ピンセット セット",
+    "brand": "汎用",
+    "price": 980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B08XY4D3RN.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=マダニ+除去+ピンセット&tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "用途": "マダニの安全な除去",
+      "形状": "細型ピンセット・フックタイプ",
+      "素材": "ステンレス",
+      "ポイント": "口器近くを掴んでまっすぐ引き抜く設計"
+    },
+    "description": "マダニが皮膚に食いついたとき、安全に除去するための専用ツール。細型ピンセットでマダニの頭部（口器）に近い位置をつかみ、ゆっくりまっすぐ引き抜く。普通のピンセットより口器が残りにくく、体液が押し出されにくい設計。",
+    "rating": 4.0,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "heatstroke-neck-cooler-kids",
+    "name": "ネッククーラー 子ども用 電動 キャンプ アウトドア Sサイズ",
+    "brand": "汎用",
+    "price": 3980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B0CXXX.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=ネッククーラー+子ども用+電動&tag=camp78-22",
+    "categoryId": "cooling",
+    "specs": {
+      "冷却方式": "ペルティエ素子（電動冷却）",
+      "対象": "子ども・Sサイズ",
+      "充電": "USB充電式",
+      "連続使用": "約5〜8時間（モードによる）",
+      "重量": "軽量設計"
+    },
+    "description": "子ども用のコンパクトな電動ネッククーラー。ペルティエ素子で首に直接冷風を当てる仕組み。USB充電式で繰り返し使える。Sサイズで子どもの細い首にもフィット。夏のキャンプ・イベントに最適。",
+    "rating": 4.0,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "heatstroke-cooling-towel",
+    "name": "冷感タオル クールタオル PVA素材 瞬間冷却 繰り返し使用可",
+    "brand": "汎用",
+    "price": 980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B07BDYY.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=冷感タオル+クールタオル+PVA+キャンプ&tag=camp78-22",
+    "categoryId": "cooling",
+    "specs": {
+      "素材": "PVA（ポリビニールアルコール）",
+      "仕組み": "水で濡らして振るだけで瞬間冷却",
+      "繰り返し": "繰り返し使用・洗濯可能",
+      "用途": "首・顔・腕の冷却"
+    },
+    "description": "水で濡らして振るだけで瞬間的に冷たくなるPVA素材のクールタオル。気化熱で継続的に体温を下げる。繰り返し使用・洗濯可能で経済的。首・わきの下・鼠径部を冷やす熱中症応急処置にも活用できる。",
+    "rating": 4.2,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
+  },
+  {
+    "id": "heatstroke-wbgt-meter",
+    "name": "熱中症指数計 WBGT計 温湿度計 アウトドア キャンプ用",
+    "brand": "汎用",
+    "price": 2980,
+    "imageUrl": "https://m.media-amazon.com/images/P/B01NBDCXXX.01._SCLZZZZZZZ_SX300_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=WBGT計+熱中症指数計+アウトドア&tag=camp78-22",
+    "categoryId": "safety",
+    "specs": {
+      "測定": "WBGT（暑さ指数）・温度・湿度",
+      "判定": "危険レベル表示（注意/警戒/厳重警戒/危険）",
+      "電源": "電池式",
+      "用途": "キャンプ・スポーツ・屋外活動"
+    },
+    "description": "WBGT（暑さ指数）を測定できる熱中症対策必携ツール。単なる気温ではなく湿度・輻射熱を合わせた体感暑さを数値化。危険レベルを4段階で表示。WBGT 31℃以上で危険レベル——活動判断の基準として信頼性が高い。",
+    "rating": 4.1,
+    "createdAt": "2026-06-21T17:44:41+09:00",
+    "updatedAt": "2026-06-21T17:44:41+09:00"
   }
 ]
