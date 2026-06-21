@@ -165,20 +165,72 @@ export default async function CategoryPage({
         )}
 
         <section className="max-w-6xl mx-auto px-4 py-12">
-          {articles.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {articles.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  category={category}
-                  thumbnailProduct={article.productIds
-                    .map((id) => productMap.get(id))
-                    .find((p) => p?.imageUrl)}
-                />
-              ))}
-            </div>
-          ) : (
+          {articles.length > 0 ? (() => {
+            const guides = articles.filter(a => /guide|checklist|first-time|safety/.test(a.slug));
+            const comparisons = articles.filter(a => !guides.includes(a) && /vs|比較|showdown/i.test(a.title));
+            const rankings = articles.filter(a => !guides.includes(a) && !comparisons.includes(a) && /おすすめ|ランキング/.test(a.title));
+            const others = articles.filter(a => !guides.includes(a) && !comparisons.includes(a) && !rankings.includes(a));
+
+            const renderGrid = (items: typeof articles) => (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {items.map((article) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    category={category}
+                    thumbnailProduct={article.productIds
+                      .map((id) => productMap.get(id))
+                      .find((p) => p?.imageUrl)}
+                  />
+                ))}
+              </div>
+            );
+
+            return (
+              <div className="space-y-14">
+                {guides.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink-strong mb-1 flex items-center gap-2">
+                      まず読むべきガイド
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4">入門・基礎知識から始めたい方へ</p>
+                    {renderGrid(guides)}
+                  </div>
+                )}
+                {comparisons.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink-strong mb-1 flex items-center gap-2">
+                      比較・VS記事
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4">製品を徹底的に比べたい方へ</p>
+                    {renderGrid(comparisons)}
+                  </div>
+                )}
+                {rankings.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink-strong mb-1 flex items-center gap-2">
+                      おすすめランキング
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4">どれを選べばいいか迷っている方へ</p>
+                    {renderGrid(rankings)}
+                  </div>
+                )}
+                {others.length > 0 && (
+                  <div>
+                    {(guides.length > 0 || comparisons.length > 0 || rankings.length > 0) && (
+                      <h3 className="text-lg font-semibold text-ink-strong mb-1 flex items-center gap-2">
+                        その他の記事
+                      </h3>
+                    )}
+                    {(guides.length > 0 || comparisons.length > 0 || rankings.length > 0) && (
+                      <p className="text-sm text-slate-500 mb-4">関連する記事・レビューなど</p>
+                    )}
+                    {renderGrid(others)}
+                  </div>
+                )}
+              </div>
+            );
+          })() : (
             <div className="text-center py-16">
               <p className="text-slate-400 text-lg">
                 このカテゴリにはまだ記事がありません
