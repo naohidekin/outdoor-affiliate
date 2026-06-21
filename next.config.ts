@@ -86,6 +86,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.thanko.jp" },
       { protocol: "https", hostname: "fieldoor.com" },
       { protocol: "https", hostname: "www.sony.jp" },
+      { protocol: "https", hostname: "s3-ap-northeast-1.amazonaws.com" },
       { protocol: "https", hostname: "makeshop-multi-images.akamaized.net" },
     ],
   },
