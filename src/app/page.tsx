@@ -123,12 +123,12 @@ export default async function Home() {
               Gear Reviews & Comparisons
             </p>
             <h1 className="text-3xl md:text-5xl font-semibold mb-5 leading-tight tracking-tight">
-              子ども連れキャンプの「危ない」を減らす、
+              現役小児科医・キャンプ歴10年の父が、
               <br />
-              医師目線のアウトドアギア比較
+              家族目線でギアを比較します
             </h1>
             <p className="text-slate-300 text-base md:text-lg max-w-lg leading-relaxed">
-              虫・暑さ・寒さ・食中毒・一酸化炭素 — 6大リスクをギアで解決する
+              実際に使って分かったリアルな情報を、子ども連れの安全性と実用性を重視してお届けします
             </p>
             {/* 3本柱カード */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-2xl">
