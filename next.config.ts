@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
       { source: "/articles/tent-without-vestibule-guide", destination: "/articles/tent-vestibule-size-ranking", permanent: true },
       { source: "/articles/winter-camp-co-safety-guide", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
       { source: "/articles/2-person-tent-ranking", destination: "/articles/duo-tent-ranking", permanent: true },
+      // 存在しないカテゴリページ（GSC 404検出 2026-06-21）
+      { source: "/category/cold-safety", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
+      { source: "/category/rain-safety", destination: "/articles/rain-camp-gear-essentials", permanent: true },
     ];
   },
   // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。
