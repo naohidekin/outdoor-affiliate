@@ -258,30 +258,38 @@ export default async function Home() {
 
         {/* 楽天ROOM まとめ買い導線 */}
         <section className="max-w-6xl mx-auto px-4 pb-16">
-          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-8">
-            <div className="mb-6">
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-6 sm:p-8">
+            <div className="mb-5">
               <span className="inline-block text-xs font-semibold tracking-widest text-red-500 uppercase mb-2">楽天ROOM</span>
               <h2 className="text-xl font-semibold text-ink-strong">テーマ別ギアをまとめて見る</h2>
-              <p className="text-sm text-slate-500 mt-1">シーン・家族構成別にまとめたコレクション。気になるセットをチェック。</p>
+              <p className="text-sm text-slate-500 mt-1">シーン・季節・スタイル別にまとめたコレクション。気になるセットをチェック。</p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
               {[
-                { label: "夏キャンプ 虫対策セット", icon: "🦟", href: "https://room.rakuten.co.jp/room_naomaru/1800012289285534" },
-                { label: "初めてのファミリーキャンプ一式", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/room_naomaru/1800012289286225" },
-                { label: "子ども連れ 暑さ対策", icon: "☀️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289288356" },
-                { label: "春秋キャンプ 寒さ対策", icon: "🧥", href: "https://room.rakuten.co.jp/room_naomaru/1800012289289365" },
-                { label: "防災兼用 キャンプギア", icon: "🏕️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289290411" },
-              ].map(({ label, icon, href }) => (
+                { label: "初めてのファミリーキャンプ一式", desc: "テント〜チェアまで家族4人分をまとめて", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/room_naomaru/1800012289286225" },
+                { label: "焚き火まわりセット", desc: "焚き火台・リフレクター・鉄板を一式で", icon: "🔥", href: "https://room.rakuten.co.jp/room_naomaru/1800012447451128" },
+                { label: "ソロキャンプ入門", desc: "軽量・コンパクトなソロ向け厳選ギア", icon: "🏔️", href: "https://room.rakuten.co.jp/room_naomaru/1800012447465234" },
+                { label: "キャンプ飯 調理道具", desc: "バーナー・クッカー・カトラリーまで", icon: "🍳", href: "https://room.rakuten.co.jp/room_naomaru/1800012447461992" },
+                { label: "夏キャンプ 虫対策セット", desc: "蚊・ブヨ・アブ対策の定番ギアを厳選", icon: "🦟", href: "https://room.rakuten.co.jp/room_naomaru/1800012289285534" },
+                { label: "子ども連れ 暑さ対策", desc: "扇風機・クーラー・日よけの涼感セット", icon: "☀️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289288356" },
+                { label: "雨の日キャンプ対策", desc: "タープ・レインウェア・撥水アイテム", icon: "☔", href: "https://room.rakuten.co.jp/room_naomaru/1800012447466303" },
+                { label: "春秋キャンプ 寒さ対策", desc: "シュラフ〜ウェアの3シーズン防寒装備", icon: "🧥", href: "https://room.rakuten.co.jp/room_naomaru/1800012289289365" },
+                { label: "冬キャンプ装備", desc: "厳冬期シュラフ・マット・暖房ギア", icon: "❄️", href: "https://room.rakuten.co.jp/room_naomaru/1800012447454103" },
+                { label: "GW・春キャンプスターター", desc: "春デビューに必要なもの全部入りセット", icon: "🌸", href: "https://room.rakuten.co.jp/room_naomaru/1800012447463166" },
+                { label: "テント泊デビューセット", desc: "テント選びから寝具まで泊まりの基本", icon: "⛺", href: "https://room.rakuten.co.jp/room_naomaru/1800012447467355" },
+                { label: "防災兼用 キャンプギア", desc: "停電・避難でも使えるアウトドア道具", icon: "🏕️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289290411" },
+              ].map(({ label, desc, icon, href }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-2 bg-white border border-red-100 rounded-xl p-4 text-center hover:border-red-300 hover:shadow-sm transition group"
+                  className="flex-none w-[140px] sm:w-[160px] flex flex-col items-center gap-2 bg-white border border-red-100 rounded-xl p-4 text-center hover:border-red-300 hover:shadow-sm transition group snap-start"
                 >
                   <span className="text-2xl">{icon}</span>
                   <span className="text-xs font-medium text-slate-700 group-hover:text-red-600 leading-snug">{label}</span>
-                  <span className="text-xs text-red-400 font-medium">楽天ROOMで見る →</span>
+                  <span className="text-[10px] text-slate-400 leading-snug line-clamp-2">{desc}</span>
+                  <span className="text-[10px] text-red-400 font-medium mt-auto">楽天ROOMで見る →</span>
                 </a>
               ))}
             </div>
