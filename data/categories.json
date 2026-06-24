@@ -110,5 +110,12 @@
     "slug": "portable-power",
     "description": "キャンプで家電を使うためのポータブル電源・ソーラーパネル",
     "order": 15
+  },
+  {
+    "id": "safety",
+    "name": "安全対策・救急",
+    "slug": "safety",
+    "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
+    "order": 17
   }
 ]
