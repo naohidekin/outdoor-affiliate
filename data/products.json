@@ -6441,5 +6441,812 @@
     "rating": 4.3,
     "createdAt": "2026-06-25T00:00:00+09:00",
     "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "kettle-uniflame-yama900",
+    "name": "ユニフレーム 山ケトル900",
+    "brand": "ユニフレーム",
+    "material": "アルミニウム・アルマイト加工",
+    "capacity": "0.9L",
+    "weight": "186g",
+    "size": "Φ16.6×H7.6cm",
+    "priceLow": 4400,
+    "priceHigh": 5500,
+    "directFire": true,
+    "amazonUrl": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22",
+    "affiliateUrl": "",
+    "rank": 1,
+    "tags": [
+      "軽量",
+      "アルミ",
+      "ソロ",
+      "スタッキング",
+      "直火OK"
+    ],
+    "pros": [
+      "186gと超軽量",
+      "クッカーへのスタッキング収納が可能",
+      "アルマイト加工で耐腐食性が高い"
+    ],
+    "cons": [
+      "注ぎ口がやや太めでドリップには不向き",
+      "アルミ素材のため傷がつきやすい"
+    ]
+  },
+  {
+    "id": "kettle-snowpeak-no1",
+    "name": "スノーピーク ケトルNo.1（CS-068R）",
+    "brand": "スノーピーク",
+    "material": "ステンレス",
+    "capacity": "0.9L",
+    "weight": "290g",
+    "size": "150×140×H96mm",
+    "priceLow": 3300,
+    "priceHigh": 3500,
+    "directFire": true,
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08DKN2NB8?tag=camp78-22",
+    "affiliateUrl": "",
+    "rank": 2,
+    "tags": [
+      "ステンレス",
+      "マルチ",
+      "ソロ",
+      "直火OK",
+      "コスパ"
+    ],
+    "pros": [
+      "ケトル兼クッカーとして使える",
+      "ステンレス製で錆びにくく耐久性が高い",
+      "スノーピーク製品の中ではコスパが良い"
+    ],
+    "cons": [
+      "ステンレスのためアルミより重い",
+      "注ぎ口は標準的でドリップには向かない"
+    ]
+  },
+  {
+    "id": "kettle-coleman-packaway",
+    "name": "コールマン パッカウェイケトル",
+    "brand": "コールマン",
+    "material": "アルミニウム",
+    "capacity": "0.6L",
+    "weight": "150g",
+    "size": "15×13×H8cm",
+    "priceLow": 2500,
+    "priceHigh": 3500,
+    "directFire": true,
+    "amazonUrl": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
+    "affiliateUrl": "",
+    "rank": 3,
+    "tags": [
+      "軽量",
+      "アルミ",
+      "コンパクト",
+      "入門",
+      "直火OK"
+    ],
+    "pros": [
+      "150gと軽量でコンパクト収納",
+      "折りたたみハンドルで持ち運びやすい",
+      "価格が手頃で入門に最適"
+    ],
+    "cons": [
+      "容量0.6Lとソロ向け",
+      "大人数には容量不足"
+    ]
+  },
+  {
+    "id": "kettle-trangia-06",
+    "name": "トランギア ケトル0.6L（TR-325）",
+    "brand": "トランギア",
+    "material": "アルミニウム",
+    "capacity": "0.6L",
+    "weight": "140g",
+    "size": "Φ13.5×H7.5cm",
+    "priceLow": 3000,
+    "priceHigh": 3630,
+    "directFire": true,
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08LVDPKCJ?tag=camp78-22",
+    "affiliateUrl": "",
+    "rank": 4,
+    "tags": [
+      "最軽量",
+      "アルミ",
+      "ソロ",
+      "トランギア",
+      "直火OK",
+      "コーヒー"
+    ],
+    "pros": [
+      "5選中最軽量の140g",
+      "注ぎ口の水切れが良くコーヒードリップにも使いやすい",
+      "着脱式ラバーグリップで熱対策"
+    ],
+    "cons": [
+      "容量0.6Lとソロ特化",
+      "ストームクッカー以外との組み合わせはサイズ確認が必要"
+    ]
+  },
+  {
+    "id": "kettle-gsi-glacier",
+    "name": "GSI グレイシャーステンレスケトル",
+    "brand": "GSI",
+    "material": "18/8ステンレス",
+    "capacity": "1.0L",
+    "weight": "290g",
+    "size": "16×15×H8.9cm",
+    "priceLow": 3000,
+    "priceHigh": 4000,
+    "directFire": true,
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
+    "affiliateUrl": "",
+    "rank": 5,
+    "tags": [
+      "ステンレス",
+      "焚き火",
+      "大容量",
+      "グループ",
+      "直火OK",
+      "吊り下げ可"
+    ],
+    "pros": [
+      "18/8ステンレスで錆に強く焚き火にも安心",
+      "蓋を外すと広い収納スペースに活用できる",
+      "吊り下げ使用が可能"
+    ],
+    "cons": [
+      "290gとやや重め",
+      "注ぎ口は太めでドリップには不向き"
+    ]
+  },
+  {
+    "id": "water-jug-stanley-7.5l",
+    "name": "スタンレー ウォータージャグ 7.5L",
+    "brand": "STANLEY(スタンレー)",
+    "price": 9900,
+    "imageUrl": "https://m.media-amazon.com/images/I/71G1gRzXDsL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%25B3%25E3%2583%25AC%25E3%2583%25BC%2520%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25BC%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%25207.5L%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07N9MC6LZ/?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "容量": "7.5L",
+      "重量": "約1.92kg",
+      "サイズ": "幅29.7×高さ34.3×径29.7cm",
+      "素材": "ポリプロピレン・断熱材（フォーム入り）",
+      "蛇口": "レバー式（アイスキャッチ付き）",
+      "保冷": "10度以下/13時間"
+    },
+    "description": "断熱材2cm入りで氷水が13時間10度以下をキープ。アイスキャッチで氷が流れてこない設計。スタンレーの定番ウォータージャグ。",
+    "rating": 4.6,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "water-jug-igloo-400s",
+    "name": "イグルー ウォータージャグ 400S（約7.9L）",
+    "brand": "igloo（イグルー）",
+    "price": 3800,
+    "imageUrl": "https://m.media-amazon.com/images/I/51zXvIQ1EtL._AC_SL1000_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25A4%25E3%2582%25B0%25E3%2583%25AB%25E3%2583%25BC%2520%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25BC%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%2520400S%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07DNHRJ5Q/?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "容量": "約7.9L（2ガロン）",
+      "重量": "約1.4kg",
+      "サイズ": "外径280×高さ270mm",
+      "素材": "高密度ポリエチレン・超高密度ウレタンフォーム",
+      "蛇口": "レバー式",
+      "保冷": "数時間"
+    },
+    "description": "超高密度ウレタンフォーム断熱でスタンレーの半額以下。軽量1.4kgで女性も扱いやすい。コスパ重視の保冷ジャグ。",
+    "rating": 4.3,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "water-jug-captain-stag-10l",
+    "name": "キャプテンスタッグ ボルディ ウォータータンク 10L",
+    "brand": "キャプテンスタッグ（CAPTAIN STAG）",
+    "price": 3608,
+    "imageUrl": "https://m.media-amazon.com/images/I/71qTGdZG4qL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%2597%25E3%2583%2586%25E3%2583%25B3%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%2583%25E3%2582%25B0%2520%25E3%2583%259C%25E3%2583%25AB%25E3%2583%2587%25E3%2582%25A3%2520%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25B3%25E3%2582%25AF%252010L%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0FH544MLG/?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "容量": "10L",
+      "重量": "約600g（空時）",
+      "素材": "ポリプロピレン（日本製）",
+      "蛇口": "ネジ式（蛇口付き）",
+      "抗菌": "抗菌加工済み",
+      "保冷": "なし"
+    },
+    "description": "日本製・抗菌加工のポリタンク。10Lの大容量で家族4人の1泊分をカバー。半透明で水の残量確認も簡単。",
+    "rating": 4.2,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "water-jug-mintage-10l",
+    "name": "ミンテージ ウォータージャグ Water Pot Elegant 10L",
+    "brand": "MINTAGE（ミンテージ）",
+    "price": 6000,
+    "imageUrl": "https://m.media-amazon.com/images/I/51C6bSaGNuL._AC_SL1000_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2Fmintage%2520%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25BC%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07DG3NVNW/?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "容量": "10L",
+      "重量": "約1.0kg",
+      "素材": "ステンレス（シングルウォール）",
+      "蛇口": "レバー式",
+      "保冷": "なし（シングルウォール）",
+      "デザイン": "インダストリアル・カスタム対応"
+    },
+    "description": "スチール缶風のインダストリアルデザインでキャンプサイト映え抜群。シングルウォールで保冷機能はないが、おしゃれさ重視派の定番。",
+    "rating": 4.1,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "water-jug-bundok-foldable",
+    "name": "バンドック フォールディングジャグ 7L BD-347",
+    "brand": "BUNDOK（バンドック）",
+    "price": 1800,
+    "imageUrl": "https://m.media-amazon.com/images/I/51G9dU3lJTL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2590%25E3%2583%25B3%25E3%2583%2589%25E3%2583%2583%25E3%2582%25AF%2520%25E3%2583%2595%25E3%2582%25A9%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%2587%25E3%2582%25A3%25E3%2583%25B3%25E3%2582%25B0%2520%25E3%2582%25B8%25E3%2583%25A3%25E3%2082%25B07L%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08VFM1VFD/?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "容量": "7L",
+      "重量": "約200g",
+      "素材": "PVC（半透明）",
+      "蛇口": "なし（傾け注ぎ）",
+      "折りたたみ": "可（ペタンコ収納）",
+      "保冷": "なし"
+    },
+    "description": "使わないときはペタンコに折りたためるソフトジャグ。重量200gと超軽量でソロ・少人数向け。2,000円以下の圧倒的コスパ。",
+    "rating": 4,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "cutting-board-snowpeak-cs207",
+    "name": "スノーピーク マナイタセット M CS-207",
+    "brand": "スノーピーク（snow peak）",
+    "price": 5720,
+    "imageUrl": "https://m.media-amazon.com/images/I/61fXpRFJKJL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://item.rakuten.co.jp/naturum/683336/?scid=af_pc_etc&sc2id=af_103_0_0",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07RR9HQ7V?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "使用時サイズ": "256×200×17mm",
+      "収納サイズ": "256×100×34mm",
+      "重量": "約470g",
+      "素材（まな板）": "天然木",
+      "素材（包丁）": "ステンレス・プラスチック",
+      "包丁固定": "マグネット付き",
+      "付属品": "包丁・マグネット・滑り止めゴム4個"
+    },
+    "description": "スノーピーク定番のオールインワンまな板セット。折りたたむと包丁が内蔵され、マグネットで固定されて安全に携行できる。天然木の切り心地と長く使えるコスパが人気のロングセラー。",
+    "rating": 4.6,
+    "createdAt": "2026-06-24T15:00:00+09:00",
+    "updatedAt": "2026-06-24T15:00:00+09:00"
+  },
+  {
+    "id": "cutting-board-tosaryu-hinoki",
+    "name": "土佐龍 四万十ひのき 軽量まな板 M",
+    "brand": "土佐龍（TOSARYU）",
+    "price": 2200,
+    "imageUrl": "https://m.media-amazon.com/images/I/71wZjWxqEwL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E5%9C%9F%E4%BD%90%E9%BE%8D+%E5%9B%9B%E4%B8%87%E5%8D%81%E3%81%B2%E3%81%AE%E3%81%8D+%E8%BB%BD%E9%87%8F%E3%81%BE%E3%81%AA%E6%9D%BF/",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E5%9C%9F%E4%BD%90%E9%BE%8D+%E5%9B%9B%E4%B8%87%E5%8D%81%E3%81%B2%E3%81%AE%E3%81%8D+%E8%BB%BD%E9%87%8F%E3%81%BE%E3%81%AA%E6%9D%BF&tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "サイズ（M）": "345×180×15mm",
+      "素材": "四万十ひのき（国産100%）",
+      "抗菌成分": "ヒノキチオール（天然成分）",
+      "特徴": "薄型設計・食材が移しやすい",
+      "産地": "高知県四万十地域"
+    },
+    "description": "高知県四万十地域産ひのきを使用した国産まな板。天然の抗菌成分ヒノキチオールを含み、水はけがよく乾燥に強い。薄型15mmで切った食材をナベへ移しやすく、料理好きキャンパーに人気。",
+    "rating": 4.5,
+    "createdAt": "2026-06-24T15:00:00+09:00",
+    "updatedAt": "2026-06-24T15:00:00+09:00"
+  },
+  {
+    "id": "cutting-board-belmont-butterfly",
+    "name": "ベルモント 抗菌バタフライカッティングボード BM-138",
+    "brand": "belmont（ベルモント）",
+    "price": 550,
+    "imageUrl": "https://m.media-amazon.com/images/I/61V7p7P3cUL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%83%99%E3%83%AB%E3%83%A2%E3%83%B3%E3%83%88+%E3%83%90%E3%82%BF%E3%83%95%E3%83%A9%E3%82%A4%E3%82%AB%E3%83%83%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%9C%E3%83%BC%E3%83%89/",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%99%E3%83%AB%E3%83%A2%E3%83%B3%E3%83%88+%E3%83%90%E3%82%BF%E3%83%95%E3%83%A9%E3%82%A4+%E3%82%AB%E3%83%83%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%9C%E3%83%BC%E3%83%89&tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "使用時サイズ": "440×150×2mm",
+      "収納時サイズ": "220×150×4mm",
+      "重量": "約180g",
+      "素材": "ポリプロピレン（抗菌加工）",
+      "目盛り": "5mm刻み（展開時）",
+      "特徴": "バタフライ展開で長い食材も切りやすい"
+    },
+    "description": "展開すると440mmの横長まな板になるバタフライ設計。ネギ・ゴボウなど長い食材も快適に切れる。約180gの超軽量設計でバックパックのサイドポケットに収まるコンパクトさ。抗菌加工済み。",
+    "rating": 4.3,
+    "createdAt": "2026-06-24T15:00:00+09:00",
+    "updatedAt": "2026-06-24T15:00:00+09:00"
+  },
+  {
+    "id": "cutting-board-cs-uh4709",
+    "name": "キャプテンスタッグ スリム抗菌まな板包丁セット UH-4709",
+    "brand": "キャプテンスタッグ（CAPTAIN STAG）",
+    "price": 2750,
+    "imageUrl": "https://m.media-amazon.com/images/I/61F3JMXK1LL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://item.rakuten.co.jp/yacom-tokyo/4560464274059/",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0+UH-4709&tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "まな板サイズ（使用時）": "280×150×16mm",
+      "収納サイズ": "280×75×33mm",
+      "セット重量": "約200g",
+      "まな板素材": "ポリエチレン（抗菌剤配合・耐熱80℃）",
+      "包丁": "全長250mm・刃長150mm（ステンレス鋼）",
+      "目盛り": "あり",
+      "メーカー希望小売価格": "2,500円（税抜）"
+    },
+    "description": "折りたたみ抗菌まな板と包丁のセット。セット重量約200g・収納サイズ280×75×33mmのコンパクト設計。抗菌剤配合で衛生的。コスパ重視のキャンプ入門者や子どものキャンプデビューに向いている。",
+    "rating": 4.1,
+    "createdAt": "2026-06-24T15:00:00+09:00",
+    "updatedAt": "2026-06-24T15:00:00+09:00"
+  },
+  {
+    "id": "cutting-board-silicon-foldable",
+    "name": "シリコン折りたたみまな板（バックパック・ツーリング向け汎用）",
+    "brand": "各社（Dockem・ペティグルー等）",
+    "price": 2500,
+    "imageUrl": "https://m.media-amazon.com/images/I/71y0M5A5KuL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://search.rakuten.co.jp/search/mall/%E3%82%B7%E3%83%AA%E3%82%B3%E3%83%B3+%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF+%E3%81%BE%E3%81%AA%E6%9D%BF+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97/",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B7%E3%83%AA%E3%82%B3%E3%83%B3+%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF+%E3%81%BE%E3%81%AA%E6%9D%BF+%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2&tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "シリコン（耐熱約230℃）",
+      "特徴": "折り曲げ可能・クッカー内収納対応",
+      "用途": "鍋敷き兼用可",
+      "向いている人": "バックパッカー・ツーリングキャンパー・登山者",
+      "価格帯": "2,000〜3,000円程度（商品により異なる）"
+    },
+    "description": "折り曲げてクッカーの中に収納できるシリコン製まな板。耐熱約230℃で鍋敷きとしても使える。軽量でコンパクトなため登山・バックパックキャンプ・ツーリングキャンプに最適。固い食材の切断には工夫が必要。",
+    "rating": 4,
+    "createdAt": "2026-06-24T15:00:00+09:00",
+    "updatedAt": "2026-06-24T15:00:00+09:00"
+  },
+  {
+    "id": "spice-box-tenmacu",
+    "name": "テンマクデザイン × SOLUM スパイスボックス",
+    "brand": "tent-Mark DESIGNS",
+    "price": 6578,
+    "size": "使用時：約50.5×9.3×35cm / 収納時：約18.5×25×35cm",
+    "weight": "約2.1kg",
+    "material": "木製・MDF合板（金具：スチール）",
+    "capacity": "引き出し式・スパイスラック型",
+    "features": [
+      "使用時は縦に開いてスパイスラックとして使用可能",
+      "収納時はコンパクトに折りたたみ可能",
+      "国産ブランドコラボ（テンマクデザイン×SOLUM）",
+      "木製ならではの温かみある見た目"
+    ],
+    "pros": "サイトで広げるとそのまま棚になるデザイン性が高い",
+    "cons": "重量2.1kgとソフトタイプより重め",
+    "scene": "カーキャンプ・グループ・ファミリー",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3+%E3%82%BD%E3%83%AB%E3%83%A0+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9&tag=cmap78-22",
+    "rank": 1
+  },
+  {
+    "id": "spice-box-yogoto",
+    "name": "YOGOTO スパイスボックス",
+    "brand": "YOGOTO",
+    "price": 2500,
+    "size": "約25×18×12cm",
+    "weight": "約380g",
+    "material": "防水キャンバス",
+    "capacity": "着脱式仕切り袋付き・背面メッシュポケット付き",
+    "features": [
+      "着脱式の仕切り袋で柔軟に収納をカスタム",
+      "背面メッシュポケット付き",
+      "防水キャンバス素材",
+      "洗濯機での丸洗い可"
+    ],
+    "pros": "コスパが高く初めてのスパイスボックスに最適",
+    "cons": "ソフト素材のため形が若干崩れやすい",
+    "scene": "ソロ〜ファミリー・幅広いシーン",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0911ZM18K?tag=cmap78-22",
+    "rank": 2
+  },
+  {
+    "id": "spice-box-coleman",
+    "name": "コールマン スパイスボックスII",
+    "brand": "Coleman",
+    "price": 2490,
+    "size": "約18×14×21cm",
+    "weight": "約250g",
+    "material": "ポリエステル・ポリエチレン",
+    "capacity": "マジックテープ式可動仕切り付き・サイドポケット付き",
+    "features": [
+      "パッド入りで瓶ボトルも安心",
+      "マジックテープ式仕切りでボトルサイズに対応",
+      "サイドポケット付き",
+      "軽量250gで携帯しやすい"
+    ],
+    "pros": "軽量・コンパクト・価格もリーズナブルな定番モデル",
+    "cons": "容量はやや小さめ（ファミリー大人数には少し手狭）",
+    "scene": "ソロ・デュオキャンプ",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08LVG5VTB?tag=cmap78-22",
+    "rank": 3
+  },
+  {
+    "id": "spice-box-wood-rack",
+    "name": "CAMPER 木製スパイスラック",
+    "brand": "CAMPER / 各種",
+    "price": 4000,
+    "size": "製品により異なる（目安：幅30〜40cm）",
+    "weight": "約1kg前後",
+    "material": "天然木",
+    "capacity": "スパイスラック開閉型・収納したまま移動可能",
+    "features": [
+      "開くとそのままスパイスラックとして使える",
+      "収納したまま移動・設営後すぐ使える",
+      "天然木の温かみある見た目"
+    ],
+    "pros": "サイトの見た目が一気に映えるデザイン性",
+    "cons": "水濡れに注意が必要・重量がある",
+    "scene": "グループキャンプ・ファミリーキャンプ",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97+%E6%9C%A8%E8%A3%BD+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9+%E3%83%A9%E3%83%83%E3%82%AF&tag=cmap78-22",
+    "rank": 4
+  },
+  {
+    "id": "spice-box-naturehike",
+    "name": "Naturehike スパイスバッグ",
+    "brand": "Naturehike（ネイチャーハイク）",
+    "price": 2200,
+    "size": "ロール収納・軽量コンパクト",
+    "weight": "150g以下",
+    "material": "防水ナイロン",
+    "capacity": "ロールトップ型ポケット・ハンギングフック付き",
+    "features": [
+      "収納時はペタンコにたためる",
+      "ハンギングフックでタープやポールに掛けて使用可能",
+      "防水ナイロン素材",
+      "超軽量設計"
+    ],
+    "pros": "軽量で荷物を最小限にしたいソロ・バックパックキャンプに最適",
+    "cons": "ハードタイプに比べ安定感は劣る",
+    "scene": "ソロキャンプ・バックパックキャンプ・ツーリング",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=Naturehike+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97&tag=cmap78-22",
+    "rank": 5
+  },
+  {
+    "id": "dry-net-coleman",
+    "name": "コールマン ハンギングドライネットII グリーン 2000026811",
+    "brand": "Coleman",
+    "price": 2280,
+    "imageUrl": "https://m.media-amazon.com/images/I/71qJJfmqDxL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%2B%E3%83%8F%E3%83%B3%E3%82%AE%E3%83%B3%E3%82%B0%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%882%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01C5HUTBU?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "使用時サイズ": "約直径32×高さ80cm",
+      "収納時サイズ": "約直径15×高さ8cm",
+      "重量": "約180g",
+      "材質": "ポリエステル・スチール・ステンレス",
+      "段数": "4段",
+      "付属品": "収納ケース"
+    },
+    "description": "キャンプ食器乾燥の定番ポップアップ式ドライネット。袋から出すだけでパッと広げられる。上から全開きできるので大きなクッカーも入れやすい。180gと超軽量。",
+    "rating": 4.4,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "dry-net-logos",
+    "name": "ロゴス スタンディングドライネット 81285040",
+    "brand": "LOGOS",
+    "price": 4200,
+    "imageUrl": "https://m.media-amazon.com/images/I/71AZJP7TcKL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%AD%E3%82%B4%E3%82%B9%2B%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00HYTDKNY?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "使用時サイズ": "約幅36×奥行36×高さ60cm",
+      "収納時サイズ": "約37×37×1.5cm",
+      "重量": "約400g",
+      "材質（フレーム）": "グラスファイバー",
+      "材質（生地）": "ポリエステル",
+      "段数": "3段（底面空間付き）",
+      "付属品": "収納バッグ・フック"
+    },
+    "description": "テーブルの上に置いて自立できるドライネット。付属フックで吊り下げ式にも対応。底面に空間があり直置きしても食器が汚れない設計。グラスファイバーフレームで安定感あり。",
+    "rating": 4.3,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "dry-net-cs",
+    "name": "キャプテンスタッグ ポップアップドライネット UM-1903",
+    "brand": "キャプテンスタッグ",
+    "price": 1800,
+    "imageUrl": "https://m.media-amazon.com/images/I/71g9gCfBdyL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%2B%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07DNDJKBD?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "使用時サイズ": "約直径39×高さ92cm",
+      "収納サイズ": "約直径16cm",
+      "材質": "ポリエステル・スチール",
+      "段数": "3段",
+      "付属品": "収納袋"
+    },
+    "description": "ポップアップ式の吊り下げドライネット。コールマンと同系統で使い勝手はほぼ同じ、価格が抑えめなのがメリット。カラーはブルー・グレーなど複数展開。",
+    "rating": 4.1,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "dry-net-snowpeak",
+    "name": "スノーピーク テーブルドライネット UG-370",
+    "brand": "スノーピーク",
+    "price": 5500,
+    "imageUrl": "https://m.media-amazon.com/images/I/71RfgXmQb8L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%2B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "カラー": "ブラック",
+      "タイプ": "自立式",
+      "材質": "ポリエステル・スチール（金属仕切り網）",
+      "受賞": "2019年グッドデザイン賞"
+    },
+    "description": "ブラックカラーでサイトをスタイリッシュに統一できる自立式ドライネット。2019年グッドデザイン賞受賞。金属製の仕切り網で安定感が高い。デザインにこだわりたい人向け。",
+    "rating": 4.3,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "dry-net-goodsland",
+    "name": "GoodsLand 折りたたみドライネット GD-DRYNET-M（ブラック）",
+    "brand": "GoodsLand",
+    "price": 1800,
+    "imageUrl": "https://m.media-amazon.com/images/I/71I4IicqgbL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FGoodsLand%2B%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09JNYJTBT?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "カラー": "ブラック",
+      "タイプ": "折りたたみ吊り下げ式",
+      "サイズ展開": "M・Lの2サイズ",
+      "材質": "ポリエステル・スチール"
+    },
+    "description": "コスパ最重視のブラックカラードライネット。折りたたみ式でコンパクト収納、2サイズ展開あり。価格を抑えてブラックで統一したい人向けの選択肢。",
+    "rating": 3.9,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "trash-box-uniflame",
+    "name": "ユニフレーム UFダストスタンド4 611739",
+    "brand": "ユニフレーム",
+    "price": 3900,
+    "imageUrl": "https://m.media-amazon.com/images/I/71JdMPXjzVL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%2BUF%E3%83%80%E3%82%B9%E3%83%88%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%89%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07BWFMBLS?tag=camp78-22",
+    "categoryId": "storage",
+    "specs": {
+      "使用時サイズ": "約52×35×55cm",
+      "収納時サイズ": "約58×35×2.5cm（薄型収納）",
+      "重量": "約1.35kg",
+      "材質": "スチール・カチオンメッキ",
+      "袋サイズ": "15Lレジ袋（最大4個）",
+      "分別数": "最大4分別",
+      "専用カバー": "別売 ¥2,200（カーキグリーン/ネイビー/ブラウン）"
+    },
+    "description": "レジ袋を最大4個かけて分別できるスチールフレームのダストスタンド。撤収時は袋をそのまま結んで捨てられる効率的な設計。薄型収納で車への積み込みが楽。",
+    "rating": 4.5,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "trash-box-dod",
+    "name": "DOD ステルスエックス ブラック GM1-450",
+    "brand": "DOD",
+    "price": 9440,
+    "imageUrl": "https://m.media-amazon.com/images/I/71KQxN4O3aL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2B%E3%82%B9%E3%83%86%E3%83%AB%E3%82%B9%E3%82%A8%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22",
+    "categoryId": "storage",
+    "specs": {
+      "使用時サイズ": "約W44.5×D41.5×H59cm",
+      "重量": "約1.6kg（BK）",
+      "天板耐荷重": "約30kg",
+      "カラビナ数": "12個（最大6分別対応）",
+      "カラー": "ブラック・タン（タン：¥13,370）",
+      "構造": "アコーディオン式・前面3パネル開閉"
+    },
+    "description": "ゴミ袋を完全に隠しながら天板がテーブルとしても使えるテーブル兼用ゴミ箱。12個のカラビナで最大6分別対応。サイトの見た目を崩さずゴミ管理ができる唯一の選択肢。",
+    "rating": 4.4,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "trash-box-coleman",
+    "name": "コールマン ポップアップボックス コヨーテ 2000038938",
+    "brand": "Coleman",
+    "price": 3500,
+    "imageUrl": "https://m.media-amazon.com/images/I/71d-EHkLOoL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%2B%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09H2MNDXW?tag=camp78-22",
+    "categoryId": "storage",
+    "specs": {
+      "使用時サイズ": "直径約30×高さ36cm",
+      "収納時サイズ": "直径約30×高さ9cm",
+      "重量": "約500g",
+      "耐荷重": "10kg",
+      "付属品": "ゴミ袋固定ステンレスクリップ×4・固定用綿テープ",
+      "材質": "ポリエステル（底面PVCコーティング）",
+      "カラー": "コヨーテ"
+    },
+    "description": "ポップアップ式で設営30秒のシンプルゴミ箱。クリップでゴミ袋を固定、テープでポールやテーブル脚に固定できる。耐荷重10kgで薪入れにも使用可能。コヨーテカラーが落ち着いた雰囲気でサイトに馴染む。",
+    "rating": 4.3,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "trash-box-fieldoor",
+    "name": "FIELDOOR ポップアップトラッシュボックス（45L袋対応）",
+    "brand": "FIELDOOR",
+    "price": 3200,
+    "imageUrl": "https://m.media-amazon.com/images/I/71XzHX7TmgL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FFIELDOOR%2B%E3%83%88%E3%83%A9%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09F95HVB8?tag=camp78-22",
+    "categoryId": "storage",
+    "specs": {
+      "使用時サイズ": "直径44cm×高さ55cm（ペグ穴含む直径48cm）",
+      "収納時サイズ": "直径44cm×高さ10cm",
+      "重量": "約850g",
+      "対応袋サイズ": "45Lゴミ袋",
+      "付属品": "ゴミ袋固定リング・ペグ固定穴・ポール固定用ベルト"
+    },
+    "description": "45Lの大きいゴミ袋に対応したポップアップ式トラッシュボックス。袋口を開いたまま保持するリング付きでゴミが捨てやすい。ペグ固定穴・ポール固定ベルトで風対策も万全。",
+    "rating": 4.3,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "trash-box-pykes",
+    "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
+    "brand": "PYKES PEAK",
+    "price": 2500,
+    "imageUrl": "https://m.media-amazon.com/images/I/71KQVY3dkFL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FPYKES%2BPEAK%2B%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%82%B4%E3%83%9F%E7%AE%B1%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22",
+    "categoryId": "storage",
+    "specs": {
+      "サイズ展開": "40L・60Lの2サイズ",
+      "タイプ": "ポップアップ式・折りたたみ収納",
+      "対象": "グループキャンプ・長期キャンプ向け"
+    },
+    "description": "40Lと60Lの2サイズ展開で大容量が特徴のポップアップゴミ箱。グループキャンプや多人数での利用に向いており、コスパも高め。ゴミが多く出る場面での主力ゴミ箱として使いやすい。",
+    "rating": 4,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "sierra-cup-snowpeak",
+    "name": "スノーピーク チタンシェラカップ E-104",
+    "brand": "スノーピーク",
+    "price": 2508,
+    "imageUrl": "https://m.media-amazon.com/images/I/71BEj73DBTL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%2BE-104%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08DKM41CN?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "チタニウム",
+      "サイズ": "φ120×45mm",
+      "容量": "310ml",
+      "重量": "37g",
+      "目盛り": "100ml・200ml",
+      "直火": "対応",
+      "ハンドル": "固定式"
+    },
+    "description": "スノーピークのシェラカップの定番モデル。わずか37gのチタン製で、計量目盛り・直火対応・スタッキング可能。使えば使うほど愛着が増す1枚。",
+    "rating": 4.7,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "sierra-cup-uniflame",
+    "name": "ユニフレーム UFシェラカップ300 667743",
+    "brand": "ユニフレーム",
+    "price": 1210,
+    "imageUrl": "https://m.media-amazon.com/images/I/71QkH0OJIIL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B007FFSUVY?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "ステンレス鋼",
+      "サイズ": "φ119×175×41mm",
+      "容量": "約300ml（満水）",
+      "重量": "約90g",
+      "目盛り": "100ml・200ml・1合（180ml）",
+      "直火": "対応",
+      "ハンドル": "固定式"
+    },
+    "description": "1,210円で直火対応・お米1合の計量目盛り付きのステンレスシェラカップ。コスパ最優先のユニフレームらしい実用設計。ステンレスなので熱伝導が均一で焦げにくい。",
+    "rating": 4.6,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "sierra-cup-belmont",
+    "name": "ベルモント チタンシェラカップ 深型250 フォールドハンドル（メモリ付）BM-329",
+    "brand": "ベルモント",
+    "price": 1870,
+    "imageUrl": "https://m.media-amazon.com/images/I/51IB8VCR+bL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%99%E3%83%AB%E3%83%A2%E3%83%B3%E3%83%88%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2FBM-329%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B072N2D691?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "チタニウム",
+      "外径": "約φ95mm（内径テーパーφ80〜89）",
+      "深さ": "50mm",
+      "容量": "250ml",
+      "重量": "約57g",
+      "ハンドル": "折りたたみ式（フォールドハンドル）",
+      "目盛り": "あり",
+      "直火": "対応"
+    },
+    "description": "ハンドルが折りたためるチタン製深型シェラカップ。コンパクト収納でバックパックのポケットにも入る。深型なのでスープや汁気のある料理に最適。チタンとしてはリーズナブルな価格。",
+    "rating": 4.5,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "sierra-cup-cs",
+    "name": "キャプテンスタッグ シェラカップ ステンレス 目盛付",
+    "brand": "キャプテンスタッグ",
+    "price": 650,
+    "imageUrl": "https://m.media-amazon.com/images/I/71WcXjzFTjL._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "ステンレス鋼",
+      "サイズ": "φ120×45mm前後",
+      "容量": "300ml前後",
+      "重量": "約70〜80g",
+      "目盛り": "あり",
+      "直火": "対応"
+    },
+    "description": "500〜700円台で揃えられるコスパ最優先のステンレスシェラカップ。家族分・子ども用にまとめて揃えたいときの定番。直火対応・目盛り付き。",
+    "rating": 4,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "sierra-cup-bundok",
+    "name": "BUNDOK シェラカップ 600ml BD-190",
+    "brand": "BUNDOK",
+    "price": 990,
+    "imageUrl": "https://m.media-amazon.com/images/I/71I0vpSl+9L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FBUNDOK%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22",
+    "categoryId": "kitchen",
+    "specs": {
+      "素材": "ステンレス鋼",
+      "容量": "600ml",
+      "直火": "対応",
+      "特徴": "大容量タイプ・ラーメン調理や大きめの盛り付けに"
+    },
+    "description": "容量600mlの大きめシェラカップ。ラーメンを作る・カレーを入れる・調理鍋として使うなど、標準サイズでは容量が足りない用途に対応。価格も1,000円前後とコスパよし。",
+    "rating": 4.1,
+    "createdAt": "2026-06-25T00:00:00+09:00",
+    "updatedAt": "2026-06-25T00:00:00+09:00"
   }
 ]
