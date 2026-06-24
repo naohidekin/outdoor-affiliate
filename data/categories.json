@@ -112,13 +112,6 @@
     "order": 15
   },
   {
-    "id": "safety",
-    "name": "安全対策・救急",
-    "slug": "safety",
-    "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
-    "order": 17
-  },
-  {
     "id": "kitchen",
     "name": "キッチンギア",
     "slug": "kitchen",
@@ -145,5 +138,12 @@
     "slug": "hammock",
     "description": "キャンプの贅沢なくつろぎアイテム",
     "order": 21
+  },
+  {
+    "id": "safety",
+    "name": "安全対策・救急",
+    "slug": "safety",
+    "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
+    "order": 17
   }
 ]
