@@ -7248,5 +7248,52 @@
     "rating": 4.1,
     "createdAt": "2026-06-25T00:00:00+09:00",
     "updatedAt": "2026-06-25T00:00:00+09:00"
+  },
+  {
+    "id": "peg-hammer-snowpeak-proc-review",
+    "name": "スノーピーク ペグハンマー PRO.C N-001",
+    "brand": "Snow Peak",
+    "price": 8470,
+    "imageUrl": "https://www.snowpeak.co.jp/media/catalog/product/N-001_main_1.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF+%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC+PRO.C+N-001%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
+    "categoryId": "accessories",
+    "specs": {
+      "品番": "N-001",
+      "重量": "670g",
+      "サイズ": "φ35×120×290mm",
+      "ヘッド": "銅（ブロンズ）+ スチール黒電着塗装",
+      "柄": "かしの木",
+      "ペグ抜き": "フック式",
+      "ベルト": "付属"
+    },
+    "description": "スノーピークの銅ヘッドペグハンマー。打撃時の衝撃を銅が吸収し、鍛造ペグを少ない打数で打ち込める。ヘッド交換が可能で長く使える定番ハンマー。",
+    "rating": 4.8,
+    "createdAt": "2026-06-25T02:00:00+09:00",
+    "updatedAt": "2026-06-25T02:00:00+09:00"
+  },
+  {
+    "id": "stanley-water-jug-7.5l",
+    "name": "スタンレー クラシックアウトドアウォータージャグ 7.5L",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22",
+    "description": "ステンレス製の本格ウォータージャグ。最大4日間の保冷力とバルブ式注ぎ口で使いやすさを両立。容量7.5L。"
+  },
+  {
+    "id": "uniflame-yama-kettle-900",
+    "name": "ユニフレーム 山ケトル900",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22",
+    "description": "重量186gのアルミ製軽量ケトル。容量900ml。細口の注ぎ口でドリップコーヒーにも対応。キャンプ・登山両用。"
+  },
+  {
+    "id": "uniflame-field-rack",
+    "name": "ユニフレーム フィールドラック",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
+    "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。"
+  },
+  {
+    "id": "dd-hammock-frontline",
+    "name": "DDハンモック フロントライン",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22",
+    "description": "バグネット（蚊帳）一体型のキャンプ用ハンモック。ポリエステル製、耐荷重150kg、重量約665g。林間キャンプ・ツリーキャンプ向け。"
   }
 ]
