@@ -117,5 +117,33 @@
     "slug": "safety",
     "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
     "order": 17
+  },
+  {
+    "id": "kitchen",
+    "name": "キッチンギア",
+    "slug": "kitchen",
+    "description": "キャンプ料理を快適にするキッチン道具",
+    "order": 18
+  },
+  {
+    "id": "storage",
+    "name": "収納・整理",
+    "slug": "storage",
+    "description": "サイトを整理するフィールドラック・ゴミ箱",
+    "order": 19
+  },
+  {
+    "id": "accessories",
+    "name": "小物・アクセサリー",
+    "slug": "accessories",
+    "description": "ペグハンマー・火吹き棒など便利な小物",
+    "order": 20
+  },
+  {
+    "id": "hammock",
+    "name": "ハンモック",
+    "slug": "hammock",
+    "description": "キャンプの贅沢なくつろぎアイテム",
+    "order": 21
   }
 ]
