@@ -325,3 +325,11 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Rakuten affiliate button */
+.rakuten-btn {
+  background-color: #BF0000;
+}
+.rakuten-btn:hover {
+  background-color: #A00000;
+}

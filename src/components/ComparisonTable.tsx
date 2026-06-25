@@ -116,7 +116,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       href={p.affiliateUrl}
                       productId={p.id}
                       store="rakuten"
-                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium bg-[#BF0000] text-white hover:bg-[#A00000] transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-white transition-colors rakuten-btn"
                     >
                       楽天市場で見る
                     </AffiliateLink>

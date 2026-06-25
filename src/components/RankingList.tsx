@@ -67,7 +67,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                 href={product.affiliateUrl}
                 productId={product.id}
                 store="rakuten"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-[#BF0000] text-white hover:bg-[#A00000] transition-colors whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors whitespace-nowrap rakuten-btn"
               >
                 楽天市場で見る
               </AffiliateLink>

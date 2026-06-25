@@ -60,7 +60,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 href={product.affiliateUrl}
                 productId={product.id}
                 store="rakuten"
-                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium bg-[#BF0000] text-white hover:bg-[#A00000] transition-colors"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium text-white transition-colors rakuten-btn"
               >
                 楽天市場で見る
               </AffiliateLink>
