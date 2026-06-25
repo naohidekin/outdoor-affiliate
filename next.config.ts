@@ -88,6 +88,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.sony.jp" },
       { protocol: "https", hostname: "s3-ap-northeast-1.amazonaws.com" },
       { protocol: "https", hostname: "makeshop-multi-images.akamaized.net" },
+      { protocol: "https", hostname: "www.snowpeak.co.jp" },
+      { protocol: "https", hostname: "www.firesidestove.com" },
+      { protocol: "https", hostname: "jp.stanley1913.com" },
+      { protocol: "https", hostname: "quickcamp.jp" },
+      { protocol: "https", hostname: "www.yamac.co.jp" },
     ],
   },
 };
