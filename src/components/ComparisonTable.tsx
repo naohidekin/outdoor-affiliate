@@ -116,9 +116,9 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       href={p.affiliateUrl}
                       productId={p.id}
                       store="rakuten"
-                      className="inline-block bg-white hover:bg-lake-50 text-lake-700 border border-lake-600 px-4 py-2 rounded-lg text-xs font-medium transition text-center"
+                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium bg-[#BF0000] text-white hover:bg-[#A00000] transition-colors"
                     >
-                      楽天で見る →
+                      楽天市場で見る
                     </AffiliateLink>
                   ) : (
                     <span className="text-slate-400 text-xs">準備中</span>
@@ -128,9 +128,9 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       href={p.amazonUrl}
                       productId={p.id}
                       store="amazon"
-                      className="inline-block bg-white hover:bg-mist text-slate-700 border border-line px-4 py-2 rounded-lg text-xs font-medium transition text-center"
+                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium border border-line text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      Amazonで見る →
+                      Amazonで見る
                     </AffiliateLink>
                   )}
                 </div>

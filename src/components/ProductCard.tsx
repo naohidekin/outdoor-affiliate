@@ -60,9 +60,9 @@ export default function ProductCard({ product }: { product: Product }) {
                 href={product.affiliateUrl}
                 productId={product.id}
                 store="rakuten"
-                className="block bg-white hover:bg-lake-50 text-lake-700 border border-lake-600 px-5 py-2 rounded-lg text-sm font-medium transition text-center"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium bg-[#BF0000] text-white hover:bg-[#A00000] transition-colors"
               >
-                楽天で見る →
+                楽天市場で見る
               </AffiliateLink>
             )}
             {product.amazonUrl && (
@@ -70,9 +70,9 @@ export default function ProductCard({ product }: { product: Product }) {
                 href={product.amazonUrl}
                 productId={product.id}
                 store="amazon"
-                className="block bg-white hover:bg-mist text-slate-700 border border-line px-5 py-2 rounded-lg text-sm font-medium transition text-center"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium border border-line text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                Amazonで見る →
+                Amazonで見る
               </AffiliateLink>
             )}
           </div>
