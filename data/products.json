@@ -7265,5 +7265,54 @@
     "rating": 4.7,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-06-21T15:26:42.024+00:00"
+  },
+  {
+    "id": "light-coleman-northstar",
+    "name": "コールマン 2500 ノーススター LPガスランタン",
+    "brand": "Coleman",
+    "price": 9900,
+    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000015520/2000015520.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3+2500+%E3%83%8E%E3%83%BC%E3%82%B9%E3%82%B9%E3%82%BF%E3%83%BC+LP%E3%82%AC%E3%82%B9%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08DK8B2X9/?tag=camp78-22",
+    "categoryId": "light",
+    "specs": {
+      "明るさ": "約320CP / 200W相当",
+      "燃料": "LPガス（OD缶）",
+      "マントル": "95-102J（チューブマントル）",
+      "重量": "約1.3kg",
+      "サイズ": "約φ14.5 x 26cm",
+      "燃焼時間": "約4〜8時間（470g缶使用時）",
+      "点火方式": "イグナイター（圧電点火）",
+      "対応ガス": "コールマン純正LPガス Tタイプ"
+    },
+    "description": "コールマンの定番ガスランタン。OD缶を装着するだけで320CP/200W相当の明るさが得られる、ポンピング不要の手軽さが魅力。1998年発売のロングセラーで、炎の温かい灯りとサイト全体を照らす光量を兼ね備える。",
+    "rating": 4.8,
+    "createdAt": "2026-07-01T00:00:00+09:00",
+    "updatedAt": "2026-07-02T00:00:00+09:00",
+    "autoAdded": false
+  },
+  {
+    "id": "table-ogawa-folding-table",
+    "name": "ogawa フォールディングテーブル",
+    "brand": "ogawa",
+    "price": 14300,
+    "imageUrl": "https://m.media-amazon.co.jp/images/I/31nPz4sWyAL._AC_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2Fogawa+%E3%83%95%E3%82%A9%E3%83%BC%E3%83%AB%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB+1937%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07JMBYYV5/?tag=camp78-22",
+    "categoryId": "table",
+    "specs": {
+      "サイズ": "120 x 60 x 70/38cm（2段階高さ調整）",
+      "重量": "約5.6kg",
+      "耐荷重": "10kg",
+      "天板素材": "プリント合板",
+      "フレーム素材": "アルミ合金",
+      "収納サイズ": "63 x 63 x 7.5cm",
+      "付属品": "収納袋"
+    },
+    "description": "ogawa（旧・小川キャンパル）の堅牢なフォールディングテーブル。高さ70cmと38cmの2段階調整が可能で、ハイ・ローどちらのスタイルにも対応する。折り畳み機構のガタつきのなさは老舗ブランドの品質そのもの。",
+    "rating": 4.5,
+    "createdAt": "2026-07-01T00:00:00+09:00",
+    "updatedAt": "2026-07-01T00:00:00+09:00",
+    "autoAdded": false
   }
 ]
