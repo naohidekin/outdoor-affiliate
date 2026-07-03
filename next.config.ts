@@ -36,6 +36,11 @@ const nextConfig: NextConfig = {
       { source: "/articles/tent-without-vestibule-guide", destination: "/articles/tent-vestibule-size-ranking", permanent: true },
       { source: "/articles/winter-camp-co-safety-guide", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
       { source: "/articles/2-person-tent-ranking", destination: "/articles/duo-tent-ranking", permanent: true },
+      // 本文が空のまま公開されていた記事を非公開化（2026-07-03）→ 近い公開記事へ301
+      { source: "/articles/spice-box-ranking", destination: "/category/kitchen", permanent: true },
+      { source: "/articles/stanley-water-jug-review", destination: "/articles/water-jug-ranking", permanent: true },
+      { source: "/articles/uniflame-yama-kettle-review", destination: "/articles/camp-kettle-ranking", permanent: true },
+      { source: "/articles/dd-hammock-review", destination: "/articles/hammock-ranking", permanent: true },
       // 存在しないカテゴリページ（GSC 404検出 2026-06-21）
       { source: "/category/cold-safety", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
       { source: "/category/rain-safety", destination: "/articles/rain-camp-gear-essentials", permanent: true },

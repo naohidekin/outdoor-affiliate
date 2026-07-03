@@ -258,8 +258,9 @@ async function main() {
           );
         }
 
-        // products.json の価格も更新
+        // products.json の価格も更新（更新日時も記録して鮮度を追跡可能にする）
         product.price = currentPrice;
+        product.priceUpdatedAt = new Date().toISOString();
       }
     } catch (err) {
       console.error(`  ❌ バッチ ${i / 10 + 1} エラー: ${err.message}`);
