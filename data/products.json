@@ -7430,27 +7430,6 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
   },
   {
-    "id": "uniflame-field-rack",
-    "name": "ユニフレーム フィールドラック",
-    "brand": "",
-    "price": 4950,
-    "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A6%25E3%2583%258B%25E3%2583%2595%25E3%2583%25AC%25E3%2583%25BC%25E3%2583%25A0%2520%25E3%2583%2595%25E3%2582%25A3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%2589%25E3%2583%25A9%25E3%2583%2583%25E3%2582%25AF%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
-    "categoryId": "",
-    "specs": {
-      "使用時サイズ": "約60×35×23(h)cm",
-      "収納時サイズ": "約60×35×1(厚さ)cm",
-      "重量": "約1.7kg",
-      "分散耐荷重": "約30kg"
-    },
-    "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
-    "rating": 0,
-    "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T07:38:37.389Z",
-    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
-  },
-  {
     "id": "dd-hammock-frontline",
     "name": "DDハンモック フロントライン",
     "brand": "",
