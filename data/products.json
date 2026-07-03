@@ -2010,7 +2010,7 @@
   },
   {
     "id": "gas-lantern-013",
-    "name": "コールマン ガスワンマントルランタン 205588",
+    "name": "コールマン ルミエールランタン 205588",
     "brand": "Coleman",
     "price": 5500,
     "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/205588/205588.jpg",
@@ -2018,17 +2018,16 @@
     "amazonUrl": "https://www.amazon.co.jp/dp/B004IWR45A/?tag=camp78-22",
     "categoryId": "light",
     "specs": {
-      "重量": "約285g（本体のみ）",
-      "明るさ": "約80W相当",
-      "マントル": "1枚",
-      "対応ガス": "コールマン専用CB缶",
-      "点火方式": "自動点火（圧電）",
-      "燃焼時間": "約3時間（230g缶）"
+      "タイプ": "キャンドル風（マントル不要）",
+      "対応ガス": "コールマン純正LPガス（OD缶）",
+      "重量": "約210g",
+      "燃焼時間": "約28〜38時間（230g缶）",
+      "点火方式": "手動（ライター等が必要）"
     },
-    "description": "コールマンのガスランタン入門機。CB缶タイプなのでコンビニでも燃料が買えるのが強み。ブランドの信頼感と入手しやすさで、ファミリーキャンパーに長く支持されている。",
+    "description": "マントル不要のキャンドル風ガスランタン。ガラスグローブの中で揺れる生の炎を、OD缶に載せるだけで楽しめるコールマンの定番おしゃれランタン。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "tarp-008",
@@ -2485,7 +2484,7 @@
   },
   {
     "id": "gas-lantern-014",
-    "name": "イワタニ カセットガスランタン CB-SLG-3",
+    "name": "イワタニ カセットガス ジュニアランタン CB-JRL-2",
     "brand": "Iwatani",
     "price": 3800,
     "imageUrl": "https://www.forewinds.iwatani.co.jp/wp-content/themes/forewinds/assets/img/product/04/product01.png",
@@ -2493,17 +2492,15 @@
     "amazonUrl": "https://www.amazon.co.jp/dp/B001C9Y8PG/?tag=camp78-22",
     "categoryId": "light",
     "specs": {
-      "重量": "約310g（本体のみ）",
-      "明るさ": "約130W相当",
-      "マントル": "1枚",
-      "対応ガス": "CB缶",
-      "点火方式": "自動点火（圧電）",
-      "燃焼時間": "約3.5時間（CB缶1本）"
+      "対応ガス": "CB缶（カセットガス）",
+      "明るさ": "約100燭光",
+      "点火方式": "圧電点火",
+      "付属品": "専用ハードケース"
     },
-    "description": "イワタニのCB缶ガスランタン。カセットコンロと同じ缶が使えるため燃料の統一管理ができる。家族でキャンプするとき、バーナーとランタンを同じ缶で賄えるのは実用的。",
+    "description": "家庭用カセットガスがそのまま使えるイワタニの小型ガスランタン。ケース付きで持ち運びやすく、テーブル灯として手軽に炎の灯りを楽しめる。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-21T15:22:18.188+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "tarp-001",
@@ -3308,7 +3305,7 @@
       "火力": "2.9kW",
       "重量": "67g（本体のみ）",
       "対応ガス": "OD缶（EPIgas/プリムス等）",
-      "点火方式": "手動（ライター別途）",
+      "点火方式": "圧電点火（ステルスイグナイター）",
       "こんな人に": "ソロ・登山・冬キャンプ",
       "冬の安定性": "◎ マイクロレギュレーター搭載",
       "燃料入手先": "アウトドアショップ・登山用品店"
@@ -3316,7 +3313,7 @@
     "description": "風に強い「マイクロレギュレーター＋四本ゴトク」構造が特長。強風時でも安定して燃焼するため山岳・海辺キャンプで真価を発揮する。ソロキャンパーのファーストバーナーとして最強候補。",
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "burner-m-004",
@@ -4354,16 +4351,16 @@
     "categoryId": "light",
     "specs": {
       "重量": "約120g（本体のみ）",
-      "明るさ": "約155W相当",
+      "明るさ": "約240W相当（プレミアムガス使用時）",
       "マントル": "1枚",
-      "対応ガス": "OD缶",
+      "対応ガス": "CB缶専用",
       "点火方式": "手動（ライター別途）",
       "燃焼時間": "約3.5時間（250g缶）"
     },
     "description": "日本の新潟発ユニフレームのフォールディングランタン。プリムス2245Aに匹敵する明るさを折り畳みコンパクト設計で実現。国産ブランドへのこだわりがある人に刺さる一台。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "tent-f03",
@@ -4657,7 +4654,7 @@
     "categoryId": "light",
     "specs": {
       "重量": "約195g（本体のみ）",
-      "明るさ": "約220W相当",
+      "明るさ": "約80W相当",
       "マントル": "1枚",
       "対応ガス": "OD缶",
       "点火方式": "自動点火（圧電）",
@@ -4666,7 +4663,7 @@
     "description": "スノーピークのガスランタン最高峰。圧電着火で火花1つで点火できる。明るさ・品質ともにOD缶ランタンのリファレンス機。迷ったらこれを選べば間違いない。",
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-21T15:05:58.346+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "shoes-001",
@@ -4721,16 +4718,17 @@
     "categoryId": "light",
     "specs": {
       "重量": "約120g（本体のみ）",
-      "明るさ": "約155W相当",
+      "明るさ": "約230W相当",
       "マントル": "1枚",
-      "対応ガス": "OD缶",
+      "対応ガス": "CB缶（ST-760等）",
       "点火方式": "手動（ライター別途）",
-      "燃焼時間": "約4時間（250g缶）"
+      "燃焼時間": "約4時間（250g缶）",
+      "特徴": "虫が寄りにくい波長の光"
     },
     "description": "マイクロレギュレーター搭載で冬でも安定した火力を発揮。気温が下がるとガス圧が落ちる問題をSOTOが解決した。6,000円以下でこの機能は圧倒的コスパ。",
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00"
+    "updatedAt": "2026-07-03T07:34:04.474Z"
   },
   {
     "id": "sb-budget-004",
@@ -5102,14 +5100,14 @@
     "brand": "Coleman",
     "price": 2490,
     "imageUrl": "https://m.media-amazon.com/images/I/41tbgKe-bPL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%259E%25E3%2583%25B3%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%259C%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25B92%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08LVG5VTB?tag=camp78-22",
     "categoryId": "",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:38:37.389Z"
   },
   {
     "id": "tent-coleman-toughwide",
@@ -5570,14 +5568,14 @@
     "brand": "CAMPER / 各種",
     "price": 4000,
     "imageUrl": "https://m.media-amazon.com/images/I/812K6s+fI7L._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%25A9%25E3%2583%2583%25E3%2582%25AF%2520%25E6%259C%25A8%25E8%25A3%25BD%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97+%E6%9C%A8%E8%A3%BD+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9+%E3%83%A9%E3%83%83%E3%82%AF&tag=camp78-22",
     "categoryId": "",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:38:37.389Z"
   },
   {
     "id": "mat-thermarest-prolite",
@@ -5667,14 +5665,14 @@
     "brand": "Naturehike（ネイチャーハイク）",
     "price": 2200,
     "imageUrl": "https://m.media-amazon.com/images/I/61+nH0dM7mL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNaturehike%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%2590%25E3%2583%2583%25E3%2582%25B0%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=Naturehike+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97&tag=camp78-22",
     "categoryId": "",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:38:37.389Z"
   },
   {
     "id": "cooker-004",
@@ -6160,7 +6158,7 @@
     "brand": "スノーピーク",
     "price": 3300,
     "imageUrl": "https://m.media-amazon.com/images/I/4180v8PqbXL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2583%258E%25E3%2583%25BC%25E3%2583%2594%25E3%2583%25BC%25E3%2582%25AF%2520%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2520No.1%2520CS-068R%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08DKN2NB8?tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -6172,7 +6170,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -6181,7 +6179,7 @@
     "brand": "コールマン",
     "price": 2490,
     "imageUrl": "https://m.media-amazon.com/images/I/51LLy7D-VPL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%259E%25E3%2583%25B3%2520%25E3%2583%2591%25E3%2583%2583%25E3%2582%25AB%25E3%2582%25A6%25E3%2582%25A7%25E3%2582%25A4%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -6193,7 +6191,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -6288,7 +6286,7 @@
     "brand": "トランギア",
     "price": 3630,
     "imageUrl": "https://m.media-amazon.com/images/I/61A3t2aNOML._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2588%25E3%2583%25A9%25E3%2583%25B3%25E3%2582%25AE%25E3%2582%25A2%2520%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%25200.6L%2520TR-325%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08LVDPKCJ?tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -6300,7 +6298,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -6309,7 +6307,7 @@
     "brand": "GSI",
     "price": 5940,
     "imageUrl": "https://m.media-amazon.com/images/I/51D-auH3BnL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FGSI%2520%25E3%2582%25B0%25E3%2583%25AC%25E3%2582%25A4%25E3%2582%25B7%25E3%2583%25A3%25E3%2583%25BC%2520%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -6321,7 +6319,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -6374,14 +6372,14 @@
     "brand": "tent-Mark DESIGNS",
     "price": 6578,
     "imageUrl": "https://m.media-amazon.com/images/I/510N0ysO9-L._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2586%25E3%2583%25B3%25E3%2583%259E%25E3%2582%25AF%25E3%2583%2587%25E3%2582%25B6%25E3%2582%25A4%25E3%2583%25B3%2520SOLUM%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%259C%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3+%E3%82%BD%E3%83%AB%E3%83%A0+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9&tag=camp78-22",
     "categoryId": "",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:38:37.389Z"
   },
   {
     "id": "water-jug-captain-stag-10l",
@@ -6588,14 +6586,14 @@
     "brand": "YOGOTO",
     "price": 2500,
     "imageUrl": "https://m.media-amazon.com/images/I/71nBIKJaieL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FYOGOTO%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%259C%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0911ZM18K?tag=camp78-22",
     "categoryId": "",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:38:37.389Z"
   },
   {
     "id": "dry-net-coleman",
@@ -6908,7 +6906,7 @@
     "brand": "",
     "price": 10780,
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%25B3%25E3%2583%25AC%25E3%2583%25BC%2520%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2582%25BF%25E3%2583%25BC%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%25207.5L%2F&link_type=text&ut=",
     "categoryId": "",
     "specs": {
       "容量": "7.5L",
@@ -6919,7 +6917,7 @@
     "description": "ステンレス製の本格ウォータージャグ。最大4日間の保冷力とバルブ式注ぎ口で使いやすさを両立。容量7.5L。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -7033,7 +7031,7 @@
     "brand": "",
     "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/71s%2BBRhNe0L._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A6%25E3%2583%258B%25E3%2583%2595%25E3%2583%25AC%25E3%2583%25BC%25E3%2583%25A0%2520%25E5%25B1%25B1%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2520900%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -7045,7 +7043,7 @@
     "description": "重量186gのアルミ製軽量ケトル。容量900ml。細口の注ぎ口でドリップコーヒーにも対応。キャンプ・登山両用。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -7143,7 +7141,7 @@
     "brand": "",
     "price": 4950,
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A6%25E3%2583%258B%25E3%2583%2595%25E3%2583%25AC%25E3%2583%25BC%25E3%2583%25A0%2520%25E3%2583%2595%25E3%2582%25A3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%2589%25E3%2583%25A9%25E3%2583%2583%25E3%2582%25AF%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
     "categoryId": "",
     "specs": {
@@ -7155,7 +7153,7 @@
     "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
@@ -7164,18 +7162,19 @@
     "brand": "",
     "price": 13980,
     "imageUrl": "https://m.media-amazon.com/images/I/617N2SvkeYL._AC_SL1500_.jpg",
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDD%25E3%2583%258F%25E3%2583%25B3%25E3%2583%25A2%25E3%2583%2583%25E3%2582%25AF%2520%25E3%2583%2595%25E3%2583%25AD%25E3%2583%25B3%25E3%2583%2588%25E3%2583%25A9%25E3%2582%25A4%25E3%2583%25B3%2F&link_type=text&ut=",
     "categoryId": "",
     "specs": {
-      "サイズ": "2.7×1.4m",
-      "重量": "860g（ハンモック本体）",
+      "サイズ": "約270×140cm",
+      "重量": "約860g",
       "耐荷重": "125kg",
-      "特徴": "両側ジッパー付き蚊帳（モスキートネット）標準装備"
+      "特徴": "両側ジッパー付き蚊帳（モスキートネット）標準装備",
+      "付属品": "ウェビング10m・ポール2本・収納袋（タープ/ツリープロテクター別売）"
     },
-    "description": "バグネット（蚊帳）一体型のキャンプ用ハンモック。ポリエステル製、耐荷重150kg、重量約665g。林間キャンプ・ツリーキャンプ向け。",
+    "description": "バグネット（蚊帳）一体型のキャンプ用ハンモック。ポリエステル製、耐荷重125kg、重量約約860g。林間キャンプ・ツリーキャンプ向け。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "updatedAt": "2026-07-03T07:38:37.389Z",
     "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
