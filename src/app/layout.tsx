@@ -64,6 +64,15 @@ export default function RootLayout({
         <Script id="ga-init" strategy="afterInteractive">
           {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0F2R4RX636');`}
         </Script>
+        {/* バリューコマース LinkSwitch: shopping.yahoo.co.jp への直リンクを
+            クリック時にアフィリエイトリンクへ自動変換する */}
+        <Script id="vc-pid" strategy="afterInteractive">
+          {`var vc_pid = "892651120";`}
+        </Script>
+        <Script
+          src="https://aml.valuecommerce.com/vcdal.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
