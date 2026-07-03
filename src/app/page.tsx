@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getCategories, getPublishedArticles, getProductsByIds } from "@/lib/db";
 import Header from "@/components/Header";
@@ -9,16 +10,16 @@ import { getCategoryIcon } from "@/lib/category-icons";
 export const revalidate = 3600; // ISR: 1時間
 
 export const metadata: Metadata = {
-  title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
+  title: "現役医師が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
   description:
-    "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
+    "現役医師・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
+    title: "現役医師が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
     description:
-      "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
+      "現役医師・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
     url: "/",
   },
 };
@@ -61,7 +62,7 @@ export default async function Home() {
     alternateName: "キャンプギアラボ",
     url: baseUrl,
     description:
-      "現役小児科医・キャンプ歴10年の運営者が、虫・暑さ・寒さ・食中毒・一酸化炭素など子ども連れキャンプのリスク視点でアウトドアギアを比較・検証。",
+      "現役医師・キャンプ歴10年の運営者が、虫・暑さ・寒さ・食中毒・一酸化炭素など子ども連れキャンプのリスク視点でアウトドアギアを比較・検証。",
     publisher: {
       "@type": "Organization",
       name: "Outdoor Gear Lab",
@@ -69,8 +70,8 @@ export default async function Home() {
     },
     author: {
       "@type": "Person",
-      name: "現役小児科開業医",
-      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+      name: "ギア男",
+      description: "現役の開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -109,21 +110,26 @@ export default async function Home() {
       <main className="flex-1">
         {/* Hero */}
         <section className="relative bg-ink-strong text-white overflow-hidden border-b border-line">
-          <div
-            className="absolute inset-0 opacity-25"
-            style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80')",
-              backgroundSize: "cover",
-              backgroundPosition: "center 40%",
-            }}
-          />
+          {/* LCP対策: CSS背景ではなく img として即時読み込みさせる */}
+          <div className="absolute inset-0 opacity-25">
+            <Image
+              src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80"
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover"
+              style={{ objectPosition: "center 40%" }}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-ink-strong via-ink-strong/70 to-ink-strong/30" />
           <div className="max-w-6xl mx-auto px-4 py-24 md:py-32 relative">
             <p className="text-lake-200 font-medium text-xs tracking-[0.25em] uppercase mb-4">
               Gear Reviews & Comparisons
             </p>
             <h1 className="text-3xl md:text-5xl font-semibold mb-5 leading-tight tracking-tight">
-              現役小児科医・キャンプ歴10年の父が、
+              現役医師・キャンプ歴10年の父が、
               <br />
               家族目線でギアを比較します
             </h1>
@@ -283,7 +289,7 @@ export default async function Home() {
                   key={label}
                   href={href}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="noopener noreferrer nofollow sponsored"
                   className="flex-none w-[140px] sm:w-[160px] flex flex-col items-center gap-2 bg-white border border-red-100 rounded-xl p-4 text-center hover:border-red-300 hover:shadow-sm transition group snap-start"
                 >
                   <span className="text-2xl">{icon}</span>

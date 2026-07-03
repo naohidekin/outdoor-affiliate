@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
 import MedicalAdvice from "@/components/MedicalAdvice";
 import RecommendationCTA from "@/components/RecommendationCTA";
+import AffiliateDisclosure from "@/components/AffiliateDisclosure";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
 
@@ -49,7 +50,7 @@ export async function generateMetadata({
     twitter: {
       card: "summary_large_image",
       title: article.title,
-      description: article.excerpt,
+      description,
     },
   };
 }
@@ -77,12 +78,15 @@ export default async function ArticlePage({
       getArticles(),
     ]);
   // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
+  // ISR(1h)ごとに再計算されるサーバーコンポーネントなので現在時刻の参照は安全
+  // eslint-disable-next-line react-hooks/purity
+  const renderedAt = Date.now();
   const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string | null }) => {
     const shared = (a.productIds ?? []).filter((id) =>
       (article.productIds ?? []).includes(id)
     ).length;
     const daysSince =
-      (Date.now() - new Date(a.publishedAt ?? 0).getTime()) / 86400000;
+      (renderedAt - new Date(a.publishedAt ?? 0).getTime()) / 86400000;
     return shared * 10 - Math.min(daysSince, 365);
   };
 
@@ -125,9 +129,9 @@ export default async function ArticlePage({
     dateModified: article.updatedAt,
     author: {
       "@type": "Person",
-      name: "現役小児科開業医",
-      jobTitle: "小児科医",
-      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+      name: "ギア男",
+      jobTitle: "医師",
+      description: "現役の開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -140,7 +144,9 @@ export default async function ArticlePage({
       url: baseUrl,
       logo: {
         "@type": "ImageObject",
-        url: `${baseUrl}/favicon.ico`,
+        url: `${baseUrl}/logo.png`,
+        width: 512,
+        height: 512,
       },
     },
     mainEntityOfPage: `${baseUrl}/articles/${article.slug}`,
@@ -178,14 +184,6 @@ export default async function ArticlePage({
       brand: { "@type": "Brand", name: p.brand },
       description: p.description,
       image: p.imageUrl || undefined,
-      ...(p.rating > 0 && {
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: p.rating,
-          bestRating: 5,
-          ratingCount: 1,
-        },
-      }),
       offers: {
         "@type": "Offer",
         price: p.price,
@@ -233,39 +231,6 @@ export default async function ArticlePage({
         }
       : null;
 
-  const isHowToArticle = /選び方|ガイド|完全/.test(article.title);
-  const howToJsonLd = isHowToArticle
-    ? (() => {
-        const headingRegex = /^##\s+(.+)$/gm;
-        const steps: { "@type": string; name: string; text: string }[] = [];
-        let match;
-        while ((match = headingRegex.exec(article.content)) !== null) {
-          const heading = match[1].replace(/[#*]/g, "").trim();
-          if (
-            heading &&
-            !heading.startsWith("合わせて読みたい") &&
-            !heading.startsWith("まとめ") &&
-            !heading.startsWith("よくある質問")
-          ) {
-            steps.push({
-              "@type": "HowToStep",
-              name: heading,
-              text: heading,
-            });
-          }
-        }
-        return steps.length >= 2
-          ? {
-              "@context": "https://schema.org",
-              "@type": "HowTo",
-              name: article.title,
-              description: article.metaDescription || article.excerpt,
-              step: steps.slice(0, 8),
-            }
-          : null;
-      })()
-    : null;
-
   return (
     <>
       <script
@@ -285,14 +250,6 @@ export default async function ArticlePage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(faqJsonLd),
-          }}
-        />
-      )}
-      {howToJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(howToJsonLd),
           }}
         />
       )}
@@ -338,8 +295,8 @@ export default async function ArticlePage({
               className="inline-flex items-center gap-1.5 text-slate-600 hover:text-lake-600 transition"
             >
               <span>🩺</span>
-              <span className="font-medium">現役小児科開業医</span>
-              <span className="text-slate-400">監修・執筆</span>
+              <span className="font-medium">ギア男（現役医師）</span>
+              <span className="text-slate-400">執筆</span>
             </Link>
             {(article.updatedAt ?? article.publishedAt) && (
               <time className="text-slate-500">
@@ -362,6 +319,8 @@ export default async function ArticlePage({
               </Link>
             )}
           </div>
+
+          <AffiliateDisclosure />
 
           {/* 記事冒頭 購入導線 */}
           {products.length > 0 && (

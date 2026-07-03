@@ -75,6 +75,16 @@ export default function ProductCard({ product }: { product: Product }) {
                 Amazonで見る
               </AffiliateLink>
             )}
+            {product.affiliateUrl && (
+              <AffiliateLink
+                href={product.affiliateUrl}
+                productId={product.id}
+                store="rakuten"
+                className="text-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
+              >
+                楽天で口コミをもっと見る →
+              </AffiliateLink>
+            )}
           </div>
         </div>
       </div>

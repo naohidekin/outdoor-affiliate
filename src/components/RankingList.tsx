@@ -82,6 +82,16 @@ export default function RankingList({ products }: { products: Product[] }) {
                 Amazonで見る
               </AffiliateLink>
             )}
+            {product.affiliateUrl && (
+              <AffiliateLink
+                href={product.affiliateUrl}
+                productId={product.id}
+                store="rakuten"
+                className="inline-flex items-center justify-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors whitespace-nowrap sm:ml-1"
+              >
+                楽天で口コミをもっと見る →
+              </AffiliateLink>
+            )}
           </div>
         </div>
       ))}

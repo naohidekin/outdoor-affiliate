@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Product } from "@/lib/types";
 import AffiliateLink from "./AffiliateLink";
 
@@ -21,10 +22,11 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                   {i + 1}
                 </span>
                 {p.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={p.imageUrl}
                     alt={p.name}
+                    width={48}
+                    height={48}
                     className="w-12 h-12 object-contain rounded shrink-0"
                   />
                 )}

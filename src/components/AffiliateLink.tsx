@@ -1,9 +1,11 @@
 "use client";
 
+import { trackAffiliateClick, AffiliateStore } from "@/lib/trackAffiliateClick";
+
 interface AffiliateLinkProps {
   href: string;
   productId: string;
-  store: "amazon" | "rakuten";
+  store: AffiliateStore;
   className?: string;
   children: React.ReactNode;
 }
@@ -16,29 +18,7 @@ export default function AffiliateLink({
   children,
 }: AffiliateLinkProps) {
   function handleClick() {
-    // GA4カスタムイベントで計測
-    if (typeof window !== "undefined" && "gtag" in window) {
-      (window as unknown as { gtag: (...args: unknown[]) => void }).gtag("event", "affiliate_click", {
-        product_id: productId,
-        store,
-        page_path: window.location.pathname,
-        link_url: href,
-      });
-    }
-
-    // ビーコンAPIでサーバーサイド記録（GA4が入っていない場合のフォールバック）
-    try {
-      const data = JSON.stringify({
-        productId,
-        store,
-        path: window.location.pathname,
-        link_url: href,
-        timestamp: new Date().toISOString(),
-      });
-      navigator.sendBeacon("/api/track-click", new Blob([data], { type: "application/json" }));
-    } catch {
-      // ignore
-    }
+    trackAffiliateClick(href, productId, store);
   }
 
   return (

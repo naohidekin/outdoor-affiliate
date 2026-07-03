@@ -133,6 +133,16 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       Amazonで見る
                     </AffiliateLink>
                   )}
+                  {p.affiliateUrl && (
+                    <AffiliateLink
+                      href={p.affiliateUrl}
+                      productId={p.id}
+                      store="rakuten"
+                      className="text-center text-[11px] text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
+                    >
+                      楽天で口コミを見る →
+                    </AffiliateLink>
+                  )}
                 </div>
               </td>
             ))}

@@ -6,6 +6,10 @@ import { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 import ComparisonTable from "./ComparisonTable";
 import RankingList from "./RankingList";
+import {
+  detectAffiliateStore,
+  trackAffiliateClick,
+} from "@/lib/trackAffiliateClick";
 
 interface Props {
   content: string;
@@ -87,6 +91,9 @@ export default function ArticleContent({ content, products }: Props) {
                   const isInternal =
                     href?.startsWith("/") ||
                     href?.includes("camp-gear-lab.com");
+                  // 本文内のアフィリエイトリンク（口コミCTA等）もボタンと
+                  // 同じ経路でクリック計測する
+                  const store = href ? detectAffiliateStore(href) : null;
                   return (
                     <a
                       href={href}
@@ -94,6 +101,11 @@ export default function ArticleContent({ content, products }: Props) {
                         target: "_blank",
                         rel: "nofollow sponsored noopener noreferrer",
                       })}
+                      {...(store &&
+                        href && {
+                          onClick: () =>
+                            trackAffiliateClick(href, "inline", store),
+                        })}
                     >
                       {children}
                     </a>
