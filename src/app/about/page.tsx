@@ -9,12 +9,12 @@ export const revalidate = 86400; // 1日キャッシュ
 export const metadata: Metadata = {
   title: "このサイトについて | Outdoor Gear Lab",
   description:
-    "現役医師・キャンプ歴10年の「ギア男」が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
+    "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "このサイトについて | Outdoor Gear Lab",
     description:
-      "現役医師・キャンプ歴10年の「ギア男」が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
+      "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
     url: "/about",
     type: "website",
     siteName: "Outdoor Gear Lab",
@@ -25,10 +25,10 @@ export const metadata: Metadata = {
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
-  name: "ギア男",
-  jobTitle: "医師",
+  name: "現役小児科開業医",
+  jobTitle: "小児科医",
   description:
-    "現役の開業医（内科ホームドクター）。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+    "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
   url: "https://camp-gear-lab.com/about",
   sameAs: ["https://camp-gear-lab.com"],
 };
@@ -61,7 +61,7 @@ export default async function AboutPage() {
           {/* 医師性バッジ */}
           <div className="flex flex-wrap items-center gap-3 text-sm mb-10 pb-6 border-b border-line">
             <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-full font-medium">
-              🩺 現役医師が執筆
+              🩺 現役小児科医監修
             </span>
             <span className="inline-flex items-center gap-1.5 bg-lake-50 text-lake-700 px-3 py-1.5 rounded-full font-medium">
               🏕️ キャンプ歴10年
@@ -73,7 +73,7 @@ export default async function AboutPage() {
 
           <div className="prose max-w-none">
             <p>
-              「Outdoor Gear Lab」は、<strong>現役の医師「ギア男」</strong>
+              「Outdoor Gear Lab」は、<strong>現役の小児科医</strong>
               が運営するアウトドアギアの比較・レビューサイトです。
             </p>
             <p>
@@ -87,7 +87,7 @@ export default async function AboutPage() {
             <h2>運営者プロフィール</h2>
             <ul>
               <li>
-                <strong>本職</strong>：開業医（内科ホームドクター）
+                <strong>専門</strong>：小児科
               </li>
               <li>
                 <strong>診療形態</strong>：開業医（関東圏）
@@ -207,7 +207,7 @@ export default async function AboutPage() {
                 <strong>URL</strong>：https://camp-gear-lab.com
               </li>
               <li>
-                <strong>運営者</strong>：ギア男（現役開業医・匿名運営）
+                <strong>運営者</strong>：現役小児科開業医（匿名運営）
               </li>
               <li>
                 <strong>収益源</strong>：Amazonアソシエイト、楽天アフィリエイト ほか

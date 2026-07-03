@@ -14,7 +14,7 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
             </h3>
             <p className="text-sm leading-relaxed text-slate-600">
               「どれ買えばいい？」に答えるアウトドアギア比較サイト。
-              現役医師・2児の父が、子ども連れキャンプの安全性と実用性を重視してギアを比較します。
+              現役小児科医・2児の父が、子ども連れキャンプの安全性と実用性を重視してギアを比較します。
             </p>
           </div>
           <div>

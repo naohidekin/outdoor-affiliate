@@ -10,16 +10,16 @@ import { getCategoryIcon } from "@/lib/category-icons";
 export const revalidate = 3600; // ISR: 1時間
 
 export const metadata: Metadata = {
-  title: "現役医師が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
+  title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
   description:
-    "現役医師・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
+    "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "現役医師が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
+    title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Outdoor Gear Lab",
     description:
-      "現役医師・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
+      "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
     url: "/",
   },
 };
@@ -62,7 +62,7 @@ export default async function Home() {
     alternateName: "キャンプギアラボ",
     url: baseUrl,
     description:
-      "現役医師・キャンプ歴10年の運営者が、虫・暑さ・寒さ・食中毒・一酸化炭素など子ども連れキャンプのリスク視点でアウトドアギアを比較・検証。",
+      "現役小児科医・キャンプ歴10年の運営者が、虫・暑さ・寒さ・食中毒・一酸化炭素など子ども連れキャンプのリスク視点でアウトドアギアを比較・検証。",
     publisher: {
       "@type": "Organization",
       name: "Outdoor Gear Lab",
@@ -70,8 +70,8 @@ export default async function Home() {
     },
     author: {
       "@type": "Person",
-      name: "ギア男",
-      description: "現役の開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+      name: "現役小児科開業医",
+      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -129,7 +129,7 @@ export default async function Home() {
               Gear Reviews & Comparisons
             </p>
             <h1 className="text-3xl md:text-5xl font-semibold mb-5 leading-tight tracking-tight">
-              現役医師・キャンプ歴10年の父が、
+              現役小児科医・キャンプ歴10年の父が、
               <br />
               家族目線でギアを比較します
             </h1>

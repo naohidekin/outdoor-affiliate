@@ -129,9 +129,9 @@ export default async function ArticlePage({
     dateModified: article.updatedAt,
     author: {
       "@type": "Person",
-      name: "ギア男",
-      jobTitle: "医師",
-      description: "現役の開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+      name: "現役小児科開業医",
+      jobTitle: "小児科医",
+      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
         "https://twitter.com/camp_gear_lab",
@@ -295,8 +295,8 @@ export default async function ArticlePage({
               className="inline-flex items-center gap-1.5 text-slate-600 hover:text-lake-600 transition"
             >
               <span>🩺</span>
-              <span className="font-medium">ギア男（現役医師）</span>
-              <span className="text-slate-400">執筆</span>
+              <span className="font-medium">現役小児科開業医</span>
+              <span className="text-slate-400">監修・執筆</span>
             </Link>
             {(article.updatedAt ?? article.publishedAt) && (
               <time className="text-slate-500">
@@ -319,8 +319,6 @@ export default async function ArticlePage({
               </Link>
             )}
           </div>
-
-          <AffiliateDisclosure />
 
           {/* 記事冒頭 購入導線 */}
           {products.length > 0 && (
@@ -422,6 +420,11 @@ export default async function ArticlePage({
             </div>
           </section>
         )}
+
+        {/* PR表記（ページ最下部） */}
+        <div className="max-w-4xl mx-auto px-4 pb-10">
+          <AffiliateDisclosure />
+        </div>
       </main>
       <Footer categories={categories} />
     </>
