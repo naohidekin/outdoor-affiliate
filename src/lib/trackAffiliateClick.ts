@@ -1,7 +1,7 @@
 // アフィリエイトクリック計測（GA4 + /api/track-click ビーコン）
 // AffiliateLink コンポーネントと記事本文内のインラインリンクで共用する
 
-export type AffiliateStore = "amazon" | "rakuten";
+export type AffiliateStore = "amazon" | "rakuten" | "yahoo";
 
 const AFFILIATE_HOSTS: [RegExp, AffiliateStore][] = [
   [/hb\.afl\.rakuten\.co\.jp/, "rakuten"],
@@ -10,6 +10,8 @@ const AFFILIATE_HOSTS: [RegExp, AffiliateStore][] = [
   [/amazon\.co\.jp/, "amazon"],
   [/amzn\.to/, "amazon"],
   [/amzn\.asia/, "amazon"],
+  [/ck\.jp\.ap\.valuecommerce\.com/, "yahoo"],
+  [/shopping\.yahoo\.co\.jp/, "yahoo"],
 ];
 
 export function detectAffiliateStore(href: string): AffiliateStore | null {

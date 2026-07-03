@@ -782,24 +782,6 @@
     "sourceApi": "rakuten"
   },
   {
-    "id": "viral-scout-1778961985579-bwqy",
-    "name": "ボウモア 15年 43％ 700ml[ウイスキー][御歳暮 贈り物 御礼 母の日 父の日 御中元]",
-    "brand": "ボウモア",
-    "price": 11710,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/sakaeyahonten/cabinet/scotchwisky/07443017/09102495/bowmore151r.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tf9f6.wwmjs1ff.g00tf9f6.wwmjt83d/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsakaeyahonten%2F10001213%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsakaeyahonten%2Fi%2F10001213%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "",
-    "categoryId": "",
-    "specs": {},
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-05-18T23:54:28.745+00:00",
-    "updatedAt": "2026-05-18T23:54:28.745+00:00",
-    "autoAdded": true,
-    "addedBy": "viral-scout",
-    "addedAt": "2026-05-16"
-  },
-  {
     "id": "rakuten-maxshare-10007356",
     "name": "【楽天1位】遮光/遮熱モデル追加！FIELDOOR ワンタッチタープテント 3m×3m 頑丈 スチール テント タープ 300 3.0m ワンタッチテント ワンタッチタープ ワンタッチ 大型 簡単 U",
     "brand": "マックスシェアー maxshare",
@@ -1549,31 +1531,6 @@
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T01:48:18.558Z",
-    "sourceApi": "rakuten"
-  },
-  {
-    "id": "chair-006",
-    "name": "在庫限り サンライン(SUNLINE) MSY おにやんま君 虫除け 防虫 アブ 蜂 対策 アウトドア キャンプ ソロキャンプ トレッキング 散策 登山 山登り 沢登り 山菜採り 園芸 農作業 釣り ",
-    "brand": "サンライン(SUNLINE)",
-    "price": 1833,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/aorinetshop/cabinet/23-leisure11/010-97084.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Faorinetshop%2F10016333%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Faorinetshop%2Fi%2F10016333%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
-    "categoryId": "chair",
-    "specs": {
-      "素材": "",
-      "重量": "",
-      "座面高": "",
-      "耐荷重": "",
-      "収納サイズ": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-04-15T00:00:40.431+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T00:00:40.431Z",
     "sourceApi": "rakuten"
   },
   {
@@ -3121,25 +3078,6 @@
     "autoAdded": false
   },
   {
-    "id": "rakuten-brave-0-ttk-0007-000",
-    "name": "タトンカ タープ Tarp 4 TC 285×400cm ポリコットン",
-    "brand": "",
-    "price": 0,
-    "imageUrl": "https://m.media-amazon.com/images/P/B08W56LSJ2.01._SCLZZZZZZZ_SX522_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25BF%25E3%2583%2588%25E3%2583%25B3%25E3%2582%25AB%2520%25E3%2582%25BF%25E3%2583%25BC%25E3%2583%2597%2520Tarp%25204%2520TC%2520285%25C3%2597400cm%2520%25E3%2583%259D%25E3%2583%25AA%25E3%2582%25B3%25E3%2583%2583%25E3%2583%2588%25E3%2583%25B3%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B08W56LSJ2?tag=camp78-22",
-    "categoryId": "テント",
-    "specs": {},
-    "description": "ポリコットン素材の軽量タープ。撥水・遮光性に優れ、ソロキャンプから焚火まで対応",
-    "rating": 0,
-    "createdAt": "2026-04-22T14:35:33.555+00:00",
-    "updatedAt": "2026-06-21T14:50:48.708+00:00",
-    "autoAdded": true,
-    "addedBy": "rakuten-brave",
-    "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
-  },
-  {
     "id": "sb-nanga-005",
     "name": "NANGA UDD BAG 630DX",
     "brand": "NANGA",
@@ -3410,25 +3348,6 @@
     "rating": 3.8,
     "createdAt": "2026-04-26T17:08:54.309+00:00",
     "updatedAt": "2026-06-12T03:09:31.626+00:00"
-  },
-  {
-    "id": "rakuten-i-collect-10010577",
-    "name": "【公式】イワタニ Iwatani カセットガス バーナー ジュニアコンパクトバーナー CB-JCB アウトドア キャンプ ジュニアバーナー【送料無料】【bousai_d19】",
-    "brand": "イワタニアイコレクト 楽天市場店",
-    "price": 4400,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/i-collect/cabinet/item02/2000002479.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r5de6.wwmjs98d.g00r5de6.wwmjtbba/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fi-collect%2F0003180%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fi-collect%2Fi%2F10010577%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
-    "categoryId": "burner",
-    "specs": {},
-    "description": "楽天レビュー607件、★4.72",
-    "rating": 4.72,
-    "createdAt": "2026-04-13T19:26:57.79+00:00",
-    "updatedAt": "2026-06-12T03:09:31.626+00:00",
-    "autoAdded": true,
-    "addedBy": "rakuten-ranking",
-    "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
   },
   {
     "id": "tent-001",
@@ -5691,31 +5610,6 @@
     "autoAdded": false
   },
   {
-    "id": "chair-008",
-    "name": "【レンタル】初めてのキャンプセット〔お得なセット〕 【往復送料無料】ファミリー キャンプ 宿泊 家族 春キャンプ 夏キャンプ 秋キャンプ 冬キャンプ テント",
-    "brand": "コールマン・キャンパルジャパン他",
-    "price": 27800,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/cotocoto/cabinet/tent/set004_01_01.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00svoh6.wwmjse43.g00svoh6.wwmjt463/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcotocoto%2Fset004%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fcotocoto%2Fi%2F10000056%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "",
-    "categoryId": "chair",
-    "specs": {
-      "素材": "",
-      "重量": "",
-      "座面高": "",
-      "耐荷重": "",
-      "収納サイズ": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-04-15T00:00:42.73+00:00",
-    "updatedAt": "2026-04-15T00:00:42.73+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T00:00:42.730Z",
-    "sourceApi": "rakuten"
-  },
-  {
     "id": "mat-waq-8cm",
     "name": "WAQ インフレータブル式マット 8cm",
     "brand": "WAQ",
@@ -7028,21 +6922,6 @@
     "rating": 4.1,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
     "updatedAt": "2026-06-24T16:01:56.241785+00:00"
-  },
-  {
-    "id": "kettle-uniflame-yama900",
-    "name": "ユニフレーム 山ケトル900",
-    "brand": "ユニフレーム",
-    "price": 0,
-    "imageUrl": "https://m.media-amazon.com/images/I/71s+BRhNe0L._AC_SL1500_.jpg",
-    "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22",
-    "categoryId": "",
-    "specs": {},
-    "description": "",
-    "rating": 0,
-    "createdAt": "2026-06-24T23:54:43.618+00:00",
-    "updatedAt": "2026-06-24T23:54:43.622+00:00"
   },
   {
     "id": "trash-box-fieldoor",

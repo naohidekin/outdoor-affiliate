@@ -82,6 +82,16 @@ export default function RankingList({ products }: { products: Product[] }) {
                 Amazonで見る
               </AffiliateLink>
             )}
+            {product.yahooUrl && (
+              <AffiliateLink
+                href={product.yahooUrl}
+                productId={product.id}
+                store="yahoo"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
+              >
+                Yahoo!で見る
+              </AffiliateLink>
+            )}
             {product.affiliateUrl && (
               <AffiliateLink
                 href={product.affiliateUrl}

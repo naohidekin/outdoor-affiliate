@@ -16,6 +16,8 @@ export interface Product {
   imageUrl: string;
   affiliateUrl: string;
   amazonUrl: string;
+  /** Yahoo!ショッピングのアフィリエイトURL（バリューコマース経由）。未設定なら Yahoo! ボタン非表示 */
+  yahooUrl?: string;
   categoryId: string;
   specs: Record<string, string>;
   description: string;

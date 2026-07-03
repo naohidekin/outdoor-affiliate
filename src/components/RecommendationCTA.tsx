@@ -61,6 +61,16 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                     Amazonで見る
                   </AffiliateLink>
                 )}
+                {p.yahooUrl && (
+                  <AffiliateLink
+                    href={p.yahooUrl}
+                    productId={p.id}
+                    store="yahoo"
+                    className="flex-1 sm:flex-none text-center bg-white hover:bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-medium transition"
+                  >
+                    Yahoo!で見る
+                  </AffiliateLink>
+                )}
               </div>
             </div>
           );
