@@ -22,6 +22,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    {
+      url: `${baseUrl}/about`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   // カテゴリページ: そのカテゴリ内の最新記事更新日を使用

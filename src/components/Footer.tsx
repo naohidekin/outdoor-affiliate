@@ -14,7 +14,7 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
             </h3>
             <p className="text-sm leading-relaxed text-slate-600">
               「どれ買えばいい？」に答えるアウトドアギア比較サイト。
-              現役小児科医・2児の父が、子ども連れキャンプの安全性と実用性を重視してギアを比較します。
+              現役医師・2児の父が、子ども連れキャンプの安全性と実用性を重視してギアを比較します。
             </p>
           </div>
           <div>
@@ -52,15 +52,35 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
               このサイトについて
             </h4>
             <p className="text-sm leading-relaxed text-slate-600">
-              当サイトはアフィリエイトプログラムに参加しています。
+              当サイトはアフィリエイト広告（プロモーション）を利用しています。
               商品リンクから購入いただくと運営費の一部になります。
             </p>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-1 mt-3 text-sm text-lake-600 hover:text-lake-700 transition font-medium"
-            >
-              運営者情報・編集ポリシー →
-            </Link>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-lake-600 hover:text-lake-700 transition font-medium"
+                >
+                  運営者情報・編集ポリシー →
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-lake-600 hover:text-lake-700 transition font-medium"
+                >
+                  プライバシーポリシー →
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-lake-600 hover:text-lake-700 transition font-medium"
+                >
+                  お問い合わせ →
+                </Link>
+              </li>
+            </ul>
             <a
               href="https://room.rakuten.co.jp/room_naomaru/items"
               target="_blank"
@@ -72,8 +92,12 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
             </a>
           </div>
         </div>
-        <div className="border-t border-line-soft mt-10 pt-6 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Outdoor Gear Lab. All rights reserved.
+        <div className="border-t border-line-soft mt-10 pt-6 text-center text-xs text-slate-400 space-y-2">
+          <p>
+            Amazonのアソシエイトとして、Outdoor Gear Lab
+            は適格販売により収入を得ています。
+          </p>
+          <p>&copy; {new Date().getFullYear()} Outdoor Gear Lab. All rights reserved.</p>
         </div>
       </div>
     </footer>
