@@ -244,20 +244,26 @@
     "id": "rakuten-brave-6-p11021",
     "name": "プリムス エクスプレス スパイダーストーブ2 P-136S",
     "brand": "",
-    "price": 0,
+    "price": 9681,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2597%25E3%2583%25AA%25E3%2583%25A0%25E3%2582%25B9%2520%25E3%2582%25A8%25E3%2582%25AF%25E3%2582%25B9%25E3%2583%2597%25E3%2583%25AC%25E3%2582%25B9%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2583%2580%25E3%2583%25BC%25E3%2582%25B9%25E3%2583%2588%25E3%2583%25BC%25E3%2583%25962%2520P-136S%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B092YGCD6B?tag=camp78-22",
     "categoryId": "バーナー",
-    "specs": {},
+    "specs": {
+      "出力": "2.8kW（2,400kcal/h・Tガス使用時）",
+      "本体重量": "195g",
+      "ゴトク径": "156mm",
+      "収納サイズ": "8.7×4.0×8.3cm"
+    },
     "description": "正規品のプリムスストーブ。安定性と使いやすさが特徴",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:17.716+00:00",
-    "updatedAt": "2026-06-21T15:05:19.368+00:00",
+    "updatedAt": "2026-07-03T07:28:36.069Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
+    "sourceApi": "brave-rakuten",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "sb-kids-003",
@@ -1109,20 +1115,26 @@
     "id": "rakuten-brave-6-4953571093208",
     "name": "SOTO アミカス SOD-320 シングルバーナー",
     "brand": "",
-    "price": 0,
+    "price": 6270,
     "imageUrl": "",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwhatnot%2F4953571093208%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B088DZTFS9?tag=camp78-22",
     "categoryId": "バーナー",
-    "specs": {},
+    "specs": {
+      "重量": "81g（本体のみ）",
+      "発熱量": "3.0kW（2,600kcal/h）",
+      "収納サイズ": "幅40×奥行43×高さ75mm",
+      "点火方式": "圧電点火（点火アシストレバー付き）"
+    },
     "description": "コンパクト設計のSOTOシングルバーナー。キャンプ・登山・BBQに最適",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:17.715+00:00",
-    "updatedAt": "2026-06-11T14:17:57.217+00:00",
+    "updatedAt": "2026-07-03T07:28:36.069Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
+    "sourceApi": "brave-rakuten",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "tumbler-007",
@@ -6146,31 +6158,43 @@
     "id": "kettle-snowpeak-no1",
     "name": "スノーピーク ケトルNo.1（CS-068R）",
     "brand": "スノーピーク",
-    "price": 0,
+    "price": 3300,
     "imageUrl": "https://m.media-amazon.com/images/I/4180v8PqbXL._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08DKN2NB8?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "0.9L",
+      "重量": "290g",
+      "材質": "ステンレス",
+      "サイズ": "150×140×96(h)mm"
+    },
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-06-24T23:54:43.622+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "kettle-coleman-packaway",
     "name": "コールマン パッカウェイケトル",
     "brand": "コールマン",
-    "price": 0,
+    "price": 2490,
     "imageUrl": "https://m.media-amazon.com/images/I/51LLy7D-VPL._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "約0.6L",
+      "重量": "約150g",
+      "材質": "アルミニウム（ハードアノダイズド加工）・ステンレス・シリコン",
+      "使用時サイズ": "約15×13×8(h)cm"
+    },
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-06-24T23:54:43.622+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "field-rack-campingmoon",
@@ -6262,31 +6286,43 @@
     "id": "kettle-trangia-06",
     "name": "トランギア ケトル0.6L（TR-325）",
     "brand": "トランギア",
-    "price": 0,
+    "price": 3630,
     "imageUrl": "https://m.media-amazon.com/images/I/61A3t2aNOML._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08LVDPKCJ?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "0.6L",
+      "重量": "140g",
+      "材質": "アルミ（無垢）",
+      "サイズ": "径13.5×高さ7.5cm"
+    },
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-06-24T23:54:43.622+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "kettle-gsi-glacier",
     "name": "GSI グレイシャーステンレスケトル",
     "brand": "GSI",
-    "price": 0,
+    "price": 5940,
     "imageUrl": "https://m.media-amazon.com/images/I/51D-auH3BnL._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "約946ml（0.9L）",
+      "重量": "290g",
+      "材質": "18-8ステンレス",
+      "サイズ": "16×15×8.9cm"
+    },
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "water-jug-stanley-7.5l",
@@ -6870,16 +6906,21 @@
     "id": "stanley-water-jug-7.5l",
     "name": "スタンレー クラシックアウトドアウォータージャグ 7.5L",
     "brand": "",
-    "price": 0,
+    "price": 10780,
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "7.5L",
+      "重量": "約1.97kg",
+      "サイズ": "約29.7×29.7×34.3cm",
+      "保冷力": "10℃以下を約11時間キープ（保冷フォーム入り）"
+    },
     "description": "ステンレス製の本格ウォータージャグ。最大4日間の保冷力とバルブ式注ぎ口で使いやすさを両立。容量7.5L。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "cooker-005",
@@ -6990,16 +7031,22 @@
     "id": "uniflame-yama-kettle-900",
     "name": "ユニフレーム 山ケトル900",
     "brand": "",
-    "price": 0,
+    "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/71s%2BBRhNe0L._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "容量": "約0.9L（適正容量 約0.85L）",
+      "重量": "約186g",
+      "材質": "アルミ（アルマイト加工）・ステンレスハンドル",
+      "付属品": "収納ケース"
+    },
     "description": "重量186gのアルミ製軽量ケトル。容量900ml。細口の注ぎ口でドリップコーヒーにも対応。キャンプ・登山両用。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "sierra-cup-belmont",
@@ -7094,31 +7141,42 @@
     "id": "uniflame-field-rack",
     "name": "ユニフレーム フィールドラック",
     "brand": "",
-    "price": 0,
+    "price": 4950,
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "使用時サイズ": "約60×35×23(h)cm",
+      "収納時サイズ": "約60×35×1(厚さ)cm",
+      "重量": "約1.7kg",
+      "分散耐荷重": "約30kg"
+    },
     "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "dd-hammock-frontline",
     "name": "DDハンモック フロントライン",
     "brand": "",
-    "price": 0,
+    "price": 13980,
     "imageUrl": "https://m.media-amazon.com/images/I/617N2SvkeYL._AC_SL1500_.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22",
     "categoryId": "",
-    "specs": {},
+    "specs": {
+      "サイズ": "2.7×1.4m",
+      "重量": "860g（ハンモック本体）",
+      "耐荷重": "125kg",
+      "特徴": "両側ジッパー付き蚊帳（モスキートネット）標準装備"
+    },
     "description": "バグネット（蚊帳）一体型のキャンプ用ハンモック。ポリエステル製、耐荷重150kg、重量約665g。林間キャンプ・ツリーキャンプ向け。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-03T07:28:36.069Z",
+    "priceUpdatedAt": "2026-07-03T07:28:36.069Z"
   },
   {
     "id": "tumbler-004",
