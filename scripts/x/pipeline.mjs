@@ -33,7 +33,7 @@ async function main() {
   }
   // キー検出の可視化（値は出さない）。OPENAI が false なら reviewer が haiku フォールバックになる。
   console.log(
-    `[keys] ANTHROPIC:${!!process.env.ANTHROPIC_API_KEY} OPENAI:${!!process.env.OPENAI_API_KEY} BRAVE:${!!process.env.BRAVE_API_KEY}`
+    `[keys] ANTHROPIC:${!!process.env.ANTHROPIC_API_KEY} OPENAI:${!!process.env.OPENAI_API_KEY} BRAVE:${!!process.env.BRAVE_API_KEY} NOTION:${!!process.env.NOTION_TOKEN}`
   );
   const args = process.argv.slice(2);
   const getNum = (flag, def) => {
