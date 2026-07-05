@@ -31,8 +31,26 @@ loadEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
 
-const MODEL = process.env.ARTICLE_WRITER_MODEL || "claude-sonnet-4-6";
+// 記事本文は脱AI・体温注入が最重要のため Opus 4.8 を既定にする（収益源・本数少で増分は月数百円）。
+// ARTICLE_WRITER_MODEL で上書き可能。キー未対応で 404 の場合は下記へ自動フォールバック。
+const MODEL = process.env.ARTICLE_WRITER_MODEL || "claude-opus-4-8";
+const MODEL_FALLBACK = process.env.ARTICLE_WRITER_FALLBACK_MODEL || "claude-sonnet-4-6";
 const MAX_RETRIES = 1;
+
+// model が 404(not_found)なら 1 度だけフォールバックモデルで再試行するラッパー。
+// 週次自動実行が Opus 未対応キーで静かに止まるのを防ぐ。
+async function createWithModelFallback(client, params) {
+  try {
+    return await client.messages.create(params);
+  } catch (err) {
+    const notFound = err?.status === 404 || /not_found|model:/i.test(err?.message || "");
+    if (notFound && params.model !== MODEL_FALLBACK) {
+      console.warn(`[article-writer] モデル ${params.model} が404 → ${MODEL_FALLBACK} へフォールバック`);
+      return await client.messages.create({ ...params, model: MODEL_FALLBACK });
+    }
+    throw err;
+  }
+}
 
 function jstDateString(d = new Date()) {
   return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -242,7 +260,7 @@ ${productInfo}
 
   console.log("[article-writer] Claude API 呼び出し中...");
 
-  const response = await anthropic.messages.create({
+  const response = await createWithModelFallback(anthropic, {
     model: MODEL,
     max_tokens: 8000,
     messages: [{ role: "user", content: userPrompt }],
