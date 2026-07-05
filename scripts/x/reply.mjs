@@ -167,14 +167,20 @@ async function reviewReply(t, reply) {
   );
 }
 
-export async function runReply({ dryRun = false } = {}) {
+export async function runReply({ dryRun = false, urls = [] } = {}) {
   if (!hasClaudeKey()) {
     console.warn("[reply] ANTHROPIC_API_KEY 未設定。スキップ。");
     return { pushed: 0 };
   }
-  const targets = parseTargets();
+  // コマンドで直接URLを渡された場合はファイルより優先（ファイル編集不要）
+  const targets =
+    urls.length > 0
+      ? urls.map((u) => ({ url: u, axis: "camp", targetText: "" }))
+      : parseTargets();
   if (targets.length === 0) {
-    console.log(`[reply] 対象がありません。${TARGETS_PATH} に「URL | 軸 | 相手の本文」を追記してください。`);
+    console.log(
+      `[reply] 対象がありません。\n  簡単: npm run x:v2:reply -- <ツイートURL>\n  または ${TARGETS_PATH} にURLを1行ずつ貼る`
+    );
     return { pushed: 0 };
   }
   const useGPT = hasOpenAIKey();
@@ -255,7 +261,9 @@ export async function runReply({ dryRun = false } = {}) {
 import { fileURLToPath } from "node:url";
 if (resolve(fileURLToPath(import.meta.url)) === resolve(process.argv[1] || "")) {
   const dryRun = process.argv.includes("--dry-run");
-  runReply({ dryRun }).catch((e) => {
+  // コマンド引数に含まれる x.com/twitter.com のステータスURLを対象にする
+  const urls = process.argv.slice(2).filter((a) => /https?:\/\/(x\.com|twitter\.com|mobile\.twitter\.com)\/[^\s]+\/status\/\d+/.test(a));
+  runReply({ dryRun, urls }).catch((e) => {
     console.error(`[reply] Fatal: ${e.message}`);
     process.exit(1);
   });
