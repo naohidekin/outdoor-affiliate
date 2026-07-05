@@ -56,3 +56,19 @@ export async function pushPostToNotion(post, { status = "draft" } = {}) {
   }
   return notionCreatePage(GEARMAN_POSTS_DB_ID, properties);
 }
+
+/**
+ * 生成した「リプライ」を GearMan Replies DB に作成。
+ * notion-poster の dbConfig(textField:"リプライ" / urlField:"元ポストURL")に一致させる。
+ * 通常リプは notion-poster が「手動対応」でスキップするため、既定は draft（人間がNotionで確認）。
+ * @param {{targetUrl, replyText, axis, targetSummary, scores, reviewedBy}} r
+ */
+export async function pushReplyToNotion(r, { status = "draft" } = {}) {
+  const properties = {
+    "リプライ": { rich_text: [{ text: { content: (r.replyText || "").slice(0, 2000) } }] },
+    "元ポストURL": { url: r.targetUrl || null },
+    "ステータス": { select: { name: status } },
+  };
+  // 任意プロパティ（DBに存在すれば入る。無ければNotionが弾くので基本フィールドのみ確実に）
+  return notionCreatePage(GEARMAN_REPLIES_DB_ID, properties);
+}
