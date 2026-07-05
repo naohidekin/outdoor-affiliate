@@ -37,7 +37,7 @@ const OWNED_GEAR = [
 ];
 
 // ─── ① 機械 regex 即弾き ─────────────────────────────────────────────
-function mechanicalScan(body) {
+export function mechanicalScan(body) {
   const hits = [];
   const add = (cat, list) => {
     for (const w of list || []) if (w && body.includes(w)) hits.push(`${cat}:${w}`);

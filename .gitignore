@@ -54,3 +54,9 @@ next-env.d.ts
 
 # Supabase sync state (local only)
 /data/_sync-state.json
+
+# X reply v2 (個人の対象URL・生成ログはコミットしない)
+data/x/reply-targets.txt
+data/x/replies.jsonl
+data/x/posts.jsonl
+data/x/ideas.jsonl

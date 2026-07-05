@@ -1,0 +1,9 @@
+# ギア男 リプ対象リスト
+# 1行 = 「相手の投稿URL | 軸(camp/doctor/parenting) | 相手の投稿本文」
+# 使い方: このファイルを reply-targets.txt にコピーし、返したい投稿を貼る
+#   cp data/x/reply-targets.example.txt data/x/reply-targets.txt
+# 実行: npm run x:v2:reply
+#
+# 例:
+https://x.com/someone/status/1234567890 | camp | 初めてのソロキャンプ、テント設営に1時間かかって心折れそうでした…
+https://x.com/someone/status/1234567891 | parenting | 子供と初焚き火。火をこわがると思ったら一番はしゃいでた
