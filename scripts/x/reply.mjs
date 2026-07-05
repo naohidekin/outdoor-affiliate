@@ -25,7 +25,8 @@ const WRITER_MODEL = process.env.X_WRITER_MODEL || "claude-opus-4-8";
 const WRITER_FALLBACK = process.env.X_WRITER_FALLBACK_MODEL || "claude-sonnet-4-6";
 const MAX_CHARS = CONFIG.formatting?.maxChars || 140;
 
-// 入力パース: 「URL | 軸 | 本文」。# 始まりと空行は無視。軸省略時は camp。
+// 入力パース: 基本は「URLだけ」を1行ずつ。任意で「URL | 軸」「URL | 軸 | 本文」も可。
+// 本文が無ければ fxtwitter から自動取得する。# 始まりと空行は無視。軸省略時は camp。
 function parseTargets() {
   if (!existsSync(TARGETS_PATH)) return [];
   return readFileSync(TARGETS_PATH, "utf8")
@@ -41,11 +42,26 @@ function parseTargets() {
         axis = ["camp", "doctor", "parenting"].includes(parts[1]) ? parts[1] : "camp";
         text = parts.slice(2).join(" | ");
       } else if (parts.length === 2) {
-        text = parts[1];
+        // 2列目が軸なら軸、そうでなければ本文とみなす
+        if (["camp", "doctor", "parenting"].includes(parts[1])) axis = parts[1];
+        else text = parts[1];
       }
       return { url, axis, targetText: text };
     })
     .filter((t) => t.url && /\/status\/\d+/.test(t.url));
+}
+
+// URL からツイート本文を取得（公開ミラー fxtwitter、認証不要・$0）。取れなければ null。
+async function fetchTweetText(url) {
+  const fx = url.replace(/^https?:\/\/(x\.com|twitter\.com|mobile\.twitter\.com)/i, "https://api.fxtwitter.com");
+  try {
+    const res = await fetch(fx, { headers: { "User-Agent": "gearman-reply/1.0" } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.tweet?.text || data?.tweet?.raw_text?.text || null;
+  } catch {
+    return null;
+  }
 }
 
 const AXIS_ANGLE = {
@@ -168,6 +184,14 @@ export async function runReply({ dryRun = false } = {}) {
   let pushed = 0;
   let rejected = 0;
   for (const t of targets) {
+    // 本文未指定なら fxtwitter から自動取得（URL貼るだけ運用）
+    if (!t.targetText) {
+      t.targetText = await fetchTweetText(t.url);
+      if (!t.targetText) {
+        console.warn(`[reply] 本文取得失敗 ${t.url} — スキップ（"URL | 軸 | 本文" で本文を手動指定も可）`);
+        continue;
+      }
+    }
     let reply;
     try {
       reply = (await generateReply(system, t)).replace(/^["「『]|["」』]$/g, "").trim();
