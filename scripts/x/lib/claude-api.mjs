@@ -36,13 +36,19 @@ export async function callClaude({
   temperature = 0.7,
 }) {
   const client = getClient();
-  const res = await client.messages.create({
-    model,
-    max_tokens: maxTokens,
-    temperature,
-    ...(system ? { system } : {}),
-    messages,
-  });
+  const base = { model, max_tokens: maxTokens, ...(system ? { system } : {}), messages };
+  let res;
+  try {
+    res = await client.messages.create({ ...base, temperature });
+  } catch (e) {
+    // Opus 4.8/4.7・Sonnet 5・Fable 5 等は sampling param を受け付けず 400。外して再試行。
+    const samplingRejected = e?.status === 400 && /temperature|top_p|top_k/i.test(e?.message || "");
+    if (samplingRejected) {
+      res = await client.messages.create(base);
+    } else {
+      throw e;
+    }
+  }
   return res.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
