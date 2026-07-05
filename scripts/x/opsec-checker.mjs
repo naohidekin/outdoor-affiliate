@@ -48,7 +48,9 @@ export function mechanicalScan(body) {
   add("効能断定(薬機法)", NG.medical);
   add("誇大", NG.landmark);
   add("政治", NG.political);
-  add("NG誇張", NG.hype);
+  // NG誇張(神/最高/絶対/完全 等)は部分一致で誤爆する(交感神経→"神"、最高気温→"最高"、
+  // 完全に→"完全")。誇張は文脈判断が必要なので機械の即弾きからは外し、LLM採点
+  // (投稿=AI軸/opsec意味検査、リプ=P軸)に委ねる。
   return hits;
 }
 
