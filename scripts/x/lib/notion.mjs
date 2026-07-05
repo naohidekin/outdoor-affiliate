@@ -39,6 +39,24 @@ export async function notionQueryDatabase(databaseId) {
   return data.results || [];
 }
 
+// DB の全ページを取得（ページネーション）。
+export async function notionQueryAll(databaseId) {
+  const results = [];
+  let cursor;
+  do {
+    const body = cursor ? { page_size: 100, start_cursor: cursor } : { page_size: 100 };
+    const data = await notionRequest("POST", `/v1/databases/${databaseId}/query`, body);
+    results.push(...(data.results || []));
+    cursor = data.has_more ? data.next_cursor : undefined;
+  } while (cursor);
+  return results;
+}
+
+// ページをアーカイブ（Notionのゴミ箱へ。30日間は復元可能）。
+export async function notionArchivePage(pageId) {
+  return notionRequest("PATCH", `/v1/pages/${pageId}`, { archived: true });
+}
+
 // ページのプロパティを更新。
 export async function notionUpdatePage(pageId, properties) {
   return notionRequest("PATCH", `/v1/pages/${pageId}`, { properties });

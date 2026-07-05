@@ -54,7 +54,8 @@
     "db:sync": "node --dns-result-order=ipv4first scripts/sync-to-supabase.js",
     "db:sync:dry": "node --dns-result-order=ipv4first scripts/sync-to-supabase.js --dry-run",
     "x:viral-scout": "node --dns-result-order=ipv4first scripts/viral-scout-agent.js",
-    "x:viral-scout:dry": "node --dns-result-order=ipv4first scripts/viral-scout-agent.js --dry-run"
+    "x:viral-scout:dry": "node --dns-result-order=ipv4first scripts/viral-scout-agent.js --dry-run",
+    "x:v2:reply:cleanup": "node --dns-result-order=ipv4first scripts/x/reply-cleanup.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
