@@ -11,9 +11,10 @@
   </array>
   <key>WorkingDirectory</key>
   <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
-  <!-- 20分ごと。Notionに元ポストURLを足すと最大20分で下書きが埋まる -->
+  <!-- 10分ごと。対象が無い時は Notion を1回問い合わせて即終了(LLM不使用=$0)。
+       間隔を短くしてもコストは増えない -->
   <key>StartInterval</key>
-  <integer>1200</integer>
+  <integer>600</integer>
   <key>StandardOutPath</key>
   <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/gearman-reply-fill.log</string>
   <key>StandardErrorPath</key>
