@@ -14,6 +14,50 @@ export function hasNotionToken() {
   return !!process.env.NOTION_TOKEN;
 }
 
+async function notionRequest(method, path, body) {
+  const token = process.env.NOTION_TOKEN;
+  if (!token) throw new Error("NOTION_TOKEN が未設定です");
+  const res = await fetch(`https://api.notion.com${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Notion ${method} ${path} 失敗 (${res.status}): ${t.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+// DB のページを取得（最大100件）。
+export async function notionQueryDatabase(databaseId) {
+  const data = await notionRequest("POST", `/v1/databases/${databaseId}/query`, { page_size: 100 });
+  return data.results || [];
+}
+
+// ページのプロパティを更新。
+export async function notionUpdatePage(pageId, properties) {
+  return notionRequest("PATCH", `/v1/pages/${pageId}`, { properties });
+}
+
+// プロパティ抽出ヘルパー
+export function propUrl(props, name) {
+  return props?.[name]?.url || null;
+}
+export function propRichText(props, name) {
+  return (props?.[name]?.rich_text || []).map((r) => r.plain_text || r.text?.content || "").join("").trim();
+}
+export function propTitle(props, name) {
+  return (props?.[name]?.title || []).map((r) => r.plain_text || r.text?.content || "").join("").trim();
+}
+export function propSelect(props, name) {
+  return props?.[name]?.select?.name || null;
+}
+
 async function notionCreatePage(databaseId, properties) {
   const token = process.env.NOTION_TOKEN;
   if (!token) throw new Error("NOTION_TOKEN が未設定です");

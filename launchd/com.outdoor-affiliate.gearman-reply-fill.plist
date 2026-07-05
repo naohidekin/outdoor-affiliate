@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.outdoor-affiliate.gearman-reply-fill</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/x/reply-fill.mjs</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+  <!-- 20分ごと。Notionに元ポストURLを足すと最大20分で下書きが埋まる -->
+  <key>StartInterval</key>
+  <integer>1200</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/gearman-reply-fill.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/gearman-reply-fill-error.log</string>
+</dict>
+</plist>
