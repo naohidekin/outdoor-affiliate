@@ -60,7 +60,9 @@ ${WISE_TEXT || "W(体温:実体験), I(独自視点:医師×ギアオタク), S(
 function parse(responseText) {
   const m = responseText.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("採点レスポンスをJSONとして解析できません");
-  const parsed = JSON.parse(m[0]);
+  // 壊れJSON対策: コードフェンス除去 + 末尾カンマ除去
+  const cleaned = m[0].replace(/```json?/gi, "").replace(/,\s*([}\]])/g, "$1");
+  const parsed = JSON.parse(cleaned);
   if (!parsed.scores || typeof parsed.scores.w !== "number") throw new Error("scores 構造が不正");
   parsed.pass = judgePass(parsed.scores); // サーバ側で再計算（モデルの判定を信用しない）
   return parsed;
