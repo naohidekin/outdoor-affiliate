@@ -167,6 +167,31 @@ async function reviewReply(t, reply) {
   );
 }
 
+// 1ターゲットを 本文取得→生成→opsec→採点 まで処理。reply.mjs / reply-fill.mjs で共用。
+// @returns {{ ok, reply, scores, reason }}
+export async function processTarget(t, system) {
+  if (!t.targetText) {
+    t.targetText = await fetchTweetText(t.url);
+    if (!t.targetText) return { ok: false, reason: "本文取得失敗" };
+  }
+  let reply;
+  try {
+    reply = (await generateReply(system, t)).replace(/^["「『]|["」』]$/g, "").trim();
+  } catch (e) {
+    return { ok: false, reason: `生成失敗: ${e.message}` };
+  }
+  const mech = mechanicalScan(reply);
+  if (mech.length) return { ok: false, reply, reason: `opsec: ${mech.join(",")}` };
+  let rv;
+  try {
+    rv = await reviewReply(t, reply);
+  } catch (e) {
+    return { ok: false, reply, reason: `採点失敗: ${e.message}` };
+  }
+  if (!rv.pass) return { ok: false, reply, scores: rv.scores, reason: rv.notes };
+  return { ok: true, reply, scores: rv.scores };
+}
+
 export async function runReply({ dryRun = false, urls = [] } = {}) {
   if (!hasClaudeKey()) {
     console.warn("[reply] ANTHROPIC_API_KEY 未設定。スキップ。");
@@ -190,65 +215,34 @@ export async function runReply({ dryRun = false, urls = [] } = {}) {
   let pushed = 0;
   let rejected = 0;
   for (const t of targets) {
-    // 本文未指定なら fxtwitter から自動取得（URL貼るだけ運用）
-    if (!t.targetText) {
-      t.targetText = await fetchTweetText(t.url);
-      if (!t.targetText) {
-        console.warn(`[reply] 本文取得失敗 ${t.url} — スキップ（"URL | 軸 | 本文" で本文を手動指定も可）`);
-        continue;
-      }
-    }
-    let reply;
-    try {
-      reply = (await generateReply(system, t)).replace(/^["「『]|["」』]$/g, "").trim();
-    } catch (e) {
-      console.warn(`[reply] 生成失敗 (${t.url}): ${e.message}`);
-      continue;
-    }
-
-    // opsec 機械ガード
-    const mech = mechanicalScan(reply);
-    if (mech.length) {
-      console.log(`[reply] REJECT(opsec) ${t.url} | ${mech.join(", ")} | ${reply}`);
+    const r = await processTarget(t, system);
+    if (!r.ok) {
+      const sc = r.scores ? ` R${r.scores.r}V${r.scores.v}P${r.scores.p}F${r.scores.f}` : "";
+      console.log(`[reply] REJECT${sc} ${t.url} | ${r.reason}`);
       rejected++;
       continue;
     }
-
-    // 独立採点
-    let rv;
-    try {
-      rv = await reviewReply(t, reply);
-    } catch (e) {
-      console.warn(`[reply] 採点失敗 (${t.url}): ${e.message} — スキップ`);
-      continue;
-    }
-    const s = rv.scores;
-    if (!rv.pass) {
-      console.log(`[reply] REJECT R${s.r}V${s.v}P${s.p}F${s.f} | ${t.url} | ${rv.notes}`);
-      rejected++;
-      continue;
-    }
-
+    const s = r.scores;
     const rec = {
       id: generateId("gr", readJsonl(REPLIES_LOG)),
       targetUrl: t.url,
       axis: t.axis,
-      replyText: reply,
+      replyText: r.reply,
       scores: s,
       reviewedBy: useGPT ? "gpt-4o" : "claude-haiku",
       status: "pushed",
       createdAt: jstNow(),
     };
     if (dryRun) {
-      console.log(`[reply] (dry) PASS R${s.r}V${s.v}P${s.p}F${s.f} | ${reply}`);
+      console.log(`[reply] (dry) PASS R${s.r}V${s.v}P${s.p}F${s.f} | ${r.reply}`);
       pushed++;
       continue;
     }
     try {
-      await pushReplyToNotion({ targetUrl: t.url, replyText: reply, axis: t.axis }, { status: "draft" });
+      await pushReplyToNotion({ targetUrl: t.url, replyText: r.reply, axis: t.axis }, { status: "draft" });
       appendFileSync(REPLIES_LOG, JSON.stringify(rec) + "\n", "utf8");
       pushed++;
-      console.log(`[reply] ✓ PASS R${s.r}V${s.v}P${s.p}F${s.f} → Notion | ${reply.slice(0, 50)}`);
+      console.log(`[reply] ✓ PASS R${s.r}V${s.v}P${s.p}F${s.f} → Notion | ${r.reply.slice(0, 50)}`);
     } catch (e) {
       console.error(`[reply] Notion投入失敗 (${t.url}): ${e.message}`);
     }

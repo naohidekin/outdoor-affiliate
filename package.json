@@ -17,6 +17,8 @@
     "x:v2:notion": "node --dns-result-order=ipv4first scripts/x/push-notion.mjs",
     "x:v2:reply": "node --dns-result-order=ipv4first scripts/x/reply.mjs",
     "x:v2:reply:dry": "node --dns-result-order=ipv4first scripts/x/reply.mjs --dry-run",
+    "x:v2:reply:fill": "node --dns-result-order=ipv4first scripts/x/reply-fill.mjs",
+    "x:v2:reply:fill:dry": "node --dns-result-order=ipv4first scripts/x/reply-fill.mjs --dry-run",
     "x:queue": "node scripts/queue-to-sheets.js",
     "x:sync": "node --dns-result-order=ipv4first scripts/sync-posted-status.js",
     "x:reset-stale": "node scripts/reset-stale-posts.js",
