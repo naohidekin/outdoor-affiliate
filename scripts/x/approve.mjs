@@ -38,14 +38,18 @@ function loadQueue() {
 }
 
 function toQueueItem(post) {
-  // 既存キューのアイテム形状に合わせる
+  // 既存の投稿レール(post-to-x.js)が拾える形状にする。
+  // - status は "ready"（JSONフォールバックの投稿対象フィルタ）。"pending"だと投稿されない
+  // - scheduledDate は今日（YYYY-MM-DD）。今日以前の approved/ready が投稿対象
+  // - url は空にする。v2の sourceUrls は「検索元の参考URL」であり、投稿に貼る
+  //   アフィリンク/記事CTAではない。ここに入れると無関係なリンクがツイートされる
   return {
-    status: "pending",
+    status: "ready",
     type: post.type,
     text: post.body,
-    url: (post.sourceUrls && post.sourceUrls[0]) || null,
+    url: null,
     selfReply: post.selfReply || null,
-    scheduledDate: null,
+    scheduledDate: jstNow().slice(0, 10),
     queuedAt: jstNow(),
     // トレーサビリティ（既存コンシューマは未知フィールドを無視する）
     _pipelineId: post.id,
@@ -69,8 +73,12 @@ function main() {
     reviewed.forEach((p) => {
       const s = p.wiseScores || {};
       const man = requiresManual(p) ? " [manual承認必須]" : "";
-      console.log(`- ${p.id} (${p.axis}/${p.type})${man} W${s.w ?? "-"}I${s.i ?? "-"}S${s.s ?? "-"}E${s.e ?? "-"}AI${s.ai ?? "-"}`);
-      console.log(`    ${p.body.slice(0, 60).replace(/\n/g, " ")}`);
+      const fc = p.needsHumanFactCheck ? ` ⚠要事実確認:${(p.claimsToVerify || []).length}件` : "";
+      console.log(`\n─ ${p.id} (${p.axis}/${p.type})${man} W${s.w ?? "-"}I${s.i ?? "-"}S${s.s ?? "-"}E${s.e ?? "-"}AI${s.ai ?? "-"}${fc}`);
+      console.log(p.body); // 全文表示
+      if (p.claimsToVerify && p.claimsToVerify.length) {
+        console.log(`  ⚠要確認: ${p.claimsToVerify.join(" / ")}`);
+      }
     });
     if (!list) console.log("\n承認: --id <id> / --all（doctor軸除く）/ --all --include-manual");
     return;
