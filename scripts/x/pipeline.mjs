@@ -31,6 +31,10 @@ async function main() {
     console.log("[pipeline] kill-switch ON。終了。");
     return;
   }
+  // キー検出の可視化（値は出さない）。OPENAI が false なら reviewer が haiku フォールバックになる。
+  console.log(
+    `[keys] ANTHROPIC:${!!process.env.ANTHROPIC_API_KEY} OPENAI:${!!process.env.OPENAI_API_KEY} BRAVE:${!!process.env.BRAVE_API_KEY}`
+  );
   const args = process.argv.slice(2);
   const getNum = (flag, def) => {
     const i = args.indexOf(flag);
