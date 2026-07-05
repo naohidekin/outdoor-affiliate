@@ -69,7 +69,6 @@ export async function runWriter({ count = 6, dryRun = false } = {}) {
       body = await callClaude({
         system,
         messages: [{ role: "user", content: buildUserPrompt(idea) }],
-        model: "claude-sonnet-4-20250514",
         maxTokens: 400,
         temperature: 0.85,
       });

@@ -20,13 +20,18 @@ export function hasClaudeKey() {
   return !!process.env.ANTHROPIC_API_KEY;
 }
 
+// 既存の記事パイプライン(article-*-agent)が使う現行モデル。
+// 旧X系の "claude-sonnet-4-20250514" は404になるため使わない。
+// X_CLAUDE_MODEL で上書き可能。
+export const DEFAULT_CLAUDE_MODEL = process.env.X_CLAUDE_MODEL || "claude-sonnet-4-6";
+
 /**
  * @returns {Promise<string>} テキスト本文
  */
 export async function callClaude({
   system,
   messages,
-  model = "claude-sonnet-4-20250514",
+  model = DEFAULT_CLAUDE_MODEL,
   maxTokens = 1024,
   temperature = 0.7,
 }) {

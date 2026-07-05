@@ -201,7 +201,6 @@ ${dedupeNote}
   const response = await callClaude({
     system: "あなたはX投稿企画のアシスタントです。JSONのみ出力してください。",
     messages: [{ role: "user", content: prompt }],
-    model: "claude-sonnet-4-20250514",
     maxTokens: 640,
     temperature: 0.8,
   });
