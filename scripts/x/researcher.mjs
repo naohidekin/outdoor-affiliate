@@ -261,7 +261,8 @@ export async function runResearcher({ count = 10, dryRun = false } = {}) {
     })
   );
 
-  let generated = 0;
+  // 各タスクをネタ化して候補を貯める（採用は後段でクォータ制御）
+  const candidates = [];
   for (const s of settled) {
     if (s.status === "rejected") {
       console.warn(`[researcher] 検索失敗: ${s.reason?.message}`);
@@ -281,29 +282,46 @@ export async function runResearcher({ count = 10, dryRun = false } = {}) {
         console.log(`[researcher] 重複スキップ: ${idea.topic}`);
         continue;
       }
-      const record = {
-        id: generateId("idea", readJsonl(IDEA_BANK_PATH)),
-        axis,
-        topic: idea.topic,
-        angle: idea.angle,
-        sourceUrls: (idea.sourceUrls || []).filter((u) => !isPromoJunk({ url: u })),
-        suggestedType: idea.suggestedType || null,
-        status: "active",
-        createdAt: jstNow(),
-      };
-      if (dryRun) {
-        console.log(`[researcher] (dry) + ${record.topic} (${axis})`);
-      } else {
-        appendJsonl(IDEA_BANK_PATH, record);
-      }
-      existingIdeas.push(record);
-      generated++;
-      if (generated >= count) break;
+      candidates.push({ axis, idea, used: false });
     }
-    if (generated >= count) break;
   }
 
-  console.log(`[researcher] 完了。ネタ${generated}件生成（目標${count}）。`);
+  // 採用: ① 軸クォータ(70/20/10)を尊重 → ② 余った枠を軸不問で補充（過少生成防止）。
+  // これで「先頭軸が全枠を食い尽くす」偏りを防ぐ。
+  const quota = { ...axisCounts }; // selectAxes が 70/20/10 で割り当てた軸別本数
+  const genByAxis = {};
+  let generated = 0;
+  const accept = (c) => {
+    const record = {
+      id: generateId("idea", readJsonl(IDEA_BANK_PATH)),
+      axis: c.axis,
+      topic: c.idea.topic,
+      angle: c.idea.angle,
+      sourceUrls: (c.idea.sourceUrls || []).filter((u) => !isPromoJunk({ url: u })),
+      suggestedType: c.idea.suggestedType || null,
+      status: "active",
+      createdAt: jstNow(),
+    };
+    if (dryRun) console.log(`[researcher] (dry) + ${record.topic} (${c.axis})`);
+    else appendJsonl(IDEA_BANK_PATH, record);
+    existingIdeas.push(record);
+    c.used = true;
+    generated++;
+    genByAxis[c.axis] = (genByAxis[c.axis] || 0) + 1;
+  };
+  // phase 1: 軸クォータの範囲で採用
+  for (const c of candidates) {
+    if (generated >= count) break;
+    if (!c.used && (genByAxis[c.axis] || 0) < (quota[c.axis] || 0)) accept(c);
+  }
+  // phase 2: 目標未達なら軸不問で補充
+  for (const c of candidates) {
+    if (generated >= count) break;
+    if (!c.used) accept(c);
+  }
+
+  const dist = Object.entries(genByAxis).map(([a, n]) => `${a}:${n}`).join(" ");
+  console.log(`[researcher] 完了。ネタ${generated}件生成（目標${count}）[${dist}]。`);
   return generated;
 }
 
