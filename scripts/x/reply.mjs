@@ -17,6 +17,10 @@ import { callClaude, hasClaudeKey } from "./lib/claude-api.mjs";
 import { callGPT, hasOpenAIKey } from "./lib/openai-api.mjs";
 import { mechanicalScan } from "./opsec-checker.mjs";
 import { pushReplyToNotion } from "./lib/notion.mjs";
+import { tweetAgeDays } from "./lib/twitter-util.mjs";
+
+// 元投稿がこれより古いURLはリプしても見られないので生成しない（$0で判定）
+const MAX_TARGET_AGE_DAYS = Number(process.env.X_REPLY_MAX_AGE_DAYS || 7);
 
 const ROOT = resolve(import.meta.dirname, "../..");
 const TARGETS_PATH = resolve(ROOT, "data/x/reply-targets.txt");
@@ -170,6 +174,11 @@ async function reviewReply(t, reply) {
 // 1ターゲットを 本文取得→生成→opsec→採点 まで処理。reply.mjs / reply-fill.mjs で共用。
 // @returns {{ ok, reply, scores, reason }}
 export async function processTarget(t, system) {
+  // 元投稿が古すぎるものは生成せず却下（無駄打ち防止）
+  const age = tweetAgeDays(t.url);
+  if (age != null && age > MAX_TARGET_AGE_DAYS) {
+    return { ok: false, reason: `元投稿が古い(${Math.floor(age)}日前) — ${MAX_TARGET_AGE_DAYS}日以内が対象` };
+  }
   if (!t.targetText) {
     t.targetText = await fetchTweetText(t.url);
     if (!t.targetText) return { ok: false, reason: "本文取得失敗" };
