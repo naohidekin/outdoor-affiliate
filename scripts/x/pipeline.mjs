@@ -14,7 +14,7 @@ loadEnv();
 
 import { isKillSwitchOn, readJsonl, POSTS_PATH } from "./lib/file-lock.mjs";
 
-const STAGES = ["researcher", "writer", "reviewer", "evidence", "opsec"];
+const STAGES = ["researcher", "writer", "reviewer", "evidence", "opsec", "notion"];
 
 async function runStep(name, fn) {
   console.log(`\n${"=".repeat(48)}\nSTEP: ${name.toUpperCase()}\n${"=".repeat(48)}`);
@@ -52,6 +52,7 @@ async function main() {
   const { runReviewer } = await import("./reviewer.mjs");
   const { runEvidenceChecker } = await import("./evidence-checker.mjs");
   const { runOpsecChecker } = await import("./opsec-checker.mjs");
+  const { runPushNotion } = await import("./push-notion.mjs");
 
   const results = {};
   if (startFrom <= 0) results.researcher = await runStep("researcher", () => runResearcher({ count: ideas, dryRun }));
@@ -59,6 +60,8 @@ async function main() {
   if (startFrom <= 2) results.reviewer = await runStep("reviewer", () => runReviewer({ dryRun }));
   if (startFrom <= 3) results.evidence = await runStep("evidence", () => runEvidenceChecker({ dryRun }));
   if (startFrom <= 4) results.opsec = await runStep("opsec", () => runOpsecChecker({ dryRun }));
+  // reviewed → Notion「ギア男 X Posts」に draft 投入（あなたが Notion で承認 → notion-poster が投稿）
+  if (startFrom <= 5) results.notion = await runStep("notion", () => runPushNotion({ dryRun }));
 
   // サマリ
   console.log(`\n${"=".repeat(48)}\nPIPELINE SUMMARY${dryRun ? " (dry-run)" : ""}\n${"=".repeat(48)}`);
@@ -67,8 +70,8 @@ async function main() {
   all.forEach((p) => (byStatus[p.status] = (byStatus[p.status] || 0) + 1));
   console.log(`posts.jsonl total: ${all.length}`);
   for (const [s, c] of Object.entries(byStatus).sort()) console.log(`  ${s}: ${c}`);
-  console.log("\n次: reviewed の投稿を承認 → キュー投入");
-  console.log("  node scripts/x/approve.mjs   （または admin ダッシュボード）");
+  console.log("\n次: Notion「ギア男 X Posts」DB で本文を確認 → 良いものを ステータス=approved に");
+  console.log("  → notion-poster（launchd自動）が X に投稿します。");
 }
 
 main().catch((e) => {

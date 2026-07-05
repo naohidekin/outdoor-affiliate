@@ -14,6 +14,7 @@
     "x:v2:research": "node --dns-result-order=ipv4first scripts/x/researcher.mjs",
     "x:v2:review": "node --dns-result-order=ipv4first scripts/x/reviewer.mjs",
     "x:v2:approve": "node --dns-result-order=ipv4first scripts/x/approve.mjs",
+    "x:v2:notion": "node --dns-result-order=ipv4first scripts/x/push-notion.mjs",
     "x:queue": "node scripts/queue-to-sheets.js",
     "x:sync": "node --dns-result-order=ipv4first scripts/sync-posted-status.js",
     "x:reset-stale": "node scripts/reset-stale-posts.js",
