@@ -78,7 +78,8 @@ ${body}
 function parse(text) {
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("opsec レスポンスをJSON解析できません");
-  return JSON.parse(m[0]);
+  const cleaned = m[0].replace(/```json?/gi, "").replace(/,\s*([}\]])/g, "$1");
+  return JSON.parse(cleaned);
 }
 
 async function semanticScan(body) {

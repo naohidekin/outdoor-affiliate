@@ -40,7 +40,8 @@ ${post.body}
 function parse(text) {
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("evidence レスポンスをJSON解析できません");
-  const p = JSON.parse(m[0]);
+  const cleaned = m[0].replace(/```json?/gi, "").replace(/,\s*([}\]])/g, "$1");
+  const p = JSON.parse(cleaned);
   if (typeof p.coherence !== "number") throw new Error("coherence が不正");
   p.claimsToVerify = Array.isArray(p.claimsToVerify) ? p.claimsToVerify : [];
   p.dangerousClaim = !!p.dangerousClaim;
