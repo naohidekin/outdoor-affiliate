@@ -12,7 +12,6 @@
  *   node scripts/article-publisher-agent.js --force id     # 強制公開
  */
 
-import { google } from "googleapis";
 import {
   loadEnv,
   readJson,
@@ -23,6 +22,26 @@ import {
 loadEnv();
 
 const SITE_URL = "https://camp-gear-lab.com";
+
+// googleapis は巨大パッケージで、環境によっては import だけで極端に遅く/ハングする
+// （dry-run では Google API を一切使わないのに読み込みで詰まる）。
+// そこで「実際に Indexing / Sheets を呼ぶ時だけ遅延ロード」し、
+// import・API呼び出しの双方にタイムアウトを掛けて、公開のコア処理を止めない。
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} タイムアウト(${ms}ms)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+let _google = null;
+async function loadGoogle() {
+  if (_google) return _google;
+  const mod = await withTimeout(import("googleapis"), 30_000, "googleapis 読み込み");
+  _google = mod.google;
+  return _google;
+}
 
 function jstDateString(d = new Date()) {
   return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -57,6 +76,7 @@ async function notifyGoogleIndex(slug) {
   }
 
   try {
+    const google = await loadGoogle();
     const credentials = JSON.parse(credentialsJson);
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -64,9 +84,9 @@ async function notifyGoogleIndex(slug) {
     });
     const indexing = google.indexing({ version: "v3", auth });
     const url = `${SITE_URL}/articles/${slug}`;
-    await indexing.urlNotifications.publish({
+    await withTimeout(indexing.urlNotifications.publish({
       requestBody: { url, type: "URL_UPDATED" },
-    });
+    }), 30_000, "Indexing publish");
     console.log(`[article-publisher] Indexing API: ${url}`);
   } catch (err) {
     console.warn(`[article-publisher] Indexing API エラー: ${err.message}`);
@@ -83,6 +103,7 @@ async function createArticlePromo(article) {
   }
 
   try {
+    const google = await loadGoogle();
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || "{}");
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -125,12 +146,12 @@ async function createArticlePromo(article) {
       "false",                  // N: autoApproved
     ];
 
-    await sheets.spreadsheets.values.append({
+    await withTimeout(sheets.spreadsheets.values.append({
       spreadsheetId,
       range: "下書き管理!A:N",
       valueInputOption: "RAW",
       requestBody: { values: [row] },
-    });
+    }), 30_000, "Sheets append");
 
     console.log(`[article-publisher] X article_promo 作成: ${id}`);
   } catch (err) {

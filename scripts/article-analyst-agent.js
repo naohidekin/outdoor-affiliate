@@ -12,7 +12,6 @@
  *   node scripts/article-analyst-agent.js --days 7       # 分析期間指定
  */
 
-import { google } from "googleapis";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   loadEnv,
@@ -22,6 +21,24 @@ import {
 } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
+
+// googleapis は巨大で環境によっては import だけでハングするため、GA4 を実際に
+// 呼ぶ時だけ遅延ロード（import・API呼び出しにタイムアウトを掛ける）。
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} タイムアウト(${ms}ms)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+let _google = null;
+async function loadGoogle() {
+  if (_google) return _google;
+  const mod = await withTimeout(import("googleapis"), 30_000, "googleapis 読み込み");
+  _google = mod.google;
+  return _google;
+}
 
 function jstDateString(d = new Date()) {
   return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -109,6 +126,7 @@ async function getArticlePVFromGA4(days) {
   }
 
   try {
+    const google = await loadGoogle();
     const credentials = JSON.parse(
       process.env.INDEXING_CREDENTIALS || process.env.GOOGLE_CREDENTIALS || "{}"
     );
@@ -123,7 +141,7 @@ async function getArticlePVFromGA4(days) {
     const formatDate = (d) => jstDateString(d);
 
     // 記事ページ別 PV + セッション
-    const res = await analyticsData.properties.runReport({
+    const res = await withTimeout(analyticsData.properties.runReport({
       property: `properties/${propertyId}`,
       requestBody: {
         dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(today) }],
@@ -141,10 +159,10 @@ async function getArticlePVFromGA4(days) {
         orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
         limit: 50,
       },
-    });
+    }), 30_000, "GA4 runReport(PV)");
 
     // カテゴリ別の検索流入（organic検索のみ）
-    const searchRes = await analyticsData.properties.runReport({
+    const searchRes = await withTimeout(analyticsData.properties.runReport({
       property: `properties/${propertyId}`,
       requestBody: {
         dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(today) }],
@@ -171,7 +189,7 @@ async function getArticlePVFromGA4(days) {
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 50,
       },
-    });
+    }), 30_000, "GA4 runReport(検索流入)");
 
     const rows = res.data.rows || [];
     const articlePV = rows.map((r) => ({
