@@ -56,7 +56,7 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                     href={p.amazonUrl}
                     productId={p.id}
                     store="amazon"
-                    className="flex-1 sm:flex-none text-center bg-white hover:bg-slate-50 text-slate-700 border border-line px-3 py-2 rounded-lg text-xs font-medium transition"
+                    className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium transition amazon-btn"
                   >
                     Amazonで見る
                   </AffiliateLink>

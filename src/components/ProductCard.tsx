@@ -70,7 +70,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 href={product.amazonUrl}
                 productId={product.id}
                 store="amazon"
-                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium border border-line text-slate-700 hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium transition-colors amazon-btn"
               >
                 Amazonで見る
               </AffiliateLink>

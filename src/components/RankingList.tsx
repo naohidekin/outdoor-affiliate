@@ -77,7 +77,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                 href={product.amazonUrl}
                 productId={product.id}
                 store="amazon"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium border border-line text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap amazon-btn"
               >
                 Amazonで見る
               </AffiliateLink>

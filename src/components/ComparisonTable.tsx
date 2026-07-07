@@ -128,7 +128,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       href={p.amazonUrl}
                       productId={p.id}
                       store="amazon"
-                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium border border-line text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium transition-colors amazon-btn"
                     >
                       Amazonで見る
                     </AffiliateLink>

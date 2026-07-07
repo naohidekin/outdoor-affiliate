@@ -335,3 +335,13 @@ body {
 .rakuten-btn:hover {
   background-color: #C40000;
 }
+
+/* Amazon affiliate button — 高視認性: 濃紺バック＋Amazonオレンジの太字 */
+.amazon-btn {
+  background-color: #232F3E;
+  color: #FF9900 !important;
+  font-weight: 700;
+}
+.amazon-btn:hover {
+  background-color: #131A22;
+}
