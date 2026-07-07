@@ -336,10 +336,12 @@ body {
   background-color: #C40000;
 }
 
-/* Amazon affiliate button — 高視認性: 濃紺バック＋Amazonオレンジの太字 */
+/* Amazon affiliate button — Amazon公式カラーで統一
+   背景: Squid Ink #232F3E（Amazon公式ネイビー・PMS 432C）
+   文字: Metallic Yellow #FFD814（Amazonの「カートに入れる」ボタンの黄色） */
 .amazon-btn {
   background-color: #232F3E;
-  color: #FF9900 !important;
+  color: #FFD814 !important;
   font-weight: 700;
 }
 .amazon-btn:hover {
