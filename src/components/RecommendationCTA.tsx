@@ -46,7 +46,7 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                     href={p.affiliateUrl}
                     productId={p.id}
                     store="rakuten"
-                    className="flex-1 sm:flex-none text-center bg-lake-600 hover:bg-lake-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition"
+                    className="flex-1 sm:flex-none text-center text-white px-3 py-2 rounded-lg text-xs font-medium transition rakuten-btn"
                   >
                     楽天で見る
                   </AffiliateLink>

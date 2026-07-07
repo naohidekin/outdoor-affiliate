@@ -326,10 +326,12 @@ body {
   overflow: hidden;
 }
 
-/* Rakuten affiliate button */
+/* Rakuten affiliate button — 高視認性: 鮮やかな赤バック＋白抜き太字 */
 .rakuten-btn {
-  background-color: #BF0000;
+  background-color: #E60000;
+  color: #ffffff !important;
+  font-weight: 700;
 }
 .rakuten-btn:hover {
-  background-color: #A00000;
+  background-color: #C40000;
 }
