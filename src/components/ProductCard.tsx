@@ -6,12 +6,12 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <div className="border border-line rounded-xl overflow-hidden bg-white">
       {product.imageUrl && (
-        <div className="aspect-square bg-white overflow-hidden relative">
+        <div className="relative h-56 sm:h-64 bg-white overflow-hidden">
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 100vw, 600px"
+            sizes="(max-width: 768px) 100vw, 400px"
             className="object-contain p-4"
             loading="lazy"
           />
