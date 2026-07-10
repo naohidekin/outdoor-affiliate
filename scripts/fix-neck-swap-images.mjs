@@ -19,6 +19,7 @@ const IMAGES = {
   "neck-mizuno-cooling-towel": "https://m.media-amazon.com/images/I/41xq5YpNSYL._AC_SL1000_.jpg",
 };
 
+const now = new Date().toISOString();
 const products = JSON.parse(fs.readFileSync(productsPath, "utf-8"));
 let changed = 0;
 for (const [id, url] of Object.entries(IMAGES)) {
@@ -27,6 +28,8 @@ for (const [id, url] of Object.entries(IMAGES)) {
   if (p.imageUrl === url) { console.log(`  ⏭️ 既存: ${id}`); continue; }
   console.log(`✅ ${id}: ${p.imageUrl} → ${url}`);
   p.imageUrl = url;
+  // updatedAt を更新しないと db:sync の auto-pull でリモート(古い画像)に巻き戻される
+  p.updatedAt = now;
   changed++;
 }
 if (changed) {
