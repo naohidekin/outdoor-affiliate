@@ -14,6 +14,8 @@ const AFFILIATE_HOSTS: [RegExp, AffiliateStore][] = [
   [/shopping\.yahoo\.co\.jp/, "yahoo"],
   // ゼビオ・エルブレス（LinkSwitchがクリック時に変換）
   [/supersports\.com/, "valuecommerce"],
+  // アルペン（スポーツデポ／ゴルフ5／アルペンアウトドアズ統合ストア。LinkSwitchがクリック時に変換）
+  [/store\.alpen-group\.jp/, "valuecommerce"],
 ];
 
 export function detectAffiliateStore(href: string): AffiliateStore | null {
