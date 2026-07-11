@@ -5,10 +5,10 @@
  *
  * 思想: 「害の除去は全自動、商品の差し替えだけ人間の1クリック承認」
  *  1. link-check-report.json の broken を再検証
- *     （PA-APIキーがあれば GetItems で確定判定。HTTPはCAPTCHAで判定不能になりやすい）
+ *     （Creators APIキーがあれば getItems で確定判定。HTTPはCAPTCHAで判定不能になりやすい）
  *  2. 死亡確定リンクは amazonUrl を自動で空に = 隔離
  *     （サイトでは楽天ボタンだけ残る。壊れリンクの露出を即座に止める）
- *  3. PA-APIキーがあれば代替候補を自動検索し、提案ファイルに書き出す
+ *  3. Creators APIキーがあれば代替候補を自動検索し、提案ファイルに書き出す
  *     → 管理画面 /admin/link-check の「候補に差し替え」ボタンで1クリック適用
  *  4. Supabase同期 + git commit/push（本番管理画面へ提案を届ける）
  *
@@ -20,7 +20,6 @@
 
 import fs from "fs";
 import path from "path";
-import crypto from "crypto";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { checkKillSwitch } from "../src/lib/x-agent-utils.mjs";
@@ -40,10 +39,17 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
-const SECRET_KEY = process.env.AMAZON_SECRET_KEY;
+// Creators API 認証情報（2026年5月にPA-API v5は廃止。後継のCreators APIを使う）
+// アソシエイト・セントラル → Creators API で発行した「認証情報ID」(amzn1...) と
+// 「Credential Secret」。旧変数名 AMAZON_ACCESS_KEY/SECRET_KEY に入れてあっても読める。
+const CREDENTIAL_ID = process.env.AMAZON_CREDENTIAL_ID || process.env.AMAZON_ACCESS_KEY;
+const CREDENTIAL_SECRET = process.env.AMAZON_CREDENTIAL_SECRET || process.env.AMAZON_SECRET_KEY;
+const CREDENTIAL_VERSION = process.env.AMAZON_CREDENTIAL_VERSION || "3.3"; // 日本のLWA
 const PARTNER_TAG = process.env.AMAZON_PARTNER_TAG || "camp78-22";
-const HAS_PAAPI = Boolean(ACCESS_KEY && SECRET_KEY);
+const HAS_API = Boolean(CREDENTIAL_ID && CREDENTIAL_SECRET);
+if (HAS_API && /^AKIA/.test(CREDENTIAL_ID)) {
+  console.log("⚠️ AKIA形式の旧PA-APIキーが設定されています。PA-APIは廃止済みのため、Creators APIの認証情報ID(amzn1...)に差し替えてください。");
+}
 
 // ─── URL再検証（check-amazon-links.js と同じ判定基準） ───────────
 
@@ -82,73 +88,79 @@ async function checkUrl(url) {
   }
 }
 
-// ─── PA-API v5 SearchItems（price-monitor.js と同じ署名方式） ───────
+// ─── Amazon Creators API（PA-API v5の後継。OAuth2 client_credentials） ───
+// 認証: 認証情報バージョンに応じたLWAエンドポイントでトークン取得（1時間有効）
+// API:  https://creatorsapi.amazon/catalog/v1/{getItems|searchItems}
+//       marketplaceは x-marketplace ヘッダー、JSONキーはlowerCamelCase
 
-const HOST = "webservices.amazon.co.jp";
-const REGION = "us-west-2";
-const SERVICE = "ProductAdvertisingAPI";
+const TOKEN_ENDPOINTS = {
+  "3.1": "https://api.amazon.com/auth/o2/token",
+  "3.2": "https://api.amazon.co.uk/auth/o2/token",
+  "3.3": "https://api.amazon.co.jp/auth/o2/token",
+};
+const API_BASE = "https://creatorsapi.amazon";
+const MARKETPLACE = "www.amazon.co.jp";
 
-function hmacSha256(key, data) {
-  return crypto.createHmac("sha256", key).update(data).digest();
-}
-function sha256hex(data) {
-  return crypto.createHash("sha256").update(data).digest("hex");
-}
-function getSignatureKey(key, dateStamp) {
-  const kDate = hmacSha256("AWS4" + key, dateStamp);
-  const kRegion = hmacSha256(kDate, REGION);
-  const kService = hmacSha256(kRegion, SERVICE);
-  return hmacSha256(kService, "aws4_request");
-}
+let cachedToken = null;
 
-async function paapiRequest(operation, apiPath, payload) {
-  const body = JSON.stringify(payload);
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-  const dateStamp = amzDate.slice(0, 8);
-  const headers = {
-    "content-encoding": "amz-1.0",
-    "content-type": "application/json; charset=utf-8",
-    host: HOST,
-    "x-amz-date": amzDate,
-    "x-amz-target": `com.amazon.paapi5.v1.ProductAdvertisingAPIv1.${operation}`,
-  };
-  const signedHeaders = Object.keys(headers).sort().join(";");
-  const canonicalHeaders = Object.keys(headers).sort().map((k) => `${k}:${headers[k]}`).join("\n");
-  const canonicalRequest = ["POST", apiPath, "", canonicalHeaders + "\n", signedHeaders, sha256hex(body)].join("\n");
-  const credentialScope = `${dateStamp}/${REGION}/${SERVICE}/aws4_request`;
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256hex(canonicalRequest)].join("\n");
-  const signature = crypto.createHmac("sha256", getSignatureKey(SECRET_KEY, dateStamp)).update(stringToSign).digest("hex");
-  const authHeader = `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  const res = await fetch(`https://${HOST}${apiPath}`, {
+async function getAccessToken() {
+  if (cachedToken && Date.now() < cachedToken.expiresAt) return cachedToken.token;
+  const endpoint = TOKEN_ENDPOINTS[CREDENTIAL_VERSION] || TOKEN_ENDPOINTS["3.3"];
+  const res = await fetch(endpoint, {
     method: "POST",
-    headers: { ...headers, Authorization: authHeader },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "client_credentials",
+      client_id: CREDENTIAL_ID,
+      client_secret: CREDENTIAL_SECRET,
+      scope: "creatorsapi::default",
+    }),
   });
-  if (!res.ok) throw new Error(`PA-API ${res.status}`);
-  return res.json();
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200);
+    throw new Error(`Creators APIトークン取得失敗 ${res.status}: ${detail}`);
+  }
+  const data = await res.json();
+  cachedToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + (Number(data.expires_in || 3600) - 60) * 1000,
+  };
+  return cachedToken.token;
+}
+
+async function creatorsApi(apiPath, payload) {
+  const token = await getAccessToken();
+  const res = await fetch(`${API_BASE}${apiPath}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "x-marketplace": MARKETPLACE,
+    },
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Creators API ${res.status}: ${text.slice(0, 200)}`);
+  return JSON.parse(text);
 }
 
 async function searchItems(keywords) {
-  const data = await paapiRequest("SearchItems", "/paapi5/searchitems", {
-    Keywords: keywords.slice(0, 100),
-    SearchIndex: "All",
-    ItemCount: 5,
-    PartnerTag: PARTNER_TAG,
-    PartnerType: "Associates",
-    Marketplace: "www.amazon.co.jp",
-    Resources: ["ItemInfo.Title", "ItemInfo.ByLineInfo", "Offers.Listings.Price"],
+  const data = await creatorsApi("/catalog/v1/searchItems", {
+    keywords: keywords.slice(0, 100),
+    searchIndex: "All",
+    itemCount: 5,
+    partnerTag: PARTNER_TAG,
+    resources: ["itemInfo.title", "itemInfo.byLineInfo", "offersV2.listings.price"],
   });
-  return data.SearchResult?.Items || [];
+  return data.searchResult?.items || [];
 }
 
-// ─── PA-API GetItems による生死判定 ─────────────────────
+// ─── Creators API getItems による生死判定 ─────────────────
 // HTTPスクレイピングはAmazonのCAPTCHAでほぼ全滅するため、
-// キーがあれば正規API（GetItems）でASINの生死を確定させる。
-//   - ItemsResult に居てオファーあり → alive
-//   - ItemsResult に居るがオファーなし → dead（「現在お取り扱いできません」ページ相当）
-//   - Errors で InvalidParameterValue / ItemNotAccessible → dead（ASIN消滅）
+// キーがあれば正規API（getItems）でASINの生死を確定させる。
+//   - itemsResult に居てオファーあり → alive
+//   - itemsResult に居るがオファーなし → dead（「現在お取り扱いできません」ページ相当）
+//   - errors で InvalidParameterValue / ItemNotAccessible → dead（ASIN消滅）
 //   - API呼び出し自体の失敗 → unknown（安全側: 隔離しない）
 
 function asinOf(url) {
@@ -156,36 +168,34 @@ function asinOf(url) {
   return m ? m[1] : null;
 }
 
-async function verifyAsinsViaPaapi(asins) {
+async function verifyAsinsViaApi(asins) {
   const verdicts = new Map();
   for (let i = 0; i < asins.length; i += 10) {
     const batch = asins.slice(i, i + 10);
     try {
-      const data = await paapiRequest("GetItems", "/paapi5/getitems", {
-        ItemIds: batch,
-        PartnerTag: PARTNER_TAG,
-        PartnerType: "Associates",
-        Marketplace: "www.amazon.co.jp",
-        Resources: ["ItemInfo.Title", "Offers.Listings.Price"],
+      const data = await creatorsApi("/catalog/v1/getItems", {
+        itemIds: batch,
+        partnerTag: PARTNER_TAG,
+        resources: ["itemInfo.title", "offersV2.listings.price"],
       });
-      const found = new Map((data.ItemsResult?.Items || []).map((it) => [it.ASIN, it]));
+      const found = new Map((data.itemsResult?.items || []).map((it) => [it.asin, it]));
       const deadAsins = new Set();
-      for (const e of data.Errors || []) {
-        if (e.Code !== "InvalidParameterValue" && e.Code !== "ItemNotAccessible") continue;
-        const m = (e.Message || "").match(/\b([A-Z0-9]{10})\b/);
+      for (const e of data.errors || []) {
+        if (e.code !== "InvalidParameterValue" && e.code !== "ItemNotAccessible") continue;
+        const m = (e.message || "").match(/\b([A-Z0-9]{10})\b/);
         if (m && batch.includes(m[1])) deadAsins.add(m[1]);
       }
       for (const asin of batch) {
         const it = found.get(asin);
-        if (it) verdicts.set(asin, it.Offers?.Listings?.length ? "alive" : "dead");
+        if (it) verdicts.set(asin, it.offersV2?.listings?.length ? "alive" : "dead");
         else if (deadAsins.has(asin)) verdicts.set(asin, "dead");
         else verdicts.set(asin, "unknown");
       }
     } catch (err) {
-      console.log(`  ⚠️ PA-API GetItems 失敗（このバッチは判定不能扱い）: ${err.message}`);
+      console.log(`  ⚠️ Creators API getItems 失敗（このバッチは判定不能扱い）: ${err.message}`);
       for (const asin of batch) verdicts.set(asin, "unknown");
     }
-    await new Promise((r) => setTimeout(r, 1200)); // PA-APIレート制限
+    await new Promise((r) => setTimeout(r, 1200)); // レート制限対策
   }
   return verdicts;
 }
@@ -201,8 +211,8 @@ function tokenize(s) {
 }
 
 function scoreCandidate(product, item) {
-  const title = item.ItemInfo?.Title?.DisplayValue || "";
-  const brandInfo = item.ItemInfo?.ByLineInfo?.Brand?.DisplayValue || "";
+  const title = item.itemInfo?.title?.displayValue || "";
+  const brandInfo = item.itemInfo?.byLineInfo?.brand?.displayValue || "";
   const pTokens = tokenize(product.name);
   const tTokens = new Set(tokenize(title + " " + brandInfo));
   if (pTokens.length === 0) return 0;
@@ -234,7 +244,7 @@ async function main() {
     return;
   }
 
-  console.log(`[link-fix] 開始${DRY_RUN ? " [DRY RUN]" : ""} — 再検証対象 ${broken.length} 件 / PA-API: ${HAS_PAAPI ? "あり" : "なし（検索リンクのみ提案）"}`);
+  console.log(`[link-fix] 開始${DRY_RUN ? " [DRY RUN]" : ""} — 再検証対象 ${broken.length} 件 / Creators API: ${HAS_API ? "あり" : "なし（検索リンクのみ提案）"}`);
 
   const products = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "products.json"), "utf-8"));
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -243,9 +253,9 @@ async function main() {
   const unknown = [];
   const quarantined = [];
 
-  // 1a. PA-API GetItems で一括判定（CAPTCHAの影響を受けない正規ルート）
-  let paapiVerdicts = new Map();
-  if (HAS_PAAPI) {
+  // 1a. Creators API getItems で一括判定（CAPTCHAの影響を受けない正規ルート）
+  let apiVerdicts = new Map();
+  if (HAS_API) {
     const asins = [
       ...new Set(
         broken
@@ -255,20 +265,20 @@ async function main() {
       ),
     ];
     if (asins.length > 0) {
-      console.log(`[link-fix] PA-API GetItems で ${asins.length} ASIN を照会します...`);
-      paapiVerdicts = await verifyAsinsViaPaapi(asins);
+      console.log(`[link-fix] Creators API getItems で ${asins.length} ASIN を照会します...`);
+      apiVerdicts = await verifyAsinsViaApi(asins);
     }
   }
 
-  // 1b. 再検証（PA-API判定を優先、確定しなかったものだけHTTPで再確認）
+  // 1b. 再検証（API判定を優先、確定しなかったものだけHTTPで再確認）
   for (const item of broken) {
     const product = byId.get(item.id);
     if (!product) { console.log(`  ⏭️ 商品なし: ${item.id}`); continue; }
     if (!product.amazonUrl) { console.log(`  ⏭️ 既に隔離済み: ${item.id}`); continue; }
 
     const asin = asinOf(item.url);
-    let verdict = asin ? paapiVerdicts.get(asin) : undefined;
-    let source = "PA-API";
+    let verdict = asin ? apiVerdicts.get(asin) : undefined;
+    let source = "Creators API";
     if (verdict !== "alive" && verdict !== "dead") {
       const result = await checkUrl(item.url);
       verdict = result.verdict;
@@ -301,7 +311,7 @@ async function main() {
     // 3. 代替候補の検索
     let candidate = null;
     let confidence = 0;
-    if (HAS_PAAPI) {
+    if (HAS_API) {
       try {
         const items = await searchItems(`${product.brand || ""} ${product.name}`.trim());
         let best = null;
@@ -312,14 +322,14 @@ async function main() {
         }
         if (best && bestScore >= 0.35) {
           candidate = {
-            asin: best.ASIN,
-            title: best.ItemInfo?.Title?.DisplayValue || "",
-            price: best.Offers?.Listings?.[0]?.Price?.Amount ?? null,
-            url: `https://www.amazon.co.jp/dp/${best.ASIN}?tag=${PARTNER_TAG}`,
+            asin: best.asin,
+            title: best.itemInfo?.title?.displayValue || "",
+            price: best.offersV2?.listings?.[0]?.price?.money?.amount ?? null,
+            url: `https://www.amazon.co.jp/dp/${best.asin}?tag=${PARTNER_TAG}`,
           };
           confidence = Math.round(bestScore * 100);
         }
-        await new Promise((r) => setTimeout(r, 1200)); // PA-APIレート制限
+        await new Promise((r) => setTimeout(r, 1200)); // レート制限対策
       } catch (err) {
         console.log(`  ⚠️ 候補検索失敗 (${q.id}): ${err.message}`);
       }

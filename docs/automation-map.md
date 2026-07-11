@@ -15,14 +15,14 @@
 | **article-daily** | 毎朝10:00 | **予約公開の執事**。公開予定日が来た記事を品質チェック→公開→Google Indexing通知→Supabase反映 |
 | **gearman-reply-fill** | 10分ごと | **リプ下書き秘書**。NotionにURLを貼ると、ギア男口調の返信下書きを自動生成（opsec機械チェック＋GPT-4o独立採点付き）。対象が無ければ0円で即終了 |
 | **link-check** | 日曜6:30 | **売り場の棚卸し係**。全Amazonリンクの生死を点検しレポート化（`data/link-check-report.json`）。結果は /admin/link-check で閲覧 |
-| **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenをPA-API GetItemsで確定判定（CAPTCHAの影響なし。キー無し時はHTTP再検証にフォールバック）→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→PA-APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認 |
+| **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenを**Creators API** getItemsで確定判定（CAPTCHAの影響なし。キー無し時はHTTP再検証にフォールバック）→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→Creators APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認。※旧PA-API v5は2026年5月廃止。認証はアソシエイト・セントラルで発行した認証情報ID(amzn1...)+Secret（.env.localのAMAZON_ACCESS_KEY/SECRET_KEYに格納、バージョン3.3=日本） |
 
 ### 🟡 条件付きの2本
 
 | ジョブ | 状態 | 条件 |
 |---|---|---|
 | **article-weekly**（水曜9:00） | **「下書き止まり」に改造して稼働**（本改修で writer が `scheduledPublishDate` を付けなくなった） | テーマ選定＋楽天商品調査＋AI初稿までを自動生成。**公開は絶対にしない**。人間が管理画面で仕上げて公開予定日を設定して初めて article-daily が公開する |
-| **price-monitor**（日曜6:00） | **保留（未インストール）** | 復活の3条件: (a) PA-APIキー取得（直近30日で売上3件以上が利用条件） (b) 価格のSupabase反映経路 (c) セール告知の保存先をSheets→Notionへ付け替え |
+| **price-monitor**（日曜6:00） | **保留（未インストール）** | 復活の3条件: (a) ~~PA-APIキー~~ → **Creators API認証情報は取得済み（2026-07-11確認）**。ただしスクリプト本体が旧PA-API署名のままなのでCreators API対応の改修が必要 (b) 価格のSupabase反映経路 (c) セール告知の保存先をSheets→Notionへ付け替え |
 
 ### 🔴 退役7本（`launchd/retired/` へ移動。setup-launchd.sh が自動アンロード）
 
@@ -152,7 +152,7 @@ launchctl list | grep outdoor-affiliate
 
 ## 7. 将来の再検討リスト
 
-- [ ] price-monitor 復活（PA-API条件が揃ったら）
+- [ ] price-monitor 復活（Creators API対応の改修＋Supabase反映経路＋Notion付け替えが揃ったら）
 - [ ] analyze-x のNotion読み取り版（投稿レール安定後）
 - [ ] viral-scout の定期実行化（「URL探しすら面倒」になったら）
 - [ ] Threads転載の作り直し（Notion読み＋トークン自動更新）
