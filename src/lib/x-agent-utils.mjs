@@ -161,6 +161,22 @@ export function checkResearchKillSwitch() {
   return { killed: false, reason: "" };
 }
 
+/**
+ * 事業別 Kill Switch チェック（notion-poster がDBごとに参照）。
+ * 全体停止(enabled) または business.<name>=true で停止。
+ * @param {string} business - gearman | amble | kodomo | jsh | drAuto
+ * @returns {{ killed: boolean, reason: string }}
+ */
+export function checkBusinessKillSwitch(business) {
+  const data = readJson("kill-switch.json");
+  if (!data) return { killed: false, reason: "" };
+  if (data.enabled) return { killed: true, reason: data.reason || "全体 Kill Switch 有効" };
+  if (data.business && data.business[business]) {
+    return { killed: true, reason: data.reason || (business + " の Kill Switch 有効") };
+  }
+  return { killed: false, reason: "" };
+}
+
 // ─── 投稿��歴管理 ────────────────���───────────────────
 
 /**

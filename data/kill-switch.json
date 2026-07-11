@@ -5,5 +5,12 @@
   "reason": "パイプライン復旧 - 2026-06-20",
   "disabledAt": "2026-06-20T08:45:00+09:00",
   "disabledBy": "manual",
-  "consecutiveErrors": []
+  "consecutiveErrors": [],
+  "business": {
+    "gearman": false,
+    "amble": false,
+    "kodomo": false,
+    "jsh": false,
+    "drAuto": true
+  }
 }

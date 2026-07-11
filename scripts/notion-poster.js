@@ -34,6 +34,7 @@ import { TwitterApi } from "twitter-api-v2";
 import {
   loadEnv,
   checkKillSwitch,
+  checkBusinessKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
 import {
   queryApproved,
@@ -339,6 +340,13 @@ async function main() {
   let totalErrors = 0;
 
   for (const dbConfig of targets) {
+    // 事業別 Kill Switch（1事業だけ止めたいとき用。全体は checkKillSwitch が担当）
+    const bks = checkBusinessKillSwitch(dbConfig.xCreds);
+    if (bks.killed) {
+      console.log(`[notion-poster] ${dbConfig.name}: 事業別 Kill Switch 有効のためスキップ (${bks.reason})`);
+      continue;
+    }
+
     const result = await processDb(dbConfig, opts, token);
     totalPosted += result.posted;
     totalSkipped += result.skipped;

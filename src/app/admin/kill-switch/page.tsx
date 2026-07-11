@@ -2,285 +2,163 @@
 
 import { useEffect, useState } from "react";
 
+type BusinessName = "gearman" | "amble" | "kodomo" | "jsh" | "drAuto";
+
 type KillSwitchState = {
-  businesses: {
-    gearman: {
-      x: boolean;
-      article: boolean;
-      research: boolean;
-    };
-    amble: {
-      x: boolean;
-    };
-    kodomo: {
-      x: boolean;
-      note: boolean;
-      threads: boolean;
-    };
-    jsh: {
-      x: boolean;
-      reddit: boolean;
-      threads: boolean;
-      article: boolean;
-      pinterest: boolean;
-    };
-    drAuto: {
-      x: boolean;
-    };
-  };
-  global: boolean;
-  updatedAt: string;
+  enabled: boolean;
+  articleEnabled: boolean;
+  researchEnabled: boolean;
+  business: Record<BusinessName, boolean>;
   reason: string;
+  disabledAt: string;
+  disabledBy: string;
 };
 
-type BusinessName = keyof KillSwitchState["businesses"];
-type PlatformName = "x" | "article" | "research" | "note" | "threads" | "reddit" | "pinterest";
-
-const DEFAULT_STATE: KillSwitchState = {
-  businesses: {
-    gearman: { x: false, article: false, research: false },
-    amble: { x: false },
-    kodomo: { x: false, note: false, threads: false },
-    jsh: { x: false, reddit: false, threads: false, article: false, pinterest: false },
-    drAuto: { x: true },
-  },
-  global: false,
-  updatedAt: "",
-  reason: "",
+const BUSINESS_LABELS: Record<BusinessName, string> = {
+  gearman: "ギア男（キャンプ）",
+  amble: "アンブロ（投資）",
+  kodomo: "こどもケアラボ（医療）",
+  jsh: "JSH（訪日）",
+  drAuto: "Dr.auto（医師×AI）",
 };
 
-const BUSINESS_SECTIONS = [
-  {
-    title: "ギア男",
-    business: "gearman",
-    items: [
-      { platform: "x", label: "X投稿" },
-      { platform: "article", label: "記事生成" },
-      { platform: "research", label: "リサーチ" },
-    ],
-  },
-  {
-    title: "アンブロ",
-    business: "amble",
-    items: [{ platform: "x", label: "X投稿" }],
-  },
-  {
-    title: "こどもケアラボ",
-    business: "kodomo",
-    items: [
-      { platform: "x", label: "X投稿" },
-      { platform: "note", label: "note" },
-      { platform: "threads", label: "Threads" },
-    ],
-  },
-  {
-    title: "JSH",
-    business: "jsh",
-    items: [
-      { platform: "x", label: "X投稿" },
-      { platform: "reddit", label: "Reddit" },
-      { platform: "threads", label: "Threads" },
-      { platform: "article", label: "記事生成" },
-      { platform: "pinterest", label: "Pinterest" },
-    ],
-  },
-  {
-    title: "Dr.auto",
-    business: "drAuto",
-    items: [{ platform: "x", label: "X投稿（API取得後に有効化）" }],
-  },
-] as const;
-
-function normalizeState(payload: Partial<KillSwitchState> | undefined): KillSwitchState {
-  return {
-    ...DEFAULT_STATE,
-    ...payload,
-    businesses: {
-      gearman: {
-        ...DEFAULT_STATE.businesses.gearman,
-        ...payload?.businesses?.gearman,
-      },
-      amble: {
-        ...DEFAULT_STATE.businesses.amble,
-        ...payload?.businesses?.amble,
-      },
-      kodomo: {
-        ...DEFAULT_STATE.businesses.kodomo,
-        ...payload?.businesses?.kodomo,
-      },
-      jsh: {
-        ...DEFAULT_STATE.businesses.jsh,
-        ...(payload?.businesses?.jsh ?? {}),
-      },
-      drAuto: {
-        ...DEFAULT_STATE.businesses.drAuto,
-        ...(payload?.businesses?.drAuto ?? {}),
-      },
-    },
-  };
-}
-
-function Toggle({
-  checked,
-  disabled,
-  onChange,
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={onChange}
-      className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
-        checked ? "bg-emerald-500" : "bg-gray-700"
-      } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
-    >
-      <span
-        className={`inline-block h-5 w-5 rounded-full bg-white transition ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-}
+const GLOBAL_SWITCHES: { key: "enabled" | "articleEnabled" | "researchEnabled"; label: string; detail: string }[] = [
+  { key: "enabled", label: "全システム停止", detail: "全パイプライン（投稿・記事・リサーチ）を止める非常ボタン" },
+  { key: "articleEnabled", label: "記事パイプライン停止", detail: "article-daily / article-weekly のみ止める" },
+  { key: "researchEnabled", label: "リサーチ系停止", detail: "viral-scout / トレンド収集のみ止める" },
+];
 
 export default function KillSwitchPage() {
-  const [state, setState] = useState<KillSwitchState>(DEFAULT_STATE);
-  const [loading, setLoading] = useState(true);
-  const [savingField, setSavingField] = useState<string | null>(null);
+  const [state, setState] = useState<KillSwitchState | null>(null);
+  const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/kill-switch")
-      .then(async (response) => {
-        const payload = (await response.json()) as KillSwitchState & { error?: string };
-        if (!response.ok) {
-          throw new Error(payload.error || "設定の取得に失敗しました");
-        }
-        setState(normalizeState(payload));
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "設定の取得に失敗しました");
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function sendUpdate(fieldKey: string, body: Record<string, unknown>, optimisticState: KillSwitchState) {
-    const previous = state;
-    setState(optimisticState);
-    setSavingField(fieldKey);
+  async function load() {
     setError(null);
-
     try {
-      const response = await fetch("/api/kill-switch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const payload = (await response.json()) as KillSwitchState & { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error || "更新に失敗しました");
-      }
-      setState(normalizeState(payload));
-    } catch (err: unknown) {
-      setState(previous);
-      setError(err instanceof Error ? err.message : "更新に失敗しました");
-    } finally {
-      setSavingField(null);
+      const res = await fetch("/api/kill-switch");
+      if (!res.ok) throw new Error(`取得失敗 (${res.status})`);
+      const data = (await res.json()) as KillSwitchState;
+      setState(data);
+      setReason(data.reason || "");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "取得に失敗しました");
     }
   }
 
-  function updateGlobal(value: boolean) {
-    void sendUpdate(
-      "global",
-      { global: value, reason: "" },
-      {
-        ...state,
-        global: value,
-      },
-    );
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function update(payload: Record<string, unknown>) {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/kill-switch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `更新失敗 (${res.status})`);
+      setState(data as KillSwitchState);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "更新に失敗しました");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function updateBusinessPlatform(business: BusinessName, platform: PlatformName, value: boolean) {
-    const nextBusinessState = {
-      ...(state.businesses[business] as Record<string, boolean>),
-      [platform]: value,
-    } as KillSwitchState["businesses"][BusinessName];
-
-    void sendUpdate(
-      `${business}:${platform}`,
-      { business, platform, value },
-      {
-        ...state,
-        businesses: {
-          ...state.businesses,
-          [business]: nextBusinessState,
-        },
-      },
+  function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+    return (
+      <button
+        onClick={onClick}
+        disabled={saving}
+        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+          on ? "bg-red-500" : "bg-gray-300"
+        }`}
+        aria-pressed={on}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+            on ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
     );
   }
 
   return (
-    <div className="-m-4 min-h-full bg-gray-950 px-4 py-6 text-gray-100 lg:-m-8 lg:px-8 lg:py-8">
-      <div className="mb-6">
-        <p className="text-sm uppercase tracking-[0.3em] text-red-400">管理</p>
-        <h1 className="mt-2 text-3xl font-semibold">KILL_SWITCH</h1>
-        <p className="mt-2 text-sm text-gray-400">共有 kill-switch を business x platform 単位で即時切り替えします。</p>
-      </div>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold text-gray-900">🛑 KILL_SWITCH</h1>
+      <p className="text-sm text-gray-500 mt-1">
+        自動パイプラインの非常停止。<strong className="text-red-600">スイッチON = 停止</strong> です。
+      </p>
+      <p className="text-xs mt-3 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+        ⚠️ このスイッチは <strong>ローカルMacのdev画面専用</strong> です（保存先: data/kill-switch.json。Vercel本番からは書き込めません）。
+        本番サイトの表示には影響せず、Mac上のlaunchdジョブだけを制御します。
+      </p>
 
-      {error ? (
-        <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</div>
-      ) : null}
+      {error && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+      )}
 
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
-            <div>
-              <p className="font-medium text-gray-100">グローバル緊急停止</p>
-              <p className="mt-1 text-sm text-red-100/70">全ビジネス・全プラットフォームを一括停止します。</p>
-            </div>
-            <Toggle
-              checked={state.global}
-              disabled={loading || savingField === "global"}
-              onChange={() => updateGlobal(!state.global)}
-            />
+      {!state ? (
+        <p className="mt-6 text-gray-500">読み込み中…</p>
+      ) : (
+        <>
+          <h2 className="mt-8 text-lg font-semibold text-gray-900">全体スイッチ</h2>
+          <div className="mt-3 rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+            {GLOBAL_SWITCHES.map((sw) => (
+              <div key={sw.key} className="flex items-center justify-between gap-4 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{sw.label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{sw.detail}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-semibold ${state[sw.key] ? "text-red-600" : "text-emerald-600"}`}>
+                    {state[sw.key] ? "停止中" : "稼働許可"}
+                  </span>
+                  <Toggle on={state[sw.key]} onClick={() => update({ field: sw.key, value: !state[sw.key] })} />
+                </div>
+              </div>
+            ))}
           </div>
 
-          {BUSINESS_SECTIONS.map((section) => (
-            <section key={section.business} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <h2 className="text-sm font-semibold tracking-[0.2em] text-gray-400">── {section.title} ──</h2>
-              <div className="mt-4 space-y-3">
-                {section.items.map((item) => {
-                  const fieldKey = `${section.business}:${item.platform}`;
-                  const checked = Boolean(
-                    (state.businesses[section.business] as Record<string, boolean>)[item.platform],
-                  );
-                  return (
-                    <div key={fieldKey} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-gray-950/60 p-4">
-                      <p className="font-medium text-gray-100">{item.label}</p>
-                      <Toggle
-                        checked={checked}
-                        disabled={loading || savingField === fieldKey}
-                        onChange={() => updateBusinessPlatform(section.business, item.platform, !checked)}
-                      />
-                    </div>
-                  );
-                })}
+          <h2 className="mt-8 text-lg font-semibold text-gray-900">事業別（SNS投稿の個別停止）</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            notion-poster がDBごとに参照します。1事業だけ止めたいときはこちら（全体を道連れにしない）。
+          </p>
+          <div className="mt-3 rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+            {(Object.keys(BUSINESS_LABELS) as BusinessName[]).map((name) => (
+              <div key={name} className="flex items-center justify-between gap-4 p-4">
+                <p className="text-sm text-gray-900">{BUSINESS_LABELS[name]}</p>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-semibold ${state.business[name] ? "text-red-600" : "text-emerald-600"}`}>
+                    {state.business[name] ? "停止中" : "稼働許可"}
+                  </span>
+                  <Toggle on={state.business[name]} onClick={() => update({ business: name, value: !state.business[name] })} />
+                </div>
               </div>
-            </section>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-          <p>最終更新: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("ja-JP") : "-"}</p>
-          <p className="mt-2">理由: {state.reason || "-"}</p>
-        </div>
-      </div>
+          <h2 className="mt-8 text-lg font-semibold text-gray-900">停止理由メモ</h2>
+          <div className="mt-3 flex gap-2">
+            <input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="例: 誤投稿の調査中"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-400">
+            最終更新: {state.disabledAt || "—"} {state.disabledBy ? `(${state.disabledBy})` : ""}
+            ※ 理由は次にどれかのスイッチを操作したときに一緒に保存されます
+          </p>
+        </>
+      )}
     </div>
   );
 }
