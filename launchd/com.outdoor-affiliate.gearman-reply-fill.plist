@@ -7,17 +7,17 @@
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/node</string>
-    <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/x/reply-fill.mjs</string>
+    <string>/Users/USERNAME/dev/outdoor-affiliate/scripts/x/reply-fill.mjs</string>
   </array>
   <key>WorkingDirectory</key>
-  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+  <string>/Users/USERNAME/dev/outdoor-affiliate</string>
   <!-- 10分ごと。対象が無い時は Notion を1回問い合わせて即終了(LLM不使用=$0)。
        間隔を短くしてもコストは増えない -->
   <key>StartInterval</key>
   <integer>600</integer>
   <key>StandardOutPath</key>
-  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/gearman-reply-fill.log</string>
+  <string>/Users/USERNAME/dev/outdoor-affiliate/logs/gearman-reply-fill.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/gearman-reply-fill-error.log</string>
+  <string>/Users/USERNAME/dev/outdoor-affiliate/logs/gearman-reply-fill-error.log</string>
 </dict>
 </plist>

@@ -7,7 +7,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/opt/homebrew/bin/node</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/article-orchestrate.js</string>
+		<string>/Users/USERNAME/dev/outdoor-affiliate/scripts/article-orchestrate.js</string>
 		<string>--pipeline</string>
 		<string>weekly</string>
 	</array>
@@ -21,11 +21,11 @@
 		<integer>0</integer>
 	</dict>
 	<key>WorkingDirectory</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-article-weekly.log</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate/logs/launchd-article-weekly.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/launchd-article-weekly-error.log</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate/logs/launchd-article-weekly-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>

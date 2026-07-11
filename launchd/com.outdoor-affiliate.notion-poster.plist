@@ -7,17 +7,17 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/opt/homebrew/bin/node</string>
-		<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/scripts/notion-poster.js</string>
+		<string>/Users/USERNAME/dev/outdoor-affiliate/scripts/notion-poster.js</string>
 	</array>
 	<key>StartInterval</key>
 	<integer>1800</integer>
 	<!-- 30分ごとに実行 (1800秒). Notion で approved にすれば最大30分以内にポスト -->
 	<key>WorkingDirectory</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate</string>
 	<key>StandardOutPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/notion-poster.log</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate/logs/notion-poster.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/NaohideKin/Desktop/AI関連/claude/outdoor-affiliate/logs/notion-poster-error.log</string>
+	<string>/Users/USERNAME/dev/outdoor-affiliate/logs/notion-poster-error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
