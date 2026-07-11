@@ -1,11 +1,18 @@
 {
-  "updatedAt": "2026-07-11T17:24:59+09:00",
+  "updatedAt": "2026-07-11T18:26:24+09:00",
   "period": "7d",
   "topArticles": [
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 48,
+      "pv7d": 49,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "family-tent-ranking",
+      "categoryId": "tent",
+      "pv7d": 27,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -19,21 +26,14 @@
     {
       "slug": "camp-fan-ranking",
       "categoryId": "fan",
-      "pv7d": 26,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "family-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 25,
+      "pv7d": 27,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "camp-insect-repellent-guide",
       "categoryId": "insect-repellent",
-      "pv7d": 24,
+      "pv7d": 25,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -47,13 +47,20 @@
     {
       "slug": "tarp-tent-layout-site-guide",
       "categoryId": "tarp",
-      "pv7d": 18,
+      "pv7d": 19,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "led-tent-light-ranking",
       "categoryId": "light",
+      "pv7d": 17,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "insect-repellent-spray-ranking",
+      "categoryId": "insect-repellent",
       "pv7d": 16,
       "clicks7d": 0,
       "ctr": 0
@@ -61,13 +68,6 @@
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv7d": 15,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "insect-repellent-spray-ranking",
-      "categoryId": "insect-repellent",
       "pv7d": 15,
       "clicks7d": 0,
       "ctr": 0
@@ -96,7 +96,7 @@
     {
       "slug": "budget-sleeping-bag-ranking",
       "categoryId": "sleeping-bag",
-      "pv7d": 9,
+      "pv7d": 10,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -122,6 +122,13 @@
       "ctr": 0
     },
     {
+      "slug": "gas-lantern-ranking",
+      "categoryId": "light",
+      "pv7d": 5,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "amenity-dome-vs-landnest-dome",
       "categoryId": "tent",
       "pv7d": 5,
@@ -134,49 +141,42 @@
       "pv7d": 5,
       "clicks7d": 0,
       "ctr": 0
-    },
-    {
-      "slug": "water-jug-ranking",
-      "categoryId": "kitchen",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "ctr": 0
     }
   ],
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "pv7d": 119,
+      "pv7d": 122,
       "clicks7d": 0,
-      "searchSessions": 87,
+      "searchSessions": 91,
       "trend": "active"
     },
     {
       "categoryId": "insect-repellent",
-      "pv7d": 39,
+      "pv7d": 41,
       "clicks7d": 0,
-      "searchSessions": 28,
+      "searchSessions": 31,
       "trend": "active"
     },
     {
       "categoryId": "fan",
-      "pv7d": 38,
+      "pv7d": 39,
       "clicks7d": 0,
       "searchSessions": 12,
       "trend": "active"
     },
     {
       "categoryId": "sleeping-bag",
-      "pv7d": 33,
+      "pv7d": 34,
       "clicks7d": 0,
-      "searchSessions": 23,
+      "searchSessions": 25,
       "trend": "active"
     },
     {
       "categoryId": "tarp",
-      "pv7d": 33,
+      "pv7d": 34,
       "clicks7d": 0,
-      "searchSessions": 32,
+      "searchSessions": 33,
       "trend": "active"
     },
     {
@@ -188,9 +188,9 @@
     },
     {
       "categoryId": "light",
-      "pv7d": 16,
+      "pv7d": 22,
       "clicks7d": 0,
-      "searchSessions": 18,
+      "searchSessions": 20,
       "trend": "active"
     },
     {
@@ -199,21 +199,14 @@
       "clicks7d": 0,
       "searchSessions": 5,
       "trend": "low"
-    },
-    {
-      "categoryId": "kitchen",
-      "pv7d": 4,
-      "clicks7d": 0,
-      "searchSessions": 6,
-      "trend": "low"
     }
   ],
   "effectivePatterns": [
-    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年版】または【2026年】を必ず含める。最新情報であることを明示し、検索意図と一致させることでCTRを高める。\",\"evidence\":\"全5記事が年版表記を含んでおり、PV上位を独占している\"}",
-    "{\"rule\":\"具体的な数字の明示ルール\",\"description\":\"「5選」「7選」「3モデル比較」など、記事内で取り上げる件数・比較数を数字でタイトルに入れる。読者が得られる情報量を事前に把握でき、クリックへの心理的障壁を下げる。\",\"evidence\":\"5記事中4記事が「5選」「7選」「3モデル」等の具体的な数量を明記している\"}",
-    "{\"rule\":\"比較・対決構造ルール\",\"description\":\"「AvsB」「徹底比較」「選び方と比較」など、複数モデルを比較する構造をタイトルで明示する。購買検討段階のユーザーの検索ニーズに直接マッチする。\",\"evidence\":\"PV最上位(48PV)のランドロック記事が「vs」「3モデル比較」を使用。他記事も「比較」を含むものが多い\"}",
-    "{\"rule\":\"ターゲット・用途の具体化ルール\",\"description\":\"「ソロキャンプ用」「家族4〜6人」「テント内が涼しくなる」など、誰向け・どんな状況かを明確にする修飾語を加える。ニッチな検索クエリにマッチしロングテールSEOで安定したPVを獲得する。\",\"evidence\":\"ソロ・ファミリー・テント内用途など用途限定記事が複数上位にランクイン\"}",
-    "{\"rule\":\"権威性・網羅性の付加ルール\",\"description\":\"「完全ガイド」「医師の安全チェック」「徹底比較」など、専門性・信頼性・網羅性を示すキーワードを付加する。EEATを意識したタイトル設計でGoogleの評価と読者信頼度を同時に高める。\",\"evidence\":\"虫除け記事が「完全ガイド」「医師の安全チェック」を入れることで差別化し24PVを獲得\"}"
+    "{\"rule\":\"年版明記による鮮度アピール\",\"description\":\"全記事が【2026年版】または【2026年】をタイトルに含めており、情報の新しさをユーザーに明示することでクリック率を高めている\",\"examples\":[\"【2026年版】\",\"【2026年】\"]}",
+    "{\"rule\":\"具体的な比較・選定数の提示\",\"description\":\"「5選」「7選」「3モデル比較」など選定数や比較数をタイトルで明示し、記事のボリューム感と網羅性をユーザーが事前に把握できるようにしている\",\"examples\":[\"おすすめ5選\",\"おすすめ7選\",\"3モデル比較\"]}",
+    "{\"rule\":\"ターゲットユーザー・用途の明確化\",\"description\":\"「家族4〜6人」「ソロキャンプ用」「テント内」など、誰のための・どんな用途向けかをタイトルに盛り込み、検索意図と記事内容の一致度を高めている\",\"examples\":[\"家族4〜6人で快適に\",\"ソロキャンプ用\",\"テント内が涼しくなる\"]}",
+    "{\"rule\":\"強力キーワード×比較・ガイド系サフィックスの組み合わせ\",\"description\":\"「おすすめ〇選」「徹底比較」「完全ガイド」「選び方と比較」など、検索需要の高いキーワードに行動・価値を示すサフィックスを付けることでSEO評価とユーザー訴求を両立している\",\"examples\":[\"徹底比較\",\"完全ガイド\",\"選び方と比較\"]}",
+    "{\"rule\":\"具体的ブランド名・モデル名の直接訴求（高PV記事限定）\",\"description\":\"最高PVのスノーピーク記事はブランド名・モデル名を直接タイトルに含めることで、比較検討フェーズの購買意欲が高いユーザーを集中的に集客し、他記事の約2倍のPVを獲得している\",\"examples\":[\"スノーピーク ランドロック vs ランドネストシェルター\",\"ランドロックX\"]}"
   ],
   "suggestions": [
     "来月の季節カテゴリ: cooler, light, tarp, insect-repellent — 準備推奨"
