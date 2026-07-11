@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-07-11T13:40:37.985Z",
+  "reportCheckedAt": "2026-06-29T00:14:07.082Z",
+  "quarantined": [],
+  "falsePositives": [],
+  "unknown": [
+    {
+      "id": "knife-001",
+      "name": "モーラナイフ Companion MG Stainless",
+      "url": "https://www.amazon.co.jp/dp/B00DWS0OIM?tag=camp78-22"
+    },
+    {
+      "id": "knife-002",
+      "name": "モーラナイフ Garberg Full Tang",
+      "url": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22"
+    },
+    {
+      "id": "pillow-sea-to-summit-aeros",
+      "name": "Sea to Summit エアロスプレミアムピロー",
+      "url": "https://www.amazon.co.jp/dp/B08VHMZP7P?tag=camp78-22"
+    },
+    {
+      "id": "pillow-thermarest-neoair",
+      "name": "サーマレスト ネオエアーピロー",
+      "url": "https://www.amazon.co.jp/dp/B00GV0B0DQ?tag=camp78-22"
+    },
+    {
+      "id": "pillow-waq-camp",
+      "name": "WAQ キャンプ枕",
+      "url": "https://www.amazon.co.jp/dp/B0CGMVZQNK?tag=camp78-22"
+    },
+    {
+      "id": "pillow-logos-camp-pillow",
+      "name": "ロゴス キャンプピロー（マイクロファイバー）",
+      "url": "https://www.amazon.co.jp/dp/B07V9KKVZW?tag=camp78-22"
+    },
+    {
+      "id": "hammock-unigear",
+      "name": "Unigear ハンモック パラシュートナイロン 2人用",
+      "url": "https://www.amazon.co.jp/dp/B07G4YNR99?tag=camp78-22"
+    },
+    {
+      "id": "knife-004",
+      "name": "オピネル フォールディングナイフ No.8 ステンレス",
+      "url": "https://www.amazon.co.jp/dp/B00006BEHO?tag=camp78-22"
+    },
+    {
+      "id": "dry-net-snowpeak",
+      "name": "スノーピーク テーブルドライネット UG-370",
+      "url": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22"
+    },
+    {
+      "id": "sierra-cup-cs",
+      "name": "キャプテンスタッグ シェラカップ ステンレス 目盛付",
+      "url": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22"
+    },
+    {
+      "id": "trash-box-dod",
+      "name": "DOD ステルスエックス ブラック GM1-450",
+      "url": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22"
+    },
+    {
+      "id": "pillow-nemo-fillo-elite",
+      "name": "NEMO フィロ エリート",
+      "url": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22"
+    },
+    {
+      "id": "trash-box-pykes",
+      "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
+      "url": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22"
+    },
+    {
+      "id": "uniflame-yama-kettle-900",
+      "name": "ユニフレーム 山ケトル900",
+      "url": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22"
+    },
+    {
+      "id": "sierra-cup-bundok",
+      "name": "BUNDOK シェラカップ 600ml BD-190",
+      "url": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22"
+    },
+    {
+      "id": "uniflame-field-rack",
+      "name": "ユニフレーム フィールドラック",
+      "url": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22"
+    }
+  ]
+}
