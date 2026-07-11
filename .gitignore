@@ -60,3 +60,5 @@ data/x/reply-targets.txt
 data/x/replies.jsonl
 data/x/posts.jsonl
 data/x/ideas.jsonl
+.env.local
+.env.production
