@@ -27,7 +27,7 @@
     "price": 2200,
     "imageUrl": "https://m.media-amazon.com/images/I/41XadwWuEBL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A2%25E3%2583%25BC%25E3%2583%25A9%25E3%2583%258A%25E3%2582%25A4%25E3%2583%2595%2520Companion%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B00DWS0OIM?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "knife",
     "specs": {
       "全長": "218mm",
@@ -41,7 +41,7 @@
     "description": "スウェーデン発のアウトドアナイフブランド・モーラナイフのエントリーモデル。¥2,200という価格で実用に足る切れ味と耐久性を持つ、キャンプ入門者の定番。",
     "rating": 4.5,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "water-jug-stanley-7.5l",
@@ -183,7 +183,7 @@
     "price": 1980,
     "imageUrl": "https://m.media-amazon.com/images/I/615JFqUo+WL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%AD%E3%82%B4%E3%82%B9+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07V9KKVZW?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "圧縮収納・空気入れ不要",
@@ -195,7 +195,7 @@
     "description": "空気不要のマイクロファイバー枕。2,000円以下のコスパ枕で、ファミリーキャンプの人数分揃えるのに最適。",
     "rating": 3.9,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "chair-007",
@@ -358,7 +358,7 @@
     "price": 990,
     "imageUrl": "https://m.media-amazon.com/images/I/71I0vpSl+9L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FBUNDOK%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "kitchen",
     "specs": {
       "容量": "600ml",
@@ -369,7 +369,7 @@
     "description": "容量600mlの大きめシェラカップ。ラーメンを作る・カレーを入れる・調理鍋として使うなど、標準サイズでは容量が足りない用途に対応。価格も1,000円前後とコスパよし。",
     "rating": 4.1,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "bluetti-eb3a",
@@ -1325,7 +1325,7 @@
     "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/71RfgXmQb8L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%2B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "kitchen",
     "specs": {
       "受賞": "2019年グッドデザイン賞",
@@ -1336,7 +1336,7 @@
     "description": "ブラックカラーでサイトをスタイリッシュに統一できる自立式ドライネット。2019年グッドデザイン賞受賞。金属製の仕切り網で安定感が高い。デザインにこだわりたい人向け。",
     "rating": 4.3,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "knife-005",
@@ -1842,7 +1842,7 @@
     "price": 9440,
     "imageUrl": "https://m.media-amazon.com/images/I/71KQxN4O3aL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2B%E3%82%B9%E3%83%86%E3%83%AB%E3%82%B9%E3%82%A8%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "storage",
     "specs": {
       "構造": "アコーディオン式・前面3パネル開閉",
@@ -1855,7 +1855,7 @@
     "description": "ゴミ袋を完全に隠しながら天板がテーブルとしても使えるテーブル兼用ゴミ箱。12個のカラビナで最大6分別対応。サイトの見た目を崩さずゴミ管理ができる唯一の選択肢。",
     "rating": 4.4,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "chair-001",
@@ -2591,7 +2591,7 @@
     "price": 3080,
     "imageUrl": "https://m.media-amazon.com/images/I/71A4e2r2jwL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88+%E3%83%8D%E3%82%AA%E3%82%A8%E3%82%A2%E3%83%BC+%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B00GV0B0DQ?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "円柱形デザイン・ワンウェイバルブ",
@@ -2603,7 +2603,7 @@
     "description": "マットで定評あるサーマレストのエアピロー。3,000円台で買えるコスパ重視の定番品。",
     "rating": 4,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "first-aid-poison-remover",
@@ -3302,7 +3302,7 @@
     "price": 4500,
     "imageUrl": "https://m.media-amazon.com/images/I/81OZC7BdnEL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FUnigear%2B%25E3%2583%2588%25E3%2583%25A9%25E3%2583%2599%25E3%2583%25AB%25E3%2583%258F%25E3%2583%25B3%25E3%2583%25A2%25E3%2583%2583%25E3%2582%25AF%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07G4YNR99?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "hammock",
     "specs": {
       "素材": "ナイロン100%（パラシュート生地）",
@@ -3315,7 +3315,7 @@
     "description": "コスパ重視の最初の1本に最適。ストラップ・カラビナが付属しているので届いてすぐ使える。320×200cmの大判サイズで余裕の寝心地。",
     "rating": 4.2,
     "createdAt": "2026-06-24T06:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "rw-003",
@@ -3499,7 +3499,7 @@
     "price": 650,
     "imageUrl": "https://m.media-amazon.com/images/I/71WcXjzFTjL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%2B%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "kitchen",
     "specs": {
       "容量": "300ml前後",
@@ -3512,7 +3512,7 @@
     "description": "500〜700円台で揃えられるコスパ最優先のステンレスシェラカップ。家族分・子ども用にまとめて揃えたいときの定番。直火対応・目盛り付き。",
     "rating": 4,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "tent-duo-005",
@@ -5342,7 +5342,7 @@
     "price": 13200,
     "imageUrl": "https://m.media-amazon.com/images/I/71HdISR7k6L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A2%25E3%2583%25BC%25E3%2583%25A9%25E3%2583%258A%25E3%2582%25A4%25E3%2583%2595%2520Garberg%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "knife",
     "specs": {
       "全長": "225mm",
@@ -5356,7 +5356,7 @@
     "description": "モーラナイフ初のフルタング構造モデル。バトニング（薪割り）にも耐えるヘビーデューティー仕様で、本格ブッシュクラフトに対応。",
     "rating": 4.6,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "sierra-cup-belmont",
@@ -5475,7 +5475,7 @@
     "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/71s%2BBRhNe0L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A6%25E3%2583%258B%25E3%2583%2595%25E3%2583%25AC%25E3%2583%25BC%25E3%2583%25A0%2520%25E5%25B1%25B1%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2520900%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "",
     "specs": {
       "容量": "約0.9L（適正容量 約0.85L）",
@@ -5486,7 +5486,7 @@
     "description": "重量186gのアルミ製軽量ケトル。容量900ml。細口の注ぎ口でドリップコーヒーにも対応。キャンプ・登山両用。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-03T08:33:42.885+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "peg-hammer-muranokajiya",
@@ -5879,7 +5879,7 @@
     "price": 4480,
     "imageUrl": "https://m.media-amazon.com/images/I/71+WhUKCkjL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSea+to+Summit+%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9+%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0+%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B08VHMZP7P?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "マルチファンクションバルブ・枕カバー付き",
@@ -5891,7 +5891,7 @@
     "description": "軽量コンパクトの定番エアピロー。62gで収納サイズは手のひら以下。バルブ1つで膨らませ・排気ができる。",
     "rating": 4.3,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "insect-repellent-010",
@@ -6450,7 +6450,7 @@
     "price": 2860,
     "imageUrl": "https://m.media-amazon.com/images/I/61AMqiWQZKL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%82%AA%25E3%83%94%25E3%83%8D%25E3%83%AB%2520No8%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B00006BEHO?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "knife",
     "specs": {
       "全長": "190mm（展開時）",
@@ -6464,7 +6464,7 @@
     "description": "1890年創業のフランスのナイフブランドOPINEL。軽量でコンパクトな折りたたみ式で、食材カットから焚き火の枝削りまでこなす汎用性の高さで人気。",
     "rating": 4.4,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "cot-helinox-cot-one",
@@ -6708,13 +6708,13 @@
     "price": 0,
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
     "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "",
     "specs": {},
     "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-06-24T23:54:43.623+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "shoes-002",
@@ -6924,7 +6924,7 @@
     "price": 3980,
     "imageUrl": "https://m.media-amazon.com/images/I/41aIpDAozZS._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0CGMVZQNK?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "ハイブリッド構造・マイクロファイバーカバー付属",
@@ -6936,7 +6936,7 @@
     "description": "ウレタンとエアのハイブリッド構造。自宅の枕に近い感触で、車キャンプに最適。",
     "rating": 4.2,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "trash-box-pykes",
@@ -6945,7 +6945,7 @@
     "price": 2500,
     "imageUrl": "https://m.media-amazon.com/images/I/71KQVY3dkFL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FPYKES%2BPEAK%2B%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%82%B4%E3%83%9F%E7%AE%B1%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "storage",
     "specs": {
       "対象": "グループキャンプ・長期キャンプ向け",
@@ -6955,7 +6955,7 @@
     "description": "40Lと60Lの2サイズ展開で大容量が特徴のポップアップゴミ箱。グループキャンプや多人数での利用に向いており、コスパも高め。ゴミが多く出る場面での主力ゴミ箱として使いやすい。",
     "rating": 4,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "screen-tarp-coleman-400",
@@ -7385,7 +7385,7 @@
     "price": 5800,
     "imageUrl": "https://m.media-amazon.com/images/I/61agDDE1jPL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNEMO+%E3%83%95%E3%82%A3%E3%83%AD+%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22",
+    "amazonUrl": "",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "滑り止め底面・ツイストバルブ",
@@ -7397,7 +7397,7 @@
     "description": "53gの超軽量エアピロー。底面に滑り止め素材を採用しており、シュラフの上でずれにくい。",
     "rating": 4.1,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-11T15:36:04.222Z"
   },
   {
     "id": "hammock-eno-doublenest",

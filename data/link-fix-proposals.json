@@ -1,88 +1,233 @@
 {
-  "generatedAt": "2026-07-11T13:57:29.769Z",
+  "generatedAt": "2026-07-11T15:36:04.222Z",
   "reportCheckedAt": "2026-06-29T00:14:07.082Z",
-  "quarantined": [],
-  "falsePositives": [],
-  "unknown": [
+  "quarantined": [
     {
       "id": "knife-001",
       "name": "モーラナイフ Companion MG Stainless",
-      "url": "https://www.amazon.co.jp/dp/B00DWS0OIM?tag=camp78-22"
+      "brand": "Morakniv",
+      "oldUrl": "https://www.amazon.co.jp/dp/B00DWS0OIM?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B009NZVZ3E",
+        "title": "モーラナイフ コンパニオン ヘビーデューティ (カーボン) MG ミリタリーグリーン キャンプ ナイフ アウトドアナイフ Mora knife Companion Heavy Duty MG",
+        "price": 2574,
+        "url": "https://www.amazon.co.jp/dp/B009NZVZ3E?tag=camp78-22"
+      },
+      "confidence": 75,
+      "searchUrl": "https://www.amazon.co.jp/s?k=Morakniv%20%E3%83%A2%E3%83%BC%E3%83%A9%E3%83%8A%E3%82%A4%E3%83%95%20Companion%20MG%20Stainless"
     },
     {
       "id": "knife-002",
       "name": "モーラナイフ Garberg Full Tang",
-      "url": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22"
+      "brand": "Morakniv",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": null,
+      "confidence": 0,
+      "searchUrl": "https://www.amazon.co.jp/s?k=Morakniv%20%E3%83%A2%E3%83%BC%E3%83%A9%E3%83%8A%E3%82%A4%E3%83%95%20Garberg%20Full%20Tang"
     },
     {
       "id": "pillow-sea-to-summit-aeros",
       "name": "Sea to Summit エアロスプレミアムピロー",
-      "url": "https://www.amazon.co.jp/dp/B08VHMZP7P?tag=camp78-22"
+      "brand": "Sea to Summit",
+      "oldUrl": "https://www.amazon.co.jp/dp/B08VHMZP7P?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B0GFY3L52Z",
+        "title": "Sea to Summit Aeros プレミアムインフレータブルトラベルピロー、レギュラー、地中海",
+        "price": 6600,
+        "url": "https://www.amazon.co.jp/dp/B0GFY3L52Z?tag=camp78-22"
+      },
+      "confidence": 75,
+      "searchUrl": "https://www.amazon.co.jp/s?k=Sea%20to%20Summit%20Sea%20to%20Summit%20%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%E3%83%94%E3%83%AD%E3%83%BC"
     },
     {
       "id": "pillow-thermarest-neoair",
       "name": "サーマレスト ネオエアーピロー",
-      "url": "https://www.amazon.co.jp/dp/B00GV0B0DQ?tag=camp78-22"
+      "brand": "Therm-a-Rest",
+      "oldUrl": "https://www.amazon.co.jp/dp/B00GV0B0DQ?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B0FHK4LK86",
+        "title": "サーマレスト(Therm-a-Rest) アウトドア キャンプ 枕 エアヘッドライトピロー レギュラー 【日本正規品】 30420",
+        "price": 7012,
+        "url": "https://www.amazon.co.jp/dp/B0FHK4LK86?tag=camp78-22"
+      },
+      "confidence": 50,
+      "searchUrl": "https://www.amazon.co.jp/s?k=Therm-a-Rest%20%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88%20%E3%83%8D%E3%82%AA%E3%82%A8%E3%82%A2%E3%83%BC%E3%83%94%E3%83%AD%E3%83%BC"
     },
     {
       "id": "pillow-waq-camp",
       "name": "WAQ キャンプ枕",
-      "url": "https://www.amazon.co.jp/dp/B0CGMVZQNK?tag=camp78-22"
+      "brand": "WAQ",
+      "oldUrl": "https://www.amazon.co.jp/dp/B0CGMVZQNK?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B098QW43JT",
+        "title": "WAQ RELAXING CAMP PILLOW リラクシングキャンプまくら waq-rcp1-olive (オリーブ)",
+        "price": 3580,
+        "url": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22"
+      },
+      "confidence": 50,
+      "searchUrl": "https://www.amazon.co.jp/s?k=WAQ%20WAQ%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95"
     },
     {
       "id": "pillow-logos-camp-pillow",
       "name": "ロゴス キャンプピロー（マイクロファイバー）",
-      "url": "https://www.amazon.co.jp/dp/B07V9KKVZW?tag=camp78-22"
+      "brand": "LOGOS",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07V9KKVZW?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": null,
+      "confidence": 0,
+      "searchUrl": "https://www.amazon.co.jp/s?k=LOGOS%20%E3%83%AD%E3%82%B4%E3%82%B9%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%94%E3%83%AD%E3%83%BC%EF%BC%88%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%83%95%E3%82%A1%E3%82%A4%E3%83%90%E3%83%BC%EF%BC%89"
     },
     {
       "id": "hammock-unigear",
       "name": "Unigear ハンモック パラシュートナイロン 2人用",
-      "url": "https://www.amazon.co.jp/dp/B07G4YNR99?tag=camp78-22"
+      "brand": "Unigear",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07G4YNR99?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B087X2KB8X",
+        "title": "Unigear ハンモック パラシュート 専用ベルト付き 超広い 超軽量 2人用 余裕がある 5色 320×200cm 275×165cm 耐荷重350kg 室内 アウトドア キャンプ 公園 三人用 コンパクト 部屋 風通し良く 涼しい サラサラ肌触り良い 高耐久安心 通気速乾丈夫安全 カラビナ付き（ダークカーキ+アーミーグリーン，320x200cm）",
+        "price": 2849,
+        "url": "https://www.amazon.co.jp/dp/B087X2KB8X?tag=camp78-22"
+      },
+      "confidence": 75,
+      "searchUrl": "https://www.amazon.co.jp/s?k=Unigear%20Unigear%20%E3%83%8F%E3%83%B3%E3%83%A2%E3%83%83%E3%82%AF%20%E3%83%91%E3%83%A9%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%88%E3%83%8A%E3%82%A4%E3%83%AD%E3%83%B3%202%E4%BA%BA%E7%94%A8"
     },
     {
       "id": "knife-004",
       "name": "オピネル フォールディングナイフ No.8 ステンレス",
-      "url": "https://www.amazon.co.jp/dp/B00006BEHO?tag=camp78-22"
+      "brand": "OPINEL",
+      "oldUrl": "https://www.amazon.co.jp/dp/B00006BEHO?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B00025ZCEW",
+        "title": "OPINEL(オピネル) 001089 NO.8 ステンレス 合皮ケース付",
+        "price": 5800,
+        "url": "https://www.amazon.co.jp/dp/B00025ZCEW?tag=camp78-22"
+      },
+      "confidence": 75,
+      "searchUrl": "https://www.amazon.co.jp/s?k=OPINEL%20%E3%82%AA%E3%83%94%E3%83%8D%E3%83%AB%20%E3%83%95%E3%82%A9%E3%83%BC%E3%83%AB%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%8A%E3%82%A4%E3%83%95%20No.8%20%E3%82%B9%E3%83%86%E3%83%B3%E3%83%AC%E3%82%B9"
     },
     {
       "id": "dry-net-snowpeak",
       "name": "スノーピーク テーブルドライネット UG-370",
-      "url": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22"
+      "brand": "スノーピーク",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": null,
+      "confidence": 0,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%20UG-370"
     },
     {
       "id": "sierra-cup-cs",
       "name": "キャプテンスタッグ シェラカップ ステンレス 目盛付",
-      "url": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22"
+      "brand": "キャプテンスタッグ",
+      "oldUrl": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B09HJWHXQR",
+        "title": "キャプテンスタッグ(CAPTAIN STAG) シェラカップ ステンレス ビッグ シェラカップ 630ml 螺旋仕上 ステンレス製 日本製 燕三条産 UH-49 シルバー",
+        "price": 1810,
+        "url": "https://www.amazon.co.jp/dp/B09HJWHXQR?tag=camp78-22"
+      },
+      "confidence": 75,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%20%E3%82%B9%E3%83%86%E3%83%B3%E3%83%AC%E3%82%B9%20%E7%9B%AE%E7%9B%9B%E4%BB%98"
     },
     {
       "id": "trash-box-dod",
       "name": "DOD ステルスエックス ブラック GM1-450",
-      "url": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22"
+      "brand": "DOD",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B072J7PTJ1",
+        "title": "DOD(ディーオーディー) ステルスエックス ゴミを隠すゴミ箱 6種類分別 テーブル機能付き GM1-450",
+        "price": 6613,
+        "url": "https://www.amazon.co.jp/dp/B072J7PTJ1?tag=camp78-22"
+      },
+      "confidence": 80,
+      "searchUrl": "https://www.amazon.co.jp/s?k=DOD%20DOD%20%E3%82%B9%E3%83%86%E3%83%AB%E3%82%B9%E3%82%A8%E3%83%83%E3%82%AF%E3%82%B9%20%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%20GM1-450"
     },
     {
       "id": "pillow-nemo-fillo-elite",
       "name": "NEMO フィロ エリート",
-      "url": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22"
+      "brand": "NEMO",
+      "oldUrl": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B0FY3VWD9F",
+        "title": "NEMO(ニーモ) テンサー エリート レギュラーワイドマミー Tensor Elite Regular Wide Mummy",
+        "price": 38500,
+        "url": "https://www.amazon.co.jp/dp/B0FY3VWD9F?tag=camp78-22"
+      },
+      "confidence": 67,
+      "searchUrl": "https://www.amazon.co.jp/s?k=NEMO%20NEMO%20%E3%83%95%E3%82%A3%E3%83%AD%20%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88"
     },
     {
       "id": "trash-box-pykes",
       "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
-      "url": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22"
+      "brand": "PYKES PEAK",
+      "oldUrl": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B0DMJLGFKK",
+        "title": "PYKES PEAK (パイクスピーク) キャンプ ゴミ箱 トラッシュボックス 折りたたみゴミ箱 キャンプ用品 ポップアップ コンパクト 40L",
+        "price": 3280,
+        "url": "https://www.amazon.co.jp/dp/B0DMJLGFKK?tag=camp78-22"
+      },
+      "confidence": 60,
+      "searchUrl": "https://www.amazon.co.jp/s?k=PYKES%20PEAK%20PYKES%20PEAK%20%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%82%B4%E3%83%9F%E7%AE%B1%2040L%2F60L"
     },
     {
       "id": "uniflame-yama-kettle-900",
       "name": "ユニフレーム 山ケトル900",
-      "url": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22"
+      "brand": "",
+      "oldUrl": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B007FFSUJQ",
+        "title": "ユニフレーム (UNIFLAME) 山ケトル900 667736",
+        "price": 5500,
+        "url": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22"
+      },
+      "confidence": 100,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20%E5%B1%B1%E3%82%B1%E3%83%88%E3%83%AB900"
     },
     {
       "id": "sierra-cup-bundok",
       "name": "BUNDOK シェラカップ 600ml BD-190",
-      "url": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22"
+      "brand": "BUNDOK",
+      "oldUrl": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B08MW6RHR5",
+        "title": "BUNDOK(バンドック)シェラ カップ BD-581 容量330ml シルバー",
+        "price": 638,
+        "url": "https://www.amazon.co.jp/dp/B08MW6RHR5?tag=camp78-22"
+      },
+      "confidence": 40,
+      "searchUrl": "https://www.amazon.co.jp/s?k=BUNDOK%20BUNDOK%20%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%20600ml%20BD-190"
     },
     {
       "id": "uniflame-field-rack",
       "name": "ユニフレーム フィールドラック",
-      "url": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22"
+      "brand": "",
+      "oldUrl": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22",
+      "quarantinedAt": "2026-07-11T15:36:04.222Z",
+      "candidate": {
+        "asin": "B06W9FQF9L",
+        "title": "ユニフレーム(UNIFLAME) フィールドラック ブラック 611616",
+        "price": 4950,
+        "url": "https://www.amazon.co.jp/dp/B06W9FQF9L?tag=camp78-22"
+      },
+      "confidence": 100,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%83%A9%E3%83%83%E3%82%AF"
     }
-  ]
+  ],
+  "falsePositives": [],
+  "unknown": []
 }
