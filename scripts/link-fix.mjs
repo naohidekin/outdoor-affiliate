@@ -128,20 +128,31 @@ async function getAccessToken() {
   return cachedToken.token;
 }
 
+// 429(ThrottleException)はリトライで吸収する。Creators APIは旧PA-APIより
+// レート制限が厳しい（アカウントの売上実績でクォータが変わる）。
 async function creatorsApi(apiPath, payload) {
-  const token = await getAccessToken();
-  const res = await fetch(`${API_BASE}${apiPath}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      "x-marketplace": MARKETPLACE,
-    },
-    body: JSON.stringify(payload),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Creators API ${res.status}: ${text.slice(0, 200)}`);
-  return JSON.parse(text);
+  const waits = [3000, 8000, 20000];
+  for (let attempt = 0; ; attempt++) {
+    const token = await getAccessToken();
+    const res = await fetch(`${API_BASE}${apiPath}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "x-marketplace": MARKETPLACE,
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    if (res.status === 429 && attempt < waits.length) {
+      const wait = waits[attempt];
+      console.log(`  ⏳ レート制限(429) — ${wait / 1000}秒待って再試行 (${attempt + 1}/${waits.length})`);
+      await new Promise((r) => setTimeout(r, wait));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Creators API ${res.status}: ${text.slice(0, 200)}`);
+    return JSON.parse(text);
+  }
 }
 
 async function searchItems(keywords) {
@@ -195,7 +206,7 @@ async function verifyAsinsViaApi(asins) {
       console.log(`  ⚠️ Creators API getItems 失敗（このバッチは判定不能扱い）: ${err.message}`);
       for (const asin of batch) verdicts.set(asin, "unknown");
     }
-    await new Promise((r) => setTimeout(r, 1200)); // レート制限対策
+    await new Promise((r) => setTimeout(r, 3000)); // レート制限対策（Creators APIは厳しめ）
   }
   return verdicts;
 }
@@ -329,7 +340,7 @@ async function main() {
           };
           confidence = Math.round(bestScore * 100);
         }
-        await new Promise((r) => setTimeout(r, 1200)); // レート制限対策
+        await new Promise((r) => setTimeout(r, 3000)); // レート制限対策（Creators APIは厳しめ）
       } catch (err) {
         console.log(`  ⚠️ 候補検索失敗 (${q.id}): ${err.message}`);
       }
