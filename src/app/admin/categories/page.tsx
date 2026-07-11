@@ -32,18 +32,20 @@ export default function AdminCategories() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (editing) {
-      await fetch("/api/categories", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, id: editing.id }),
-      });
-    } else {
-      await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    const res = editing
+      ? await fetch("/api/categories", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, id: editing.id }),
+        })
+      : await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+    if (!res.ok) {
+      alert(res.status === 401 ? "セッションが切れています。再ログインしてください。" : `保存に失敗しました (${res.status})`);
+      return;
     }
     setShowForm(false);
     fetchCategories();
@@ -51,7 +53,11 @@ export default function AdminCategories() {
 
   async function handleDelete(id: string) {
     if (!confirm("このカテゴリを削除しますか？")) return;
-    await fetch(`/api/categories?id=${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/categories?id=${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert(res.status === 401 ? "セッションが切れています。再ログインしてください。" : `削除に失敗しました (${res.status})`);
+      return;
+    }
     fetchCategories();
   }
 

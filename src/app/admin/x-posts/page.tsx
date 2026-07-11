@@ -478,6 +478,9 @@ export default function XPostsPage() {
           <p className="text-sm text-gray-500 mt-1">
             ギア男 @camp_gear_lab のツイート管理
           </p>
+          <p className="text-xs mt-2 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+            ⚠️ 投稿の生成・承認は 2026-07-05 に Notion（「ギア男 X Posts」DB）へ移行済みです。この画面は旧Sheets運用の閲覧・エンゲージ管理用で、新規投稿はここには表示されません。承認は Notion で行ってください（承認すると notion-poster が30分毎に自動投稿します）。
+          </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button

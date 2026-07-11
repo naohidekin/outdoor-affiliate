@@ -42,7 +42,13 @@ async function checkArticleIntegrity(article: Article): Promise<string[]> {
 }
 
 export async function GET() {
-  return NextResponse.json(await getArticles());
+  const articles = await getArticles();
+  // 管理画面（認証済み）には全件、未認証には公開記事のみ返す
+  // （下書き・予約記事の全文が誰でも読める情報露出を防ぐ）
+  if (await isAuthenticated()) {
+    return NextResponse.json(articles);
+  }
+  return NextResponse.json(articles.filter((a) => a.status === "published"));
 }
 
 export async function POST(request: NextRequest) {

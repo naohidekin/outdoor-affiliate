@@ -139,7 +139,7 @@ export async function POST(req: Request) {
   if (process.env.VERCEL) {
     return NextResponse.json({
       ok: false,
-      error: "本番環境ではスカウトを実行できません。ローカルの launchd（毎日 07:30）で自動実行されます。",
+      error: "本番環境ではスカウトを実行できません。ローカルMacで npm run x:viral-scout を手動実行してください（定期自動実行は未設定）。",
     }, { status: 400 });
   }
 
