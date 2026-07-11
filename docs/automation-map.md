@@ -15,7 +15,7 @@
 | **article-daily** | 毎朝10:00 | **予約公開の執事**。公開予定日が来た記事を品質チェック→公開→Google Indexing通知→Supabase反映 |
 | **gearman-reply-fill** | 10分ごと | **リプ下書き秘書**。NotionにURLを貼ると、ギア男口調の返信下書きを自動生成（opsec機械チェック＋GPT-4o独立採点付き）。対象が無ければ0円で即終了 |
 | **link-check** | 日曜6:30 | **売り場の棚卸し係**。全Amazonリンクの生死を点検しレポート化（`data/link-check-report.json`）。結果は /admin/link-check で閲覧 |
-| **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenを再検証→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→PA-APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認 |
+| **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenをPA-API GetItemsで確定判定（CAPTCHAの影響なし。キー無し時はHTTP再検証にフォールバック）→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→PA-APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認 |
 
 ### 🟡 条件付きの2本
 

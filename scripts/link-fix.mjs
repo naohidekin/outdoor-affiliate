@@ -4,7 +4,8 @@
  * リンク切れ自動修復パイプライン（link-check の後段。日曜 7:00）
  *
  * 思想: 「害の除去は全自動、商品の差し替えだけ人間の1クリック承認」
- *  1. link-check-report.json の broken を再検証（CAPTCHA等の誤検知を除去）
+ *  1. link-check-report.json の broken を再検証
+ *     （PA-APIキーがあれば GetItems で確定判定。HTTPはCAPTCHAで判定不能になりやすい）
  *  2. 死亡確定リンクは amazonUrl を自動で空に = 隔離
  *     （サイトでは楽天ボタンだけ残る。壊れリンクの露出を即座に止める）
  *  3. PA-APIキーがあれば代替候補を自動検索し、提案ファイルに書き出す
@@ -100,18 +101,7 @@ function getSignatureKey(key, dateStamp) {
   return hmacSha256(kService, "aws4_request");
 }
 
-async function searchItems(keywords) {
-  const operation = "SearchItems";
-  const apiPath = "/paapi5/searchitems";
-  const payload = {
-    Keywords: keywords.slice(0, 100),
-    SearchIndex: "All",
-    ItemCount: 5,
-    PartnerTag: PARTNER_TAG,
-    PartnerType: "Associates",
-    Marketplace: "www.amazon.co.jp",
-    Resources: ["ItemInfo.Title", "ItemInfo.ByLineInfo", "Offers.Listings.Price"],
-  };
+async function paapiRequest(operation, apiPath, payload) {
   const body = JSON.stringify(payload);
   const now = new Date();
   const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
@@ -137,8 +127,67 @@ async function searchItems(keywords) {
     body,
   });
   if (!res.ok) throw new Error(`PA-API ${res.status}`);
-  const data = await res.json();
+  return res.json();
+}
+
+async function searchItems(keywords) {
+  const data = await paapiRequest("SearchItems", "/paapi5/searchitems", {
+    Keywords: keywords.slice(0, 100),
+    SearchIndex: "All",
+    ItemCount: 5,
+    PartnerTag: PARTNER_TAG,
+    PartnerType: "Associates",
+    Marketplace: "www.amazon.co.jp",
+    Resources: ["ItemInfo.Title", "ItemInfo.ByLineInfo", "Offers.Listings.Price"],
+  });
   return data.SearchResult?.Items || [];
+}
+
+// ─── PA-API GetItems による生死判定 ─────────────────────
+// HTTPスクレイピングはAmazonのCAPTCHAでほぼ全滅するため、
+// キーがあれば正規API（GetItems）でASINの生死を確定させる。
+//   - ItemsResult に居てオファーあり → alive
+//   - ItemsResult に居るがオファーなし → dead（「現在お取り扱いできません」ページ相当）
+//   - Errors で InvalidParameterValue / ItemNotAccessible → dead（ASIN消滅）
+//   - API呼び出し自体の失敗 → unknown（安全側: 隔離しない）
+
+function asinOf(url) {
+  const m = (url || "").match(/\/dp\/([A-Z0-9]{10})/);
+  return m ? m[1] : null;
+}
+
+async function verifyAsinsViaPaapi(asins) {
+  const verdicts = new Map();
+  for (let i = 0; i < asins.length; i += 10) {
+    const batch = asins.slice(i, i + 10);
+    try {
+      const data = await paapiRequest("GetItems", "/paapi5/getitems", {
+        ItemIds: batch,
+        PartnerTag: PARTNER_TAG,
+        PartnerType: "Associates",
+        Marketplace: "www.amazon.co.jp",
+        Resources: ["ItemInfo.Title", "Offers.Listings.Price"],
+      });
+      const found = new Map((data.ItemsResult?.Items || []).map((it) => [it.ASIN, it]));
+      const deadAsins = new Set();
+      for (const e of data.Errors || []) {
+        if (e.Code !== "InvalidParameterValue" && e.Code !== "ItemNotAccessible") continue;
+        const m = (e.Message || "").match(/\b([A-Z0-9]{10})\b/);
+        if (m && batch.includes(m[1])) deadAsins.add(m[1]);
+      }
+      for (const asin of batch) {
+        const it = found.get(asin);
+        if (it) verdicts.set(asin, it.Offers?.Listings?.length ? "alive" : "dead");
+        else if (deadAsins.has(asin)) verdicts.set(asin, "dead");
+        else verdicts.set(asin, "unknown");
+      }
+    } catch (err) {
+      console.log(`  ⚠️ PA-API GetItems 失敗（このバッチは判定不能扱い）: ${err.message}`);
+      for (const asin of batch) verdicts.set(asin, "unknown");
+    }
+    await new Promise((r) => setTimeout(r, 1200)); // PA-APIレート制限
+  }
+  return verdicts;
 }
 
 // ─── 候補スコアリング ─────────────────────────────────
@@ -194,24 +243,49 @@ async function main() {
   const unknown = [];
   const quarantined = [];
 
-  // 1. 再検証（1.2秒間隔）
+  // 1a. PA-API GetItems で一括判定（CAPTCHAの影響を受けない正規ルート）
+  let paapiVerdicts = new Map();
+  if (HAS_PAAPI) {
+    const asins = [
+      ...new Set(
+        broken
+          .filter((b) => byId.get(b.id)?.amazonUrl)
+          .map((b) => asinOf(b.url))
+          .filter(Boolean)
+      ),
+    ];
+    if (asins.length > 0) {
+      console.log(`[link-fix] PA-API GetItems で ${asins.length} ASIN を照会します...`);
+      paapiVerdicts = await verifyAsinsViaPaapi(asins);
+    }
+  }
+
+  // 1b. 再検証（PA-API判定を優先、確定しなかったものだけHTTPで再確認）
   for (const item of broken) {
     const product = byId.get(item.id);
     if (!product) { console.log(`  ⏭️ 商品なし: ${item.id}`); continue; }
     if (!product.amazonUrl) { console.log(`  ⏭️ 既に隔離済み: ${item.id}`); continue; }
 
-    const result = await checkUrl(item.url);
-    if (result.verdict === "alive") {
+    const asin = asinOf(item.url);
+    let verdict = asin ? paapiVerdicts.get(asin) : undefined;
+    let source = "PA-API";
+    if (verdict !== "alive" && verdict !== "dead") {
+      const result = await checkUrl(item.url);
+      verdict = result.verdict;
+      source = "HTTP";
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+
+    if (verdict === "alive") {
       falsePositives.push({ id: item.id, name: item.name, url: item.url });
-      console.log(`  ✅ 誤検知（生存確認）: ${item.name.slice(0, 30)}`);
-    } else if (result.verdict === "unknown") {
+      console.log(`  ✅ 誤検知（${source}で生存確認）: ${item.name.slice(0, 30)}`);
+    } else if (verdict === "unknown") {
       unknown.push({ id: item.id, name: item.name, url: item.url });
       console.log(`  ❓ 判定不能（隔離しない）: ${item.name.slice(0, 30)}`);
     } else {
       quarantined.push({ id: item.id, name: item.name, url: item.url });
-      console.log(`  🔴 死亡確定 → 隔離: ${item.name.slice(0, 30)}`);
+      console.log(`  🔴 死亡確定（${source}） → 隔離: ${item.name.slice(0, 30)}`);
     }
-    await new Promise((r) => setTimeout(r, 1200));
   }
 
   // 2. 隔離: amazonUrl を空に（サイトは楽天ボタンだけ残る）
