@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { type: "link", href: "/admin/articles", label: "記事管理", icon: "📝" },
   { type: "link", href: "/admin/products", label: "商品管理", icon: "📦" },
   { type: "link", href: "/admin/categories", label: "カテゴリ管理", icon: "🗂️" },
+  { type: "link", href: "/admin/link-check", label: "リンク切れ点検", icon: "🔗" },
   { type: "link", href: "/admin/4koma", label: "4コマ漫画", icon: "🎨" },
   { type: "link", href: "/admin/queue", label: "コンテンツキュー", icon: "📋" },
   { type: "link", href: "/admin/trend-scout", label: "トレンドスカウト", icon: "🔥" },
