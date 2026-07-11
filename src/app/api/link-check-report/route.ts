@@ -9,15 +9,24 @@ export const runtime = "nodejs";
 // 本番(Vercel)ではデプロイ時点にバンドルされたスナップショット、
 // ローカルdevでは常に最新ファイルが読める。
 const REPORT_PATH = path.join(process.cwd(), "data", "link-check-report.json");
+const PROPOSALS_PATH = path.join(process.cwd(), "data", "link-fix-proposals.json");
 
 export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
+  let report: Record<string, unknown> | null = null;
   try {
-    const raw = await fs.readFile(REPORT_PATH, "utf8");
-    return NextResponse.json({ exists: true, ...JSON.parse(raw) });
+    report = JSON.parse(await fs.readFile(REPORT_PATH, "utf8"));
   } catch {
-    return NextResponse.json({ exists: false });
+    report = null;
   }
+  let proposals: Record<string, unknown> | null = null;
+  try {
+    proposals = JSON.parse(await fs.readFile(PROPOSALS_PATH, "utf8"));
+  } catch {
+    proposals = null;
+  }
+  if (!report) return NextResponse.json({ exists: false, proposals });
+  return NextResponse.json({ exists: true, ...report, proposals });
 }

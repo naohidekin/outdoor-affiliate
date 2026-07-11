@@ -14,7 +14,8 @@
 | **notion-poster** | 30分ごと | **投稿の実行係（最重要）**。Notionで「approved」にした投稿だけをXへ投稿。ギア男＋別事業4アカウント全部がこの1本に依存 |
 | **article-daily** | 毎朝10:00 | **予約公開の執事**。公開予定日が来た記事を品質チェック→公開→Google Indexing通知→Supabase反映 |
 | **gearman-reply-fill** | 10分ごと | **リプ下書き秘書**。NotionにURLを貼ると、ギア男口調の返信下書きを自動生成（opsec機械チェック＋GPT-4o独立採点付き）。対象が無ければ0円で即終了 |
-| **link-check** | 日曜6:30 | **売り場の棚卸し係**。全Amazonリンクの生死を点検しレポート化（`data/link-check-report.json`）。※直すのは人間。月1でレポートを見ること |
+| **link-check** | 日曜6:30 | **売り場の棚卸し係**。全Amazonリンクの生死を点検しレポート化（`data/link-check-report.json`）。結果は /admin/link-check で閲覧 |
+| **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenを再検証→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→PA-APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認 |
 
 ### 🟡 条件付きの2本
 
@@ -49,6 +50,7 @@
 ### 週次
 ```
 日曜6:30   link-check          … Amazonリンク301件の生死点検→レポート
+日曜7:00   link-fix            … 死亡リンクを自動隔離+代替候補を提案（差し替えは管理画面で1クリック）
 水曜9:00   article-weekly      … テーマ3本選定＋商品調査＋AI初稿（下書き止まり・公開しない）
 ```
 
@@ -87,7 +89,7 @@ X→サイト流入 → アフィリ収益（効果は GA4 / /admin/affiliate �
 2. 中堅キャンプ垢（数百〜数千フォロワー）の**24時間以内の投稿にリプ2〜3件**＝URLをNotionに貼るだけ（3分）
 3. Notionの下書きを承認（1〜2分）
 4. 記事は自分のペースで仕上げて予約設定
-5. 月1回 `data/link-check-report.json` を見てリンク切れを修理
+5. 週1回 /admin/link-check を見て「差し替え承認待ち」を1クリック処理（隔離は自動済み）
 
 KPIはフォロワー数ではなく **GA4のX経由流入**。
 

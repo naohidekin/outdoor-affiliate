@@ -45,6 +45,7 @@ PLISTS=(
   "com.outdoor-affiliate.article-weekly.plist"
   "com.outdoor-affiliate.gearman-reply-fill.plist"
   "com.outdoor-affiliate.link-check.plist"
+  "com.outdoor-affiliate.link-fix.plist"
 )
 
 # ─── 退役・保留ジョブ（毎回アンロード＆LaunchAgentsから撤去） ───
