@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-11T15:36:04.222Z",
+  "generatedAt": "2026-07-11T16:55:48.859Z",
   "reportCheckedAt": "2026-06-29T00:14:07.082Z",
   "quarantined": [
     {
@@ -23,8 +23,13 @@
       "brand": "Morakniv",
       "oldUrl": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22",
       "quarantinedAt": "2026-07-11T15:36:04.222Z",
-      "candidate": null,
-      "confidence": 0,
+      "candidate": {
+        "asin": "B08548NHGS",
+        "title": "モーラナイフ ガーバーグ スタンダード ステンレス Morakniv | ナイフ キャンプナイフ フルタング キャンプ アウトドア キャンプ用品 アウトドア用品 料理 調理 釣り 登山 防災 ステンレス バトニング 薪割り 刃厚3.2mm (ブラック)",
+        "price": 10395,
+        "url": "https://www.amazon.co.jp/dp/B08548NHGS?tag=camp78-22"
+      },
+      "confidence": 90,
       "searchUrl": "https://www.amazon.co.jp/s?k=Morakniv%20%E3%83%A2%E3%83%BC%E3%83%A9%E3%83%8A%E3%82%A4%E3%83%95%20Garberg%20Full%20Tang"
     },
     {
@@ -159,12 +164,12 @@
       "oldUrl": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22",
       "quarantinedAt": "2026-07-11T15:36:04.222Z",
       "candidate": {
-        "asin": "B0FY3VWD9F",
-        "title": "NEMO(ニーモ) テンサー エリート レギュラーワイドマミー Tensor Elite Regular Wide Mummy",
-        "price": 38500,
-        "url": "https://www.amazon.co.jp/dp/B0FY3VWD9F?tag=camp78-22"
+        "asin": "B0DK7PR83X",
+        "title": "Nemo Equipment Fillo Elite 超軽量 バックパッキングピロー - ブルーホライズン/シトロン - ワンサイズ",
+        "price": 7480,
+        "url": "https://www.amazon.co.jp/dp/B0DK7PR83X?tag=camp78-22"
       },
-      "confidence": 67,
+      "confidence": 90,
       "searchUrl": "https://www.amazon.co.jp/s?k=NEMO%20NEMO%20%E3%83%95%E3%82%A3%E3%83%AD%20%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88"
     },
     {
