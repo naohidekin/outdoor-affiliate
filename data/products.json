@@ -2603,7 +2603,7 @@
     "description": "マットで定評あるサーマレストのエアピロー。3,000円台で買えるコスパ重視の定番品。",
     "rating": 4,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-11T15:36:04.222Z"
+    "updatedAt": "2026-07-11T17:01:20.607Z"
   },
   {
     "id": "first-aid-poison-remover",
@@ -5339,10 +5339,10 @@
     "id": "knife-002",
     "name": "モーラナイフ Garberg Full Tang",
     "brand": "Morakniv",
-    "price": 13200,
+    "price": 10395,
     "imageUrl": "https://m.media-amazon.com/images/I/71HdISR7k6L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A2%25E3%2583%25BC%25E3%2583%25A9%25E3%2583%258A%25E3%2582%25A4%25E3%2583%2595%2520Garberg%2F&link_type=text&ut=",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08548NHGS?tag=camp78-22",
     "categoryId": "knife",
     "specs": {
       "全長": "225mm",
@@ -5356,7 +5356,7 @@
     "description": "モーラナイフ初のフルタング構造モデル。バトニング（薪割り）にも耐えるヘビーデューティー仕様で、本格ブッシュクラフトに対応。",
     "rating": 4.6,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-07-11T15:36:04.222Z"
+    "updatedAt": "2026-07-11T17:01:20.607Z"
   },
   {
     "id": "sierra-cup-belmont",
@@ -6921,10 +6921,10 @@
     "id": "pillow-waq-camp",
     "name": "WAQ キャンプ枕",
     "brand": "WAQ",
-    "price": 3980,
+    "price": 3580,
     "imageUrl": "https://m.media-amazon.com/images/I/41aIpDAozZS._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95%2F&link_type=text&ut=",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "ハイブリッド構造・マイクロファイバーカバー付属",
@@ -6936,7 +6936,7 @@
     "description": "ウレタンとエアのハイブリッド構造。自宅の枕に近い感触で、車キャンプに最適。",
     "rating": 4.2,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-11T15:36:04.222Z"
+    "updatedAt": "2026-07-11T17:01:20.607Z"
   },
   {
     "id": "trash-box-pykes",
@@ -7382,10 +7382,10 @@
     "id": "pillow-nemo-fillo-elite",
     "name": "NEMO フィロ エリート",
     "brand": "NEMO",
-    "price": 5800,
+    "price": 7480,
     "imageUrl": "https://m.media-amazon.com/images/I/61agDDE1jPL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNEMO+%E3%83%95%E3%82%A3%E3%83%AD+%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88%2F&link_type=text&ut=",
-    "amazonUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DK7PR83X?tag=camp78-22",
     "categoryId": "sleeping-bag",
     "specs": {
       "特徴": "滑り止め底面・ツイストバルブ",
@@ -7397,7 +7397,7 @@
     "description": "53gの超軽量エアピロー。底面に滑り止め素材を採用しており、シュラフの上でずれにくい。",
     "rating": 4.1,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-07-11T15:36:04.222Z"
+    "updatedAt": "2026-07-11T17:01:20.607Z"
   },
   {
     "id": "hammock-eno-doublenest",
