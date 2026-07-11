@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
   { type: "link", href: "/admin/notion-queue", label: "Notionキュー", icon: "📬" },
   { type: "link", href: "/admin/kodomo", label: "こどもケアラボ", icon: "👨‍👩‍👧" },
   { type: "section", label: "管理" },
+  { type: "link", href: "/admin/affiliate", label: "アフィリ分析", icon: "📈" },
   { type: "link", href: "/admin/kill-switch", label: "KILL_SWITCH", icon: "🛑" },
   { type: "link", href: "/admin/launchd", label: "launchdジョブ", icon: "⚙️" },
 ];
