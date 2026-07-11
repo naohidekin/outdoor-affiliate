@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isAuthenticated } from "@/lib/auth";
 
 // Dynamic import since notion-queue is ESM .mjs
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,6 +35,10 @@ const REPLY_DBS = [
 ];
 
 export async function GET() {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   if (!NOTION_TOKEN) {
     return NextResponse.json({ error: "NOTION_TOKEN not set" }, { status: 500 });
   }
@@ -73,6 +78,10 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   if (!NOTION_TOKEN) {
     return NextResponse.json({ error: "NOTION_TOKEN not set" }, { status: 500 });
   }

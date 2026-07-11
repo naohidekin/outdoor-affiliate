@@ -2,7 +2,7 @@ import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticatedRequest } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -361,7 +361,7 @@ async function updateJshStatus(filePath: string, rawId: string, status: string) 
 // --- PATCH: ステータス更新 (全事業共通) ---
 
 export async function PATCH(req: NextRequest) {
-  if (!isAuthenticatedRequest(req)) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
@@ -396,7 +396,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthenticatedRequest(req)) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 

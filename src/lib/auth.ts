@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
-import { NextRequest } from "next/server";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+// 本番では ADMIN_PASSWORD 必須（未設定なら fail closed = ログイン不可）。
+// 開発環境のみ、未設定時に旧デフォルト "admin123" を警告付きで許可する。
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const SESSION_TOKEN = "outdoor-admin-session";
 const HMAC_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || "fallback-secret-change-me";
 
@@ -20,7 +21,13 @@ function verifyToken(token: string): boolean {
   const hmac = crypto.createHmac("sha256", HMAC_SECRET);
   hmac.update(payload);
   const expected = hmac.digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  // timingSafeEqual は長さ不一致で throw するため、事前に長さを確認する
+  if (signature.length !== expected.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  } catch {
+    return false;
+  }
 }
 
 export function createSessionToken(): string {
@@ -32,21 +39,18 @@ export async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
   const value = cookieStore.get(SESSION_TOKEN)?.value;
   if (!value) return false;
-  // 後方互換: 旧トークン "authenticated" も一時的に許可（次回ログインで置き換え）
-  if (value === "authenticated") return true;
+  // 旧平文トークン "authenticated" の受理は廃止（署名なしCookie 1個で全APIが開く穴だったため）
   return verifyToken(value);
 }
 
-export function isAuthenticatedRequest(req: NextRequest): boolean {
-  const token = req.headers.get("x-admin-token");
-  if (token && token === process.env.ADMIN_API_TOKEN) return true;
-  const cookieValue = req.cookies.get(SESSION_TOKEN)?.value;
-  if (!cookieValue) return false;
-  if (cookieValue === "authenticated") return true;
-  return verifyToken(cookieValue);
-}
-
 export function verifyPassword(password: string): boolean {
+  if (!ADMIN_PASSWORD) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[auth] ADMIN_PASSWORD 未設定。開発用デフォルトを一時許可しています（本番では必ず設定を）");
+      return password === "admin123";
+    }
+    return false; // 本番は fail closed
+  }
   return password === ADMIN_PASSWORD;
 }
 

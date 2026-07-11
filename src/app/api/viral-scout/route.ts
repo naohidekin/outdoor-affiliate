@@ -6,6 +6,7 @@ import {
   markDeleted,
   setStatus,
 } from "@/lib/viral-scout-overrides";
+import { isAuthenticated } from "@/lib/auth";
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,10 @@ interface ViralScoutData {
 }
 
 export async function GET() {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   try {
     if (!fs.existsSync(DATA_PATH)) {
       return NextResponse.json({ viralPosts: [], config: null, aggregateAnalysis: null });
@@ -86,6 +91,10 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   try {
     const { tweetId, field, status } = await req.json();
     if (!tweetId || !field || !status) {
@@ -104,6 +113,10 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   try {
     const { tweetIds } = await req.json();
     if (!Array.isArray(tweetIds) || tweetIds.length === 0) {
@@ -118,6 +131,10 @@ export async function DELETE(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   // 本番（Vercel）ではタイムアウト・/tmp制限のためスカウト実行不可
   if (process.env.VERCEL) {
     return NextResponse.json({
@@ -164,6 +181,10 @@ export async function POST(req: Request) {
 
 // スカウト実行状態を返す
 export async function PUT() {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   const running = fs.existsSync(LOCK_PATH);
   if (running) {
     const lockAge = Date.now() - fs.statSync(LOCK_PATH).mtimeMs;
