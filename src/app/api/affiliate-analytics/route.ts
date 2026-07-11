@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { isAuthenticatedRequest } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -14,8 +14,8 @@ function bump(map: Record<string, Agg>, key: string, store: string) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthenticatedRequest(req)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
   const daysRaw = parseInt(req.nextUrl.searchParams.get("days") || "28", 10);
