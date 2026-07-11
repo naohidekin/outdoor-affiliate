@@ -33,7 +33,34 @@ type Report = {
   proposals?: Proposals;
 };
 
-function ItemRow({ item, showUrl }: { item: { id: string; name: string; url?: string }; showUrl: boolean }) {
+function ItemRow({
+  item,
+  showUrl,
+  resolved,
+}: {
+  item: { id: string; name: string; url?: string };
+  showUrl: boolean;
+  resolved?: "replaced" | "quarantined";
+}) {
+  if (resolved) {
+    return (
+      <div className="p-3 border-b border-gray-100 last:border-b-0 flex items-center justify-between gap-3 opacity-60">
+        <div className="min-w-0">
+          <p className="text-sm text-gray-500 line-through">{item.name}</p>
+          <p className="text-xs text-gray-400 truncate">{item.id}</p>
+        </div>
+        <span
+          className={`text-xs px-2.5 py-1.5 rounded-lg border shrink-0 ${
+            resolved === "replaced"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-sky-50 text-sky-700 border-sky-200"
+          }`}
+        >
+          {resolved === "replaced" ? "✅ 差し替え済み" : "🛡️ 隔離済み（楽天のみで運用中）"}
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="p-3 border-b border-gray-100 last:border-b-0 flex items-center justify-between gap-3">
       <div className="min-w-0">
@@ -226,7 +253,19 @@ export default function LinkCheckPage() {
             {broken.length === 0 ? (
               <p className="p-4 text-sm text-gray-500">リンク切れはありません 🎉</p>
             ) : (
-              broken.map((b) => <ItemRow key={b.id} item={b} showUrl />)
+              broken.map((b) => {
+                // レポートは前回チェック時点のスナップショット。ライブの商品データと
+                // 突き合わせて、すでに対応済みのものはバッジ表示に切り替える
+                const live = products.find((x) => x.id === b.id);
+                const resolved = !live
+                  ? undefined
+                  : !live.amazonUrl
+                    ? ("quarantined" as const)
+                    : live.amazonUrl !== b.url
+                      ? ("replaced" as const)
+                      : undefined;
+                return <ItemRow key={b.id} item={b} showUrl resolved={resolved} />;
+              })
             )}
           </div>
 
