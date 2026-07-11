@@ -159,6 +159,8 @@ async function getItemPrices(asins) {
 
 // --- メイン処理 ---
 
+let priceUpdateCount = 0; // 完走後のSupabase同期ゲート用
+
 async function main() {
   if (!ACCESS_KEY || !SECRET_KEY) {
     console.log("⚠️ PA-API認証情報が未設定です。");
@@ -258,9 +260,17 @@ async function main() {
           );
         }
 
-        // products.json の価格も更新（更新日時も記録して鮮度を追跡可能にする）
-        product.price = currentPrice;
-        product.priceUpdatedAt = new Date().toISOString();
+        // products.json の価格も更新。productは .map(p => ({...p})) の浅いコピーなので
+        // 必ず原本(products配列)側を更新する（コピーだけ更新すると書き出しに反映されない）
+        const original = products.find((p) => p.id === product.id);
+        if (original) {
+          const ts = new Date().toISOString();
+          original.price = currentPrice;
+          original.priceUpdatedAt = ts;
+          // pull時のマージは updatedAt 比較でローカル/リモートを選ぶため、
+          // これを進めないと次回同期で旧価格に巻き戻される
+          original.updatedAt = ts;
+        }
       }
     } catch (err) {
       console.error(`  ❌ バッチ ${i / 10 + 1} エラー: ${err.message}`);
@@ -277,6 +287,7 @@ async function main() {
   fs.writeFileSync(priceHistoryPath, JSON.stringify(priceHistory, null, 2), "utf-8");
 
   // products.jsonの価格更新
+  priceUpdateCount = Object.keys(priceUpdates).length;
   if (Object.keys(priceUpdates).length > 0) {
     fs.writeFileSync(
       path.join(DATA_DIR, "products.json"),
@@ -380,12 +391,14 @@ main()
   .then(async () => {
     // 価格更新を本番(Supabase)へ即反映（従来は週次パイプライン任せで最大1週間ラグ）
     if (process.argv.includes("--no-sync")) return;
+    if (priceUpdateCount === 0) return; // 価格変更ゼロなら同期不要（無駄な全量upsertを回避）
     try {
       const { execSync } = await import("child_process").then((m) => m.default || m);
       console.log("\n[price-monitor] Supabaseへ商品を同期します...");
+      const projectDir = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
       execSync("node --dns-result-order=ipv4first scripts/sync-to-supabase.js", {
         stdio: "inherit",
-        cwd: process.cwd(),
+        cwd: projectDir, // リポジトリ外から手動実行されてもスクリプトを見つけられるように
       });
     } catch (err) {
       console.error("[price-monitor] Supabase同期に失敗（価格は次回同期で反映されます）:", err.message);

@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid" }, { status: 400 });
     }
     const uaRaw = req.headers.get("user-agent") || "";
-    if (/bot|crawler|spider|headless|python|curl/i.test(uaRaw)) {
+    // 汎用の /bot/ は Cubot 等の実機UAに誤爆するため、既知のbotトークンのみ弾く
+    if (/(googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|crawler|spider|headlesschrome|phantomjs|python-requests|python\/|curl\/|wget\/|axios\/|go-http-client|okhttp)/i.test(uaRaw)) {
       return NextResponse.json({ ok: true });
     }
 

@@ -17,6 +17,7 @@ export default function AdminArticles() {
     excerpt: "",
     productIds: [] as string[],
     status: "draft" as "draft" | "published",
+    scheduledPublishDate: "",
   });
   const [previewMode, setPreviewMode] = useState(false);
   const [filterAuto, setFilterAuto] = useState<"all" | "auto" | "manual">("all");
@@ -46,6 +47,7 @@ export default function AdminArticles() {
       excerpt: "",
       productIds: [],
       status: "draft",
+      scheduledPublishDate: "",
     });
     setEditing(null);
     setShowEditor(true);
@@ -61,6 +63,7 @@ export default function AdminArticles() {
       excerpt: article.excerpt,
       productIds: article.productIds,
       status: article.status,
+      scheduledPublishDate: (article.scheduledPublishDate || "").slice(0, 10),
     });
     setEditing(article);
     setShowEditor(true);
@@ -68,7 +71,11 @@ export default function AdminArticles() {
   }
 
   async function handleSave(status?: "draft" | "published") {
-    const data = { ...form, status: status || form.status };
+    const data = {
+      ...form,
+      scheduledPublishDate: form.scheduledPublishDate || null,
+      status: status || form.status,
+    };
 
     const res = editing
       ? await fetch("/api/articles", {
@@ -370,6 +377,22 @@ https://camp-gear-lab.com/articles/${article.slug}
                 >
                   公開する
                 </button>
+                <div className="pt-3 border-t">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    公開予約日（毎朝10時の article-daily が自動公開）
+                  </label>
+                  <input
+                    type="date"
+                    value={form.scheduledPublishDate}
+                    onChange={(e) =>
+                      setForm({ ...form, scheduledPublishDate: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg text-sm text-gray-800"
+                  />
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    下書きのまま日付を入れて保存すると予約になります
+                  </p>
+                </div>
               </div>
             </div>
 

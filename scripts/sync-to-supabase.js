@@ -90,7 +90,9 @@ function productToRow(p) {
     added_by: p.addedBy ?? null,
     added_at: p.addedAt ?? null,
     source_api: p.sourceApi ?? null,
-    availability: p.availability ?? null,
+    // availability はSupabase側のカラム存在が未確認のため送信保留。
+    // scripts/sql/add-availability-column.sql を実行後にこの行を有効化する
+    // availability: p.availability ?? null,
   };
 }
 

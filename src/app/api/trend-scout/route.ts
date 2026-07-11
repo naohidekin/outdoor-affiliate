@@ -199,7 +199,7 @@ export async function GET(req: NextRequest) {
 }
 
 // Export config for the frontend to know available queries per business
-export async function POST(req: NextRequest) {
+export async function POST() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }

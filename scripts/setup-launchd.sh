@@ -105,8 +105,11 @@ for plist in "${PLISTS[@]}"; do
     -e "s|/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin|$CURRENT_PATH|g" \
     "$SRC" > "$TARGET_DIR/$plist"
 
-  launchctl bootstrap "gui/$(id -u)" "$TARGET_DIR/$plist" 2>/dev/null || launchctl load "$TARGET_DIR/$plist" 2>/dev/null
-  echo "  登録: $LABEL"
+  if launchctl bootstrap "gui/$(id -u)" "$TARGET_DIR/$plist" 2>/dev/null || launchctl load "$TARGET_DIR/$plist" 2>/dev/null; then
+    echo "  登録: $LABEL"
+  else
+    echo "  ⚠️ 登録失敗: $LABEL（bootstrap/load とも失敗。launchctl bootout gui/\$(id -u)/$LABEL 後に再実行してください）"
+  fi
 done
 
 mkdir -p "$PROJECT_DIR/logs"

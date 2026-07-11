@@ -67,6 +67,7 @@ function parseArgs() {
 const DB_CONFIGS = [
   {
     id: "gearman-replies",
+    business: "gearman", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "ギア男 リプライ",
     databaseId: "9feff0c2-142a-49f9-9985-d4d72868ad26",
     type: "reply",
@@ -76,6 +77,7 @@ const DB_CONFIGS = [
   },
   {
     id: "gearman-posts",
+    business: "gearman", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "ギア男 X Posts",
     databaseId: "1d9bbe0c-30a5-4bfd-86b3-ced628cf05eb",
     type: "post",
@@ -84,6 +86,7 @@ const DB_CONFIGS = [
   },
   {
     id: "amble-posts",
+    business: "amble", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "アンブロ X Posts",
     databaseId: "60f51624-34c4-4ada-9511-65a88cf6e6d4",
     type: "post",
@@ -92,6 +95,7 @@ const DB_CONFIGS = [
   },
   {
     id: "amble-replies",
+    business: "amble", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "アンブロ Replies",
     databaseId: "bb14682e-285b-41a5-a0d1-eccecf56e077",
     type: "reply",
@@ -101,6 +105,7 @@ const DB_CONFIGS = [
   },
   {
     id: "labo-posts",
+    business: "labo", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "ラボ X Posts",
     databaseId: "90e61bd3-ed3c-444c-9032-4c69394759fd",
     type: "post",
@@ -109,6 +114,7 @@ const DB_CONFIGS = [
   },
   {
     id: "kodomo-replies",
+    business: "kodomo", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "こどもケアラボ Replies",
     databaseId: "8be1d3d2-5fee-4222-ab2e-1c1eba96dc90",
     type: "reply",
@@ -118,6 +124,7 @@ const DB_CONFIGS = [
   },
   {
     id: "droto-posts",
+    business: "drAuto", // kill-switch事業キー（xCredsは資格情報名で別物）
     name: "ドクターオート X Posts",
     databaseId: "3dc0d996-f127-4a15-b280-307deb87dd05",
     type: "post",
@@ -341,7 +348,7 @@ async function main() {
 
   for (const dbConfig of targets) {
     // 事業別 Kill Switch（1事業だけ止めたいとき用。全体は checkKillSwitch が担当）
-    const bks = checkBusinessKillSwitch(dbConfig.xCreds);
+    const bks = checkBusinessKillSwitch(dbConfig.business || dbConfig.xCreds);
     if (bks.killed) {
       console.log(`[notion-poster] ${dbConfig.name}: 事業別 Kill Switch 有効のためスキップ (${bks.reason})`);
       continue;

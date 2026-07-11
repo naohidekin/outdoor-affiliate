@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type BusinessName = "gearman" | "amble" | "kodomo" | "jsh" | "drAuto";
+type BusinessName = "gearman" | "amble" | "labo" | "kodomo" | "jsh" | "drAuto";
 
 type KillSwitchState = {
   enabled: boolean;
@@ -17,6 +17,7 @@ type KillSwitchState = {
 const BUSINESS_LABELS: Record<BusinessName, string> = {
   gearman: "ギア男（キャンプ）",
   amble: "アンブロ（投資）",
+  labo: "ラボ（X Posts）",
   kodomo: "こどもケアラボ（医療）",
   jsh: "JSH（訪日）",
   drAuto: "Dr.auto（医師×AI）",
@@ -27,6 +28,25 @@ const GLOBAL_SWITCHES: { key: "enabled" | "articleEnabled" | "researchEnabled"; 
   { key: "articleEnabled", label: "記事パイプライン停止", detail: "article-daily / article-weekly のみ止める" },
   { key: "researchEnabled", label: "リサーチ系停止", detail: "viral-scout / トレンド収集のみ止める" },
 ];
+
+function Toggle({ on, disabled, onClick }: { on: boolean; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+        on ? "bg-red-500" : "bg-gray-300"
+      }`}
+      aria-pressed={on}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          on ? "translate-x-6" : "translate-x-1"
+        }`}
+      />
+    </button>
+  );
+}
 
 export default function KillSwitchPage() {
   const [state, setState] = useState<KillSwitchState | null>(null);
@@ -70,25 +90,6 @@ export default function KillSwitchPage() {
     }
   }
 
-  function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
-    return (
-      <button
-        onClick={onClick}
-        disabled={saving}
-        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
-          on ? "bg-red-500" : "bg-gray-300"
-        }`}
-        aria-pressed={on}
-      >
-        <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-            on ? "translate-x-6" : "translate-x-1"
-          }`}
-        />
-      </button>
-    );
-  }
-
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold text-gray-900">🛑 KILL_SWITCH</h1>
@@ -120,7 +121,7 @@ export default function KillSwitchPage() {
                   <span className={`text-xs font-semibold ${state[sw.key] ? "text-red-600" : "text-emerald-600"}`}>
                     {state[sw.key] ? "停止中" : "稼働許可"}
                   </span>
-                  <Toggle on={state[sw.key]} onClick={() => update({ field: sw.key, value: !state[sw.key] })} />
+                  <Toggle on={state[sw.key]} disabled={saving} onClick={() => update({ field: sw.key, value: !state[sw.key] })} />
                 </div>
               </div>
             ))}
@@ -138,7 +139,7 @@ export default function KillSwitchPage() {
                   <span className={`text-xs font-semibold ${state.business[name] ? "text-red-600" : "text-emerald-600"}`}>
                     {state.business[name] ? "停止中" : "稼働許可"}
                   </span>
-                  <Toggle on={state.business[name]} onClick={() => update({ business: name, value: !state.business[name] })} />
+                  <Toggle on={state.business[name]} disabled={saving} onClick={() => update({ business: name, value: !state.business[name] })} />
                 </div>
               </div>
             ))}

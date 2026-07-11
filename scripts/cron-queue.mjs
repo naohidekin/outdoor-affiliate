@@ -20,7 +20,9 @@ import dns from "dns/promises";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.join(__dirname, "..");
 const LOG_DIR = path.join(PROJECT_DIR, "logs");
-const KS_PATH = path.join(process.env.HOME || "", ".claude/context/kill_switch.json");
+// 2026-07-11 kill-switch一本化: 旧 ~/.claude/context/kill_switch.json は廃止し、
+// 全パイプライン共通の data/kill-switch.json を参照する
+const KS_PATH = path.join(PROJECT_DIR, "data/kill-switch.json");
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 
@@ -61,9 +63,10 @@ function readKillSwitch() {
   }
 }
 
-function isKSEnabled(business, platform) {
+function isKSEnabled(business, _platform) {
+  // 新スキーマ: enabled=全体停止 / business.<name>=事業別停止（platform粒度は廃止）
   const ks = readKillSwitch();
-  return ks.global === true || ks.businesses?.[business]?.[platform] === true;
+  return ks.enabled === true || ks.business?.[business] === true;
 }
 
 // スロット判定

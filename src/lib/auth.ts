@@ -6,6 +6,9 @@ import crypto from "crypto";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const SESSION_TOKEN = "outdoor-admin-session";
 const HMAC_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || "fallback-secret-change-me";
+// 秘密鍵が実質未設定（=リポジトリ公開のフォールバック定数）の本番では、
+// Cookieが偽造可能になるため isAuthenticated 自体を fail closed にする
+const HAS_CONFIGURED_SECRET = Boolean(process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD);
 
 function signToken(payload: string): string {
   const hmac = crypto.createHmac("sha256", HMAC_SECRET);
@@ -36,6 +39,7 @@ export function createSessionToken(): string {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
+  if (!HAS_CONFIGURED_SECRET && process.env.NODE_ENV === "production") return false;
   const cookieStore = await cookies();
   const value = cookieStore.get(SESSION_TOKEN)?.value;
   if (!value) return false;

@@ -22,7 +22,7 @@ export const runtime = "nodejs";
 
 const KILL_SWITCH_PATH = path.join(process.cwd(), "data", "kill-switch.json");
 
-const BUSINESS_NAMES = ["gearman", "amble", "kodomo", "jsh", "drAuto"] as const;
+const BUSINESS_NAMES = ["gearman", "amble", "labo", "kodomo", "jsh", "drAuto"] as const;
 type BusinessName = (typeof BUSINESS_NAMES)[number];
 
 type KillSwitchState = {
@@ -39,6 +39,7 @@ type KillSwitchState = {
 const DEFAULT_BUSINESS: Record<BusinessName, boolean> = {
   gearman: false,
   amble: false,
+  labo: false,
   kodomo: false,
   jsh: false,
   drAuto: false,

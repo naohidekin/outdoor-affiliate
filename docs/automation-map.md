@@ -103,7 +103,7 @@ KPIはフォロワー数ではなく **GA4のX経由流入**。
   "articleEnabled": false,   // true = 記事系のみ停止
   "researchEnabled": false,  // true = リサーチ系のみ停止
   "business": {              // true = その事業のSNS投稿のみ停止（notion-posterがDB別に参照）
-    "gearman": false, "amble": false, "kodomo": false, "jsh": false, "drAuto": false
+    "gearman": false, "amble": false, "labo": false, "kodomo": false, "jsh": false, "drAuto": false
   },
   "reason": "", "disabledAt": "", "disabledBy": ""
 }
@@ -111,6 +111,7 @@ KPIはフォロワー数ではなく **GA4のX経由流入**。
 
 - 操作: `/admin/kill-switch`（**ローカルMacのdev画面専用**。Vercel本番からは書き込めない仕様）または直接JSON編集
 - 事業別フラグにより「キャンプの都合で全事業を止める」事故を解消
+- ⚠️ このファイルはgit管理下にある。スイッチ操作でリポジトリがdirtyになるため、**非常停止中に `git checkout data/` や `git reset --hard` をしない**こと（停止が解除されてしまう）
 - article-weekly は3連続失敗で `articleEnabled=true` を自動セット（記事系のみ自己停止。全体は道連れにしない）
 
 ---

@@ -1,3 +1,5 @@
+> ⚠️ **2026-07-11 更新**: この文書の launchd 構成（queue-to-sheets / weekly-pipeline / nightly-analyst / sync-posted-status / analyze-x / x-trend-researcher / threads-poster）は**廃止済み**です。現行の自動化構成・運用手順は **docs/automation-map.md** を参照してください。この文書は旧Sheets運用の歴史的資料として残しています。
+
 # X (@camp_gear_lab) 運用ルール
 
 最終更新: 2026-04-11（4軸拡張・10タイプ対応）

@@ -179,10 +179,14 @@ export default function AdminProducts() {
         ? `（価格変更: ${allChanges.map((c) => `${c.name} ¥${c.oldPrice.toLocaleString()}→¥${c.newPrice.toLocaleString()}`).join(", ")}）`
         : "";
       setSyncResult(`全${grandTotal}件を同期し、${syncedTotal}件を更新しました${changeText}`);
-      fetchData();
     } catch (err) {
-      setSyncResult(err instanceof Error ? err.message : "同期に失敗しました");
+      setSyncResult(
+        (err instanceof Error ? err.message : "同期に失敗しました") +
+          "（途中のバッチまではサーバに反映済みの可能性があります）"
+      );
     } finally {
+      // 途中失敗でも反映済み分があるため、一覧は必ず更新する
+      fetchData();
       setSyncing(false);
     }
   }

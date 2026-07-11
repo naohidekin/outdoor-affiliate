@@ -35,7 +35,7 @@ async function readPosts(): Promise<DrAutoPost[]> {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }

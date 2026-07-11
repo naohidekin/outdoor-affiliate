@@ -168,10 +168,11 @@ export function checkResearchKillSwitch() {
  * @returns {{ killed: boolean, reason: string }}
  */
 export function checkBusinessKillSwitch(business) {
+  // 全体停止の判定は checkKillSwitch に委譲（欠損ファイル時の挙動を1箇所に統一）
+  const ks = checkKillSwitch();
+  if (ks.killed) return { killed: true, reason: ks.reason || "全体 Kill Switch 有効" };
   const data = readJson("kill-switch.json");
-  if (!data) return { killed: false, reason: "" };
-  if (data.enabled) return { killed: true, reason: data.reason || "全体 Kill Switch 有効" };
-  if (data.business && data.business[business]) {
+  if (data?.business && data.business[business]) {
     return { killed: true, reason: data.reason || (business + " の Kill Switch 有効") };
   }
   return { killed: false, reason: "" };

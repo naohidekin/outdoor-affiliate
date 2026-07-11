@@ -9,6 +9,7 @@
   "business": {
     "gearman": false,
     "amble": false,
+    "labo": false,
     "kodomo": false,
     "jsh": false,
     "drAuto": true
