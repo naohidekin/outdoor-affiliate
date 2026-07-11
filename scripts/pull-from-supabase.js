@@ -90,6 +90,7 @@ function rowToProduct(row) {
     addedBy: row.added_by ?? undefined,
     addedAt: row.added_at ?? undefined,
     sourceApi: row.source_api ?? undefined,
+    availability: row.availability ?? undefined,
   };
 }
 

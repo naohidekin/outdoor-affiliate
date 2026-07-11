@@ -376,7 +376,22 @@ async function generateSalePosts(deals) {
   console.log("  管理画面で確認・承認してください");
 }
 
-main().catch((err) => {
-  console.error("エラー:", err.message);
-  process.exit(1);
-});
+main()
+  .then(async () => {
+    // 価格更新を本番(Supabase)へ即反映（従来は週次パイプライン任せで最大1週間ラグ）
+    if (process.argv.includes("--no-sync")) return;
+    try {
+      const { execSync } = await import("child_process").then((m) => m.default || m);
+      console.log("\n[price-monitor] Supabaseへ商品を同期します...");
+      execSync("node --dns-result-order=ipv4first scripts/sync-to-supabase.js", {
+        stdio: "inherit",
+        cwd: process.cwd(),
+      });
+    } catch (err) {
+      console.error("[price-monitor] Supabase同期に失敗（価格は次回同期で反映されます）:", err.message);
+    }
+  })
+  .catch((err) => {
+    console.error("エラー:", err.message);
+    process.exit(1);
+  });

@@ -160,13 +160,25 @@ export default function AdminProducts() {
     setSyncing(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/products/sync");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { synced, total, changes } = await res.json();
-      const changeText = changes.length > 0
-        ? `（価格変更: ${changes.map((c: { name: string; oldPrice: number; newPrice: number }) => `${c.name} ¥${c.oldPrice.toLocaleString()}→¥${c.newPrice.toLocaleString()}`).join(", ")}）`
+      // Vercel 10秒制限内の10件バッチを、nextOffset が尽きるまでループして全件同期
+      let offset: number | null = 0;
+      let syncedTotal = 0;
+      let grandTotal = 0;
+      const allChanges: { name: string; oldPrice: number; newPrice: number }[] = [];
+      while (offset !== null) {
+        const res: Response = await fetch(`/api/products/sync?offset=${offset}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        syncedTotal += data.synced || 0;
+        grandTotal = data.total || grandTotal;
+        allChanges.push(...(data.changes || []));
+        offset = data.nextOffset ?? null;
+        setSyncResult(`同期中… ${offset === null ? grandTotal : offset}/${grandTotal} 件`);
+      }
+      const changeText = allChanges.length > 0
+        ? `（価格変更: ${allChanges.map((c) => `${c.name} ¥${c.oldPrice.toLocaleString()}→¥${c.newPrice.toLocaleString()}`).join(", ")}）`
         : "";
-      setSyncResult(`${total}件中 ${synced}件を更新しました${changeText}`);
+      setSyncResult(`全${grandTotal}件を同期し、${syncedTotal}件を更新しました${changeText}`);
       fetchData();
     } catch (err) {
       setSyncResult(err instanceof Error ? err.message : "同期に失敗しました");

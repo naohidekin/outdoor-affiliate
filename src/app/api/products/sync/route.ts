@@ -13,11 +13,13 @@ export async function GET(request: NextRequest) {
   // 注意: 10件/バッチ・1.1秒間隔のため、136 ASINで約14秒かかる。
   // Vercel Hobby plan は10秒制限のため、本番ではlimitを小さくするか分割実行すること。
   const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 200);
+  // offset: クライアントが nextOffset を受け取りながらループすることで、
+  // Vercel 10秒制限内のまま全商品を分割同期できる（従来は常に先頭10件のみだった）
+  const offset = Math.max(0, parseInt(searchParams.get("offset") || "0"));
 
   const products = await getProducts();
-  const targets = products
-    .filter((p) => !!extractAsin(p.amazonUrl || ""))
-    .slice(0, limit);
+  const eligible = products.filter((p) => !!extractAsin(p.amazonUrl || ""));
+  const targets = eligible.slice(offset, offset + limit);
 
   const asins = targets.map((p) => extractAsin(p.amazonUrl)!);
 
@@ -50,7 +52,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ synced: updated, total: targets.length, changes });
+  const nextOffset = offset + targets.length < eligible.length ? offset + targets.length : null;
+  return NextResponse.json({ synced: updated, batch: targets.length, total: eligible.length, offset, nextOffset, changes });
 }
 
 /** 指定ASIN配列のみ同期 */

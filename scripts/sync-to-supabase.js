@@ -90,6 +90,7 @@ function productToRow(p) {
     added_by: p.addedBy ?? null,
     added_at: p.addedAt ?? null,
     source_api: p.sourceApi ?? null,
+    availability: p.availability ?? null,
   };
 }
 
