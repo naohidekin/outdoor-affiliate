@@ -93,6 +93,30 @@ async function notifyGoogleIndex(slug) {
   }
 }
 
+// ─── IndexNow（Bing/Copilot 即時インデックス通知） ─────────
+// キーは public/<key>.txt でサイト上に公開済み（IndexNowの仕様上、秘密ではない）
+
+const INDEXNOW_KEY = "945e8303b9c842052e5dfde5850252a3";
+
+async function notifyIndexNow(slugs) {
+  const list = Array.isArray(slugs) ? slugs : [slugs];
+  try {
+    const res = await withTimeout(fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: "camp-gear-lab.com",
+        key: INDEXNOW_KEY,
+        keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
+        urlList: list.map((s) => `${SITE_URL}/articles/${s}`),
+      }),
+    }), 15_000, "IndexNow submit");
+    console.log(`[article-publisher] IndexNow: ${res.status} (${list.length}件)`);
+  } catch (err) {
+    console.warn(`[article-publisher] IndexNow エラー（無視して続行）: ${err.message}`);
+  }
+}
+
 // ─── X投稿連携（article_promo を下書き管理シートに追加） ───
 
 async function createArticlePromo(article) {
@@ -192,6 +216,7 @@ async function main() {
 
     if (!opts.dryRun) {
       await notifyGoogleIndex(target.slug);
+      await notifyIndexNow(target.slug);
       await createArticlePromo(target);
     }
   } else {
@@ -254,6 +279,7 @@ async function main() {
 
       if (!opts.dryRun) {
         await notifyGoogleIndex(article.slug);
+        await notifyIndexNow(article.slug);
         await createArticlePromo(article);
       } else {
         console.log("  [DRY RUN] 公開処理をスキップ");
