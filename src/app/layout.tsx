@@ -17,15 +17,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Outdoor Gear Lab | アウトドア用品比較・レビュー",
-    template: "%s | Outdoor Gear Lab",
+    default: "Camp Gear Lab | アウトドア用品比較・レビュー",
+    template: "%s | Camp Gear Lab",
   },
   description:
     "アウトドア用品を徹底比較。テント、シュラフ、バーナー、バックパックなど、キャンプ・登山ギアのリアルなレビューと比較情報をお届けします。",
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    siteName: "Outdoor Gear Lab",
+    siteName: "Camp Gear Lab",
     url: "https://camp-gear-lab.com",
   },
   twitter: {
@@ -51,7 +51,7 @@ export default function RootLayout({
         <link
           rel="alternate"
           type="application/rss+xml"
-          title="Outdoor Gear Lab"
+          title="Camp Gear Lab"
           href="https://camp-gear-lab.com/feed"
         />
       </head>

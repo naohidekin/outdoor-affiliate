@@ -7,9 +7,9 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "お問い合わせ | Outdoor Gear Lab",
+  title: "お問い合わせ | Camp Gear Lab",
   description:
-    "Outdoor Gear Lab（camp-gear-lab.com）へのお問い合わせ方法のご案内。記事内容の誤り・掲載情報・その他のご連絡はこちらから。",
+    "Camp Gear Lab（camp-gear-lab.com）へのお問い合わせ方法のご案内。記事内容の誤り・掲載情報・その他のご連絡はこちらから。",
   alternates: { canonical: "/contact" },
 };
 
@@ -35,7 +35,7 @@ export default async function ContactPage() {
 
           <div className="prose max-w-none">
             <p>
-              Outdoor Gear Lab へのお問い合わせは、X（旧Twitter）のダイレクトメッセージにて受け付けています。
+              Camp Gear Lab へのお問い合わせは、X（旧Twitter）のダイレクトメッセージにて受け付けています。
               記事内容の誤りのご指摘、掲載情報に関するご連絡、その他のご質問など、お気軽にどうぞ。
             </p>
 

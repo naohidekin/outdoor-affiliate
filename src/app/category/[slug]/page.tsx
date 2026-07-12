@@ -61,7 +61,7 @@ export async function generateMetadata({
     openGraph: {
       title: `${category.name}のおすすめ比較・レビュー`,
       description: `${category.description}おすすめ製品の比較・口コミ・ランキング情報をまとめて紹介。`,
-      siteName: "Outdoor Gear Lab",
+      siteName: "Camp Gear Lab",
       locale: "ja_JP",
       url: `/category/${category.slug}`,
     },

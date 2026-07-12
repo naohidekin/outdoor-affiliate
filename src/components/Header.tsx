@@ -11,7 +11,7 @@ export default function Header({ categories }: { categories: Category[] }) {
           <Link href="/" className="flex items-center gap-2 group">
             <Mountain className="w-6 h-6 text-lake-600" strokeWidth={2} />
             <span className="text-lg font-semibold tracking-tight text-ink-strong">
-              Outdoor Gear Lab
+              Camp Gear Lab
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">

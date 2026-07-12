@@ -7,9 +7,9 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "プライバシーポリシー | Outdoor Gear Lab",
+  title: "プライバシーポリシー | Camp Gear Lab",
   description:
-    "Outdoor Gear Lab（camp-gear-lab.com）のプライバシーポリシー。アクセス解析・広告配信・Cookieの取り扱いについて説明します。",
+    "Camp Gear Lab（camp-gear-lab.com）のプライバシーポリシー。アクセス解析・広告配信・Cookieの取り扱いについて説明します。",
   alternates: { canonical: "/privacy" },
 };
 
@@ -35,7 +35,7 @@ export default async function PrivacyPage() {
 
           <div className="prose max-w-none">
             <p>
-              Outdoor Gear Lab（https://camp-gear-lab.com、以下「当サイト」）は、
+              Camp Gear Lab（https://camp-gear-lab.com、以下「当サイト」）は、
               訪問者のプライバシーを尊重し、個人情報の保護に努めます。
               本ポリシーでは、当サイトにおける情報の取り扱いを説明します。
             </p>
@@ -113,7 +113,7 @@ export default async function PrivacyPage() {
               制定日: 2026年7月3日
               <br />
               運営者:{" "}
-              <Link href="/about">Outdoor Gear Lab（運営者情報はこちら）</Link>
+              <Link href="/about">Camp Gear Lab（運営者情報はこちら）</Link>
             </p>
           </div>
         </article>
