@@ -1,233 +1,98 @@
 {
-  "checkedAt": "2026-06-29T00:14:07.082Z",
-  "total": 339,
-  "checked": 301,
-  "ok": 283,
-  "broken": [
-    {
-      "id": "knife-001",
-      "name": "モーラナイフ Companion MG Stainless",
-      "url": "https://www.amazon.co.jp/dp/B00DWS0OIM?tag=camp78-22"
-    },
-    {
-      "id": "knife-002",
-      "name": "モーラナイフ Garberg Full Tang",
-      "url": "https://www.amazon.co.jp/dp/B07B3FMFRF?tag=camp78-22"
-    },
-    {
-      "id": "pillow-sea-to-summit-aeros",
-      "name": "Sea to Summit エアロスプレミアムピロー",
-      "url": "https://www.amazon.co.jp/dp/B08VHMZP7P?tag=camp78-22"
-    },
-    {
-      "id": "pillow-thermarest-neoair",
-      "name": "サーマレスト ネオエアーピロー",
-      "url": "https://www.amazon.co.jp/dp/B00GV0B0DQ?tag=camp78-22"
-    },
-    {
-      "id": "pillow-waq-camp",
-      "name": "WAQ キャンプ枕",
-      "url": "https://www.amazon.co.jp/dp/B0CGMVZQNK?tag=camp78-22"
-    },
-    {
-      "id": "pillow-logos-camp-pillow",
-      "name": "ロゴス キャンプピロー（マイクロファイバー）",
-      "url": "https://www.amazon.co.jp/dp/B07V9KKVZW?tag=camp78-22"
-    },
-    {
-      "id": "hammock-unigear",
-      "name": "Unigear ハンモック パラシュートナイロン 2人用",
-      "url": "https://www.amazon.co.jp/dp/B07G4YNR99?tag=camp78-22"
-    },
-    {
-      "id": "knife-004",
-      "name": "オピネル フォールディングナイフ No.8 ステンレス",
-      "url": "https://www.amazon.co.jp/dp/B00006BEHO?tag=camp78-22"
-    },
-    {
-      "id": "dry-net-snowpeak",
-      "name": "スノーピーク テーブルドライネット UG-370",
-      "url": "https://www.amazon.co.jp/dp/B07GXJGQJD?tag=camp78-22"
-    },
-    {
-      "id": "sierra-cup-cs",
-      "name": "キャプテンスタッグ シェラカップ ステンレス 目盛付",
-      "url": "https://www.amazon.co.jp/dp/B001S6XVZS?tag=camp78-22"
-    },
-    {
-      "id": "trash-box-dod",
-      "name": "DOD ステルスエックス ブラック GM1-450",
-      "url": "https://www.amazon.co.jp/dp/B07WNLM9PK?tag=camp78-22"
-    },
-    {
-      "id": "stanley-water-jug-7.5l",
-      "name": "スタンレー クラシックアウトドアウォータージャグ 7.5L",
-      "url": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22"
-    },
-    {
-      "id": "pillow-nemo-fillo-elite",
-      "name": "NEMO フィロ エリート",
-      "url": "https://www.amazon.co.jp/dp/B07WF8GK8F?tag=camp78-22"
-    },
-    {
-      "id": "trash-box-pykes",
-      "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
-      "url": "https://www.amazon.co.jp/dp/B09DYDCGZB?tag=camp78-22"
-    },
-    {
-      "id": "uniflame-yama-kettle-900",
-      "name": "ユニフレーム 山ケトル900",
-      "url": "https://www.amazon.co.jp/dp/B000AR3OY6?tag=camp78-22"
-    },
-    {
-      "id": "sierra-cup-bundok",
-      "name": "BUNDOK シェラカップ 600ml BD-190",
-      "url": "https://www.amazon.co.jp/dp/B00BMRUCEW?tag=camp78-22"
-    },
-    {
-      "id": "uniflame-field-rack",
-      "name": "ユニフレーム フィールドラック",
-      "url": "https://www.amazon.co.jp/dp/B007J68TCC?tag=camp78-22"
-    },
-    {
-      "id": "dd-hammock-frontline",
-      "name": "DDハンモック フロントライン",
-      "url": "https://www.amazon.co.jp/dp/B07XXXXXXX?tag=camp78-22"
-    }
-  ],
+  "checkedAt": "2026-07-11T21:32:53.950Z",
+  "total": 344,
+  "checked": 299,
+  "ok": 299,
+  "broken": [],
   "errors": [],
   "noUrl": [
     {
-      "id": "tent-008",
-      "name": "インディアン野外キャンプテント.キャノピーテント 6-8人用 前室付き ワンポールテント 大型 広い 屋外 キャンプテント 設営簡単 UVカット 防水 耐水圧?3000mm 煙突穴付き アウトドア パ"
-    },
-    {
-      "id": "chair-010",
-      "name": "【全品5％OFFクーポン】アウトドアチェア 折りたたみ椅子 耐荷重150kg コンパクトチェア キャンプ椅子 キャンプチェア アウトドア 椅子 軽量 持ち運び便利 アウトドア リクライニングチェア 完"
+      "id": "pillow-logos-camp-pillow",
+      "name": "ロゴス キャンプピロー（マイクロファイバー）"
     },
     {
       "id": "chair-007",
       "name": "アウトドアチェア 折りたたみ 椅子 チェア ローチェア 簡単組立 キャンプ イス アウトドア 背もたれ付 バーベキュー ファミリー 公園 運動会 レジャー 屋外 室内 おしゃれ 送料無料 軽量 フォー"
     },
     {
-      "id": "rakuten-brave-4-odsbps",
-      "name": "寝袋 シュラフ 封筒型 コンパクト 軽量 -4℃"
-    },
-    {
-      "id": "rakuten-ymbstore-10000345",
-      "name": "＼めざましテレビで紹介されました！／ アウトドアチェア キャンプ椅子 キャンプチェア 軽量 折りたたみ椅子 アウトドア チェア コンパクト アルミ キャンプ 運動会 椅子 イス キャンプ椅子 携帯 送"
-    },
-    {
-      "id": "rakuten-brave-0-10000006358",
-      "name": "防災士監修 ワンタッチテント 2-4人用 3WAY使用"
-    },
-    {
-      "id": "tent-010",
-      "name": "[全品10％OFF×15日限定クーポン+P10倍 15日20時〜4H]日よけ シェード サンシェード 日除け 庭 プール 大型 ベランダ シェード 大きいサイズ 窓 おしゃれ タープテント アウトドア"
-    },
-    {
-      "id": "rakuten-k-lalala-10102906",
-      "name": "クーラーボックス【楽天1位】ベルト付 小型 コンパクト かわいい 5L 7L 13L 14L 46L 限定カラー おしゃれ クーラーバッグ クーラーバスケット クーラーBOX 保冷バッグ 保冷 キャン"
-    },
-    {
-      "id": "rakuten-mystic-r-10000076",
-      "name": "【選ばれて23冠／レビュー1000件超！楽天1位】 焚火台 焚き火台 コンパクト ソロ キャンプ 折りたたみ式 たきび台 焚き火 台 おしゃれ 焚火 キャンプ用品 グリル ステンレス ミニ ソロ 用 "
-    },
-    {
-      "id": "viral-scout-1778961985579-bwqy",
-      "name": "ボウモア 15年 43％ 700ml[ウイスキー][御歳暮 贈り物 御礼 母の日 父の日 御中元]"
-    },
-    {
-      "id": "rakuten-next-online-10000136",
-      "name": "楽天1位【★4.64レビュー2980件】ウィンドスクリーン 焚き火 防風板 リフレクター 反射板 キャンプ 風除け 軽量 コンパクト 風防 折りたたみ かさばらない 風よけ 大型 小型 大判サイズ ア"
-    },
-    {
-      "id": "rakuten-brave-1-led-rant",
-      "name": "Okulu LEDランタン おしゃれ 名入れギフト対応"
-    },
-    {
-      "id": "chair-009",
-      "name": "アウトドアチェア 折りたたみ椅子 軽量 コンパクト キャンプチェア ミニチェア ローチェア 最大150kg 安定感 撥水加工 収納袋付 持ち運び便利 レジャーチェア ビーチチェア バーベキュー 釣り "
-    },
-    {
-      "id": "tarp-009",
-      "name": "アウトドア かっぱ レインウェア アウトドア 多機能 タクティカル レインコート 完全 防水 ラミネート 暴風 雨 キャンプ 登山 ハイキング用 レインギアを 収納 可能"
-    },
-    {
-      "id": "rakuten-brave-3-liberaiders-657",
-      "name": "Liberaiders PX SOFT COOLER M"
-    },
-    {
-      "id": "tent-016",
-      "name": "MW-TAKAMORI ドームテント 大人2人用 防水 フルクローズ"
-    },
-    {
-      "id": "rakuten-brave-5-f26001",
-      "name": "FeNEEDS WELDERS POINT ユナイテッド・ボーンファイヤー・スタンド FCG010"
-    },
-    {
-      "id": "tarp-010",
-      "name": "アウトドア かっぱ レインウェア アウトドア 多機能 タクティカル レインコート 完全 防水 ラミネート 暴風 雨 キャンプ 登山 ハイキング用 レインギアを 収納 可能"
-    },
-    {
-      "id": "rakuten-brave-7-zp04-1",
-      "name": "カーサイドタープ 車用 UVカット 3〜6人対応"
-    },
-    {
-      "id": "rakuten-brave-1-pr330033",
-      "name": "Lepro LEDランタン 1500ルーメン 電池式"
-    },
-    {
-      "id": "rakuten-brave-3-c0144",
-      "name": "AND MYSELF ソフトクーラーボックス 3サイズ展開"
-    },
-    {
-      "id": "rakuten-brave-5-10000010",
-      "name": "TokyoCamp 焚き火台 オプションパーツ 焼き網 3点セット"
-    },
-    {
-      "id": "rakuten-brave-2-outdoor-chair",
-      "name": "めざましテレビで紹介！アウトドアチェア キャンプ用"
-    },
-    {
-      "id": "rakuten-brave-2-vl0494-1",
-      "name": "VASTLAND キャンプフィットチェア ハイタイプ"
-    },
-    {
-      "id": "tent-006",
-      "name": "HOMFINE ソロテント 2人用 前室付き 4000mm耐水圧"
-    },
-    {
-      "id": "viral-scout-1778961984248-mcno",
-      "name": "【モンベル】シームレスダウンハガー800#3 R/ZIP バルサム（BASM）#1121401"
+      "id": "sierra-cup-bundok",
+      "name": "BUNDOK シェラカップ 600ml BD-190"
     },
     {
       "id": "rakuten-nuuca-10000003",
       "name": "Nuuca 寝袋 防災 来客用 布団セット ヌーカスリープ【ISO国際基準 -10℃】 北欧デザイン シュラフ オールシーズン 春用 秋用 冬用 来客布団 布団 ふとん 客用布団 人気 おすすめ コン"
     },
     {
-      "id": "rakuten-longlife-global-10000378",
-      "name": "折りたたみアウトドアチェア ローチェア 軽量コンパクト"
+      "id": "cooler-corona-pa-f85a",
+      "name": "コロナ OUTFIELD BREEZE BOX PA-F85A"
     },
     {
-      "id": "rakuten-brave-4-kot-15",
-      "name": "寝袋 シュラフ 冬 コンパクト -10℃ 封筒型 枕付き"
-    },
-    {
-      "id": "tent-f-landlock-x",
-      "name": "スノーピーク ランドロック X"
+      "id": "rakuten-mystic-r-10000076",
+      "name": "【選ばれて23冠／レビュー1000件超！楽天1位】 焚火台 焚き火台 コンパクト ソロ キャンプ 折りたたみ式 たきび台 焚き火 台 おしゃれ 焚火 キャンプ用品 グリル ステンレス ミニ ソロ 用 "
     },
     {
       "id": "chair-008",
       "name": "【レンタル】初めてのキャンプセット〔お得なセット〕 【往復送料無料】ファミリー キャンプ 宿泊 家族 春キャンプ 夏キャンプ 秋キャンプ 冬キャンプ テント"
     },
     {
-      "id": "rakuten-artpiece-10000946",
-      "name": "軽量コンパクト寝袋 最低使用温度-15度 オールシーズン対応"
+      "id": "viral-scout-1778961985579-bwqy",
+      "name": "ボウモア 15年 43％ 700ml[ウイスキー][御歳暮 贈り物 御礼 母の日 父の日 御中元]"
     },
     {
-      "id": "cooker-004",
-      "name": "スノーピーク チタントレック 900"
+      "id": "dry-net-snowpeak",
+      "name": "スノーピーク テーブルドライネット UG-370"
+    },
+    {
+      "id": "rakuten-brave-4-odsbps",
+      "name": "寝袋 シュラフ 封筒型 コンパクト 軽量 -4℃"
+    },
+    {
+      "id": "rakuten-brave-1-led-rant",
+      "name": "Okulu LEDランタン おしゃれ 名入れギフト対応"
+    },
+    {
+      "id": "rakuten-next-online-10000136",
+      "name": "楽天1位【★4.64レビュー2980件】ウィンドスクリーン 焚き火 防風板 リフレクター 反射板 キャンプ 風除け 軽量 コンパクト 風防 折りたたみ かさばらない 風よけ 大型 小型 大判サイズ ア"
+    },
+    {
+      "id": "cooker-003",
+      "name": "ユニフレーム fan5 DX"
+    },
+    {
+      "id": "rakuten-brave-2-vl0494-1",
+      "name": "VASTLAND キャンプフィットチェア ハイタイプ"
+    },
+    {
+      "id": "tent-008",
+      "name": "インディアン野外キャンプテント.キャノピーテント 6-8人用 前室付き ワンポールテント 大型 広い 屋外 キャンプテント 設営簡単 UVカット 防水 耐水圧?3000mm 煙突穴付き アウトドア パ"
+    },
+    {
+      "id": "pillow-thermarest-neoair",
+      "name": "サーマレスト ネオエアーピロー"
+    },
+    {
+      "id": "rakuten-brave-4-kot-15",
+      "name": "寝袋 シュラフ 冬 コンパクト -10℃ 封筒型 枕付き"
+    },
+    {
+      "id": "rakuten-k-lalala-10102906",
+      "name": "クーラーボックス【楽天1位】ベルト付 小型 コンパクト かわいい 5L 7L 13L 14L 46L 限定カラー おしゃれ クーラーバッグ クーラーバスケット クーラーBOX 保冷バッグ 保冷 キャン"
+    },
+    {
+      "id": "rakuten-brave-0-10000006358",
+      "name": "防災士監修 ワンタッチテント 2-4人用 3WAY使用"
+    },
+    {
+      "id": "tarp-010",
+      "name": "アウトドア かっぱ レインウェア アウトドア 多機能 タクティカル レインコート 完全 防水 ラミネート 暴風 雨 キャンプ 登山 ハイキング用 レインギアを 収納 可能"
+    },
+    {
+      "id": "dd-hammock-frontline",
+      "name": "DDハンモック フロントライン"
+    },
+    {
+      "id": "chair-009",
+      "name": "アウトドアチェア 折りたたみ椅子 軽量 コンパクト キャンプチェア ミニチェア ローチェア 最大150kg 安定感 撥水加工 収納袋付 持ち運び便利 レジャーチェア ビーチチェア バーベキュー 釣り "
     },
     {
       "id": "lantern-stand-003",
@@ -238,16 +103,88 @@
       "name": "スノーピーク クッカーセット フィールドクッカー No.1"
     },
     {
-      "id": "cooker-002",
-      "name": "モンベル アルパインクッカー 16 スターターセット"
+      "id": "rakuten-brave-5-10000010",
+      "name": "TokyoCamp 焚き火台 オプションパーツ 焼き網 3点セット"
     },
     {
-      "id": "cooker-003",
-      "name": "ユニフレーム fan5 DX"
+      "id": "rakuten-brave-1-pr330033",
+      "name": "Lepro LEDランタン 1500ルーメン 電池式"
     },
     {
       "id": "cooker-005",
       "name": "トランギア ストームクッカーS（アルコールバーナーセット）"
+    },
+    {
+      "id": "tent-010",
+      "name": "[全品10％OFF×15日限定クーポン+P10倍 15日20時〜4H]日よけ シェード サンシェード 日除け 庭 プール 大型 ベランダ シェード 大きいサイズ 窓 おしゃれ タープテント アウトドア"
+    },
+    {
+      "id": "chair-010",
+      "name": "【全品5％OFFクーポン】アウトドアチェア 折りたたみ椅子 耐荷重150kg コンパクトチェア キャンプ椅子 キャンプチェア アウトドア 椅子 軽量 持ち運び便利 アウトドア リクライニングチェア 完"
+    },
+    {
+      "id": "rakuten-brave-3-liberaiders-657",
+      "name": "Liberaiders PX SOFT COOLER M"
+    },
+    {
+      "id": "rakuten-ymbstore-10000345",
+      "name": "＼めざましテレビで紹介されました！／ アウトドアチェア キャンプ椅子 キャンプチェア 軽量 折りたたみ椅子 アウトドア チェア コンパクト アルミ キャンプ 運動会 椅子 イス キャンプ椅子 携帯 送"
+    },
+    {
+      "id": "rakuten-brave-3-c0144",
+      "name": "AND MYSELF ソフトクーラーボックス 3サイズ展開"
+    },
+    {
+      "id": "viral-scout-1778961984248-mcno",
+      "name": "【モンベル】シームレスダウンハガー800#3 R/ZIP バルサム（BASM）#1121401"
+    },
+    {
+      "id": "cooker-004",
+      "name": "スノーピーク チタントレック 900"
+    },
+    {
+      "id": "rakuten-longlife-global-10000378",
+      "name": "折りたたみアウトドアチェア ローチェア 軽量コンパクト"
+    },
+    {
+      "id": "tarp-009",
+      "name": "アウトドア かっぱ レインウェア アウトドア 多機能 タクティカル レインコート 完全 防水 ラミネート 暴風 雨 キャンプ 登山 ハイキング用 レインギアを 収納 可能"
+    },
+    {
+      "id": "cooker-002",
+      "name": "モンベル アルパインクッカー 16 スターターセット"
+    },
+    {
+      "id": "tent-006",
+      "name": "HOMFINE ソロテント 2人用 前室付き 4000mm耐水圧"
+    },
+    {
+      "id": "rakuten-brave-5-f26001",
+      "name": "FeNEEDS WELDERS POINT ユナイテッド・ボーンファイヤー・スタンド FCG010"
+    },
+    {
+      "id": "rakuten-artpiece-10000946",
+      "name": "軽量コンパクト寝袋 最低使用温度-15度 オールシーズン対応"
+    },
+    {
+      "id": "rakuten-brave-2-outdoor-chair",
+      "name": "めざましテレビで紹介！アウトドアチェア キャンプ用"
+    },
+    {
+      "id": "rakuten-brave-7-zp04-1",
+      "name": "カーサイドタープ 車用 UVカット 3〜6人対応"
+    },
+    {
+      "id": "stanley-water-jug-7.5l",
+      "name": "スタンレー クラシックアウトドアウォータージャグ 7.5L"
+    },
+    {
+      "id": "pillow-nemo-fillo",
+      "name": "NEMO ニーモ フィッロ Fillo キャンプ枕"
+    },
+    {
+      "id": "tent-016",
+      "name": "MW-TAKAMORI ドームテント 大人2人用 防水 フルクローズ"
     }
   ]
 }
