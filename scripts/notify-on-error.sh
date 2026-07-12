@@ -14,6 +14,25 @@ set -uo pipefail
 LABEL="$1"
 shift
 
+# Telegram(Secretary bot) 同時配信ヘルパー（macOS通知に加えてiPhoneにも届ける）。
+# トークン/chat_id は ~/.secretary/.env（値は読むだけ・ログ/コミットに残さない）。
+# 未設定なら黙ってスキップし、既存の挙動（macOS通知のみ）を壊さない。
+__TG_ENV_FILE="$HOME/.secretary/.env"
+if [ -f "$__TG_ENV_FILE" ]; then
+  set -a
+  . "$__TG_ENV_FILE" 2>/dev/null || true
+  set +a
+fi
+tg_notify() {
+  [ -z "${SECRETARY_BOT_TOKEN:-}" ] && return 0
+  [ -z "${OWNER_CHAT_ID:-}" ] && return 0
+  curl -s -o /dev/null --max-time 10 \
+    "https://api.telegram.org/bot${SECRETARY_BOT_TOKEN}/sendMessage" \
+    --data-urlencode "chat_id=${OWNER_CHAT_ID}" \
+    --data-urlencode "text=$1" >/dev/null 2>&1 || true
+  return 0
+}
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
@@ -29,6 +48,8 @@ if [ "$EXIT_CODE" -ne 0 ]; then
 
   # macOS 通知
   osascript -e "display notification \"$LABEL が失敗しました (exit $EXIT_CODE)\" with title \"X自動化エラー\" sound name \"Basso\"" 2>/dev/null || true
+  # Telegram にも同時配信（iPhone到達）
+  tg_notify "🔗 [outdoor-affiliate] $LABEL が失敗しました (exit $EXIT_CODE)"
 
   # エラー履歴を JSONL で追記
   echo "{\"timestamp\":\"$TIMESTAMP\",\"label\":\"$LABEL\",\"exitCode\":$EXIT_CODE,\"command\":\"$*\"}" >> "$ERROR_LOG"
