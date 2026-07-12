@@ -29,6 +29,9 @@ GA4 トラフィック獲得（直近28日 = 6/14〜7/11、施策**前**の自�
    正典外の捏造体験（未所有ギア使用談・具体地名）を3記事で無害化
 6. **計測**: GA4標準「AI Assistant」チャネルで測定（Google自動メンテ。自作セグメント不要と判明）。
    Vercel Firewall は AI Bots = Allow を確認済み
+7. **Bing Webmaster Tools 登録**（2026-07-12）: GSCインポートで所有権・sitemap引き継ぎ。
+   sitemap.xml 成功・検出URL 128件・エラー0。ChatGPT/Copilot検索はBingインデックス依存のため必須の導線。
+   「AI Performance（ベータ）」でAI回答内の引用数を月次確認する（DNSはVercel直結でCloudflare不使用＝AI Crawl Control対象外）
 
 ## 月次記録
 
