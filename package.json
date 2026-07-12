@@ -57,7 +57,9 @@
     "x:viral-scout:dry": "node --dns-result-order=ipv4first scripts/viral-scout-agent.js --dry-run",
     "x:v2:reply:cleanup": "node --dns-result-order=ipv4first scripts/x/reply-cleanup.mjs",
     "fix:links": "node --dns-result-order=ipv4first scripts/link-fix.mjs",
-    "fix:links:dry": "node --dns-result-order=ipv4first scripts/link-fix.mjs --dry-run"
+    "fix:links:dry": "node --dns-result-order=ipv4first scripts/link-fix.mjs --dry-run",
+    "indexnow:all": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs",
+    "indexnow:dry": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
