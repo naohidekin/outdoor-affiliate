@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Outdoor Gear Lab - アウトドア用品比較・レビュー";
+export const alt = "Camp Gear Lab - アウトドア用品比較・レビュー";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -30,7 +30,7 @@ export default async function Image() {
             display: "flex",
           }}
         >
-          Outdoor Gear Lab
+          Camp Gear Lab
         </div>
         <div
           style={{

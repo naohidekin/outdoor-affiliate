@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getArticleBySlug, getCategoryById } from "@/lib/db";
 
-export const alt = "Outdoor Gear Lab";
+export const alt = "Camp Gear Lab";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -40,7 +40,7 @@ export default async function Image({
   const article = await getArticleBySlug(slug);
   const category = article ? await getCategoryById(article.categoryId) : null;
 
-  const title = article?.title ?? "Outdoor Gear Lab";
+  const title = article?.title ?? "Camp Gear Lab";
   const categoryName = category?.name ?? "";
   const categorySlug = category?.slug ?? "";
   const emoji = CATEGORY_EMOJI[categorySlug] ?? "🏕️";
@@ -164,7 +164,7 @@ export default async function Image({
                 color: "#fbbf24",
               }}
             >
-              Outdoor Gear Lab
+              Camp Gear Lab
             </span>
           </div>
           <span style={{ fontSize: "18px", color: "rgba(255,255,255,0.5)" }}>

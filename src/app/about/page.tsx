@@ -7,17 +7,17 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "このサイトについて | Outdoor Gear Lab",
+  title: "このサイトについて | Camp Gear Lab",
   description:
-    "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
+    "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Camp Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "このサイトについて | Outdoor Gear Lab",
+    title: "このサイトについて | Camp Gear Lab",
     description:
-      "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Outdoor Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
+      "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Camp Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
     url: "/about",
     type: "website",
-    siteName: "Outdoor Gear Lab",
+    siteName: "Camp Gear Lab",
     locale: "ja_JP",
   },
 };
@@ -25,12 +25,23 @@ export const metadata: Metadata = {
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
-  name: "現役小児科開業医",
-  jobTitle: "小児科医",
+  name: "ギア男",
+  alternateName: "Camp Gear Lab 編集長",
+  jobTitle: "小児科医（開業医）",
   description:
-    "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+    "現役の小児科開業医「ギア男」。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
   url: "https://camp-gear-lab.com/about",
-  sameAs: ["https://camp-gear-lab.com"],
+  worksFor: {
+    "@type": "Organization",
+    name: "Camp Gear Lab",
+    url: "https://camp-gear-lab.com",
+  },
+  knowsAbout: ["キャンプギア", "ファミリーキャンプ", "アウトドア医学", "小児科"],
+  sameAs: [
+    "https://x.com/camp_gear_lab",
+    "https://twitter.com/camp_gear_lab",
+    "https://room.rakuten.co.jp/room_naomaru",
+  ],
 };
 
 export default async function AboutPage() {
@@ -73,7 +84,7 @@ export default async function AboutPage() {
 
           <div className="prose max-w-none">
             <p>
-              「Outdoor Gear Lab」は、<strong>現役の小児科医</strong>
+              「Camp Gear Lab」は、<strong>現役の小児科医</strong>
               が運営するアウトドアギアの比較・レビューサイトです。
             </p>
             <p>
@@ -201,13 +212,13 @@ export default async function AboutPage() {
             <h2>運営情報</h2>
             <ul>
               <li>
-                <strong>サイト名</strong>：Outdoor Gear Lab
+                <strong>サイト名</strong>：Camp Gear Lab
               </li>
               <li>
                 <strong>URL</strong>：https://camp-gear-lab.com
               </li>
               <li>
-                <strong>運営者</strong>：現役小児科開業医（匿名運営）
+                <strong>運営者</strong>：ギア男（現役小児科開業医・ペンネームで運営）
               </li>
               <li>
                 <strong>収益源</strong>：Amazonアソシエイト、楽天アフィリエイト ほか

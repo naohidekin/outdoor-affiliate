@@ -43,7 +43,7 @@ export async function generateMetadata({
       type: "article",
       publishedTime: article.publishedAt ?? undefined,
       modifiedTime: article.updatedAt,
-      siteName: "Outdoor Gear Lab",
+      siteName: "Camp Gear Lab",
       locale: "ja_JP",
       url: `/articles/${article.slug}`,
     },
@@ -129,18 +129,19 @@ export default async function ArticlePage({
     dateModified: article.updatedAt,
     author: {
       "@type": "Person",
-      name: "現役小児科開業医",
-      jobTitle: "小児科医",
-      description: "現役の小児科開業医。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
+      name: "ギア男",
+      jobTitle: "小児科医（開業医）",
+      description: "現役の小児科開業医「ギア男」。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
       url: `${baseUrl}/about`,
       sameAs: [
+        "https://x.com/camp_gear_lab",
         "https://twitter.com/camp_gear_lab",
-        `${baseUrl}/about`,
+        "https://room.rakuten.co.jp/room_naomaru",
       ],
     },
     publisher: {
       "@type": "Organization",
-      name: "Outdoor Gear Lab",
+      name: "Camp Gear Lab",
       url: baseUrl,
       logo: {
         "@type": "ImageObject",
@@ -295,7 +296,7 @@ export default async function ArticlePage({
               className="inline-flex items-center gap-1.5 text-slate-600 hover:text-lake-600 transition"
             >
               <span>🩺</span>
-              <span className="font-medium">現役小児科開業医</span>
+              <span className="font-medium">ギア男（現役小児科開業医）</span>
               <span className="text-slate-400">監修・執筆</span>
             </Link>
             {(article.updatedAt ?? article.publishedAt) && (

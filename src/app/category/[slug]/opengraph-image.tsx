@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getCategoryBySlug } from "@/lib/db";
 
-export const alt = "Outdoor Gear Lab";
+export const alt = "Camp Gear Lab";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -95,7 +95,7 @@ export default async function Image({
               color: "#92400e",
             }}
           >
-            Outdoor Gear Lab
+            Camp Gear Lab
           </span>
           <span style={{ fontSize: "20px", color: "#78716c", marginLeft: "8px" }}>
             camp-gear-lab.com

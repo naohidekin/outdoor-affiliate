@@ -10,7 +10,7 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
           <div>
             <h3 className="text-ink-strong font-semibold text-base mb-3 flex items-center gap-2">
               <Mountain className="w-5 h-5 text-lake-600" strokeWidth={2} />
-              Outdoor Gear Lab
+              Camp Gear Lab
             </h3>
             <p className="text-sm leading-relaxed text-slate-600">
               「どれ買えばいい？」に答えるアウトドアギア比較サイト。
@@ -94,10 +94,10 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
         </div>
         <div className="border-t border-line-soft mt-10 pt-6 text-center text-xs text-slate-400 space-y-2">
           <p>
-            Amazonのアソシエイトとして、Outdoor Gear Lab
+            Amazonのアソシエイトとして、Camp Gear Lab
             は適格販売により収入を得ています。
           </p>
-          <p>&copy; {new Date().getFullYear()} Outdoor Gear Lab. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Camp Gear Lab. All rights reserved.</p>
         </div>
       </div>
     </footer>
