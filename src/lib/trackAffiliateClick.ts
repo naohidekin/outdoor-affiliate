@@ -25,30 +25,47 @@ export function detectAffiliateStore(href: string): AffiliateStore | null {
   return null;
 }
 
+// ボタンの設置場所（成約分析用）。「商品が弱い」か「位置が弱い」かを切り分ける
+export type AffiliatePlacement =
+  | "product_card" // 商品カード
+  | "ranking" // ランキングリスト
+  | "comparison_table" // 比較表
+  | "recommended" // おすすめCTA
+  | "body_text" // 本文インラインリンク
+  | "unknown";
+
 export function trackAffiliateClick(
   href: string,
   productId: string,
-  store: AffiliateStore
+  store: AffiliateStore,
+  opts?: { placement?: AffiliatePlacement; productName?: string }
 ) {
-  // GA4カスタムイベントで計測
+  const placement = opts?.placement || "unknown";
+  const productName = opts?.productName || "";
+
+  // GA4カスタムイベント（広告ブロッカーで欠落しうる。正はサーバー側ビーコン）
   if (typeof window !== "undefined" && "gtag" in window) {
     (window as unknown as { gtag: (...args: unknown[]) => void }).gtag(
       "event",
       "affiliate_click",
       {
         product_id: productId,
-        store,
+        product_name: productName,
+        merchant: store,
+        placement,
         page_path: window.location.pathname,
         link_url: href,
       }
     );
   }
 
-  // ビーコンAPIでサーバーサイド記録（GA4が入っていない場合のフォールバック）
+  // ファーストパーティのビーコン記録（こちらが正の計測。ブロッカーに強い）
   try {
     const data = JSON.stringify({
       productId,
+      productName,
       store,
+      placement,
       path: window.location.pathname,
       link_url: href,
       timestamp: new Date().toISOString(),

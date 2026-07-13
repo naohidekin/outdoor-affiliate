@@ -1,10 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getArticles, getCategories } from "@/lib/db";
+import { getArticlesList, getCategories } from "@/lib/db";
+
+// クローラー（Google/Bing/GPTBot等）が高頻度で叩くため1時間キャッシュ。
+// これが無いとアクセスの度にSupabaseから全記事メタを取得しEgressを消費する。
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://camp-gear-lab.com";
   const [allArticles, categories] = await Promise.all([
-    getArticles(),
+    getArticlesList(),
     getCategories(),
   ]);
   const articles = allArticles.filter((a) => a.status === "published");

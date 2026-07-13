@@ -45,6 +45,8 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                   <AffiliateLink
                     href={p.affiliateUrl}
                     productId={p.id}
+                    placement="recommended"
+                    productName={p.name}
                     store="rakuten"
                     className="flex-1 sm:flex-none text-center text-white px-3 py-2 rounded-lg text-xs font-medium transition rakuten-btn"
                   >
@@ -55,6 +57,8 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                   <AffiliateLink
                     href={p.amazonUrl}
                     productId={p.id}
+                    placement="recommended"
+                    productName={p.name}
                     store="amazon"
                     className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium transition amazon-btn"
                   >
@@ -65,6 +69,8 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                   <AffiliateLink
                     href={p.yahooUrl}
                     productId={p.id}
+                    placement="recommended"
+                    productName={p.name}
                     store="yahoo"
                     className="flex-1 sm:flex-none text-center bg-white hover:bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-medium transition"
                   >

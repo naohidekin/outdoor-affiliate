@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getCategories,
-  getArticles,
+  getArticlesList,
   getArticleBySlug,
   getProductsByIds,
   getCategoryById,
@@ -75,7 +75,7 @@ export default async function ArticlePage({
       getCategoryById(article.categoryId),
       getProductsByIds(article.productIds),
       getArticlesByCategory(article.categoryId),
-      getArticles(),
+      getArticlesList(),
     ]);
   // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
   // ISR(1h)ごとに再計算されるサーバーコンポーネントなので現在時刻の参照は安全

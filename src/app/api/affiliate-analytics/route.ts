@@ -4,7 +4,7 @@ import { isAuthenticated } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-type ClickRow = { product_id: string; store: string; page_path: string; clicked_at: string };
+type ClickRow = { product_id: string; store: string; page_path: string; clicked_at: string; placement?: string | null };
 type Agg = { clicks: number; stores: Record<string, number> };
 
 function bump(map: Record<string, Agg>, key: string, store: string) {
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const [{ data: clicks }, { data: arts }, { data: prods }] = await Promise.all([
     supabase
       .from("affiliate_clicks")
-      .select("product_id, store, page_path, clicked_at")
+      .select("product_id, store, page_path, clicked_at, placement")
       .gte("clicked_at", start),
     supabase.from("articles").select("slug, title"),
     supabase.from("products").select("id, name"),
@@ -43,10 +43,14 @@ export async function GET(req: NextRequest) {
   const byStore: Record<string, number> = {};
   const byArticle: Record<string, Agg> = {};
   const byProduct: Record<string, Agg> = {};
+  const byPlacement: Record<string, number> = {};
 
   for (const c of rows) {
     const store = c.store || "other";
     byStore[store] = (byStore[store] || 0) + 1;
+    // placementはSQL移行前の既存行だとnull → 「(計測前)」に寄せる
+    const placement = c.placement || "(計測前)";
+    byPlacement[placement] = (byPlacement[placement] || 0) + 1;
     bump(byArticle, c.page_path || "(不明)", store);
     bump(byProduct, c.product_id || "(不明)", store);
   }
@@ -71,6 +75,7 @@ export async function GET(req: NextRequest) {
     period: { days, start },
     total: rows.length,
     byStore,
+    byPlacement,
     articleRanking,
     productRanking,
   });

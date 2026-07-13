@@ -59,6 +59,8 @@ export default function ProductCard({ product }: { product: Product }) {
               <AffiliateLink
                 href={product.affiliateUrl}
                 productId={product.id}
+                placement="product_card"
+                productName={product.name}
                 store="rakuten"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium text-white transition-colors rakuten-btn"
               >
@@ -69,6 +71,8 @@ export default function ProductCard({ product }: { product: Product }) {
               <AffiliateLink
                 href={product.amazonUrl}
                 productId={product.id}
+                placement="product_card"
+                productName={product.name}
                 store="amazon"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium transition-colors amazon-btn"
               >
@@ -79,6 +83,8 @@ export default function ProductCard({ product }: { product: Product }) {
               <AffiliateLink
                 href={product.yahooUrl}
                 productId={product.id}
+                placement="product_card"
+                productName={product.name}
                 store="yahoo"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
               >
@@ -89,6 +95,8 @@ export default function ProductCard({ product }: { product: Product }) {
               <AffiliateLink
                 href={product.affiliateUrl}
                 productId={product.id}
+                placement="product_card"
+                productName={product.name}
                 store="rakuten"
                 className="text-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
               >

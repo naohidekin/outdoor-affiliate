@@ -1,4 +1,4 @@
-import { getPublishedArticles, getCategories } from "@/lib/db";
+import { getPublishedArticlesList, getCategories } from "@/lib/db";
 
 export const revalidate = 3600; // 1時間キャッシュ
 
@@ -8,7 +8,7 @@ export const revalidate = 3600; // 1時間キャッシュ
 export async function GET() {
   const baseUrl = "https://camp-gear-lab.com";
   const [articles, categories] = await Promise.all([
-    getPublishedArticles(),
+    getPublishedArticlesList(),
     getCategories(),
   ]);
 

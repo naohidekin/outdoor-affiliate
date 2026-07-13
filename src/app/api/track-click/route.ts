@@ -18,9 +18,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // placement はホワイトリスト検証（不正値は unknown に丸める）
+    const ALLOWED_PLACEMENTS = new Set([
+      "product_card", "ranking", "comparison_table",
+      "recommended", "body_text", "unknown",
+    ]);
+    const placement = ALLOWED_PLACEMENTS.has(body.placement) ? body.placement : "unknown";
+    const productName =
+      typeof body.productName === "string" ? body.productName.slice(0, 200) : "";
+
     const entry = {
       product_id: productId,
+      product_name: productName,
       store,
+      placement,
       page_path: body.path || "",
       clicked_at: body.timestamp || new Date().toISOString(),
       ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "",

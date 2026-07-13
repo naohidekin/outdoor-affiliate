@@ -104,7 +104,9 @@ export default function ArticleContent({ content, products }: Props) {
                       {...(store &&
                         href && {
                           onClick: () =>
-                            trackAffiliateClick(href, "inline", store),
+                            trackAffiliateClick(href, "inline", store, {
+                              placement: "body_text",
+                            }),
                         })}
                     >
                       {children}
