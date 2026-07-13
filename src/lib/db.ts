@@ -269,6 +269,18 @@ export async function getArticles(): Promise<Article[]> {
   return (data || []).map(toArticle);
 }
 
+// ─── 一覧用の軽量取得（本文を転送しない = Egress削減） ────────
+// 一覧・sitemap・feed・llms・トップ・カテゴリは content/faqs/generation_meta を
+// 使わないため、巨大な content 列を除いて取得する。1記事最大32KBの content を
+// 100本超×クローラー多数のアクセスで毎回引くのがEgress肥大の主因だった。
+const ARTICLE_LIST_COLS =
+  "id, title, slug, category_id, excerpt, product_ids, status, meta_description, tags, created_at, updated_at, published_at, auto_generated, quality_score, scheduled_publish_date, eyecatch";
+
+function toArticleListItem(row: Record<string, unknown>): Article {
+  // content/faqs/generation_meta は一覧では未取得 → 空で埋める（型互換のため）
+  return toArticle({ ...row, content: "", faqs: [], generation_meta: null });
+}
+
 export async function getPublishedArticles(): Promise<Article[]> {
   if (!isSupabaseConfigured()) {
     return readLocalJson<Article>("articles.json").filter(
@@ -282,6 +294,33 @@ export async function getPublishedArticles(): Promise<Article[]> {
     .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data || []).map(toArticle);
+}
+
+// 一覧表示・sitemap・feed・llms 用。本文を含まない軽量版。
+export async function getPublishedArticlesList(): Promise<Article[]> {
+  if (!isSupabaseConfigured()) {
+    return readLocalJson<Article>("articles.json").filter(
+      (a) => a.status === "published"
+    );
+  }
+  const { data, error } = await getSupabase()
+    .from("articles")
+    .select(ARTICLE_LIST_COLS)
+    .eq("status", "published")
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(toArticleListItem);
+}
+
+// sitemap 用（下書き含む全記事の軽量メタ。sitemapは公開のみ使うが将来用に全件）
+export async function getArticlesList(): Promise<Article[]> {
+  if (!isSupabaseConfigured()) return readLocalJson<Article>("articles.json");
+  const { data, error } = await getSupabase()
+    .from("articles")
+    .select(ARTICLE_LIST_COLS)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(toArticleListItem);
 }
 
 export async function getArticleBySlug(
@@ -333,11 +372,11 @@ export async function getArticlesByCategory(
     }
     const { data, error } = await getSupabase()
       .from("articles")
-      .select("*")
+      .select(ARTICLE_LIST_COLS) // カテゴリ一覧は本文不使用 → 軽量取得
       .eq("status", "published")
       .in("slug", slugs);
     if (error) throw error;
-    const mapped = (data || []).map(toArticle);
+    const mapped = (data || []).map(toArticleListItem);
     return slugs
       .map((s) => mapped.find((a) => a.slug === s))
       .filter((a): a is Article => a !== undefined);
@@ -351,12 +390,12 @@ export async function getArticlesByCategory(
   }
   const { data, error } = await getSupabase()
     .from("articles")
-    .select("*")
+    .select(ARTICLE_LIST_COLS) // カテゴリ一覧は本文不使用 → 軽量取得
     .eq("status", "published")
     .eq("category_id", categoryId)
     .order("updated_at", { ascending: false });
   if (error) throw error;
-  return (data || []).map(toArticle);
+  return (data || []).map(toArticleListItem);
 }
 
 export async function saveArticle(article: Article): Promise<void> {
