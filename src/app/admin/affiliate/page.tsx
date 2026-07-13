@@ -19,9 +19,20 @@ interface Data {
   period: { days: number; start: string };
   total: number;
   byStore: StoreMap;
+  byPlacement?: Record<string, number>;
   articleRanking: ArticleRow[];
   productRanking: ProductRow[];
 }
+
+const PLACEMENT_LABEL: Record<string, string> = {
+  product_card: "商品カード",
+  ranking: "ランキング",
+  comparison_table: "比較表",
+  recommended: "おすすめCTA",
+  body_text: "本文リンク",
+  unknown: "不明",
+  "(計測前)": "計測前(旧データ)",
+};
 
 const STORE_LABEL: Record<string, string> = {
   amazon: "Amazon",
@@ -114,6 +125,26 @@ export default function AffiliateAnalyticsPage() {
               </div>
             ))}
           </div>
+
+          {/* ボタン位置別（placement）— 「商品が弱い」か「位置が弱い」かの切り分け */}
+          {data.byPlacement && Object.keys(data.byPlacement).length > 0 && (
+            <>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">ボタン位置別クリック</h2>
+              <p className="text-xs text-gray-500 mb-2">
+                どの位置のボタンが押されているか。位置ごとの強弱が分かると、商品自体の弱さとボタン配置の弱さを切り分けられます（2026-07-12計測開始）。
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+                {Object.entries(data.byPlacement)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([p, n]) => (
+                    <div key={p} className="bg-white rounded-lg border border-gray-200 p-3">
+                      <p className="text-xs text-gray-500">{PLACEMENT_LABEL[p] || p}</p>
+                      <p className="text-xl font-bold text-gray-900">{n.toLocaleString()}</p>
+                    </div>
+                  ))}
+              </div>
+            </>
+          )}
 
           {/* 記事別ランキング */}
           <h2 className="text-lg font-bold text-gray-900 mb-2">記事別クリック</h2>

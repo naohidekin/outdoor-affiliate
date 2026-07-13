@@ -115,6 +115,8 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     <AffiliateLink
                       href={p.affiliateUrl}
                       productId={p.id}
+                      placement="comparison_table"
+                      productName={p.name}
                       store="rakuten"
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-white transition-colors rakuten-btn"
                     >
@@ -127,6 +129,8 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     <AffiliateLink
                       href={p.amazonUrl}
                       productId={p.id}
+                      placement="comparison_table"
+                      productName={p.name}
                       store="amazon"
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium transition-colors amazon-btn"
                     >
@@ -137,6 +141,8 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     <AffiliateLink
                       href={p.yahooUrl}
                       productId={p.id}
+                      placement="comparison_table"
+                      productName={p.name}
                       store="yahoo"
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
                     >
@@ -147,6 +153,8 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     <AffiliateLink
                       href={p.affiliateUrl}
                       productId={p.id}
+                      placement="comparison_table"
+                      productName={p.name}
                       store="rakuten"
                       className="text-center text-[11px] text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
                     >
