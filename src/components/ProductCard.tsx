@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import AffiliateLink from "./AffiliateLink";
+import RakutenDealStamp from "./RakutenDealStamp";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <div className="border border-line rounded-xl overflow-hidden bg-white">
+    <div className="relative border border-line rounded-xl overflow-hidden bg-white">
+      {product.affiliateUrl && <RakutenDealStamp />}
       {product.imageUrl && (
         <div className="relative h-56 sm:h-64 bg-white overflow-hidden">
           <Image

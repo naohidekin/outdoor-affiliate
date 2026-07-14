@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import AffiliateLink from "./AffiliateLink";
+import RakutenDealStamp from "./RakutenDealStamp";
 
 export default function RankingList({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
@@ -10,8 +11,9 @@ export default function RankingList({ products }: { products: Product[] }) {
       {products.map((product, i) => (
         <div
           key={product.id}
-          className="bg-white rounded-xl border border-line p-5"
+          className="relative bg-white rounded-xl border border-line p-5"
         >
+          {product.affiliateUrl && <RakutenDealStamp />}
           {/* Header row: rank + image + (name on desktop) */}
           <div className="flex gap-4 items-start">
             <div className="flex-shrink-0">
