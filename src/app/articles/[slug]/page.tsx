@@ -17,6 +17,7 @@ import RecommendationCTA from "@/components/RecommendationCTA";
 import AffiliateDisclosure from "@/components/AffiliateDisclosure";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
+import RakutenDealBadge from "@/components/RakutenDealBadge";
 
 export const revalidate = 3600; // ISR: 1時間
 
@@ -320,6 +321,9 @@ export default async function ArticlePage({
               </Link>
             )}
           </div>
+
+          {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示） */}
+          {products.some((p) => p.affiliateUrl) && <RakutenDealBadge />}
 
           {/* 記事冒頭 購入導線 */}
           {products.length > 0 && (
