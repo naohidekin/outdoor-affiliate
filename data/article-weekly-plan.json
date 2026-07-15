@@ -1,71 +1,68 @@
 {
-  "week": "2026-W24",
-  "generatedAt": "2026-06-10T09:00:47+09:00",
+  "week": "2026-W29",
+  "generatedAt": "2026-07-15T09:00:45+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W24-01",
+      "themeId": "theme-2026-W29-01",
       "categoryId": "insect-repellent",
-      "title": "キャンプの虫除けブレスレット・バンドおすすめランキング【2026年版】",
-      "slug": "insect-repellent-bracelet-ranking",
-      "angle": "スプレーが苦手な子どもや肌に直接塗りたくない人向けに、ブレスレット・バンド型虫除けを比較ランキング形式で紹介する。",
+      "title": "子連れキャンプの虫除けグッズ完全ガイド【2026年版】",
+      "slug": "kids-insect-repellent-camping-guide",
+      "angle": "子どもに安心して使えるDEET濃度・成分別の選び方と年齢別おすすめ製品を徹底解説",
       "targetKeywords": [
-        "虫除けブレスレット キャンプ",
-        "虫除けバンド おすすめ",
-        "子ども 虫除け スプレー以外"
+        "子供 虫除け キャンプ",
+        "キャンプ 虫除け 子ども 安全"
       ],
-      "seasonRelevance": "6月は蚊・ブヨの活動が本格化する時期で、肌に優しい虫除け手段への需要が急増する。",
+      "seasonRelevance": "7月は蚊・ブヨが最も活発な時期で、子連れファミリーキャンプのニーズが急増する",
       "priority": "high",
-      "reason": "6月の季節カテゴリかつ既存記事（スプレーランキング・ガイド）と重複しない新切り口で、夏本番前の検索増加タイミングを捉えられる。",
-      "scheduledPublishDate": "2026-06-12",
+      "reason": "insect-repellentは今月の季節カテゴリかつトレンド active で既存記事に「子ども向け選び方」の切り口が存在しないため",
+      "scheduledPublishDate": "2026-07-17",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-010",
-        "insect-repellent-011",
-        "insect-repellent-012"
+        "insect-repellent-013",
+        "insect-repellent-014",
+        "insect-repellent-015"
       ]
     },
     {
-      "themeId": "theme-2026-W24-02",
-      "categoryId": "backpack",
-      "title": "登山・ハイキング用30Lバックパックおすすめランキング【2026年版】",
-      "slug": "hiking-backpack-30l-ranking",
-      "angle": "日帰り〜1泊ハイキングで最も使いやすい30L前後のバックパックを、フィット感・収納力・コスパの3軸で比較する。",
+      "themeId": "theme-2026-W29-02",
+      "categoryId": "cooler",
+      "title": "キャンプ用クーラーボックスの保冷力を最大化する使い方【2026年版】",
+      "slug": "cooler-box-ice-retention-tips",
+      "angle": "氷の種類・食材の詰め方・開閉頻度など、保冷力を2倍にする実践テクニックをデータで検証",
       "targetKeywords": [
-        "バックパック 30L おすすめ",
-        "ハイキング ザック 30リットル",
-        "登山 バックパック 初心者"
+        "クーラーボックス 保冷力 上げる",
+        "キャンプ クーラー 氷 長持ち"
       ],
-      "seasonRelevance": "6月は梅雨の合間を狙った日帰り登山・ハイキング需要が高まり、バックパック選びの検索が増える時期。",
+      "seasonRelevance": "真夏の食材管理は食中毒リスクと直結し、7月に最も検索需要が高まる",
       "priority": "high",
-      "reason": "6月の季節カテゴリで既存記事（backpack-ranking）は総合ランキングのみのため、容量帯に絞った切り口で検索意図をより細かく拾える。",
-      "scheduledPublishDate": "2026-06-14",
+      "reason": "coolerは季節カテゴリかつ検索セッション78で伸長中、既存記事にない「保冷力最大化の使い方ノウハウ」という実用的切り口で差別化できるため",
+      "scheduledPublishDate": "2026-07-19",
       "productCount": 3,
       "productIds": [
-        "backpack-001",
-        "backpack-002",
-        "backpack-003"
+        "cooler-001",
+        "rakuten-livewell-10002781",
+        "growler-003"
       ]
     },
     {
-      "themeId": "theme-2026-W24-03",
+      "themeId": "theme-2026-W29-03",
       "categoryId": "light",
-      "title": "キャンプ用LEDランタンおすすめランキング【2026年版】充電式・乾電池式を徹底比較",
-      "slug": "led-lantern-ranking",
-      "angle": "充電式と乾電池式の違いを整理しつつ、明るさ・連続点灯時間・防水性で絞った実用的なLEDランタンのランキングを提供する。",
+      "title": "夏キャンプにおすすめ充電式LEDランタン人気ランキング【2026年版】",
+      "slug": "rechargeable-led-lantern-ranking",
+      "angle": "USB充電式に絞り、防虫機能付き・明るさ調光・連続点灯時間を軸に実用ランキングを構成",
       "targetKeywords": [
-        "LEDランタン キャンプ おすすめ",
-        "充電式ランタン 比較",
-        "キャンプ ランタン 明るい"
+        "充電式 ランタン キャンプ",
+        "LEDランタン USB充電 おすすめ"
       ],
-      "seasonRelevance": "7月の季節カテゴリ（light）への移行に備えた先行コンテンツとして、夏キャンプシーズン直前の需要を先取りできる。",
-      "priority": "medium",
-      "reason": "lightカテゴリはPV・検索セッションともに上位でトレンドがactiveだが、既存記事はガスランタンとテント用ライトのみのためLEDランタン全般の記事が空白になっている。",
-      "scheduledPublishDate": "2026-06-17",
+      "seasonRelevance": "夏キャンプは日没が遅く夜の活動時間が長いうえ、電池切れを気にせず使える充電式への関心が高まる時期",
+      "priority": "high",
+      "reason": "lightは季節カテゴリで検索セッション84・PV active、既存ランキング記事はLED全般・ガス・テントライトで構成されており「充電式特化」の切り口が空白のため",
+      "scheduledPublishDate": "2026-07-22",
       "productCount": 3,
       "productIds": [
-        "light-006",
-        "light-007",
-        "light-008"
+        "light-008",
+        "light-009",
+        "light-010"
       ]
     }
   ]
