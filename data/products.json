@@ -7420,5 +7420,24 @@
     "rating": 4.5,
     "createdAt": "2026-06-24T06:00:00+00:00",
     "updatedAt": "2026-07-03T08:39:07.934+00:00"
+  },
+  {
+    "id": "sb-kids-005",
+    "name": "コールマン スクールキッズ/C10",
+    "brand": "Coleman",
+    "price": 3998,
+    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000027268/2000027268.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%259E%25E3%2583%25B3%2520%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25BC%25E3%2583%25AB%25E3%2582%25AD%25E3%2583%2583%25E3%2582%25BA%2520C10%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01C5HW8JQ?tag=camp78-22",
+    "categoryId": "sleeping-bag",
+    "rating": 4.4,
+    "description": "快適温度10℃以上・約700gの小学生向け封筒型。洗濯機で丸洗いでき、ネームカード付きで林間学校の定番モデルです。",
+    "specs": {
+      "快適温度": "10℃以上",
+      "サイズ": "約65×180cm",
+      "収納サイズ": "約φ17×34cm",
+      "重量": "約700g",
+      "洗濯": "洗濯機で丸洗いOK"
+    }
   }
 ]
