@@ -102,7 +102,11 @@ function asinOf(url) {
 
 function imageUrlOf(item) {
   const p = item.images?.primary;
-  return p?.large?.url || p?.medium?.url || p?.small?.url || null;
+  const url = p?.large?.url || p?.medium?.url || p?.small?.url || null;
+  // Amazonの「画像なし」プレースホルダー（/images/I/01xxx...gif 等）を除外する。
+  // 2026-07-16: スノーピーク3商品で 01MKUOLsA5L....gif を掴む事故があった。
+  if (url && /\/images\/I\/0[01][A-Za-z0-9+]*\._?[^/]*\.gif$/i.test(url)) return null;
+  return url;
 }
 
 const productsPath = path.join(ROOT, "data", "products.json");
