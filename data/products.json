@@ -904,7 +904,7 @@
     "name": "スノーピーク アメニティドームM",
     "brand": "Snow Peak",
     "price": 42900,
-    "imageUrl": "",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0118A0266/SNP0118A0266_x_c101.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/5267a71c.3099e4b4.5267a71d.56cb11ee/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnowpeak-official%2Fsde-001rh%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DFG51JMQ/?tag=camp78-22",
     "categoryId": "tent",
@@ -919,7 +919,7 @@
     "description": "日本のキャンプブームを牽引したスノーピークの定番テント。広い前室と高さのある設計で家族4〜5人も快適に過ごせる。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-07-03T08:39:07.934+00:00"
+    "updatedAt": "2026-07-16T16:03:54.329Z"
   },
   {
     "id": "first-aid-tick-remover",
@@ -6218,7 +6218,7 @@
     "name": "スノーピーク たねほおずき ES-041",
     "brand": "Snow Peak",
     "price": 3520,
-    "imageUrl": "",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0119A0108/SNP0119A0108_x_c101.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2583%258E%25E3%2583%25BC%25E3%2583%2594%25E3%2583%25BC%25E3%2582%25AF%2520%25E3%2581%259F%25E3%2581%25AD%25E3%2581%25BB%25E3%2581%258A%25E3%2581%259A%25E3%2581%258D%2520ES-041%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0BVLJ85D2/?tag=camp78-22",
     "categoryId": "light",
@@ -6233,7 +6233,7 @@
     "description": "テント内の常夜灯として世界中のキャンパーに愛用されるスノーピークの名作。シリコンストラップで張り綱やポールに吊るせる。重さ41gの軽さで就寝前のほんのり灯に最適。",
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-07-03T08:33:42.885+00:00"
+    "updatedAt": "2026-07-16T16:03:54.329Z"
   },
   {
     "id": "tent-013",
@@ -6602,7 +6602,7 @@
     "name": "EcoFlow WAVE 2",
     "brand": "EcoFlow",
     "price": 110000,
-    "imageUrl": "",
+    "imageUrl": "https://jp.ecoflow.com/cdn/shop/products/wave2__1_2000x.png?v=1682493147",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FEcoFlow%2520WAVE%25202%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=EcoFlow%20WAVE%202&tag=camp78-22",
     "categoryId": "portable-cooler",
@@ -6616,7 +6616,7 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-07-16T15:57:44.443Z",
+    "updatedAt": "2026-07-16T16:03:54.329Z",
     "autoAdded": false
   },
   {
