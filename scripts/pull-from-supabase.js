@@ -112,10 +112,19 @@ function writeJsonAtomic(filename, data) {
 }
 
 function readLocal(filename) {
+  const filepath = path.join(DATA_DIR, filename);
+  // ファイルが無いのは正常（初回）。パース不能は異常（マージ未解決の
+  // コンフリクトマーカー入り等）— 空配列として扱うと「ローカル0件」と
+  // 誤認してSupabase側で全上書きしてしまうため、即座に中断する
+  // （2026-07-16: マージ中db:syncで "0 → 351" と誤認する事故が実際に発生）。
+  if (!fs.existsSync(filepath)) return [];
   try {
-    return JSON.parse(fs.readFileSync(path.join(DATA_DIR, filename), "utf8"));
-  } catch {
-    return [];
+    return JSON.parse(fs.readFileSync(filepath, "utf8"));
+  } catch (err) {
+    console.error(`[pull] ❌ ${filename} がJSONとして読めません: ${err.message}`);
+    console.error("[pull]    マージのコンフリクトが未解決の可能性があります。先に解消してください:");
+    console.error("[pull]    git checkout --theirs data/articles.json data/products.json && git add -A && git commit --no-edit");
+    process.exit(1);
   }
 }
 

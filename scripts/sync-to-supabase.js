@@ -17,9 +17,21 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnv, readJson, writeJson } from "../src/lib/x-agent-utils.mjs";
 
 loadEnv();
+
+// マージ未解決のままdb:syncを走らせるとコンフリクトマーカー入りJSONを
+// 読んで事故る（2026-07-16に「0件パース→Supabase全上書き」が発生）。
+// MERGE_HEADがある間は何もせず停止する。
+if (fs.existsSync(path.join(process.cwd(), ".git", "MERGE_HEAD"))) {
+  console.error("[sync] ❌ gitのマージが未解決です。先にコンフリクトを解消してください:");
+  console.error("[sync]    git checkout --theirs data/articles.json data/products.json");
+  console.error("[sync]    git add data/articles.json data/products.json && git commit --no-edit");
+  process.exit(1);
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
