@@ -58,6 +58,7 @@
     "x:v2:reply:cleanup": "node --dns-result-order=ipv4first scripts/x/reply-cleanup.mjs",
     "fix:links": "node --dns-result-order=ipv4first scripts/link-fix.mjs",
     "fix:links:dry": "node --dns-result-order=ipv4first scripts/link-fix.mjs --dry-run",
+    "images:fetch": "node --dns-result-order=ipv4first scripts/fetch-product-images.mjs",
     "indexnow:all": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs",
     "indexnow:dry": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs --dry-run",
     "sync:main": "bash scripts/sync-main.sh"
