@@ -7445,5 +7445,89 @@
       "重量": "約700g",
       "洗濯": "洗濯機で丸洗いOK"
     }
+  },
+  {
+    "id": "cooler-tansu-spot-23kw",
+    "name": "タンスのゲン スポットクーラー 2.3kW（窓パネル4枚付）",
+    "brand": "タンスのゲン",
+    "price": 34999,
+    "rating": 4.3,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftansu%2F7980000000%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B1PXB3WT?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "description": "冷房能力2.3kW・6〜10畳対応の工事不要ポータブルクーラー。窓パネル4枚付きでテラス窓にも対応し、ノンドレン構造で排水いらず。電源サイトのキャンプと自宅の兼用に向きます。",
+    "specs": {
+      "冷房能力": "2.3kW",
+      "対応畳数": "6〜10畳",
+      "除湿能力": "約25L/日",
+      "排水": "ノンドレン構造",
+      "付属": "窓パネル4枚（テラス窓対応）"
+    },
+    "createdAt": "2026-07-16T13:45:43.522Z",
+    "updatedAt": "2026-07-16T13:45:43.522Z"
+  },
+  {
+    "id": "stove-paseco-wkh3100s",
+    "name": "パセコ WKH-3100S 対流形石油ストーブ",
+    "brand": "PASECO",
+    "price": 19800,
+    "rating": 4.4,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2591%25E3%2582%25BB%25E3%2582%25B3%2520WKH-3100S%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B553VG7D?tag=camp78-22",
+    "categoryId": "heater",
+    "description": "3.0kWの火力とタンク5.3L・約18時間燃焼で実売2万円弱。冬キャンプの定番になった対流形石油ストーブです。屋外専用・対震自動消火付き。",
+    "specs": {
+      "暖房出力": "3.0kW",
+      "タンク容量": "5.3L",
+      "燃焼時間": "約18時間",
+      "重量": "約5.2kg",
+      "用途": "屋外専用（対震自動消火付き）"
+    },
+    "createdAt": "2026-07-16T13:45:43.522Z",
+    "updatedAt": "2026-07-16T13:45:43.522Z"
+  },
+  {
+    "id": "stove-alpaca-ts77nc",
+    "name": "アルパカ プラス TS-77NC 石油ストーブ",
+    "brand": "ALPACA PLUS",
+    "price": 24970,
+    "rating": 4.5,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25A2%25E3%2583%25AB%25E3%2583%2591%25E3%2582%25AB%25E3%2582%25B9%25E3%2583%2588%25E3%2583%25BC%25E3%2583%2596%2520TS-77NC%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B9WGBWVD?tag=camp78-22",
+    "categoryId": "heater",
+    "description": "3.0kWをコンパクト筐体に詰め込んだキャンプ人気の火付け役。専用収納バッグ付属で持ち運びやすく、対震自動消火（しん降下式）を備えます。",
+    "specs": {
+      "暖房出力": "3.0kW",
+      "タンク容量": "3.7L",
+      "燃焼時間": "約10時間",
+      "重量": "約6.6kg",
+      "付属": "専用収納バッグ"
+    },
+    "createdAt": "2026-07-16T13:45:43.522Z",
+    "updatedAt": "2026-07-16T13:45:43.522Z"
+  },
+  {
+    "id": "stove-toyotomi-rb251",
+    "name": "トヨトミ レインボーストーブ RB-251",
+    "brand": "トヨトミ",
+    "price": 22800,
+    "rating": 4.4,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2588%25E3%2583%25A8%25E3%2583%2588%25E3%2583%259F%2520%25E3%2583%25AC%25E3%2582%25A4%25E3%2583%25B3%25E3%2583%259C%25E3%2583%25BC%2520RB-251%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09F5XJ24Q?tag=camp78-22",
+    "categoryId": "heater",
+    "description": "電子点火・50%火力調節・二重タンクと安全装備が揃った日本メーカーの対流形ストーブ。7色に光る炎は約40W相当の明るさで、家庭・防災・キャンプの三刀流に向きます。",
+    "specs": {
+      "暖房出力": "2.5kW（50%調節可）",
+      "タンク容量": "約4.9L",
+      "燃焼時間": "約20時間",
+      "重量": "約6.2kg",
+      "点火": "電子点火（電池式）"
+    },
+    "createdAt": "2026-07-16T13:45:43.522Z",
+    "updatedAt": "2026-07-16T13:45:43.522Z"
   }
 ]
