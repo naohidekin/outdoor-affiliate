@@ -83,6 +83,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.ecoflow.com" },
       { protocol: "https", hostname: "jp.ecoflow.com" },
       { protocol: "https", hostname: "imagedelivery.net" },
+      { protocol: "https", hostname: "i.ytimg.com" },
       { protocol: "https", hostname: "www.jackery.jp" },
       { protocol: "https", hostname: "www.bluetti.jp" },
       { protocol: "https", hostname: "www.thanko.jp" },

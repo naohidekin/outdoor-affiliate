@@ -6,6 +6,7 @@ import { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 import ComparisonTable from "./ComparisonTable";
 import RankingList from "./RankingList";
+import YouTubeEmbed from "./YouTubeEmbed";
 import {
   detectAffiliateStore,
   trackAffiliateClick,
@@ -21,7 +22,7 @@ export default function ArticleContent({ content, products }: Props) {
 
   // Split content by custom tags
   const parts = content.split(
-    /(\{\{(?:product|comparison|ranking):[^}]+\}\})/g
+    /(\{\{(?:product|comparison|ranking|youtube):[^}]+\}\})/g
   );
 
   // フォールバック: productIds がありながら本文に商品タグが無い記事には
@@ -78,6 +79,16 @@ export default function ArticleContent({ content, products }: Props) {
             );
           }
           return null;
+        }
+
+        // YouTube埋め込み: {{youtube:動画ID}} / {{youtube:動画ID|キャプション}}
+        const ytMatch = part.match(/\{\{youtube:([A-Za-z0-9_-]{6,20})(?:\|([^}]*))?\}\}/);
+        if (ytMatch) {
+          return (
+            <div key={i} className="not-prose">
+              <YouTubeEmbed videoId={ytMatch[1]} caption={ytMatch[2]?.trim()} />
+            </div>
+          );
         }
 
         // Regular markdown

@@ -173,8 +173,44 @@ async function main() {
     });
   }
 
+  // ─── YouTube埋め込みの死活チェック ───
+  // 記事内の {{youtube:ID}} をoEmbedで確認する（404/401=削除・非公開）。
+  // 他人の動画は消えることがあるため、週次でここに載せて放置事故を防ぐ。
+  const articles = JSON.parse(
+    fs.readFileSync(path.join(DATA_DIR, "articles.json"), "utf-8")
+  );
+  const ytRefs = [];
+  for (const a of articles) {
+    if (a.status !== "published") continue;
+    for (const m of (a.content || "").matchAll(
+      /\{\{youtube:([A-Za-z0-9_-]{6,20})(?:\|[^}]*)?\}\}/g
+    )) {
+      ytRefs.push({ slug: a.slug, videoId: m[1] });
+    }
+  }
+  const deadVideos = [];
+  if (ytRefs.length > 0) {
+    console.log(`\n🎬 YouTube埋め込みチェック（${ytRefs.length}件）...`);
+    for (const ref of ytRefs) {
+      try {
+        const res = await fetch(
+          `https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D${ref.videoId}&format=json`
+        );
+        if (res.status === 404 || res.status === 401 || res.status === 403) {
+          deadVideos.push(ref);
+          console.log(`  🚨 消滅/非公開: ${ref.videoId}（記事: ${ref.slug}）`);
+        }
+      } catch {
+        // ネットワークエラーは判定不能（安全側: 報告しない）
+      }
+      await sleep(500);
+    }
+    if (deadVideos.length === 0) console.log("  ✅ 全動画が視聴可能");
+  }
+
   // 結果をJSONファイルに保存（他スクリプトから参照用）
   const report = {
+    deadVideos,
     checkedAt: new Date().toISOString(),
     total: products.length,
     checked: withUrl.length,
