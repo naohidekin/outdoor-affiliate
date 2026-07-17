@@ -7529,5 +7529,47 @@
     },
     "createdAt": "2026-07-16T13:45:43.522Z",
     "updatedAt": "2026-07-16T13:45:43.522Z"
+  },
+  {
+    "id": "cooler-iris-ipp2222g",
+    "name": "アイリスオーヤマ ポータブルクーラー IPP-2222G",
+    "brand": "アイリスオーヤマ",
+    "price": 34570,
+    "rating": 4.2,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25A2%25E3%2582%25A4%25E3%2583%25AA%25E3%2582%25B9%25E3%2582%25AA%25E3%2583%25BC%25E3%2583%25A4%25E3%2583%259E%2520IPP-2222G%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0B41DJPZJ?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "description": "2.2kW・4.5〜7畳対応の工事不要ポータブルクーラー。内部洗浄モード・リモコン・タイマー付きで、家庭とキャンプの兼用に向く大手ブランドの安心モデルです。",
+    "specs": {
+      "冷房能力": "2.2kW",
+      "対応畳数": "4.5〜7畳",
+      "排水": "ノンドレン方式",
+      "機能": "内部洗浄・タイマー・リモコン",
+      "発売": "2022年モデル"
+    },
+    "createdAt": "2026-07-17T11:17:24.653Z",
+    "updatedAt": "2026-07-17T11:17:24.653Z"
+  },
+  {
+    "id": "cooler-nakatomi-mac10",
+    "name": "ナカトミ ミニクーラー MAC-10",
+    "brand": "ナカトミ",
+    "price": 23800,
+    "rating": 3.9,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%258A%25E3%2582%25AB%25E3%2583%2588%25E3%2583%259F%2520MAC-10%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B085RXK7J6?tag=camp78-22",
+    "categoryId": "portable-cooler",
+    "description": "約13kg・2万円台前半で買える最小クラスのコンプレッサー式クーラー。冷房能力0.43kWのため車中泊やコット周りのピンポイント冷却向けです。",
+    "specs": {
+      "冷房能力": "0.43kW（50Hz）",
+      "消費電力": "約188W",
+      "重量": "約13kg",
+      "サイズ": "295×295×440mm",
+      "用途": "車中泊・ソロのピンポイント冷却"
+    },
+    "createdAt": "2026-07-17T11:17:24.653Z",
+    "updatedAt": "2026-07-17T11:17:24.653Z"
   }
 ]
