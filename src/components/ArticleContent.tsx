@@ -82,11 +82,13 @@ export default function ArticleContent({ content, products }: Props) {
         }
 
         // YouTube埋め込み: {{youtube:動画ID}} / {{youtube:動画ID|キャプション}}
+        // 第3フィールドは動画の公開日（VideoObject構造化データ用・表示には使わない）
         const ytMatch = part.match(/\{\{youtube:([A-Za-z0-9_-]{6,20})(?:\|([^}]*))?\}\}/);
         if (ytMatch) {
+          const caption = ytMatch[2]?.split("|")[0]?.trim();
           return (
             <div key={i} className="not-prose">
-              <YouTubeEmbed videoId={ytMatch[1]} caption={ytMatch[2]?.trim()} />
+              <YouTubeEmbed videoId={ytMatch[1]} caption={caption} />
             </div>
           );
         }

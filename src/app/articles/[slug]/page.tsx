@@ -233,6 +233,23 @@ export default async function ArticlePage({
         }
       : null;
 
+  // 記事内の {{youtube:ID|キャプション|YYYY-MM-DD}} から VideoObject を生成する。
+  // GoogleのVideoObjectは uploadDate（動画の公開日）が必須のため、
+  // 日付付きタグのみ対象（日付なしの埋め込みは表示のみでスキーマは出さない）。
+  const videoJsonLd = [
+    ...(article.content || "").matchAll(
+      /\{\{youtube:([A-Za-z0-9_-]{6,20})\|([^|}]+)\|(\d{4}-\d{2}-\d{2})\}\}/g
+    ),
+  ].map((m) => ({
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: m[2].trim(),
+    description: `${m[2].trim()}｜${article.title}`,
+    thumbnailUrl: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`,
+    uploadDate: m[3],
+    embedUrl: `https://www.youtube-nocookie.com/embed/${m[1]}`,
+  }));
+
   return (
     <>
       <script
@@ -261,6 +278,15 @@ export default async function ArticlePage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(pld),
+          }}
+        />
+      ))}
+      {videoJsonLd.map((vld, i) => (
+        <script
+          key={`video-${i}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(vld),
           }}
         />
       ))}
