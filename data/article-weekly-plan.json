@@ -1,68 +1,71 @@
 {
-  "week": "2026-W29",
-  "generatedAt": "2026-07-15T09:00:45+09:00",
+  "week": "2026-W30",
+  "generatedAt": "2026-07-22T09:00:56+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W29-01",
+      "themeId": "theme-2026-W30-01",
+      "categoryId": "fan",
+      "title": "キャンプ用扇風機おすすめランキング10選【2026年版】充電式・USB・クリップ型を徹底比較",
+      "slug": "camp-fan-usb-clip-ranking-2026",
+      "angle": "充電式・USB給電・クリップ型など給電方式別に整理し、ファミリーからソロまでシーン別最適解を提示する",
+      "targetKeywords": [
+        "キャンプ 扇風機 おすすめ",
+        "キャンプ 扇風機 充電式",
+        "テント 扇風機"
+      ],
+      "seasonRelevance": "7月の真夏キャンプは熱中症対策が最優先であり、扇風機は必需品として検索需要がピークを迎える",
+      "priority": "high",
+      "reason": "fanカテゴリはPV・searchSessions共にサイト内トップ水準で既存記事(camp-fan-ranking)と差別化できる給電方式別の切り口を採用",
+      "scheduledPublishDate": "2026-07-24",
+      "productCount": 3,
+      "productIds": [
+        "fan-001",
+        "fan-002",
+        "fan-003"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W30-02",
       "categoryId": "insect-repellent",
-      "title": "子連れキャンプの虫除けグッズ完全ガイド【2026年版】",
-      "slug": "kids-insect-repellent-camping-guide",
-      "angle": "子どもに安心して使えるDEET濃度・成分別の選び方と年齢別おすすめ製品を徹底解説",
+      "title": "キャンプの蚊帳・虫よけテントおすすめ5選【2026年版】夏の夜を快眠に変える選び方",
+      "slug": "camp-mosquito-net-tent-ranking-2026",
+      "angle": "スプレーや腕輪ではなく「囲う」発想で虫を完全シャットアウトする蚊帳・メッシュシェルターに特化",
       "targetKeywords": [
-        "子供 虫除け キャンプ",
-        "キャンプ 虫除け 子ども 安全"
+        "キャンプ 蚊帳 おすすめ",
+        "テント 虫除け 蚊帳",
+        "キャンプ 虫 対策 囲む"
       ],
-      "seasonRelevance": "7月は蚊・ブヨが最も活発な時期で、子連れファミリーキャンプのニーズが急増する",
+      "seasonRelevance": "夏の蚊・ブヨ最盛期に向けてスプレー以外の物理的虫対策ニーズが高まる7月にぴったりのテーマ",
       "priority": "high",
-      "reason": "insect-repellentは今月の季節カテゴリかつトレンド active で既存記事に「子ども向け選び方」の切り口が存在しないため",
-      "scheduledPublishDate": "2026-07-17",
+      "reason": "insect-repellentは今月の季節カテゴリかつ既存6記事はスプレー・腕輪・総合ガイドが中心で、蚊帳特化の記事が空白になっている",
+      "scheduledPublishDate": "2026-07-26",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-013",
-        "insect-repellent-014",
-        "insect-repellent-015"
+        "insect-repellent-016",
+        "insect-repellent-017",
+        "insect-repellent-018"
       ]
     },
     {
-      "themeId": "theme-2026-W29-02",
+      "themeId": "theme-2026-W30-03",
       "categoryId": "cooler",
-      "title": "キャンプ用クーラーボックスの保冷力を最大化する使い方【2026年版】",
-      "slug": "cooler-box-ice-retention-tips",
-      "angle": "氷の種類・食材の詰め方・開閉頻度など、保冷力を2倍にする実践テクニックをデータで検証",
+      "title": "キャンプクーラーボックスの正しい使い方完全ガイド【2026年版】保冷力を最大化する7つのコツ",
+      "slug": "cooler-box-how-to-maximize-cold-retention",
+      "angle": "クーラー選びではなく「持っているクーラーをどう使うか」実践テクニック集として差別化",
       "targetKeywords": [
+        "クーラーボックス 使い方",
         "クーラーボックス 保冷力 上げる",
-        "キャンプ クーラー 氷 長持ち"
+        "キャンプ クーラー コツ"
       ],
-      "seasonRelevance": "真夏の食材管理は食中毒リスクと直結し、7月に最も検索需要が高まる",
-      "priority": "high",
-      "reason": "coolerは季節カテゴリかつ検索セッション78で伸長中、既存記事にない「保冷力最大化の使い方ノウハウ」という実用的切り口で差別化できるため",
-      "scheduledPublishDate": "2026-07-19",
+      "seasonRelevance": "夏キャンプで食材管理の失敗が最も増える7月に、すでにクーラーを持っているユーザーの実用検索を狙う",
+      "priority": "medium",
+      "reason": "coolerは今月の季節カテゴリで既存のcooler-box-ice-retention-tipsと類似するが、より網羅的な「完全ガイド」として構成し直すことで検索上位を目指せる",
+      "scheduledPublishDate": "2026-07-29",
       "productCount": 3,
       "productIds": [
-        "cooler-001",
-        "rakuten-livewell-10002781",
-        "growler-003"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W29-03",
-      "categoryId": "light",
-      "title": "夏キャンプにおすすめ充電式LEDランタン人気ランキング【2026年版】",
-      "slug": "rechargeable-led-lantern-ranking",
-      "angle": "USB充電式に絞り、防虫機能付き・明るさ調光・連続点灯時間を軸に実用ランキングを構成",
-      "targetKeywords": [
-        "充電式 ランタン キャンプ",
-        "LEDランタン USB充電 おすすめ"
-      ],
-      "seasonRelevance": "夏キャンプは日没が遅く夜の活動時間が長いうえ、電池切れを気にせず使える充電式への関心が高まる時期",
-      "priority": "high",
-      "reason": "lightは季節カテゴリで検索セッション84・PV active、既存ランキング記事はLED全般・ガス・テントライトで構成されており「充電式特化」の切り口が空白のため",
-      "scheduledPublishDate": "2026-07-22",
-      "productCount": 3,
-      "productIds": [
-        "light-008",
-        "light-009",
-        "light-010"
+        "cooler-024",
+        "cooler-025",
+        "cooler-026"
       ]
     }
   ]
