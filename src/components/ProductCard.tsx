@@ -8,13 +8,13 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="relative border border-line rounded-xl overflow-hidden bg-white">
       {product.affiliateUrl && <RakutenDealStamp />}
       {product.imageUrl && (
-        <div className="relative h-56 sm:h-64 bg-white overflow-hidden">
+        <div className="relative h-64 sm:h-96 bg-white overflow-hidden">
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 100vw, 400px"
-            className="object-contain p-4"
+            sizes="(max-width: 768px) 100vw, 800px"
+            className="object-contain p-1"
             loading="lazy"
           />
         </div>
