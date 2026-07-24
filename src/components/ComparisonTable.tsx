@@ -6,7 +6,13 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
 
   const allKeys = new Set<string>();
   products.forEach((p) => Object.keys(p.specs).forEach((k) => allKeys.add(k)));
-  const specKeys = Array.from(allKeys);
+  // 4商品以上の表では、過半数の商品に値がない行（歯抜け行）を非表示にする。
+  // 2〜3商品のA vs B比較表は固有スペック行も見せたいので従来通り全行表示。
+  const specKeys = Array.from(allKeys).filter((key) => {
+    if (products.length < 4) return true;
+    const filled = products.filter((p) => p.specs[key]).length;
+    return filled * 2 >= products.length;
+  });
 
   return (
     <div className="overflow-x-auto my-8 rounded-xl border border-line">

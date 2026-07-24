@@ -24,6 +24,10 @@ export default function HeroImage({ article, products }: Props) {
   }
 
   if (type === "split" && cleanImages.length >= 2) {
+    // 1対多の比較記事（4商品以上）は1対1構図だと誤解を招くのでタイル型に切替
+    if (cleanImages.length >= 4) {
+      return <HeroTile products={cleanImages} />;
+    }
     return <HeroSplit productA={cleanImages[0]} productB={cleanImages[1]} />;
   }
 
