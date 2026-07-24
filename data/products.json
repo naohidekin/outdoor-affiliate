@@ -7585,7 +7585,7 @@
     "name": "RATELWORKS BODEN G2（ボーデンG2）",
     "brand": "RATELWORKS",
     "price": 138000,
-    "imageUrl": "",
+    "imageUrl": "https://ratelworks.jp/cms/wp-content/uploads/2026/04/DSC00296.jpg.webp",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmarueidanboru%2Frws0111%2F&link_type=text&ut=",
     "amazonUrl": "",
     "categoryId": "tent",
@@ -7603,15 +7603,15 @@
     "description": "SNS発の国産ブランド・ラーテルワークスの看板2ルームの第2世代。ドーム型2ルームでランドネストシェルターと同構造。遮光PUコーティングと高耐水圧生地、デザイン性の高さで指名買いが多い。3人用のG2 MID（87,000〜92,000円）も展開。",
     "rating": 4.5,
     "createdAt": "2026-07-24T10:56:11.797Z",
-    "updatedAt": "2026-07-24T10:56:11.797Z"
+    "updatedAt": "2026-07-24T11:11:52.896Z"
   },
   {
     "id": "tent-logos-neos-double-xl-bg",
     "name": "ロゴス neos PANELスクリーンドゥーブル XL-BG",
     "brand": "LOGOS",
     "price": 66000,
-    "imageUrl": "",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AD%25E3%2582%25B4%25E3%2582%25B9%2520neos%2520PANEL%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2583%2589%25E3%2582%25A5%25E3%2583%25BC%25E3%2583%2596%25E3%2583%25AB%2520XL-BG%2F&link_type=text&ut=",
+    "imageUrl": "https://www.logos.ne.jp/storage/ec/products/71201019/71201019_m3.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flogosshop%2Flgs80679%2F&link_type=text&ut=",
     "amazonUrl": "",
     "categoryId": "tent",
     "specs": {
@@ -7626,6 +7626,6 @@
     "description": "ロゴスの2ルーム定番。従来モデルから重量20%減の約13.5kgで、2ルームとしては圧倒的に軽く運びやすい。前面パネルをポールで跳ね上げてタープ代わりにできるPANELシステムが便利。6万円前後で買える現実派の1張。",
     "rating": 4,
     "createdAt": "2026-07-24T10:56:11.797Z",
-    "updatedAt": "2026-07-24T10:56:11.797Z"
+    "updatedAt": "2026-07-24T11:11:52.896Z"
   }
 ]
