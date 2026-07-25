@@ -41,7 +41,7 @@ const CATEGORY_INTRO: Record<string, string> = {
 };
 
 
-export const revalidate = 3600; // ISR: 1時間
+export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
 export async function generateMetadata({
   params,

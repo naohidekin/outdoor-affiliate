@@ -1,6 +1,6 @@
 import { getPublishedArticlesList, getCategories } from "@/lib/db";
 
-export const revalidate = 3600; // ISR: 1時間
+export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
 export async function GET() {
   const baseUrl = "https://camp-gear-lab.com";
@@ -47,7 +47,7 @@ ${items}
   return new Response(rss, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "s-maxage=3600, stale-while-revalidate",
+      "Cache-Control": "s-maxage=21600, stale-while-revalidate",
     },
   });
 }
