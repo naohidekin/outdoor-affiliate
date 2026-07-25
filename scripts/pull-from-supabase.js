@@ -80,6 +80,7 @@ function rowToProduct(row) {
     imageUrl: row.image_url,
     affiliateUrl: row.affiliate_url,
     amazonUrl: row.amazon_url,
+    yahooUrl: row.yahoo_url ?? undefined,
     categoryId: row.category_id,
     specs: row.specs || {},
     description: row.description,
