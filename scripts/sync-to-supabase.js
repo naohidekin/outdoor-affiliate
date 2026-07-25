@@ -92,6 +92,7 @@ function productToRow(p) {
     image_url: p.imageUrl || "",
     affiliate_url: p.affiliateUrl || "",
     amazon_url: p.amazonUrl || "",
+    yahoo_url: p.yahooUrl || null,
     category_id: p.categoryId || "",
     specs: p.specs || {},
     description: p.description || "",

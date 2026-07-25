@@ -1,5 +1,15 @@
 # Yahoo!ショッピング アフィリエイト導入手順
 
+## 導入状況（2026-07-24 更新）
+
+- ✅ **同期パイプラインのyahooUrl欠落バグを修正**（2026-07-24）:
+  pull-from-supabase.js / sync-to-supabase.js / db.ts の3箇所が
+  yahooUrl を運んでおらず、7/3設定の298件がdb:syncで消失していた。
+  git履歴（ed51c4b）から300件へ復元済み（新規テント2商品を含む）
+- ⚠️ **要作業**: Supabaseの products テーブルに列追加が必要:
+  `ALTER TABLE products ADD COLUMN IF NOT EXISTS yahoo_url text;`
+  （列がない状態で db:sync するとエラーになる。SQL実行→merge→db:sync の順）
+
 ## 導入状況（2026-07-03 時点）
 
 - ✅ バリューコマース登録済み（サイトID: 3774986、**適正審査中**）
