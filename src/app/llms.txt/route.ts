@@ -1,6 +1,6 @@
 import { getPublishedArticlesList, getCategories } from "@/lib/db";
 
-export const revalidate = 3600; // 1時間キャッシュ
+export const revalidate = 21600; // 6時間キャッシュ（Egress削減・2026-07-24）
 
 // llms.txt — AI(LLM)向けのサイト索引。https://llmstxt.org/ 提案仕様に準拠した
 // Markdown形式。AIクローラー・エージェントがサイト構造と主要コンテンツを

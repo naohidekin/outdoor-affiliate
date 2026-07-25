@@ -19,7 +19,7 @@ import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
 import RakutenDealBadge from "@/components/RakutenDealBadge";
 
-export const revalidate = 3600; // ISR: 1時間
+export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
 export async function generateMetadata({
   params,

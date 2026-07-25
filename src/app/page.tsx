@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
 import { getCategoryIcon } from "@/lib/category-icons";
 
-export const revalidate = 3600; // ISR: 1時間
+export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
 export const metadata: Metadata = {
   title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Camp Gear Lab",
