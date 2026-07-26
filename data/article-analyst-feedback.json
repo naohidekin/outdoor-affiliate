@@ -1,46 +1,46 @@
 {
-  "updatedAt": "2026-07-25T10:00:08+09:00",
+  "updatedAt": "2026-07-26T10:00:09+09:00",
   "period": "7d",
   "topArticles": [
     {
       "slug": "portable-cooler-fan-guide",
       "categoryId": "fan",
-      "pv7d": 937,
+      "pv7d": 995,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "camp-fan-ranking",
       "categoryId": "fan",
-      "pv7d": 81,
+      "pv7d": 85,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "family-tent-ranking",
       "categoryId": "tent",
-      "pv7d": 70,
+      "pv7d": 66,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 54,
+      "pv7d": 61,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "water-jug-ranking",
       "categoryId": "kitchen",
-      "pv7d": 40,
+      "pv7d": 48,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "led-tent-light-ranking",
       "categoryId": "light",
-      "pv7d": 39,
+      "pv7d": 38,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -52,22 +52,29 @@
       "ctr": 0
     },
     {
-      "slug": "insect-repellent-spray-ranking",
-      "categoryId": "insect-repellent",
-      "pv7d": 33,
+      "slug": "compact-chair-ranking",
+      "categoryId": "chair",
+      "pv7d": 35,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "compact-chair-ranking",
-      "categoryId": "chair",
-      "pv7d": 31,
+      "slug": "insect-repellent-spray-ranking",
+      "categoryId": "insect-repellent",
+      "pv7d": 30,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "backpack-ranking",
       "categoryId": "backpack",
+      "pv7d": 30,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-tent-layout-site-guide",
+      "categoryId": "tarp",
       "pv7d": 27,
       "clicks7d": 0,
       "ctr": 0
@@ -80,9 +87,9 @@
       "ctr": 0
     },
     {
-      "slug": "tarp-tent-layout-site-guide",
-      "categoryId": "tarp",
-      "pv7d": 23,
+      "slug": "cooler-box-ranking",
+      "categoryId": "cooler",
+      "pv7d": 24,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -94,22 +101,15 @@
       "ctr": 0
     },
     {
-      "slug": "cooler-box-ranking",
-      "categoryId": "cooler",
-      "pv7d": 19,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "growler-comparison-summer-ice",
-      "categoryId": "cooler",
-      "pv7d": 19,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
       "slug": "solo-tent-ranking",
       "categoryId": "tent",
+      "pv7d": 17,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "single-burner-ranking",
+      "categoryId": "burner",
       "pv7d": 17,
       "clicks7d": 0,
       "ctr": 0
@@ -124,21 +124,21 @@
     {
       "slug": "multi-burner-ranking",
       "categoryId": "burner",
-      "pv7d": 15,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "single-burner-ranking",
-      "categoryId": "burner",
       "pv7d": 14,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "rainwear-ranking",
-      "categoryId": "wear",
-      "pv7d": 14,
+      "slug": "growler-comparison-summer-ice",
+      "categoryId": "cooler",
+      "pv7d": 13,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "camping-beginner-gear-checklist",
+      "categoryId": "tent",
+      "pv7d": 13,
       "clicks7d": 0,
       "ctr": 0
     }
@@ -146,95 +146,88 @@
   "categoryTrends": [
     {
       "categoryId": "fan",
-      "pv7d": 1018,
+      "pv7d": 1080,
       "clicks7d": 0,
-      "searchSessions": 903,
+      "searchSessions": 952,
       "trend": "active"
     },
     {
       "categoryId": "tent",
-      "pv7d": 164,
+      "pv7d": 180,
       "clicks7d": 0,
-      "searchSessions": 150,
+      "searchSessions": 157,
       "trend": "active"
     },
     {
       "categoryId": "insect-repellent",
-      "pv7d": 69,
+      "pv7d": 66,
       "clicks7d": 0,
-      "searchSessions": 55,
+      "searchSessions": 50,
       "trend": "active"
     },
     {
       "categoryId": "kitchen",
-      "pv7d": 40,
-      "clicks7d": 0,
-      "searchSessions": 43,
-      "trend": "active"
-    },
-    {
-      "categoryId": "light",
-      "pv7d": 39,
-      "clicks7d": 0,
-      "searchSessions": 39,
-      "trend": "active"
-    },
-    {
-      "categoryId": "tarp",
-      "pv7d": 38,
+      "pv7d": 48,
       "clicks7d": 0,
       "searchSessions": 53,
       "trend": "active"
     },
     {
-      "categoryId": "cooler",
+      "categoryId": "tarp",
+      "pv7d": 42,
+      "clicks7d": 0,
+      "searchSessions": 54,
+      "trend": "active"
+    },
+    {
+      "categoryId": "light",
       "pv7d": 38,
       "clicks7d": 0,
-      "searchSessions": 40,
+      "searchSessions": 38,
+      "trend": "active"
+    },
+    {
+      "categoryId": "cooler",
+      "pv7d": 37,
+      "clicks7d": 0,
+      "searchSessions": 39,
       "trend": "active"
     },
     {
       "categoryId": "chair",
-      "pv7d": 31,
+      "pv7d": 35,
       "clicks7d": 0,
-      "searchSessions": 30,
+      "searchSessions": 32,
       "trend": "active"
     },
     {
       "categoryId": "burner",
-      "pv7d": 29,
+      "pv7d": 31,
       "clicks7d": 0,
-      "searchSessions": 29,
+      "searchSessions": 32,
       "trend": "active"
     },
     {
       "categoryId": "backpack",
-      "pv7d": 27,
+      "pv7d": 30,
       "clicks7d": 0,
-      "searchSessions": 22,
+      "searchSessions": 24,
       "trend": "active"
     },
     {
       "categoryId": "sleeping-bag",
       "pv7d": 24,
       "clicks7d": 0,
-      "searchSessions": 45,
-      "trend": "active"
-    },
-    {
-      "categoryId": "wear",
-      "pv7d": 14,
-      "clicks7d": 0,
-      "searchSessions": 9,
+      "searchSessions": 43,
       "trend": "active"
     }
   ],
   "effectivePatterns": [
-    "{\"rule\":\"年号明記ルール\",\"description\":\"タイトルに【2026年】【2026年版】などの年号を必ず含める。情報の新鮮さを示し検索意図と一致させることでCTRが向上する。\",\"evidence\":\"全5記事すべてに年号表記あり\"}",
-    "{\"rule\":\"具体的数字による絞り込みルール\",\"description\":\"「おすすめ5選」「おすすめ7選」のように選定数を数字で示す。読者に情報量の見通しを与え、クリック率と直帰率改善に寄与する。\",\"evidence\":\"5記事中4記事が選定数を数字で提示（例：5選・7選）\"}",
-    "{\"rule\":\"使用シーン・ユーザー属性の明示ルール\",\"description\":\"「真夏キャンプ」「テント内」「家族4〜6人」など、誰がどの場面で使うかをタイトルに入れる。検索キーワードとの一致度を高め、PVが高い記事に共通する。\",\"evidence\":\"PV上位3記事すべてにシーン・属性の記述あり\"}",
-    "{\"rule\":\"比較訴求ルール\",\"description\":\"「比較」「徹底比較」「vs」といった比較ワードをタイトルに含める。複数商品を検討中のユーザーを獲得でき、検索ボリュームの広い層にリーチできる。\",\"evidence\":\"5記事中4記事に『比較』または『vs』を使用\"}",
-    "{\"rule\":\"ベネフィット直結ワードルール\",\"description\":\"「涼しくなる」「快適に過ごせる」「保冷力」など、購入後の具体的な効果・メリットをタイトルに入れる。感情的動機と購買意欲を刺激しPV獲得につながる。\",\"evidence\":\"PV上位2記事（937・81）はいずれも体験価値ワードを明示\"}"
+    "{\"rule\":\"年号明記ルール\",\"description\":\"タイトルに【2026年】【2026年版】などの年号を必ず含める。情報の新鮮さを示し、検索意図にマッチしやすくなる\",\"example\":\"【2026年】【2026年版】\"}",
+    "{\"rule\":\"数字による具体化ルール\",\"description\":\"「おすすめ5選」「7選」など選定数を数字で明示する。読者に記事のボリューム感と明確な価値を伝え、クリック率を高める\",\"example\":\"おすすめ5選、おすすめ7選\"}",
+    "{\"rule\":\"比較訴求ルール\",\"description\":\"「比較」「徹底比較」「vs」などの比較ワードをタイトルに含める。複数商品を検討中のユーザーの検索意図に直接応える\",\"example\":\"徹底比較、保冷力と容量で比較、3モデル比較\"}",
+    "{\"rule\":\"ユーザー便益の明示ルール\",\"description\":\"「テント内が涼しくなる」「真夏キャンプを涼しくする」「快適に過ごせる」など、読者が得られる具体的なベネフィットをタイトルに盛り込む\",\"example\":\"真夏キャンプを涼しくする方法、テント内が涼しくなるモデル、快適に過ごせる\"}",
+    "{\"rule\":\"ターゲット・用途の限定ルール\",\"description\":\"「テント用」「キャンプ用」「ファミリー」「家族4〜6人」など用途や対象者を絞り込むワードを入れる。ニッチな検索クエリに対応しCVRを高める\",\"example\":\"テント用ポータブルクーラー、キャンプ用充電式扇風機、家族4〜6人\"}"
   ],
   "suggestions": [
     "来月の季節カテゴリ: cooler, light, tarp, insect-repellent — 準備推奨"
