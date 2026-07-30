@@ -5,11 +5,14 @@
 # 自動置換してからコピーする。
 #
 # 2026-07-11 棚卸監査による再設計:
-#   生かす5本 = notion-poster / article-daily / article-weekly(下書き止まり改造済み)
-#               / gearman-reply-fill / link-check
-#   保留      = price-monitor（PA-APIキー等の3条件が揃ったら PLISTS へ戻す）
-#   退役8本   = launchd/retired/ 参照。実行のたびに自動アンロード＆撤去する
+#   生かす = article-daily / article-weekly(下書き止まり改造済み) / link-check / link-fix
+#   保留   = price-monitor（PA-APIキー等の3条件が揃ったら PLISTS へ戻す）
+#   退役   = launchd/retired/ 参照。実行のたびに自動アンロード＆撤去する
 #   詳細は docs/automation-map.md
+#
+# 2026-07-30 X自動投稿レール廃止:
+#   notion-poster / gearman-reply-fill を退役。X APIコスト削減のため
+#   自動投稿をやめ、Claudeルーティン生成 + Notion下書き + 手動投稿に移行。
 #
 # 使い方:
 #   ./scripts/setup-launchd.sh           # 生かす分を登録 + 退役分を掃除
@@ -40,10 +43,8 @@ echo ""
 
 # ─── 生かすジョブ ───────────────────────────────
 PLISTS=(
-  "com.outdoor-affiliate.notion-poster.plist"
   "com.outdoor-affiliate.article-daily.plist"
   "com.outdoor-affiliate.article-weekly.plist"
-  "com.outdoor-affiliate.gearman-reply-fill.plist"
   "com.outdoor-affiliate.link-check.plist"
   "com.outdoor-affiliate.link-fix.plist"
 )
@@ -58,6 +59,8 @@ RETIRED_LABELS=(
   "com.outdoor-affiliate.x-trend-researcher"
   "com.outdoor-affiliate.threads-poster"
   "com.outdoor-affiliate.price-monitor"   # 保留: PA-API条件が揃ったらPLISTSへ
+  "com.outdoor-affiliate.notion-poster"       # 2026-07-30退役: X自動投稿廃止（手動投稿へ）
+  "com.outdoor-affiliate.gearman-reply-fill"  # 2026-07-30退役: 同上
 )
 
 unload_label() {

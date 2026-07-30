@@ -1,7 +1,14 @@
-# 自動化マップ（2026-07-11 再設計版）
+# 自動化マップ（2026-07-30 X自動投稿廃止版）
 
-> 2026-07-11 の棚卸監査に基づく確定版。リポジトリ移設（`~/Desktop/AI関連/claude/outdoor-affiliate` → `~/dev/outdoor-affiliate`）を機に、launchd 自動化13本を「生かす4本＋条件付き2本＋退役7本」に再設計した。
-> 監査で判明した重要事実: **大半のジョブは移設前から実質稼働していなかった**（git履歴の定時実行痕跡で確認）。今回は「復旧」ではなく、6月以降の実運用（手動の高品質記事運用＋Notion承認制X運用）に合わせた再設計である。
+> 2026-07-11 の棚卸監査に基づく再設計に、2026-07-30 の方針転換を反映した確定版。
+> 監査で判明した重要事実: **大半のジョブは移設前から実質稼働していなかった**（git履歴の定時実行痕跡で確認）。
+
+## ⚠️ 2026-07-30 方針転換: X自動投稿レールの全廃
+
+- **notion-poster / gearman-reply-fill を退役**。X APIコスト（有料プラン）が高すぎるため、X APIによる自動投稿をやめた
+- 判明していた事実: notion-poster は 7/11 の移設時に `.env.local` から NOTION_TOKEN 等が欠落し、7/11〜7/30 の間ずっとエラー空走していた（`logs/notion-poster-error.log`）。復旧ではなく廃止を選択
+- **新レール**: Claudeルーティン（claude.ai の scheduled agent、サブスク内でAPI課金なし）が毎朝Web検索で時事ネタを収集しギア男ペルソナで投稿文を生成 → Notion「ギア男 X Posts」DBに下書き投入 → **人間がスマホでXアプリに手動コピペ投稿** → Notionでpostedにマーク
+- ローカルの v2 パイプライン（`npm run x:v2`、Anthropic+OpenAI API課金あり）は温存するが定常運用からは外す。アンブロ（san-pedinvestor-x）側の launchd 4本（morning/noon/sync/engage-scout）も同時退役（6/2からiCloud退避EAGAINで全停止していた）
 
 ---
 
@@ -11,9 +18,7 @@
 
 | ジョブ | スケジュール | 役割（平たく言うと） |
 |---|---|---|
-| **notion-poster** | 30分ごと | **投稿の実行係（最重要）**。Notionで「approved」にした投稿だけをXへ投稿。ギア男＋別事業4アカウント全部がこの1本に依存 |
 | **article-daily** | 毎朝10:00 | **予約公開の執事**。公開予定日が来た記事を品質チェック→公開→Google Indexing通知→Supabase反映 |
-| **gearman-reply-fill** | 10分ごと | **リプ下書き秘書**。NotionにURLを貼ると、ギア男口調の返信下書きを自動生成（opsec機械チェック＋GPT-4o独立採点付き）。対象が無ければ0円で即終了 |
 | **link-check** | 日曜6:30 | **売り場の棚卸し係**。全Amazonリンクの生死を点検しレポート化（`data/link-check-report.json`）。結果は /admin/link-check で閲覧 |
 | **link-fix** | 日曜7:00 | **売り場の自動修理係**。link-checkのbrokenを**Creators API** getItemsで確定判定（CAPTCHAの影響なし。キー無し時はHTTP再検証にフォールバック）→死亡確定は amazonUrl を自動で空に（楽天ボタンは残る）→Creators APIで代替候補を検索し提案化。差し替えは /admin/link-check で1クリック承認。※旧PA-API v5は2026年5月廃止。認証はアソシエイト・セントラルで発行した認証情報ID(amzn1...)+Secret（.env.localのAMAZON_ACCESS_KEY/SECRET_KEYに格納、バージョン3.3=日本） |
 
@@ -24,10 +29,12 @@
 | **article-weekly**（水曜9:00） | **「下書き止まり」に改造して稼働**（本改修で writer が `scheduledPublishDate` を付けなくなった） | テーマ選定＋楽天商品調査＋AI初稿までを自動生成。**公開は絶対にしない**。人間が管理画面で仕上げて公開予定日を設定して初めて article-daily が公開する |
 | **price-monitor**（日曜6:00） | **保留（未インストール）** | 復活の3条件: (a) ~~PA-APIキー~~ → **Creators API認証情報は取得済み（2026-07-11確認）**。ただしスクリプト本体が旧PA-API署名のままなのでCreators API対応の改修が必要 (b) 価格のSupabase反映経路 (c) セール告知の保存先をSheets→Notionへ付け替え |
 
-### 🔴 退役7本（`launchd/retired/` へ移動。setup-launchd.sh が自動アンロード）
+### 🔴 退役9本（`launchd/retired/` へ移動。setup-launchd.sh が自動アンロード）
 
 | ジョブ | 退役理由 |
 |---|---|
+| notion-poster | **2026-07-30退役**。X API自動投稿の廃止（コスト削減）。7/11移設時の.env.local欠落で以降ずっと空走していた。手動投稿へ移行 |
+| gearman-reply-fill | **2026-07-30退役**。同上（生成にAnthropic+OpenAI API課金。投稿先レール自体を廃止したため）。リプ運用再開時はClaudeルーティン化を検討 |
 | nightly-analyst | 死んだSheetsを読む分析係。X管理はNotionへ移行済みでデータが来ない。旧モデルID残存で指示書生成も空振り |
 | analyze-x | 同上（分析対象=Sheetsのposted行が今後増えない）。学習ループ自体は価値があるので、投稿レール安定後（1〜2ヶ月後）にNotion読み取り版を作るか再判断 |
 | sync-posted-status | Sheets前提の同期係。対象データが来ない |
@@ -42,9 +49,10 @@
 
 ### 毎日
 ```
-10分ごと   gearman-reply-fill  … NotionにURLが貼られていたら返信下書きを生成（無ければ0円）
-30分ごと   notion-poster       … 承認済み投稿をXへ（1DB1件/30分）
+朝06:30    [Claudeルーティン] ギア男時事ポスト … Web検索で時事→3本生成→Notionに下書き（Mac不要・クラウド実行）
+朝07:00    [Claudeルーティン] アンブロ時事ポスト … 同上（アンブロ X Posts DBへ）
 朝10:00    article-daily       … 予約日が来た記事を公開・Google通知・本番反映
+（随時）   人間: Notionの下書きを確認→Xアプリに手動コピペ投稿→postedにマーク
 ```
 
 ### 週次
@@ -71,25 +79,26 @@
 収益: 記事内の Amazon / 楽天 / ValueCommerce リンク
 ```
 
-### X（集客の補助輪）— 方針A「省力交流」
+### X（集客の補助輪）— 2026-07-30〜「ルーティン生成＋手動投稿」
 ```
-[手動+自動] 投稿生成: v2パイプライン（npm run x:v2）→ AI採点・OPSEC→ Notionに下書き投入
-[半自動]   リプライ: あなたがXで見つけた投稿のURLをNotionに貼る（3秒）
-              → reply-fill が10分以内にギア男口調の下書きを生成
+[自動] Claudeルーティン（毎朝06:30）: Web検索で時事収集 → ギア男ペルソナで3本生成
+        → NGワード・opsec自己チェック → Notion「ギア男 X Posts」DBに下書き投入
    ↓
-【関門②】人間: Notionでスマホから「approved」を押す（全投稿があなたの目を通る）
+【関門】人間: Notionでスマホから下書きを確認（微修正OK）
    ↓
-[自動] notion-poster が30分以内にXへ投稿
+[手動] Xアプリにコピペして投稿 → Notionのステータスをpostedに変更
    ↓
 X→サイト流入 → アフィリ収益（効果は GA4 / /admin/affiliate で測る）
 ```
+- X APIは使わない（自動投稿なし・API課金なし）
+- 生成はclaude.aiのルーティン（サブスク内）。Macが起きていなくても動く
+- ローカルv2パイプライン（`npm run x:v2`）は予備として温存（API課金あり・定常運用外）
 
 ### あなたの日常運用（1日10分の編集長）
 1. **自分の投稿に来たリプへ返信**（最優先。2〜3分）
-2. 中堅キャンプ垢（数百〜数千フォロワー）の**24時間以内の投稿にリプ2〜3件**＝URLをNotionに貼るだけ（3分）
-3. Notionの下書きを承認（1〜2分）
-4. 記事は自分のペースで仕上げて予約設定
-5. 週1回 /admin/link-check を見て「差し替え承認待ち」を1クリック処理（隔離は自動済み）
+2. Notionの時事下書き3本を確認 → 良いものをXアプリにコピペ投稿 → postedにマーク（3分）
+3. 記事は自分のペースで仕上げて予約設定
+4. 週1回 /admin/link-check を見て「差し替え承認待ち」を1クリック処理（隔離は自動済み）
 
 KPIはフォロワー数ではなく **GA4のX経由流入**。
 
@@ -127,10 +136,7 @@ git pull origin main
 # 0. 滞留中の予約記事を先に公開（7/10予定分が止まっている）
 npm run article:daily
 
-# 1. Notionの棚卸し: notion-poster復旧前に、停止中に溜まった
-#    「approved のまま古くなった投稿」を Notion で削除/差し戻しする（重要）
-
-# 2. launchd 再インストール（生かす5本を登録、退役7本を自動アンロード）
+# 1. launchd 再インストール（生かす4本を登録、退役9本を自動アンロード）
 ./scripts/setup-launchd.sh
 
 # 3. 確認
