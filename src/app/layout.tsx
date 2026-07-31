@@ -3,16 +3,17 @@ import { Noto_Sans_JP, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
+// weightを個別指定すると日本語の~124 unicode-range分割×ウェイト数の@font-face宣言が
+// 全てレンダリングブロッキングCSSに入る（3ウェイトで276KB）。両フォントとも可変フォント
+// なのでweight未指定（可変軸）にして宣言を1/3に削減する。描画結果は同一。
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
