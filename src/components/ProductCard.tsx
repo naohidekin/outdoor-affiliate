@@ -1,9 +1,23 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
+import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import AffiliateLink from "./AffiliateLink";
 import RakutenDealStamp from "./RakutenDealStamp";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const amazonFirst = isAmazonPrimary(product);
+  const amazonBtn = product.amazonUrl ? (
+    <AffiliateLink
+      href={product.amazonUrl}
+      productId={product.id}
+      placement="product_card"
+      productName={product.name}
+      store="amazon"
+      className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium transition-colors amazon-btn"
+    >
+      Amazonで見る
+    </AffiliateLink>
+  ) : null;
   return (
     <div className="relative border border-line rounded-xl overflow-hidden bg-white">
       {product.affiliateUrl && <RakutenDealStamp />}
@@ -57,6 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
           <div className="flex flex-col gap-2">
+            {amazonFirst && amazonBtn}
             {product.affiliateUrl && (
               <AffiliateLink
                 href={product.affiliateUrl}
@@ -69,18 +84,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 楽天市場で見る
               </AffiliateLink>
             )}
-            {product.amazonUrl && (
-              <AffiliateLink
-                href={product.amazonUrl}
-                productId={product.id}
-                placement="product_card"
-                productName={product.name}
-                store="amazon"
-                className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium transition-colors amazon-btn"
-              >
-                Amazonで見る
-              </AffiliateLink>
-            )}
+            {!amazonFirst && amazonBtn}
             {product.yahooUrl && (
               <AffiliateLink
                 href={product.yahooUrl}

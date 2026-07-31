@@ -1,7 +1,24 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
+import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import AffiliateLink from "./AffiliateLink";
 import RakutenDealStamp from "./RakutenDealStamp";
+
+function AmazonButton({ product }: { product: Product }) {
+  if (!product.amazonUrl) return null;
+  return (
+    <AffiliateLink
+      href={product.amazonUrl}
+      productId={product.id}
+      placement="ranking"
+      productName={product.name}
+      store="amazon"
+      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap amazon-btn"
+    >
+      Amazonで見る
+    </AffiliateLink>
+  );
+}
 
 export default function RankingList({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
@@ -64,6 +81,7 @@ export default function RankingList({ products }: { products: Product[] }) {
 
           {/* CTA row */}
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            {isAmazonPrimary(product) && <AmazonButton product={product} />}
             {product.affiliateUrl && (
               <AffiliateLink
                 href={product.affiliateUrl}
@@ -76,18 +94,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                 楽天市場で見る
               </AffiliateLink>
             )}
-            {product.amazonUrl && (
-              <AffiliateLink
-                href={product.amazonUrl}
-                productId={product.id}
-                placement="ranking"
-                productName={product.name}
-                store="amazon"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap amazon-btn"
-              >
-                Amazonで見る
-              </AffiliateLink>
-            )}
+            {!isAmazonPrimary(product) && <AmazonButton product={product} />}
             {product.yahooUrl && (
               <AffiliateLink
                 href={product.yahooUrl}
