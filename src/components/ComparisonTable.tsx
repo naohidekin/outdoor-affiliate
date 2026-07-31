@@ -1,5 +1,22 @@
 import { Product } from "@/lib/types";
+import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import AffiliateLink from "./AffiliateLink";
+
+function AmazonButton({ product }: { product: Product }) {
+  if (!product.amazonUrl) return null;
+  return (
+    <AffiliateLink
+      href={product.amazonUrl}
+      productId={product.id}
+      placement="comparison_table"
+      productName={product.name}
+      store="amazon"
+      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium transition-colors amazon-btn"
+    >
+      Amazonで見る
+    </AffiliateLink>
+  );
+}
 
 export default function ComparisonTable({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
@@ -117,6 +134,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                 className="px-4 py-4 text-center border-l border-line-soft"
               >
                 <div className="flex flex-col gap-2 items-stretch">
+                  {isAmazonPrimary(p) && <AmazonButton product={p} />}
                   {p.affiliateUrl ? (
                     <AffiliateLink
                       href={p.affiliateUrl}
@@ -129,20 +147,9 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       楽天市場で見る
                     </AffiliateLink>
                   ) : (
-                    <span className="text-slate-400 text-xs">準備中</span>
+                    !isAmazonPrimary(p) && <span className="text-slate-400 text-xs">準備中</span>
                   )}
-                  {p.amazonUrl && (
-                    <AffiliateLink
-                      href={p.amazonUrl}
-                      productId={p.id}
-                      placement="comparison_table"
-                      productName={p.name}
-                      store="amazon"
-                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium transition-colors amazon-btn"
-                    >
-                      Amazonで見る
-                    </AffiliateLink>
-                  )}
+                  {!isAmazonPrimary(p) && <AmazonButton product={p} />}
                   {p.yahooUrl && (
                     <AffiliateLink
                       href={p.yahooUrl}

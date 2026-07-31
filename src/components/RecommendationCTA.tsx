@@ -1,6 +1,23 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
+import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import AffiliateLink from "./AffiliateLink";
+
+function AmazonButton({ product }: { product: Product }) {
+  if (!product.amazonUrl) return null;
+  return (
+    <AffiliateLink
+      href={product.amazonUrl}
+      productId={product.id}
+      placement="recommended"
+      productName={product.name}
+      store="amazon"
+      className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium transition amazon-btn"
+    >
+      Amazonで見る
+    </AffiliateLink>
+  );
+}
 
 export default function RecommendationCTA({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
@@ -41,6 +58,7 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 sm:flex-col sm:w-32">
+                {isAmazonPrimary(p) && <AmazonButton product={p} />}
                 {p.affiliateUrl && (
                   <AffiliateLink
                     href={p.affiliateUrl}
@@ -53,18 +71,7 @@ export default function RecommendationCTA({ products }: { products: Product[] })
                     楽天で見る
                   </AffiliateLink>
                 )}
-                {p.amazonUrl && (
-                  <AffiliateLink
-                    href={p.amazonUrl}
-                    productId={p.id}
-                    placement="recommended"
-                    productName={p.name}
-                    store="amazon"
-                    className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium transition amazon-btn"
-                  >
-                    Amazonで見る
-                  </AffiliateLink>
-                )}
+                {!isAmazonPrimary(p) && <AmazonButton product={p} />}
                 {p.yahooUrl && (
                   <AffiliateLink
                     href={p.yahooUrl}
