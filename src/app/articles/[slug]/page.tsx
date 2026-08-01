@@ -20,6 +20,7 @@ import AffiliateDisclosure from "@/components/AffiliateDisclosure";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
 import RakutenDealBadge from "@/components/RakutenDealBadge";
+import { showTopCta } from "@/lib/articleCta";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
@@ -363,14 +364,21 @@ export default async function ArticlePage({
             )}
           </div>
 
-          {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示） */}
-          {products.some((p) => p.affiliateUrl) && <RakutenDealBadge />}
+          {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示）。
+              安全・医学系記事では冒頭の販売色を消すため出さない */}
+          {showTopCta(article.slug) && products.some((p) => p.affiliateUrl) && (
+            <RakutenDealBadge />
+          )}
 
-          {/* 記事冒頭 購入導線（広告表示は導線より前に置く＝ステマ規制対応） */}
+          {/* 記事冒頭 購入導線（広告表示は導線より前に置く＝ステマ規制対応）。
+              PR表記は冒頭CTAを出さない記事でも必ず表示する（本文中の
+              アフィリエイトリンクに対する表示義務は変わらないため） */}
           {products.length > 0 && (
             <>
               <AffiliateDisclosure variant="inline" />
-              <RecommendationCTA products={products.slice(0, 3)} />
+              {showTopCta(article.slug) && (
+                <RecommendationCTA products={products.slice(0, 3)} />
+              )}
             </>
           )}
 
