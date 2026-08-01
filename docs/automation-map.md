@@ -202,3 +202,42 @@ outdoor-affiliateのlaunchdジョブが8個登録されたまま残っており�
 対処: `scripts/sync-to-supabase.js` の冒頭に、同期対象3ファイル（articles/products/categories）の
 **コンフリクトマーカー検知とJSON.parse検証**を追加。破損時は同期せず exit 1 で停止する。
 
+
+## 複数マシンで触るときの同期手順（2026-08-01 追記）
+
+`sync-to-supabase.js` は既定で「Supabase → ローカルJSON書き戻し（auto-pull）」を先に実行する。
+このとき記事・商品が `updated_at` 順に並べ替えられるため、**git上の並びと食い違って
+全行が差分として出る**（実害はないが、次回の `git pull` が
+"Your local changes would be overwritten" で止まる原因になる）。
+
+### 推奨フロー
+
+リモート（Claude Code / Web）で編集 → Macに取り込んで本番反映する場合:
+
+```bash
+cd ~/dev/outdoor-affiliate
+git pull                                    # 先にgitを最新にする
+node scripts/sync-to-supabase.js --no-pull  # 書き戻しをせずSupabaseへ反映
+```
+
+`--no-pull`（または `SKIP_AUTO_PULL=1`）を付ければローカルJSONは書き換わらず、
+gitの状態がきれいなまま保たれる。
+
+### auto-pull を使うべきケース
+
+**管理画面（/admin）でSupabase側を直接編集した直後**は auto-pull が必要。
+その編集はgitに存在しないため、`--no-pull` で同期するとローカル（＝git）の内容で
+上書きされて失われる。この場合は素直に auto-pull ありで実行し、
+書き戻しで出た差分はコミットしてgitに戻す。
+
+### 並び替え差分が出てしまったときの片付け
+
+書き戻し差分は「並び替えのみ」であることがほとんど（追加行数と削除行数がほぼ同数なら並び替え）。
+記事の欠落がないことを確認してから捨てる:
+
+```bash
+git stash push -m "sync-writeback" data/articles.json data/products.json
+node -e 'const a=require("./data/articles.json");console.log("記事数",a.length,
+  "／公開",a.filter(x=>x.status==="published").length)'
+git stash drop   # 欠落がなければ捨てる
+```
