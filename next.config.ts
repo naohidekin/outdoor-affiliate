@@ -41,6 +41,31 @@ const nextConfig: NextConfig = {
       { source: "/category/rain-safety", destination: "/articles/rain-camp-gear-essentials", permanent: true },
     ];
   },
+  async headers() {
+    return [
+      {
+        // 管理画面はビルド時に静的HTMLとしてプリレンダーされるため、robots.txt の
+        // Disallow だけではインデックスを防げない（Disallowはクロール抑止であって
+        // インデックス抑止ではなく、外部リンク経由でURLが載りうる）。
+        // X-Robots-Tag ヘッダで確実にインデックスを拒否する。
+        source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/admin",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // 全ページ共通のセキュリティヘッダ（保険）
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
+  },
   // X 投稿生成・viral-scout・記事系API は data/ 配下のJSON群を動的に読み込む。
   // Vercel の自動 file tracing は動的読み込みを検出できないため、明示的に
   // bundle に含める。これがないと本番で ENOENT エラーになる。

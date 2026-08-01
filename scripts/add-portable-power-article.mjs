@@ -344,4 +344,4 @@ if (articles.some((a) => a.slug === NEW_ARTICLE.slug)) {
   console.log(`📝 記事追加: ${NEW_ARTICLE.slug}（status: draft）`);
 }
 
-console.log("\n✅ 完了。次に  npm run db:sync  で反映 → ?preview=1 でプレビュー確認。");
+console.log("\n✅ 完了。次に  npm run db:sync  で反映 → /api/draft?slug=<slug> でプレビュー確認（要adminログイン）。");

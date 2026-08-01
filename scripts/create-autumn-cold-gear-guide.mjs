@@ -232,4 +232,4 @@ if (articles.some((a) => a.slug === SLUG)) {
   console.log(`✅ 新記事を作成（下書き）: ${SLUG}`);
   console.log(`   字数:${content.length} / カード:${(content.match(/\{\{product:/g) || []).length}枚 / FAQ:${article.faqs.length}`);
 }
-console.log("次に  npm run db:sync  で反映（下書きなのでプレビューは ?preview=1）。");
+console.log("次に  npm run db:sync  で反映（下書きのプレビューは /api/draft?slug=<slug>・要adminログイン）。");

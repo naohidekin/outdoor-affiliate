@@ -111,7 +111,7 @@ export default function RankingList({ products }: { products: Product[] }) {
               <AffiliateLink
                 href={product.affiliateUrl}
                 productId={product.id}
-                placement="ranking"
+                placement="reviews_link"
                 productName={product.name}
                 store="rakuten"
                 className="inline-flex items-center justify-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors whitespace-nowrap sm:ml-1"

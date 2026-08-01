@@ -49,6 +49,13 @@ export default function RootLayout({
       className={`${notoSansJP.variable} ${inter.variable} h-full antialiased`}
     >
       <head>
+        {/* LCP画像は外部CDN（商品画像・Unsplash）から来るため、接続確立
+            （DNS+TCP+TLS）を前倒しする。1オリジンあたり100〜300msの短縮 */}
+        <link rel="preconnect" href="https://m.media-amazon.com" crossOrigin="" />
+        <link rel="preconnect" href="https://thumbnail.image.rakuten.co.jp" crossOrigin="" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://shop.r10s.jp" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link
           rel="alternate"
           type="application/rss+xml"

@@ -101,7 +101,7 @@ export default function ProductCard({ product }: { product: Product }) {
               <AffiliateLink
                 href={product.affiliateUrl}
                 productId={product.id}
-                placement="product_card"
+                placement="reviews_link"
                 productName={product.name}
                 store="rakuten"
                 className="text-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"

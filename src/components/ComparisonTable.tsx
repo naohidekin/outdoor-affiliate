@@ -166,7 +166,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                     <AffiliateLink
                       href={p.affiliateUrl}
                       productId={p.id}
-                      placement="comparison_table"
+                      placement="reviews_link"
                       productName={p.name}
                       store="rakuten"
                       className="text-center text-[11px] text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"

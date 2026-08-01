@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import {
   getCategories,
-  getArticlesList,
+  getPublishedArticlesList,
   getArticleBySlug,
   getProductsByIds,
   getCategoryById,
@@ -21,6 +22,23 @@ import RakutenDealBadge from "@/components/RakutenDealBadge";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
+// 下書きプレビューは searchParams ではなく Draft Mode（__prerender_bypass Cookie）で行う。
+// searchParams はリクエスト時APIのため、参照するだけでページが動的レンダリングに落ち、
+// 上の revalidate が無効化される（2026-08-01に全記事ページがSSRになっていた事故の原因）。
+// Draft Mode ならCookie保持者だけがキャッシュをバイパスし、通常訪問者はISRのまま。
+// 副次効果として、Cookieを持たないクローラーは下書きに到達できずインデックス事故も防げる。
+
+// 全公開記事をビルド時にプリレンダーする。Supabase未接続などで失敗しても
+// ビルドは通し、その場合はオンデマンド生成＋ISRにフォールバックさせる。
+export async function generateStaticParams() {
+  try {
+    const articles = await getPublishedArticlesList();
+    return articles.map((a) => ({ slug: a.slug }));
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -35,6 +53,11 @@ export async function generateMetadata({
   return {
     title: article.title,
     description,
+    // 未公開記事はDraft Mode経由でしか表示されない（＝クローラーは到達できない）が、
+    // 念のためインデックス禁止を明示しておく
+    ...(article.status !== "published"
+      ? { robots: { index: false, follow: false } }
+      : {}),
     alternates: {
       canonical: `/articles/${article.slug}`,
     },
@@ -47,6 +70,8 @@ export async function generateMetadata({
       siteName: "Camp Gear Lab",
       locale: "ja_JP",
       url: `/articles/${article.slug}`,
+      authors: ["ギア男（現役小児科開業医）"],
+      tags: article.tags,
     },
     twitter: {
       card: "summary_large_image",
@@ -58,14 +83,11 @@ export async function generateMetadata({
 
 export default async function ArticlePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
-  const sp = searchParams ? await searchParams : {};
-  const isPreview = sp?.preview === "1";
+  const { isEnabled: isPreview } = await draftMode();
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
   if (article.status !== "published" && !isPreview) notFound();
@@ -76,10 +98,10 @@ export default async function ArticlePage({
       getCategoryById(article.categoryId),
       getProductsByIds(article.productIds),
       getArticlesByCategory(article.categoryId),
-      getArticlesList(),
+      getPublishedArticlesList(),
     ]);
   // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
-  // ISR(1h)ごとに再計算されるサーバーコンポーネントなので現在時刻の参照は安全
+  // ISR(6h)ごとに再計算されるサーバーコンポーネントなので現在時刻の参照は安全
   // eslint-disable-next-line react-hooks/purity
   const renderedAt = Date.now();
   const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string | null }) => {
@@ -126,10 +148,17 @@ export default async function ArticlePage({
     "@type": "Article",
     headline: article.title,
     description: article.excerpt,
+    // Googleのリッチリザルトで推奨される image。記事のアイキャッチ or 掲載商品の
+    // 画像を優先し、無ければ動的生成のOGP画像（1200x630）にフォールバックする
+    image:
+      article.eyecatch ||
+      products.find((p) => p.imageUrl)?.imageUrl ||
+      `${baseUrl}/articles/${article.slug}/opengraph-image`,
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     author: {
       "@type": "Person",
+      "@id": `${baseUrl}/about#person`,
       name: "ギア男",
       jobTitle: "小児科医（開業医）",
       description: "現役の小児科開業医「ギア男」。キャンプ歴10年、2児の父。医師目線で家族が安全に楽しめるアウトドアギアを比較・検証。",
@@ -351,9 +380,12 @@ export default async function ArticlePage({
           {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示） */}
           {products.some((p) => p.affiliateUrl) && <RakutenDealBadge />}
 
-          {/* 記事冒頭 購入導線 */}
+          {/* 記事冒頭 購入導線（広告表示は導線より前に置く＝ステマ規制対応） */}
           {products.length > 0 && (
-            <RecommendationCTA products={products.slice(0, 3)} />
+            <>
+              <AffiliateDisclosure variant="inline" />
+              <RecommendationCTA products={products.slice(0, 3)} />
+            </>
           )}
 
           {/* Article body */}
@@ -365,6 +397,16 @@ export default async function ArticlePage({
             </>
           ) : (
             <ArticleContent content={article.content} products={products} />
+          )}
+
+          {/* 記事末尾 購入導線（読了直後が最も購買意欲が高い） */}
+          {products.length > 0 && (
+            <RecommendationCTA
+              products={products.slice(0, 3)}
+              title={`この記事で紹介した${Math.min(products.length, 3)}つ`}
+              subtitle="気になるモデルがあれば、在庫と価格をチェックしてみてください"
+              placement="article_end"
+            />
           )}
         </article>
 

@@ -30,7 +30,9 @@ export type AffiliatePlacement =
   | "product_card" // 商品カード
   | "ranking" // ランキングリスト
   | "comparison_table" // 比較表
-  | "recommended" // おすすめCTA
+  | "recommended" // おすすめCTA（記事冒頭）
+  | "article_end" // おすすめCTA（記事末尾・読了直後）
+  | "reviews_link" // 「楽天で口コミをもっと見る」リンク
   | "body_text" // 本文インラインリンク
   | "unknown";
 

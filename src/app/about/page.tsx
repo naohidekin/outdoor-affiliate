@@ -25,6 +25,8 @@ export const metadata: Metadata = {
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
+  // 記事ページの author からこの @id を参照させ、サイト全体で同一人物として束ねる
+  "@id": "https://camp-gear-lab.com/about#person",
   name: "ギア男",
   alternateName: "Camp Gear Lab 編集長",
   jobTitle: "小児科医（開業医）",
