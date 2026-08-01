@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
       // ─── 孤立URL救済（2026-06-15）: draft/削除済み記事 → 最も近い公開記事へ301 ───
       // draft記事
       { source: "/articles/insect-repellent-bracelet-ranking", destination: "/articles/insect-repellent-gear-roundup", permanent: true },
+      // カニバリ統合（2026-08-01）: 同一検索意図の重複記事を吸収し301で集約
+      { source: "/articles/tent-vestibule-size-ranking", destination: "/articles/tent-with-vestibule-ranking", permanent: true },
+      { source: "/articles/compact-lightweight-chair-ranking", destination: "/articles/compact-chair-ranking", permanent: true },
       { source: "/articles/led-lantern-ranking", destination: "/articles/gas-lantern-ranking", permanent: true },
       { source: "/articles/hiking-backpack-30l-ranking", destination: "/articles/backpack-ranking", permanent: true },
       // 削除済み記事
@@ -33,7 +36,9 @@ const nextConfig: NextConfig = {
       { source: "/articles/summer-camp-heat-food-safety", destination: "/articles/summer-camp-heat-gear-guide", permanent: true },
       { source: "/articles/tarp-setup-patterns-guide", destination: "/articles/tarp-setup-guide-for-beginners", permanent: true },
       { source: "/articles/tarp-tent-connection-setup-guide", destination: "/articles/tarp-tent-layout-site-guide", permanent: true },
-      { source: "/articles/tent-without-vestibule-guide", destination: "/articles/tent-vestibule-size-ranking", permanent: true },
+      // 2026-08-01: 中継先が tent-with-vestibule-ranking へ統合されたため、
+      // 2段リダイレクトを避けて直接最終URLへ向ける
+      { source: "/articles/tent-without-vestibule-guide", destination: "/articles/tent-with-vestibule-ranking", permanent: true },
       { source: "/articles/winter-camp-co-safety-guide", destination: "/articles/winter-camp-beginners-checklist", permanent: true },
       { source: "/articles/2-person-tent-ranking", destination: "/articles/duo-tent-ranking", permanent: true },
       // 存在しないカテゴリページ（GSC 404検出 2026-06-21）
