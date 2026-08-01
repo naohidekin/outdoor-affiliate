@@ -90,12 +90,27 @@ function tokenOverlap(a, b) {
   return hit / ta.size;
 }
 
+// 楽天APIは1文字の単語を含むキーワードを400で拒否する（各単語2文字以上の制約）。
+// 「アメニティドーム L」「カマボコテント3 M」等が全滅していた原因。
+// 記号（×・/・＋）も除去する
+function sanitizeKeyword(s) {
+  return s
+    .replace(/[×\/＋+|｜]/g, " ")
+    .split(/\s+/)
+    .filter((t) => [...t].length >= 2)
+    .join(" ")
+    .slice(0, 120);
+}
+
+// 中古・リユース店は除外（新品を勧める記事から中古在庫に飛ばさない）
+const USED_SHOP_PATTERNS = /2nd STREET|セカンドストリート|ワットマン|リサイクル|中古|質屋|ブックオフ|BOOKOFF|トレファク|セカスト/i;
+
 async function searchRakuten(keyword) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
     affiliateId: RAKUTEN_AFFILIATE_ID,
-    keyword,
+    keyword: sanitizeKeyword(keyword),
     hits: "10",
     sort: "standard", // 検索妥当性順（レビュー順だと別商品が上に来やすい）
     formatVersion: "2",
@@ -116,6 +131,7 @@ async function searchRakuten(keyword) {
 
 function pickBest(product, items) {
   const models = modelNumbers(product.name);
+  items = items.filter((it) => !USED_SHOP_PATTERNS.test(it.shopName || ""));
   for (const item of items) {
     const itemModels = modelNumbers(item.itemName);
     const overlap = tokenOverlap(product.name, item.itemName);
@@ -147,8 +163,19 @@ const skipped = [];
 for (const p of targets) {
   await sleep(1100); // 楽天APIレート制限（1req/秒）
   const brand = p.brand && !p.name.includes(p.brand) ? `${p.brand} ` : "";
-  const items = await searchRakuten(`${brand}${p.name}`.slice(0, 120));
-  const best = pickBest(p, items);
+  const items = await searchRakuten(`${brand}${p.name}`);
+  let best = pickBest(p, items);
+  // フォールバック: 商品名フルでヒットしない場合、型番だけで再検索
+  // （店の商品名は語順・表記が違うことが多く、型番検索の方が刺さる）
+  if (!best) {
+    const models = p.name.match(/[A-Za-z]{1,6}-[A-Za-z0-9]{2,10}|[A-Za-z]{2,6}[0-9]{2,5}[A-Za-z0-9]*/g);
+    if (models && models.length > 0) {
+      await sleep(1100);
+      const brandWord = (p.brand || p.name.split(/\s+/)[0] || "").slice(0, 20);
+      const retry = await searchRakuten(`${brandWord} ${models[0]}`);
+      best = pickBest(p, retry);
+    }
+  }
   if (!best || !best.item.affiliateUrl) {
     skipped.push({ id: p.id, name: p.name, candidates: items.length });
     console.log(`✗ スキップ: ${p.name.slice(0, 40)}（候補${items.length}件・確信なし）`);
