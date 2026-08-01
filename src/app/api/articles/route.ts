@@ -39,17 +39,35 @@ async function checkArticleIntegrity(article: Article): Promise<string[]> {
     }
   }
 
+  // 3. 内部商品IDの本文露出（「（chair-013）」等。読者に見せる文字列ではない）
+  const leakedIds = content.match(/[（(][a-z]+-\d{3}[）)]/g);
+  if (leakedIds) {
+    warnings.push(`本文に内部商品IDが露出: ${[...new Set(leakedIds)].join(", ")}`);
+  }
+
+  // 4. タイトルの「◯選」と紐付け商品数の乖離（comparisonタグが無い記事向け。
+  //    コツ系記事はタイトルのNが商品数でないことがあるため、乖離が2倍以上の
+  //    明白なケースだけ警告する）
+  const titleN = article.title?.match(/(\d+)選/);
+  if (titleN && compTags.length === 0) {
+    const claimed = parseInt(titleN[1]);
+    const linked = (article.productIds ?? []).length;
+    if (linked > 0 && (claimed >= linked * 2 || linked >= claimed * 2)) {
+      warnings.push(`タイトル「${claimed}選」に対して紐付け商品が${linked}件です`);
+    }
+  }
+
   return warnings;
 }
 
 export async function GET() {
-  const articles = await getArticles();
-  // 管理画面（認証済み）には全件、未認証には公開記事のみ返す
-  // （下書き・予約記事の全文が誰でも読める情報露出を防ぐ）
-  if (await isAuthenticated()) {
-    return NextResponse.json(articles);
+  // 管理画面専用。公開ページはサーバーコンポーネントが直接db.tsを呼ぶため
+  // このAPIを使わない。未認証に返すと、アクセスごとに全記事本文がSupabase
+  // から転送され（Egress浪費）、全記事の一括スクレイピング経路にもなる
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
-  return NextResponse.json(articles.filter((a) => a.status === "published"));
+  return NextResponse.json(await getArticles());
 }
 
 export async function POST(request: NextRequest) {
@@ -107,8 +125,9 @@ export async function PUT(request: NextRequest) {
       body.status === "published" && !existing.publishedAt ? now : existing.publishedAt,
   };
 
-  // 公開時に整合性チェック
-  if (updated.status === "published" && existing.status !== "published") {
+  // 整合性チェックは「公開への遷移時」だけでなく「公開中の記事の再保存」でも走らせる。
+  // 従来は公開後の編集がノーチェックで通り、タイトル◯選と本文の乖離等が本番に出ていた
+  if (updated.status === "published") {
     const warnings = await checkArticleIntegrity(updated);
     if (warnings.length > 0) {
       return NextResponse.json(

@@ -129,7 +129,12 @@ export default async function ArticlePage({
     .sort((a, b) => scoreRelevance(b) - scoreRelevance(a))
     .slice(0, 3);
 
-  const faqs = article.faqs ?? [];
+  // 本文にFAQセクションが直書きされている記事が47本あり、システム生成FAQと
+  // 二重表示になっていた。本文側を優先し、システムFAQ（表示とFAQPage JSON-LDの
+  // 両方）を抑止する。JSON-LDだけ残すと「ページに見えている内容と構造化データの
+  // 不一致」になるため両方消す
+  const bodyHasFaq = /^##+ *よくある(ご)?質問/m.test(article.content);
+  const faqs = bodyHasFaq ? [] : article.faqs ?? [];
 
   // 「医師から一言」セクションをまとめ直前に注入
   const medicalAdvice = MEDICAL_ADVICE_MAP[article.slug] ?? null;
@@ -216,34 +221,14 @@ export default async function ArticlePage({
       brand: { "@type": "Brand", name: p.brand },
       description: p.description,
       image: p.imageUrl || undefined,
+      // 当サイトは販売者ではなく送客サイト。在庫・送料・配送日数・返品条件は
+      // 販売店ごとに異なり事実確認もできないため出力しない（不正確な構造化
+      // データはリッチリザルト除外・手動対策の原因になる）。価格とリンク先のみ
       offers: {
         "@type": "Offer",
         price: p.price,
         priceCurrency: "JPY",
-        availability: "https://schema.org/InStock",
         url: p.affiliateUrl || p.amazonUrl || undefined,
-        shippingDetails: {
-          "@type": "OfferShippingDetails",
-          shippingDestination: {
-            "@type": "DefinedRegion",
-            addressCountry: "JP",
-          },
-          deliveryTime: {
-            "@type": "ShippingDeliveryTime",
-            handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "d" },
-            transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 5, unitCode: "d" },
-          },
-          shippingRate: {
-            "@type": "MonetaryAmount",
-            value: 0,
-            currency: "JPY",
-          },
-        },
-        hasMerchantReturnPolicy: {
-          "@type": "MerchantReturnPolicy",
-          applicableCountry: "JP",
-          returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
-        },
       },
     }));
 

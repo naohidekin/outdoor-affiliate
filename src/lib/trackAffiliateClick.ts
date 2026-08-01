@@ -25,16 +25,22 @@ export function detectAffiliateStore(href: string): AffiliateStore | null {
   return null;
 }
 
-// ボタンの設置場所（成約分析用）。「商品が弱い」か「位置が弱い」かを切り分ける
-export type AffiliatePlacement =
-  | "product_card" // 商品カード
-  | "ranking" // ランキングリスト
-  | "comparison_table" // 比較表
-  | "recommended" // おすすめCTA（記事冒頭）
-  | "article_end" // おすすめCTA（記事末尾・読了直後）
-  | "reviews_link" // 「楽天で口コミをもっと見る」リンク
-  | "body_text" // 本文インラインリンク
-  | "unknown";
+// ボタンの設置場所（成約分析用）。「商品が弱い」か「位置が弱い」かを切り分ける。
+// サーバー側（/api/track-click）の許可リストもこの配列から導出する。
+// 別々に持つと追加漏れで新placementがunknownに丸められる事故が起きる
+// （2026-08-01にarticle_end/reviews_linkで実際に発生）
+export const AFFILIATE_PLACEMENTS = [
+  "product_card", // 商品カード
+  "ranking", // ランキングリスト
+  "comparison_table", // 比較表
+  "recommended", // おすすめCTA（記事冒頭）
+  "article_end", // おすすめCTA（記事末尾・読了直後）
+  "reviews_link", // 「楽天で口コミをもっと見る」リンク
+  "body_text", // 本文インラインリンク
+  "unknown",
+] as const;
+
+export type AffiliatePlacement = (typeof AFFILIATE_PLACEMENTS)[number];
 
 export function trackAffiliateClick(
   href: string,

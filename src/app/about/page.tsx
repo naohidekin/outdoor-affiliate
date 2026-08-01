@@ -8,12 +8,12 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "このサイトについて | Camp Gear Lab",
+  title: "このサイトについて",
   description:
     "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Camp Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "このサイトについて | Camp Gear Lab",
+    title: "このサイトについて",
     description:
       "現役小児科医・キャンプ歴10年が運営するアウトドアギア比較サイト「Camp Gear Lab」の運営者プロフィールと編集ポリシーをご紹介します。",
     url: "/about",

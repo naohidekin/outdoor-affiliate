@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "プライバシーポリシー | Camp Gear Lab",
+  title: "プライバシーポリシー",
   description:
     "Camp Gear Lab（camp-gear-lab.com）のプライバシーポリシー。アクセス解析・広告配信・Cookieの取り扱いについて説明します。",
   alternates: { canonical: "/privacy" },
@@ -75,6 +75,24 @@ export default async function PrivacyPage() {
                 Googleのポリシーと規約
               </a>
               をご確認ください。
+            </p>
+
+            <h2>商品リンクのクリック計測について</h2>
+            <p>
+              当サイトでは、記事の改善とアフィリエイト成果の分析のため、
+              商品リンク（Amazon・楽天市場・Yahoo!ショッピング等）がクリックされた際に、
+              以下の情報を当サイトのサーバーに記録しています。
+            </p>
+            <ul>
+              <li>クリックされた商品・販売店・ページ内の位置</li>
+              <li>クリックが発生したページのURLと日時</li>
+              <li>ブラウザの種類（User-Agent）</li>
+              <li>IPアドレスを復元できない形に変換した識別子（同日内の重複クリック判定のみに使用）</li>
+            </ul>
+            <p>
+              IPアドレスそのものは保存していません。これらの記録は個人の特定を目的とせず、
+              「どの記事のどの位置のリンクが役立っているか」の分析にのみ利用し、
+              収集から1年を目安に削除します。第三者に提供することはありません。
             </p>
 
             <h2>個人情報の利用目的</h2>

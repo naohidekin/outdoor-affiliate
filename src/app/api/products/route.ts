@@ -6,6 +6,11 @@ import { Product } from "@/lib/types";
 import { revalidateAllArticlePages } from "@/lib/revalidate";
 
 export async function GET() {
+  // 管理画面専用（公開ページはサーバーコンポーネントが直接db.tsを呼ぶ）。
+  // 未認証に全商品＋アフィリエイトURLを返すとスクレイピング経路になる
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
   return NextResponse.json(await getProducts());
 }
 

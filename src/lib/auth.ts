@@ -16,11 +16,22 @@ function signToken(payload: string): string {
   return `${payload}.${hmac.digest("hex")}`;
 }
 
+// Cookie maxAge(7日)とそろえる。Cookieの失効はクライアント任せなので、
+// 盗まれたトークンを別経路で再設定された場合に備えサーバー側でも期限を検証する
+const TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 function verifyToken(token: string): boolean {
   const lastDot = token.lastIndexOf(".");
   if (lastDot === -1) return false;
   const payload = token.slice(0, lastDot);
   const signature = token.slice(lastDot + 1);
+  // payload形式: authenticated:<発行時刻ms>:<nonce>（createSessionToken参照）
+  const parts = payload.split(":");
+  if (parts[0] !== "authenticated") return false;
+  const issuedAt = Number(parts[1]);
+  if (!Number.isFinite(issuedAt)) return false;
+  const age = Date.now() - issuedAt;
+  if (age < 0 || age > TOKEN_MAX_AGE_MS) return false;
   const hmac = crypto.createHmac("sha256", HMAC_SECRET);
   hmac.update(payload);
   const expected = hmac.digest("hex");

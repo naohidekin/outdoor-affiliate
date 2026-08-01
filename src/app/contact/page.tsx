@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 export const revalidate = 86400; // 1日キャッシュ
 
 export const metadata: Metadata = {
-  title: "お問い合わせ | Camp Gear Lab",
+  title: "お問い合わせ",
   description:
     "Camp Gear Lab（camp-gear-lab.com）へのお問い合わせ方法のご案内。記事内容の誤り・掲載情報・その他のご連絡はこちらから。",
   alternates: { canonical: "/contact" },

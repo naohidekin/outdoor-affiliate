@@ -71,33 +71,42 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
             ))}
           </tr>
 
-          {/* 評価行 */}
-          <tr className="border-b border-line bg-white">
-            <td className="px-4 py-4 text-sm font-semibold text-ink-strong sticky left-0 bg-white z-[5]">
-              総合評価
-            </td>
-            {products.map((p) => (
-              <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
-                <div className="flex justify-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={`text-lg ${
-                        star <= Math.floor(p.rating)
-                          ? "text-amber-400"
-                          : star - 0.5 <= p.rating
-                          ? "text-amber-300"
-                          : "text-slate-200"
-                      }`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <div className="text-xs text-slate-500 mt-0.5">{p.rating} / 5</div>
+          {/* 評価行（全商品が未評価なら行ごと出さない。「0 / 5」は低評価なのか
+              未評価なのか読者に伝わらず、かえって信頼を落とすため） */}
+          {products.some((p) => (p.rating ?? 0) > 0) && (
+            <tr className="border-b border-line bg-white">
+              <td className="px-4 py-4 text-sm font-semibold text-ink-strong sticky left-0 bg-white z-[5]">
+                総合評価
               </td>
-            ))}
-          </tr>
+              {products.map((p) => (
+                <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
+                  {(p.rating ?? 0) > 0 ? (
+                    <>
+                      <div className="flex justify-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={`text-lg ${
+                              star <= Math.floor(p.rating)
+                                ? "text-amber-400"
+                                : star - 0.5 <= p.rating
+                                ? "text-amber-300"
+                                : "text-slate-200"
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">{p.rating} / 5</div>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-400">未評価</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          )}
 
           {/* スペック行 */}
           {specKeys.map((key, i) => (
