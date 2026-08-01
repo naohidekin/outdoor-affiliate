@@ -250,6 +250,24 @@ async function main() {
   }
 
   console.log("[sync-to-supabase] 完了");
+
+  // 同期後に本番のISRキャッシュを無効化する（無いと最大6時間古い価格が配信される）。
+  // REVALIDATE_SECRET が未設定なら黙ってスキップ（従来通りISR期限切れ待ち）
+  if (!dryRun && process.env.REVALIDATE_SECRET) {
+    try {
+      const res = await fetch("https://camp-gear-lab.com/api/revalidate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-revalidate-secret": process.env.REVALIDATE_SECRET,
+        },
+        body: JSON.stringify({ all: true }),
+      });
+      console.log(`[sync-to-supabase] ISR再検証: ${res.status}`);
+    } catch (err) {
+      console.warn("[sync-to-supabase] ISR再検証に失敗（次のISR期限で反映）:", err.message);
+    }
+  }
 }
 
 main().catch((err) => {

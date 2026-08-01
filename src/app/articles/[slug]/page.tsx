@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toJsonLd } from "@/lib/jsonld";
 import Link from "next/link";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
@@ -284,20 +285,20 @@ export default async function ArticlePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(articleJsonLd),
+          __html: toJsonLd(articleJsonLd),
         }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd),
+          __html: toJsonLd(breadcrumbJsonLd),
         }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(faqJsonLd),
+            __html: toJsonLd(faqJsonLd),
           }}
         />
       )}
@@ -306,7 +307,7 @@ export default async function ArticlePage({
           key={i}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(pld),
+            __html: toJsonLd(pld),
           }}
         />
       ))}
@@ -315,7 +316,7 @@ export default async function ArticlePage({
           key={`video-${i}`}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(vld),
+            __html: toJsonLd(vld),
           }}
         />
       ))}

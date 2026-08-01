@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { cache } from "react";
 import { getSupabase, isSupabaseConfigured } from "./supabase";
 import { Category, Product, Article } from "./types";
 
@@ -325,20 +326,24 @@ export async function getArticlesList(): Promise<Article[]> {
   return (data || []).map(toArticleListItem);
 }
 
-export async function getArticleBySlug(
-  slug: string
-): Promise<Article | undefined> {
-  if (!isSupabaseConfigured()) {
-    return readLocalJson<Article>("articles.json").find((a) => a.slug === slug);
+// cache() でリクエスト内メモ化。generateMetadata とページ本体が同じ記事を
+// 取得するため、素のままだと1レンダリングでSupabaseへ2クエリ飛ぶ
+export const getArticleBySlug = cache(
+  async (slug: string): Promise<Article | undefined> => {
+    if (!isSupabaseConfigured()) {
+      return readLocalJson<Article>("articles.json").find(
+        (a) => a.slug === slug
+      );
+    }
+    const { data, error } = await getSupabase()
+      .from("articles")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? toArticle(data) : undefined;
   }
-  const { data, error } = await getSupabase()
-    .from("articles")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? toArticle(data) : undefined;
-}
+);
 
 export async function getArticleById(
   id: string

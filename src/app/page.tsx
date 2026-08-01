@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toJsonLd } from "@/lib/jsonld";
 import Image from "next/image";
 import Link from "next/link";
 import { getCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
@@ -126,15 +127,15 @@ export default async function Home() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(webSiteJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(organizationJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(collectionJsonLd) }}
       />
       <Header categories={categories} />
       <main className="flex-1">

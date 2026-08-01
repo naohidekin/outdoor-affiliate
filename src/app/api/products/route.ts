@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { isAuthenticated } from "@/lib/auth";
 import { getProducts, saveProduct, deleteProduct, getProductById } from "@/lib/db";
 import { Product } from "@/lib/types";
+import { revalidateAllArticlePages } from "@/lib/revalidate";
 
 export async function GET() {
   return NextResponse.json(await getProducts());
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
   };
 
   await saveProduct(product);
+  revalidateAllArticlePages();
   return NextResponse.json(product, { status: 201 });
 }
 
@@ -54,6 +56,8 @@ export async function PUT(request: NextRequest) {
   };
 
   await saveProduct(updated);
+  // 価格・画像・スペックは多数の記事の比較表とJSON-LDに埋まるため全記事を無効化
+  revalidateAllArticlePages();
   return NextResponse.json(updated);
 }
 
@@ -69,5 +73,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   await deleteProduct(id);
+  revalidateAllArticlePages();
   return NextResponse.json({ success: true });
 }

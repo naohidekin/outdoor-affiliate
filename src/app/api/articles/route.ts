@@ -5,6 +5,7 @@ import { getArticles, saveArticle, deleteArticle, getArticleById, getProducts } 
 import { Article } from "@/lib/types";
 import { triggerPostPublishIndexing } from "@/lib/indexing";
 import { pullFromSupabase } from "@/lib/local-sync";
+import { revalidateArticlePages } from "@/lib/revalidate";
 
 /** 公開前の整合性チェック。警告メッセージの配列を返す（空なら問題なし）*/
 async function checkArticleIntegrity(article: Article): Promise<string[]> {
@@ -75,6 +76,9 @@ export async function POST(request: NextRequest) {
 
   await saveArticle(article);
 
+  if (article.slug) {
+    await revalidateArticlePages(article.slug, article.categoryId);
+  }
   if (article.status === "published" && article.slug) {
     triggerPostPublishIndexing(article.slug).catch(() => {});
     pullFromSupabase().catch(() => {});
@@ -116,6 +120,14 @@ export async function PUT(request: NextRequest) {
 
   await saveArticle(updated);
 
+  if (updated.slug) {
+    await revalidateArticlePages(updated.slug, updated.categoryId);
+  }
+  // スラッグ変更時は旧URLのキャッシュも消す（残すと旧スラッグで旧本文が生き続ける）
+  if (existing.slug && existing.slug !== updated.slug) {
+    await revalidateArticlePages(existing.slug, existing.categoryId);
+  }
+
   if (updated.status === "published" && updated.slug) {
     triggerPostPublishIndexing(updated.slug).catch(() => {});
     pullFromSupabase().catch(() => {});
@@ -135,6 +147,10 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "IDが必要です" }, { status: 400 });
   }
 
+  const existing = await getArticleById(id);
   await deleteArticle(id);
+  if (existing?.slug) {
+    await revalidateArticlePages(existing.slug, existing.categoryId);
+  }
   return NextResponse.json({ success: true });
 }

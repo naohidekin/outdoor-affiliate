@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toJsonLd } from "@/lib/jsonld";
 import Link from "next/link";
 import { getCategories } from "@/lib/db";
 import Header from "@/components/Header";
@@ -53,7 +54,7 @@ export default async function AboutPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(personJsonLd) }}
       />
       <Header categories={categories} />
       <main className="flex-1">
