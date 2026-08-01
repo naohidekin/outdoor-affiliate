@@ -55,7 +55,15 @@ function isSearchLink(affiliateUrl) {
   if (!affiliateUrl) return false;
   const m = affiliateUrl.match(/[?&]pc=([^&]+)/);
   if (!m) return false;
-  return decodeURIComponent(m[1]).includes("search.rakuten.co.jp");
+  // 一部商品のpc=値はエンコードが壊れていてdecodeURIComponentが例外を投げる。
+  // デコードできない場合は生文字列で判定する（%2F区切りでも部分一致する）
+  let target;
+  try {
+    target = decodeURIComponent(m[1]);
+  } catch {
+    target = m[1];
+  }
+  return target.includes("search.rakuten.co.jp");
 }
 
 // 型番抽出: 「PA-F85A」「ST-310」「YEC-M03」のような英数ハイフン列
