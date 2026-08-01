@@ -255,7 +255,8 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Categories */}
+        {/* Categories（記事数上位8件。全カテゴリ展開は縦に長くなりすぎるため
+            残りは /articles のカテゴリ絞り込みへ誘導） */}
         <section className="max-w-6xl mx-auto px-4 py-16">
           <div className="flex items-end justify-between mb-8">
             <div>
@@ -264,12 +265,24 @@ export default async function Home() {
               </h2>
               <p className="text-sm text-slate-500 mt-1">ジャンル別にギアを比較</p>
             </div>
+            <Link
+              href="/articles"
+              className="text-sm text-lake-600 hover:text-lake-700 font-medium shrink-0"
+            >
+              すべてのカテゴリ →
+            </Link>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categories.map((c) => {
-              const articleCount = c.articleSlugs
-                ? articles.filter((a) => c.articleSlugs!.includes(a.slug)).length
-                : articles.filter((a) => a.categoryId === c.id).length;
+            {categories
+              .map((c) => ({
+                c,
+                count: c.articleSlugs
+                  ? articles.filter((a) => c.articleSlugs!.includes(a.slug)).length
+                  : articles.filter((a) => a.categoryId === c.id).length,
+              }))
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 8)
+              .map(({ c, count: articleCount }) => {
               return (
                 <Link
                   key={c.id}
@@ -289,7 +302,7 @@ export default async function Home() {
                   </div>
                 </Link>
               );
-            })}
+              })}
           </div>
         </section>
 
@@ -302,18 +315,14 @@ export default async function Home() {
               <p className="text-sm text-slate-500 mt-1">シーン・季節・スタイル別にまとめたコレクション。気になるセットをチェック。</p>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+              {/* 季節に合う6件に絞る（8月時点: 夏対策を先頭に）。12件全部並べると
+                  トップが長くなりすぎ、本命の記事導線を押し下げるため */}
               {[
-                { label: "初めてのファミリーキャンプ一式", desc: "テント〜チェアまで家族4人分をまとめて", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/room_naomaru/1800012289286225" },
-                { label: "焚き火まわりセット", desc: "焚き火台・リフレクター・鉄板を一式で", icon: "🔥", href: "https://room.rakuten.co.jp/room_naomaru/1800012447451128" },
-                { label: "ソロキャンプ入門", desc: "軽量・コンパクトなソロ向け厳選ギア", icon: "🏔️", href: "https://room.rakuten.co.jp/room_naomaru/1800012447465234" },
-                { label: "キャンプ飯 調理道具", desc: "バーナー・クッカー・カトラリーまで", icon: "🍳", href: "https://room.rakuten.co.jp/room_naomaru/1800012447461992" },
                 { label: "夏キャンプ 虫対策セット", desc: "蚊・ブヨ・アブ対策の定番ギアを厳選", icon: "🦟", href: "https://room.rakuten.co.jp/room_naomaru/1800012289285534" },
                 { label: "子ども連れ 暑さ対策", desc: "扇風機・クーラー・日よけの涼感セット", icon: "☀️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289288356" },
-                { label: "雨の日キャンプ対策", desc: "タープ・レインウェア・撥水アイテム", icon: "☔", href: "https://room.rakuten.co.jp/room_naomaru/1800012447466303" },
+                { label: "初めてのファミリーキャンプ一式", desc: "テント〜チェアまで家族4人分をまとめて", icon: "👨‍👩‍👧‍👦", href: "https://room.rakuten.co.jp/room_naomaru/1800012289286225" },
                 { label: "春秋キャンプ 寒さ対策", desc: "シュラフ〜ウェアの3シーズン防寒装備", icon: "🧥", href: "https://room.rakuten.co.jp/room_naomaru/1800012289289365" },
-                { label: "冬キャンプ装備", desc: "厳冬期シュラフ・マット・暖房ギア", icon: "❄️", href: "https://room.rakuten.co.jp/room_naomaru/1800012447454103" },
-                { label: "GW・春キャンプスターター", desc: "春デビューに必要なもの全部入りセット", icon: "🌸", href: "https://room.rakuten.co.jp/room_naomaru/1800012447463166" },
-                { label: "テント泊デビューセット", desc: "テント選びから寝具まで泊まりの基本", icon: "⛺", href: "https://room.rakuten.co.jp/room_naomaru/1800012447467355" },
+                { label: "焚き火まわりセット", desc: "焚き火台・リフレクター・鉄板を一式で", icon: "🔥", href: "https://room.rakuten.co.jp/room_naomaru/1800012447451128" },
                 { label: "防災兼用 キャンプギア", desc: "停電・避難でも使えるアウトドア道具", icon: "🏕️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289290411" },
               ].map(({ label, desc, icon, href }) => (
                 <a
@@ -333,33 +342,23 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Latest Articles */}
+        {/* 記事アーカイブへの導線。従来は全記事（100本超）をここに展開しており、
+            トップが際限なく長くなっていた。一覧・検索・絞り込みは /articles に分離 */}
         {articles.length > 0 && (
           <section className="max-w-6xl mx-auto px-4 pb-20">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-semibold text-ink-strong tracking-tight">
-                  記事一覧
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">スペック比較・レビュー・選び方ガイド</p>
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {articles.map((article) => {
-                const cat = categories.find(
-                  (c) => c.id === article.categoryId
-                );
-                return (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    category={cat}
-                    thumbnailProduct={article.productIds
-                      .map((id) => productMap.get(id))
-                      .find((p) => p?.imageUrl)}
-                  />
-                );
-              })}
+            <div className="bg-lake-50/60 border border-lake-100 rounded-2xl p-8 text-center">
+              <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-2">
+                お探しのギアが決まっていますか？
+              </h2>
+              <p className="text-sm text-slate-500 mb-5">
+                全{articles.length}記事をキーワード・カテゴリから探せます
+              </p>
+              <Link
+                href="/articles"
+                className="inline-flex items-center gap-2 bg-lake-600 hover:bg-lake-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition"
+              >
+                すべての記事を見る →
+              </Link>
             </div>
           </section>
         )}

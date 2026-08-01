@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { sizedImageUrl } from "@/lib/imageSize";
 import { Article, Category, Product } from "@/lib/types";
 
 interface Props {
@@ -23,7 +24,7 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
       <div className="relative aspect-[16/10] bg-mist border-b border-line-soft overflow-hidden">
         {article.eyecatch || thumbProduct ? (
           <Image
-            src={article.eyecatch || thumbProduct!.imageUrl}
+            src={sizedImageUrl(article.eyecatch || thumbProduct!.imageUrl, 640)}
             alt={article.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

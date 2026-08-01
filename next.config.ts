@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // /category と /articles は page.tsx が存在せず 404 になるため恒久リダイレクト
+      // /category は page.tsx が存在せず 404 になるため恒久リダイレクト
+      // （/articles は 2026-08-01 に記事アーカイブページを新設したため解除）
       { source: "/category", destination: "/", permanent: true },
-      { source: "/articles", destination: "/", permanent: true },
       // 重複記事の統合（2026-06-11）: 6/8公開の刷新版を、GSC順位資産のある
       // 旧スラッグへ移植したため、新スラッグ側を301で正規URLへ集約する
       {
