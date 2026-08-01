@@ -33,6 +33,25 @@ if (fs.existsSync(path.join(process.cwd(), ".git", "MERGE_HEAD"))) {
   process.exit(1);
 }
 
+// stash pop由来のコンフリクトはMERGE_HEADを作らないため上のガードをすり抜ける
+// （2026-08-01にマーカー入りarticles.jsonがmainへコミットされる事故が発生）。
+// マーカー混入 or JSONとして壊れているファイルがあれば同期せず停止する。
+for (const f of ["data/articles.json", "data/products.json", "data/categories.json"]) {
+  const fp = path.join(process.cwd(), f);
+  if (!fs.existsSync(fp)) continue;
+  const raw = fs.readFileSync(fp, "utf-8");
+  if (/^(<{7} |>{7} |={7}$)/m.test(raw)) {
+    console.error(`[sync] ❌ ${f} にgitコンフリクトマーカーが残っています。解消するまで同期を中止します。`);
+    process.exit(1);
+  }
+  try {
+    JSON.parse(raw);
+  } catch (e) {
+    console.error(`[sync] ❌ ${f} がJSONとして壊れています（${e.message}）。同期を中止します。`);
+    process.exit(1);
+  }
+}
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
