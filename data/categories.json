@@ -145,5 +145,12 @@
     "slug": "hammock",
     "description": "キャンプの贅沢なくつろぎアイテム",
     "order": 21
+  },
+  {
+    "id": "heater",
+    "name": "ストーブ・暖房",
+    "slug": "heater",
+    "description": "冬キャンプの暖房。石油・薪・ガス・電気の各方式と一酸化炭素対策",
+    "order": 22
   }
 ]
