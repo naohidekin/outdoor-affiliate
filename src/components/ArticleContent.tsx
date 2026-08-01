@@ -1,5 +1,6 @@
-"use client";
-
+// Server Component。従来はファイル全体が "use client" で、react-markdown・
+// remark-gfm・商品カード・比較表が全記事でクライアントバンドルに入っていた。
+// クリック計測が必要な本文リンクだけ BodyLink（Client）に切り出している
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Product } from "@/lib/types";
@@ -7,10 +8,7 @@ import ProductCard from "./ProductCard";
 import ComparisonTable from "./ComparisonTable";
 import RankingList from "./RankingList";
 import YouTubeEmbed from "./YouTubeEmbed";
-import {
-  detectAffiliateStore,
-  trackAffiliateClick,
-} from "@/lib/trackAffiliateClick";
+import BodyLink from "./BodyLink";
 
 interface Props {
   content: string;
@@ -100,32 +98,9 @@ export default function ArticleContent({ content, products }: Props) {
               key={i}
               remarkPlugins={[remarkGfm]}
               components={{
-                a: ({ href, children }) => {
-                  const isInternal =
-                    href?.startsWith("/") ||
-                    href?.includes("camp-gear-lab.com");
-                  // 本文内のアフィリエイトリンク（口コミCTA等）もボタンと
-                  // 同じ経路でクリック計測する
-                  const store = href ? detectAffiliateStore(href) : null;
-                  return (
-                    <a
-                      href={href}
-                      {...(!isInternal && {
-                        target: "_blank",
-                        rel: "nofollow sponsored noopener noreferrer",
-                      })}
-                      {...(store &&
-                        href && {
-                          onClick: () =>
-                            trackAffiliateClick(href, "inline", store, {
-                              placement: "body_text",
-                            }),
-                        })}
-                    >
-                      {children}
-                    </a>
-                  );
-                },
+                a: ({ href, children }) => (
+                  <BodyLink href={href}>{children}</BodyLink>
+                ),
                 table: ({ children, ...props }) => (
                   <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                     <table {...props}>{children}</table>
