@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
+import { sizedImageUrl } from "@/lib/imageSize";
 
 interface Props {
   productA: Product;
@@ -15,12 +16,12 @@ export default function HeroSplit({ productA, productB }: Props) {
       <div className="relative w-1/2 bg-white flex flex-col items-center justify-center p-4">
         <div className="relative w-full flex-1">
           <Image
-            src={productA.imageUrl}
+            src={sizedImageUrl(productA.imageUrl, 800)}
             alt={productA.name}
             fill
             sizes="(max-width: 896px) 50vw, 448px"
             className="object-contain"
-            priority
+            preload
           />
         </div>
         <p className="text-[11px] font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">
@@ -42,12 +43,11 @@ export default function HeroSplit({ productA, productB }: Props) {
       <div className="relative w-1/2 bg-white flex flex-col items-center justify-center p-4">
         <div className="relative w-full flex-1">
           <Image
-            src={productB.imageUrl}
+            src={sizedImageUrl(productB.imageUrl, 800)}
             alt={productB.name}
             fill
             sizes="(max-width: 896px) 50vw, 448px"
             className="object-contain"
-            priority
           />
         </div>
         <p className="text-[11px] font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import { isAmazonPrimary } from "@/lib/affiliate-priority";
+import { sizedImageUrl } from "@/lib/imageSize";
 import AffiliateLink from "./AffiliateLink";
 import RakutenDealStamp from "./RakutenDealStamp";
 
@@ -42,7 +43,7 @@ export default function RankingList({ products }: { products: Product[] }) {
             {product.imageUrl && (
               <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-mist relative">
                 <Image
-                  src={product.imageUrl}
+                  src={sizedImageUrl(product.imageUrl, 192)}
                   alt={product.name}
                   fill
                   sizes="96px"

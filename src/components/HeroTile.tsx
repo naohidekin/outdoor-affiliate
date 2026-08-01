@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
+import { sizedImageUrl } from "@/lib/imageSize";
 
 interface Props {
   products: Product[];
@@ -14,18 +15,20 @@ export default function HeroTile({ products }: Props) {
       className="w-full h-[200px] md:h-[300px] overflow-hidden rounded-xl mb-8 bg-mist"
       style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)` }}
     >
-      {images.map((p) => (
+      {images.map((p, i) => (
         <div
           key={p.id}
           className="relative overflow-hidden bg-white border-r border-line-soft last:border-r-0"
         >
           <Image
-            src={p.imageUrl}
+            src={sizedImageUrl(p.imageUrl, 600)}
             alt={p.name}
             fill
             sizes={`(max-width: 896px) ${Math.floor(100 / cols)}vw, ${Math.floor(896 / cols)}px`}
             className="object-contain p-3"
-            priority
+            // preloadはLCP候補（先頭タイル）だけ。全タイルを先読みすると
+            // かえって重要リソースを遅らせる
+            preload={i === 0}
           />
         </div>
       ))}

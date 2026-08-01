@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import { isAmazonPrimary } from "@/lib/affiliate-priority";
+import { sizedImageUrl } from "@/lib/imageSize";
 import AffiliateLink from "./AffiliateLink";
 import RakutenDealStamp from "./RakutenDealStamp";
 
@@ -24,7 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
       {product.imageUrl && (
         <div className="relative h-64 sm:h-96 bg-white overflow-hidden">
           <Image
-            src={product.imageUrl}
+            src={sizedImageUrl(product.imageUrl, 800)}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 100vw, 800px"

@@ -3,6 +3,7 @@ import { Product } from "@/lib/types";
 import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import type { AffiliatePlacement } from "@/lib/trackAffiliateClick";
 import AffiliateLink from "./AffiliateLink";
+import { sizedImageUrl } from "@/lib/imageSize";
 
 function AmazonButton({
   product,
@@ -61,7 +62,7 @@ export default function RecommendationCTA({
                 </span>
                 {p.imageUrl && (
                   <Image
-                    src={p.imageUrl}
+                    src={sizedImageUrl(p.imageUrl, 96)}
                     alt={p.name}
                     width={48}
                     height={48}
