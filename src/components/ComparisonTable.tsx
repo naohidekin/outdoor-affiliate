@@ -156,7 +156,14 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       楽天市場で見る
                     </AffiliateLink>
                   ) : (
-                    !isAmazonPrimary(p) && <span className="text-slate-400 text-xs">準備中</span>
+                    // 購入リンクが無い商品。specsに「入手方法」があればその実情を
+                    // 表示する（例: メーカー公式ストア限定の抽選販売品）。
+                    // 一律「準備中」だと入手不可の商品で誤解を招くため
+                    !isAmazonPrimary(p) && (
+                      <span className="text-slate-400 text-xs">
+                        {p.specs?.["入手方法"] ?? "準備中"}
+                      </span>
+                    )
                   )}
                   {!isAmazonPrimary(p) && <AmazonButton product={p} />}
                   {p.yahooUrl && (

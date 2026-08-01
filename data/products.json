@@ -7935,11 +7935,12 @@
     "brand": "コロナ",
     "price": 59800,
     "imageUrl": "https://makeshop-multi-images.akamaized.net/CORONASTORE/itemimages/000000002537_DXGqChs.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%AD%E3%83%8A%20OUTFIELD%20BREEZE%20BOX%20PA-F85A%2F&link_type=text&ut=",
+    "affiliateUrl": "",
     "amazonUrl": "",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%AD%E3%83%8A%20OUTFIELD%20BREEZE%20BOX%20PA-F85A",
+    "yahooUrl": "",
     "categoryId": "portable-cooler",
     "specs": {
+      "入手方法": "コロナストア限定・抽選販売",
       "重量": "13.6kg",
       "電源": "AC100V",
       "サイズ": "315×264×580mm",
@@ -7950,7 +7951,8 @@
     "rating": 0,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
     "updatedAt": "2026-07-25T01:04:14.687+00:00",
-    "autoAdded": false
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-01T20:36:56.000Z"
   },
   {
     "id": "rakuten-brave-7-zp04-1",

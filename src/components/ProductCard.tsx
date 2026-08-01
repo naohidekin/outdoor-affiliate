@@ -72,6 +72,16 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
           <div className="flex flex-col gap-2">
+            {/* どの販路にもリンクが無い商品（メーカー公式限定の抽選販売品など）は
+                空のCTA欄になるため、specsの「入手方法」を代わりに示す */}
+            {!product.affiliateUrl &&
+              !product.amazonUrl &&
+              !product.yahooUrl &&
+              product.specs?.["入手方法"] && (
+                <p className="text-xs text-slate-500 bg-mist rounded-lg px-4 py-2.5 text-center">
+                  {product.specs["入手方法"]}
+                </p>
+              )}
             {amazonFirst && amazonBtn}
             {product.affiliateUrl && (
               <AffiliateLink
