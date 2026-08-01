@@ -129,9 +129,29 @@ async function searchRakuten(keyword) {
   return data.Items || [];
 }
 
+// サイズ違い誤マッチ防止: 商品名に単独のサイズ表記（S/M/L/XL・「2型」等）が
+// ある場合、候補の商品名にも同じサイズが含まれることを必須にする。
+// キーワードsanitizeで1文字トークンを落とすため、「アメニティドームL」の
+// 検索結果にはMやSも混ざる。ここで弾かないと別サイズに誤リンクする
+function sizeToken(name) {
+  const m = name.match(/(?:^|[\s／/])([SML]|XL|LX|\d型)(?=$|[\s／/（(])/);
+  return m ? m[1] : null;
+}
+
+function sizeMatches(productName, itemName) {
+  const size = sizeToken(productName);
+  if (!size) return true;
+  const re = new RegExp(`(?:^|[\\s／/｜|（(【])${size}(?=$|[\\s／/｜|）)】])|(?:ドーム|テント|タープ|シェルター|サイズ)\\s?${size}(?![A-Za-z0-9])`);
+  return re.test(itemName) || itemName.includes(` ${size} `) || itemName.endsWith(` ${size}`) || itemName.includes(`${size}サイズ`) || new RegExp(`[0-9ァ-ヶー一-龠]${size}(?![A-Za-z0-9])`).test(itemName);
+}
+
 function pickBest(product, items) {
   const models = modelNumbers(product.name);
-  items = items.filter((it) => !USED_SHOP_PATTERNS.test(it.shopName || ""));
+  items = items.filter(
+    (it) =>
+      !USED_SHOP_PATTERNS.test(it.shopName || "") &&
+      sizeMatches(product.name, it.itemName || "")
+  );
   for (const item of items) {
     const itemModels = modelNumbers(item.itemName);
     const overlap = tokenOverlap(product.name, item.itemName);
