@@ -164,3 +164,41 @@ launchctl list | grep outdoor-affiliate
 - [ ] Threads転載の作り直し（Notion読み＋トークン自動更新）
 - [ ] 別事業レールの本格分離（他事業の投稿量が増えたら）
 - [ ] x-posts 管理画面のNotion読み替え（当面はバナーで案内のみ）
+
+## 2026-08-01 追記: MacBook Pro側の残骸ジョブを全停止（実行環境の一本化）
+
+Camp Gear Labの記事データ同期でトラブルが続いた調査の過程で、**MacBook Pro側に
+outdoor-affiliateのlaunchdジョブが8個登録されたまま残っており、全て起動不能だった**
+ことが判明した。
+
+**判明した事実**:
+- Proの8ジョブ（article-daily/weekly, nightly-analyst, price-monitor, queue-to-sheets,
+  sync-posted-status, threads-poster, weekly-pipeline）は exit code 78 (EX_CONFIG) を返し続けていた
+- 真因: plistが `/opt/homebrew/bin/node`（Apple Silicon系パス）を指していたが、
+  **Proのnodeは `/usr/local/bin/node`（Intel系パス）にある**。存在しないバイナリを叩いていた
+- 加えてProのデスクトップにあった作業フォルダはiCloud同期の抜け殻（.git も .env.local も無い）で、
+  実体を伴わない。つまりProのジョブは移設以降**一度も稼働していない**
+- **実際に毎朝10:00に稼働している本物の実行環境は MacBook Air の `~/dev/outdoor-affiliate`**
+
+**実施した対処（2026-08-01）**:
+- Proの8ジョブを `launchctl bootout` で停止し、plistを `~/launchagents-backup-20260801/` へ退避（削除ではない）
+- Proのデスクトップにあった抜け殻フォルダを `~/icloud-shell-backup-20260801/` へ退避
+- Proの `~/dev/outdoor-affiliate/.env.local` にAirの完全版キーを配置（予備＋SSH経由の同期経路確保）
+- Pro側で `npm run db:sync -- --dry-run` の動作確認済み（categories 21 / products 377 / articles 117）
+  ※ Pro側でnpmを使う場合は `export PATH=/usr/local/bin:$PATH` が必要
+
+**運用上の結論**:
+- **定時実行の正本は Air の `~/dev/outdoor-affiliate` のみ**。Proは手動実行できる予備環境という位置づけ
+- 作業フォルダをiCloud同期対象（デスクトップ・書類）に置かない。`~/dev` のような同期外の場所に置く
+- 同一ジョブを複数マシンに登録しない（重複実行とデータ競合の温床）
+
+## 2026-08-01 追記: 同期スクリプトに破損データガードを追加
+
+日次パイプラインが `git stash pop` 由来の未解決コンフリクトを検知できず、
+コンフリクトマーカー混入で**JSONとして壊れた articles.json をmainにコミット・push**する
+事故が発生（コミット 95d5592、修復は 86e95de）。既存のガードは `.git/MERGE_HEAD` の
+存在を見ていたが、stash popのコンフリクトはMERGE_HEADを作らないためすり抜けた。
+
+対処: `scripts/sync-to-supabase.js` の冒頭に、同期対象3ファイル（articles/products/categories）の
+**コンフリクトマーカー検知とJSON.parse検証**を追加。破損時は同期せず exit 1 で停止する。
+
