@@ -9,6 +9,18 @@ import ComparisonTable from "./ComparisonTable";
 import RankingList from "./RankingList";
 import YouTubeEmbed from "./YouTubeEmbed";
 import BodyLink from "./BodyLink";
+import { headingId } from "@/lib/toc";
+import type { ReactNode } from "react";
+
+// 見出しレンダラー用: 子要素（strong/リンク等を含みうる）を平文化する。
+// 目次（lib/toc.ts extractToc）と同じ headingId に通すことでアンカー一致を保証
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (node && typeof node === "object" && "props" in node)
+    return textOf((node as { props: { children?: ReactNode } }).props.children);
+  return "";
+}
 
 interface Props {
   content: string;
@@ -100,6 +112,13 @@ export default function ArticleContent({ content, products }: Props) {
               components={{
                 a: ({ href, children }) => (
                   <BodyLink href={href}>{children}</BodyLink>
+                ),
+                // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
+                // 逃げを確保
+                h2: ({ children }) => (
+                  <h2 id={headingId(textOf(children))} className="scroll-mt-24">
+                    {children}
+                  </h2>
                 ),
                 table: ({ children, ...props }) => (
                   <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>

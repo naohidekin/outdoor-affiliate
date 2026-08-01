@@ -21,6 +21,8 @@ import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
 import RakutenDealBadge from "@/components/RakutenDealBadge";
 import { showTopCta } from "@/lib/articleCta";
+import { extractToc } from "@/lib/toc";
+import TableOfContents from "@/components/TableOfContents";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
@@ -381,6 +383,13 @@ export default async function ArticlePage({
               )}
             </>
           )}
+
+          {/* 目次（H2が4本以上の記事のみ。3.4万字級の長文で目的の見出しへ
+              飛べない問題への対策。<details>ベースでJS不要） */}
+          {(() => {
+            const toc = extractToc(article.content);
+            return toc.length >= 4 ? <TableOfContents items={toc} /> : null;
+          })()}
 
           {/* Article body */}
           {contentSummaryOnward ? (
