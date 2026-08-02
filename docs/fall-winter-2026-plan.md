@@ -33,6 +33,12 @@
   楽天のコロナ公式店（item.rakuten.co.jp/corona-official/02351930000/）で普通に買える＝アフィリが効く。
   夏のエース記事で実績のあるコロナ OUTFIELD ブランドの冬版で、「ポータブル電源で石油ファンヒーターを回す」は
   P1エースの目玉になる切り口。products.json への追加（画像・アフィリURL・口コミ）を執筆前にやること
+- **商品追加は `node scripts/add-winter-heating-products.mjs` で実行**（dry-run → `--apply`）。
+  石油1・薪3・ガス2・電気2の計8製品の候補リスト（調査済みスペック・説明文つき）を実装済み。
+  2026-08-01時点で未実行。楽天APIのアクセスキーはIP許可リスト制のため、
+  **自宅Wi-Fiから実行すること**（テザリング・カフェのIPでは CLIENT_IP_NOT_ALLOWED で全滅する）。
+  IPが変わっていたら https://webservice.rakuten.co.jp/ で `curl -s ifconfig.me` の値を登録。
+  追加後は amazonUrl が空なので、記事掲載前にASINを手で入れる
 
 ### P2: キャンプ用電気毛布ランキング（新規）
 - 「電気毛布 キャンプ」「ポータブル電源 電気毛布」はトレンドの中心（500Whクラス電源との組み合わせが定番化。出典: mybest、ポータブル電源ラボ）
