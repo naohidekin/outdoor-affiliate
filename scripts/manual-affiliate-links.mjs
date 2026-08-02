@@ -165,10 +165,6 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
     errors.push(`${id}: products.json に存在しません`);
     continue;
   }
-  if (!allowed.has(id)) {
-    errors.push(`${id}: 対象リスト外です（--all で全件対象にできます）`);
-    continue;
-  }
   // 「URL | 価格」の書式を許可（商品ページを見ている間に価格も更新できる）
   const [rawUrl, rawPrice] = rawValue.split("|").map((v) => (v || "").trim());
   const newPrice = rawPrice ? parseInt(rawPrice.replace(/[^\d]/g, ""), 10) : null;
@@ -178,7 +174,12 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
   }
   const itemUrl = extractItemUrl(rawUrl);
   if (!itemUrl) {
+    // 未記入は対象リスト外でも黙って飛ばす（古いシートを使い回しても止まらない）
     skipped.push(`${id} (${p.name.slice(0, 30)})`);
+    continue;
+  }
+  if (!allowed.has(id)) {
+    errors.push(`${id}: 対象リスト外です（--all で全件対象にできます）`);
     continue;
   }
   // 「楽天に無かった」を記録する書き方。死んだ検索リンクを消す
