@@ -191,10 +191,15 @@ function sanitizeKeyword(s) {
 
 // パラメータは実績のある fix-search-affiliate-links.mjs と同一に揃える
 // （hits=20 / imageFlag などを足すと差分要因が増えるため最小構成）
+// アクセスキーはIP許可リストで縛られており、グローバルIPが変わると
+// CLIENT_IP_NOT_ALLOWED で全滅する。アクセスキーは任意項目なので、
+// 弾かれたら applicationId のみで再試行する（アフィリURLはaffiliateIdで付く）
+let useAccessKey = true;
+
 async function searchRakuten(keyword, attempt = 0) {
   const params = new URLSearchParams({
     applicationId: appId,
-    accessKey,
+    ...(useAccessKey ? { accessKey } : {}),
     affiliateId: RAKUTEN_AFFILIATE_ID,
     keyword: sanitizeKeyword(keyword),
     hits: "10",
@@ -209,8 +214,16 @@ async function searchRakuten(keyword, attempt = 0) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    // 403/429はレート制限の可能性が高い。間隔を空けて1度だけ再試行する
-    if ((res.status === 403 || res.status === 429) && attempt < 1) {
+    // アクセスキーのIP制限で弾かれた → 以降はアクセスキー無しで叩く
+    if (body.includes("CLIENT_IP_NOT_ALLOWED") && useAccessKey) {
+      useAccessKey = false;
+      console.warn(
+        "  アクセスキーがIP制限で拒否されました → applicationIdのみで再試行します"
+      );
+      return searchRakuten(keyword, attempt);
+    }
+    // 429などのレート制限は間隔を空けて1度だけ再試行する
+    if (res.status === 429 && attempt < 1) {
       console.warn(`  API ${res.status} → 20秒待って再試行: ${keyword}`);
       await sleep(20000);
       return searchRakuten(keyword, attempt + 1);
