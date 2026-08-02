@@ -117,6 +117,9 @@ if (INIT) {
     "# 分からない商品は空のまま飛ばして構いません（スキップされます）。",
     "# 貼るURL例: https://item.rakuten.co.jp/shopname/itemcode/",
     "# 楽天で見つからなかった商品は `none` と書いてください（死んだ検索リンクを削除します）。",
+    "# 価格も更新する場合: URL のあとに ` | 12800` のように書きます（任意）。",
+    "# 注意: 登録価格と大きく違う商品は別モデルか並行輸入の可能性があります。",
+    "#       モデル名を最後まで照合し、「日本未発売」「関税負担」表記の店は避けてください。",
     "",
   ];
   for (const id of ids) {
@@ -166,7 +169,14 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
     errors.push(`${id}: 対象リスト外です（--all で全件対象にできます）`);
     continue;
   }
-  const itemUrl = extractItemUrl(rawValue);
+  // 「URL | 価格」の書式を許可（商品ページを見ている間に価格も更新できる）
+  const [rawUrl, rawPrice] = rawValue.split("|").map((v) => (v || "").trim());
+  const newPrice = rawPrice ? parseInt(rawPrice.replace(/[^\d]/g, ""), 10) : null;
+  if (rawPrice && !Number.isFinite(newPrice)) {
+    errors.push(`${id}: 価格が数値として読めません → ${rawPrice}`);
+    continue;
+  }
+  const itemUrl = extractItemUrl(rawUrl);
   if (!itemUrl) {
     skipped.push(`${id} (${p.name.slice(0, 30)})`);
     continue;
@@ -190,14 +200,34 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
     errors.push(`${id}: 楽天の商品ページURLではありません → ${itemUrl.slice(0, 60)}`);
     continue;
   }
-  ok.push({ id, name: p.name, itemUrl, affiliateUrl: buildAffiliateUrl(itemUrl) });
+  // 登録価格と大きく乖離していたら、別モデルや並行輸入品の可能性を警告する
+  // （2026-08-01: スタンレーのクラシックを探して別モデルのアドベンチャーを
+  //   並行輸入店で見つけかけた。価格差は誤選択の一番わかりやすいサイン）
+  let priceWarn = null;
+  const ref = newPrice || p.price;
+  if (p.price > 0 && ref > 0 && (ref > p.price * 1.5 || ref < p.price * 0.5)) {
+    priceWarn = `登録¥${p.price.toLocaleString()} → ¥${ref.toLocaleString()}（別モデル・並行輸入の可能性）`;
+  }
+  ok.push({
+    id,
+    name: p.name,
+    itemUrl,
+    newPrice,
+    priceWarn,
+    affiliateUrl: buildAffiliateUrl(itemUrl),
+  });
 }
 
 console.log(`\n=== 検証結果 ===`);
 console.log(
   `直リンク化: ${ok.length}件 / 楽天に無し: ${notFound.length}件 / 未記入: ${skipped.length}件 / エラー: ${errors.length}件\n`
 );
-for (const o of ok) console.log(`✓ ${o.name.slice(0, 38)}\n    ${o.itemUrl}`);
+for (const o of ok) {
+  console.log(`✓ ${o.name.slice(0, 38)}`);
+  console.log(`    ${o.itemUrl}`);
+  if (o.newPrice) console.log(`    価格を ¥${o.newPrice.toLocaleString()} に更新します`);
+  if (o.priceWarn) console.log(`    ⚠ ${o.priceWarn}`);
+}
 if (notFound.length) {
   console.log(`\n▼ 楽天に無し → 死んだ検索リンクを削除します`);
   for (const n of notFound) {
@@ -237,6 +267,10 @@ const now = new Date().toISOString();
 for (const o of ok) {
   const p = byId.get(o.id);
   p.affiliateUrl = o.affiliateUrl;
+  if (o.newPrice) {
+    p.price = o.newPrice;
+    p.priceUpdatedAt = now;
+  }
   p.updatedAt = now;
 }
 for (const n of notFound) {
