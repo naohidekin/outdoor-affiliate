@@ -42,6 +42,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const USED_SHOP = /2nd STREET|セカンドストリート|ワットマン|リサイクル|中古|質屋/i;
 
+// 本体ではない商品を除外する。安い順で検索するとベースプレート・グランドシート・
+// ゴトク・レンタルなどが上位を占め、相場を大きく誤って推定する（2026-08-01に発生）
+const NOT_MAIN =
+  /レンタル|ベースプレート|グランドシート|インナーシート|ゴトク|ロストル|焼網|焼き網|オプション|パーツ|部品|替え|交換用|収納袋|ケース単品|カバーのみ|専用ケース|マット単品|ポールのみ|ペグのみ|補修/;
+
+// 商品名の主要語（ブランド以外の識別語）が候補にも含まれることを必須にする
+function coreTokens(name) {
+  return name
+    .replace(/[（(].*?[)）]/g, " ")
+    .split(/[\s　/／・]+/)
+    .filter((t) => [...t].length >= 2)
+    .slice(0, 4);
+}
+function looksSameProduct(productName, itemName) {
+  const toks = coreTokens(productName);
+  if (toks.length === 0) return true;
+  const hit = toks.filter((t) => itemName.includes(t)).length;
+  return hit >= Math.min(2, toks.length); // 主要語が2つ以上一致
+}
+
 function sanitize(s) {
   return s
     .replace(/[×/＋+|｜]/g, " ")
@@ -58,7 +78,7 @@ async function search(keyword) {
     affiliateId: AFFILIATE_ID,
     keyword: sanitize(keyword),
     hits: "20",
-    sort: "+itemPrice", // 安い順。相場の下限を掴む
+    sort: "standard", // 検索妥当性順。安い順にすると付属品・部品が上位に来る
     format: "json",
     formatVersion: "2",
   });
@@ -78,7 +98,9 @@ async function search(keyword) {
     return [];
   }
   const data = await res.json();
-  return (data.Items || []).filter((i) => !USED_SHOP.test(i.shopName || ""));
+  return (data.Items || []).filter(
+    (i) => !USED_SHOP.test(i.shopName || "") && !NOT_MAIN.test(i.itemName || "")
+  );
 }
 
 console.log("\n=== 重複商品の現在価格を確認（products.jsonは変更しません）===\n");
@@ -88,7 +110,8 @@ for (const ids of DUP_GROUPS) {
   if (list.length < 2) continue;
   const name = list[0].name;
   await sleep(1500);
-  const items = await search(name);
+  const raw = await search(name);
+  const items = raw.filter((i) => looksSameProduct(name, i.itemName || ""));
   const prices = items.map((i) => i.itemPrice).filter((v) => v > 0);
 
   console.log(`■ ${name}`);
@@ -96,7 +119,9 @@ for (const ids of DUP_GROUPS) {
     console.log(`   登録: ${p.id.padEnd(26)} ¥${(p.price || 0).toLocaleString()}`);
   }
   if (prices.length === 0) {
-    console.log("   楽天: 該当なし（型番違い・廃番の可能性）\n");
+    console.log(
+      `   楽天: 本体と判定できる商品なし（候補${raw.length}件は付属品・別物）。手動確認が必要です\n`
+    );
     continue;
   }
   // 中央値を実勢の目安にする（最安は転売・訳あり品が混じるため）
