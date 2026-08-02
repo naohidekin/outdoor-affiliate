@@ -116,6 +116,7 @@ if (INIT) {
     "# 各行の検索URLをブラウザで開き、正しい商品ページのURLを `= ` の後ろに貼ってください。",
     "# 分からない商品は空のまま飛ばして構いません（スキップされます）。",
     "# 貼るURL例: https://item.rakuten.co.jp/shopname/itemcode/",
+    "# 楽天で見つからなかった商品は `none` と書いてください（死んだ検索リンクを削除します）。",
     "",
   ];
   for (const id of ids) {
@@ -148,6 +149,7 @@ const allowed = new Set(targetIds());
 const ok = [];
 const errors = [];
 const skipped = [];
+const notFound = []; // 楽天に商品が存在しなかったもの（死にリンクを消す）
 
 for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
   const t = line.trim();
@@ -169,6 +171,17 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
     skipped.push(`${id} (${p.name.slice(0, 30)})`);
     continue;
   }
+  // 「楽天に無かった」を記録する書き方。死んだ検索リンクを消す
+  if (/^(none|なし|no|-|x)$/i.test(itemUrl)) {
+    const yahooIsSearch = (p.yahooUrl || "").includes("/search");
+    notFound.push({
+      id,
+      name: p.name,
+      // 楽天を消したあとに確実な購入導線が残るか
+      hasRoute: !!p.amazonUrl || (!!p.yahooUrl && !yahooIsSearch),
+    });
+    continue;
+  }
   if (itemUrl.includes("search.rakuten")) {
     errors.push(`${id}: 検索URLが貼られています。商品ページのURLにしてください`);
     continue;
@@ -181,8 +194,23 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
 }
 
 console.log(`\n=== 検証結果 ===`);
-console.log(`記入あり: ${ok.length}件 / 未記入: ${skipped.length}件 / エラー: ${errors.length}件\n`);
+console.log(
+  `直リンク化: ${ok.length}件 / 楽天に無し: ${notFound.length}件 / 未記入: ${skipped.length}件 / エラー: ${errors.length}件\n`
+);
 for (const o of ok) console.log(`✓ ${o.name.slice(0, 38)}\n    ${o.itemUrl}`);
+if (notFound.length) {
+  console.log(`\n▼ 楽天に無し → 死んだ検索リンクを削除します`);
+  for (const n of notFound) {
+    console.log(`  − ${n.name.slice(0, 38)}${n.hasRoute ? "" : "  ← 購入導線が無くなります（記事側の対応が必要）"}`);
+  }
+  const orphan = notFound.filter((n) => !n.hasRoute);
+  if (orphan.length) {
+    console.log(
+      `\n  ※ ${orphan.length}件は楽天・Amazon・Yahoo!のどれにも確実な購入先がありません。\n` +
+        `     コロナ PA-F85A と同じく「入手方法」を記事に書くか、掲載商品の差し替えを検討してください。`
+    );
+  }
+}
 if (errors.length) {
   console.log(`\n▼ エラー（修正してください）`);
   for (const e of errors) console.log(`  ✗ ${e}`);
@@ -200,7 +228,7 @@ if (errors.length > 0) {
   console.error(`\nエラーがあるため反映を中止しました。上の行を直してから再実行してください。`);
   process.exit(1);
 }
-if (ok.length === 0) {
+if (ok.length === 0 && notFound.length === 0) {
   console.error(`\n記入がありません。`);
   process.exit(1);
 }
@@ -211,6 +239,13 @@ for (const o of ok) {
   p.affiliateUrl = o.affiliateUrl;
   p.updatedAt = now;
 }
+for (const n of notFound) {
+  const p = byId.get(n.id);
+  p.affiliateUrl = ""; // 検索ページ行きの死にリンクを消す（買えない先へ送らない）
+  p.updatedAt = now;
+}
 fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
-console.log(`\nproducts.json に ${ok.length}件を反映しました。`);
+console.log(
+  `\nproducts.json 反映: 直リンク化 ${ok.length}件 / 死にリンク削除 ${notFound.length}件`
+);
 console.log("次: git diff data/products.json で確認 → コミット → sync（--no-pull）");
