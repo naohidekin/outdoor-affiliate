@@ -31,8 +31,15 @@ const ROOT = path.join(__dirname, "..");
 const PRODUCTS = path.join(ROOT, "data", "products.json");
 const REPORT = path.join(ROOT, "scratch", "winter-heating-products.json");
 
+// 楽天には2系統のエンドポイントがある。
+// - ichibams(openapi): accessKey必須。アクセスキーにIP許可リストが紐づくため
+//   外出先などIPが変わる環境では CLIENT_IP_NOT_ALLOWED で全滅する
+// - 従来の app.rakuten.co.jp: applicationId のみ。IP制限なし
+// 既定はichibamsを使い、IP拒否されたら従来エンドポイントへ自動で切り替える
 const RAKUTEN_API_URL =
   "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const RAKUTEN_API_URL_LEGACY =
+  "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
 const RAKUTEN_AFFILIATE_ID =
   process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
@@ -191,22 +198,22 @@ function sanitizeKeyword(s) {
 
 // パラメータは実績のある fix-search-affiliate-links.mjs と同一に揃える
 // （hits=20 / imageFlag などを足すと差分要因が増えるため最小構成）
-// アクセスキーはIP許可リストで縛られており、グローバルIPが変わると
-// CLIENT_IP_NOT_ALLOWED で全滅する。アクセスキーは任意項目なので、
-// 弾かれたら applicationId のみで再試行する（アフィリURLはaffiliateIdで付く）
-let useAccessKey = true;
+let useLegacy = false; // IP拒否を検出したら従来エンドポイントへ切り替える
 
 async function searchRakuten(keyword, attempt = 0) {
   const params = new URLSearchParams({
     applicationId: appId,
-    ...(useAccessKey ? { accessKey } : {}),
+    // 従来エンドポイントは accessKey を受け付けない（付けると400）
+    ...(useLegacy ? {} : { accessKey }),
     affiliateId: RAKUTEN_AFFILIATE_ID,
     keyword: sanitizeKeyword(keyword),
     hits: "10",
     sort: "standard",
+    format: "json",
     formatVersion: "2",
   });
-  const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
+  const url = useLegacy ? RAKUTEN_API_URL_LEGACY : RAKUTEN_API_URL;
+  const res = await fetch(`${url}?${params}`, {
     headers: {
       Origin: "https://camp-gear-lab.com",
       Referer: "https://camp-gear-lab.com/",
@@ -214,11 +221,11 @@ async function searchRakuten(keyword, attempt = 0) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    // アクセスキーのIP制限で弾かれた → 以降はアクセスキー無しで叩く
-    if (body.includes("CLIENT_IP_NOT_ALLOWED") && useAccessKey) {
-      useAccessKey = false;
+    // アクセスキーのIP制限で弾かれた → IP制限のない従来エンドポイントへ
+    if (body.includes("CLIENT_IP_NOT_ALLOWED") && !useLegacy) {
+      useLegacy = true;
       console.warn(
-        "  アクセスキーがIP制限で拒否されました → applicationIdのみで再試行します"
+        "  アクセスキーがIP制限で拒否されました（外出先のIPなど）\n  → IP制限のない従来エンドポイント(app.rakuten.co.jp)へ切り替えます"
       );
       return searchRakuten(keyword, attempt);
     }
