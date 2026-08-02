@@ -20,6 +20,13 @@ INDEXING_CREDENTIALS={"type":"service_account",...}
 サービスアカウントは GSC で **「所有者」権限**を持っている必要がある。
 権限不足の場合は https://search.google.com/search-console/users から追加。
 
+> **やってはいけないこと**: `export $(grep '^INDEXING_CREDENTIALS' .env.local | xargs)`
+> のような読み込みは実行しない。値がJSON（空白を含む）のため `xargs` が分解し、
+> **bashのエラーメッセージとして秘密鍵の全文が画面に出力される**（2026-08-01に発生し、
+> サービスアカウント鍵の再発行が必要になった）。
+> 各スクリプトは自前で `.env.local` を読むので、環境変数を手で export する必要はない。
+> そのまま `node scripts/request-indexing.js ...` を実行すればよい。
+
 ## 通常の運用フロー
 
 ### 新記事公開後
