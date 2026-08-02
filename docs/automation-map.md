@@ -241,3 +241,26 @@ node -e 'const a=require("./data/articles.json");console.log("記事数",a.lengt
   "／公開",a.filter(x=>x.status==="published").length)'
 git stash drop   # 欠落がなければ捨てる
 ```
+
+### 定時パイプラインの自動コミット（2026-08-01 修正）
+
+`article-orchestrate.js`（日次）と `orchestrate.js`（週次）は実行後に
+`data/` を自動コミット＆プッシュする。以前は commit 直後に push していたため、
+リモートが先に進んでいると push が弾かれ、**ローカルにコミットだけが取り残された**。
+翌日以降 `git pull` が divergent branches で止まり、手作業の復旧が必要になっていた。
+
+現在は `commit → git pull --rebase → push` の順に修正済み。競合時は
+`rebase --abort` して中断しエラーを返す（データJSONを機械的に片側へ倒すと
+記事・商品が丸ごと消えるため、人が中身を見て判断する）。
+
+**パイプラインが「rebase失敗」で終了していたら**、Mac上で状況を確認して手動で解決する:
+
+```bash
+cd ~/dev/outdoor-affiliate
+git log --oneline origin/main..HEAD   # ローカルにだけあるコミット
+git log --oneline HEAD..origin/main   # リモートにだけあるコミット
+git status --short
+```
+
+そのうえで `git pull --rebase` を実行し、競合したファイルは中身を見て解決する。
+`git checkout --ours/--theirs` は使わない（JSONが片側に倒れてデータが消える）。
