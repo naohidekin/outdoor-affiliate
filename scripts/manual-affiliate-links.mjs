@@ -87,6 +87,25 @@ function isItemUrl(url) {
     : false;
 }
 
+// 商品ページURLから広告・計測パラメータを取り除く。
+// ブラウザからコピーしたURLには gclid / scid=af_pc_etc / icm_cid などの
+// 他社アフィリエイト・広告の識別子が付いていることがあり、そのまま
+// アフィリリンクに埋めると成果が他社に帰属したり無効化される恐れがある。
+// 楽天の商品ページはパス（/shop/itemcode/）だけで一意に開けるのでクエリは全て捨てる
+function stripTracking(url) {
+  try {
+    const u = new URL(url);
+    if (/(^|\.)rakuten\.co\.jp$/.test(u.hostname)) {
+      u.search = "";
+      u.hash = "";
+      return u.toString();
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 // アフィリエイトURLが貼られた場合は中の pc= を取り出す
 function extractItemUrl(raw) {
   const v = raw.trim();
@@ -94,12 +113,12 @@ function extractItemUrl(raw) {
   const m = v.match(/[?&]pc=([^&]+)/);
   if (m) {
     try {
-      return decodeURIComponent(m[1]);
+      return stripTracking(decodeURIComponent(m[1]));
     } catch {
       return m[1];
     }
   }
-  return v;
+  return stripTracking(v);
 }
 
 function buildAffiliateUrl(itemUrl) {
