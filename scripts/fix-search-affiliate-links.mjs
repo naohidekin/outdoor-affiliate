@@ -134,7 +134,10 @@ async function searchRakuten(keyword) {
     const body = await res.text().catch(() => "");
     if (body.includes("CLIENT_IP_NOT_ALLOWED") && !useLegacy) {
       useLegacy = true;
-      console.warn("  アクセスキーがIP制限で拒否 → 従来エンドポイントへ切り替えます");
+      console.warn(
+        "  アクセスキーがIP制限で拒否（CLIENT_IP_NOT_ALLOWED）\n" +
+          "  → https://webservice.rakuten.co.jp/ で現在のグローバルIP（curl -s ifconfig.me）を許可リストに追加してください"
+      );
       return searchRakuten(keyword);
     }
     console.warn(`  API ${res.status}: ${keyword.slice(0, 30)}`);

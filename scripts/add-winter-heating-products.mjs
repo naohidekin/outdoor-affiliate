@@ -230,7 +230,10 @@ async function searchRakuten(keyword, attempt = 0) {
     if (body.includes("CLIENT_IP_NOT_ALLOWED") && !useLegacy) {
       useLegacy = true;
       console.warn(
-        "  アクセスキーがIP制限で拒否されました（外出先のIPなど）\n  → IP制限のない従来エンドポイント(app.rakuten.co.jp)へ切り替えます"
+        "  アクセスキーがIP制限で拒否されました（CLIENT_IP_NOT_ALLOWED）\n" +
+          "  → 楽天ウェブサービスの管理画面で、現在のグローバルIPを許可リストに追加してください\n" +
+          "     現在のIP: curl -s ifconfig.me で確認 / 登録先: https://webservice.rakuten.co.jp/\n" +
+          "  ※ 従来エンドポイントも試しますが、RAKUTEN_APP_IDがichibams用の場合は使えません"
       );
       return searchRakuten(keyword, attempt);
     }
