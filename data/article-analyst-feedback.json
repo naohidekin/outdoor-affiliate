@@ -1,53 +1,60 @@
 {
-  "updatedAt": "2026-07-31T10:00:09+09:00",
+  "updatedAt": "2026-08-02T10:00:13+09:00",
   "period": "7d",
   "topArticles": [
     {
       "slug": "portable-cooler-fan-guide",
       "categoryId": "fan",
-      "pv7d": 886,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camp-fan-ranking",
-      "categoryId": "fan",
-      "pv7d": 65,
+      "pv7d": 924,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "landlock-vs-landnest-shelter",
       "categoryId": "tent",
-      "pv7d": 64,
+      "pv7d": 69,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "family-tent-ranking",
-      "categoryId": "tent",
-      "pv7d": 42,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "water-jug-ranking",
-      "categoryId": "kitchen",
-      "pv7d": 41,
+      "slug": "camp-fan-ranking",
+      "categoryId": "fan",
+      "pv7d": 68,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "backpack-ranking",
       "categoryId": "backpack",
-      "pv7d": 35,
+      "pv7d": 38,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "family-tent-ranking",
+      "categoryId": "tent",
+      "pv7d": 34,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "camp-insect-repellent-guide",
+      "categoryId": "insect-repellent",
+      "pv7d": 33,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "cooler-box-ranking",
       "categoryId": "cooler",
-      "pv7d": 31,
+      "pv7d": 32,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "water-jug-ranking",
+      "categoryId": "kitchen",
+      "pv7d": 30,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -59,44 +66,23 @@
       "ctr": 0
     },
     {
-      "slug": "camp-insect-repellent-guide",
-      "categoryId": "insect-repellent",
-      "pv7d": 25,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
       "slug": "led-tent-light-ranking",
       "categoryId": "light",
-      "pv7d": 24,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "insect-repellent-spray-ranking",
-      "categoryId": "insect-repellent",
-      "pv7d": 20,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "snow-peak-amenity-dome-l-10year-review",
-      "categoryId": "tent",
-      "pv7d": 19,
+      "pv7d": 27,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "growler-comparison-summer-ice",
       "categoryId": "cooler",
-      "pv7d": 19,
+      "pv7d": 20,
       "clicks7d": 0,
       "ctr": 0
     },
     {
-      "slug": "compact-chair-ranking",
-      "categoryId": "chair",
-      "pv7d": 18,
+      "slug": "snow-peak-landlock-x-review",
+      "categoryId": "tent",
+      "pv7d": 20,
       "clicks7d": 0,
       "ctr": 0
     },
@@ -108,6 +94,27 @@
       "ctr": 0
     },
     {
+      "slug": "camp-pillow-ranking",
+      "categoryId": "sleeping-bag",
+      "pv7d": 16,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "snow-peak-amenity-dome-l-10year-review",
+      "categoryId": "tent",
+      "pv7d": 16,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "compact-chair-ranking",
+      "categoryId": "chair",
+      "pv7d": 16,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
       "slug": "landnest-shelter-vs-2room-comparison",
       "categoryId": "tent",
       "pv7d": 16,
@@ -115,29 +122,22 @@
       "ctr": 0
     },
     {
-      "slug": "camp-pillow-ranking",
-      "categoryId": "sleeping-bag",
-      "pv7d": 15,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "kids-sleeping-bag-ranking",
-      "categoryId": "sleeping-bag",
-      "pv7d": 13,
-      "clicks7d": 0,
-      "ctr": 0
-    },
-    {
-      "slug": "camping-beginner-gear-checklist",
-      "categoryId": "tent",
-      "pv7d": 13,
+      "slug": "insect-repellent-spray-ranking",
+      "categoryId": "insect-repellent",
+      "pv7d": 14,
       "clicks7d": 0,
       "ctr": 0
     },
     {
       "slug": "budget-sleeping-bag-ranking",
       "categoryId": "sleeping-bag",
+      "pv7d": 14,
+      "clicks7d": 0,
+      "ctr": 0
+    },
+    {
+      "slug": "tarp-setup-guide-for-beginners",
+      "categoryId": "tarp",
       "pv7d": 13,
       "clicks7d": 0,
       "ctr": 0
@@ -146,83 +146,83 @@
   "categoryTrends": [
     {
       "categoryId": "fan",
-      "pv7d": 951,
+      "pv7d": 992,
       "clicks7d": 0,
-      "searchSessions": 828,
+      "searchSessions": 875,
       "trend": "active"
     },
     {
       "categoryId": "tent",
-      "pv7d": 172,
+      "pv7d": 173,
       "clicks7d": 0,
-      "searchSessions": 170,
+      "searchSessions": 188,
       "trend": "active"
     },
     {
       "categoryId": "cooler",
-      "pv7d": 50,
+      "pv7d": 52,
       "clicks7d": 0,
       "searchSessions": 49,
       "trend": "active"
     },
     {
       "categoryId": "insect-repellent",
-      "pv7d": 45,
+      "pv7d": 47,
       "clicks7d": 0,
-      "searchSessions": 39,
-      "trend": "active"
-    },
-    {
-      "categoryId": "kitchen",
-      "pv7d": 41,
-      "clicks7d": 0,
-      "searchSessions": 48,
-      "trend": "active"
-    },
-    {
-      "categoryId": "sleeping-bag",
-      "pv7d": 41,
-      "clicks7d": 0,
-      "searchSessions": 45,
-      "trend": "active"
-    },
-    {
-      "categoryId": "backpack",
-      "pv7d": 35,
-      "clicks7d": 0,
-      "searchSessions": 26,
+      "searchSessions": 38,
       "trend": "active"
     },
     {
       "categoryId": "tarp",
+      "pv7d": 43,
+      "clicks7d": 0,
+      "searchSessions": 51,
+      "trend": "active"
+    },
+    {
+      "categoryId": "backpack",
+      "pv7d": 38,
+      "clicks7d": 0,
+      "searchSessions": 27,
+      "trend": "active"
+    },
+    {
+      "categoryId": "kitchen",
       "pv7d": 30,
       "clicks7d": 0,
-      "searchSessions": 46,
+      "searchSessions": 38,
+      "trend": "active"
+    },
+    {
+      "categoryId": "sleeping-bag",
+      "pv7d": 30,
+      "clicks7d": 0,
+      "searchSessions": 41,
       "trend": "active"
     },
     {
       "categoryId": "light",
-      "pv7d": 24,
+      "pv7d": 27,
       "clicks7d": 0,
-      "searchSessions": 28,
+      "searchSessions": 33,
       "trend": "active"
     },
     {
       "categoryId": "chair",
-      "pv7d": 18,
+      "pv7d": 16,
       "clicks7d": 0,
-      "searchSessions": 22,
+      "searchSessions": 18,
       "trend": "active"
     }
   ],
   "effectivePatterns": [
-    "{\"rule\":\"年号明記による鮮度アピール\",\"description\":\"タイトルに【2026年】【2026年版】などの年号を含めることで、最新情報であることを示し、検索ユーザーの信頼とクリック率を高める\",\"evidence\":\"上位5記事すべてに年号表記が含まれている\"}",
-    "{\"rule\":\"具体的な数字で選択肢を明示する\",\"description\":\"「おすすめ7選」「おすすめ5選」のように選定数を数字で示すことで、情報量の見通しが立ちやすくなりCTRが向上する\",\"evidence\":\"PV上位の記事の多くが選定数を数字でタイトルに明記している\"}",
-    "{\"rule\":\"ユーザーの利用シーンや悩みをタイトルに盛り込む\",\"description\":\"「真夏キャンプを涼しくする」「テント内が涼しくなる」「家族4〜6人で快適に」など、読者が抱える具体的な状況・課題を訴求することで共感とクリックを誘発する\",\"evidence\":\"最高PV記事(886)は「真夏キャンプを涼しくする方法」と悩みを直接表現している\"}",
-    "{\"rule\":\"比較・徹底比較というキーワードで差別化を図る\",\"description\":\"「比較」「徹底比較」をタイトルに入れることで、複数商品を客観的に評価するコンテンツであることを示し、購買検討段階のユーザーを集めやすくなる\",\"evidence\":\"上位5記事中4記事が「比較」をタイトルに含んでいる\"}",
-    "{\"rule\":\"評価軸・選定基準をタイトルで先出しする\",\"description\":\"「保冷力と容量で比較」「充電式」「ポータブル」など、何の基準で選んでいるかをタイトルに明示することで、ニーズが合致するユーザーの検索意図とマッチしやすくなる\",\"evidence\":\"ウォータージャグ記事は「保冷力と容量」、扇風機記事は「充電式」と具体的なスペック軸を明示している\"}"
+    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年】【2026年版】など年号を明記する。情報の鮮度を示し検索意図に合致するため、全上位記事で共通して使われている。\"}",
+    "{\"rule\":\"比較・対決フォーマットルール\",\"description\":\"「比較」「vs」「どれ？」など複数製品を並べて評価する構造をタイトルに含める。読者の選択コストを下げる訴求が高PVに直結している。\"}",
+    "{\"rule\":\"具体的な数字・スペック明示ルール\",\"description\":\"「7選」「5選」「4〜6人用」「日帰り〜小屋泊」など具体的な数値や条件をタイトルに入れる。ターゲット読者が自分ごととして捉えやすくなる。\"}",
+    "{\"rule\":\"ユースケース・シーン訴求ルール\",\"description\":\"「テント内が涼しくなる」「真夏キャンプを涼しくする」「日帰り〜小屋泊」など読者の具体的な利用シーンをタイトルに盛り込む。検索クエリとの一致率が上がりCTRが向上する。\"}",
+    "{\"rule\":\"権威・本音ワードルール\",\"description\":\"「徹底比較」「本音で比較」「おすすめ」など信頼性・客観性を示す言葉を添える。読者の不安を解消しクリックを促す効果がある。\"}"
   ],
   "suggestions": [
-    "来月の季節カテゴリ: cooler, light, tarp, insect-repellent — 準備推奨"
+    "来月の季節カテゴリ: tent, firepit, sleeping-bag, insect-repellent — 準備推奨"
   ]
 }
