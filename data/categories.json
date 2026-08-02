@@ -22,9 +22,9 @@
   },
   {
     "id": "sleeping-bag",
-    "name": "シュラフ・寝袋",
+    "name": "シュラフ・寝袋・コット",
     "slug": "sleeping-bag",
-    "description": "快適な睡眠のためのシュラフ選び",
+    "description": "快適な睡眠のためのシュラフ・マット・コット選び",
     "order": 3
   },
   {
