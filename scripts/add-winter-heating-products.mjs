@@ -84,6 +84,8 @@ const CANDIDATES = [
     brand: "Winnerwell",
     keyword: "Winnerwell ウィンナーウェル Nomad View 薪ストーブ M",
     mustMatch: ["Nomad", "ノマド"],
+    // 4点セット等のパッケージ品は本体価格と乖離するため除外
+    exclude: /点セット|スペシャルパッケージ|セット販売/,
     specs: {
       素材: "ステンレス（SUS304）",
       窓: "耐熱ガラス窓付き",
@@ -99,6 +101,8 @@ const CANDIDATES = [
     brand: "Mt.SUMI",
     keyword: "Mt.SUMI マウントスミ ミドラ 薪ストーブ",
     mustMatch: ["ミドラ", "MIDORA", "Midora"],
+    // 「ミドラ」はアクセサリ名にも含まれるため、本体を示す語を必須にする
+    require: /薪ストーブ|ストーブ本体|WOOD STOVE/i,
     specs: {
       窓: "正面＋両サイドの3面大型ガラス",
       燃焼: "二次燃焼構造",
@@ -160,6 +164,8 @@ const CANDIDATES = [
     brand: "コイズミ",
     keyword: "コイズミ 電気敷毛布 洗える",
     mustMatch: ["コイズミ", "KOIZUMI"],
+    require: /敷き?毛布|敷パッド/,
+    exclude: /着る|こたつ|ケット|掛け毛布専用/,
     specs: {
       消費電力: "約40W",
       形式: "敷きタイプ",
@@ -175,6 +181,9 @@ const CANDIDATES = [
     brand: "山善",
     keyword: "山善 電気毛布 敷き 洗える",
     mustMatch: ["山善", "YAMAZEN"],
+    // 「着る電気毛布」は敷きタイプではない別ジャンル
+    require: /敷き?毛布|敷パッド/,
+    exclude: /着る|こたつ|ケット|ひざ掛け/,
     specs: {
       消費電力: "約40〜55W",
       形式: "敷きタイプ",
@@ -188,6 +197,13 @@ const CANDIDATES = [
 
 const USED_SHOP_PATTERNS =
   /2nd STREET|セカンドストリート|ワットマン|リサイクル|中古|質屋|ブックオフ|BOOKOFF|トレファク|セカスト/i;
+
+// 本体ではない商品（付属品・オプション・セット売り）を除外する。
+// ブランド名や短い型番だけでマッチさせると、アクセサリを本体として登録して
+// しまう（2026-08-01: Mt.SUMI「ミドラ」で「ストーブ用ピザストーン」¥4,400を
+// 拾いかけた）。価格も本体と桁違いになるため実害が大きい
+const NOT_MAIN_PATTERNS =
+  /ピザストーン|ゴトク|ロストル|焼網|焼き網|ベースプレート|グランドシート|オプション|パーツ|部品|替え|交換用|補修|収納袋|専用ケース|カバーのみ|煙突のみ|延長|スペーサー|レンタル|ステッカー|専用バッグ/;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -257,6 +273,10 @@ function pickBest(cand, items) {
     items
       .filter((it) => !USED_SHOP_PATTERNS.test(it.shopName || ""))
       .filter((it) => it.affiliateUrl && it.itemPrice > 0)
+      // 付属品・セット品・別ジャンルを除外する
+      .filter((it) => !NOT_MAIN_PATTERNS.test(it.itemName || ""))
+      .filter((it) => !cand.exclude || !cand.exclude.test(it.itemName || ""))
+      .filter((it) => !cand.require || cand.require.test(it.itemName || ""))
       // mustMatchのどれかが商品名に含まれることを必須にする
       .find((it) =>
         cand.mustMatch.some((m) => norm(it.itemName).includes(norm(m)))
@@ -303,9 +323,16 @@ for (const cand of CANDIDATES) {
     createdAt: now,
     updatedAt: now,
   };
-  added.push({ entry, source: { itemName: best.itemName, shop: best.shopName } });
+  const priceCaveat = /在庫処分|訳あり|アウトレット|数量限定|タイムセール/.test(
+    best.itemName || ""
+  );
+  added.push({
+    entry,
+    priceCaveat,
+    source: { itemName: best.itemName, shop: best.shopName },
+  });
   console.log(
-    `✓ ${cand.name}\n    ¥${best.itemPrice.toLocaleString()} / ${best.shopName} / ★${best.reviewAverage || "-"}（${best.reviewCount || 0}件）\n    ${best.itemName.slice(0, 60)}`
+    `✓ ${cand.name}\n    ¥${best.itemPrice.toLocaleString()} / ${best.shopName} / ★${best.reviewAverage || "-"}（${best.reviewCount || 0}件）\n    ${best.itemName.slice(0, 60)}${priceCaveat ? "\n    ⚠ 在庫処分・訳あり等の一時価格の可能性。通常価格を確認してください" : ""}`
   );
   if (APPLY) products.push(entry);
 }
