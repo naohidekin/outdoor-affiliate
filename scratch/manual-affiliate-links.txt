@@ -95,10 +95,6 @@ sb-budget-004 =
 #   検索: https://search.rakuten.co.jp/search/mall/TokyoCamp%20%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92%20%E4%BC%B8%E7%B8%AE%E5%BC%8F%20%E5%A4%A9%E7%84%B6%E6%9C%A8%20%E3%82%B1%E3%83%BC%E3%82%B9%E4%BB%98%E3%81%8D/
 fire-blower-tokyocamp = 
 
-# スタンレー クラシックアウトドアウォータージャグ 7.5L（¥10,780）
-#   検索: https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC%20%E3%82%AF%E3%83%A9%E3%82%B7%E3%83%83%E3%82%AF%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BF%E3%83%BC%E3%82%B8%E3%83%A3%E3%82%B0%207.5L/
-stanley-water-jug-7.5l = 
-
 # カリマー リッジ30 Medium（¥31,900）
 #   検索: https://search.rakuten.co.jp/search/mall/karrimor%20%E3%82%AB%E3%83%AA%E3%83%9E%E3%83%BC%20%E3%83%AA%E3%83%83%E3%82%B830%20Medium/
 bp-004 = 

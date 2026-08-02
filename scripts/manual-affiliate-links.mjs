@@ -52,7 +52,7 @@ const PRIORITY_IDS = [
   "tent-duo-004", "tent-duo-002", "table-002", "fp-001", "cooler-005",
   "rw-004", "growler-003", "pillow-nemo-fillo-elite", "hammock-unigear",
   "knife-003", "sierra-cup-belmont", "sb-budget-004",
-  "fire-blower-tokyocamp", "stanley-water-jug-7.5l", "bp-004", "cooker-001",
+  "fire-blower-tokyocamp", "bp-004", "cooker-001",
 ];
 
 const APPLY = process.argv.includes("--apply");
