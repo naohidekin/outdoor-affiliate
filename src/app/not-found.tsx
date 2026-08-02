@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { getCategories } from "@/lib/db";
+import { getPublicCategories } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export default async function NotFound() {
-  const categories = await getCategories();
+  const categories = await getPublicCategories();
 
   return (
     <>

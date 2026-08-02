@@ -151,6 +151,20 @@ export async function getCategories(): Promise<Category[]> {
   return [...sceneCats, ...supaCats].sort((a, b) => a.order - b.order);
 }
 
+// 公開面（ヘッダー・トップ・sitemap）に出すカテゴリ。
+// 公開記事が1本も無いカテゴリはページとして中身が無く、出すと薄いページになる。
+// 記事より先にカテゴリを用意する運用（例: 冬の暖房エース記事を書く前に
+// heaterカテゴリを作る）を安全にするため、公開面では記事数0を落とす。
+// 管理画面は getCategories() を使い、全カテゴリを扱う
+export async function getPublicCategories(): Promise<Category[]> {
+  const [categories, articles] = await Promise.all([
+    getCategories(),
+    getPublishedArticlesList(),
+  ]);
+  const used = new Set(articles.map((a) => a.categoryId));
+  return categories.filter((c) => used.has(c.id));
+}
+
 export async function getCategoryBySlug(
   slug: string
 ): Promise<Category | undefined> {

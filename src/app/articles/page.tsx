@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { toJsonLd } from "@/lib/jsonld";
-import { getCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
+import { getPublicCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleArchive from "@/components/ArticleArchive";
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function ArticlesPage() {
   const [categories, articles] = await Promise.all([
-    getCategories(),
+    getPublicCategories(),
     getPublishedArticlesList(),
   ]);
 

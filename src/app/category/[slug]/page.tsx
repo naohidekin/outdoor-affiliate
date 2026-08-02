@@ -3,7 +3,7 @@ import { toJsonLd } from "@/lib/jsonld";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  getCategories,
+  getPublicCategories,
   getCategoryBySlug,
   getArticlesByCategory,
   getProductsByIds,
@@ -79,9 +79,12 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const [categories, articles] = await Promise.all([
-    getCategories(),
+    getPublicCategories(),
     getArticlesByCategory(category.id),
   ]);
+  // 公開記事が無いカテゴリは表示するものが無い。薄いページを配信・
+  // インデックスさせないため404にする（記事が入れば自動的に復活する）
+  if (articles.length === 0) notFound();
 
   const allProductIds = [...new Set(articles.flatMap((a) => a.productIds))];
   const allProducts = allProductIds.length > 0

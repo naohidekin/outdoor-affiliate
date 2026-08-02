@@ -4,7 +4,7 @@ import Link from "next/link";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import {
-  getCategories,
+  getPublicCategories,
   getPublishedArticlesList,
   getArticleBySlug,
   getProductsByIds,
@@ -98,7 +98,7 @@ export default async function ArticlePage({
 
   const [categories, category, products, sameCategoryArticles, allArticles] =
     await Promise.all([
-      getCategories(),
+      getPublicCategories(),
       getCategoryById(article.categoryId),
       getProductsByIds(article.productIds),
       getArticlesByCategory(article.categoryId),

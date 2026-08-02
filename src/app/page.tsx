@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { toJsonLd } from "@/lib/jsonld";
 import Image from "next/image";
 import Link from "next/link";
-import { getCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
+import { getPublicCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const [categories, articles] = await Promise.all([
-    getCategories(),
+    getPublicCategories(),
     getPublishedArticlesList(),
   ]);
 
