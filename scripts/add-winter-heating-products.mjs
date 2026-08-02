@@ -189,15 +189,16 @@ function sanitizeKeyword(s) {
     .slice(0, 120);
 }
 
-async function searchRakuten(keyword) {
+// パラメータは実績のある fix-search-affiliate-links.mjs と同一に揃える
+// （hits=20 / imageFlag などを足すと差分要因が増えるため最小構成）
+async function searchRakuten(keyword, attempt = 0) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
     affiliateId: RAKUTEN_AFFILIATE_ID,
     keyword: sanitizeKeyword(keyword),
-    hits: "20",
+    hits: "10",
     sort: "standard",
-    imageFlag: "1",
     formatVersion: "2",
   });
   const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
@@ -207,7 +208,15 @@ async function searchRakuten(keyword) {
     },
   });
   if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    // 403/429はレート制限の可能性が高い。間隔を空けて1度だけ再試行する
+    if ((res.status === 403 || res.status === 429) && attempt < 1) {
+      console.warn(`  API ${res.status} → 20秒待って再試行: ${keyword}`);
+      await sleep(20000);
+      return searchRakuten(keyword, attempt + 1);
+    }
     console.warn(`  API ${res.status}: ${keyword}`);
+    if (body) console.warn(`    応答: ${body.slice(0, 300)}`);
     return [];
   }
   const data = await res.json();
@@ -242,7 +251,7 @@ for (const cand of CANDIDATES) {
     console.log(`− 既存のためスキップ: ${cand.name}`);
     continue;
   }
-  await sleep(1100);
+  await sleep(2000); // 楽天APIのレート制限に余裕を持たせる
   const items = await searchRakuten(cand.keyword);
   const best = pickBest(cand, items);
   if (!best) {
