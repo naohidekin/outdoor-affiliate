@@ -25,6 +25,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+
+// .env.local を自前で読む。手動で export すると、値に空白を含む変数で
+// シェルがエラーメッセージとして中身を画面に出す事故が起きる（2026-08-01）
+loadEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");

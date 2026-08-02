@@ -26,6 +26,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+
+// .env.local を自前で読む（手動 export は値に空白を含む変数で事故を起こす）
+loadEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -34,6 +38,10 @@ const REPORT = path.join(ROOT, "scratch", "affiliate-link-fixes.json");
 
 const RAKUTEN_API_URL =
   "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+// accessKeyのIP許可リストで弾かれたとき用（外出先など）。IP制限が無い従来系
+const RAKUTEN_API_URL_LEGACY =
+  "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
+let useLegacy = false;
 const RAKUTEN_AFFILIATE_ID =
   process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
@@ -108,21 +116,29 @@ const USED_SHOP_PATTERNS = /2nd STREET|セカンドストリート|ワットマ�
 async function searchRakuten(keyword) {
   const params = new URLSearchParams({
     applicationId: appId,
-    accessKey,
+    ...(useLegacy ? {} : { accessKey }), // 従来系はaccessKeyを受け付けない
     affiliateId: RAKUTEN_AFFILIATE_ID,
     keyword: sanitizeKeyword(keyword),
     hits: "10",
     sort: "standard", // 検索妥当性順（レビュー順だと別商品が上に来やすい）
+    format: "json",
     formatVersion: "2",
   });
-  const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
+  const res = await fetch(`${useLegacy ? RAKUTEN_API_URL_LEGACY : RAKUTEN_API_URL}?${params}`, {
     headers: {
       Origin: "https://camp-gear-lab.com",
       Referer: "https://camp-gear-lab.com/",
     },
   });
   if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    if (body.includes("CLIENT_IP_NOT_ALLOWED") && !useLegacy) {
+      useLegacy = true;
+      console.warn("  アクセスキーがIP制限で拒否 → 従来エンドポイントへ切り替えます");
+      return searchRakuten(keyword);
+    }
     console.warn(`  API ${res.status}: ${keyword.slice(0, 30)}`);
+    if (body) console.warn(`    応答: ${body.slice(0, 200)}`);
     return [];
   }
   const data = await res.json();
