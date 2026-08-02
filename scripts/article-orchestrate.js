@@ -95,7 +95,27 @@ async function gitCommitAndPush(message) {
     await execFileAsync("git", [
       "commit", "-m", `${message}\n\nCo-Authored-By: Article Pipeline <noreply@anthropic.com>`,
     ], { cwd: PROJECT_ROOT, timeout: 15_000 });
-    await execFileAsync("git", ["push"], { cwd: PROJECT_ROOT, timeout: 30_000 });
+
+    // リモートが先に進んでいると push が弾かれ、ローカルにコミットだけが
+    // 取り残される（次回以降 divergent branches で pull も止まる）。
+    // commit 後に rebase で載せ替えてから push する。
+    // 競合時は自動解決を試みず中断し、人が直す（データJSONを機械的に
+    // 片側へ倒すと記事や商品が丸ごと消えるため）
+    const pushWithRebase = async () => {
+      try {
+        await execFileAsync("git", ["pull", "--rebase"], {
+          cwd: PROJECT_ROOT,
+          timeout: 60_000,
+        });
+      } catch (err) {
+        await execFileAsync("git", ["rebase", "--abort"], {
+          cwd: PROJECT_ROOT,
+        }).catch(() => {});
+        throw new Error(`rebase失敗（競合の可能性・手動対応が必要）: ${err.message}`);
+      }
+      await execFileAsync("git", ["push"], { cwd: PROJECT_ROOT, timeout: 30_000 });
+    };
+    await pushWithRebase();
     console.log(`[article-orchestrate] git push 完了`);
     return true;
   } catch (err) {
