@@ -56,17 +56,65 @@ async function fetchSitemapUrls() {
   return matches.map((m) => m[1].trim()).filter((u) => u.startsWith("http"));
 }
 
-function fetchUrlsFromLocalData() {
-  // sitemap が CDN キャッシュされている場合に備えてローカルJSONからも生成
-  const baseUrl = "https://camp-gear-lab.com";
+const BASE_URL = "https://camp-gear-lab.com";
+
+function readLocalData() {
   const articles = JSON.parse(fs.readFileSync("data/articles.json", "utf8"));
   const categories = JSON.parse(fs.readFileSync("data/categories.json", "utf8"));
-  const urls = [baseUrl];
-  for (const c of categories) urls.push(`${baseUrl}/category/${c.slug}`);
-  for (const a of articles) {
-    if (a.status === "published") urls.push(`${baseUrl}/articles/${a.slug}`);
-  }
+  const published = articles.filter((a) => a.status === "published");
+  const usedCategoryIds = new Set(published.map((a) => a.categoryId));
+  return {
+    articles,
+    // 公開記事が1本も無いカテゴリはページ自体が404を返す（サイト側で
+    // 薄いページを出さないようにしているため）。送信対象から外す
+    liveCategories: categories.filter((c) => usedCategoryIds.has(c.id)),
+    publishedSlugs: new Set(published.map((a) => a.slug)),
+    knownSlugs: new Set(articles.map((a) => a.slug)),
+    knownCategorySlugs: new Set(categories.map((c) => c.slug)),
+    liveCategorySlugs: new Set(
+      categories.filter((c) => usedCategoryIds.has(c.id)).map((c) => c.slug)
+    ),
+  };
+}
+
+function fetchUrlsFromLocalData(local) {
+  // sitemap が CDN キャッシュされている場合に備えてローカルJSONからも生成
+  const urls = [BASE_URL];
+  for (const c of local.liveCategories) urls.push(`${BASE_URL}/category/${c.slug}`);
+  for (const slug of local.publishedSlugs) urls.push(`${BASE_URL}/articles/${slug}`);
   return urls;
+}
+
+// 本番のsitemapはCDNキャッシュで古いことがあり、非公開化・統合した記事の
+// URLが残る。Googleに301や404を送るのは無駄なので、ローカルデータで
+// 「存在は知っているが今は公開されていない」と判定できるURLだけ落とす。
+// ローカルに無いURL（新規追加など）は判断できないので残す
+function dropStaleUrls(urls, local) {
+  const dropped = [];
+  const kept = urls.filter((u) => {
+    const art = u.match(/\/articles\/([^/?#]+)\/?$/);
+    if (art && local.knownSlugs.has(art[1]) && !local.publishedSlugs.has(art[1])) {
+      dropped.push(u);
+      return false;
+    }
+    const cat = u.match(/\/category\/([^/?#]+)\/?$/);
+    if (
+      cat &&
+      local.knownCategorySlugs.has(cat[1]) &&
+      !local.liveCategorySlugs.has(cat[1])
+    ) {
+      dropped.push(u);
+      return false;
+    }
+    return true;
+  });
+  if (dropped.length > 0) {
+    console.log(
+      `[index-now] 非公開・空カテゴリのURLを除外: ${dropped.length}件`
+    );
+    for (const u of dropped) console.log(`  - ${u}`);
+  }
+  return kept;
 }
 
 async function getUrls(opts) {
@@ -80,11 +128,16 @@ async function getUrls(opts) {
     console.warn(`[index-now] sitemap fetch failed: ${err.message}`);
   }
 
-  const localUrls = fetchUrlsFromLocalData();
+  const local = readLocalData();
+  const localUrls = fetchUrlsFromLocalData(local);
   console.log(`[index-now] local urls: ${localUrls.length}`);
 
-  // sitemap と local をマージ（ローカルの方が新しい可能性があるため和集合）
-  const merged = Array.from(new Set([...sitemapUrls, ...localUrls]));
+  // sitemap と local をマージ（ローカルの方が新しい可能性があるため和集合）。
+  // そのうえで、古いsitemapに残った非公開・空カテゴリのURLを落とす
+  const merged = dropStaleUrls(
+    Array.from(new Set([...sitemapUrls, ...localUrls])),
+    local
+  );
   console.log(`[index-now] merged unique urls: ${merged.length}`);
   return merged;
 }
