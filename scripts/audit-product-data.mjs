@@ -110,31 +110,57 @@ for (const [model, list] of byModel) {
 }
 
 // ── 4. 記事本文の価格表記との矛盾 ─────────────────────
-// 「約25,000円」「1,210円」のような表記を拾い、掲載商品の価格と突き合わせる
+// 商品名の先頭語（ブランド名）で探すと、同じブランドの別商品が並ぶ記事で
+// 隣のセクションの価格を拾ってしまう（2026-08-01: ペグハンマーPRO.Cの
+// 検査でPRO.Sの5,280円を拾い、正しい記事を誤検出した）。
+// {{product:ID}} タグから次の見出しまでを「その商品の記述範囲」とみなし、
+// その中の価格表記だけを突き合わせる
 for (const a of published) {
-  for (const pid of a.productIds || []) {
-    const p = byId.get(pid);
+  for (const m of a.content.matchAll(/\{\{product:([^}]+)\}\}/g)) {
+    const p = byId.get(m[1].trim());
     if (!p || !p.price) continue;
-    // 商品名の主要語が近くにある価格表記だけを対象にする（誤検出を抑える）
-    const head = p.name.split(/[\s　]/)[0];
-    if (!head || head.length < 2) continue;
-    const re = new RegExp(
-      `${head.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^。\\n]{0,25}?(?:約)?([0-9,]{3,9})\\s*円`,
-      "g"
-    );
-    for (const m of a.content.matchAll(re)) {
-      const written = parseInt(m[1].replace(/,/g, ""), 10);
-      if (!Number.isFinite(written) || written < 100) continue;
-      // 単価ではない金額（合計・差額・年間コスト・ふるさと納税の自己負担など）を除外する。
-      // 例:「4台分で30,800円」「自己負担は2,000円」「年間930円」は商品価格ではない
-      const around = a.content.slice(Math.max(0, m.index - 60), m.index + m[0].length + 20);
-      if (/台分|合計|差額|年間|自己負担|納税|控除|総額|込みで|セットで|\d+年で/.test(around)) continue;
-      const diff = Math.abs(written - p.price) / p.price;
-      if (diff >= 0.2) {
+    // タグ位置から次の見出し（##/###）までがこの商品のセクション
+    const rest = a.content.slice(m.index + m[0].length);
+    const nextHeading = rest.search(/\n#{2,3} /);
+    const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+
+    // 「約9,700〜11,880円」のような幅表記が本文では主流なので、レンジとして扱う。
+    // 単一値だけ見ると幅の下限を拾って毎回誤検出になる（2026-08-03に7件発生）
+    const candidates = [];
+    for (const pm of section.matchAll(
+      /(?:約)?([0-9,]{3,9})\s*(?:[〜~～]\s*([0-9,]{3,9})\s*)?円/g
+    )) {
+      const lo = parseInt(pm[1].replace(/,/g, ""), 10);
+      const hi = pm[2] ? parseInt(pm[2].replace(/,/g, ""), 10) : lo;
+      if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo < 100) continue;
+      // レンジ内なら一致とみなす。外れている場合だけ近い側の端との差で判定する
+      const gap = p.price < lo ? lo - p.price : p.price > hi ? p.price - hi : 0;
+      // 単価ではない金額（合計・差額・年間コスト・定価など）を除外する。
+      // 前後どちらに現れるかで語が違うので窓を分ける。まとめて広く見ると
+      // 「249,700円は10年で1泊あたり…」の本体価格まで落ちてしまう
+      const before = section.slice(Math.max(0, pm.index - 40), pm.index);
+      const after = section.slice(pm.index + pm[0].length, pm.index + pm[0].length + 14);
+      const excluded =
+        /台分|合計|総額|自己負担|納税|控除|セット価格|セットで|希望小売|定価|年間|追加で|別売り?で|込みで/.test(
+          before
+        ) || /の差額|の差|ほど高|ほど安|程度高|程度安|上乗せ|割引|値上|分安|分高|で割る|お得|節約/.test(after);
+      candidates.push({
+        diff: gap / p.price,
+        excluded,
+        written: pm[2] ? `${pm[1]}〜${pm[2]}円` : `${pm[1]}円`,
+      });
+    }
+    // セクション内のどれか1つでもデータ価格と整合していれば矛盾なしとみなす。
+    // 除外語で先頭をスキップしたあと遠くの無関係な金額を拾う事故を防ぐため、
+    // 「最初の1件だけ見る」ではなく「全候補中の最良一致」で判定する
+    const usable = candidates.filter((c) => !c.excluded);
+    if (usable.length > 0) {
+      const best = usable.reduce((a, b) => (a.diff <= b.diff ? a : b));
+      if (best.diff >= 0.2) {
         add("記事矛盾", "medium", {
           name: p.name,
-          detail: `${a.slug}: 本文「${m[1]}円」 vs データ ¥${p.price.toLocaleString()}`,
-          note: `差 ${Math.round(diff * 100)}%`,
+          detail: `${a.slug}: 本文「${best.written}」 vs データ ¥${p.price.toLocaleString()}`,
+          note: `差 ${Math.round(best.diff * 100)}%`,
         });
       }
     }
