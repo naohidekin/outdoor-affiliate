@@ -75,7 +75,21 @@ function isSearchLink(url) {
   return t.includes("search.rakuten");
 }
 
+// 2026-08-03: リンク先が中古出品・削除済み・別モデルだった商品。
+// 検索ページ行きではないので isSearchLink では拾えず、明示的に列挙する
+const BROKEN_LINK_IDS = {
+  "cooler-yamazen-yec-m03": "リンク先が中古出品。新品の商品ページに差し替える",
+  "rakuten-brave-6-4953571093208": "リンク先ページが削除済み（店舗在庫は工具のみ）",
+  "kettle-gsi-glacier": "検索ページ行きのまま",
+  "fan-hagoogi-ot-f12": "登録ページが店舗の出品一覧に出てこない。要確認",
+  "sb-nanga-003": "600DXと同じ商品ページを指している。750DXのページに分離する",
+};
+
+const idsArg = process.argv.find((a) => a.startsWith("--ids="));
+
 function targetIds() {
+  if (idsArg) return idsArg.slice(6).split(",").map((s) => s.trim()).filter((id) => byId.has(id));
+  if (process.argv.includes("--broken")) return Object.keys(BROKEN_LINK_IDS).filter((id) => byId.has(id));
   if (ALL) return products.filter((p) => isSearchLink(p.affiliateUrl)).map((p) => p.id);
   return PRIORITY_IDS.filter((id) => byId.has(id));
 }
@@ -149,6 +163,9 @@ if (INIT) {
       `${needsBrand ? p.brand + " " : ""}${p.name}`.slice(0, 100)
     );
     lines.push(`# ${p.name}（¥${(p.price || 0).toLocaleString()}）`);
+    if (BROKEN_LINK_IDS[id]) lines.push(`#   理由: ${BROKEN_LINK_IDS[id]}`);
+    const current = extractItemUrl(p.affiliateUrl || "");
+    if (current) lines.push(`#   現在: ${current}`);
     lines.push(`#   検索: https://search.rakuten.co.jp/search/mall/${q}/`);
     lines.push(`${id} = `);
     lines.push("");
