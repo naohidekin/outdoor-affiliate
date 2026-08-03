@@ -14,6 +14,13 @@
  * 1) 記入用ファイルを作る（対象商品と検索URLの一覧が出力される）
  *      node scripts/manual-affiliate-links.mjs --init
  *
+ *    対象の切り替え:
+ *      --broken     リンク先が中古出品・削除済み・別モデルだった商品（2026-08-03検出）
+ *      --ids=a,b    任意の商品IDを指定
+ *      --all        検索ページ行きのアフィリリンク全件
+ *    ※ 2)以降も同じ引数を付けること。付け忘れると対象リストが既定に戻り、
+ *      記入した行が「対象リスト外」で弾かれる
+ *
  * 2) scratch/manual-affiliate-links.txt を開き、各行の検索URLをブラウザで開いて
  *    正しい商品ページを見つけ、そのURL（https://item.rakuten.co.jp/... ）を
  *    行末の `= ` の後ろに貼る。分からない商品は空のまま飛ばしてよい
@@ -86,6 +93,15 @@ const BROKEN_LINK_IDS = {
 };
 
 const idsArg = process.argv.find((a) => a.startsWith("--ids="));
+
+// 案内文にモード引数を引き継ぐ。--broken を落とすと対象リストが
+// PRIORITY_IDS に戻り、記入した5件が「対象外」で弾かれる
+const MODE_ARGS = [
+  idsArg,
+  process.argv.includes("--broken") ? "--broken" : null,
+  process.argv.includes("--all") ? "--all" : null,
+].filter(Boolean).join(" ");
+const CMD = `node scripts/manual-affiliate-links.mjs${MODE_ARGS ? " " + MODE_ARGS : ""}`;
 
 function targetIds() {
   if (idsArg) return idsArg.slice(6).split(",").map((s) => s.trim()).filter((id) => byId.has(id));
@@ -174,13 +190,13 @@ if (INIT) {
   fs.writeFileSync(SHEET, lines.join("\n"));
   console.log(`記入用ファイルを作成: ${SHEET}`);
   console.log(`対象 ${ids.length}件。ファイルを開いてURLを貼ってください。`);
-  console.log("貼り終わったら: node scripts/manual-affiliate-links.mjs（検証）");
+  console.log(`貼り終わったら: ${CMD}（検証）`);
   process.exit(0);
 }
 
 // ─── 検証 / 反映 ────────────────────────────────────
 if (!fs.existsSync(SHEET)) {
-  console.error(`記入用ファイルがありません。先に --init を実行してください:\n  node scripts/manual-affiliate-links.mjs --init`);
+  console.error(`記入用ファイルがありません。先に --init を実行してください:\n  ${CMD} --init`);
   process.exit(1);
 }
 
@@ -215,7 +231,7 @@ for (const line of fs.readFileSync(SHEET, "utf8").split("\n")) {
     continue;
   }
   if (!allowed.has(id)) {
-    errors.push(`${id}: 対象リスト外です（--all で全件対象にできます）`);
+    errors.push(`${id}: 対象リスト外です（--broken / --ids= / --all で対象を切り替えられます）`);
     continue;
   }
   // 「楽天に無かった」を記録する書き方。死んだ検索リンクを消す
@@ -288,7 +304,7 @@ if (skipped.length) {
 }
 
 if (!APPLY) {
-  console.log(`\n反映するには: node scripts/manual-affiliate-links.mjs --apply`);
+  console.log(`\n反映するには: ${CMD} --apply`);
   process.exit(errors.length > 0 ? 1 : 0);
 }
 if (errors.length > 0) {
