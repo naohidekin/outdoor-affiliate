@@ -57,21 +57,30 @@ function itemUrlOf(p) {
   }
 }
 
-// https://item.rakuten.co.jp/{shop}/{itemNumber}/ → "{shop}:{itemNumber}"
-function itemCodeOf(url) {
+// https://item.rakuten.co.jp/{shop}/{itemNumber}/ → { shop, slug }
+function shopAndSlug(url) {
   const m = /item\.rakuten\.co\.jp\/([^/?#]+)\/([^/?#]+)/.exec(url || "");
-  return m ? `${m[1]}:${m[2]}` : "";
+  return m ? { shop: m[1], slug: m[2] } : null;
+}
+const slugOf = (u) => shopAndSlug(u)?.slug || "";
+
+function sanitize(s) {
+  return s
+    .replace(/[×/＋+|｜（）()]/g, " ")
+    .split(/\s+/)
+    .filter((t) => [...t].length >= 2)
+    .join(" ")
+    .slice(0, 120);
 }
 
-async function fetchByItemCode(itemCode) {
+async function call(extra) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
     affiliateId: AFFILIATE_ID,
-    itemCode,
-    hits: "1",
     format: "json",
     formatVersion: "2",
+    ...extra,
   });
   const res = await fetch(`${RAKUTEN_API_URL}?${params}`, {
     headers: {
@@ -89,12 +98,40 @@ async function fetchByItemCode(itemCode) {
       );
       process.exit(1);
     }
-    // 商品が削除・売り切れ・店舗閉店の場合もここに来る
-    return { error: `${res.status} ${body.slice(0, 80)}` };
+    return { error: `${res.status} ${body.slice(0, 90)}`, items: [] };
   }
   const data = await res.json();
-  const item = (data.Items || [])[0];
-  return item ? { item } : { error: "該当商品なし（削除・販売終了の可能性）" };
+  return { items: data.Items || [] };
+}
+
+// 2026-08-03: itemCode パラメータは ichibams エンドポイントが受け付けない
+// （全件 wrong_parameter で弾かれる）。店舗コードで絞り、返ってきた
+// itemUrl の末尾スラッグが一致するものを拾う方式に変更した
+async function fetchLinkedItem({ shop, slug }, name) {
+  const attempts = [
+    { label: "shopCode+keyword", q: { shopCode: shop, keyword: sanitize(name), hits: "30" } },
+    { label: "shopCode", q: { shopCode: shop, hits: "30" } },
+    { label: "keyword", q: { keyword: sanitize(name), hits: "30" } },
+  ];
+  let lastError = "";
+  let nearby = [];
+  for (const a of attempts) {
+    await sleep(1200);
+    const { items, error } = await call(a.q);
+    if (error) {
+      lastError = error;
+      continue;
+    }
+    const hit = items.find((i) => slugOf(i.itemUrl) === slug);
+    if (hit) return { item: hit, via: a.label };
+    if (items.length && !nearby.length) nearby = items.slice(0, 5);
+  }
+  return {
+    error:
+      lastError ||
+      "リンク先の商品が店舗の出品一覧に見つかりません（販売終了・ページ削除の可能性）",
+    nearby,
+  };
 }
 
 // 商品名の世代・型番が一致しているかの目視補助。
@@ -146,14 +183,14 @@ for (const t of targets) {
     continue;
   }
   const url = itemUrlOf(p);
-  const code = itemCodeOf(url);
+  const loc = shopAndSlug(url);
 
   console.log(`■ ${p.name}${t.slug ? `（${t.slug}）` : ""}`);
   console.log(
     `   データ ¥${(p.price || 0).toLocaleString()}${t.written ? ` / 本文 ${t.written}円` : ""}`
   );
 
-  if (!code) {
+  if (!loc) {
     console.log(
       url
         ? `   リンク先が商品ページではありません: ${url.slice(0, 70)}\n`
@@ -162,16 +199,21 @@ for (const t of targets) {
     continue;
   }
 
-  await sleep(1200);
-  const { item, error } = await fetchByItemCode(code);
+  const { item, via, error, nearby } = await fetchLinkedItem(loc, p.name);
   if (error) {
-    console.log(`   ${code}: ${error}\n`);
+    console.log(`   ${loc.shop}/${loc.slug}: ${error}`);
+    for (const c of nearby || []) {
+      console.log(`      同店舗の候補: ¥${c.itemPrice.toLocaleString()} ${c.itemName.slice(0, 44)}`);
+    }
+    console.log();
     continue;
   }
 
   const live = item.itemPrice;
   const gap = p.price ? Math.abs(live - p.price) / p.price : 1;
-  console.log(`   リンク先: ¥${live.toLocaleString()}  ${item.itemName.slice(0, 46)}`);
+  console.log(
+    `   リンク先: ¥${live.toLocaleString()}  ${item.itemName.slice(0, 46)}  [${via}]`
+  );
 
   // リンク先が別モデルを指していないか（WAVE 2 → wave3 の事故が実在）
   const want = modelTokens(p.name);
