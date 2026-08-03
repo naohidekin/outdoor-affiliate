@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 /**
  * 記事本文とproducts.jsonの価格が食い違っている商品について、
- * 楽天の実勢価格を調べて「どちらが正しいか」を判定する（読み取り専用）
+ * 「リンク先の楽天商品ページの現在価格」を1件ずつ引いて確認する（読み取り専用）
  *
- * 背景（2026-08-03）: 監査の「記事矛盾」10件は、本文が正しい場合と
- * データが正しい場合の両方が混ざっている。人力で1件ずつ楽天を見るのは
- * 時間がかかるので、中央値との距離で機械的に当たりを付ける。
+ * 背景（2026-08-03）: 最初はキーワード検索で相場の中央値を出す設計にしたが、
+ * 型番の世代違い（Jackery 1000/2000、WAVE 2/3、RIVER 2 Pro/RIVER Pro）や
+ * 保護フィルム・ケーブル・中古出品が混ざり、中央値が完全に壊れた。
+ * products.json の affiliateUrl には楽天の商品ページURLが入っているので、
+ * そこから itemCode を組み立てて直接引く。推定ではなく、
+ * 「読者がリンクを踏んで実際に見る価格」が取れる。
  *
  * products.json / articles.json は一切変更しない。
  *
  * 使い方（自宅Wi-Fiから。アクセスキーのIP許可リスト登録が必要）:
  *   node scripts/check-market-prices.mjs
- *   node scripts/check-market-prices.mjs --ids=jackery-1000-new,fan-hagoogi-ot-f12
+ *   node scripts/check-market-prices.mjs --ids=jackery-1000-new,mat-waq-8cm
+ *   node scripts/check-market-prices.mjs --all   # 全商品を点検
  */
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -34,41 +38,38 @@ const products = JSON.parse(fs.readFileSync("data/products.json", "utf8"));
 const byId = new Map(products.map((p) => [p.id, p]));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const USED_SHOP = /2nd STREET|セカンドストリート|ワットマン|リサイクル|中古|質屋/i;
-// 本体ではない出品を弾く。付属品・別売バッテリー・セット品が混じると中央値が壊れる
-const NOT_MAIN =
-  /レンタル|ベースプレート|グランドシート|インナーシート|ゴトク|ロストル|焼網|焼き網|オプション|パーツ|部品|替え|交換用|収納袋|ケース単品|カバーのみ|専用ケース|マット単品|ポールのみ|ペグのみ|補修|延長保証|バッテリーのみ|拡張バッテリー|ソーラーパネル単品/;
-
-function coreTokens(name) {
-  return name
-    .replace(/[（(].*?[)）]/g, " ")
-    .split(/[\s　/／・]+/)
-    .filter((t) => [...t].length >= 2)
-    .slice(0, 4);
-}
-function looksSameProduct(productName, itemName) {
-  const toks = coreTokens(productName);
-  if (toks.length === 0) return true;
-  const hit = toks.filter((t) => itemName.includes(t)).length;
-  return hit >= Math.min(2, toks.length);
-}
-function sanitize(s) {
-  return s
-    .replace(/[×/＋+|｜]/g, " ")
-    .split(/\s+/)
-    .filter((t) => [...t].length >= 2)
-    .join(" ")
-    .slice(0, 120);
+// affiliateUrl から楽天の商品ページURLを取り出す。
+// hb.afl.rakuten.co.jp/.../?pc=<エンコード済み商品URL> の形式
+function itemUrlOf(p) {
+  const raw = p.affiliateUrl || "";
+  if (!raw) return "";
+  if (raw.includes("item.rakuten.co.jp") && !raw.includes("hb.afl.")) return raw;
+  try {
+    const pc = new URL(raw).searchParams.get("pc");
+    if (!pc) return "";
+    try {
+      return decodeURIComponent(pc);
+    } catch {
+      return pc; // 壊れたエンコードの商品が7件ある。生のまま返す
+    }
+  } catch {
+    return "";
+  }
 }
 
-async function search(keyword) {
+// https://item.rakuten.co.jp/{shop}/{itemNumber}/ → "{shop}:{itemNumber}"
+function itemCodeOf(url) {
+  const m = /item\.rakuten\.co\.jp\/([^/?#]+)\/([^/?#]+)/.exec(url || "");
+  return m ? `${m[1]}:${m[2]}` : "";
+}
+
+async function fetchByItemCode(itemCode) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
     affiliateId: AFFILIATE_ID,
-    keyword: sanitize(keyword),
-    hits: "20",
-    sort: "standard", // 安い順にすると付属品が上位に来て相場を誤る
+    itemCode,
+    hits: "1",
     format: "json",
     formatVersion: "2",
   });
@@ -88,16 +89,20 @@ async function search(keyword) {
       );
       process.exit(1);
     }
-    console.warn(`  API ${res.status}: ${body.slice(0, 120)}`);
-    return [];
+    // 商品が削除・売り切れ・店舗閉店の場合もここに来る
+    return { error: `${res.status} ${body.slice(0, 80)}` };
   }
   const data = await res.json();
-  return (data.Items || []).filter(
-    (i) => !USED_SHOP.test(i.shopName || "") && !NOT_MAIN.test(i.itemName || "")
-  );
+  const item = (data.Items || [])[0];
+  return item ? { item } : { error: "該当商品なし（削除・販売終了の可能性）" };
 }
 
-// 監査の「記事矛盾」からIDを引く。--ids= で明示指定もできる
+// 商品名の世代・型番が一致しているかの目視補助。
+// 「WAVE 2」の商品に「WAVE 3」のページが紐づいている事故が実在した
+function modelTokens(s) {
+  return (s || "").toUpperCase().match(/[A-Z]{2,}[-\s]?\d{2,4}|\b\d{3,4}\b/g) || [];
+}
+
 function targetsFromAudit() {
   const raw = execFileSync("node", ["scripts/audit-product-data.mjs", "--json"], {
     encoding: "utf8",
@@ -109,24 +114,30 @@ function targetsFromAudit() {
     if (f.type !== "記事矛盾") continue;
     const p = products.find((x) => x.name === f.name);
     if (!p) continue;
-    const written = /本文「([0-9,〜~～]+)円」/.exec(f.detail || "")?.[1] || "";
-    const slug = (f.detail || "").split(":")[0];
-    out.push({ id: p.id, slug, written });
+    out.push({
+      id: p.id,
+      slug: (f.detail || "").split(":")[0],
+      written: /本文「([0-9,〜~～]+)円」/.exec(f.detail || "")?.[1] || "",
+    });
   }
   return out;
 }
 
 const idsArg = process.argv.find((a) => a.startsWith("--ids="));
-const targets = idsArg
-  ? idsArg
-      .slice(6)
-      .split(",")
-      .map((id) => ({ id: id.trim(), slug: "", written: "" }))
-  : targetsFromAudit();
+const targets = process.argv.includes("--all")
+  ? products.map((p) => ({ id: p.id, slug: "", written: "" }))
+  : idsArg
+    ? idsArg
+        .slice(6)
+        .split(",")
+        .map((id) => ({ id: id.trim(), slug: "", written: "" }))
+    : targetsFromAudit();
 
 console.log(
-  `\n=== 価格矛盾${targets.length}件の実勢確認（データは変更しません）===\n`
+  `\n=== リンク先の現在価格を確認（${targets.length}件 / データは変更しません）===\n`
 );
+
+const mismatched = [];
 
 for (const t of targets) {
   const p = byId.get(t.id);
@@ -134,35 +145,55 @@ for (const t of targets) {
     console.log(`■ ${t.id}: products.jsonに見つかりません\n`);
     continue;
   }
-  await sleep(1500);
-  const items = (await search(p.name)).filter((i) =>
-    looksSameProduct(p.name, i.itemName || "")
-  );
-  const prices = items.map((i) => i.itemPrice).filter((v) => v > 0);
+  const url = itemUrlOf(p);
+  const code = itemCodeOf(url);
 
   console.log(`■ ${p.name}${t.slug ? `（${t.slug}）` : ""}`);
   console.log(
     `   データ ¥${(p.price || 0).toLocaleString()}${t.written ? ` / 本文 ${t.written}円` : ""}`
   );
-  if (prices.length === 0) {
-    console.log(`   楽天: 本体と判定できる出品なし（候補なし）。手動確認が必要です\n`);
+
+  if (!code) {
+    console.log(
+      url
+        ? `   リンク先が商品ページではありません: ${url.slice(0, 70)}\n`
+        : `   affiliateUrl が未設定です\n`
+    );
     continue;
   }
-  const sorted = [...prices].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  console.log(
-    `   楽天: ${prices.length}件 最安¥${sorted[0].toLocaleString()} 中央値¥${median.toLocaleString()} 最高¥${sorted[sorted.length - 1].toLocaleString()}`
-  );
 
-  const dataGap = Math.abs((p.price || 0) - median) / median;
-  const verdict =
-    dataGap <= 0.1
-      ? "データが実勢。本文の価格表記を直す"
-      : dataGap >= 0.25
-        ? "データが実勢から外れている。products.jsonの価格を直す"
-        : "どちらとも言えない。目視で確認する";
-  console.log(`   → ${verdict}（データと中央値の差 ${Math.round(dataGap * 100)}%）`);
-  console.log(`   参考: ${items[Math.floor(items.length / 2)]?.itemName?.slice(0, 52) || ""}\n`);
+  await sleep(1200);
+  const { item, error } = await fetchByItemCode(code);
+  if (error) {
+    console.log(`   ${code}: ${error}\n`);
+    continue;
+  }
+
+  const live = item.itemPrice;
+  const gap = p.price ? Math.abs(live - p.price) / p.price : 1;
+  console.log(`   リンク先: ¥${live.toLocaleString()}  ${item.itemName.slice(0, 46)}`);
+
+  // リンク先が別モデルを指していないか（WAVE 2 → wave3 の事故が実在）
+  const want = modelTokens(p.name);
+  const got = modelTokens(item.itemName);
+  if (want.length && !want.some((w) => got.includes(w))) {
+    console.log(`   !! 型番が一致しません（期待 ${want.join(",")} / 実際 ${got.join(",") || "なし"}）`);
+    console.log(`      リンク先が別商品の可能性があります: ${url}`);
+  }
+
+  if (gap >= 0.1) {
+    console.log(`   → データを ¥${live.toLocaleString()} に直す（差 ${Math.round(gap * 100)}%）`);
+    mismatched.push({ id: p.id, from: p.price, to: live });
+  } else {
+    console.log(`   → データは正しい。本文の価格表記を直す`);
+  }
+  console.log();
 }
 
-console.log("結果を見て、本文とデータのどちらを直すか決めてください。");
+if (mismatched.length) {
+  console.log(`\n価格を直すべき商品 ${mismatched.length}件:`);
+  for (const m of mismatched) {
+    console.log(`  ${m.id.padEnd(32)} ¥${m.from.toLocaleString()} → ¥${m.to.toLocaleString()}`);
+  }
+}
+console.log("\n※ このスクリプトはデータを変更しません。反映は別途承認のうえで行います。");

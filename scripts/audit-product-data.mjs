@@ -167,6 +167,58 @@ for (const a of published) {
   }
 }
 
+// ── 7. リンク先の不整合 ──────────────────────────
+// 2026-08-03: EcoFlow WAVE 2 のアフィリエイトリンクが WAVE 3 の商品ページを
+// 指していた（WAVE 3 の商品と同一URL）。記事はWAVE 2を紹介しているのに
+// クリックすると別モデルに飛ぶ。世代違いは名前だけでは気づけないので機械で拾う
+function itemUrlOf(p) {
+  const raw = p.affiliateUrl || "";
+  if (!raw) return "";
+  if (raw.includes("item.rakuten.co.jp") && !raw.includes("hb.afl.")) return raw;
+  try {
+    const pc = new URL(raw).searchParams.get("pc");
+    if (!pc) return "";
+    try {
+      return decodeURIComponent(pc);
+    } catch {
+      return pc; // エンコードが壊れている商品が数件ある
+    }
+  } catch {
+    return "";
+  }
+}
+const urlOwners = new Map();
+for (const p of products) {
+  const url = itemUrlOf(p);
+  const m = /item\.rakuten\.co\.jp\/([^/?#]+)\/([^/?#]+)/.exec(url);
+  if (!m) continue;
+  const path = `${m[1]}/${m[2]}`.toLowerCase();
+
+  // 商品名の「英字＋世代番号」（WAVE 2 / RIVER 2 / DELTA 3）とURLの世代を比べる
+  for (const g of p.name.matchAll(/([A-Za-z]{3,10})\s*([0-9])\b/g)) {
+    const hit = new RegExp(`${g[1].toLowerCase()}[-_ ]?([0-9])`).exec(path);
+    if (hit && hit[1] !== g[2]) {
+      add("リンク先不整合", "high", {
+        name: p.name,
+        detail: `${p.id}: 商品名は「${g[1]} ${g[2]}」だがリンク先は「${g[1]} ${hit[1]}」`,
+        note: `別モデルに誘導しています: ${url}`,
+      });
+    }
+  }
+  // 別々の商品が同じ商品ページを指していないか
+  if (!urlOwners.has(path)) urlOwners.set(path, []);
+  urlOwners.get(path).push(p);
+}
+for (const [path, list] of urlOwners) {
+  if (list.length < 2) continue;
+  if (new Set(list.map((p) => norm(p.name).slice(0, 24))).size < 2) continue; // 重複登録は 1. で報告済み
+  add("リンク先不整合", "high", {
+    name: path,
+    detail: list.map((p) => `${p.id}(${p.name.slice(0, 24)})`).join(" / "),
+    note: "別商品が同じ楽天ページを指しています。どちらかのリンクが誤りです",
+  });
+}
+
 // ── 5-6. 欠損と孤立 ──────────────────────────────
 const missing = { price: [], image: [], category: [] };
 const orphans = [];
