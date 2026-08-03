@@ -124,7 +124,12 @@ async function fetchLinkedItem({ shop, slug }, name) {
       lastError = error;
       continue;
     }
-    const hit = items.find((i) => slugOf(i.itemUrl) === slug);
+    // 店舗コードまで一致させる。スラッグだけで比べると、keyword検索の
+    // フォールバック時に別店舗の同名スラッグを掴む
+    const hit = items.find((i) => {
+      const loc = shopAndSlug(itemUrlOf({ affiliateUrl: i.itemUrl }));
+      return loc && loc.shop === shop && loc.slug === slug;
+    });
     if (hit) return { item: hit, via: a.label };
     if (items.length && !nearby.length) nearby = items.slice(0, 5);
   }
@@ -137,9 +142,19 @@ async function fetchLinkedItem({ shop, slug }, name) {
 }
 
 // 商品名の世代・型番が一致しているかの目視補助。
-// 「WAVE 2」の商品に「WAVE 3」のページが紐づいている事故が実在した
+// 「WAVE 2」の商品に「WAVE 3」のページが紐づいている事故が実在した。
+// 世代番号は1桁なので \d{2,4} だと拾えず、実際に見逃した（2026-08-03）
 function modelTokens(s) {
-  return (s || "").toUpperCase().match(/[A-Z]{2,}[-\s]?\d{2,4}|\b\d{3,4}\b/g) || [];
+  const out = new Set();
+  for (const m of (s || "").toUpperCase().matchAll(/([A-Z]{2,10})[-\s]?(\d{1,4})\b/g)) {
+    out.add(m[1] + m[2]);
+  }
+  // 型番（OT-F12 / SOD-320 / YEC-M03 / PA-F85A）は上の式では拾えない
+  for (const m of (s || "").toUpperCase().matchAll(/\b[A-Z]{1,6}-[A-Z]?\d{1,4}[A-Z]?\b/g)) {
+    out.add(m[0].replace(/-/g, ""));
+  }
+  for (const m of (s || "").matchAll(/\b\d{3,4}\b/g)) out.add(m[0]);
+  return [...out];
 }
 
 function targetsFromAudit() {
