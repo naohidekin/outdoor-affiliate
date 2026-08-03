@@ -25,8 +25,6 @@ loadEnv();
 
 const RAKUTEN_API_URL =
   "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
-const AFFILIATE_ID =
-  process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
 if (!appId || !accessKey) {
@@ -62,7 +60,10 @@ function shopAndSlug(url) {
   const m = /item\.rakuten\.co\.jp\/([^/?#]+)\/([^/?#]+)/.exec(url || "");
   return m ? { shop: m[1], slug: m[2] } : null;
 }
-const slugOf = (u) => shopAndSlug(u)?.slug || "";
+// 2026-08-03: affiliateId を渡すと楽天APIは itemUrl をアフィリエイトURLに
+// 差し替えて返す。そのままスラッグを取ると全件マッチしないので、
+// hb.afl 形式なら pc= の中身をほどいてから比較する
+const slugOf = (u) => shopAndSlug(itemUrlOf({ affiliateUrl: u }))?.slug || "";
 
 function sanitize(s) {
   return s
@@ -77,7 +78,8 @@ async function call(extra) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
-    affiliateId: AFFILIATE_ID,
+    // affiliateId は渡さない。渡すと itemUrl がアフィリエイトURLに化けて
+    // 商品ページの照合ができなくなる。ここは価格確認だけなので不要
     format: "json",
     formatVersion: "2",
     ...extra,
