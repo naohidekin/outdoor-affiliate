@@ -8495,5 +8495,132 @@
     "rating": 4.4,
     "createdAt": "2026-06-24T15:00:00+00:00",
     "updatedAt": "2026-07-25T01:04:14.687+00:00"
+  },
+  {
+    "id": "heater-corona-fh-cpf25a",
+    "name": "コロナ OUTFIELD ポータブル電源対応石油ファンヒーター FH-CPF25A",
+    "brand": "コロナ",
+    "price": 25800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/corona-official/cabinet/10727571/imgrc0118802882.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uebx6.wwmjs8ef.g00uebx6.wwmjt96a/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcorona-official%2F02351930000%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fcorona-official%2Fi%2F10000021%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "暖房出力": "2.5kW",
+      "消費電力": "8.5〜14W（運転時）",
+      "連続燃焼": "540Whのポータブル電源で約27時間",
+      "高地対応": "標高2,000mまで（高地設定モード）",
+      "安全装置": "対震自動消火・不完全燃焼防止"
+    },
+    "description": "消費電力8.5〜14Wという圧倒的な省電力で、540Whクラスのポータブル電源でも一晩まわせる石油ファンヒーター。標高2,000mまでの高地設定モードと水平器を搭載し、電源サイト以外の冬キャンプでも使えます。",
+    "rating": 4.57,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
+  },
+  {
+    "id": "heater-winnerwell-nomad-view-m",
+    "name": "Winnerwell Nomad View M 薪ストーブ",
+    "brand": "Winnerwell",
+    "price": 49800,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-e-tradeservice/cabinet/item/imgrc0082362016.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00s9696.wwmjs14f.g00s9696.wwmjt310/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-e-tradeservice%2F18121809%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fauc-e-tradeservice%2Fi%2F10000193%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "素材": "ステンレス（SUS304）",
+      "窓": "耐熱ガラス窓付き",
+      "形式": "テント内設営前提の煙突式",
+      "拡張性": "オプションパーツが豊富"
+    },
+    "description": "ステンレス製薪ストーブの世界的定番。錆びにくく手入れがしやすい作りで、煙突・オプションの選択肢が広いのが強みです。ガラス窓から炎が見えるので、暖房と焚き火の楽しさを両立できます。",
+    "rating": 4.86,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
+  },
+  {
+    "id": "heater-iwatani-dekadan3",
+    "name": "イワタニ カセットガスストーブ デカ暖III CB-STV-DKD3",
+    "brand": "イワタニ",
+    "price": 21700,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/homeshop/cabinet/officebung45/s5305-www-300_1.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00pssb6.wwmjs4b0.g00pssb6.wwmjtd36/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhomeshop%2Fs5305-www-300%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhomeshop%2Fi%2F10335773%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "燃料": "カセットガス（CB缶）",
+      "構造": "セラミック筒・パンチングメタル筒・ステンレスメッシュ筒の3層",
+      "給排気": "屋外・換気必須",
+      "利点": "灯油不要で扱いが手軽"
+    },
+    "description": "CB缶1本で使えるカセットガスストーブの最新モデル。灯油の給油やニオイがなく、冬キャンプの暖房として一番手を出しやすい方式です。持続時間の短さと引き換えの手軽さと考えてください。",
+    "rating": 4.67,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
+  },
+  {
+    "id": "heater-iwatani-kazedan",
+    "name": "イワタニ カセットガスファンヒーター 風暖",
+    "brand": "イワタニ",
+    "price": 32980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/i-collect/cabinet/item02/2000003007.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r5de6.wwmjs98d.g00r5de6.wwmjtbba/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fi-collect%2F2000003007%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fi-collect%2Fi%2F10012239%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "燃料": "カセットガス（CB缶）",
+      "形式": "ファンヒーター（温風）",
+      "電源": "乾電池（点火・送風用）",
+      "利点": "電源不要で温風が出せる"
+    },
+    "description": "CB缶と乾電池だけで温風が出せるガスファンヒーター。コンセントもポータブル電源も不要で、電源サイト以外でも温風暖房ができるのが最大の強みです。",
+    "rating": 4.58,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
+  },
+  {
+    "id": "heater-koizumi-electric-blanket",
+    "name": "コイズミ 電気敷毛布",
+    "brand": "コイズミ",
+    "price": 7980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/mypita/cabinet/sssale/kds5089ct-outletf.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00t8k06.wwmjs952.g00t8k06.wwmjt24b/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmypita%2Fkds5089ct%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmypita%2Fi%2F10000172%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "消費電力": "約40W",
+      "形式": "敷きタイプ",
+      "手入れ": "丸洗い可（モデルによる）",
+      "電源目安": "500Whクラスのポータブル電源で一晩"
+    },
+    "description": "消費電力40W前後の省エネ敷き毛布。500Whクラスのポータブル電源でも朝まで持つので、電源なしサイトの冬キャンプで一番費用対効果が高い暖房です。シュラフの中に敷いて使います。",
+    "rating": 4.8,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
+  },
+  {
+    "id": "heater-yamazen-electric-blanket",
+    "name": "山善 電気毛布",
+    "brand": "山善",
+    "price": 5980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/momizistore/cabinet/imgrc0097326424.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ug9n6.wwmjsa40.g00ug9n6.wwmjt8da/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmomizistore%2Fb09c1ph1wz%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmomizistore%2Fi%2F10000918%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "",
+    "categoryId": "heater",
+    "specs": {
+      "消費電力": "約40〜55W",
+      "形式": "敷きタイプ",
+      "手入れ": "丸洗い可（モデルによる）",
+      "価格帯": "エントリー"
+    },
+    "description": "キャンプ用電気毛布の定番格。価格が手ごろで、まず1枚試すのに向いています。ポータブル電源の容量計算がしやすい消費電力表示も助かります。",
+    "rating": 0,
+    "priceUpdatedAt": "2026-08-03T12:46:07.841Z",
+    "createdAt": "2026-08-03T12:46:07.841Z",
+    "updatedAt": "2026-08-03T12:46:07.841Z"
   }
 ]
