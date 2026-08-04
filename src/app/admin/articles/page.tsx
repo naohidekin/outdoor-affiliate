@@ -348,6 +348,7 @@ https://camp-gear-lab.com/articles/${article.slug}
 {{product:商品IDがここに入ります}}
 
 初心者から上級者まで幅広く使えるテントです。
+価格は{{price:商品ID}}です（表示時に商品データの価格へ差し替わります）。
 
 {{comparison:商品ID1,商品ID2,商品ID3}}
 

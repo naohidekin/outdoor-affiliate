@@ -57,6 +57,22 @@ async function checkArticleIntegrity(article: Article): Promise<string[]> {
     }
   }
 
+  // 5. {{price:商品ID}} の参照切れ。表示側はタグを黙って消すので、
+  //    ID打ち間違い・価格未登録は「価格の記述が丸ごと消えた本文」になって出る
+  const priceTags = [...content.matchAll(/\{\{price:([^}]+)\}\}/g)].map((m) =>
+    m[1].trim()
+  );
+  if (priceTags.length > 0) {
+    const products = await getProducts();
+    const priceById = new Map(products.map((p) => [p.id, p.price]));
+    const broken = [...new Set(priceTags)].filter((id) => !priceById.get(id));
+    if (broken.length > 0) {
+      warnings.push(
+        `{{price:}} が解決できません（存在しないID or 価格未登録）: ${broken.join(", ")}`
+      );
+    }
+  }
+
   return warnings;
 }
 

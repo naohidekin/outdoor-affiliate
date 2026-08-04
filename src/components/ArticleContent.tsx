@@ -30,8 +30,21 @@ interface Props {
 export default function ArticleContent({ content, products }: Props) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
+  // {{price:商品ID}} を現在の登録価格に差し替える。
+  // 本文に金額を文字列で焼き込むと、商品データを直しても本文が古いまま残る
+  // （2026-08-03に10記事で発覚。クーポン価格を「実売価格」と書いた記事もあった）。
+  // 分割ではなく置換で処理するので、表のセル内や文中でも使える。
+  // 価格未登録・IDの打ち間違いはタグを消して黙って本文を通す（記号の露出を防ぐ）
+  const resolved = content.replace(
+    /\{\{price:([^}]+)\}\}/g,
+    (_all, rawId: string) => {
+      const p = productMap.get(rawId.trim());
+      return p?.price ? `${p.price.toLocaleString()}円` : "";
+    }
+  );
+
   // Split content by custom tags
-  const parts = content.split(
+  const parts = resolved.split(
     /(\{\{(?:product|comparison|ranking|youtube):[^}]+\}\})/g
   );
 
