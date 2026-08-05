@@ -2,13 +2,16 @@
 
 /**
  * Amazon 価格監視 & セール検知スクリプト
- * PA-API v5 で商品価格を取得し、値下げ・セールを検知
+ * Creators API で商品価格を取得し、値下げ・セールを検知
  * → 検知時に X投稿を自動生成してGoogle Sheetsに保存
  *
+ * ※ PA-API v5 は 2026-05-15 に廃止。後継の Creators API に移行済み。
+ *
  * 必要な環境変数:
- *   AMAZON_ACCESS_KEY   — PA-API アクセスキー
- *   AMAZON_SECRET_KEY   — PA-API シークレットキー
- *   AMAZON_PARTNER_TAG  — アソシエイトタグ (例: camp78-22)
+ *   AMAZON_CREDENTIAL_ID      — 認証情報ID (amzn1.application-oa2-client....)
+ *   AMAZON_CREDENTIAL_SECRET  — 発行時に一度だけ表示されるSecret
+ *   AMAZON_PARTNER_TAG        — アソシエイトタグ (既定: camp78-22)
+ *   ※ 旧 AMAZON_ACCESS_KEY / AMAZON_SECRET_KEY に入っていても読む
  *
  * 使い方:
  *   node scripts/price-monitor.js
@@ -17,8 +20,8 @@
 
 import fs from "fs";
 import path from "path";
-import crypto from "crypto";
 import { fileURLToPath } from "url";
+import { creatorsApi, credentials, hasCredentials } from "../src/lib/amazon-creators-api.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -35,100 +38,12 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
-const SECRET_KEY = process.env.AMAZON_SECRET_KEY;
-const PARTNER_TAG = process.env.AMAZON_PARTNER_TAG || "camp78-22";
 const THRESHOLD = parseInt(
   process.argv.find((a) => a.startsWith("--threshold="))?.split("=")[1] || "10"
 );
 
-const HOST = "webservices.amazon.co.jp";
-const REGION = "us-west-2";
-const SERVICE = "ProductAdvertisingAPI";
-
-// --- PA-API v5 AWS Signature V4 ---
-
-function hmacSha256(key, data) {
-  return crypto.createHmac("sha256", key).update(data).digest();
-}
-
-function sha256(data) {
-  return crypto.createHash("sha256").update(data).digest("hex");
-}
-
-function getSignatureKey(key, dateStamp, region, service) {
-  const kDate = hmacSha256("AWS4" + key, dateStamp);
-  const kRegion = hmacSha256(kDate, region);
-  const kService = hmacSha256(kRegion, service);
-  return hmacSha256(kService, "aws4_request");
-}
-
-async function paApiRequest(operation, payload) {
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-  const dateStamp = amzDate.slice(0, 8);
-
-  const body = JSON.stringify(payload);
-  const headers = {
-    "content-encoding": "amz-1.0",
-    "content-type": "application/json; charset=utf-8",
-    host: HOST,
-    "x-amz-date": amzDate,
-    "x-amz-target": `com.amazon.paapi5.v1.ProductAdvertisingAPIv1.${operation}`,
-  };
-
-  const signedHeaders = Object.keys(headers).sort().join(";");
-  const canonicalHeaders = Object.keys(headers)
-    .sort()
-    .map((k) => `${k}:${headers[k]}`)
-    .join("\n");
-
-  const canonicalRequest = [
-    "POST",
-    "/paapi5/" + operation.toLowerCase().replace(/([A-Z])/g, (m) => m).replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase().replace("get-", "get"),
-    "",
-    canonicalHeaders + "\n",
-    signedHeaders,
-    sha256(body),
-  ].join("\n");
-
-  // Fix path for PA-API
-  const apiPath = `/paapi5/${operation === "GetItems" ? "getitems" : operation === "SearchItems" ? "searchitems" : operation.toLowerCase()}`;
-  const canonicalRequestFixed = [
-    "POST",
-    apiPath,
-    "",
-    canonicalHeaders + "\n",
-    signedHeaders,
-    sha256(body),
-  ].join("\n");
-
-  const credentialScope = `${dateStamp}/${REGION}/${SERVICE}/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    sha256(canonicalRequestFixed),
-  ].join("\n");
-
-  const signingKey = getSignatureKey(SECRET_KEY, dateStamp, REGION, SERVICE);
-  const signature = hmacSha256(signingKey, stringToSign).toString("hex");
-
-  const authHeader = `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  const res = await fetch(`https://${HOST}${apiPath}`, {
-    method: "POST",
-    headers: { ...headers, Authorization: authHeader },
-    body,
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`PA-API error ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  return res.json();
-}
+// --- Creators API（PA-API v5 は 2026-05-15 廃止） ---
+// 認証・トークン管理・429リトライは src/lib/amazon-creators-api.mjs に集約
 
 // --- 価格取得 ---
 
@@ -137,24 +52,71 @@ function extractAsin(url) {
   return match ? match[1] : null;
 }
 
-async function getItemPrices(asins) {
-  // PA-API GetItems は最大10件
-  const payload = {
-    ItemIds: asins,
-    Resources: [
-      "ItemInfo.Title",
-      "Offers.Listings.Price",
-      "Offers.Listings.SavingBasis",
-      "Offers.Listings.MerchantInfo",
-      "Offers.Listings.Promotions",
-    ],
-    PartnerTag: PARTNER_TAG,
-    PartnerType: "Associates",
-    Marketplace: "www.amazon.co.jp",
-  };
+// offersV2 に定価（savingBasis）が含まれるかは環境によって差があるため、
+// richリソースで一度試し、拒否されたら最小構成に落として続行する。
+// 最小構成でも「保存済み価格からの下落」は検知できる（定価比だけが取れなくなる）。
+const RESOURCES_RICH = [
+  "itemInfo.title",
+  "offersV2.listings.price",
+  "offersV2.listings.savingBasis",
+];
+const RESOURCES_MIN = ["itemInfo.title", "offersV2.listings.price"];
+let resources = RESOURCES_RICH;
+let savingBasisAvailable = true;
 
-  const data = await paApiRequest("GetItems", payload);
-  return data.ItemsResult?.Items || [];
+async function getItemPrices(asins) {
+  const c = credentials();
+  let data;
+  try {
+    data = await creatorsApi("/catalog/v1/getItems", {
+      itemIds: asins,
+      partnerTag: c.partnerTag,
+      resources,
+    });
+  } catch (e) {
+    // 未対応リソースが原因なら最小構成へ落として再試行する（一度だけ）
+    if (resources === RESOURCES_RICH && /400|resource/i.test(String(e.message))) {
+      console.log("  ℹ️ savingBasis 非対応のため最小リソースに切替（定価比の検知は無効）");
+      resources = RESOURCES_MIN;
+      savingBasisAvailable = false;
+      data = await creatorsApi("/catalog/v1/getItems", {
+        itemIds: asins,
+        partnerTag: c.partnerTag,
+        resources,
+      });
+    } else {
+      throw e;
+    }
+  }
+
+  for (const e of data.errors || []) {
+    console.log(`  ⚠️ APIエラー: ${e.code} ${String(e.message).slice(0, 100)}`);
+  }
+
+  // 既存の集計ロジックを変えずに済むよう、PA-API v5 と同じ形に整形して返す
+  return (data.itemsResult?.items || []).map((item) => {
+    const listing = item.offersV2?.listings?.[0];
+    const amount = listing?.price?.money?.amount;
+    const basis = listing?.savingBasis?.money?.amount;
+    const savings =
+      basis && amount && basis > amount
+        ? { Amount: Math.round(basis - amount), Percentage: Math.round(((basis - amount) / basis) * 100) }
+        : undefined;
+    return {
+      ASIN: item.asin,
+      ItemInfo: { Title: { DisplayValue: item.itemInfo?.title?.displayValue || "" } },
+      Offers: {
+        Listings: listing
+          ? [
+              {
+                Price: { Amount: typeof amount === "number" ? Math.round(amount) : undefined, Savings: savings },
+                SavingBasis: basis ? { Amount: Math.round(basis) } : undefined,
+              },
+            ]
+          : [],
+      },
+    };
+  });
 }
 
 // --- メイン処理 ---
@@ -162,20 +124,22 @@ async function getItemPrices(asins) {
 let priceUpdateCount = 0; // 完走後のSupabase同期ゲート用
 
 async function main() {
-  if (!ACCESS_KEY || !SECRET_KEY) {
-    console.log("⚠️ PA-API認証情報が未設定です。");
+  if (!hasCredentials()) {
+    console.log("⚠️ Creators API認証情報が未設定です。");
     console.log("");
     console.log("以下を .env.local に追加してください:");
-    console.log("  AMAZON_ACCESS_KEY=your_access_key");
-    console.log("  AMAZON_SECRET_KEY=your_secret_key");
-    console.log("  AMAZON_PARTNER_TAG=camp78-22");
+    console.log("  AMAZON_CREDENTIAL_ID=amzn1.application-oa2-client....");
+    console.log("  AMAZON_CREDENTIAL_SECRET=（発行時に一度だけ表示されるSecret）");
+    console.log("  # AMAZON_PARTNER_TAG=camp78-22   … 未設定なら既定値を使用");
     console.log("");
-    console.log("PA-APIのアクセスキーの取得方法:");
+    console.log("認証情報の取得方法:");
     console.log("  1. https://affiliate.amazon.co.jp/ にログイン");
-    console.log("  2. ツール → Product Advertising API");
-    console.log("  3. 認証情報を管理 → アクセスキーを生成");
+    console.log("  2. ツール → クリエイターAPI（/creatorsapi）");
+    console.log("  3. アプリケーションの「新しい認証情報を追加」");
+    console.log("     → Secret は追加直後にしか表示されないので必ず控える");
     console.log("");
-    console.log("※ PA-APIを利用するには、直近30日間に3件以上の売上実績が必要です");
+    console.log("※ PA API へのアクセスには、過去30日間に10件以上の売上が必要です");
+    console.log("※ 旧 AMAZON_ACCESS_KEY / AMAZON_SECRET_KEY に入れてあっても読みます");
     process.exit(0);
   }
 
