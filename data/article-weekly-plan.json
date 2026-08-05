@@ -1,71 +1,71 @@
 {
-  "week": "2026-W31",
-  "generatedAt": "2026-07-29T09:00:43+09:00",
+  "week": "2026-W32",
+  "generatedAt": "2026-08-05T09:00:48+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W31-01",
+      "themeId": "theme-2026-W32-01",
       "categoryId": "fan",
-      "title": "キャンプ用ポータブル扇風機おすすめランキング【2026年版】テント内・就寝時の使い方も解説",
-      "slug": "camp-fan-tent-sleep-guide-2026",
-      "angle": "テント内や就寝時の熱中症対策という実用シーン別に、選び方から使い方まで網羅したガイド記事",
+      "title": "テント内で使える扇風機おすすめ7選【2026年版】就寝時の熱帯夜を乗り切る選び方",
+      "slug": "tent-fan-sleep-ranking-2026",
+      "angle": "「テント内での使用」に絞り、静音・安全・バッテリー持ちの3軸で夜間使用に特化した選び方を解説",
       "targetKeywords": [
+        "テント 扇風機 おすすめ",
         "キャンプ 扇風機 テント内",
-        "キャンプ 扇風機 就寝",
-        "夏キャンプ 熱中症対策 扇風機"
+        "夏キャンプ 熱帯夜 対策"
       ],
-      "seasonRelevance": "7月は夏キャンプ最盛期でテント内の暑さ対策への需要が急上昇するタイミング",
+      "seasonRelevance": "8月は夜でも気温が下がらない熱帯夜が続き、テント内の就寝時扇風機需要が最高潮に達する",
       "priority": "high",
-      "reason": "fanカテゴリはPV・検索セッションともにサイト内トップ（PV 1749 / SS 1516）で既存記事との重複を避けたテント内・就寝シーン特化の切り口が未カバー",
-      "scheduledPublishDate": "2026-07-31",
+      "reason": "fanカテゴリはPV2,844と群を抜いてトレンドactiveだが、既存記事にテント内夜間使用に特化した記事がなく、即戦力の差別化コンテンツを投入できる",
+      "scheduledPublishDate": "2026-08-07",
       "productCount": 3,
       "productIds": [
-        "fan-004",
-        "fan-005",
-        "fan-006"
+        "fan-007",
+        "fan-008",
+        "fan-009"
       ]
     },
     {
-      "themeId": "theme-2026-W31-02",
+      "themeId": "theme-2026-W32-02",
       "categoryId": "cooler",
-      "title": "キャンプ用ハードクーラーボックスおすすめランキング【2026年版】保冷力・サイズ・コスパで徹底比較",
-      "slug": "hard-cooler-box-ranking-2026",
-      "angle": "ソフトクーラー記事と差別化し、ハードクーラーに絞って保冷力・容量・価格帯のマトリクスで選べる比較記事",
+      "title": "キャンプで保冷力を最大化するクーラーボックスの使い方完全ガイド【2026年版】",
+      "slug": "cooler-box-max-cold-technique-guide",
+      "angle": "機種選びではなく「使い方・詰め方・氷の種類・予冷」などのテクニック面に特化し、手持ちのクーラーで保冷力を引き出す方法を網羅",
       "targetKeywords": [
-        "ハードクーラーボックス おすすめ",
-        "クーラーボックス 保冷力 比較",
-        "キャンプ クーラーボックス ランキング"
+        "クーラーボックス 保冷力 上げる",
+        "クーラーボックス 使い方 コツ",
+        "キャンプ 氷 長持ち"
       ],
-      "seasonRelevance": "7月の今月季節カテゴリであり、食材・飲料の保冷は夏キャンプの最重要課題",
+      "seasonRelevance": "真夏の8月は食材の傷みリスクが最も高く、保冷テクニックへの検索需要が急増する",
       "priority": "high",
-      "reason": "coolerは今月季節カテゴリかつ検索セッション136と需要が高い一方、既存のsoft-cooler-rankingやcooler-box-rankingと切り口が重複しないハードクーラー特化記事が未存在",
-      "scheduledPublishDate": "2026-08-02",
+      "reason": "coolerは8月の季節カテゴリかつPVもactiveで、既存記事は製品ランキング・氷節約Tipsが中心のため、テクニック特化という新角度で被りなく量産できる",
+      "scheduledPublishDate": "2026-08-09",
       "productCount": 3,
       "productIds": [
-        "cooler-027",
-        "cooler-028",
-        "cooler-029"
+        "cooler-001",
+        "growler-002",
+        "growler-003"
       ]
     },
     {
-      "themeId": "theme-2026-W31-03",
+      "themeId": "theme-2026-W32-03",
       "categoryId": "insect-repellent",
-      "title": "キャンプの虫除けアロマおすすめ【2026年版】化学成分が気になる方向けの天然・ナチュラル系虫対策",
-      "slug": "natural-aroma-insect-repellent-camping",
-      "angle": "DEET・イカリジン不使用の天然・アロマ系虫除けに絞り、子連れ・敏感肌ファミリーに向けた安心訴求の特化記事",
+      "title": "ブヨ対策グッズおすすめ5選＆刺された時の正しい対処法【2026年版】",
+      "slug": "byu-insect-repellent-treatment-guide",
+      "angle": "蚊より被害が深刻なブヨに絞り、予防グッズの選び方と刺されてからの応急処置・薬選びまでをセットで解説",
       "targetKeywords": [
-        "虫除け アロマ キャンプ",
-        "天然 虫除け キャンプ 子供",
-        "ナチュラル 虫除けスプレー アウトドア"
+        "ブヨ 対策 キャンプ",
+        "ブヨ 刺された 対処法",
+        "ブヨ除け グッズ"
       ],
-      "seasonRelevance": "7月の今月季節カテゴリであり、蚊・ブヨが最も活発になる真夏に向けて安全志向の検索需要が高まる",
+      "seasonRelevance": "8月の渓流・山岳キャンプでブヨ被害が急増し、蚊とは別の専門対策情報への需要が高まる",
       "priority": "medium",
-      "reason": "insect-repellentは今月季節カテゴリで既存7記事はスプレーランキング・ブレスレット・総合ガイド等が揃っているが、天然・アロマ系という成分軸の切り口が未カバーで差別化できる",
-      "scheduledPublishDate": "2026-08-05",
+      "reason": "insect-repellentは8月季節カテゴリで既存記事が多いが、ブヨ専門に絞った記事は皆無であり、検索意図の明確なニッチキーワードを獲得できる",
+      "scheduledPublishDate": "2026-08-12",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-019",
-        "insect-repellent-020",
-        "insect-repellent-021"
+        "insect-repellent-022",
+        "insect-repellent-023",
+        "insect-repellent-024"
       ]
     }
   ]
