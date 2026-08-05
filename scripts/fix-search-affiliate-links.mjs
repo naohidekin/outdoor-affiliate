@@ -46,6 +46,8 @@ const RAKUTEN_AFFILIATE_ID =
   process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
 const APPLY = process.argv.includes("--apply");
+// 診断モード。判定は一切変えず、スキップ理由の内訳だけを追加で出す
+const EXPLAIN = process.argv.includes("--explain");
 const limitIdx = process.argv.indexOf("--limit");
 const LIMIT =
   limitIdx !== -1 ? parseInt(process.argv[limitIdx + 1], 10) : Infinity;
@@ -193,6 +195,73 @@ function pickBest(product, items) {
   return null;
 }
 
+// --explain 用。pickBest と同じゲートを再現し「どこで落ちたか」を返す。
+// 判定には一切影響しない（採否は pickBest が単独で決める）
+function diagnose(product, items) {
+  if (items.length === 0) return { reason: "候補0件（検索がヒットしない）", top: null };
+
+  const models = modelNumbers(product.name);
+  const usedOut = items.filter((it) => USED_SHOP_PATTERNS.test(it.shopName || ""));
+  const survivors = items.filter(
+    (it) =>
+      !USED_SHOP_PATTERNS.test(it.shopName || "") &&
+      sizeMatches(product.name, it.itemName || "")
+  );
+  const sizeOut = items.length - usedOut.length - survivors.length;
+
+  if (survivors.length === 0) {
+    return {
+      reason: `全候補が除外（中古${usedOut.length}・サイズ不一致${sizeOut}）`,
+      top: null,
+      models,
+      usedOut: usedOut.length,
+      sizeOut,
+    };
+  }
+
+  const scored = survivors
+    .map((it) => {
+      const overlap = tokenOverlap(product.name, it.itemName);
+      const itemModels = modelNumbers(it.itemName);
+      const modelHit = models.length > 0 && models.some((m) => itemModels.includes(m));
+      const priceOk =
+        !product.price ||
+        (it.itemPrice >= product.price * 0.6 && it.itemPrice <= product.price * 1.4);
+      const ratio = product.price ? it.itemPrice / product.price : null;
+      return { it, overlap, modelHit, priceOk, ratio };
+    })
+    .sort((a, b) => b.overlap - a.overlap);
+
+  const top = scored[0];
+  let reason;
+  if (models.length > 0) {
+    reason = "型番不一致（型番ありは完全一致が必須）";
+  } else if (top.overlap < 0.7) {
+    reason = `一致率不足（最高${Math.round(top.overlap * 100)}% < 70%）`;
+  } else if (!scored.some((s) => s.overlap >= 0.7 && s.priceOk)) {
+    reason = "価格乖離（一致率は足りたが±40%外）";
+  } else {
+    reason = "アフィリエイトURLが空";
+  }
+  return { reason, top, models, usedOut: usedOut.length, sizeOut, survivors: survivors.length };
+}
+
+function printDiagnosis(product, d) {
+  console.log(`   └ 理由: ${d.reason}`);
+  if (d.models?.length) console.log(`     商品側の型番: ${d.models.join(", ")}`);
+  if (d.top) {
+    const t = d.top;
+    const price = product.price
+      ? `¥${t.it.itemPrice.toLocaleString()}（登録¥${product.price.toLocaleString()} の ${Math.round(t.ratio * 100)}%）${t.priceOk ? "✓" : "✗"}`
+      : `¥${t.it.itemPrice.toLocaleString()}（登録価格なし）`;
+    console.log(`     最有力: ${t.it.itemName.slice(0, 50)}`);
+    console.log(
+      `     一致率${Math.round(t.overlap * 100)}% / 型番${t.modelHit ? "✓" : "✗"} / 価格 ${price}`
+    );
+    console.log(`     店舗: ${t.it.shopName}`);
+  }
+}
+
 const products = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
 const targets = products.filter((p) => isSearchLink(p.affiliateUrl)).slice(0, LIMIT);
 console.log(`検索ページ行きリンク: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
@@ -203,6 +272,7 @@ for (const p of targets) {
   await sleep(1100); // 楽天APIレート制限（1req/秒）
   const brand = p.brand && !p.name.includes(p.brand) ? `${p.brand} ` : "";
   const items = await searchRakuten(`${brand}${p.name}`);
+  let allItems = items; // --explain 用（型番再検索の結果も含めた全候補）
   let best = pickBest(p, items);
   // フォールバック: 商品名フルでヒットしない場合、型番だけで再検索
   // （店の商品名は語順・表記が違うことが多く、型番検索の方が刺さる）
@@ -212,12 +282,25 @@ for (const p of targets) {
       await sleep(1100);
       const brandWord = (p.brand || p.name.split(/\s+/)[0] || "").slice(0, 20);
       const retry = await searchRakuten(`${brandWord} ${models[0]}`);
+      if (retry.length > 0) allItems = items.concat(retry);
       best = pickBest(p, retry);
     }
   }
   if (!best || !best.item.affiliateUrl) {
-    skipped.push({ id: p.id, name: p.name, candidates: items.length });
+    const d = diagnose(p, allItems);
+    skipped.push({
+      id: p.id,
+      name: p.name,
+      candidates: items.length,
+      candidatesAll: allItems.length,
+      reason: d.reason,
+      topItemName: d.top?.it.itemName ?? null,
+      topItemPrice: d.top?.it.itemPrice ?? null,
+      productPrice: p.price ?? null,
+      overlap: d.top ? Math.round(d.top.overlap * 100) : null,
+    });
     console.log(`✗ スキップ: ${p.name.slice(0, 40)}（候補${items.length}件・確信なし）`);
+    if (EXPLAIN) printDiagnosis(p, d);
     continue;
   }
   fixes.push({
@@ -236,8 +319,38 @@ for (const p of targets) {
   }
 }
 
+// スキップ理由の内訳。どのゲートが効いているかを一目で見るための集計
+const reasonTally = {};
+for (const s of skipped) {
+  const key = (s.reason || "不明").replace(/（.*$/, "").trim();
+  reasonTally[key] = (reasonTally[key] || 0) + 1;
+}
+
 fs.mkdirSync(path.dirname(REPORT), { recursive: true });
-fs.writeFileSync(REPORT, JSON.stringify({ appliedAt: new Date().toISOString(), apply: APPLY, fixes, skipped }, null, 2));
+fs.writeFileSync(
+  REPORT,
+  JSON.stringify(
+    { appliedAt: new Date().toISOString(), apply: APPLY, reasonTally, fixes, skipped },
+    null,
+    2
+  )
+);
+
+if (skipped.length > 0) {
+  console.log("\n── スキップ理由の内訳 ──");
+  for (const [reason, n] of Object.entries(reasonTally).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${String(n).padStart(3)}件  ${reason}`);
+  }
+  const priced = skipped.filter((s) => s.topItemPrice && s.productPrice);
+  if (priced.length > 0) {
+    const ratios = priced.map((s) => s.topItemPrice / s.productPrice).sort((a, b) => a - b);
+    const median = ratios[Math.floor(ratios.length / 2)];
+    console.log(
+      `\n  参考: 最有力候補の実売 / 登録価格 の中央値 = ${Math.round(median * 100)}%（${priced.length}件で算出）`
+    );
+    console.log("  100%から大きく外れていれば、products.json の価格が古い可能性が高い");
+  }
+}
 if (APPLY) {
   fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
   console.log(`\nproducts.json 反映: ${fixes.length}件 / スキップ ${skipped.length}件`);
