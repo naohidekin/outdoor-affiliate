@@ -18,9 +18,14 @@
  *   node scripts/revert-price-anomalies.mjs --apply          # 異常値を全部戻す
  *   node scripts/revert-price-anomalies.mjs --apply --keep light-002,burner-s-008
  *   node scripts/revert-price-anomalies.mjs --min 0.5 --max 2.0
+ *   node scripts/revert-price-anomalies.mjs --fix-drift          # 履歴との食い違いを検出
  *
- * --apply の後は Supabase 同期が必要:
- *   npm run db:sync
+ * --apply の後は Supabase 同期が必要。**--no-pull を必ず付ける**:
+ *   npm run db:sync -- --no-pull
+ *
+ * 付けないと auto-pull(Supabase→local) が先に走り、まだDBに反映されていない
+ * ローカルの修正が旧値で上書きされる。updatedAt は進めてあるので
+ * pull-from-supabase の保持ルールには掛かるが、二重の保険として付ける。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -72,6 +77,45 @@ for (const p of products) {
   byAsin.get(a).push(p);
 }
 
+// --fix-drift: price-history と products.json の食い違いを直す。
+// 通常この2つは一致する（price-monitor が両方書くため）。ずれているのは
+// 片方だけが外部要因で書き換わった場合で、実際 2026-08-05 に
+// sync-to-supabase の auto-pull が差し戻し後の products.json を
+// 旧価格へ巻き戻す事故が起きた。history 側を正として揃える。
+if (argv.includes("--fix-drift")) {
+  const drift = [];
+  for (const [asin, h] of Object.entries(history)) {
+    if (!h.price) continue;
+    for (const product of byAsin.get(asin) || []) {
+      if (product.price === h.price) continue;
+      drift.push({ product, from: product.price, to: h.price });
+    }
+  }
+  console.log(`履歴との食い違い: ${drift.length}件${APPLY ? "" : " ※dry-run"}\n`);
+  for (const d of drift) {
+    console.log(
+      `${APPLY ? "✓ 修正" : "・ 対象"}  ¥${String(d.from).padStart(7)} → ¥${String(d.to).padStart(7)}  ` +
+        `${d.product.id}  ${d.product.name.slice(0, 34)}`
+    );
+    if (APPLY) {
+      const ts = new Date().toISOString();
+      d.product.price = d.to;
+      d.product.updatedAt = ts;
+      d.product.priceUpdatedAt = ts;
+    }
+  }
+  if (APPLY && drift.length) {
+    fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
+    console.log(`\n✅ ${drift.length}件を履歴の値に揃えました`);
+    console.log("次: npm run db:sync -- --no-pull で本番反映（--no-pull を必ず付ける）");
+  } else if (!drift.length) {
+    console.log("食い違いはありません。");
+  } else {
+    console.log(`\ndry-run完了: ${drift.length}件が対象。--apply で修正します`);
+  }
+  process.exit(0);
+}
+
 const anomalies = [];
 for (const [asin, h] of Object.entries(history)) {
   if (!h.price || !h.previousPrice) continue;
@@ -104,6 +148,12 @@ for (const a of anomalies) {
   reverted++;
   if (APPLY) {
     a.product.price = a.to;
+    // updatedAt を進めないと sync-to-supabase の auto-pull で巻き戻る。
+    // pull-from-supabase は「ローカルの updatedAt がリモートより新しい」
+    // 行だけを push待ちとして保持する仕様（2026-08-05にこれで差し戻しが消えた）
+    const ts = new Date().toISOString();
+    a.product.updatedAt = ts;
+    a.product.priceUpdatedAt = ts;
     // 次回実行で同じ差分を再検出しないよう履歴も戻す
     history[a.asin] = {
       ...history[a.asin],
