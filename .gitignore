@@ -66,3 +66,5 @@ data/x/ideas.jsonl
 # 手動記入するワークシート。リモート側の再生成とローカルの記入内容が
 # 衝突するためGit管理から外す（再生成は --init でいつでも可能）
 scratch/manual-affiliate-links.txt
+scratch/
+data/price-history.json
