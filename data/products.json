@@ -95,7 +95,7 @@
     "id": "cot-waq-2way",
     "name": "WAQ 2WAYフォールディングコット",
     "brand": "WAQ",
-    "price": 13430,
+    "price": 15800,
     "imageUrl": "https://m.media-amazon.com/images/I/51SD-zbmccL._AC_SL1000_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwaqoutdoor%2Fwaq-cot1%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B083ZWDCXN?tag=camp78-22",
@@ -110,8 +110,9 @@
     "description": "",
     "rating": 4.6,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:28.008+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:14.609Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:14.609Z"
   },
   {
     "id": "cooler-001",
@@ -165,7 +166,7 @@
     "id": "jackery-1000-new",
     "name": "Jackery ポータブル電源 1000 New",
     "brand": "Jackery",
-    "price": 69484,
+    "price": 119800,
     "imageUrl": "https://m.media-amazon.com/images/I/51cgrzCirhL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fjackery-japan%2Fn-p-10001000-bkor-jk2%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0D3HJM175?tag=camp78-22",
@@ -181,8 +182,9 @@
     "description": "",
     "rating": 4.6,
     "createdAt": "2026-06-20T10:53:28.965+00:00",
-    "updatedAt": "2026-08-05T21:40:28.008+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:14.609Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:14.609Z"
   },
   {
     "id": "growler-002",
@@ -248,7 +250,8 @@
     "description": "1,210円で直火対応・お米1合の計量目盛り付きのステンレスシェラカップ。コスパ最優先のユニフレームらしい実用設計。ステンレスなので熱伝導が均一で焦げにくい。",
     "rating": 4.6,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:30.009+00:00"
+    "updatedAt": "2026-08-06T15:10:14.609Z",
+    "priceUpdatedAt": "2026-08-06T15:10:14.609Z"
   },
   {
     "id": "uniflame-yama-kettle-900",
@@ -462,17 +465,18 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-04-15T02:21:25.767+00:00",
-    "updatedAt": "2026-08-05T21:40:30.009+00:00",
+    "updatedAt": "2026-08-06T15:10:16.309Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T02:21:25.767Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:16.309Z"
   },
   {
     "id": "neck-thanko-lite",
     "name": "THANKO ネッククーラーLite",
     "brand": "THANKO",
-    "price": 5420,
+    "price": 5438,
     "imageUrl": "https://m.media-amazon.com/images/I/61+dc2X3k3L._AC_SX679_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fthanko%2F000000004815%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0GK7GH9ML?tag=camp78-22",
@@ -487,8 +491,9 @@
     "description": "",
     "rating": 2.9,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:30.009+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:16.309Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:16.309Z"
   },
   {
     "id": "heatstroke-wbgt-meter",
@@ -535,7 +540,8 @@
     "description": "三脚式ランタンスタンドの完成形。ペグ付きで風に強く、10段階の高さ調整が使いやすい。コールマンユーザーとの相性も良い定番モデル。",
     "rating": 4.5,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:30.009+00:00"
+    "updatedAt": "2026-08-06T15:10:16.309Z",
+    "priceUpdatedAt": "2026-08-06T15:10:16.309Z"
   },
   {
     "id": "burner-s-006",
@@ -602,8 +608,9 @@
     "description": "",
     "rating": 4.2,
     "createdAt": "2026-06-20T10:53:28.965+00:00",
-    "updatedAt": "2026-08-05T21:40:31.955+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:16.309Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:16.309Z"
   },
   {
     "id": "sierra-cup-bundok",
@@ -664,8 +671,9 @@
     "description": "",
     "rating": 4.5,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:35.738+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:17.994Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:17.994Z"
   },
   {
     "id": "gas-lantern-008",
@@ -688,7 +696,8 @@
     "description": "日本の新潟発ユニフレームのフォールディングランタン。プリムス2245Aに匹敵する明るさを折り畳みコンパクト設計で実現。国産ブランドへのこだわりがある人に刺さる一台。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:31.955+00:00"
+    "updatedAt": "2026-08-06T15:10:17.994Z",
+    "priceUpdatedAt": "2026-08-06T15:10:17.994Z"
   },
   {
     "id": "tent-solo-001",
@@ -869,8 +878,9 @@
     "description": "パワー森林香・森林香専用の金属製携帯ケース。吊り下げフック付き。",
     "rating": 4.3,
     "createdAt": "2026-04-28T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:33.902+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:17.994Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:17.994Z"
   },
   {
     "id": "rakuten-yiprefer-10002589",
@@ -885,11 +895,12 @@
     "description": "楽天レビュー1904件、★4.66",
     "rating": 4.66,
     "createdAt": "2026-04-13T19:26:51.385+00:00",
-    "updatedAt": "2026-08-05T21:40:35.738+00:00",
+    "updatedAt": "2026-08-06T15:10:17.994Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:17.994Z"
   },
   {
     "id": "co-detector-coalan-cl715",
@@ -960,7 +971,8 @@
     "description": "2.4kgの軽量ボディで各3.0kWの高火力を誇るユニフレームの名作。薄く折り畳めるので車積みでも場所を取らない。CB缶2本使いで長時間の調理にも対応できる実用重視のツーバーナー。",
     "rating": 5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:30.009+00:00"
+    "updatedAt": "2026-08-06T15:10:19.696Z",
+    "priceUpdatedAt": "2026-08-06T15:10:19.696Z"
   },
   {
     "id": "chair-007",
@@ -1148,8 +1160,9 @@
     "description": "",
     "rating": 3.4,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:31.955+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:19.696Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:19.696Z"
   },
   {
     "id": "chair-010",
@@ -1282,7 +1295,8 @@
     "description": "53gの超軽量エアピロー。底面に滑り止め素材を採用しており、シュラフの上でずれにくい。",
     "rating": 4.1,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-08-05T21:40:31.955+00:00"
+    "updatedAt": "2026-08-06T15:10:19.696Z",
+    "priceUpdatedAt": "2026-08-06T15:10:19.696Z"
   },
   {
     "id": "cot-dod-baginbed",
@@ -1310,7 +1324,7 @@
     "id": "rakuten-maxshare-10007356",
     "name": "FIELDOOR ワンタッチタープテント 3m×3m",
     "brand": "FIELDOOR",
-    "price": 11400,
+    "price": 12800,
     "imageUrl": "https://m.media-amazon.com/images/I/313AAayMyqL._SL500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00prba6.wwmjsa5c.g00prba6.wwmjt79e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmaxshare%2Fa04309_sale%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmaxshare%2Fi%2F10007356%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00I0Q8VVG/?tag=camp78-22",
@@ -1325,11 +1339,12 @@
     "description": "骨組みを広げるだけで自立するワンタッチ式。3×3mのスチールフレームにサイドシート2枚付き。デイキャンプ・BBQ・運動会の「日陰を最速で作る」定番です。",
     "rating": 4.44,
     "createdAt": "2026-04-13T19:26:50.021+00:00",
-    "updatedAt": "2026-08-05T21:40:33.902+00:00",
+    "updatedAt": "2026-08-06T15:10:21.418Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:21.418Z"
   },
   {
     "id": "burner-m-007",
@@ -1395,7 +1410,8 @@
     "description": "アウトドアチェアの革命児。890gの超軽量で座り心地は抜群。全キャンパー必携の名作。",
     "rating": 4.7,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:33.902+00:00"
+    "updatedAt": "2026-08-06T15:10:21.418Z",
+    "priceUpdatedAt": "2026-08-06T15:10:21.418Z"
   },
   {
     "id": "tent-004",
@@ -1464,7 +1480,8 @@
     "description": "取り外して懐中電灯としても使えるキャプテンスタッグのLEDランタン。テント内吊り下げ・手持ちの2WAY使用が可能。",
     "rating": 3.8,
     "createdAt": "2026-04-26T17:08:54.309+00:00",
-    "updatedAt": "2026-08-05T21:40:33.902+00:00"
+    "updatedAt": "2026-08-06T15:10:21.418Z",
+    "priceUpdatedAt": "2026-08-06T15:10:21.418Z"
   },
   {
     "id": "tent-011",
@@ -1519,7 +1536,7 @@
     "id": "anker-solix-c1000-gen2",
     "name": "Anker Solix C1000 Gen 2",
     "brand": "Anker",
-    "price": 62990,
+    "price": 99990,
     "imageUrl": "https://m.media-amazon.com/images/I/51YsPaYII9L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fanker%2Fa1763%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0FK9YH385?tag=camp78-22",
@@ -1535,8 +1552,9 @@
     "description": "",
     "rating": 4.5,
     "createdAt": "2026-06-20T10:53:28.965+00:00",
-    "updatedAt": "2026-08-05T21:40:35.738+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:21.418Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:21.418Z"
   },
   {
     "id": "screen-tarp-coleman-400",
@@ -1622,7 +1640,8 @@
     "description": "2.2kW・4.5〜7畳対応の工事不要ポータブルクーラー。内部洗浄モード・リモコン・タイマー付きで、家庭とキャンプの兼用に向く大手ブランドの安心モデルです。",
     "rating": 4.2,
     "createdAt": "2026-07-17T11:17:24.653+00:00",
-    "updatedAt": "2026-08-05T21:40:35.738+00:00"
+    "updatedAt": "2026-08-06T15:10:23.120Z",
+    "priceUpdatedAt": "2026-08-06T15:10:23.120Z"
   },
   {
     "id": "sb-kids-001",
@@ -1718,7 +1737,7 @@
     "id": "pillow-waq-camp",
     "name": "WAQ キャンプ枕",
     "brand": "WAQ",
-    "price": 3580,
+    "price": 3980,
     "imageUrl": "https://m.media-amazon.com/images/I/41aIpDAozZS._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22",
@@ -1734,7 +1753,8 @@
     "description": "ウレタンとエアのハイブリッド構造。自宅の枕に近い感触で、車キャンプに最適。",
     "rating": 4.2,
     "createdAt": "2026-06-24T16:01:56.241785+00:00",
-    "updatedAt": "2026-08-05T21:40:35.738+00:00"
+    "updatedAt": "2026-08-06T15:10:23.121Z",
+    "priceUpdatedAt": "2026-08-06T15:10:23.121Z"
   },
   {
     "id": "cooler-026",
@@ -2187,8 +2207,9 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T10:53:28.965+00:00",
-    "updatedAt": "2026-08-05T21:40:39.276+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:25.097Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:25.097Z"
   },
   {
     "id": "insect-repellent-012",
@@ -2220,7 +2241,7 @@
     "id": "tarp-006",
     "name": "キャプテンスタッグ カージョイント タープテント車連結用",
     "brand": "キャプテンスタッグ",
-    "price": 3401,
+    "price": 3581,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/farson/cabinet/10310220/imgrc0120649660.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00sa736.wwmjs674.g00sa736.wwmjt7e5/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ffarson%2Fet003199-1%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ffarson%2Fi%2F10007691%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0B5GGDY3S?tag=camp78-22",
@@ -2236,11 +2257,12 @@
     "description": "",
     "rating": 5,
     "createdAt": "2026-04-15T00:00:35.29+00:00",
-    "updatedAt": "2026-08-05T21:40:39.276+00:00",
+    "updatedAt": "2026-08-06T15:10:25.097Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T00:00:35.290Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:25.097Z"
   },
   {
     "id": "burner-s-004",
@@ -2263,7 +2285,8 @@
     "description": "3.7kWという高火力が武器のプリムス製シングルバーナー。お湯が沸くのが速く、グループキャンプでも待ち時間が短い。高火力と軽量を両立したい人向けの選択肢。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00"
+    "updatedAt": "2026-08-06T15:10:25.097Z",
+    "priceUpdatedAt": "2026-08-06T15:10:25.097Z"
   },
   {
     "id": "burner-s-001",
@@ -2286,7 +2309,8 @@
     "description": "73gの超軽量シングルバーナー。スノーピークの品質で登山・バックパッキングから普段のソロキャンプまで使い回せる万能機。重量にこだわる人が最初に検討すべき一台。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:42.983+00:00"
+    "updatedAt": "2026-08-06T15:10:25.097Z",
+    "priceUpdatedAt": "2026-08-06T15:10:25.097Z"
   },
   {
     "id": "neck-suo-ring",
@@ -2361,7 +2385,7 @@
     "id": "cooler-tansu-spot-23kw",
     "name": "タンスのゲン スポットクーラー 2.3kW（窓パネル4枚付）",
     "brand": "タンスのゲン",
-    "price": 28469,
+    "price": 29999,
     "imageUrl": "https://m.media-amazon.com/images/I/41qunJiLRXL._SL500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftansu%2F7980000000%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0B1PXB3WT?tag=camp78-22",
@@ -2376,7 +2400,8 @@
     "description": "冷房能力2.3kW・6〜10畳対応の工事不要ポータブルクーラー。窓パネル4枚付きでテラス窓にも対応し、ノンドレン構造で排水いらず。電源サイトのキャンプと自宅の兼用に向きます。",
     "rating": 4.3,
     "createdAt": "2026-07-16T13:45:43.522+00:00",
-    "updatedAt": "2026-08-05T21:40:39.276+00:00"
+    "updatedAt": "2026-08-06T15:10:26.962Z",
+    "priceUpdatedAt": "2026-08-06T15:10:26.962Z"
   },
   {
     "id": "viral-scout-1778961984248-mcno",
@@ -2453,7 +2478,7 @@
     "id": "rakuten-music-and-outdoor-lab-10000402",
     "name": "SOTO マイクロトーチ ACTIVE ST-486",
     "brand": "キャンプ専門店Music&Outdoor lab",
-    "price": 1823,
+    "price": 1818,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/music-and-outdoor-lab/cabinet/06708470/st486-01.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tejc6.wwmjs43c.g00tejc6.wwmjt5bc/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmusic-and-outdoor-lab%2Fst-486-bk-free%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmusic-and-outdoor-lab%2Fi%2F10000402%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07N6SB9K2/?tag=camp78-22",
@@ -2463,11 +2488,12 @@
     "description": "楽天レビュー320件、★4.51",
     "rating": 4.51,
     "createdAt": "2026-04-13T19:26:57.79+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00",
+    "updatedAt": "2026-08-06T15:10:26.962Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:26.962Z"
   },
   {
     "id": "tent-f03",
@@ -2493,7 +2519,8 @@
     "description": "スノーピーク2ルームテントの最高峰。圧倒的な居住性と耐久性で、悪天候でも快適に過ごせる。一度買えば10年以上使える本物志向のファミリーテント。",
     "rating": 5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:42.983+00:00"
+    "updatedAt": "2026-08-06T15:10:26.962Z",
+    "priceUpdatedAt": "2026-08-06T15:10:26.962Z"
   },
   {
     "id": "cutting-board-belmont-butterfly",
@@ -2621,7 +2648,8 @@
     "description": "各3.5kWという高火力のSOTOツーバーナー。コールマン413Hに匹敵するパワーをCB缶で実現している。大人数のグループキャンプや料理にこだわるキャンパーが選ぶ本格派。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00"
+    "updatedAt": "2026-08-06T15:10:26.962Z",
+    "priceUpdatedAt": "2026-08-06T15:10:26.962Z"
   },
   {
     "id": "fan-claymore-v600plus",
@@ -2643,8 +2671,9 @@
     "description": "",
     "rating": 3.3,
     "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:28.771Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:28.771Z"
   },
   {
     "id": "trash-box-coleman",
@@ -2668,7 +2697,8 @@
     "description": "ポップアップ式で設営30秒のシンプルゴミ箱。クリップでゴミ袋を固定、テープでポールやテーブル脚に固定できる。耐荷重10kgで薪入れにも使用可能。コヨーテカラーが落ち着いた雰囲気でサイトに馴染む。",
     "rating": 4.3,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00"
+    "updatedAt": "2026-08-06T15:10:28.772Z",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "cooker-004",
@@ -2696,7 +2726,7 @@
     "id": "rakuten-i-collect-10010577",
     "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
     "brand": "イワタニアイコレクト 楽天市場店",
-    "price": 3780,
+    "price": 3742,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/i-collect/cabinet/item02/2000002479.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r5de6.wwmjs98d.g00r5de6.wwmjtbba/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fi-collect%2F0003180%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fi-collect%2Fi%2F10010577%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
@@ -2705,11 +2735,12 @@
     "description": "楽天レビュー607件、★4.72",
     "rating": 4.72,
     "createdAt": "2026-04-13T19:26:57.79+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00",
+    "updatedAt": "2026-08-06T15:10:28.772Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "rw-002",
@@ -2780,7 +2811,8 @@
     "description": "2,000円以下の最安値クラスガスランタン。明るさは抑えめだが、テーブルの手元照明やトイレへの道しるべランタンとして使うなら十分。サブ機として持つ価値がある。",
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00"
+    "updatedAt": "2026-08-06T15:10:28.772Z",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "heatstroke-cooling-towel",
@@ -2840,11 +2872,12 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-04-15T02:21:25.768+00:00",
-    "updatedAt": "2026-08-05T21:40:41.134+00:00",
+    "updatedAt": "2026-08-06T15:10:28.772Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T02:21:25.768Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "tent-003",
@@ -2910,7 +2943,8 @@
     "description": "DDハンモックの定番蚊帳付きソロモデル。メッシュパネルが全周を覆い虫を確実にシャットアウト。両サイドのジッパーで出入りがスムーズ。",
     "rating": 4.6,
     "createdAt": "2026-06-24T06:00:00+00:00",
-    "updatedAt": "2026-08-06T14:51:59.364Z"
+    "updatedAt": "2026-08-06T15:10:28.772Z",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "rakuten-brave-0-ttk-0007-000",
@@ -2925,11 +2959,12 @@
     "description": "ポリコットン素材の軽量タープ。撥水・遮光性に優れ、ソロキャンプから焚火まで対応",
     "rating": 0,
     "createdAt": "2026-04-22T14:35:33.555+00:00",
-    "updatedAt": "2026-08-05T21:40:42.983+00:00",
+    "updatedAt": "2026-08-06T15:10:28.772Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
+    "sourceApi": "brave-rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:28.772Z"
   },
   {
     "id": "first-aid-tick-remover",
@@ -3046,7 +3081,7 @@
     "id": "burner-s-009",
     "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
     "brand": "イワタニ",
-    "price": 3780,
+    "price": 3742,
     "imageUrl": "https://m.media-amazon.com/images/I/61WQJr5ZCLL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fec760cf420d666ac2a740c8238b720a6%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
@@ -3063,7 +3098,8 @@
     "description": "イワタニのCB缶対応シングルバーナー。スーパーやコンビニで手に入るCB缶が使えるため、遠征先でも燃料に困らない。圧電着火で着火も簡単で、家族キャンプのファーストバーナーに最適。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:42.983+00:00"
+    "updatedAt": "2026-08-06T15:10:30.467Z",
+    "priceUpdatedAt": "2026-08-06T15:10:30.467Z"
   },
   {
     "id": "rakuten-brave-2-vl0494-1",
@@ -3152,8 +3188,9 @@
     "description": "",
     "rating": 4.5,
     "createdAt": "2026-06-20T10:53:28.965+00:00",
-    "updatedAt": "2026-08-05T21:40:42.983+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:30.467Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:30.467Z"
   },
   {
     "id": "table-002",
@@ -3190,11 +3227,12 @@
     "description": "楽天レビュー5223件、★4.34",
     "rating": 4.34,
     "createdAt": "2026-04-13T19:26:51.385+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00",
+    "updatedAt": "2026-08-06T15:10:30.468Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:30.468Z"
   },
   {
     "id": "power-ecoflow-delta3-plus",
@@ -3276,7 +3314,8 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.618+00:00",
-    "updatedAt": "2026-08-05T21:40:46.703+00:00"
+    "updatedAt": "2026-08-06T15:10:32.240Z",
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "insect-repellent-014",
@@ -3327,8 +3366,9 @@
     "description": "ファミリーキャンプのド定番。5〜6人が使えるゆったりインナー（300×300cm）と大きな前室が魅力。インナーシート・グランドシート付きのスタートパッケージで初心者でもすぐ使い始められる。アルミフレームで耐風性も確保。",
     "rating": 4.3,
     "createdAt": "2026-06-20T03:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:32.240Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "led-tent-001",
@@ -3415,8 +3455,9 @@
     "description": "ディート10%配合の虫除けスプレー。防除用医薬部外品。キャンプで遭遇しうる害虫をほぼカバー。コスパ重視ならまず候補になる1本。",
     "rating": 4.2,
     "createdAt": "2026-05-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:52.398+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:32.240Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "tent-duo-005",
@@ -3453,17 +3494,18 @@
     "description": "ポリコットン素材で防水・遮光性が高く、焚き火にも強い高機能タープ",
     "rating": 0,
     "createdAt": "2026-04-22T14:36:25.73+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00",
+    "updatedAt": "2026-08-06T15:10:32.240Z",
     "autoAdded": true,
     "addedBy": "rakuten-brave",
     "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
+    "sourceApi": "brave-rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "tent-007",
     "name": "DOD ライダーズワンポールテント T1-442",
     "brand": "DOD",
-    "price": 17200,
+    "price": 17600,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/premoa/cabinet/pics/329/0-4589946133295.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r8gx6.wwmjs6c6.g00r8gx6.wwmjt555/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fpremoa%2F4589946133295%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fpremoa%2Fi%2F10414411%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B01FFQJWIE?tag=camp78-22",
@@ -3480,11 +3522,12 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-04-15T00:00:30.12+00:00",
-    "updatedAt": "2026-08-05T21:40:44.837+00:00",
+    "updatedAt": "2026-08-06T15:10:32.240Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T00:00:30.120Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "cooler-ecoflow-wave2",
@@ -3531,7 +3574,8 @@
     "description": "",
     "rating": 4.3,
     "createdAt": "2026-05-18T16:42:19.364+00:00",
-    "updatedAt": "2026-08-06T14:52:31.454Z"
+    "updatedAt": "2026-08-06T15:10:32.240Z",
+    "priceUpdatedAt": "2026-08-06T15:10:32.240Z"
   },
   {
     "id": "tent-005",
@@ -3559,7 +3603,7 @@
     "id": "tarp-007",
     "name": "ロゴス USBシェードランタン（4連タイプ）",
     "brand": "ロゴス",
-    "price": 8100,
+    "price": 10800,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/7dials/cabinet/logos/tent/74175042_8.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r7q66.wwmjs703.g00r7q66.wwmjt88e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2F7dials%2F7d74175042%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2F7dials%2Fi%2F10008557%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0CL6GFW6Q?tag=camp78-22",
@@ -3574,11 +3618,12 @@
     "description": "",
     "rating": 5,
     "createdAt": "2026-04-15T00:00:36.434+00:00",
-    "updatedAt": "2026-08-05T21:40:46.703+00:00",
+    "updatedAt": "2026-08-06T15:10:33.928Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T00:00:36.434Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:33.928Z"
   },
   {
     "id": "fan-hagoogi-ot-f12",
@@ -3642,7 +3687,8 @@
     "description": "テーブルにクランプ固定するタイプ。地面を使わないのでスペース節約。ソロ・バイクツーリング向き。超々ジュラルミン製で軽量。",
     "rating": 4.1,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:46.703+00:00"
+    "updatedAt": "2026-08-06T15:10:33.928Z",
+    "priceUpdatedAt": "2026-08-06T15:10:33.928Z"
   },
   {
     "id": "rakuten-brave-6-p11021",
@@ -3713,7 +3759,8 @@
     "description": "スノーピークの永久保証付き焚き火台Lサイズ。2.5mm厚ステンレスで一生使える堅牢さ。3〜4人のファミリーキャンプに最適なサイズ感。開くだけの簡単設営。",
     "rating": 4.7,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00"
+    "updatedAt": "2026-08-06T15:10:33.928Z",
+    "priceUpdatedAt": "2026-08-06T15:10:33.928Z"
   },
   {
     "id": "neck-suo-ring-plus",
@@ -3734,8 +3781,9 @@
     "description": "",
     "rating": 4.2,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:48.617+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:33.928Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:33.928Z"
   },
   {
     "id": "cutting-board-silicon-foldable",
@@ -3983,8 +4031,9 @@
     "description": "北海道北見産のハッカ油100%スプレー。天然由来で虫除け・清涼感・リフレッシュの3役。",
     "rating": 4.3,
     "createdAt": "2026-04-28T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:48.616+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:35.784Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:35.784Z"
   },
   {
     "id": "co-detector-4in1",
@@ -4030,7 +4079,8 @@
     "description": "BBQグリルとバーナーを兼ねたコールマンのプレミアムモデル。ステーキを焼きながら隣でソースを温める——アメリカンスタイルのアウトドアクッキングを実現したい本気のキャンパー向け。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:52.398+00:00"
+    "updatedAt": "2026-08-06T15:10:35.784Z",
+    "priceUpdatedAt": "2026-08-06T15:10:35.784Z"
   },
   {
     "id": "tent-duo-003",
@@ -4116,7 +4166,8 @@
     "description": "",
     "rating": 4.3,
     "createdAt": "2026-05-18T16:52:46.77+00:00",
-    "updatedAt": "2026-08-06T14:52:43.461Z"
+    "updatedAt": "2026-08-06T15:10:35.784Z",
+    "priceUpdatedAt": "2026-08-06T15:10:35.784Z"
   },
   {
     "id": "shoes-003",
@@ -4160,7 +4211,8 @@
     "description": "「絶対になくしたくない」をコンセプトに職人が天然木で手作りした伸縮式火吹き棒。7段階調整で最短11cmに収納可能。ネックレスケース付き。",
     "rating": 4.3,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00"
+    "updatedAt": "2026-08-06T15:10:35.784Z",
+    "priceUpdatedAt": "2026-08-06T15:10:35.784Z"
   },
   {
     "id": "rakuten-brave-3-liberaiders-657",
@@ -4224,7 +4276,8 @@
     "description": "62gの超軽量モデルながら日本製クオリティを誇るユニフレームのシングルバーナー。SOTOウインドマスターと双璧をなす軽量バーナーとして、国産にこだわりたいキャンパーに支持される。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:48.617+00:00"
+    "updatedAt": "2026-08-06T15:10:35.784Z",
+    "priceUpdatedAt": "2026-08-06T15:10:35.784Z"
   },
   {
     "id": "tumbler-005",
@@ -4272,7 +4325,8 @@
     "description": "2,000円以下で買えるシリコン製テントランタン。柔らかいシリコンボディで落としても安心。入門機として最初の1台に最適で、子どもに持たせるナイトランタンとしても活躍する。",
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:48.617+00:00"
+    "updatedAt": "2026-08-06T15:10:37.469Z",
+    "priceUpdatedAt": "2026-08-06T15:10:37.469Z"
   },
   {
     "id": "gas-lantern-001",
@@ -4568,7 +4622,7 @@
     "id": "burner-s-005",
     "name": "MSR ウインドバーナー パーソナルストーブシステム",
     "brand": "MSR",
-    "price": 29293,
+    "price": 28141,
     "imageUrl": "https://m.media-amazon.com/images/I/61Sg0+8jEdL._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2F0a41424ece29897fb03c278fcf588c1a%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B085M4YQYJ/?tag=camp78-22",
@@ -4585,7 +4639,8 @@
     "description": "ラジエーター式熱交換で燃費が極めて良い山岳向けシステムバーナー。専用クッカーとセットで使うことで、強風・低温時にも安定してお湯を沸かせる。縦走登山のベストバーナー。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:50.488+00:00"
+    "updatedAt": "2026-08-06T15:10:37.469Z",
+    "priceUpdatedAt": "2026-08-06T15:10:37.469Z"
   },
   {
     "id": "cooler-024",
@@ -4768,7 +4823,8 @@
     "description": "約13kg・2万円台前半で買える最小クラスのコンプレッサー式クーラー。冷房能力0.43kWのため車中泊やコット周りのピンポイント冷却向けです。",
     "rating": 3.9,
     "createdAt": "2026-07-17T11:17:24.653+00:00",
-    "updatedAt": "2026-08-05T21:40:57.98+00:00"
+    "updatedAt": "2026-08-06T15:10:39.289Z",
+    "priceUpdatedAt": "2026-08-06T15:10:39.289Z"
   },
   {
     "id": "tumbler-002",
@@ -4830,8 +4886,9 @@
     "description": "",
     "rating": 4.4,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:40:52.398+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:39.289Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:39.289Z"
   },
   {
     "id": "tarp-008",
@@ -4863,7 +4920,7 @@
     "id": "gas-lantern-013",
     "name": "コールマン ルミエールランタン 205588",
     "brand": "コールマン",
-    "price": 3576,
+    "price": 3973,
     "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/205588/205588.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fproduct.rakuten.co.jp%2Fproduct%2F-%2Fda41b6a678868ded8192c7b6ffcd5dda%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjEsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B004IWR45A/?tag=camp78-22",
@@ -4879,7 +4936,8 @@
     "description": "マントル不要のキャンドル風ガスランタン。ガラスグローブの中で揺れる生の炎を、OD缶に載せるだけで楽しめるコールマンの定番おしゃれランタン。",
     "rating": 4,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:07.48+00:00"
+    "updatedAt": "2026-08-06T15:10:39.289Z",
+    "priceUpdatedAt": "2026-08-06T15:10:39.289Z"
   },
   {
     "id": "kettle-snowpeak-no1",
@@ -4968,7 +5026,8 @@
     "description": "モーラナイフ初のフルタング構造モデル。バトニング（薪割り）にも耐えるヘビーデューティー仕様で、本格ブッシュクラフトに対応。",
     "rating": 4.6,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:57.98+00:00"
+    "updatedAt": "2026-08-06T15:10:40.980Z",
+    "priceUpdatedAt": "2026-08-06T15:10:40.980Z"
   },
   {
     "id": "pillow-sea-to-summit-aeros",
@@ -5042,7 +5101,7 @@
     "id": "tarp-004",
     "name": "テンマクデザイン ムササビウイング 13ft TC",
     "brand": "テンマクデザイン",
-    "price": 14080,
+    "price": 15180,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/f092011-utsunomiya/cabinet/kanseki/67954-40009132-01.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u0zt6.wwmjs338.g00u0zt6.wwmjt405/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fskymarketplus%2Fb00uriz7te%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fskymarketplus%2Fi%2F10819398%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00URIZ7TE?tag=camp78-22",
@@ -5058,7 +5117,8 @@
     "description": "焚き火の近くで使えるTC素材ウイングタープ。独特の美しい曲線が映えるキャンプサイトを演出。",
     "rating": 4.5,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:54.28+00:00"
+    "updatedAt": "2026-08-06T15:10:40.980Z",
+    "priceUpdatedAt": "2026-08-06T15:10:40.980Z"
   },
   {
     "id": "tarp-009",
@@ -5146,11 +5206,12 @@
     "description": "楽天レビュー309件、★4.4",
     "rating": 4.4,
     "createdAt": "2026-04-13T19:26:57.79+00:00",
-    "updatedAt": "2026-08-05T21:40:54.28+00:00",
+    "updatedAt": "2026-08-06T15:10:40.980Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:40.980Z"
   },
   {
     "id": "light-007",
@@ -5256,7 +5317,7 @@
     "id": "tent-009",
     "name": "厚手ブルーシート 3.6m×5.4m（#3000）",
     "brand": "ESTOAH.home エストアホーム",
-    "price": 2649,
+    "price": 2642,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-estoah/cabinet/image14/z5012-msm.jpg?_ex=600x600",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rdva6.wwmjsf65.g00rdva6.wwmjt4aa/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-estoah%2Fz5012-msm%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fauc-estoah%2Fi%2F10053352%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B002P8WQMK?tag=camp78-22",
@@ -5272,11 +5333,12 @@
     "description": "",
     "rating": 5,
     "createdAt": "2026-04-15T01:48:08.267+00:00",
-    "updatedAt": "2026-08-05T21:40:54.28+00:00",
+    "updatedAt": "2026-08-06T15:10:40.980Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T01:48:08.268Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:40.980Z"
   },
   {
     "id": "cooler-002",
@@ -5326,7 +5388,7 @@
     "id": "insect-repellent-005",
     "name": "サラテクトミスト リッチリッチ30 200mL",
     "brand": "アース製薬",
-    "price": 1100,
+    "price": 1112,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/mushi-taiji/cabinet/06516168/n75020300r.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tynx6.wwmjs1a7.g00tynx6.wwmjt50b/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkzstore%2F4901080421715%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkzstore%2Fi%2F10001020%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B01N6ZRSWM?tag=camp78-22",
@@ -5342,8 +5404,9 @@
     "description": "DEET30%配合の高濃度虫除けミスト。第2類医薬品。",
     "rating": 4.3,
     "createdAt": "2026-04-28T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:42.662Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:42.662Z"
   },
   {
     "id": "fan-socool",
@@ -5365,8 +5428,9 @@
     "description": "",
     "rating": 3.6,
     "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:42.662Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:42.662Z"
   },
   {
     "id": "tent-f06",
@@ -5508,8 +5572,9 @@
     "description": "林業のプロが使う極太防虫香。普通の蚊取り線香の約3倍の煙量で、風のあるキャンプ場でも効果を発揮する。",
     "rating": 4.5,
     "createdAt": "2026-04-28T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:42.662Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:42.662Z"
   },
   {
     "id": "shoes-002",
@@ -5736,7 +5801,8 @@
     "description": "登山のヘッドライトとして世界標準。IPX8防水で雨の日も安心。電池でもUSBでも使えるハイブリッド電源が便利。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:56.119+00:00"
+    "updatedAt": "2026-08-06T15:10:44.346Z",
+    "priceUpdatedAt": "2026-08-06T15:10:44.346Z"
   },
   {
     "id": "burner-m-001",
@@ -6025,7 +6091,8 @@
     "description": "スウェーデン発プリムスの定番ガスランタン。スノーピークより低価格でクオリティは同等。シンプルな構造で故障が少なく、長年使い続けられる信頼性がある。",
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:57.98+00:00"
+    "updatedAt": "2026-08-06T15:10:46.028Z",
+    "priceUpdatedAt": "2026-08-06T15:10:46.028Z"
   },
   {
     "id": "sb-budget-001",
@@ -6097,7 +6164,8 @@
     "description": "",
     "rating": 4.5,
     "createdAt": "2026-05-18T16:42:19.364+00:00",
-    "updatedAt": "2026-08-05T21:40:59.748+00:00"
+    "updatedAt": "2026-08-06T15:10:46.028Z",
+    "priceUpdatedAt": "2026-08-06T15:10:46.028Z"
   },
   {
     "id": "fan-coleman-rechargeable",
@@ -6119,8 +6187,9 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-08-05T21:41:01.64+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:46.028Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:46.028Z"
   },
   {
     "id": "chair-005",
@@ -6204,7 +6273,8 @@
     "description": "コスパ最重視のブラックカラードライネット。折りたたみ式でコンパクト収納、2サイズ展開あり。価格を抑えてブラックで統一したい人向けの選択肢。",
     "rating": 3.9,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:59.748+00:00"
+    "updatedAt": "2026-08-06T15:10:47.971Z",
+    "priceUpdatedAt": "2026-08-06T15:10:47.971Z"
   },
   {
     "id": "fp-001",
@@ -6225,7 +6295,8 @@
     "description": "ヒロシも愛用する超軽量焚き火台。A4サイズに折りたため、重さわずか442g。ソロキャンプ・バックパックキャンプの定番。",
     "rating": 4.5,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:40:59.748+00:00"
+    "updatedAt": "2026-08-06T15:10:47.971Z",
+    "priceUpdatedAt": "2026-08-06T15:10:47.971Z"
   },
   {
     "id": "sb-kids-003",
@@ -6293,8 +6364,9 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-05T21:41:01.64+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:47.972Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:47.972Z"
   },
   {
     "id": "led-tent-002",
@@ -6429,8 +6501,9 @@
     "description": "天然殺虫成分配合のカメムシ専用スプレー300ml。秋のキャンプで大量発生するカメムシ対策に。屋外・ベランダ・車内にも使える多用途設計。",
     "rating": 4.1,
     "createdAt": "2026-05-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:11.274+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:47.972Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:47.972Z"
   },
   {
     "id": "fp-006",
@@ -6626,11 +6699,12 @@
     "description": "楽天レビュー1919件、★4.36",
     "rating": 4.36,
     "createdAt": "2026-04-13T19:26:52.677+00:00",
-    "updatedAt": "2026-08-05T21:41:01.64+00:00",
+    "updatedAt": "2026-08-06T15:10:49.748Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:49.748Z"
   },
   {
     "id": "table-001",
@@ -6862,7 +6936,8 @@
     "description": "二次燃焼で煙が極めて少ない。キャンプ場だけでなく庭でも使える。美しい炎が楽しめるプレミアム焚き火台。",
     "rating": 4.6,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:03.597+00:00"
+    "updatedAt": "2026-08-06T15:10:49.748Z",
+    "priceUpdatedAt": "2026-08-06T15:10:49.748Z"
   },
   {
     "id": "cooler-005",
@@ -6884,7 +6959,8 @@
     "description": "使わないときは折りたためる軽量ソフトクーラー。700gで持ち運び楽々。サブクーラーとしても最適。",
     "rating": 4.3,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-06T14:54:10.418Z"
+    "updatedAt": "2026-08-06T15:10:49.748Z",
+    "priceUpdatedAt": "2026-08-06T15:10:49.748Z"
   },
   {
     "id": "dry-net-logos",
@@ -6908,7 +6984,8 @@
     "description": "テーブルの上に置いて自立できるドライネット。付属フックで吊り下げ式にも対応。底面に空間があり直置きしても食器が汚れない設計。グラスファイバーフレームで安定感あり。",
     "rating": 4.3,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:03.597+00:00"
+    "updatedAt": "2026-08-06T15:10:49.748Z",
+    "priceUpdatedAt": "2026-08-06T15:10:49.748Z"
   },
   {
     "id": "tent-016",
@@ -6971,11 +7048,12 @@
     "description": "楽天レビュー1274件、★4.63",
     "rating": 4.63,
     "createdAt": "2026-04-13T19:26:54.008+00:00",
-    "updatedAt": "2026-08-05T21:41:03.597+00:00",
+    "updatedAt": "2026-08-06T15:10:49.748Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:49.748Z"
   },
   {
     "id": "light-001",
@@ -7189,7 +7267,8 @@
     "description": "5千円以下で買えるコスパ抜群のソロ焚き火台。ピコグリルに似た構造で約965g。組立15秒。",
     "rating": 4.4,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:03.597+00:00"
+    "updatedAt": "2026-08-06T15:10:51.430Z",
+    "priceUpdatedAt": "2026-08-06T15:10:51.430Z"
   },
   {
     "id": "tumbler-001",
@@ -7372,11 +7451,12 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-04-15T02:21:29.728+00:00",
-    "updatedAt": "2026-08-05T21:41:05.46+00:00",
+    "updatedAt": "2026-08-06T15:10:51.430Z",
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-15T02:21:29.728Z",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:51.430Z"
   },
   {
     "id": "fp-002",
@@ -7397,7 +7477,8 @@
     "description": "圧倒的コスパの定番焚き火台。ダッチオーブンも載せられる頑丈さで7,700円。ファミリーからソロまで対応。",
     "rating": 4.6,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:07.48+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "heater-corona-fh-cpf25a",
@@ -7442,7 +7523,8 @@
     "description": "国産老舗ブランドogawaのポリコットンティピー。夏は通気性よく涼しく、冬は保温性が高い。薪ストーブとの相性も抜群で、オールシーズン使える本格ファミリーテント。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:05.46+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "water-jug-mintage-10l",
@@ -7465,7 +7547,8 @@
     "description": "スチール缶風のインダストリアルデザインでキャンプサイト映え抜群。シングルウォールで保冷機能はないが、おしゃれさ重視派の定番。",
     "rating": 4.1,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:05.46+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "uniflame-field-rack",
@@ -7480,7 +7563,8 @@
     "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-05T21:41:11.274+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "bp-003",
@@ -7529,7 +7613,7 @@
     "id": "tent-f05",
     "name": "キャプテンスタッグ CSクラシックス ワンポールテント DXオクタゴン460UV",
     "brand": "キャプテンスタッグ",
-    "price": 34681,
+    "price": 35354,
     "imageUrl": "https://www.captainstag.net/item_img/l/UA-47.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/5267af75.3e04edf4.5267af76.a8b4f94c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flafitte%2Fua0047%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07PM2TFW7/?tag=camp78-22",
@@ -7547,7 +7631,8 @@
     "description": "2万円台で買えるファミリー向けワンポールテント。設営は中心のポール1本を立てるだけ。ティピーシェイプで見た目もおしゃれ。予算を抑えて始めたい家族に最適。",
     "rating": 4,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:05.46+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "field-rack-uniflame",
@@ -7570,7 +7655,8 @@
     "description": "1995年から変わらない設計で30年以上売れ続けるキャンプラックの定番。収納時厚さ1cmの薄さと耐荷重30kgを両立した国内メーカーの傑作。",
     "rating": 4.7,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:07.48+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "rakuten-jikabijapan-10000002",
@@ -7585,11 +7671,12 @@
     "description": "楽天レビュー1169件、★4.55",
     "rating": 4.55,
     "createdAt": "2026-04-13T19:26:56.48+00:00",
-    "updatedAt": "2026-08-05T21:41:09.432+00:00",
+    "updatedAt": "2026-08-06T15:10:53.325Z",
     "autoAdded": true,
     "addedBy": "rakuten-ranking",
     "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
+    "sourceApi": "rakuten",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "fan-006",
@@ -7632,7 +7719,8 @@
     "description": "レジ袋を最大4個かけて分別できるスチールフレームのダストスタンド。撤収時は袋をそのまま結んで捨てられる効率的な設計。薄型収納で車への積み込みが楽。",
     "rating": 4.5,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:05.46+00:00"
+    "updatedAt": "2026-08-06T15:10:53.325Z",
+    "priceUpdatedAt": "2026-08-06T15:10:53.325Z"
   },
   {
     "id": "gas-lantern-014",
@@ -7741,7 +7829,8 @@
     "description": "電子点火・50%火力調節・二重タンクと安全装備が揃った日本メーカーの対流形ストーブ。7色に光る炎は約40W相当の明るさで、家庭・防災・キャンプの三刀流に向きます。",
     "rating": 4.4,
     "createdAt": "2026-07-16T13:45:43.522+00:00",
-    "updatedAt": "2026-08-05T21:41:09.432+00:00"
+    "updatedAt": "2026-08-06T15:10:55.039Z",
+    "priceUpdatedAt": "2026-08-06T15:10:55.039Z"
   },
   {
     "id": "tent-solo-005",
@@ -7770,7 +7859,7 @@
     "id": "light-002",
     "name": "コールマン LED ランタン クアッドマルチパネルランタン",
     "brand": "コールマン",
-    "price": 16598,
+    "price": 16611,
     "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2218364/2218364.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r3jp6.wwmjs5b0.g00r3jp6.wwmjtcb2/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhimaraya%2F0000001237400%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhimaraya%2Fi%2F10596981%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B079NTXHSD/?tag=camp78-22",
@@ -7787,7 +7876,8 @@
     "description": "4枚のLEDパネルが分離できる革新的なランタン。卓上ライトとして使ったり、テント内外に分散配置したりと汎用性が高い。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:09.432+00:00"
+    "updatedAt": "2026-08-06T15:10:55.039Z",
+    "priceUpdatedAt": "2026-08-06T15:10:55.039Z"
   },
   {
     "id": "insect-repellent-011",
@@ -7988,7 +8078,8 @@
     "description": "燕三条製の鍛造焼入れペグハンマー。ステンレス・真鍮のヘッドを選べる。エリッゼステーク（鍛造ペグ）との相性が良く、ヘッド交換で長期使用できる日本製ハンマー。",
     "rating": 4.5,
     "createdAt": "2026-06-24T16:20:00+00:00",
-    "updatedAt": "2026-08-05T21:41:07.48+00:00"
+    "updatedAt": "2026-08-06T15:10:55.039Z",
+    "priceUpdatedAt": "2026-08-06T15:10:55.039Z"
   },
   {
     "id": "cooler-029",
@@ -8035,8 +8126,9 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-08-05T21:41:11.274+00:00",
-    "autoAdded": false
+    "updatedAt": "2026-08-06T15:10:55.039Z",
+    "autoAdded": false,
+    "priceUpdatedAt": "2026-08-06T15:10:55.039Z"
   },
   {
     "id": "cooler-corona-pa-f85a",
@@ -8129,7 +8221,7 @@
     "id": "peg-hammer-captainstag",
     "name": "キャプテンスタッグ 鍛造ペグ抜きハンマー UA-4516",
     "brand": "キャプテンスタッグ",
-    "price": 2718,
+    "price": 2716,
     "imageUrl": "https://www.captainstag.net/img/products/UA-4516_1.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rz9y6.wwmjs3e5.g00rz9y6.wwmjt70d/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsenichi%2F10004183%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsenichi%2Fi%2F10004183%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09137TGXH/?tag=camp78-22",
@@ -8145,7 +8237,8 @@
     "description": "3,000円台で鍛造ヘッドが手に入るコスパ枠の定番。490gと5製品中最軽量で女性・子どもにも扱いやすい。天然木の柄が打撃時の衝撃を適度に吸収。",
     "rating": 4.3,
     "createdAt": "2026-06-24T16:20:00+00:00",
-    "updatedAt": "2026-08-05T21:41:11.274+00:00"
+    "updatedAt": "2026-08-06T15:10:55.039Z",
+    "priceUpdatedAt": "2026-08-06T15:10:55.039Z"
   },
   {
     "id": "cooler-027",
@@ -8395,7 +8488,8 @@
     "description": "木がなくても使える自立式スタンドセット。ハンモック・チェアモック・ハンガーラックと3通りの使い方ができる。区画サイトや庭でも設営可能。",
     "rating": 4,
     "createdAt": "2026-06-24T06:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:11.274+00:00"
+    "updatedAt": "2026-08-06T15:10:56.720Z",
+    "priceUpdatedAt": "2026-08-06T15:10:56.720Z"
   },
   {
     "id": "insect-repellent-016",
@@ -8511,7 +8605,8 @@
     "description": "オーロラテックスライトより軽く、ダウン自体が撥水する。770FPの超撥水ダウンは内側からの湿気にも強い。シュラフカバーとの併用が必要だが、軽量・コンパクトを追求するならこちらが正解。登山メインのユーザー向け。",
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:13.1+00:00"
+    "updatedAt": "2026-08-06T15:10:56.720Z",
+    "priceUpdatedAt": "2026-08-06T15:10:56.720Z"
   },
   {
     "id": "hammock-eno-doublenest",
@@ -8623,6 +8718,7 @@
     "description": "Amazonで評価4.4超のコスパモデル。マットブラックの落ち着いた仕上げとスタッキング対応でファミリー・ソロ両方に対応。",
     "rating": 4.4,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-05T21:41:13.1+00:00"
+    "updatedAt": "2026-08-06T15:10:56.720Z",
+    "priceUpdatedAt": "2026-08-06T15:10:56.720Z"
   }
 ]
