@@ -24,11 +24,23 @@ export function modelNumbers(name) {
   );
 }
 
+// 世代表記のローマ数字を算用数字に寄せる。
+// 「スパイスボックスII」と「スパイスボックス2」、「ステイシーST-II」と「ST-2」が
+// 別物として扱われ、一致率50%で落ちていた（2026-08-06に21件を精査して判明）。
+// 英字に挟まれたものは除外する（UVカット の V などを壊さないため）
+const ROMAN_MAP = { i: "1", ii: "2", iii: "3", iv: "4", v: "5", vi: "6", vii: "7", viii: "8", ix: "9", x: "10" };
+export function normalizeNumerals(s) {
+  return s
+    .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]/g, (c) => String("ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ".indexOf(c) + 1))
+    .replace(/[ⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g, (c) => String("ⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ".indexOf(c) + 1))
+    .replace(/(?<![A-Za-z0-9])(viii|vii|iii|ix|iv|vi|ii|x|v)(?![A-Za-z0-9])/gi, (m) => ROMAN_MAP[m.toLowerCase()] || m);
+}
+
 /** 商品名の語が、候補の商品名にどれだけ含まれるか（0〜1） */
 export function tokenOverlap(a, b) {
   const tok = (s) =>
     new Set(
-      s
+      normalizeNumerals(s)
         .toLowerCase()
         .replace(/[（(].*?[)）]/g, " ")
         .split(/[\s/／|｜・、。×]+/)

@@ -38,6 +38,7 @@ import path from "node:path";
 import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+import { tokenOverlap } from "../src/lib/product-match.mjs";
 
 // IPv6回線だと楽天へIPv6で接続してしまい、アプリのIP許可リスト（IPv4のみ）に
 // 一致せず CLIENT_IP_NOT_ALLOWED になる。他スクリプトは package.json の
@@ -114,22 +115,8 @@ function modelNumbers(name) {
   );
 }
 
-function tokenOverlap(a, b) {
-  const tok = (s) =>
-    new Set(
-      s
-        .toLowerCase()
-        .replace(/[（(].*?[)）]/g, " ")
-        .split(/[\s/／|｜・、。×]+/)
-        .filter((t) => t.length >= 2)
-    );
-  const ta = tok(a);
-  const tb = tok(b);
-  if (ta.size === 0) return 0;
-  let hit = 0;
-  for (const t of ta) if ([...tb].some((u) => u.includes(t) || t.includes(u))) hit++;
-  return hit / ta.size;
-}
+// tokenOverlap は共通モジュール側を使う（ローマ数字の正規化を含む）。
+// 「スパイスボックスII」と「スパイスボックス2」が別物扱いされ50%で落ちていた
 
 // 楽天APIは1文字の単語を含むキーワードを400で拒否する（各単語2文字以上の制約）。
 // 「アメニティドーム L」「カマボコテント3 M」等が全滅していた原因。
