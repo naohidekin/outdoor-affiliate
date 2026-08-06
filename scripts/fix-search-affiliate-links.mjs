@@ -58,6 +58,14 @@ const RAKUTEN_AFFILIATE_ID =
 const APPLY = process.argv.includes("--apply");
 // 信頼度「低」も含めて適用する。既定は 高・中 のみ
 const WITH_LOW = process.argv.includes("--with-low");
+// 目視した商品だけを信頼度に関係なく適用する。
+// 低は誤りが半数近く混じるため、一覧を見て個別に通す運用が現実的
+const onlyIdx = process.argv.indexOf("--only");
+const ONLY = new Set(
+  onlyIdx !== -1 && process.argv[onlyIdx + 1]
+    ? process.argv[onlyIdx + 1].split(",").map((s) => s.trim()).filter(Boolean)
+    : []
+);
 // 診断モード。判定は一切変えず、スキップ理由の内訳だけを追加で出す
 const EXPLAIN = process.argv.includes("--explain");
 const limitIdx = process.argv.indexOf("--limit");
@@ -442,7 +450,8 @@ for (const p of targets) {
   }
   const shortened = isShortenedKeyword(p.name, usedKeyword);
   const tier = confidenceTier(best, shortened);
-  const autoApplicable = tier !== "低" || WITH_LOW;
+  // --only を指定したときは、そのIDだけを信頼度に関係なく対象にする
+  const autoApplicable = ONLY.size > 0 ? ONLY.has(p.id) : tier !== "低" || WITH_LOW;
   fixes.push({
     id: p.id,
     name: p.name,
@@ -536,14 +545,25 @@ if (fixes.length > 0) {
   }
 }
 
-const autoCount = fixes.filter((f) => f.tier !== "低" || WITH_LOW).length;
+const wouldApply = (f) =>
+  ONLY.size > 0 ? ONLY.has(f.id) : f.tier !== "低" || WITH_LOW;
+const autoCount = fixes.filter(wouldApply).length;
+
+if (ONLY.size > 0) {
+  const missing = [...ONLY].filter((id) => !fixes.some((f) => f.id === id));
+  if (missing.length) {
+    console.log(`\n⚠️ --only に提案のないIDが含まれています: ${missing.join(", ")}`);
+  }
+}
 
 if (APPLY) {
   fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
-  console.log(
-    `\nproducts.json 反映: ${autoCount}件（高${byTier.高.length} 中${byTier.中.length}` +
-      `${WITH_LOW ? ` 低${byTier.低.length}` : ` / 低${byTier.低.length}件は未適用`}）`
-  );
+  const applyNote =
+    ONLY.size > 0
+      ? `--only 指定の${autoCount}件`
+      : `高${byTier.高.length} 中${byTier.中.length}` +
+        (WITH_LOW ? ` 低${byTier.低.length}` : ` / 低${byTier.低.length}件は未適用`);
+  console.log(`\nproducts.json 反映: ${autoCount}件（${applyNote}）`);
   console.log("次: git diff で確認 → npm run db:sync -- --no-pull");
   if (!WITH_LOW && byTier.低.length > 0) {
     console.log("低も適用するなら: --apply --with-low（目視してから推奨）");
@@ -553,5 +573,7 @@ if (APPLY) {
     `\ndry-run完了: 提案${fixes.length}件（自動適用対象${autoCount}件）/ スキップ${skipped.length}件`
   );
   console.log(`レポート: ${REPORT}`);
-  console.log("適用: --apply （高・中のみ） / --apply --with-low （低も含む）");
+  console.log("適用: --apply                     … 高・中のみ");
+  console.log("      --apply --only id1,id2     … 目視した商品だけ（信頼度は問わない）");
+  console.log("      --apply --with-low         … 低も全部（非推奨）");
 }
