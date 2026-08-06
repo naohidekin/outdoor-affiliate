@@ -11,14 +11,24 @@
  * APIが返すアフィリエイトURL（アフィリエイトID込み）に置き換える。
  *
  * 使い方（Macで実行。RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が必要）:
- *   node scripts/fix-search-affiliate-links.mjs           # dry-run（提案のみ）
- *   node scripts/fix-search-affiliate-links.mjs --apply   # products.jsonへ反映
- *   node scripts/fix-search-affiliate-links.mjs --limit 20  # 先頭N件だけ処理
+ *   node scripts/fix-search-affiliate-links.mjs              # dry-run（提案のみ）
+ *   node scripts/fix-search-affiliate-links.mjs --explain    # スキップ理由の内訳付き
+ *   node scripts/fix-search-affiliate-links.mjs --apply      # 高・中のみ反映
+ *   node scripts/fix-search-affiliate-links.mjs --apply --with-low  # 低も反映
+ *   node scripts/fix-search-affiliate-links.mjs --limit 20   # 先頭N件だけ処理
+ *
+ * 信頼度（--apply は既定で 高・中 のみ適用する）:
+ *   高 … 型番一致。カラー接尾辞まで照合するので取り違えにくい
+ *   中 … 商品名の語を1つも削らずに検索して一致率100%
+ *   低 … 一致率100%未満、またはキーワードを短縮。別サイズ・別グレード・
+ *        付属品を掴む余地があるため、URL付きで一覧に出して目視に回す
  *
  * 安全装置:
  * - 商品名に型番らしき文字列がある場合、候補の商品名にも同じ型番が
- *   含まれない限り採用しない
- * - 型番がない場合は、名前トークンの一致率と価格の乖離（±40%以内）で判定
+ *   含まれない限り採用しない（カラー違いの接尾辞は許容）
+ * - 型番がない場合は、名前トークンの一致率と価格レンジ（登録の60〜200%）で判定
+ * - 中古・付属品・互換品は候補から除外する
+ * - ブランド名だけのキーワードは検索しない（同ブランドの別商品を掴むため）
  * - 確信が持てない商品はスキップして手動リストに出す（誤リンクは検索リンクより害が大きい）
  * - dry-run がデフォルト。--apply でも scratch/affiliate-link-fixes.json に
  *   全変更履歴を残す
@@ -46,6 +56,8 @@ const RAKUTEN_AFFILIATE_ID =
   process.env.RAKUTEN_AFFILIATE_ID || "18eb3228.621d8df3.18eb3229.ec5f8d49";
 
 const APPLY = process.argv.includes("--apply");
+// 信頼度「低」も含めて適用する。既定は 高・中 のみ
+const WITH_LOW = process.argv.includes("--with-low");
 // 診断モード。判定は一切変えず、スキップ理由の内訳だけを追加で出す
 const EXPLAIN = process.argv.includes("--explain");
 const limitIdx = process.argv.indexOf("--limit");
@@ -134,15 +146,65 @@ function keywordLadder(product) {
   if (tokens.length > 2) ladder.push(tokens.slice(0, 2).join(" "));
   if (models.length > 0) ladder.push(`${brandWord} ${models[0]}`, models[0]);
 
+  // ブランド名だけ（およびその断片）の検索は別商品を掴むので落とす。
+  // 例「Sea to Summit エアロスプレミアムピロー」が tokens.slice(0,3) で
+  // 「Sea to Summit」、slice(0,2) で「Sea to」になり、
+  // 商品を特定しないまま同ブランドの別商品に一致していた
+  const brandTokens = new Set(
+    sanitizeKeyword(product.brand || "")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+  );
+  const isBrandOnly = (k) => {
+    if (brandTokens.size === 0) return false;
+    const t = k.toLowerCase().split(/\s+/).filter(Boolean);
+    return t.length > 0 && t.every((x) => brandTokens.has(x));
+  };
+
   // 正規化して重複と空を落とす
   const seen = new Set();
   return ladder
     .map((k) => sanitizeKeyword(k || ""))
     .filter((k) => {
       if (!k || seen.has(k)) return false;
+      if (isBrandOnly(k)) return false;
       seen.add(k);
       return true;
     });
+}
+
+// 「短縮したか」は ladder 上の位置ではなく中身で判定する。
+// 位置で見ると、ブランド名だけ落とした検索が重複除去で前に繰り上がり
+// フル検索と誤認される（例 Unigear ハンモック… → ハンモック…）
+// 比較は sanitizeKeyword を通す前の生の名前で行う。
+// sanitize は1文字語と記号を落とすため、通した後だと
+//「パンダTC+」と「パンダTC」、「軽量まな板 M」と「軽量まな板」が
+// 同一視され、別製品・別サイズへの取り違えを見逃す
+function isShortenedKeyword(productName, keyword) {
+  const tok = (s) =>
+    s
+      .toLowerCase()
+      .replace(/[（(].*?[)）]/g, " ")
+      .split(/[\s/／|｜・、。×]+/)
+      .filter(Boolean);
+  const want = tok(productName);
+  const got = tok(keyword);
+  return !want.every((t) =>
+    got.some((g) => g === t || (t.length >= 2 && g.includes(t)))
+  );
+}
+
+/**
+ * 高: 型番一致。カラー接尾辞まで含めて照合するので取り違えにくい
+ * 中: 商品名の語を1つも削らずに検索して一致率100%
+ * 低: 一致率が100%未満、またはキーワードを短縮した。別サイズ・別グレード・
+ *     付属品を掴む余地があるので目視に回す
+ */
+function confidenceTier(best, shortened) {
+  if (best.reason.startsWith("型番一致")) return "高";
+  if (best.overlap >= 1 && !shortened) return "中";
+  return "低";
 }
 
 // 中古・リユース店は除外（新品を勧める記事から中古在庫に飛ばさない）
@@ -378,23 +440,33 @@ for (const p of targets) {
     if (EXPLAIN) printDiagnosis(p, d);
     continue;
   }
+  const shortened = isShortenedKeyword(p.name, usedKeyword);
+  const tier = confidenceTier(best, shortened);
+  const autoApplicable = tier !== "低" || WITH_LOW;
   fixes.push({
     id: p.id,
     name: p.name,
+    tier,
     reason: best.reason,
     keyword: usedKeyword,
+    keywordShortened: shortened,
+    overlap: Math.round(best.overlap * 100),
     oldUrl: p.affiliateUrl,
     newUrl: best.item.affiliateUrl,
     itemName: best.item.itemName,
     itemPrice: best.item.itemPrice,
+    productPrice: p.price ?? null,
     shopName: best.item.shopName,
+    applied: APPLY && autoApplicable,
   });
   console.log(
-    `✓ ${p.name.slice(0, 40)} → ${best.item.shopName}（${best.reason}）` +
-      (EXPLAIN ? `\n   └ 採用キーワード: ${usedKeyword}` : "")
+    `✓[${tier}] ${p.name.slice(0, 36)} → ${best.item.shopName}（${best.reason}）` +
+      (EXPLAIN || tier === "低" ? `\n   └ 採用キーワード: ${usedKeyword}` : "")
   );
-  if (APPLY) {
+  if (APPLY && autoApplicable) {
     p.affiliateUrl = best.item.affiliateUrl;
+    // updatedAt を進めないと sync の auto-pull で旧URLに巻き戻る
+    p.updatedAt = new Date().toISOString();
   }
 }
 
@@ -405,11 +477,22 @@ for (const s of skipped) {
   reasonTally[key] = (reasonTally[key] || 0) + 1;
 }
 
+const byTier = { 高: [], 中: [], 低: [] };
+for (const f of fixes) byTier[f.tier].push(f);
+
 fs.mkdirSync(path.dirname(REPORT), { recursive: true });
 fs.writeFileSync(
   REPORT,
   JSON.stringify(
-    { appliedAt: new Date().toISOString(), apply: APPLY, reasonTally, fixes, skipped },
+    {
+      appliedAt: new Date().toISOString(),
+      apply: APPLY,
+      withLow: WITH_LOW,
+      tierCounts: { 高: byTier.高.length, 中: byTier.中.length, 低: byTier.低.length },
+      reasonTally,
+      fixes,
+      skipped,
+    },
     null,
     2
   )
@@ -430,11 +513,45 @@ if (skipped.length > 0) {
     console.log("  100%から大きく外れていれば、products.json の価格が古い可能性が高い");
   }
 }
+if (fixes.length > 0) {
+  console.log("\n── 信頼度の内訳 ──");
+  console.log(`  高 ${String(byTier.高.length).padStart(3)}件  型番一致（カラー接尾辞まで照合）`);
+  console.log(`  中 ${String(byTier.中.length).padStart(3)}件  商品名フルで検索して一致率100%`);
+  console.log(`  低 ${String(byTier.低.length).padStart(3)}件  一致率100%未満、またはキーワードを短縮`);
+
+  if (byTier.低.length > 0) {
+    console.log("\n── 要目視（低）──");
+    console.log("  別サイズ・別グレード・付属品を掴んでいないか確認してください\n");
+    for (const f of byTier.低) {
+      const priceNote = f.productPrice
+        ? `¥${f.itemPrice.toLocaleString()}（登録¥${f.productPrice.toLocaleString()} の ${Math.round((f.itemPrice / f.productPrice) * 100)}%）`
+        : `¥${f.itemPrice.toLocaleString()}`;
+      console.log(`  ${f.id}  ${f.name.slice(0, 34)}`);
+      console.log(`    → ${f.itemName.slice(0, 54)}`);
+      console.log(
+        `    一致率${f.overlap}% / ${f.keywordShortened ? "キーワード短縮" : "フル検索"} / ${priceNote} / ${f.shopName}`
+      );
+      console.log(`    ${f.newUrl}\n`);
+    }
+  }
+}
+
+const autoCount = fixes.filter((f) => f.tier !== "低" || WITH_LOW).length;
+
 if (APPLY) {
   fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
-  console.log(`\nproducts.json 反映: ${fixes.length}件 / スキップ ${skipped.length}件`);
-  console.log("次: git diff で確認 → コミット → sync（Supabase反映）");
+  console.log(
+    `\nproducts.json 反映: ${autoCount}件（高${byTier.高.length} 中${byTier.中.length}` +
+      `${WITH_LOW ? ` 低${byTier.低.length}` : ` / 低${byTier.低.length}件は未適用`}）`
+  );
+  console.log("次: git diff で確認 → npm run db:sync -- --no-pull");
+  if (!WITH_LOW && byTier.低.length > 0) {
+    console.log("低も適用するなら: --apply --with-low（目視してから推奨）");
+  }
 } else {
-  console.log(`\ndry-run完了: 提案${fixes.length}件 / スキップ${skipped.length}件 → ${REPORT}`);
-  console.log("問題なければ --apply で反映してください");
+  console.log(
+    `\ndry-run完了: 提案${fixes.length}件（自動適用対象${autoCount}件）/ スキップ${skipped.length}件`
+  );
+  console.log(`レポート: ${REPORT}`);
+  console.log("適用: --apply （高・中のみ） / --apply --with-low （低も含む）");
 }
