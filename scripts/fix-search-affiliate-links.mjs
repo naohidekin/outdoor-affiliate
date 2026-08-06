@@ -35,8 +35,15 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
+
+// IPv6回線だと楽天へIPv6で接続してしまい、アプリのIP許可リスト（IPv4のみ）に
+// 一致せず CLIENT_IP_NOT_ALLOWED になる。他スクリプトは package.json の
+// --dns-result-order=ipv4first で回避しているが、これは直接 node で叩かれる
+// ことが多いのでコード側で固定する
+dns.setDefaultResultOrder("ipv4first");
 
 // .env.local を自前で読む（手動 export は値に空白を含む変数で事故を起こす）
 loadEnv();
@@ -80,6 +87,10 @@ if (!appId || !accessKey) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// 認証エラーが続いたら早期終了する（設定ミスで5分待たされるのを防ぐ）
+let authFailures = 0;
+const AUTH_FAILURE_LIMIT = 5;
 
 function isSearchLink(affiliateUrl) {
   if (!affiliateUrl) return false;
@@ -257,14 +268,34 @@ async function searchRakuten(keyword) {
       useLegacy = true;
       console.warn(
         "  アクセスキーがIP制限で拒否（CLIENT_IP_NOT_ALLOWED）\n" +
-          "  → https://webservice.rakuten.co.jp/ で現在のグローバルIP（curl -s ifconfig.me）を許可リストに追加してください"
+          "  → https://webservice.rakuten.co.jp/ で現在のグローバルIPを許可リストに追加してください\n" +
+          "  → IPv4アドレスを登録すること: curl -4 -s ifconfig.me\n" +
+          "    （IPv6で出た場合、それを登録しても一致しません）"
       );
       return searchRakuten(keyword);
     }
     console.warn(`  API ${res.status}: ${keyword.slice(0, 30)}`);
     if (body) console.warn(`    応答: ${body.slice(0, 200)}`);
+
+    // 認証まわりのエラーが続くときは設定の問題なので、全件回す前に止める。
+    // 81件×最大6キーワードで5分以上待ってから気づくのを避ける
+    if (/CLIENT_IP_NOT_ALLOWED|wrong_parameter|applicationId|401|403/.test(body) || res.status === 401 || res.status === 403) {
+      authFailures++;
+      if (authFailures >= AUTH_FAILURE_LIMIT) {
+        console.error(
+          `\n認証エラーが${AUTH_FAILURE_LIMIT}回続きました。設定を直してから再実行してください。\n` +
+            "  1. curl -4 -s ifconfig.me でIPv4アドレスを確認\n" +
+            "  2. https://webservice.rakuten.co.jp/app/list で許可IPに追加（1行1IP・複数可）\n" +
+            "  3. 保存時は画像認証の入力が必須です\n"
+        );
+        process.exit(1);
+      }
+    } else {
+      authFailures = 0; // 一時的なエラーは連続カウントに含めない
+    }
     return [];
   }
+  authFailures = 0;
   const data = await res.json();
   return data.Items || [];
 }
