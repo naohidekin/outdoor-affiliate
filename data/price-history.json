@@ -1,0 +1,530 @@
+{
+  "B083ZWDCXN": {
+    "price": 13430,
+    "checkedAt": "2026-08-05T21:40:27.967Z",
+    "previousPrice": 15800
+  },
+  "B01GJBGX54": {
+    "price": 29800,
+    "checkedAt": "2026-08-05T21:40:28.008Z",
+    "previousPrice": 24800
+  },
+  "B084L1JYHB": {
+    "price": 1833,
+    "checkedAt": "2026-08-05T21:40:57.979Z",
+    "previousPrice": 1833,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 771
+  },
+  "B0D3HJM175": {
+    "price": 69484,
+    "checkedAt": "2026-08-05T21:40:28.008Z",
+    "previousPrice": 119800
+  },
+  "B09J4NZJ8V": {
+    "price": 4513,
+    "checkedAt": "2026-08-05T21:40:30.009Z",
+    "previousPrice": 4190
+  },
+  "B0GK7GH9ML": {
+    "price": 5420,
+    "checkedAt": "2026-08-05T21:40:30.009Z",
+    "previousPrice": 5980
+  },
+  "B01N23BHLY": {
+    "price": 6422,
+    "checkedAt": "2026-08-05T21:40:30.009Z",
+    "previousPrice": 6380
+  },
+  "B007FFSUVY": {
+    "price": 1210,
+    "checkedAt": "2026-08-05T21:40:30.009Z",
+    "previousPrice": 1210
+  },
+  "B017973NPK": {
+    "price": 22980,
+    "checkedAt": "2026-08-05T21:40:30.009Z",
+    "previousPrice": 16500
+  },
+  "B09XWNYZFG": {
+    "price": 22980,
+    "checkedAt": "2026-08-05T21:40:31.955Z",
+    "previousPrice": 22980
+  },
+  "B0GTLBDP65": {
+    "price": 25300,
+    "checkedAt": "2026-08-05T21:40:31.955Z",
+    "previousPrice": 25300
+  },
+  "B001QV4GP2": {
+    "price": 7700,
+    "checkedAt": "2026-08-05T21:40:31.955Z",
+    "previousPrice": 12100
+  },
+  "B0DK7PR83X": {
+    "price": 7480,
+    "checkedAt": "2026-08-05T21:40:31.955Z",
+    "previousPrice": 7480
+  },
+  "B00I0Q8VVG": {
+    "price": 11400,
+    "checkedAt": "2026-08-05T21:40:33.901Z",
+    "previousPrice": 10780
+  },
+  "B00U72QEFQ": {
+    "price": 12730,
+    "checkedAt": "2026-08-05T21:40:33.902Z",
+    "previousPrice": 16500
+  },
+  "B001A4KL86": {
+    "price": 1155,
+    "checkedAt": "2026-08-05T21:40:33.902Z",
+    "previousPrice": 1000
+  },
+  "B00HHMTWIA": {
+    "price": 2918,
+    "checkedAt": "2026-08-05T21:40:33.902Z",
+    "previousPrice": 2480
+  },
+  "B0153VK4RY": {
+    "price": 209000,
+    "checkedAt": "2026-08-05T21:40:33.902Z",
+    "previousPrice": 209000,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 86000
+  },
+  "B0FKT4CV7Z": {
+    "price": 2970,
+    "checkedAt": "2026-08-05T21:40:35.738Z",
+    "previousPrice": 2970
+  },
+  "B0FK9YH385": {
+    "price": 62990,
+    "checkedAt": "2026-08-05T21:40:35.738Z",
+    "previousPrice": 99990
+  },
+  "B08WPRC6Y1": {
+    "price": 6980,
+    "checkedAt": "2026-08-05T21:40:35.738Z",
+    "previousPrice": 6980
+  },
+  "B098QW43JT": {
+    "price": 3580,
+    "checkedAt": "2026-08-05T21:40:35.738Z",
+    "previousPrice": 3580
+  },
+  "B0B41DJPZJ": {
+    "price": 49980,
+    "checkedAt": "2026-08-05T21:40:35.738Z",
+    "previousPrice": 34570
+  },
+  "B0DBGW8LP8": {
+    "price": 19700,
+    "checkedAt": "2026-08-05T21:40:39.276Z",
+    "previousPrice": 13860
+  },
+  "B0B5GGDY3S": {
+    "price": 3401,
+    "checkedAt": "2026-08-05T21:40:39.276Z",
+    "previousPrice": 2210
+  },
+  "B0B1PXB3WT": {
+    "price": 28469,
+    "checkedAt": "2026-08-05T21:40:39.276Z",
+    "previousPrice": 34999
+  },
+  "B000AQXZME": {
+    "price": 5986,
+    "checkedAt": "2026-08-05T21:40:41.133Z",
+    "previousPrice": 6600
+  },
+  "B00VT0UKD2": {
+    "price": 27500,
+    "checkedAt": "2026-08-05T21:40:41.134Z",
+    "previousPrice": 27500
+  },
+  "B09H2MNDXW": {
+    "price": 3002,
+    "checkedAt": "2026-08-05T21:40:41.134Z",
+    "previousPrice": 3500
+  },
+  "B0BRTZPWSF": {
+    "price": 5980,
+    "checkedAt": "2026-08-05T21:40:41.134Z",
+    "previousPrice": 7103
+  },
+  "B07RR9HQ7V": {
+    "price": 5720,
+    "checkedAt": "2026-08-05T21:40:41.134Z",
+    "previousPrice": 5720,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 29260
+  },
+  "B01J59SGCK": {
+    "price": 3780,
+    "checkedAt": "2026-08-05T21:40:42.983Z",
+    "previousPrice": 3850
+  },
+  "B09J4MDLXB": {
+    "price": 3628,
+    "checkedAt": "2026-08-05T21:40:41.134Z",
+    "previousPrice": 3490
+  },
+  "B005FL31DM": {
+    "price": 18241,
+    "checkedAt": "2026-08-05T21:40:42.982Z",
+    "previousPrice": 9900
+  },
+  "B08W56LSJ2": {
+    "price": 80233,
+    "checkedAt": "2026-08-05T21:40:44.837Z",
+    "previousPrice": 0
+  },
+  "B007VLFI6W": {
+    "price": 9130,
+    "checkedAt": "2026-08-05T21:40:42.983Z",
+    "previousPrice": 6600
+  },
+  "B01N5FYL0K": {
+    "price": 129800,
+    "checkedAt": "2026-08-05T21:40:42.983Z",
+    "previousPrice": 132000
+  },
+  "B0CYT9N94T": {
+    "price": 59800,
+    "checkedAt": "2026-08-05T21:40:42.983Z",
+    "previousPrice": 70267
+  },
+  "B00HZEGRBA": {
+    "price": 3498,
+    "checkedAt": "2026-08-05T21:40:44.836Z",
+    "previousPrice": 3498
+  },
+  "B000AR4VZ8": {
+    "price": 4520,
+    "checkedAt": "2026-08-05T21:40:44.837Z",
+    "previousPrice": 1980
+  },
+  "B08P5GD96X": {
+    "price": 64800,
+    "checkedAt": "2026-08-05T21:40:44.837Z",
+    "previousPrice": 52800
+  },
+  "B07N6SB9K2": {
+    "price": 1823,
+    "checkedAt": "2026-08-05T21:40:44.837Z",
+    "previousPrice": 2475
+  },
+  "B01FFQJWIE": {
+    "price": 17200,
+    "checkedAt": "2026-08-05T21:40:44.837Z",
+    "previousPrice": 17200
+  },
+  "B0844HJT6H": {
+    "price": 3480,
+    "checkedAt": "2026-08-05T21:40:46.703Z",
+    "previousPrice": 3480
+  },
+  "B007FFSUJQ": {
+    "price": 5500,
+    "checkedAt": "2026-08-05T21:40:46.703Z",
+    "previousPrice": 0
+  },
+  "B0B7S4GJ7P": {
+    "price": 29800,
+    "checkedAt": "2026-08-05T21:40:46.703Z",
+    "previousPrice": 29800
+  },
+  "B0CL6GFW6Q": {
+    "price": 8100,
+    "checkedAt": "2026-08-05T21:40:46.703Z",
+    "previousPrice": 11990
+  },
+  "B0013L25N0": {
+    "price": 1168,
+    "checkedAt": "2026-08-05T21:40:48.616Z",
+    "previousPrice": 1080
+  },
+  "B0CYLCJC6M": {
+    "price": 4416,
+    "checkedAt": "2026-08-05T21:40:48.616Z",
+    "previousPrice": 4290
+  },
+  "B085Y1CY5H": {
+    "price": 14300,
+    "checkedAt": "2026-08-05T21:40:48.617Z",
+    "previousPrice": 6600
+  },
+  "B0DYN4MD1P": {
+    "price": 2280,
+    "checkedAt": "2026-08-05T21:40:48.617Z",
+    "previousPrice": 1980
+  },
+  "B08R8V78TY": {
+    "price": 17300,
+    "checkedAt": "2026-08-05T21:40:59.748Z",
+    "previousPrice": 14000
+  },
+  "B081FFJNVL": {
+    "price": 17600,
+    "checkedAt": "2026-08-05T21:40:50.488Z",
+    "previousPrice": 17600,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 44422
+  },
+  "B085M4YQYJ": {
+    "price": 29293,
+    "checkedAt": "2026-08-05T21:40:50.488Z",
+    "previousPrice": 19800
+  },
+  "B003MOZNSU": {
+    "price": 424,
+    "checkedAt": "2026-08-05T21:40:52.398Z",
+    "previousPrice": 387
+  },
+  "B00352KRDU": {
+    "price": 33500,
+    "checkedAt": "2026-08-05T21:40:52.398Z",
+    "previousPrice": 39600
+  },
+  "B0BG7QP5T6": {
+    "price": 27780,
+    "checkedAt": "2026-08-05T21:40:52.398Z",
+    "previousPrice": 16980
+  },
+  "B00URIZ7TE": {
+    "price": 14080,
+    "checkedAt": "2026-08-05T21:40:54.280Z",
+    "previousPrice": 24200
+  },
+  "B0BHDB5RBZ": {
+    "price": 3500,
+    "checkedAt": "2026-08-05T21:40:54.280Z",
+    "previousPrice": 2970
+  },
+  "B000O1P8I4": {
+    "price": 9100,
+    "checkedAt": "2026-08-05T21:40:54.280Z",
+    "previousPrice": 9100,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 2820
+  },
+  "B002P8WQMK": {
+    "price": 2649,
+    "checkedAt": "2026-08-05T21:40:54.280Z",
+    "previousPrice": 1932
+  },
+  "B0BKG2CMXJ": {
+    "price": 1980,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 1980
+  },
+  "B0C4KG77YJ": {
+    "price": 7680,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 5679
+  },
+  "B001A4SC7I": {
+    "price": 1780,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 1327
+  },
+  "B01N6ZRSWM": {
+    "price": 1100,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 990
+  },
+  "B08HMPH45X": {
+    "price": 21120,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 25300
+  },
+  "B09Y8RG66X": {
+    "price": 8470,
+    "checkedAt": "2026-08-05T21:40:56.119Z",
+    "previousPrice": 6600
+  },
+  "B085RXK7J6": {
+    "price": 26800,
+    "checkedAt": "2026-08-05T21:40:57.980Z",
+    "previousPrice": 23800
+  },
+  "B08548NHGS": {
+    "price": 12540,
+    "checkedAt": "2026-08-05T21:40:57.980Z",
+    "previousPrice": 10395
+  },
+  "B000AQXZD8": {
+    "price": 8780,
+    "checkedAt": "2026-08-05T21:40:57.980Z",
+    "previousPrice": 13200
+  },
+  "B07JMBYYV5": {
+    "price": 14300,
+    "checkedAt": "2026-08-05T21:40:59.748Z",
+    "previousPrice": 14300,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 6290
+  },
+  "B07XB5WX89": {
+    "price": 47800,
+    "checkedAt": "2026-08-05T21:40:59.748Z",
+    "previousPrice": 43780
+  },
+  "B09JNYJTBT": {
+    "price": 948,
+    "checkedAt": "2026-08-05T21:40:59.748Z",
+    "previousPrice": 1800
+  },
+  "B07BPQSMHQ": {
+    "price": 4980,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 4980,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 11962
+  },
+  "B09WTRZQWQ": {
+    "price": 18654,
+    "checkedAt": "2026-08-05T21:41:01.640Z",
+    "previousPrice": 32000
+  },
+  "B09HGBR242": {
+    "price": 9910,
+    "checkedAt": "2026-08-05T21:41:01.640Z",
+    "previousPrice": 8766
+  },
+  "B000AR4TJQ": {
+    "price": 18600,
+    "checkedAt": "2026-08-05T21:41:01.640Z",
+    "previousPrice": 18600,
+    "revertedAt": "2026-08-06T00:03:20.164Z",
+    "revertedFrom": 1845
+  },
+  "B094D91L2R": {
+    "price": 5587,
+    "checkedAt": "2026-08-05T21:41:01.640Z",
+    "previousPrice": 3972
+  },
+  "B0B7BG9YPW": {
+    "price": 38500,
+    "checkedAt": "2026-08-05T21:41:03.596Z",
+    "previousPrice": 34100
+  },
+  "B07NGBHWC3": {
+    "price": 3955,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 4980
+  },
+  "B00HYTDKNY": {
+    "price": 4318,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 4200
+  },
+  "B08Z75P937": {
+    "price": 4980,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 2980
+  },
+  "B0BD4FFN59": {
+    "price": 23100,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 23100,
+    "revertedAt": "2026-08-06T00:03:20.169Z",
+    "revertedFrom": 5382
+  },
+  "B08CZWJ7P8": {
+    "price": 5680,
+    "checkedAt": "2026-08-05T21:41:03.597Z",
+    "previousPrice": 4980
+  },
+  "B000FBGCBA": {
+    "price": 2500,
+    "checkedAt": "2026-08-05T21:41:05.460Z",
+    "previousPrice": 2970
+  },
+  "B06XPRTK55": {
+    "price": 79800,
+    "checkedAt": "2026-08-05T21:41:05.460Z",
+    "previousPrice": 118800
+  },
+  "B07DG3NVNW": {
+    "price": 3740,
+    "checkedAt": "2026-08-05T21:41:05.460Z",
+    "previousPrice": 6000
+  },
+  "B07BWFMBLS": {
+    "price": 4510,
+    "checkedAt": "2026-08-05T21:41:05.460Z",
+    "previousPrice": 3900
+  },
+  "B07PM2TFW7": {
+    "price": 34681,
+    "checkedAt": "2026-08-05T21:41:05.460Z",
+    "previousPrice": 24800
+  },
+  "B000AR5Y90": {
+    "price": 7889,
+    "checkedAt": "2026-08-05T21:41:07.479Z",
+    "previousPrice": 7700
+  },
+  "B09M2RX9WB": {
+    "price": 7480,
+    "checkedAt": "2026-08-05T21:41:07.480Z",
+    "previousPrice": 5800
+  },
+  "B004IWR45A": {
+    "price": 3576,
+    "checkedAt": "2026-08-05T21:41:07.480Z",
+    "previousPrice": 5500
+  },
+  "B06W9FQF9L": {
+    "price": 4950,
+    "checkedAt": "2026-08-05T21:41:11.274Z",
+    "previousPrice": 0
+  },
+  "B0D5YHT9TZ": {
+    "price": 4980,
+    "checkedAt": "2026-08-05T21:41:09.431Z",
+    "previousPrice": 4480
+  },
+  "B09F5XJ24Q": {
+    "price": 25000,
+    "checkedAt": "2026-08-05T21:41:09.432Z",
+    "previousPrice": 22800
+  },
+  "B079NTXHSD": {
+    "price": 16598,
+    "checkedAt": "2026-08-05T21:41:09.432Z",
+    "previousPrice": 7800
+  },
+  "B0CYBJ67D8": {
+    "price": 2490,
+    "checkedAt": "2026-08-05T21:41:11.273Z",
+    "previousPrice": 2880
+  },
+  "B0CYRW2BQD": {
+    "price": 10800,
+    "checkedAt": "2026-08-05T21:41:11.274Z",
+    "previousPrice": 14000
+  },
+  "B0B4NNJNM2": {
+    "price": 7700,
+    "checkedAt": "2026-08-05T21:41:11.274Z",
+    "previousPrice": 7700
+  },
+  "B09137TGXH": {
+    "price": 2718,
+    "checkedAt": "2026-08-05T21:41:11.274Z",
+    "previousPrice": 3500
+  },
+  "B09Z27TM7R": {
+    "price": 42075,
+    "checkedAt": "2026-08-05T21:41:13.100Z",
+    "previousPrice": 49500
+  },
+  "B08115XHZN": {
+    "price": 5350,
+    "checkedAt": "2026-08-05T21:41:13.100Z",
+    "previousPrice": 5150
+  }
+}
