@@ -27,7 +27,7 @@
 | ジョブ | 状態 | 条件 |
 |---|---|---|
 | **article-weekly**（水曜9:00） | **「下書き止まり」に改造して稼働**（本改修で writer が `scheduledPublishDate` を付けなくなった） | テーマ選定＋楽天商品調査＋AI初稿までを自動生成。**公開は絶対にしない**。人間が管理画面で仕上げて公開予定日を設定して初めて article-daily が公開する |
-| **price-monitor**（日曜6:00） | **保留（未インストール）** | 復活の3条件: (a) ~~PA-APIキー~~ → **Creators API認証情報は取得済み（2026-07-11確認）**。ただしスクリプト本体が旧PA-API署名のままなのでCreators API対応の改修が必要 (b) 価格のSupabase反映経路 (c) セール告知の保存先をSheets→Notionへ付け替え |
+| **price-monitor**（日曜6:00） | **手動運用可。launchd登録は保留** | (a) ~~PA-API署名の改修~~ → **2026-08-06にCreators APIへ移行済み**。変動率ガード付きで手動実行できる (b) ~~価格のSupabase反映経路~~ → **完了**（実行後に `sync-to-supabase --no-pull` を自動実行） (c) セール告知の保存先をSheets→Notionへ付け替え **← 未着手。launchd登録はこれが済んでから** |
 
 ### 🔴 退役9本（`launchd/retired/` へ移動。setup-launchd.sh が自動アンロード）
 
@@ -158,7 +158,7 @@ launchctl list | grep outdoor-affiliate
 
 ## 7. 将来の再検討リスト
 
-- [ ] price-monitor 復活（Creators API対応の改修＋Supabase反映経路＋Notion付け替えが揃ったら）
+- [ ] price-monitor のlaunchd登録（~~Creators API対応~~ ~~Supabase反映経路~~ は2026-08-06に完了。残るはセール告知のNotion付け替え）
 - [ ] analyze-x のNotion読み取り版（投稿レール安定後）
 - [ ] viral-scout の定期実行化（「URL探しすら面倒」になったら）
 - [ ] Threads転載の作り直し（Notion読み＋トークン自動更新）
@@ -264,3 +264,88 @@ git status --short
 
 そのうえで `git pull --rebase` を実行し、競合したファイルは中身を見て解決する。
 `git checkout --ours/--theirs` は使わない（JSONが片側に倒れてデータが消える）。
+
+---
+
+## 2026-08-06: アフィリエイトリンクの取りこぼし一斉修正とCreators API移行
+
+### 何が起きていたか
+
+7月最多クリックの コロナ PA-F85A（511クリック）が楽天成果ゼロだった件を
+起点に調べたところ、同じ構造の取りこぼしが広範囲にあった。
+
+- 楽天 `affiliateUrl` … 81件が検索結果ページ行き
+- Amazon `amazonUrl` … 77件が `/s?k=...` の検索結果ページ行き
+
+Amazon側の混入時期を追うと壊れ率は **2026-04:14% → 06:28% → 07:76%** と上昇。
+PA-API v5 の段階的停止（OffersV2は1月末、本体は5/15）でASINが取得できず、
+フォールバックの検索URLが入り続けたのが原因だった。
+
+**検索結果ページに着地した読者は迷子になり、成約しない。**
+
+### 直した結果
+
+| 対象 | 修正 | 残 |
+|---|---|---|
+| 楽天リンク | 20件を商品直リンクへ | 61件 |
+| Amazonリンク | 39件を商品直リンクへ | 38件 |
+| Amazon価格 | Creators APIへ移行し92件を更新 | — |
+| 異常価格 | 誤ASIN由来の7件を差し戻し | — |
+
+### 追加・改修したスクリプト
+
+| スクリプト | 用途 |
+|---|---|
+| `fix-search-affiliate-links.mjs` | 楽天。信頼度3段階・`--explain`・`--only` を追加 |
+| `fix-amazon-search-links.mjs` | **新規**。Amazon版。Creators API searchItems を使う |
+| `price-monitor.js` | **Creators APIへ移行**。`--dry-run` と変動率ガードを追加 |
+| `apply-held-price.mjs` | **新規**。ガードで保留した価格を目視後に個別適用 |
+| `revert-price-anomalies.mjs` | **新規**。異常な価格更新を差し戻す。`--fix-drift` で復旧 |
+| `src/lib/amazon-creators-api.mjs` | **新規**。トークン取得・429リトライ・getItems/searchItems |
+| `src/lib/product-match.mjs` | **新規**。商品名照合ロジック（楽天/Amazon共通） |
+
+### 踏んだ落とし穴（再発させないこと）
+
+1. **`updatedAt` を進めないと同期で巻き戻る**
+   `pull-from-supabase` は「ローカルの updatedAt がリモートより新しい」行だけを
+   push待ちとして保持する。価格やURLだけ書き換えたスクリプトは、次の
+   `sync-to-supabase` の auto-pull で旧値に上書きされる。実際に差し戻した7件が消えた。
+   **データを直接書き換えるスクリプトは必ず `updatedAt` を進める。**
+
+2. **同期は `npm run db:sync -- --no-pull` を使う**
+   まだDBに無いローカルの修正を auto-pull が旧値で潰す。二重の保険として付ける。
+
+3. **楽天APIはIPv4のIP許可リスト。IPv6回線だと永久に一致しない**
+   `curl -s ifconfig.me` がIPv6を返す環境では、その値を登録しても無意味。
+   `curl -4 -s ifconfig.me` でIPv4を確認して登録する。スクリプト側は
+   `dns.setDefaultResultOrder("ipv4first")` で固定済み。
+   許可IPはCIDR表記も使える（`143.189.126.0/24` 等）。移動のたびに追記が必要。
+
+4. **同一ASINを複数商品が共有している**
+   おにやんま君（`chair-006` / `insect-repellent-001`）、
+   スランバーシュラフ・2（`sb-kids-003` / `sb-budget-002`）など。
+   片方だけ更新すると価格が食い違う。`find` ではなく `filter` で全件そろえる。
+
+5. **低信頼の提案は半数近くが別商品**
+   楽天で低13件中6件、Amazonで低10件中3件が誤り（WAVE 2→WAVE 3、
+   本体→ソーラーパネルセット、別ブランドなど）。
+   **`--apply` は高・中のみ。低は目視して `--only` で通す。**
+
+6. **Amazonの検索結果は実行ごとに揺らぐ**
+   同じ商品・同じキーワードでも、順位変動で別ASINが返る。
+   「一致率100%」が毎回出るとは限らない。適用後の再検証が要る。
+
+### 帰国後のチェックリスト
+
+- [ ] `data/price-held-back.json` の7商品を確認。ASINが本体を指しているか
+      （焚火台L `B000AR4TJQ`／マナイタセットM `B07RR9HQ7V`／
+      ヘリノックス ビーチチェア `B0BD4FFN59` が特に怪しい）。
+      正しければ `apply-held-price.mjs <ID>`、誤りなら `amazonUrl` を差し替え
+- [ ] 8/9（日）の `link-check` / `link-fix` が動いたか確認
+- [ ] 適用済み59件のASIN・URLを `getItems` で再検証（上記6のため）
+- [ ] スキップ分の追い込み（楽天61件・Amazon38件）。
+      Amazonは「一致率不足」が28件と最多。商品名が冗長で一致率が構造的に下がる
+- [ ] 重複商品の統合とID整理（おにやんま君が `chair-006`、
+      岩鋳のスキレットが `tent-015` など、IDとカテゴリが不整合）
+- [ ] 楽天リンク修正の効果測定（適用から3〜4週後）
+- [ ] `price-monitor` のセール告知をSheets→Notionへ付け替え（launchd登録の前提）
