@@ -135,9 +135,24 @@ console.log(
     `${APPLY ? "" : " ※dry-run"}\n`
 );
 
+// --keep は商品IDで受けるが、履歴はASIN単位なので判定もASIN単位に広げる。
+// 重複商品（同一ASIN）の片方だけ据え置くと、共有している履歴が書き換わって
+// もう片方に引きずられ、両者の価格が食い違う（2026-08-05に発生）
+const KEEP_ASINS = new Set(
+  anomalies.filter((a) => KEEP.has(a.product.id)).map((a) => a.asin)
+);
+const spillover = anomalies.filter(
+  (a) => !KEEP.has(a.product.id) && KEEP_ASINS.has(a.asin)
+);
+if (spillover.length) {
+  console.log(
+    `※ --keep と同じASINの重複商品も据え置きます: ${spillover.map((a) => a.product.id).join(", ")}\n`
+  );
+}
+
 let reverted = 0;
 for (const a of anomalies) {
-  const kept = KEEP.has(a.product.id);
+  const kept = KEEP_ASINS.has(a.asin);
   const mark = kept ? "－ 据置" : APPLY ? "✓ 差戻" : "・ 対象";
   console.log(
     `${mark}  ${String(Math.round(a.ratio * 100)).padStart(4)}%  ` +

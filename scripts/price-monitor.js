@@ -14,8 +14,15 @@
  *   ※ 旧 AMAZON_ACCESS_KEY / AMAZON_SECRET_KEY に入っていても読む
  *
  * 使い方:
+ *   node scripts/price-monitor.js --dry-run        # 書き込み・同期なし（推奨: まずこれ）
  *   node scripts/price-monitor.js
- *   node scripts/price-monitor.js --threshold=15  (15%以上の値下げのみ通知)
+ *   node scripts/price-monitor.js --threshold=15   # 15%以上の値下げのみ通知
+ *   node scripts/price-monitor.js --no-sync        # 書き込むがSupabase同期はしない
+ *   node scripts/price-monitor.js --guard-max=3.0  # 変動率ガードを緩める
+ *
+ * 変動率ガード: 前回価格の 0.5〜2.0倍を外れる更新は自動適用せず
+ * data/price-held-back.json に保留する。誤ったASIN（本体ではなくパーツ）を
+ * 指していると異常な価格を掴むため。目視後 apply-held-price.mjs で適用する。
  */
 
 import fs from "fs";
@@ -41,6 +48,15 @@ if (fs.existsSync(envPath)) {
 const THRESHOLD = parseInt(
   process.argv.find((a) => a.startsWith("--threshold="))?.split("=")[1] || "10"
 );
+
+// 書き込み・Supabase同期・ISR再検証をすべて止める
+const DRY_RUN = process.argv.includes("--dry-run");
+
+// 変動率ガード。この範囲を外れた更新は自動適用せず保留する
+const numArg = (name, fallback) =>
+  parseFloat(process.argv.find((a) => a.startsWith(`${name}=`))?.split("=")[1] || fallback);
+const GUARD_MIN = numArg("--guard-min", "0.5");
+const GUARD_MAX = numArg("--guard-max", "2.0");
 
 // --- Creators API（PA-API v5 は 2026-05-15 廃止） ---
 // 認証・トークン管理・429リトライは src/lib/amazon-creators-api.mjs に集約
@@ -165,6 +181,7 @@ async function main() {
 
   const deals = [];
   const priceUpdates = {};
+  const heldBack = [];
 
   // 10件ずつバッチ処理（PA-API制限）
   for (let i = 0; i < productAsins.length; i += 10) {
@@ -176,7 +193,10 @@ async function main() {
 
       for (const item of items) {
         const asin = item.ASIN;
-        const product = batch.find((p) => p.asin === asin);
+        // 同じASINが複数商品に登録されているケースがある（焚火台L・おにやんま君など）。
+        // find だと片方しか更新されず、重複間で価格が食い違う
+        const matched = batch.filter((p) => p.asin === asin);
+        const product = matched[0];
         if (!product) continue;
 
         const listing = item.Offers?.Listings?.[0];
@@ -196,6 +216,29 @@ async function main() {
           checkedAt: new Date().toISOString(),
           previousPrice: prevPrice,
         };
+
+        // 変動が大きすぎる場合は自動適用せず保留する。
+        // 2026-08-05: 誤ったASIN（本体ではなくパーツ）を参照していた商品で
+        // 焚火台Lが¥18,600→¥1,845になり、そのまま本番へ出た。
+        // 正しい値上がりも混じるため、破棄せずレポートして目視に回す。
+        const ratio = prevPrice > 0 ? currentPrice / prevPrice : 1;
+        if (ratio < GUARD_MIN || ratio > GUARD_MAX) {
+          heldBack.push({
+            ids: matched.map((m) => m.id),
+            name: product.name,
+            asin,
+            prevPrice,
+            currentPrice,
+            ratio,
+            amazonUrl: product.amazonUrl,
+          });
+          console.log(
+            `  ⏸  保留 ${product.name.slice(0, 28)} ¥${prevPrice.toLocaleString()} → ¥${currentPrice.toLocaleString()} (${Math.round(ratio * 100)}%)`
+          );
+          // 履歴も更新しない。次回も同じ差分として検出させる
+          delete priceUpdates[asin];
+          continue;
+        }
 
         // 値下げ検知
         const dropFromStored = prevPrice > 0
@@ -225,9 +268,11 @@ async function main() {
         }
 
         // products.json の価格も更新。productは .map(p => ({...p})) の浅いコピーなので
-        // 必ず原本(products配列)側を更新する（コピーだけ更新すると書き出しに反映されない）
-        const original = products.find((p) => p.id === product.id);
-        if (original) {
+        // 必ず原本(products配列)側を更新する（コピーだけ更新すると書き出しに反映されない）。
+        // 同じASINの商品が複数あるときは全部そろえる
+        for (const m of matched) {
+          const original = products.find((p) => p.id === m.id);
+          if (!original) continue;
           const ts = new Date().toISOString();
           original.price = currentPrice;
           original.priceUpdatedAt = ts;
@@ -244,6 +289,40 @@ async function main() {
     if (i + 10 < productAsins.length) {
       await new Promise((r) => setTimeout(r, 1500));
     }
+  }
+
+  // 保留分の報告。破棄せず一覧に出して目視に回す
+  if (heldBack.length > 0) {
+    console.log(
+      `\n⏸  ガードで保留: ${heldBack.length}件（変動が ${Math.round(GUARD_MIN * 100)}〜${Math.round(GUARD_MAX * 100)}% の外）`
+    );
+    console.log("   誤ったASIN（本体でなくパーツ等）を指している可能性があります。");
+    console.log("   URLを開いて確認し、正しければ下のコマンドで個別に適用してください。\n");
+    for (const h of heldBack) {
+      console.log(
+        `   ${String(Math.round(h.ratio * 100)).padStart(4)}%  ¥${String(h.prevPrice).padStart(7)} → ¥${String(h.currentPrice).padStart(7)}  ${h.name.slice(0, 30)}`
+      );
+      console.log(`         ${h.ids.join(", ")}  ${h.amazonUrl}`);
+    }
+    const heldPath = path.join(DATA_DIR, "price-held-back.json");
+    if (!DRY_RUN) {
+      fs.writeFileSync(
+        heldPath,
+        JSON.stringify({ checkedAt: new Date().toISOString(), items: heldBack }, null, 2),
+        "utf-8"
+      );
+      console.log(`\n   一覧: ${heldPath}`);
+    }
+    console.log(
+      `   適用する場合: node scripts/apply-held-price.mjs <商品ID> [<商品ID>...]`
+    );
+  }
+
+  if (DRY_RUN) {
+    console.log(
+      `\n🔍 DRY RUN: 書き込みなし（更新対象 ${Object.keys(priceUpdates).length}件 / 保留 ${heldBack.length}件 / セール検知 ${deals.length}件）`
+    );
+    return;
   }
 
   // 価格履歴保存
@@ -354,13 +433,16 @@ async function generateSalePosts(deals) {
 main()
   .then(async () => {
     // 価格更新を本番(Supabase)へ即反映（従来は週次パイプライン任せで最大1週間ラグ）
+    if (DRY_RUN) return; // dry-run は同期・ISR再検証まで含めて何もしない
     if (process.argv.includes("--no-sync")) return;
     if (priceUpdateCount === 0) return; // 価格変更ゼロなら同期不要（無駄な全量upsertを回避）
     try {
       const { execSync } = await import("child_process").then((m) => m.default || m);
       console.log("\n[price-monitor] Supabaseへ商品を同期します...");
       const projectDir = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
-      execSync("node --dns-result-order=ipv4first scripts/sync-to-supabase.js", {
+      // --no-pull: auto-pull(Supabase→local) が走ると、まだDBに無い
+      // ローカルの更新が旧値で上書きされうる（2026-08-05に差し戻しが消えた）
+      execSync("node --dns-result-order=ipv4first scripts/sync-to-supabase.js --no-pull", {
         stdio: "inherit",
         cwd: projectDir, // リポジトリ外から手動実行されてもスクリプトを見つけられるように
       });
