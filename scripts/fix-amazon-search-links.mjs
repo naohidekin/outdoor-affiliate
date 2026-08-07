@@ -204,6 +204,15 @@ const pickTarget = (p) => {
 };
 const targets = products.filter(pickTarget).slice(0, LIMIT);
 
+// 既に他の商品が使っているASIN。汎用的な商品名（「軽量折りたたみアウトドアチェア」
+// 「クーラーボックス」等）は同じASINへ収束しやすく、複数商品が同一ページを
+// 指してしまう。2026-08-06 に B0H4QWP4K3 が2商品に付く事例を確認した
+const asinOwner = new Map();
+for (const p of products) {
+  const a = asinOf(p.amazonUrl);
+  if (a && !asinOwner.has(a)) asinOwner.set(a, p.id);
+}
+
 const scope = MISSING_ONLY
   ? "amazonUrl未設定"
   : INCLUDE_MISSING
@@ -253,8 +262,13 @@ for (const p of targets) {
   }
 
   const shortened = isShortenedKeyword(p.name, usedKeyword);
-  const tier = confidenceTier(best.reason, best.overlap, shortened);
+  let tier = confidenceTier(best.reason, best.overlap, shortened);
   const newUrl = `https://www.amazon.co.jp/dp/${best.item.asin}/?tag=${PARTNER_TAG}`;
+
+  // 他の商品が既に使っているASINなら、どちらかが誤り。自動適用はしない
+  const dupOwner = asinOwner.get(best.item.asin);
+  const duplicate = dupOwner && dupOwner !== p.id;
+  if (duplicate) tier = "低";
 
   fixes.push({
     id: p.id,
@@ -270,9 +284,11 @@ for (const p of targets) {
     itemTitle: best.item.title,
     itemPrice: best.item.price,
     productPrice: p.price ?? null,
+    duplicateOf: duplicate ? dupOwner : null,
   });
 
   console.log(`✓[${tier}] ${p.name.slice(0, 36)} → ${best.item.asin}（${best.reason}）`);
+  if (duplicate) console.log(`   ⚠ ASIN重複: ${dupOwner} が既に使用中。どちらかが誤り`);
   if (EXPLAIN || tier === "低") console.log(`   └ 採用キーワード: ${usedKeyword}`);
 }
 
@@ -287,6 +303,13 @@ if (APPLY) {
     if (!wouldApply(f)) continue;
     const p = products.find((q) => q.id === f.id);
     if (!p) continue;
+    // 同一実行の中でも同じASINを2商品に付けない
+    const owner = asinOwner.get(f.asin);
+    if (owner && owner !== f.id) {
+      console.log(`⚠ 適用しない: ${f.id} … ASIN ${f.asin} は ${owner} が使用中`);
+      continue;
+    }
+    asinOwner.set(f.asin, f.id);
     p.amazonUrl = f.newUrl;
     // updatedAt を進めないと sync の auto-pull で旧URLに巻き戻る
     p.updatedAt = ts;
@@ -339,6 +362,7 @@ if (fixes.length > 0) {
       console.log(`  ${f.id}  ${f.name.slice(0, 34)}`);
       console.log(`    → ${f.itemTitle.slice(0, 54)}`);
       console.log(`    一致率${f.overlap}% / ${f.keywordShortened ? "キーワード短縮" : "フル検索"} / ${priceNote}`);
+      if (f.duplicateOf) console.log(`    ⚠ ASIN重複: ${f.duplicateOf} と同じ商品を指している`);
       console.log(`    ${f.newUrl}\n`);
     }
   }
