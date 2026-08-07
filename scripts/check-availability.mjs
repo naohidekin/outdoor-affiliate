@@ -86,6 +86,16 @@ console.log(`在庫確認: ${targets.length}件\n`);
 const c = credentials();
 const results = [];
 
+/** オファーの有無と価格の有無は別物。価格が取れなくても出品があれば買える */
+function describeOffer(item) {
+  const listings = item.offersV2?.listings;
+  if (!listings?.length) return "取扱終了（オファー無し）";
+  const amount = listings[0].price?.money?.amount;
+  return typeof amount === "number" && amount > 0
+    ? `販売中 ¥${Math.round(amount).toLocaleString()}`
+    : "販売中（価格取得不可）";
+}
+
 for (let i = 0; i < targets.length; i += 10) {
   const batch = targets.slice(i, i + 10);
   const withAsin = batch.filter((p) => asinOf(p.amazonUrl));
@@ -111,10 +121,8 @@ for (let i = 0; i < targets.length; i += 10) {
         let amazon;
         if (!item) {
           amazon = errors.size ? `ASIN無効(${errors.get(asin) || "不明"})` : "APIに存在しない";
-        } else if (!item.offersV2?.listings?.length) {
-          amazon = "取扱終了（オファー無し）";
         } else {
-          amazon = `販売中 ¥${Math.round(item.offersV2.listings[0].price?.money?.amount ?? 0).toLocaleString()}`;
+          amazon = describeOffer(item);
         }
         results.push({
           id: p.id,
@@ -127,9 +135,39 @@ for (let i = 0; i < targets.length; i += 10) {
         });
       }
     } catch (e) {
-      console.error(`  バッチ${Math.floor(i / 10) + 1} エラー: ${String(e.message).slice(0, 120)}`);
+      // バッチ単位で落ちると無関係な9件まで「確認できず」になるので個別に再試行する
+      console.error(`  バッチ${Math.floor(i / 10) + 1} 失敗（個別に再試行）: ${String(e.message).slice(0, 90)}`);
       for (const p of withAsin) {
-        results.push({ id: p.id, name: p.name, amazon: "確認できず", rakuten: rakutenStatus.get(p.id) || "-" });
+        const asin = asinOf(p.amazonUrl);
+        await new Promise((r) => setTimeout(r, 1200));
+        try {
+          const d = await creatorsApi("/catalog/v1/getItems", {
+            itemIds: [asin],
+            partnerTag: c.partnerTag,
+            resources: ["itemInfo.title", "offersV2.listings.price"],
+          });
+          const it = (d.itemsResult?.items || [])[0];
+          const code = (d.errors || [])[0]?.code;
+          results.push({
+            id: p.id,
+            name: p.name,
+            asin,
+            amazon: !it
+              ? `ASIN無効(${code || "不明"})`
+              : describeOffer(it),
+            amazonTitle: it?.itemInfo?.title?.displayValue || null,
+            rakuten: rakutenStatus.get(p.id) || "-",
+            productPrice: p.price ?? null,
+          });
+        } catch (e2) {
+          results.push({
+            id: p.id,
+            name: p.name,
+            asin,
+            amazon: `確認できず(${String(e2.message).slice(0, 40)})`,
+            rakuten: rakutenStatus.get(p.id) || "-",
+          });
+        }
       }
     }
     if (i + 10 < targets.length) await new Promise((r) => setTimeout(r, 3000));
