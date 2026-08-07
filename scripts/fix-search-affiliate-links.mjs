@@ -38,7 +38,7 @@ import path from "node:path";
 import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
-import { tokenOverlap } from "../src/lib/product-match.mjs";
+import { tokenOverlap, sizeMatches } from "../src/lib/product-match.mjs";
 
 // IPv6回線だと楽天へIPv6で接続してしまい、アプリのIP許可リスト（IPv4のみ）に
 // 一致せず CLIENT_IP_NOT_ALLOWED になる。他スクリプトは package.json の
@@ -293,17 +293,8 @@ async function searchRakuten(keyword) {
 // ある場合、候補の商品名にも同じサイズが含まれることを必須にする。
 // キーワードsanitizeで1文字トークンを落とすため、「アメニティドームL」の
 // 検索結果にはMやSも混ざる。ここで弾かないと別サイズに誤リンクする
-function sizeToken(name) {
-  const m = name.match(/(?:^|[\s／/])([SML]|XL|LX|\d型)(?=$|[\s／/（(])/);
-  return m ? m[1] : null;
-}
-
-function sizeMatches(productName, itemName) {
-  const size = sizeToken(productName);
-  if (!size) return true;
-  const re = new RegExp(`(?:^|[\\s／/｜|（(【])${size}(?=$|[\\s／/｜|）)】])|(?:ドーム|テント|タープ|シェルター|サイズ)\\s?${size}(?![A-Za-z0-9])`);
-  return re.test(itemName) || itemName.includes(` ${size} `) || itemName.endsWith(` ${size}`) || itemName.includes(`${size}サイズ`) || new RegExp(`[0-9ァ-ヶー一-龠]${size}(?![A-Za-z0-9])`).test(itemName);
-}
+// sizeToken / sizeMatches は共通モジュール側を使う。
+// 「クロノスドーム 2型」と「クロノスドーム2」の揺れに対応済み
 
 // 価格ゲートは非対称にする。
 // 下限は付属品・部品を掴む事故の防波堤なので厳しく保ち（0.6）、

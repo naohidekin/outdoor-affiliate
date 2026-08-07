@@ -149,6 +149,13 @@ export function sizeToken(name) {
 export function sizeMatches(productName, itemName) {
   const size = sizeToken(productName);
   if (!size) return true;
+  // 「クロノスドーム 2型」と「クロノスドーム2」は同じ製品。
+  // 型番的な世代表記は「型」の有無で表記が揺れるので両方見る
+  const m = size.match(/^(\d)型$/);
+  if (m) {
+    const n = m[1];
+    return new RegExp(`${n}\\s*型|[ァ-ヶー一-龠A-Za-z]${n}(?![0-9])`).test(itemName);
+  }
   const re = new RegExp(
     `(?:^|[\\s／/｜|（(【])${size}(?=$|[\\s／/｜|）)】])|(?:ドーム|テント|タープ|シェルター|サイズ)\\s?${size}(?![A-Za-z0-9])`
   );
