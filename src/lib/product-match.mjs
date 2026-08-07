@@ -54,13 +54,16 @@ export function tokenOverlap(a, b) {
   return hit / ta.size;
 }
 
-// 楽天APIは1文字の単語を含むキーワードを400で拒否する。記号も検索を狂わせる
-export function sanitizeKeyword(s) {
+// 楽天APIは1文字の単語を含むキーワードを400で拒否する。記号も検索を狂わせる。
+// ただしこの制約は楽天固有で、Amazonに持ち込むと世代番号が消えて事故る
+// （「EcoFlow WAVE 2」→「EcoFlow WAVE」で WAVE 3 を掴んだ／2026-08-07）。
+// Amazon側は minTokenLength: 1 を渡して1文字語を残すこと
+export function sanitizeKeyword(s, { minTokenLength = 2 } = {}) {
   return s
     .replace(/[（(].*?[)）]/g, " ") // 括弧内の補足はAND条件を増やすだけで当たらない
     .replace(/[×\/＋+|｜]/g, " ")
     .split(/\s+/)
-    .filter((t) => [...t].length >= 2)
+    .filter((t) => [...t].length >= minTokenLength)
     .join(" ")
     .slice(0, 120);
 }
@@ -69,11 +72,11 @@ export function sanitizeKeyword(s) {
  * 検索キーワードを「絞り込みが強い順」に並べる。当たった時点で打ち切る前提。
  * ブランド名だけ（およびその断片）は別商品を掴むので除外する。
  */
-export function keywordLadder(product) {
+export function keywordLadder(product, opts = {}) {
   const name = product.name || "";
   const brand = product.brand && !name.includes(product.brand) ? `${product.brand} ` : "";
   const asciiBrandOnly = /^[\x20-\x7E]+$/.test((product.brand || "").trim());
-  const tokens = sanitizeKeyword(name).split(/\s+/).filter(Boolean);
+  const tokens = sanitizeKeyword(name, opts).split(/\s+/).filter(Boolean);
   const models =
     name.match(/[A-Za-z]{1,6}-[A-Za-z0-9]{2,10}|[A-Za-z]{2,6}[0-9]{2,5}[A-Za-z0-9]*/g) || [];
   const brandWord = (product.brand || tokens[0] || "").slice(0, 20);
@@ -85,7 +88,7 @@ export function keywordLadder(product) {
   if (models.length > 0) ladder.push(`${brandWord} ${models[0]}`, models[0]);
 
   const brandTokens = new Set(
-    sanitizeKeyword(product.brand || "").toLowerCase().split(/\s+/).filter(Boolean)
+    sanitizeKeyword(product.brand || "", opts).toLowerCase().split(/\s+/).filter(Boolean)
   );
   const isBrandOnly = (k) => {
     if (brandTokens.size === 0) return false;
@@ -95,7 +98,7 @@ export function keywordLadder(product) {
 
   const seen = new Set();
   return ladder
-    .map((k) => sanitizeKeyword(k || ""))
+    .map((k) => sanitizeKeyword(k || "", opts))
     .filter((k) => {
       if (!k || seen.has(k) || isBrandOnly(k)) return false;
       seen.add(k);
@@ -113,6 +116,22 @@ export function isShortenedKeyword(productName, keyword) {
   const want = tok(productName);
   const got = tok(keyword);
   return !want.every((t) => got.some((g) => g === t || (t.length >= 2 && g.includes(t))));
+}
+
+/**
+ * 商品名にある数字が候補側に無いか（世代・容量の取り違え検知）。
+ * tokenOverlap は2文字未満の語を落とすので「WAVE 2」と「WAVE 3」が一致率100%になり、
+ * さらに部分一致なので「2」は候補の「2026年新型」にも当たってしまう。
+ * 数字の並びだけを完全一致で突き合わせて、この抜け道を塞ぐ。
+ * 「丸洗いスランバーシュラフ・2」と「丸洗いスランバーシュラフ2」のように
+ * 区切りが違うだけの表記は、数字列そのものを見るので拾える。
+ */
+export function generationMismatch(productName, itemName) {
+  const runs = (s) => normalizeNumerals(s).match(/\d+/g) || [];
+  const want = runs(productName);
+  if (want.length === 0) return false;
+  const got = new Set(runs(itemName));
+  return want.some((n) => !got.has(n));
 }
 
 /**
@@ -140,8 +159,11 @@ export function isAccessoryMismatch(productName, itemName) {
   return ACCESSORY_PATTERNS.test(itemName) && !ACCESSORY_PATTERNS.test(productName);
 }
 
+// ST/LX はコールマンのグレード表記（ツーリングドーム ST / LX）。
+// 数字が無いので世代判定に引っかからず、実際に tent-duo-001（LX）へ
+// ST の ASIN が付く取り違えが起きていた（2026-08-07）
 export function sizeToken(name) {
-  const m = name.match(/(?:^|[\s／/])([SML]|XL|LX|\d型)(?=$|[\s／/（(])/);
+  const m = name.match(/(?:^|[\s／/])([SML]|XL|LX|ST|\d型)(?=$|[\s／/（(])/);
   return m ? m[1] : null;
 }
 

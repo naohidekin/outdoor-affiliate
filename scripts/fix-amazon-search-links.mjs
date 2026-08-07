@@ -43,6 +43,7 @@ import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials } from "../src/lib/amazon-creators-api.mjs";
 import {
   keywordLadder,
+  generationMismatch,
   isShortenedKeyword,
   confidenceTier,
   pickBest,
@@ -236,7 +237,8 @@ const fixes = [];
 const skipped = [];
 
 for (const p of targets) {
-  const ladder = keywordLadder(p);
+  // Amazonには楽天のような1文字語の制約が無い。世代番号（WAVE 2 の 2）を残す
+  const ladder = keywordLadder(p, { minTokenLength: 1 });
   let allItems = [];
   let best = null;
   let usedKeyword = null;
@@ -282,6 +284,10 @@ for (const p of targets) {
   const duplicate = dupOwner && dupOwner !== p.id;
   if (duplicate) tier = "低";
 
+  // 商品名の数字が候補に無い＝世代・容量違いの疑い。自動適用はしない
+  const genMismatch = generationMismatch(p.name, best.item.title || "");
+  if (genMismatch) tier = "低";
+
   fixes.push({
     id: p.id,
     name: p.name,
@@ -297,10 +303,12 @@ for (const p of targets) {
     itemPrice: best.item.price,
     productPrice: p.price ?? null,
     duplicateOf: duplicate ? dupOwner : null,
+    generationMismatch: genMismatch,
   });
 
   console.log(`✓[${tier}] ${p.name.slice(0, 36)} → ${best.item.asin}（${best.reason}）`);
   if (duplicate) console.log(`   ⚠ ASIN重複: ${dupOwner} が既に使用中。どちらかが誤り`);
+  if (genMismatch) console.log("   ⚠ 商品名の数字が候補に無い。世代・容量違いの疑い");
   if (EXPLAIN || tier === "低") console.log(`   └ 採用キーワード: ${usedKeyword}`);
 }
 
@@ -362,7 +370,7 @@ if (fixes.length > 0) {
   console.log("\n── 信頼度の内訳 ──");
   console.log(`  高 ${String(byTier.高.length).padStart(3)}件  型番一致`);
   console.log(`  中 ${String(byTier.中.length).padStart(3)}件  商品名フル検索で一致率100%`);
-  console.log(`  低 ${String(byTier.低.length).padStart(3)}件  一致率100%未満、またはキーワード短縮`);
+  console.log(`  低 ${String(byTier.低.length).padStart(3)}件  一致率100%未満／短縮／世代違いの疑い`);
 
   if (byTier.低.length > 0) {
     console.log("\n── 要目視（低）──");
@@ -375,6 +383,7 @@ if (fixes.length > 0) {
       console.log(`    → ${f.itemTitle.slice(0, 54)}`);
       console.log(`    一致率${f.overlap}% / ${f.keywordShortened ? "キーワード短縮" : "フル検索"} / ${priceNote}`);
       if (f.duplicateOf) console.log(`    ⚠ ASIN重複: ${f.duplicateOf} と同じ商品を指している`);
+      if (f.generationMismatch) console.log("    ⚠ 商品名の数字が候補に無い。世代・容量違いの疑い");
       console.log(`    ${f.newUrl}\n`);
     }
   }
