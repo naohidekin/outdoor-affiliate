@@ -23,6 +23,11 @@
  *   node scripts/fix-amazon-search-links.mjs --limit 10
  *   node scripts/fix-amazon-search-links.mjs --missing-only     # amazonUrl未設定のみ
  *   node scripts/fix-amazon-search-links.mjs --include-missing  # 検索URL＋未設定
+ *   node scripts/fix-amazon-search-links.mjs --ids id1,id2      # ID指定で調べ直す
+ *
+ * --ids と --only は別物:
+ *   --ids  … 調べる商品を指定（既に /dp/ が入っていても対象にする）
+ *   --only … 調べた結果のうち反映する商品を指定（低でも反映する）
  *
  * 信頼度（--apply は既定で 高・中 のみ）:
  *   高 … 型番一致  中 … 商品名フル検索で一致率100%  低 … 要目視
@@ -70,6 +75,10 @@ const argVal = (name) => {
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
 const ONLY = new Set((argVal("--only") || "").split(",").map((s) => s.trim()).filter(Boolean));
+// --only は「適用する商品」の指定であって、調べる商品の指定ではない。
+// 既に /dp/ リンクが入っているが中身が別商品、というケース（ツーリングドームLXが
+// STのASINを指す等）は通常の対象条件に入らないので、IDで直接呼び出せるようにする
+const IDS = new Set((argVal("--ids") || "").split(",").map((s) => s.trim()).filter(Boolean));
 // amazonUrl が空の商品も対象にする。買う導線がゼロなので検索URLより優先度が高い
 const INCLUDE_MISSING = argv.includes("--include-missing");
 const MISSING_ONLY = argv.includes("--missing-only");
@@ -198,6 +207,7 @@ function printDiagnosis(product, d) {
 // ─── 本処理 ──────────────────────────────────────────
 const products = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
 const pickTarget = (p) => {
+  if (IDS.size > 0) return IDS.has(p.id);
   if (MISSING_ONLY) return isMissingLink(p.amazonUrl);
   if (INCLUDE_MISSING) return isSearchLink(p.amazonUrl) || isMissingLink(p.amazonUrl);
   return isSearchLink(p.amazonUrl);
@@ -213,11 +223,13 @@ for (const p of products) {
   if (a && !asinOwner.has(a)) asinOwner.set(a, p.id);
 }
 
-const scope = MISSING_ONLY
-  ? "amazonUrl未設定"
-  : INCLUDE_MISSING
-    ? "検索ページ行き＋未設定"
-    : "検索ページ行き";
+const scope = IDS.size > 0
+  ? "ID指定"
+  : MISSING_ONLY
+    ? "amazonUrl未設定"
+    : INCLUDE_MISSING
+      ? "検索ページ行き＋未設定"
+      : "検索ページ行き";
 console.log(`Amazon ${scope}: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
 
 const fixes = [];
@@ -383,5 +395,6 @@ if (APPLY) {
   console.log(`\ndry-run完了: 提案${fixes.length}件（適用対象${applyCount}件）/ スキップ${skipped.length}件`);
   console.log(`レポート: ${REPORT}`);
   console.log("適用: --apply                  … 高・中のみ");
-  console.log("      --apply --only id1,id2  … 目視した商品だけ");
+  console.log("      --apply --only id1,id2  … 目視した商品だけ（低も反映）");
+  console.log("調査: --ids id1,id2            … 既存リンクの正誤を調べ直す");
 }
