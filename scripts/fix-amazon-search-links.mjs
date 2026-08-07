@@ -21,6 +21,8 @@
  *   node scripts/fix-amazon-search-links.mjs --apply            # 高・中のみ反映
  *   node scripts/fix-amazon-search-links.mjs --apply --only id1,id2
  *   node scripts/fix-amazon-search-links.mjs --limit 10
+ *   node scripts/fix-amazon-search-links.mjs --missing-only     # amazonUrl未設定のみ
+ *   node scripts/fix-amazon-search-links.mjs --include-missing  # 検索URL＋未設定
  *
  * 信頼度（--apply は既定で 高・中 のみ）:
  *   高 … 型番一致  中 … 商品名フル検索で一致率100%  低 … 要目視
@@ -68,6 +70,9 @@ const argVal = (name) => {
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
 const ONLY = new Set((argVal("--only") || "").split(",").map((s) => s.trim()).filter(Boolean));
+// amazonUrl が空の商品も対象にする。買う導線がゼロなので検索URLより優先度が高い
+const INCLUDE_MISSING = argv.includes("--include-missing");
+const MISSING_ONLY = argv.includes("--missing-only");
 const LIMIT = parseInt(argVal("--limit") || "", 10) || Infinity;
 
 if (!hasCredentials()) {
@@ -86,6 +91,11 @@ const AUTH_FAILURE_LIMIT = 5;
 /** 検索ページ行きのAmazonリンクか */
 function isSearchLink(url) {
   return /amazon\.co\.jp\/s\?/.test(url || "");
+}
+
+/** amazonUrl が空＝Amazonで買う導線が無い。検索URLより実害が大きい */
+function isMissingLink(url) {
+  return !url || !String(url).trim();
 }
 
 function asinOf(url) {
@@ -187,9 +197,19 @@ function printDiagnosis(product, d) {
 
 // ─── 本処理 ──────────────────────────────────────────
 const products = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
-const targets = products.filter((p) => isSearchLink(p.amazonUrl)).slice(0, LIMIT);
+const pickTarget = (p) => {
+  if (MISSING_ONLY) return isMissingLink(p.amazonUrl);
+  if (INCLUDE_MISSING) return isSearchLink(p.amazonUrl) || isMissingLink(p.amazonUrl);
+  return isSearchLink(p.amazonUrl);
+};
+const targets = products.filter(pickTarget).slice(0, LIMIT);
 
-console.log(`Amazon検索ページ行きリンク: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
+const scope = MISSING_ONLY
+  ? "amazonUrl未設定"
+  : INCLUDE_MISSING
+    ? "検索ページ行き＋未設定"
+    : "検索ページ行き";
+console.log(`Amazon ${scope}: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
 
 const fixes = [];
 const skipped = [];
