@@ -76,6 +76,8 @@ const ONLY = new Set(
 );
 // 診断モード。判定は一切変えず、スキップ理由の内訳だけを追加で出す
 const EXPLAIN = process.argv.includes("--explain");
+// 除外された候補の実物を出す。判定を緩めるべきか測るための診断
+const SHOW_EXCLUDED = process.argv.includes("--show-excluded");
 const limitIdx = process.argv.indexOf("--limit");
 const LIMIT =
   limitIdx !== -1 ? parseInt(process.argv[limitIdx + 1], 10) : Infinity;
@@ -369,6 +371,15 @@ function diagnose(product, items) {
   const survivors = survivingCandidates(product, items);
   const sizeOut = items.length - usedOut.length - accOut.length - survivors.length;
 
+  // サイズで落ちた候補（中古でも付属品でもないのに survivors に居ないもの）
+  const sizeOutItems = items.filter(
+    (it) =>
+      !USED_SHOP_PATTERNS.test(it.shopName || "") &&
+      !USED_ITEM_PATTERNS.test(it.itemName || "") &&
+      !isAccessoryMismatch(product.name, it.itemName || "") &&
+      !sizeMatches(product.name, it.itemName || "")
+  );
+
   if (survivors.length === 0) {
     return {
       reason: `全候補が除外（中古${usedOut.length}・付属品${accOut.length}・サイズ不一致${sizeOut}）`,
@@ -377,6 +388,10 @@ function diagnose(product, items) {
       usedOut: usedOut.length,
       accOut: accOut.length,
       sizeOut,
+      usedItems: usedOut,
+      accItems: accOut,
+      sizeOutItems,
+      scored: [],
     };
   }
 
@@ -404,7 +419,18 @@ function diagnose(product, items) {
   } else {
     reason = "アフィリエイトURLが空";
   }
-  return { reason, top, models, usedOut: usedOut.length, sizeOut, survivors: survivors.length };
+  return {
+    reason,
+    top,
+    models,
+    usedOut: usedOut.length,
+    sizeOut,
+    survivors: survivors.length,
+    usedItems: usedOut,
+    accItems: accOut,
+    sizeOutItems,
+    scored,
+  };
 }
 
 function printDiagnosis(product, d) {
@@ -420,6 +446,27 @@ function printDiagnosis(product, d) {
       `     一致率${Math.round(t.overlap * 100)}% / 型番${t.modelHit ? "✓" : "✗"} / 価格 ${price}`
     );
     console.log(`     店舗: ${t.it.shopName}`);
+  }
+  if (!SHOW_EXCLUDED) return;
+  // 判定を緩めるべきか判断するため、落とした候補の実物を見せる
+  const dump = (label, list) => {
+    if (!list?.length) return;
+    console.log(`     [${label} ${list.length}件]`);
+    for (const it of list.slice(0, 4)) {
+      console.log(`       - ${(it.itemName || "").slice(0, 52)}  ¥${(it.itemPrice ?? 0).toLocaleString()}`);
+    }
+    if (list.length > 4) console.log(`       … 他${list.length - 4}件`);
+  };
+  dump("中古で除外", d.usedItems);
+  dump("付属品で除外", d.accItems);
+  dump("サイズ不一致で除外", d.sizeOutItems);
+  if (d.scored?.length > 1) {
+    console.log(`     [残った候補 ${d.scored.length}件（一致率順）]`);
+    for (const s of d.scored.slice(0, 4)) {
+      console.log(
+        `       ${String(Math.round(s.overlap * 100)).padStart(3)}%  ${(s.it.itemName || "").slice(0, 46)}  ¥${(s.it.itemPrice ?? 0).toLocaleString()}`
+      );
+    }
   }
 }
 
