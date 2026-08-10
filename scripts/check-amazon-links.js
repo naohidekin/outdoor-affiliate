@@ -2,16 +2,40 @@
 
 /**
  * Amazonリンク切れ自動チェック
- * products.jsonのamazonUrlを全件チェックし、404や無効なリンクを検出
+ * products.jsonのamazonUrlを全件チェックし、無効なリンクを検出
+ *
+ * 2026-08-10 改修: HTMLスクレイピングから Creators API の getItems へ移行した。
+ * 7/30 は ok=313 / errors=0 だったのが、8/9 の定期実行では
+ * **350件すべてが "fetch failed"（ok=0）** になっていた。Amazon側が
+ * 接続レベルで弾いていると見られる。しかも全件が errors に落ちるため
+ * broken は常に0件になり、後段の link-fix は何もすることが無くなり、
+ * 管理画面は「リンク切れはありません🎉」と表示し続けていた。
+ * 監視が沈黙して壊れている状態で、これが一番たちが悪い。
+ *
+ * getItems なら在庫・取扱終了を公式に判定できる。判定規則は
+ * check-availability.mjs / link-fix.mjs と揃える:
+ *   itemsResult に居てオファーあり  → 正常
+ *   itemsResult に居るがオファー無し → 取扱終了（＝クリックされても1円にならない）
+ *   errors で ItemNotAccessible 等  → ASIN消滅
+ * 認証情報が無い環境では従来のHTTPチェックに落ちる。
  *
  * 使い方:
  *   node scripts/check-amazon-links.js
- *   node scripts/check-amazon-links.js --fix  (空URLの商品をレポート)
+ *   node scripts/check-amazon-links.js --http   (強制的に旧HTTPチェック)
  */
 
 import fs from "fs";
 import path from "path";
+import dns from "node:dns";
 import { fileURLToPath } from "url";
+import {
+  creatorsApi,
+  credentials,
+  hasCredentials,
+  asinOf,
+} from "../src/lib/amazon-creators-api.mjs";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -28,6 +52,7 @@ if (fs.existsSync(envPath)) {
   }
 }
 
+const FORCE_HTTP = process.argv.includes("--http");
 const CONCURRENCY = 5;
 const REQUEST_DELAY = 1000; // 1秒間隔（Amazon制限回避）
 
@@ -84,6 +109,121 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const GETITEMS_BATCH = 10; // getItems の1回あたり上限
+const GETITEMS_DELAY = 3000;
+
+/**
+ * Creators API で在庫を確定判定する。
+ * 返り値は旧HTTPチェックと同じ {ok, broken, errors} の3分類。
+ */
+async function checkViaCreatorsApi(withUrl) {
+  const ok = [];
+  const broken = [];
+  const errors = [];
+  const partnerTag = credentials().partnerTag;
+
+  // 検索URLはASINが無いので getItems にかけられない。
+  // ページ自体は開けるので broken には入れない（link-fix に隔離させない）
+  const targets = [];
+  for (const p of withUrl) {
+    if (asinOf(p.amazonUrl)) targets.push(p);
+    else {
+      errors.push({ product: p, result: { error: "検索URL（ASIN未確定）" } });
+      process.stdout.write(`  ⚠️ ${p.id} ${p.name.slice(0, 25)} → 検索URL\n`);
+    }
+  }
+
+  /** オファーの有無と価格の有無は別物。価格が取れなくても出品があれば買える */
+  const hasOffer = (item) => (item.offersV2?.listings || []).length > 0;
+
+  const classify = (p, item, errCode) => {
+    if (!item) {
+      broken.push({ product: p, result: { notFound: true, error: `ASIN無効(${errCode || "不明"})` } });
+      process.stdout.write(`  🚨 ${p.id} ${p.name.slice(0, 25)} → ASIN無効\n`);
+    } else if (!hasOffer(item)) {
+      broken.push({ product: p, result: { notFound: true, error: "取扱終了（オファー無し）" } });
+      process.stdout.write(`  🚨 ${p.id} ${p.name.slice(0, 25)} → 取扱終了\n`);
+    } else {
+      ok.push(p);
+      process.stdout.write(`  ✅ ${p.id} ${p.name.slice(0, 25)}\n`);
+    }
+  };
+
+  for (let i = 0; i < targets.length; i += GETITEMS_BATCH) {
+    const batch = targets.slice(i, i + GETITEMS_BATCH);
+    const payload = {
+      partnerTag,
+      resources: ["itemInfo.title", "offersV2.listings.price"],
+    };
+    try {
+      const data = await creatorsApi("/catalog/v1/getItems", {
+        ...payload,
+        itemIds: batch.map((p) => asinOf(p.amazonUrl)),
+      });
+      const items = new Map((data.itemsResult?.items || []).map((it) => [it.asin, it]));
+      const errMap = new Map((data.errors || []).map((e) => [e.asin || "", e.code]));
+      for (const p of batch) {
+        const asin = asinOf(p.amazonUrl);
+        classify(p, items.get(asin), errMap.get(asin));
+      }
+    } catch (e) {
+      // バッチ単位で落ちると無関係な9件まで巻き添えになるので個別に再試行する
+      process.stdout.write(
+        `  … バッチ${Math.floor(i / GETITEMS_BATCH) + 1} 失敗（個別に再試行）\n`
+      );
+      for (const p of batch) {
+        await sleep(1200);
+        try {
+          const d = await creatorsApi("/catalog/v1/getItems", {
+            ...payload,
+            itemIds: [asinOf(p.amazonUrl)],
+          });
+          classify(p, (d.itemsResult?.items || [])[0], (d.errors || [])[0]?.code);
+        } catch (e2) {
+          errors.push({ product: p, result: { error: String(e2.message).slice(0, 60) } });
+          process.stdout.write(`  ⚠️ ${p.id} ${p.name.slice(0, 25)} → 確認できず\n`);
+        }
+      }
+    }
+    if (i + GETITEMS_BATCH < targets.length) await sleep(GETITEMS_DELAY);
+  }
+
+  return { ok, broken, errors };
+}
+
+/** 旧方式。認証情報が無い環境向けのフォールバック */
+async function checkViaHttp(withUrl) {
+  const ok = [];
+  const broken = [];
+  const errors = [];
+
+  for (let i = 0; i < withUrl.length; i += CONCURRENCY) {
+    const batch = withUrl.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(async (product) => ({ product, result: await checkUrl(product.amazonUrl) }))
+    );
+
+    for (const { product, result } of results) {
+      if (result.ok) {
+        ok.push(product);
+        process.stdout.write(`  ✅ ${product.id} ${product.name.slice(0, 25)}\n`);
+      } else if (result.notFound) {
+        broken.push({ product, result });
+        process.stdout.write(`  🚨 ${product.id} ${product.name.slice(0, 25)} → 404/不存在\n`);
+      } else {
+        errors.push({ product, result });
+        process.stdout.write(
+          `  ⚠️ ${product.id} ${product.name.slice(0, 25)} → ${(result.error || `HTTP ${result.status}`).slice(0, 40)}\n`
+        );
+      }
+    }
+
+    if (i + CONCURRENCY < withUrl.length) await sleep(REQUEST_DELAY);
+  }
+
+  return { ok, broken, errors };
+}
+
 async function main() {
   const products = JSON.parse(
     fs.readFileSync(path.join(DATA_DIR, "products.json"), "utf-8")
@@ -101,49 +241,27 @@ async function main() {
     withoutUrl.forEach((p) => console.log(`  ${p.id}: ${p.name}`));
   }
 
-  console.log(`\n🔍 リンクチェック開始（${withUrl.length}件）...\n`);
-
-  const broken = [];
-  const errors = [];
-  const ok = [];
-
-  // バッチ処理（同時接続数制限）
-  for (let i = 0; i < withUrl.length; i += CONCURRENCY) {
-    const batch = withUrl.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(
-      batch.map(async (product) => {
-        const result = await checkUrl(product.amazonUrl);
-        return { product, result };
-      })
+  const useApi = !FORCE_HTTP && hasCredentials();
+  console.log(
+    `\n🔍 リンクチェック開始（${withUrl.length}件・${useApi ? "Creators API" : "HTTP"}）...\n`
+  );
+  if (!useApi && !FORCE_HTTP) {
+    console.log(
+      "  ⚠️ Creators API認証情報が無いためHTTPで確認します。" +
+        "Amazonに弾かれて全件エラーになることがあります\n"
     );
+  }
 
-    for (const { product, result } of results) {
-      const short = product.amazonUrl.slice(0, 60);
-      if (result.ok) {
-        ok.push(product);
-        process.stdout.write(`  ✅ ${product.id} ${product.name.slice(0, 25)}\n`);
-      } else if (result.notFound) {
-        broken.push({ product, result });
-        process.stdout.write(
-          `  🚨 ${product.id} ${product.name.slice(0, 25)} → 404/不存在\n`
-        );
-      } else if (result.error) {
-        errors.push({ product, result });
-        process.stdout.write(
-          `  ⚠️ ${product.id} ${product.name.slice(0, 25)} → ${result.error.slice(0, 40)}\n`
-        );
-      } else {
-        errors.push({ product, result });
-        process.stdout.write(
-          `  ⚠️ ${product.id} ${product.name.slice(0, 25)} → HTTP ${result.status}\n`
-        );
-      }
-    }
+  const { ok, broken, errors } = useApi
+    ? await checkViaCreatorsApi(withUrl)
+    : await checkViaHttp(withUrl);
 
-    // レート制限回避
-    if (i + CONCURRENCY < withUrl.length) {
-      await sleep(REQUEST_DELAY);
-    }
+  // 監視が沈黙して壊れるのを防ぐ。8/9はこれが無くて全滅に気づけなかった
+  if (withUrl.length > 0 && ok.length === 0) {
+    console.log(
+      "\n🛑 正常判定が1件もありません。チェック自体が壊れている可能性が高いです" +
+        `（確認 ${withUrl.length}件 / エラー ${errors.length}件）`
+    );
   }
 
   // レポート
