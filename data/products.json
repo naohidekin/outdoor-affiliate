@@ -281,7 +281,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r3jp6.wwmjs5b0.g00r3jp6.wwmjtcb2/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhimaraya%2F0000000383379%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhimaraya%2Fi%2F10126646%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20%E5%B1%B1%E3%82%B1%E3%83%88%E3%83%AB900",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "約0.9L（適正容量 約0.85L）",
       "材質": "アルミ（アルマイト加工）・ステンレスハンドル",
@@ -291,7 +291,7 @@
     "description": "重量186gのアルミ製軽量ケトル。容量900ml。細口の注ぎ口でドリップコーヒーにも対応。キャンプ・登山両用。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-30T12:00:00+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "fan-004",
@@ -923,7 +923,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ugu16.wwmjs51e.g00ugu16.wwmjt0e9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbasecamp-saga%2F06003trg1801%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fbasecamp-saga%2Fi%2F10000287%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08LVDPKCJ?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%88%E3%83%A9%E3%83%B3%E3%82%AE%E3%82%A2%20%E3%82%B1%E3%83%88%E3%83%AB0.6L%EF%BC%88TR-325%EF%BC%89",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "0.6L",
       "材質": "アルミ（無垢）",
@@ -933,7 +933,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "tent-f02",
@@ -1324,12 +1324,12 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rzs76.wwmjs22b.g00rzs76.wwmjt5ae/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmoccasin%2Fa493%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmoccasin%2Fi%2F10023333%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97+%E6%9C%A8%E8%A3%BD+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9+%E3%83%A9%E3%83%83%E3%82%AF&tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=CAMPER%20%E6%9C%A8%E8%A3%BD%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%A9%E3%83%83%E3%82%AF",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-06T14:51:09.074+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "water-jug-mintage-10l",
@@ -1480,7 +1480,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00re3i6.wwmjs0bd.g00re3i6.wwmjtb05/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fm-outdoor%2F2000010532%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fm-outdoor%2Fi%2F10002748%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%91%E3%83%83%E3%82%AB%E3%82%A6%E3%82%A7%E3%82%A4%E3%82%B1%E3%83%88%E3%83%AB",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "約0.6L",
       "材質": "アルミニウム（ハードアノダイズド加工）・ステンレス・シリコン",
@@ -1490,7 +1490,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "chair-001",
@@ -1688,12 +1688,12 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u2g56.wwmjsbb0.g00u2g56.wwmjt8bb/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftrenditemshop%2Fb08lvg5vtb%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ftrenditemshop%2Fi%2F10058616%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08LVG5VTB?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9II",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-07T03:41:34.863+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "fan-002",
@@ -2291,7 +2291,7 @@
     "imageUrl": "https://imagedelivery.net/QondspN4HIUvB_R16-ddAQ/5e755d032a9a4217afe0f2c5/5a16a8d4438c4cc4d8f3.jpg/fit=cover,w=920,h=920",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09SWPQWFH/?tag=camp78-22",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "7.5L",
       "重量": "約1.97kg",
@@ -2301,7 +2301,7 @@
     "description": "ステンレス製の本格ウォータージャグ。最大4日間の保冷力とバルブ式注ぎ口で使いやすさを両立。容量7.5L。（※ water-jug-stanley-7.5l と同一製品の重複登録。2026-08-01に記事の参照を統合済み）",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "rakuten-brave-7-zp04-1",
@@ -2491,7 +2491,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tc1c6.wwmjsc78.g00tc1c6.wwmjt9d5/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fyumeyume888%2F0759-001331%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fyumeyume888%2Fi%2F10000197%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07J4V5MZT/?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DD%E3%83%8F%E3%83%B3%E3%83%A2%E3%83%83%E3%82%AF%20%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%83%A9%E3%82%A4%E3%83%B3",
-    "categoryId": "",
+    "categoryId": "hammock",
     "specs": {
       "特徴": "両側ジッパー付き蚊帳（モスキートネット）標準装備",
       "重量": "約860g",
@@ -2502,7 +2502,7 @@
     "description": "バグネット（蚊帳）一体型のキャンプ用ハンモック。ポリエステル製、耐荷重125kg、重量約約860g。林間キャンプ・ツリーキャンプ向け。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "cooler-tansu-spot-23kw",
@@ -3351,12 +3351,12 @@
     "imageUrl": "https://m.media-amazon.com/images/I/71s+BRhNe0L._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.618+00:00",
-    "updatedAt": "2026-08-06T15:10:32.24+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "led-tent-003",
@@ -3486,12 +3486,12 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u6eu6.wwmjsf3a.g00u6eu6.wwmjt4fb/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fekobo%2F43aocr7r274hpu2fuofpcf6sbe%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fekobo%2Fi%2F10206910%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0911ZM18K?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=YOGOTO%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "light-003",
@@ -3961,7 +3961,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FGSI%2520%25E3%2582%25B0%25E3%2583%25AC%25E3%2582%25A4%25E3%2582%25B7%25E3%2583%25A3%25E3%2583%25BC%2520%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=GSI%20%E3%82%B0%E3%83%AC%E3%82%A4%E3%82%B7%E3%83%A3%E3%83%BC%E3%82%B9%E3%83%86%E3%83%B3%E3%83%AC%E3%82%B9%E3%82%B1%E3%83%88%E3%83%AB",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "約946ml（0.9L）",
       "材質": "18-8ステンレス",
@@ -3971,7 +3971,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "dry-net-coleman",
@@ -4860,12 +4860,12 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2586%25E3%2583%25B3%25E3%2583%259E%25E3%2582%25AF%25E3%2583%2587%25E3%2582%25B6%25E3%2582%25A4%25E3%2583%25B3%2520SOLUM%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%259C%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3+%E3%82%BD%E3%83%AB%E3%83%A0+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9&tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%C3%97%20SOLUM%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-07-30T12:00:00+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "mat-waq-10cm",
@@ -4949,7 +4949,7 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qhbn6.wwmjs337.g00qhbn6.wwmjt6e2/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwins-shop%2Fsp-cs-068r%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fwins-shop%2Fi%2F10345759%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08DKN2NB8?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B1%E3%83%88%E3%83%ABNo.1%EF%BC%88CS-068R%EF%BC%89",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {
       "容量": "0.9L",
       "材質": "ステンレス",
@@ -4959,7 +4959,7 @@
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.622+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "chair-002",
@@ -6226,7 +6226,7 @@
     "brand": "ピコグリル",
     "price": 17300,
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/iwiss/cabinet/outdoor/solo/t-175/a-q-1.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2594%25E3%2582%25B3%25E3%2582%25B0%25E3%2583%25AA%25E3%2583%25AB%2520398%2F&link_type=text&ut=",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uc086.wwmjs999.g00uc086.wwmjt45f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fitemstore-oosaka%2F20240913023909_45%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fitemstore-oosaka%2Fi%2F10037968%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08R8V78TY?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%94%E3%82%B3%E3%82%B0%E3%83%AA%E3%83%AB%20398",
     "categoryId": "firepit",
@@ -6239,7 +6239,7 @@
     "description": "ヒロシも愛用する超軽量焚き火台。A4サイズに折りたため、重さわずか442g。ソロキャンプ・バックパックキャンプの定番。",
     "rating": 4.5,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-06T15:10:47.971+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "sb-kids-003",
@@ -7239,12 +7239,12 @@
     "imageUrl": "https://m.media-amazon.com/images/I/51mMEOuHimL._AC_SL1500_.jpg",
     "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B06W9FQF9L?tag=camp78-22",
-    "categoryId": "",
+    "categoryId": "storage",
     "specs": {},
     "description": "耐荷重約20kgのスチールメッシュラック。スタッキング可能で複数枚の重ね使いに対応。収納時フラット。重量約690g。",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-06T15:10:53.325+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "rw-003",
@@ -8313,12 +8313,12 @@
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNaturehike%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%2590%25E3%2583%2583%25E3%2582%25B0%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0CG5LFY4R/?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Naturehike%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%90%E3%83%83%E3%82%B0",
-    "categoryId": "",
+    "categoryId": "kitchen",
     "specs": {},
     "description": "",
     "rating": 0,
     "createdAt": "2026-06-24T23:54:43.623+00:00",
-    "updatedAt": "2026-08-06T19:16:27.468+00:00"
+    "updatedAt": "2026-08-10T21:08:07.728Z"
   },
   {
     "id": "burner-s-007",
