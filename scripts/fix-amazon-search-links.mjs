@@ -207,8 +207,21 @@ function printDiagnosis(product, d) {
 
 // ─── 本処理 ──────────────────────────────────────────
 const products = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
+
+// Amazonに存在しない商品（ふるさと納税の利用券・楽天専売のOEM品など）。
+// 毎回スキップ一覧に並んで本当の取りこぼしが埋もれるので、既定で対象外にする。
+// --ids で名指しした場合はこのリストを無視して調べ直せる
+const EXCLUSIONS = new Map();
+try {
+  const f = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "amazon-match-exclusions.json"), "utf8"));
+  for (const e of f.exclusions || []) EXCLUSIONS.set(e.id, e.reason);
+} catch {
+  /* 無ければ除外なしで動く */
+}
+
 const pickTarget = (p) => {
   if (IDS.size > 0) return IDS.has(p.id);
+  if (EXCLUSIONS.has(p.id)) return false;
   if (MISSING_ONLY) return isMissingLink(p.amazonUrl);
   if (INCLUDE_MISSING) return isSearchLink(p.amazonUrl) || isMissingLink(p.amazonUrl);
   return isSearchLink(p.amazonUrl);
@@ -232,6 +245,10 @@ const scope = IDS.size > 0
       ? "検索ページ行き＋未設定"
       : "検索ページ行き";
 console.log(`Amazon ${scope}: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
+if (IDS.size === 0 && EXCLUSIONS.size > 0) {
+  // 黙って減らすと「全部見た」と誤解するので、必ず件数を出す
+  console.log(`（Amazonに存在しない${EXCLUSIONS.size}件は除外。data/amazon-match-exclusions.json）\n`);
+}
 
 const fixes = [];
 const skipped = [];

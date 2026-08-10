@@ -1,0 +1,13 @@
+{
+  "_note": "Amazonに存在しない商品。fix-amazon-search-links.mjs / check-amazon-links.js の照合対象から外す。毎回スキップ一覧に並んで本当の取りこぼしが埋もれるため。--ids で明示指定した場合はこのリストを無視して調べ直せる。",
+  "_updatedAt": "2026-08-10",
+  "exclusions": [
+    { "id": "tarp-011", "reason": "ふるさと納税の利用券。Amazonでは扱わない" },
+    { "id": "tarp-012", "reason": "ふるさと納税の利用券。Amazonでは扱わない" },
+    { "id": "tarp-013", "reason": "ふるさと納税の利用券。Amazonでは扱わない" },
+    { "id": "chair-012", "reason": "楽天専売のOEMチェア（トップセンス／wakufimac）。一致率0%" },
+    { "id": "chair-013", "reason": "楽天専売のOEMチェア（ここち／waku fimac）。候補0件" },
+    { "id": "chair-014", "reason": "楽天専売のOEMチェア（SASUKE project）。同型の別出品しか出ない" },
+    { "id": "cooler-corona-pa-f85a", "reason": "コロナストア限定の抽選販売。楽天・Amazonに流通しない" }
+  ]
+}

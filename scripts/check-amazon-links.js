@@ -229,12 +229,30 @@ async function main() {
     fs.readFileSync(path.join(DATA_DIR, "products.json"), "utf-8")
   );
 
+  // Amazonに存在しない商品（ふるさと納税の利用券・楽天専売のOEM品など）は
+  // 「URL未設定」に並べても直しようがないので、理由つきで別枠にする
+  let excluded = new Map();
+  try {
+    const f = JSON.parse(
+      fs.readFileSync(path.join(DATA_DIR, "amazon-match-exclusions.json"), "utf-8")
+    );
+    for (const e of f.exclusions || []) excluded.set(e.id, e.reason);
+  } catch {
+    /* 無ければ除外なしで動く */
+  }
+
   const withUrl = products.filter((p) => p.amazonUrl);
-  const withoutUrl = products.filter((p) => !p.amazonUrl);
+  const withoutUrl = products.filter((p) => !p.amazonUrl && !excluded.has(p.id));
+  const notOnAmazon = products.filter((p) => !p.amazonUrl && excluded.has(p.id));
 
   console.log(`\n📦 商品数: ${products.length}`);
   console.log(`🔗 Amazon URL あり: ${withUrl.length}`);
   console.log(`❌ Amazon URL なし: ${withoutUrl.length}`);
+
+  if (notOnAmazon.length > 0) {
+    console.log(`\n--- Amazonに存在しない商品（対象外・${notOnAmazon.length}件） ---`);
+    notOnAmazon.forEach((p) => console.log(`  ${p.id}: ${p.name} … ${excluded.get(p.id)}`));
+  }
 
   if (withoutUrl.length > 0) {
     console.log("\n--- URL未設定の商品 ---");
