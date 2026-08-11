@@ -18,6 +18,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { loadEnv, readJson, writeJson } from "../src/lib/x-agent-utils.mjs";
 
@@ -215,8 +216,37 @@ async function autoPullFirst() {
   }
 }
 
+/**
+ * ローカルが origin より遅れたまま同期すると、リモートにある新しい内容を
+ * 古いローカルで上書きしてしまう。2026-08-11 に2回発生した
+ * （`git pull` が「unstaged changes」で失敗したのを見落として sync まで走った）。
+ * MERGE_HEADガードと同じ思想で、事故る前に止める。
+ * fetch できない環境（オフライン・CI）では黙って素通りする。
+ */
+function assertNotBehindOrigin() {
+  if (process.argv.includes("--skip-git-check")) return;
+  let branch, behind;
+  try {
+    const run = (c) => execSync(c, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    branch = run("git rev-parse --abbrev-ref HEAD");
+    execSync(`git fetch --quiet origin ${branch}`, { stdio: "ignore", timeout: 20000 });
+    behind = parseInt(run("git rev-list --count HEAD..FETCH_HEAD"), 10);
+  } catch {
+    return; // gitが使えない／fetchできない場合は判定しない
+  }
+  if (!Number.isFinite(behind) || behind === 0) return;
+  console.error(`[sync] ❌ ローカルが origin/${branch} より ${behind} コミット遅れています。`);
+  console.error("[sync]    このまま同期すると、リモートにある新しい内容を古いデータで上書きします。");
+  console.error("[sync]    先に取り込んでください:");
+  console.error("[sync]      git pull --rebase   # 失敗したら git status で未コミット分を確認");
+  console.error("[sync]    意図的に古い内容で上書きするなら --skip-git-check を付けてください。");
+  process.exit(1);
+}
+
 async function main() {
   console.log(`[sync-to-supabase] 開始 ${dryRun ? "(DRY RUN)" : ""}`);
+
+  assertNotBehindOrigin();
 
   await autoPullFirst();
 
