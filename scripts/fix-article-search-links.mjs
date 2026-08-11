@@ -47,6 +47,26 @@ const VERBOSE = argv.includes("--verbose");
 // 「ふるさと納税◯◯を探す」は検索結果を見せるのが目的。直リンク化すると意味が変わる
 const SKIP_SLUGS = new Set(["furusato-tax-camp-gear"]);
 
+// 自動判定のガードに引っかかったが、目視で対象が確定したもの。
+// キーは「slug|検索語に必ず含まれる文字列」。自動判定より優先する
+const MANUAL = [
+  // T-230 と T-230A は型番が包含関係にあり、一致率が並んで自動では選べない
+  { slug: "field-rack-ranking", contains: "T-230A", id: "field-rack-campingmoon-sts" },
+  { slug: "field-rack-ranking", contains: "T-230", id: "field-rack-campingmoon" },
+  // DDフロントラインは二重登録。記事が使っているのは hammock-dd-frontline のほう
+  { slug: "hammock-ranking", contains: "DDフロントライン", id: "hammock-dd-frontline" },
+  // 検索語だけに型番1937が入っていて一致率が67%に落ちる。商品は1つしかない
+  { slug: "low-table-ranking", contains: "フォールディングテーブル", id: "table-ogawa-folding-table" },
+];
+
+/** 手動対応表。contains は長いものから順に見る（T-230A を T-230 より先に）*/
+function manualMatch(slug, keyword) {
+  const hit = MANUAL.filter((m) => m.slug === slug && keyword.includes(m.contains)).sort(
+    (a, b) => b.contains.length - a.contains.length
+  )[0];
+  return hit?.id ?? null;
+}
+
 const decode = (s) => {
   try {
     return decodeURIComponent(s);
@@ -113,7 +133,9 @@ for (const a of articles) {
     };
   }
 
-  for (const m of content.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)) {
+  // ラベルに画像を入れた [![alt](img)](url) 形式があるので、角括弧の1段ネストを許す。
+  // [^\]]* だけだと画像リンクを丸ごと取りこぼす（camp-knife-ranking で1件見落とした）
+  for (const m of content.matchAll(/\[((?:[^[\]]|!\[[^\]]*\]\([^)]*\))*)\]\((https?:\/\/[^)\s]+)\)/g)) {
     const [full, label, url] = m;
     if (!isSearchLink(url)) continue;
 
@@ -133,7 +155,13 @@ for (const a of articles) {
       continue;
     }
 
-    const { best: product, score, runnerUp } = resolveByKeyword(keyword);
+    const forced = manualMatch(a.slug, keyword);
+    let { best: product, score, runnerUp } = resolveByKeyword(keyword);
+    if (forced) {
+      product = byId.get(forced) ?? product;
+      score = 1;
+      runnerUp = 0;
+    }
     const overlap = score;
 
     if (!product || score < 0.7) {
