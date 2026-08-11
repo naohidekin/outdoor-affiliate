@@ -109,6 +109,10 @@ function imageUrlOf(item) {
   return url;
 }
 
+// 価格の変動率ガード。price-monitor.js と同じ値に揃える
+const PRICE_GUARD_MIN = 0.5;
+const PRICE_GUARD_MAX = 2.0;
+
 const productsPath = path.join(ROOT, "data", "products.json");
 const products = JSON.parse(fs.readFileSync(productsPath, "utf-8"));
 
@@ -159,9 +163,20 @@ for (let i = 0; i < asins.length; i += 10) {
       console.log(`  ⚠️ ${p.id}: APIレスポンスに画像なし`);
     }
     const amount = item.offersV2?.listings?.[0]?.price?.money?.amount;
-    if (UPDATE_PRICE && amount && !DRY_RUN) {
-      console.log(`     価格更新: ¥${p.price} → ¥${Math.round(amount)}`);
-      p.price = Math.round(amount);
+    if (UPDATE_PRICE && amount) {
+      const next = Math.round(amount);
+      // 2026-08-06 に price-monitor が誤ASIN由来の異常価格を11件書き込んだ。
+      // こちらには歯止めが無かったので同じガードを入れる
+      const ratio = p.price ? next / p.price : 1;
+      if (p.price && (ratio < PRICE_GUARD_MIN || ratio > PRICE_GUARD_MAX)) {
+        console.log(
+          `     ⚠️ 価格が${Math.round(ratio * 100)}%に変動（¥${p.price} → ¥${next}）。` +
+            "別商品を指している疑いがあるため更新しません"
+        );
+      } else if (!DRY_RUN) {
+        console.log(`     価格更新: ¥${p.price} → ¥${next}`);
+        p.price = next;
+      }
     }
   }
   for (const e of data.errors || []) {
@@ -172,7 +187,8 @@ for (let i = 0; i < asins.length; i += 10) {
 
 if (!DRY_RUN && updated) {
   fs.writeFileSync(productsPath, JSON.stringify(products, null, 2) + "\n");
-  console.log(`\n✅ products.json に ${updated} 件書き込みました。反映は npm run db:sync を実行してください。`);
+  console.log(`\n✅ products.json に ${updated} 件書き込みました。`);
+  console.log("   反映: npm run db:sync -- --no-pull  ← --no-pull が無いと auto-pull で巻き戻る");
 } else if (DRY_RUN) {
   console.log("\n（dry-runのため書き込みなし）");
 }
