@@ -19,6 +19,14 @@
  *   Amazon … amazonUrl のASIN → Creators API getItems
  *   楽天   … affiliateUrl の item.rakuten.co.jp/{shop}/{code}/ → itemCode で直引き
  *
+ * 2026-08-11 追記: Amazon単独では価格の誤りと「ASINが別商品を指している」を
+ * 区別できない。実際、最初の実行で上位に並んだ マナイタセットM 512% /
+ * 山専ボトル 6% / ヘリノックス ビーチチェア 26% は、いずれも
+ * price-held-back.json で誤ASINを疑っていた商品だった。
+ * 価格だけ見て直すと、誤ったASINの値段を正として書き込んでしまう。
+ * 商品名とストア側のタイトルを突き合わせ、一致率50%未満は
+ * 「リンクの問題」として価格の話から切り離す。
+ *
  * 使い方（Macで実行。両APIの認証情報が必要。楽天はIP許可リストも）:
  *   node scripts/audit-prices.mjs                 # 監査のみ（書き込まない）
  *   node scripts/audit-prices.mjs --limit 50      # 件数を絞って試す
@@ -33,6 +41,7 @@ import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials, asinOf } from "../src/lib/amazon-creators-api.mjs";
+import { tokenOverlap } from "../src/lib/product-match.mjs";
 
 dns.setDefaultResultOrder("ipv4first");
 loadEnv();
@@ -90,11 +99,18 @@ async function rakutenPrice(itemCode) {
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      if (/CLIENT_IP_NOT_ALLOWED|wrong_parameter|401|403/.test(body) || res.status >= 401) {
-        if (++rakutenFailures >= 5) {
-          console.warn("\n  楽天APIの認証エラーが5回続いたので、以降はAmazonのみで判定します");
-          console.warn("  （curl -4 -s ifconfig.me のIPを許可リストに登録してください）\n");
-        }
+      // wrong_parameter を認証エラーに混ぜると本当の原因が隠れる。
+      // 2026-08-11 に「IP制限で拒否」と誤表示して30分溶かした
+      const isAuth = /CLIENT_IP_NOT_ALLOWED/.test(body) || res.status === 401 || res.status === 403;
+      if (++rakutenFailures <= 3) {
+        console.warn(`\n  楽天API ${res.status}（${itemCode}）: ${body.slice(0, 180)}`);
+      }
+      if (rakutenFailures === 5) {
+        console.warn(
+          isAuth
+            ? "\n  IP制限で拒否されています。curl -4 -s ifconfig.me のIPを許可リストへ。以降はAmazonのみで判定します\n"
+            : "\n  楽天APIがリクエストを受け付けません（上の応答を確認）。以降はAmazonのみで判定します\n"
+        );
       }
       return null;
     }
@@ -180,6 +196,14 @@ for (const p of targets) {
   const agree =
     prices.length === 2 && Math.abs(prices[0] - prices[1]) / Math.max(...prices) <= 0.1;
 
+  // 価格の誤りと「そもそも別商品を指している」は別問題で、混ぜると判断できない。
+  // 価格だけ見て直すと、誤ったASINの値段を正として書き込んでしまう。
+  // 商品名とストア側のタイトルを突き合わせて切り分ける
+  const amzMatch = amz ? tokenOverlap(p.name, amz.name) : null;
+  const rakMatch = rak ? tokenOverlap(p.name, rak.name) : null;
+  const wrongLink =
+    (amzMatch !== null && amzMatch < 0.5) || (rakMatch !== null && rakMatch < 0.5);
+
   results.push({
     id: p.id,
     name: p.name,
@@ -187,6 +211,11 @@ for (const p of targets) {
     registered: p.price,
     amazon: amz?.price ?? null,
     rakuten: rak?.price ?? null,
+    amazonTitle: amz?.name ?? null,
+    rakutenTitle: rak?.name ?? null,
+    amazonMatch: amzMatch === null ? null : Math.round(amzMatch * 100),
+    rakutenMatch: rakMatch === null ? null : Math.round(rakMatch * 100),
+    wrongLink,
     market,
     ratio: Math.round(ratio * 100),
     agree,
@@ -197,16 +226,30 @@ console.log("\n");
 
 // ─── 出力 ───────────────────────────────────────────
 const off = (r) => Math.abs(r.ratio - 100);
-const suspicious = results.filter((r) => off(r) >= 20).sort((a, b) => b.exposure - a.exposure || off(b) - off(a));
-const confident = suspicious.filter((r) => r.agree);
-const single = suspicious.filter((r) => !r.agree);
+const byImpact = (a, b) => b.exposure - a.exposure || off(b) - off(a);
+const suspicious = results.filter((r) => off(r) >= 20).sort(byImpact);
+
+// リンクが別商品を指しているものは価格の話ではない。先に切り出す
+const mislinked = suspicious.filter((r) => r.wrongLink);
+const priceOnly = suspicious.filter((r) => !r.wrongLink);
+const confident = priceOnly.filter((r) => r.agree);
+const single = priceOnly.filter((r) => !r.agree);
 
 const fmt = (r) =>
   `  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 26).padEnd(28)}\n` +
   `          登録¥${String(r.registered).padStart(7)}  →  実売¥${String(r.market).padStart(7)}（${r.ratio}%）` +
   `  Amazon:${r.amazon ? "¥" + r.amazon : "—"} 楽天:${r.rakuten ? "¥" + r.rakuten : "—"}`;
 
-console.log(`── 両モールが一致して登録価格とずれる ${confident.length}件（確度が高い）──`);
+console.log(`── ⚠ リンクが別商品を指している疑い ${mislinked.length}件（価格ではなくASIN/URLの問題）──`);
+for (const r of mislinked) {
+  console.log(`  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 30)}`);
+  if (r.amazonTitle && r.amazonMatch < 50)
+    console.log(`          Amazon一致${r.amazonMatch}%  ¥${r.amazon}  「${r.amazonTitle.slice(0, 46)}」`);
+  if (r.rakutenTitle && r.rakutenMatch < 50)
+    console.log(`          楽天一致${r.rakutenMatch}%  ¥${r.rakuten}  「${r.rakutenTitle.slice(0, 46)}」`);
+}
+
+console.log(`\n── 両モールが一致して登録価格とずれる ${confident.length}件（確度が高い）──`);
 for (const r of confident) console.log(fmt(r));
 
 console.log(`\n── 片方しか取れない / 両モールが割れる ${single.length}件（要目視）──`);
@@ -217,7 +260,10 @@ const ratios = results.map((r) => r.ratio).sort((a, b) => a - b);
 console.log(`\n── まとめ ──`);
 console.log(`  照合できた商品: ${results.length}件`);
 console.log(`  実売/登録 の中央値: ${ratios[Math.floor(ratios.length / 2)]}%`);
-console.log(`  20%以上ずれ: ${suspicious.length}件（うち両モール一致 ${confident.length}件）`);
+console.log(`  20%以上ずれ: ${suspicious.length}件`);
+console.log(`    ├ 別商品を指している疑い: ${mislinked.length}件 ← リンクを直す話`);
+console.log(`    ├ 両モール一致（価格が誤り）: ${confident.length}件 ← --apply で直せる`);
+console.log(`    └ 片方のみ・要目視: ${single.length}件`);
 
 if (APPLY) {
   const ts = new Date().toISOString();
@@ -239,5 +285,5 @@ if (APPLY) {
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify({ ranAt: new Date().toISOString(), results, confident, single }, null, 2));
+fs.writeFileSync(OUT, JSON.stringify({ ranAt: new Date().toISOString(), results, mislinked, confident, single }, null, 2));
 console.log(`レポート: ${OUT}`);
