@@ -17,7 +17,8 @@
  * 実売の取り方は「その商品ページそのもの」を引く。検索で拾い直すと
  * 別商品を掴むので、照合の意味がなくなる。
  *   Amazon … amazonUrl のASIN → Creators API getItems
- *   楽天   … affiliateUrl の item.rakuten.co.jp/{shop}/{code}/ → itemCode で直引き
+ *   楽天   … affiliateUrl の店舗コードで店舗内検索し、itemUrl が一致するものを採用
+ *            （itemCode 直引きは 400 "itemCode is not valid" で使えなかった）
  *
  * 2026-08-11 追記: Amazon単独では価格の誤りと「ASINが別商品を指している」を
  * 区別できない。実際、最初の実行で上位に並んだ マナイタセットM 512% /
@@ -41,7 +42,7 @@ import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials, asinOf } from "../src/lib/amazon-creators-api.mjs";
-import { tokenOverlap } from "../src/lib/product-match.mjs";
+import { tokenOverlap, sanitizeKeyword } from "../src/lib/product-match.mjs";
 
 dns.setDefaultResultOrder("ipv4first");
 loadEnv();
@@ -77,33 +78,44 @@ if (!hasCredentials() && !appId) {
   process.exit(1);
 }
 
-/** アフィリエイトURLから楽天の itemCode（shop:code）を取り出す */
-function itemCodeOf(affiliateUrl) {
+/**
+ * アフィリエイトURLから楽天の店舗コードと商品URLコードを取り出す。
+ * item.rakuten.co.jp/{shopCode}/{urlCode}/
+ */
+function rakutenRef(affiliateUrl) {
   const m = decode(affiliateUrl || "").match(/item\.rakuten\.co\.jp\/([^/]+)\/([^/?&]+)/);
-  return m ? `${m[1]}:${m[2]}` : null;
+  return m ? { shopCode: m[1], urlCode: m[2] } : null;
 }
 
 let rakutenFailures = 0;
-async function rakutenPrice(itemCode) {
+/**
+ * その商品ページの価格を引く。
+ *
+ * 当初 itemCode（shop:code）で直引きしたが全件 400 "itemCode is not valid" だった。
+ * URLのパス末尾は楽天の itemCode とは別物で、この形では受け付けられない。
+ * 代わりに shopCode で店舗内を検索し、itemUrl が一致するものを拾う。
+ * 検索なので取り違えの余地があるが、URL完全一致を条件にするので実質直引きと同じ。
+ */
+async function rakutenPrice(ref, productName) {
   if (!appId || rakutenFailures >= 5) return null;
-  const params = new URLSearchParams({
-    applicationId: appId,
-    ...(accessKey ? { accessKey } : {}),
-    itemCode,
-    format: "json",
-    formatVersion: "2",
-  });
-  try {
+  const attempt = async (keyword) => {
+    const params = new URLSearchParams({
+      applicationId: appId,
+      ...(accessKey ? { accessKey } : {}),
+      shopCode: ref.shopCode,
+      keyword: sanitizeKeyword(keyword).slice(0, 100),
+      hits: "30",
+      format: "json",
+      formatVersion: "2",
+    });
     const res = await fetch(`${RAKUTEN_API}?${params}`, {
       headers: { Origin: "https://camp-gear-lab.com", Referer: "https://camp-gear-lab.com/" },
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      // wrong_parameter を認証エラーに混ぜると本当の原因が隠れる。
-      // 2026-08-11 に「IP制限で拒否」と誤表示して30分溶かした
       const isAuth = /CLIENT_IP_NOT_ALLOWED/.test(body) || res.status === 401 || res.status === 403;
       if (++rakutenFailures <= 3) {
-        console.warn(`\n  楽天API ${res.status}（${itemCode}）: ${body.slice(0, 180)}`);
+        console.warn(`\n  楽天API ${res.status}（${ref.shopCode}）: ${body.slice(0, 160)}`);
       }
       if (rakutenFailures === 5) {
         console.warn(
@@ -115,8 +127,15 @@ async function rakutenPrice(itemCode) {
       return null;
     }
     const data = await res.json();
-    const it = (data.Items || [])[0];
-    return it ? { price: it.itemPrice, name: it.itemName } : null;
+    // 同じ商品ページのものだけ採用する。店舗内の別商品を掴んでは意味がない
+    const hit = (data.Items || []).find((it) =>
+      decode(it.itemUrl || "").includes(`/${ref.urlCode}`)
+    );
+    return hit ? { price: hit.itemPrice, name: hit.itemName } : null;
+  };
+
+  try {
+    return (await attempt(productName)) ?? (await attempt(ref.urlCode));
   } catch {
     return null;
   }
@@ -138,12 +157,12 @@ for (const a of articles) {
 }
 
 const targets = products
-  .filter((p) => p.price && (asinOf(p.amazonUrl) || itemCodeOf(p.affiliateUrl)))
+  .filter((p) => p.price && (asinOf(p.amazonUrl) || rakutenRef(p.affiliateUrl)))
   .sort((a, b) => (exposure.get(b.id) || 0) - (exposure.get(a.id) || 0))
   .slice(0, LIMIT);
 
 console.log(`価格監査: ${targets.length}件（${APPLY ? "APPLY" : "監査のみ"}）`);
-console.log(`  Amazon: ${targets.filter((p) => asinOf(p.amazonUrl)).length}件 / 楽天: ${targets.filter((p) => itemCodeOf(p.affiliateUrl)).length}件\n`);
+console.log(`  Amazon: ${targets.filter((p) => asinOf(p.amazonUrl)).length}件 / 楽天: ${targets.filter((p) => rakutenRef(p.affiliateUrl)).length}件\n`);
 
 // Amazon は10件ずつまとめて引ける
 const amazonPrice = new Map();
@@ -178,11 +197,11 @@ const results = [];
 let done = 0;
 for (const p of targets) {
   const asin = asinOf(p.amazonUrl);
-  const code = itemCodeOf(p.affiliateUrl);
+  const ref = rakutenRef(p.affiliateUrl);
   const amz = asin ? amazonPrice.get(asin) : null;
   let rak = null;
-  if (code) {
-    rak = await rakutenPrice(code);
+  if (ref) {
+    rak = await rakutenPrice(ref, p.name);
     await sleep(1100); // 楽天は毎秒1リクエストが目安
   }
   done++;
