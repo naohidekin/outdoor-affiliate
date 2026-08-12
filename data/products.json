@@ -919,7 +919,7 @@
     "price": 990,
     "imageUrl": "https://m.media-amazon.com/images/I/71I0vpSl+9L._AC_SL1500_.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00q28t6.wwmjs50f.g00q28t6.wwmjt754/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fpompadour%2F10002797%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fpompadour%2Fi%2F10002797%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0GGXDSJLZ/?tag=camp78-22",
+    "amazonUrl": "",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=BUNDOK%20%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%AB%E3%83%83%E3%83%97%20600ml%20BD-190",
     "categoryId": "kitchen",
     "specs": {
@@ -931,7 +931,7 @@
     "description": "容量600mlの大きめシェラカップ。ラーメンを作る・カレーを入れる・調理鍋として使うなど、標準サイズでは容量が足りない用途に対応。価格も1,000円前後とコスパよし。",
     "rating": 4.1,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00"
+    "updatedAt": "2026-08-12T13:32:10.072Z"
   },
   {
     "id": "chair-001",
@@ -6791,7 +6791,7 @@
     "brand": "サーモス",
     "price": 3955,
     "imageUrl": "https://image.rakuten.co.jp/crown-musen/cabinet/thermos/ref-020-bl-00.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qqay6.wwmjs2fa.g00qqay6.wwmjt5e7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbergershop%2Fref0254%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fbergershop%2Fi%2F10004219%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07NGBHWC3/?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B5%E3%83%BC%E3%83%A2%E3%82%B9%20%E3%82%BD%E3%83%95%E3%83%88%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%20REF-025",
     "categoryId": "cooler",
@@ -6805,7 +6805,7 @@
     "description": "使わないときは折りたためる軽量ソフトクーラー。700gで持ち運び楽々。サブクーラーとしても最適。",
     "rating": 4.3,
     "createdAt": "2026-04-02T00:00:00+00:00",
-    "updatedAt": "2026-08-06T15:10:49.748+00:00"
+    "updatedAt": "2026-08-12T13:32:10.072Z"
   },
   {
     "id": "dry-net-logos",
@@ -7073,7 +7073,7 @@
     "brand": "スノーピーク",
     "price": 5500,
     "imageUrl": "https://m.media-amazon.com/images/I/71RfgXmQb8L._AC_SL1500_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00q6ov6.wwmjs2f3.g00q6ov6.wwmjt16e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fstyl-us%2Fug370%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fstyl-us%2Fi%2F10159665%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "affiliateUrl": "",
     "amazonUrl": "",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%20UG-370",
     "categoryId": "kitchen",
@@ -7086,7 +7086,7 @@
     "description": "ブラックカラーでサイトをスタイリッシュに統一できる自立式ドライネット。2019年グッドデザイン賞受賞。金属製の仕切り網で安定感が高い。デザインにこだわりたい人向け。",
     "rating": 4.3,
     "createdAt": "2026-06-24T15:00:00+00:00",
-    "updatedAt": "2026-08-06T14:54:21.071+00:00"
+    "updatedAt": "2026-08-12T13:32:10.072Z"
   },
   {
     "id": "light-009",
@@ -8549,7 +8549,7 @@
     "brand": "PowerArq",
     "price": 7700,
     "imageUrl": "https://m.media-amazon.com/images/I/714ydspLkBL._AC_SL1500_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkashima-tokeiten%2Fhp-1061%2F&link_type=text&ut=",
+    "affiliateUrl": "",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0B4NNJNM2?tag=camp78-22",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=PowerArq%20Fan%20Light",
     "categoryId": "fan",
@@ -8563,7 +8563,7 @@
     "description": "",
     "rating": 4,
     "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-08-06T15:10:55.039+00:00",
+    "updatedAt": "2026-08-12T13:32:10.072Z",
     "autoAdded": false
   },
   {
