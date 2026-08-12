@@ -135,6 +135,19 @@ export function generationMismatch(productName, itemName) {
 }
 
 /**
+ * 型番が一致するか。カラー等の英字接尾辞は同一商品として許す（BD-347 と BD-347BR）。
+ * ただし数字が伸びるものは別品番として扱う。
+ * 以前は単純な startsWith だったため REF-025 が REF-0254 に一致し、
+ * サーモスのソフトクーラーがペット用ブラシを指していた（2026-08-11に発覚）。
+ * 型番一致は信頼度「高」で自動適用されるので、ここが緩いと目視をすり抜ける。
+ */
+export function modelsMatch(productModels, itemModels) {
+  return productModels.some((m) =>
+    itemModels.some((im) => im === m || (im.startsWith(m) && /^[A-Za-z]/.test(im.slice(m.length))))
+  );
+}
+
+/**
  * 高: 型番一致。カラー接尾辞まで照合するので取り違えにくい
  * 中: 商品名の語を1つも削らずに検索して一致率100%
  * 低: 一致率100%未満、またはキーワードを短縮
@@ -229,8 +242,7 @@ export function pickBest(product, items, opts = {}) {
     const overlap = tokenOverlap(product.name, item.title || "");
     const priceOk = priceInRange(product.price, item.price, opts.priceMin, opts.priceMax);
     if (models.length > 0) {
-      // 型番あり: 型番一致が必須。カラー等の接尾辞は許す（BD-347 に対し BD-347BR）
-      if (models.some((m) => itemModels.some((im) => im === m || im.startsWith(m)))) {
+      if (modelsMatch(models, itemModels)) {
         return { item, reason: `型番一致(${models[0]})`, overlap };
       }
     } else if (overlap >= 0.7 && priceOk) {

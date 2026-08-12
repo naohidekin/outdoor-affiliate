@@ -50,6 +50,7 @@ import {
   survivingCandidates,
   tokenOverlap,
   modelNumbers,
+  modelsMatch,
   priceInRange,
   USED_ITEM_PATTERNS,
   isAccessoryMismatch,
@@ -174,7 +175,7 @@ function diagnose(product, items) {
       const overlap = tokenOverlap(product.name, it.title || "");
       const itemModels = modelNumbers(it.title || "");
       const modelHit =
-        models.length > 0 && models.some((m) => itemModels.some((im) => im === m || im.startsWith(m)));
+        models.length > 0 && modelsMatch(models, itemModels);
       return { it, overlap, modelHit, priceOk: priceInRange(product.price, it.price) };
     })
     .sort((a, b) => b.overlap - a.overlap);

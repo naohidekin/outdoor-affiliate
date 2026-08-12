@@ -38,7 +38,7 @@ import path from "node:path";
 import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
-import { tokenOverlap, sizeMatches } from "../src/lib/product-match.mjs";
+import { tokenOverlap, sizeMatches, modelsMatch } from "../src/lib/product-match.mjs";
 
 // IPv6回線だと楽天へIPv6で接続してしまい、アプリのIP許可リスト（IPv4のみ）に
 // 一致せず CLIENT_IP_NOT_ALLOWED になる。他スクリプトは package.json の
@@ -331,7 +331,7 @@ function pickBest(product, items) {
     if (models.length > 0) {
       // 型番あり: 型番一致が必須。ただしカラー等の接尾辞は許す
       // （商品 BD-347 に対し 出品 BD-347BR は同一商品）
-      if (models.some((m) => itemModels.some((im) => im === m || im.startsWith(m)))) {
+      if (modelsMatch(models, itemModels)) {
         return { item, reason: `型番一致(${models[0]})`, overlap };
       }
     } else {
@@ -392,7 +392,7 @@ function diagnose(product, items) {
       const itemModels = modelNumbers(it.itemName);
       const modelHit =
         models.length > 0 &&
-        models.some((m) => itemModels.some((im) => im === m || im.startsWith(m)));
+        modelsMatch(models, itemModels);
       const priceOk = priceInRange(product, it);
       const ratio = product.price ? it.itemPrice / product.price : null;
       return { it, overlap, modelHit, priceOk, ratio };
@@ -462,7 +462,14 @@ function printDiagnosis(product, d) {
 }
 
 const products = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
-const targets = products.filter((p) => isSearchLink(p.affiliateUrl)).slice(0, LIMIT);
+// --only は適用対象の指定。既に商品ページのURLが入っているが中身が別商品、
+// というケースは通常の対象条件に入らないので、IDで直接呼び出せるようにする
+// （Amazon版の --ids と同じ。2026-08-11 に誤リンク4件を調べ直すため追加）
+const IDS = new Set((argVal("--ids") || "").split(",").map((s) => s.trim()).filter(Boolean));
+const targets = (IDS.size > 0
+  ? products.filter((p) => IDS.has(p.id))
+  : products.filter((p) => isSearchLink(p.affiliateUrl))
+).slice(0, LIMIT);
 console.log(`検索ページ行きリンク: ${targets.length}件を処理（${APPLY ? "APPLY" : "dry-run"}）\n`);
 
 const fixes = [];
