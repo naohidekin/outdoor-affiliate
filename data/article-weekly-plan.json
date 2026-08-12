@@ -1,71 +1,71 @@
 {
-  "week": "2026-W31",
-  "generatedAt": "2026-07-29T09:00:43+09:00",
+  "week": "2026-W33",
+  "generatedAt": "2026-08-12T09:00:49+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W31-01",
+      "themeId": "theme-2026-W33-01",
       "categoryId": "fan",
-      "title": "キャンプ用ポータブル扇風機おすすめランキング【2026年版】テント内・就寝時の使い方も解説",
-      "slug": "camp-fan-tent-sleep-guide-2026",
-      "angle": "テント内や就寝時の熱中症対策という実用シーン別に、選び方から使い方まで網羅したガイド記事",
+      "title": "キャンプ用扇風機おすすめランキング2026年版｜テント内の熱中症対策に効く選び方",
+      "slug": "camp-fan-heatstroke-prevention-ranking-2026",
+      "angle": "熱中症リスクという安全視点から、テント内での扇風機選びを風量・静粛性・バッテリーで比較する",
       "targetKeywords": [
-        "キャンプ 扇風機 テント内",
-        "キャンプ 扇風機 就寝",
-        "夏キャンプ 熱中症対策 扇風機"
+        "キャンプ 扇風機 熱中症",
+        "テント内 扇風機 おすすめ",
+        "キャンプ 熱中症対策 ファン"
       ],
-      "seasonRelevance": "7月は夏キャンプ最盛期でテント内の暑さ対策への需要が急上昇するタイミング",
+      "seasonRelevance": "8月はキャンプ中の熱中症リスクが最も高まる時期で、テント内の暑さ対策ニーズが急増する",
       "priority": "high",
-      "reason": "fanカテゴリはPV・検索セッションともにサイト内トップ（PV 1749 / SS 1516）で既存記事との重複を避けたテント内・就寝シーン特化の切り口が未カバー",
-      "scheduledPublishDate": "2026-07-31",
+      "reason": "fanカテゴリはPV・検索セッションともにダントツ1位（PV3153）で既存記事と重複しない安全対策×扇風機の切り口が狙える",
+      "scheduledPublishDate": "2026-08-14",
       "productCount": 3,
       "productIds": [
-        "fan-004",
-        "fan-005",
-        "fan-006"
+        "fan-007",
+        "fan-008",
+        "fan-009"
       ]
     },
     {
-      "themeId": "theme-2026-W31-02",
-      "categoryId": "cooler",
-      "title": "キャンプ用ハードクーラーボックスおすすめランキング【2026年版】保冷力・サイズ・コスパで徹底比較",
-      "slug": "hard-cooler-box-ranking-2026",
-      "angle": "ソフトクーラー記事と差別化し、ハードクーラーに絞って保冷力・容量・価格帯のマトリクスで選べる比較記事",
-      "targetKeywords": [
-        "ハードクーラーボックス おすすめ",
-        "クーラーボックス 保冷力 比較",
-        "キャンプ クーラーボックス ランキング"
-      ],
-      "seasonRelevance": "7月の今月季節カテゴリであり、食材・飲料の保冷は夏キャンプの最重要課題",
-      "priority": "high",
-      "reason": "coolerは今月季節カテゴリかつ検索セッション136と需要が高い一方、既存のsoft-cooler-rankingやcooler-box-rankingと切り口が重複しないハードクーラー特化記事が未存在",
-      "scheduledPublishDate": "2026-08-02",
-      "productCount": 3,
-      "productIds": [
-        "cooler-027",
-        "cooler-028",
-        "cooler-029"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W31-03",
+      "themeId": "theme-2026-W33-02",
       "categoryId": "insect-repellent",
-      "title": "キャンプの虫除けアロマおすすめ【2026年版】化学成分が気になる方向けの天然・ナチュラル系虫対策",
-      "slug": "natural-aroma-insect-repellent-camping",
-      "angle": "DEET・イカリジン不使用の天然・アロマ系虫除けに絞り、子連れ・敏感肌ファミリーに向けた安心訴求の特化記事",
+      "title": "キャンプのブヨ対策完全ガイド2026年版｜蚊と違う刺され方・効く薬・予防グッズ一覧",
+      "slug": "camp-biting-midge-repellent-complete-guide-2026",
+      "angle": "蚊との違いを明確にしながら、ブヨに特化した予防・刺された後の対処・おすすめアイテムを網羅する",
       "targetKeywords": [
-        "虫除け アロマ キャンプ",
-        "天然 虫除け キャンプ 子供",
-        "ナチュラル 虫除けスプレー アウトドア"
+        "キャンプ ブヨ 対策",
+        "ブヨ 虫除け おすすめ",
+        "ブヨ 刺された 対処"
       ],
-      "seasonRelevance": "7月の今月季節カテゴリであり、蚊・ブヨが最も活発になる真夏に向けて安全志向の検索需要が高まる",
-      "priority": "medium",
-      "reason": "insect-repellentは今月季節カテゴリで既存7記事はスプレーランキング・ブレスレット・総合ガイド等が揃っているが、天然・アロマ系という成分軸の切り口が未カバーで差別化できる",
-      "scheduledPublishDate": "2026-08-05",
+      "seasonRelevance": "8月は渓流・高原キャンプでブヨの活動が活発になるピーク時期で検索ニーズが集中する",
+      "priority": "high",
+      "reason": "insect-repellentは今月の季節カテゴリで来月も継続推奨、かつ既存記事は蚊・アロマ中心でブヨに特化した記事が空白になっている",
+      "scheduledPublishDate": "2026-08-16",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-019",
-        "insect-repellent-020",
-        "insect-repellent-021"
+        "insect-repellent-022",
+        "insect-repellent-023",
+        "insect-repellent-024"
+      ]
+    },
+    {
+      "themeId": "theme-2026-W33-03",
+      "categoryId": "tarp",
+      "title": "夏キャンプのタープ選び方ガイド2026年版｜日差し・通気性・UVカット率で選ぶおすすめ6選",
+      "slug": "summer-tarp-uv-ventilation-guide-2026",
+      "angle": "遮光性・UVカット率・メッシュ構造など夏特有の快適性指標に絞り込んでタープを比較する",
+      "targetKeywords": [
+        "夏 タープ おすすめ",
+        "タープ 日よけ UVカット",
+        "キャンプ 日差し対策 タープ"
+      ],
+      "seasonRelevance": "8月の強烈な紫外線と熱中症対策として、日差しカットに特化したタープ需要が高まる時期",
+      "priority": "medium",
+      "reason": "tarpは今月の季節カテゴリで検索セッション248と活発、既存記事は雨・初心者向け設置ガイド中心のため夏の日差し対策という新切り口で差別化できる",
+      "scheduledPublishDate": "2026-08-19",
+      "productCount": 3,
+      "productIds": [
+        "tarp-014",
+        "tarp-015",
+        "tarp-016"
       ]
     }
   ]
