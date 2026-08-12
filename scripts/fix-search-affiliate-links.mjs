@@ -81,6 +81,10 @@ const SHOW_EXCLUDED = process.argv.includes("--show-excluded");
 const limitIdx = process.argv.indexOf("--limit");
 const LIMIT =
   limitIdx !== -1 ? parseInt(process.argv[limitIdx + 1], 10) : Infinity;
+const argVal = (name) => {
+  const i = process.argv.indexOf(name);
+  return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : null;
+};
 
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
@@ -110,11 +114,17 @@ function isSearchLink(affiliateUrl) {
   return target.includes("search.rakuten.co.jp");
 }
 
-// 型番抽出: 「PA-F85A」「ST-310」「YEC-M03」のような英数ハイフン列
+// 型番抽出: 「PA-F85A」「ST-310」「YEC-M03」のような英数ハイフン列。
+//
+// ハイフンで区切られた塊は「途中で切らず、まるごと1つの型番」として扱う。
+// 部分だけ切り出すと、シャツの品番 LFTG-BD-190 から BD-190 が取れてしまい、
+// BUNDOK のシェラカップ BD-190 と完全一致する（2026-08-11に実害）。
+// 逆に直前の文字だけ見て弾くと YEC-M03 のような多段型番が拾えなくなるので、
+// 塊の単位で判定する。数字を2桁以上含み、英字で始まるものだけを型番とみなす。
 function modelNumbers(name) {
-  return (name.match(/[A-Za-z]{1,6}-?[0-9]{2,5}[A-Za-z0-9+/]*/g) || []).map(
-    (s) => s.toUpperCase().replace(/-/g, "")
-  );
+  return (name.match(/[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*/g) || [])
+    .filter((s) => /[0-9]{2,}/.test(s))
+    .map((s) => s.toUpperCase().replace(/-/g, ""));
 }
 
 // tokenOverlap は共通モジュール側を使う（ローマ数字の正規化を含む）。
