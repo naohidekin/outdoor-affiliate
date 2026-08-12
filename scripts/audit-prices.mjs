@@ -42,7 +42,7 @@ import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials, asinOf } from "../src/lib/amazon-creators-api.mjs";
-import { tokenOverlap, sanitizeKeyword } from "../src/lib/product-match.mjs";
+import { tokenOverlap, sanitizeKeyword, modelNumbers } from "../src/lib/product-match.mjs";
 
 dns.setDefaultResultOrder("ipv4first");
 loadEnv();
@@ -88,6 +88,8 @@ function rakutenRef(affiliateUrl) {
 }
 
 let rakutenFailures = 0;
+let perItemErrors = 0;
+let rateLimited = 0;
 /**
  * その商品ページの価格を引く。
  *
@@ -111,31 +113,55 @@ async function rakutenPrice(ref, productName) {
     const res = await fetch(`${RAKUTEN_API}?${params}`, {
       headers: { Origin: "https://camp-gear-lab.com", Referer: "https://camp-gear-lab.com/" },
     });
+    // 429（レート超過）は待てば通る。打ち切りに数えない
+    if (res.status === 429) {
+      rateLimited++;
+      await sleep(1600);
+      const retry = await fetch(`${RAKUTEN_API}?${params}`, {
+        headers: { Origin: "https://camp-gear-lab.com", Referer: "https://camp-gear-lab.com/" },
+      });
+      if (!retry.ok) return null;
+      return pickItem(await retry.json());
+    }
     if (!res.ok) {
       const body = await res.text().catch(() => "");
+      // 打ち切りに数えるのは設定の問題（認証・IP制限）だけ。
+      // shopCode が無効といった商品固有の400で全体を止めると、
+      // 1件のデータ不備で残り122件の照合を失う（2026-08-11に発生）
       const isAuth = /CLIENT_IP_NOT_ALLOWED/.test(body) || res.status === 401 || res.status === 403;
-      if (++rakutenFailures <= 3) {
+      if (!isAuth) {
+        if (++perItemErrors <= 5) {
+          console.warn(`\n  楽天API ${res.status}（${ref.shopCode}）: ${body.slice(0, 120)}  ← この商品のみスキップ`);
+        }
+        return null;
+      }
+      if (++rakutenFailures <= 2) {
         console.warn(`\n  楽天API ${res.status}（${ref.shopCode}）: ${body.slice(0, 160)}`);
       }
       if (rakutenFailures === 5) {
         console.warn(
-          isAuth
-            ? "\n  IP制限で拒否されています。curl -4 -s ifconfig.me のIPを許可リストへ。以降はAmazonのみで判定します\n"
-            : "\n  楽天APIがリクエストを受け付けません（上の応答を確認）。以降はAmazonのみで判定します\n"
+          "\n  IP制限で拒否されています。curl -4 -s ifconfig.me のIPを許可リストへ。" +
+            "以降はAmazonのみで判定します\n"
         );
       }
       return null;
     }
-    const data = await res.json();
-    // 同じ商品ページのものだけ採用する。店舗内の別商品を掴んでは意味がない
+    return pickItem(await res.json());
+  };
+
+  // 同じ商品ページのものだけ採用する。店舗内の別商品を掴んでは意味がない
+  function pickItem(data) {
     const hit = (data.Items || []).find((it) =>
       decode(it.itemUrl || "").includes(`/${ref.urlCode}`)
     );
     return hit ? { price: hit.itemPrice, name: hit.itemName } : null;
-  };
+  }
 
   try {
-    return (await attempt(productName)) ?? (await attempt(ref.urlCode));
+    const first = await attempt(productName);
+    if (first) return first;
+    await sleep(700); // 1商品で2回投げるので、間を空けないと429を踏む
+    return await attempt(ref.urlCode);
   } catch {
     return null;
   }
@@ -217,11 +243,30 @@ for (const p of targets) {
 
   // 価格の誤りと「そもそも別商品を指している」は別問題で、混ぜると判断できない。
   // 価格だけ見て直すと、誤ったASINの値段を正として書き込んでしまう。
-  // 商品名とストア側のタイトルを突き合わせて切り分ける
-  const amzMatch = amz ? tokenOverlap(p.name, amz.name) : null;
-  const rakMatch = rak ? tokenOverlap(p.name, rak.name) : null;
+  // 商品名とストア側のタイトルを突き合わせて切り分ける。
+  //
+  // 半角カナのタイトルで一致率が落ちるので NFKC で正規化する
+  // （「ﾀﾄﾝｶ ﾀｰﾌﾟ」が29%→43%になった）。
+  // またタイトルが型番だけの出品（「IPP-2222G」）は一致率が構造的に低いので、
+  // 型番が一致していれば別商品ではないと判断する
+  const norm = (x) => (x || "").normalize("NFKC");
+  // 型番は「独立した語」として現れる場合だけ一致とみなす。
+  // 抽出値だけで比べると BUNDOK の BD-190 が
+  // シャツの品番 LFTG-BD-190 の一部に一致してしまい、誤リンクを見逃す
+  const rawModels = (norm(p.name).match(/[A-Za-z]{1,6}-?[0-9]{2,5}[A-Za-z0-9+/]*/g) || []);
+  const sameModel = (title) => {
+    const t = norm(title);
+    return rawModels.some((m) => {
+      const esc = m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`(?<![A-Za-z0-9-])${esc}(?![A-Za-z0-9])`, "i").test(t);
+    });
+  };
+  const score = (title) => (sameModel(title) ? 1 : tokenOverlap(norm(p.name), norm(title)));
+  const amzMatch = amz ? score(amz.name) : null;
+  const rakMatch = rak ? score(rak.name) : null;
+  // これは選別であって断定ではない。閾値を下げて拾いすぎない側に倒す
   const wrongLink =
-    (amzMatch !== null && amzMatch < 0.5) || (rakMatch !== null && rakMatch < 0.5);
+    (amzMatch !== null && amzMatch < 0.4) || (rakMatch !== null && rakMatch < 0.4);
 
   results.push({
     id: p.id,
@@ -259,7 +304,7 @@ const fmt = (r) =>
   `          登録¥${String(r.registered).padStart(7)}  →  実売¥${String(r.market).padStart(7)}（${r.ratio}%）` +
   `  Amazon:${r.amazon ? "¥" + r.amazon : "—"} 楽天:${r.rakuten ? "¥" + r.rakuten : "—"}`;
 
-console.log(`── ⚠ リンクが別商品を指している疑い ${mislinked.length}件（価格ではなくASIN/URLの問題）──`);
+console.log(`── ⚠ リンクが別商品を指している疑い ${mislinked.length}件（要確認。価格ではなくリンクの問題）──`);
 for (const r of mislinked) {
   console.log(`  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 30)}`);
   if (r.amazonTitle && r.amazonMatch < 50)
@@ -279,6 +324,8 @@ const ratios = results.map((r) => r.ratio).sort((a, b) => a - b);
 console.log(`\n── まとめ ──`);
 console.log(`  照合できた商品: ${results.length}件`);
 console.log(`  実売/登録 の中央値: ${ratios[Math.floor(ratios.length / 2)]}%`);
+if (perItemErrors || rateLimited)
+  console.log(`  楽天: 商品固有のエラー${perItemErrors}件 / レート超過で再試行${rateLimited}件`);
 console.log(`  20%以上ずれ: ${suspicious.length}件`);
 console.log(`    ├ 別商品を指している疑い: ${mislinked.length}件 ← リンクを直す話`);
 console.log(`    ├ 両モール一致（価格が誤り）: ${confident.length}件 ← --apply で直せる`);
