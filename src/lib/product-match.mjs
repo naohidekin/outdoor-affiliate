@@ -17,6 +17,119 @@
  *   次に触るときにこのモジュールへ寄せる。
  */
 
+// ─── ブランド表記の突き合わせ ───────────────────────────
+//
+// 2026-08-14: リンク検証（verify-links.mjs）で挙がった「別商品の疑い」16件のうち
+// 9件が誤検出で、原因はすべて表記ゆれだった。
+//   「スノーピーク ホームアンドキャンプバーナー」vs「snow peak HOME&CAMPバーナー」
+//   「メレル モアブ3ミッド ゴアテックス」vs「MERRELL メンズ MOAB 3 GORE-TEX」
+// カタカナと英語が1語も重ならないので一致率が0〜33%まで落ちる。
+//
+// 語の一致率だけで見ている限りこれは解けない（商品名まで音訳されるため）。
+// そこで判定を分ける: **ブランドが一致しているか**を独立した軸として見る。
+// 実際、本物の誤リンク4件はすべてブランドが違っていた
+//   ロゴス→LACITA / DARCHE→XiaZ / ファイヤーサイド→Redecker / スノーピーク→キャプテンスタッグ
+// ブランドが合っていれば、語が重ならなくても誤リンクとは断定しない。
+//
+// 対応表は data/brand-aliases.json。無くても動く（正規化なしになるだけ）。
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+let ALIAS_ROWS = null;
+function aliasRows() {
+  if (ALIAS_ROWS) return ALIAS_ROWS;
+  ALIAS_ROWS = [];
+  try {
+    const dir = path.dirname(fileURLToPath(import.meta.url));
+    const f = JSON.parse(
+      fs.readFileSync(path.join(dir, "..", "..", "data", "brand-aliases.json"), "utf8")
+    );
+    ALIAS_ROWS = f.aliases || [];
+  } catch {
+    /* 対応表が無ければブランド正規化なしで動く */
+  }
+  return ALIAS_ROWS;
+}
+
+/** 照合用のキー。全角半角・大小文字・記号・空白の差を消す */
+function brandKey(s) {
+  return (s || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s・.,&'’\-_/|()（）[\]【】]/g, "");
+}
+
+// brand フィールドは店名や飾りが混ざっている（「Mystic Ridge 楽天市場店」
+// 「アウトドアチェア【ポンコタン】」「ESTOAH.home エストアホーム」）。
+// 塊ごとに候補を作り、対応表に載っていれば別表記も候補に加える
+const SHOP_SUFFIX =
+  /(楽天市場店|楽天市場|ヤフー店|公式ストア|公式|オンラインストア|直営店|専門店|ショップ|ストア|株式会社|有限会社)/g;
+
+// 「アウトドアチェア【ポンコタン】」の brand から「アウトドアチェア」を
+// 候補にしてしまうと、その語を含むタイトルなら何でもブランド一致になる。
+// ブランド一致は疑いを**外す**側に効くので、この取りこぼしは危険。
+// 一般名詞だけでできた候補は捨てる
+const GENERIC_BRAND_WORD =
+  /^(アウトドア|キャンプ|キャンプグランド|チェア|テーブル|ランタン|テント|寝袋|シュラフ|クーラー|クーラーボックス|バーナー|焚火台|焚き火台|アウトドアチェア|アウトドア用品|キャンプ用品|通販|広場|市場|本店|プレミアム)+$/;
+
+export function brandVariants(brand) {
+  if (!brand) return [];
+  const chunks = [brand];
+  const bracket = brand.match(/[【[（(]([^\]】)）]+)[\]】)）]/);
+  if (bracket) chunks.push(bracket[1]);
+  chunks.push(brand.replace(/[【[（(][^\]】)）]*[\]】)）]/g, " "));
+  for (const c of [...chunks]) for (const t of c.split(/[\s/・,、|]+/)) chunks.push(t);
+
+  const out = new Set();
+  const add = (v) => {
+    const k = brandKey(String(v).replace(SHOP_SUFFIX, ""));
+    if (GENERIC_BRAND_WORD.test(k)) return;
+    // 2文字未満は語として弱すぎる。英字2文字も同様（「dd」は対応表側で拾う）
+    if (k.length >= 3 || (k.length === 2 && /[^\x20-\x7e]/.test(k))) out.add(k);
+  };
+  for (const c of chunks) {
+    add(c);
+    const k = brandKey(c.replace(SHOP_SUFFIX, ""));
+    for (const row of aliasRows()) if (row.some((v) => brandKey(v) === k)) row.forEach(add);
+  }
+  return [...out];
+}
+
+/**
+ * ストア側のタイトルにそのブランドが出てくるか。
+ * 英字だけの表記は語境界を見る（"eno" が "keno" に当たるのを防ぐ）
+ */
+export function brandMatches(brand, storeTitle) {
+  if (!brand || !storeTitle) return false;
+  const spaced = (storeTitle || "").normalize("NFKC").toLowerCase();
+  const tight = brandKey(storeTitle);
+  return brandVariants(brand).some((v) => {
+    if (/^[a-z0-9]+$/.test(v)) {
+      const esc = v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // 詰めた側でも語境界付きで見る（「snow peak」→「snowpeak」対策）
+      return (
+        new RegExp(`(?<![a-z0-9])${esc}(?![a-z0-9])`).test(spaced) ||
+        new RegExp(`(?<![a-z0-9])${esc}(?![a-z0-9])`).test(tight)
+      );
+    }
+    return tight.includes(v);
+  });
+}
+
+/** 対応表にあるブランド表記を1つの語に寄せる（一致率計算の前処理） */
+export function normalizeBrands(s) {
+  let out = s;
+  for (const row of aliasRows()) {
+    // 長い表記から先に置換する（「dd hammocks」を「dd」より先に）
+    for (const v of [...row].sort((a, b) => b.length - a.length)) {
+      const esc = v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      out = out.replace(new RegExp(esc, "gi"), ` brand_${row[0]} `);
+    }
+  }
+  return out;
+}
+
 // 型番抽出: 「PA-F85A」「ST-310」「YEC-M03」のような英数ハイフン列。
 //
 // ハイフンで区切られた塊は「途中で切らず、まるごと1つの型番」として扱う。

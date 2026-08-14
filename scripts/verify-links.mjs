@@ -30,7 +30,13 @@ import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials, asinOf } from "../src/lib/amazon-creators-api.mjs";
-import { tokenOverlap, sanitizeKeyword, modelNumbers } from "../src/lib/product-match.mjs";
+import {
+  tokenOverlap,
+  sanitizeKeyword,
+  modelNumbers,
+  normalizeBrands,
+  brandMatches,
+} from "../src/lib/product-match.mjs";
 
 dns.setDefaultResultOrder("ipv4first");
 loadEnv();
@@ -106,19 +112,22 @@ async function rakutenTitle(ref, productName) {
 
 /**
  * 商品名とストア側タイトルの一致度。
- * 半角カナを NFKC で正規化し、型番が独立した語として一致すれば同一とみなす
+ * 半角カナを NFKC で正規化し、ブランド表記を正規化し、
+ * 型番が独立した語として一致すれば同一とみなす
  * （タイトルが型番だけの出品は一致率が構造的に低くなるため）
  */
 function matchScore(productName, storeTitle) {
-  const norm = (x) => (x || "").normalize("NFKC");
-  const raw = norm(productName).match(/[A-Za-z]{1,6}-?[0-9]{2,5}[A-Za-z0-9+/]*/g) || [];
-  const t = norm(storeTitle);
+  const norm = (x) => normalizeBrands((x || "").normalize("NFKC").toLowerCase());
+  // 型番は大小文字を潰す前の文字列から拾う
+  const rawSrc = (productName || "").normalize("NFKC");
+  const raw = rawSrc.match(/[A-Za-z]{1,6}-?[0-9]{2,5}[A-Za-z0-9+/]*/g) || [];
+  const titleSrc = (storeTitle || "").normalize("NFKC");
   const modelHit = raw.some((m) => {
     const esc = m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(?<![A-Za-z0-9-])${esc}(?![A-Za-z0-9])`, "i").test(t);
+    return new RegExp(`(?<![A-Za-z0-9-])${esc}(?![A-Za-z0-9])`, "i").test(titleSrc);
   });
   if (modelHit) return 1;
-  return tokenOverlap(norm(productName), t);
+  return tokenOverlap(norm(productName), norm(storeTitle));
 }
 
 // ─── 対象 ────────────────────────────────────────────
@@ -198,16 +207,25 @@ for (const p of targets) {
   if (!aTitle && !rTitle) continue;
   checked++;
 
-  const aScore = aTitle ? matchScore(p.name, aTitle) : null;
-  const rScore = rTitle ? matchScore(p.name, rTitle) : null;
+  // 一致率が低くても、ブランドが合っていれば誤リンクとは断定しない。
+  // 商品名が音訳されているだけのケース（メレル モアブ3 ⇄ MERRELL MOAB 3）を
+  // 語の一致率で救うのは無理なので、ブランドを別の軸として見る
   const bad = [];
-  if (aScore !== null && aScore < 0.4) bad.push({ store: "Amazon", title: aTitle, score: aScore });
-  if (rScore !== null && rScore < 0.4) bad.push({ store: "楽天", title: rTitle, score: rScore });
+  const judge = (store, title) => {
+    if (!title) return;
+    const score = matchScore(p.name, title);
+    if (score >= 0.4) return;
+    if (brandMatches(p.brand, title)) return;
+    bad.push({ store, title, score });
+  };
+  judge("Amazon", aTitle);
+  judge("楽天", rTitle);
   if (bad.length === 0) continue;
 
   suspects.push({
     id: p.id,
     name: p.name,
+    brand: p.brand || "",
     clicks30d: clickCount.get(p.id) || 0,
     articles: exposure.get(p.id) || 0,
     bad,
