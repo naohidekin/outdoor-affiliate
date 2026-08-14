@@ -43,7 +43,13 @@ import dns from "node:dns";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 import { creatorsApi, credentials, hasCredentials, asinOf } from "../src/lib/amazon-creators-api.mjs";
-import { tokenOverlap, sanitizeKeyword, modelNumbers } from "../src/lib/product-match.mjs";
+import {
+  tokenOverlap,
+  sanitizeKeyword,
+  modelNumbers,
+  normalizeBrands,
+  brandMatches,
+} from "../src/lib/product-match.mjs";
 
 dns.setDefaultResultOrder("ipv4first");
 loadEnv();
@@ -270,12 +276,23 @@ for (const p of targets) {
       return new RegExp(`(?<![A-Za-z0-9-])${esc}(?![A-Za-z0-9])`, "i").test(t);
     });
   };
-  const score = (title) => (sameModel(title) ? 1 : tokenOverlap(norm(p.name), norm(title)));
+  const score = (title) =>
+    sameModel(title)
+      ? 1
+      : tokenOverlap(
+          normalizeBrands(norm(p.name).toLowerCase()),
+          normalizeBrands(norm(title).toLowerCase())
+        );
   const amzMatch = amz ? score(amz.name) : null;
   const rakMatch = rak ? score(rak.name) : null;
-  // これは選別であって断定ではない。閾値を下げて拾いすぎない側に倒す
-  const wrongLink =
-    (amzMatch !== null && amzMatch < 0.4) || (rakMatch !== null && rakMatch < 0.4);
+  // これは選別であって断定ではない。閾値を下げて拾いすぎない側に倒す。
+  //
+  // 一致率が低くてもブランドが合っていれば別商品とは断定しない。
+  // カタカナと英語で商品名まで音訳されると語が1つも重ならず、
+  // 「メレル モアブ3ミッド」と「MERRELL MOAB 3 GORE-TEX」が0%になる。
+  // 語の一致率では原理的に解けないので、ブランドを別の軸として見る
+  const suspect = (m, title) => m !== null && m < 0.4 && !brandMatches(p.brand, title);
+  const wrongLink = suspect(amzMatch, amz?.name) || suspect(rakMatch, rak?.name);
 
   results.push({
     id: p.id,
@@ -302,8 +319,17 @@ const off = (r) => Math.abs(r.ratio - 100);
 const byImpact = (a, b) => b.exposure - a.exposure || off(b) - off(a);
 const suspicious = results.filter((r) => off(r) >= 20).sort(byImpact);
 
-// リンクが別商品を指しているものは価格の話ではない。先に切り出す
-const mislinked = suspicious.filter((r) => r.wrongLink);
+// リンクが別商品を指しているものは価格の話ではない。先に切り出す。
+//
+// 2026-08-14: ここは suspicious（価格が20%以上ずれたもの）から絞っていた。
+// そのせいで「別商品を指しているのに価格はたまたま合っている」ケースが
+// 丸ごと消えていた。tarp-007 がまさにそれで、リンク先の LACITA のランタンが
+// 偶然 ¥10,800 で登録価格と同額だったため、wrongLink: true がJSONに入って
+// いるのに画面には「疑い0件」と出た。
+//
+// 値段が合っていることは、同じ商品である証拠にならない。
+// リンクの正誤は価格と独立して判定する
+const mislinked = results.filter((r) => r.wrongLink).sort(byImpact);
 const priceOnly = suspicious.filter((r) => !r.wrongLink);
 const confident = priceOnly.filter((r) => r.agree);
 const single = priceOnly.filter((r) => !r.agree);
@@ -335,8 +361,9 @@ console.log(`  照合できた商品: ${results.length}件`);
 console.log(`  実売/登録 の中央値: ${ratios[Math.floor(ratios.length / 2)]}%`);
 if (perItemErrors || rateLimited)
   console.log(`  楽天: 商品固有のエラー${perItemErrors}件 / レート超過で再試行${rateLimited}件`);
+// リンクの疑いは価格のずれとは独立に数える（価格が合っていても別商品はある）
+console.log(`  別商品を指している疑い: ${mislinked.length}件 ← リンクを直す話`);
 console.log(`  20%以上ずれ: ${suspicious.length}件`);
-console.log(`    ├ 別商品を指している疑い: ${mislinked.length}件 ← リンクを直す話`);
 console.log(`    ├ 両モール一致（価格が誤り）: ${confident.length}件 ← --apply で直せる`);
 console.log(`    └ 片方のみ・要目視: ${single.length}件`);
 
