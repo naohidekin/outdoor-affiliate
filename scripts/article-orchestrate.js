@@ -126,7 +126,13 @@ async function gitCommitAndPush(message) {
 
 // ─── エージェント起動（orchestrate.js と同じパターン） ──
 
-async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
+/**
+ * optional: true を渡したステップは、失敗しても連続失敗カウンタに数えない。
+ * 記事の生成・公開に必須でない補助処理（クリック実績の取り込み等）が
+ * 一時的なネットワーク障害で落ちただけで、3回連続に達して
+ * パイプライン全体がキルスイッチで止まるのを避けるため。
+ */
+async function runAgent(script, args = [], { timeout = 300_000, optional = false } = {}) {
   const scriptPath = path.join(__dirname, script);
   const startTime = Date.now();
   const label = `${script} ${args.join(" ")}`.trim();
@@ -154,6 +160,10 @@ async function runAgent(script, args = [], { timeout = 300_000 } = {}) {
     console.error(`  ${err.message}`);
     if (err.stdout) console.log(err.stdout);
     if (err.stderr) console.error(err.stderr);
+    if (optional) {
+      console.error(`[article-orchestrate] ${script} は補助処理のため続行します`);
+      return { success: false, error: err.message };
+    }
     // 同一パイプライン実行内の連続失敗を記録
     articleConsecutiveFailures++;
     console.error(`[article-orchestrate] 連続失敗: ${articleConsecutiveFailures}回目`);
@@ -500,6 +510,15 @@ async function dailyPipeline(dryRun) {
     await runAgent("article-publisher-agent.js", []);
   } else {
     await runAgent("article-publisher-agent.js", ["--dry-run"]);
+  }
+
+  // 2.5 クリック実績を Supabase から取り込む
+  // これが無いと Analyst が空の affiliate-clicks.json を読み、CTRが常に0になる。
+  // 2026-08-13 まで実際にそうなっており、記事評価がPVだけで行われていた。
+  // 補助処理なので失敗しても続行し、連続失敗カウンタにも数えない
+  // （クリックが取れなくてもPV分析は成立する）
+  if (!dryRun) {
+    await runAgent("pull-affiliate-clicks.mjs", ["--write"], { optional: true });
   }
 
   // 3. Analyst → 直近7日の記事PV更新
