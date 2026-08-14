@@ -31,6 +31,7 @@
  * 使い方（Macで実行。両APIの認証情報が必要。楽天はIP許可リストも）:
  *   node scripts/audit-prices.mjs                 # 監査のみ（書き込まない）
  *   node scripts/audit-prices.mjs --limit 50      # 件数を絞って試す
+ *   node scripts/audit-prices.mjs --ids tarp-007  # 特定商品の登録価格だけ確かめる
  *   node scripts/audit-prices.mjs --apply         # 確度の高いものだけ登録価格を直す
  *
  * --apply が直すのは「両モールの実売が10%以内で一致し、かつ登録価格から
@@ -60,6 +61,8 @@ const argVal = (n) => {
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
 const LIMIT = parseInt(argVal("--limit") || "", 10) || Infinity;
+// 特定の商品だけ調べたい場合。1件の登録価格を確かめるのに全件回すのは無駄
+const IDS = new Set((argVal("--ids") || "").split(",").map((s) => s.trim()).filter(Boolean));
 
 const RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
 const appId = process.env.RAKUTEN_APP_ID;
@@ -183,9 +186,15 @@ for (const a of articles) {
 }
 
 const targets = products
+  .filter((p) => (IDS.size > 0 ? IDS.has(p.id) : true))
   .filter((p) => p.price && (asinOf(p.amazonUrl) || rakutenRef(p.affiliateUrl)))
   .sort((a, b) => (exposure.get(b.id) || 0) - (exposure.get(a.id) || 0))
   .slice(0, LIMIT);
+
+if (IDS.size > 0) {
+  const missing = [...IDS].filter((id) => !targets.some((p) => p.id === id));
+  if (missing.length) console.log(`⚠ 対象外（価格未設定かリンク無し）: ${missing.join(", ")}\n`);
+}
 
 console.log(`価格監査: ${targets.length}件（${APPLY ? "APPLY" : "監査のみ"}）`);
 console.log(`  Amazon: ${targets.filter((p) => asinOf(p.amazonUrl)).length}件 / 楽天: ${targets.filter((p) => rakutenRef(p.affiliateUrl)).length}件\n`);
