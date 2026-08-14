@@ -69,10 +69,14 @@ if (!p) {
   process.exit(1);
 }
 
-const items = await getItems([ASIN]);
+// getItems は配列ではなく { items, errors } を返す。
+// ここを配列と思い込んで items[0] を見ていたため、正常なASINまで
+// 「引けません」と表示していた（2026-08-14）。APIのエラーも必ず出す
+const { items, errors } = await getItems([ASIN]);
 const item = items[0];
 if (!item) {
   console.error(`ASIN ${ASIN} がAmazonで引けません。番号が違うか、取り扱いが終わっています`);
+  for (const e of errors) console.error(`  APIエラー: ${e.code || ""} ${e.message || JSON.stringify(e)}`);
   process.exit(1);
 }
 

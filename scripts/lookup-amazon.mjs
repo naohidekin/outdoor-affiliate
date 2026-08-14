@@ -73,11 +73,13 @@ if (productId) {
 
 if (asins.length) {
   console.log(`\n── ASIN直引き（${asins.length}件）──`);
-  const items = await getItems(asins);
+  // getItems は配列ではなく { items, errors } を返す
+  const { items, errors } = await getItems(asins);
   const got = new Set(items.map((it) => it.asin));
   for (const it of items) show(it);
   // 「引けなかった」を黙って落とさない。切り分けたいのはまさにそこ
   for (const a of asins) if (!got.has(a)) console.log(`  ${a}  ← 個別取得できません`);
+  for (const e of errors) console.log(`  APIエラー: ${e.code || ""} ${e.message || JSON.stringify(e)}`);
 }
 
 if (query) {
