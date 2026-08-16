@@ -62,16 +62,53 @@ function parseArgs() {
 
 // ─── Git 同期 ───────────────────────────────────────
 
+// 通信できていないのか、ローカルが競合しているのかを分ける。
+// 前者に stash は無意味で、しかも作業中の変更を巻き込む危険がある
+const NETWORK_ERROR =
+  /could not resolve host|unable to access|failed to connect|connection refused|connection reset|operation timed out|network is unreachable|the remote end hung up/i;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function gitPull() {
   console.log("[article-orchestrate] git pull --ff-only ...");
-  try {
-    const { stdout } = await execFileAsync("git", ["pull", "--ff-only"], {
-      cwd: PROJECT_ROOT,
-      timeout: 30_000,
-    });
-    console.log(`[article-orchestrate] ${stdout.trim() || "Already up to date."}`);
-    return true;
-  } catch (err) {
+
+  // 10:00 の起動時、スリープ復帰直後でネットワークがまだ上がっていないことがある。
+  //
+  // 2026-08-16: これで実際に丸一日分のパイプラインが飛んだ。
+  // gitPull はキルスイッチ判定より前にあり、false を返すと全工程を飛ばす。
+  // 旧実装は失敗時に即 stash → pull を1回試すだけで、名前解決できない状況では
+  // 2回目も同じ理由で落ちるため、実質リトライになっていなかった。
+  // 通信起因なら待って何度か試す。ネットが遅いだけで一日分を失う理由はない
+  const BACKOFF_MS = [5_000, 15_000, 45_000, 120_000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const { stdout } = await execFileAsync("git", ["pull", "--ff-only"], {
+        cwd: PROJECT_ROOT,
+        timeout: 30_000,
+      });
+      console.log(`[article-orchestrate] ${stdout.trim() || "Already up to date."}`);
+      if (attempt > 0) console.log(`[article-orchestrate] （${attempt + 1}回目で成功）`);
+      return true;
+    } catch (err) {
+      const msg = `${err.message || ""}${err.stderr || ""}`;
+      if (!NETWORK_ERROR.test(msg)) break; // 競合なら下の stash 経路へ
+      if (attempt >= BACKOFF_MS.length) {
+        console.error(
+          `[article-orchestrate] git pull がネットワーク起因で${attempt + 1}回失敗。` +
+            `起動時にネットワークが上がっていない可能性があります: ${String(msg).trim().slice(0, 120)}`
+        );
+        return false;
+      }
+      const wait = BACKOFF_MS[attempt];
+      console.warn(
+        `[article-orchestrate] 通信できません（${attempt + 1}回目）。${wait / 1000}秒待って再試行します`
+      );
+      await sleep(wait);
+    }
+  }
+
+  // ここに来るのは通信以外の理由。未コミットの変更が邪魔しているケース
+  {
     console.warn(`[article-orchestrate] git pull --ff-only 失敗。stash → pull → pop で再試行...`);
     try {
       await execFileAsync("git", ["stash"], { cwd: PROJECT_ROOT, timeout: 10_000 });
