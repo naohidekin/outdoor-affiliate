@@ -220,9 +220,16 @@ if (hasCredentials()) {
       });
       for (const it of data.itemsResult?.items || []) {
         const amount = it.offersV2?.listings?.[0]?.price?.money?.amount;
-        if (typeof amount === "number") {
-          amazonPrice.set(it.asin, { price: Math.round(amount), name: it.itemInfo?.title?.displayValue || "" });
-        }
+        // 価格が無い出品でもタイトルは必ず残す。
+        //
+        // 2026-08-16: 価格が取れたときだけ記録していたため、在庫切れ等で
+        // offersV2 に価格が無いASINは名前まで捨てられ、**そのリンクが正しい
+        // 商品を指しているかの判定自体が行われなくなっていた**。
+        // 価格の話とリンクの話は別なので、片方が欠けてももう片方は続ける
+        amazonPrice.set(it.asin, {
+          price: typeof amount === "number" ? Math.round(amount) : null,
+          name: it.itemInfo?.title?.displayValue || "",
+        });
       }
     } catch (e) {
       console.warn(`  Amazonバッチ${Math.floor(i / 10) + 1}失敗: ${String(e.message).slice(0, 60)}`);
@@ -231,6 +238,15 @@ if (hasCredentials()) {
     if (i + 10 < withAsin.length) await sleep(3000);
   }
   console.log("");
+  // 価格が取れない件数を必ず出す。ここが多いと「両モール一致」が構造的に
+  // 成立せず、価格の自動是正が黙って動かなくなる
+  const noPrice = [...amazonPrice.values()].filter((v) => v.price === null).length;
+  console.log(
+    `  Amazon: ${amazonPrice.size}件取得（うち価格なし ${noPrice}件）` +
+      (noPrice > amazonPrice.size / 2
+        ? "\n  ⚠ 半数以上で価格が取れていません。両モール照合が成立しないため --apply はほぼ何もしません"
+        : "")
+  );
 }
 
 // 楽天は1件ずつ。itemCode指定なので確実にその商品ページの値が返る
@@ -250,8 +266,11 @@ for (const p of targets) {
   if (!amz && !rak) continue;
 
   const prices = [amz?.price, rak?.price].filter((x) => typeof x === "number" && x > 0);
-  const market = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-  const ratio = market / p.price;
+  // タイトルだけ取れて価格が1つも無い場合がある（在庫切れのASINなど）。
+  // 0除算で market/ratio が NaN になり中央値まで壊れるので null にする。
+  // リンクの正誤判定は価格が無くても続ける
+  const market = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : null;
+  const ratio = market === null ? null : market / p.price;
   // 両モールが互いに10%以内なら市場価格として信頼できる
   const agree =
     prices.length === 2 && Math.abs(prices[0] - prices[1]) / Math.max(...prices) <= 0.1;
@@ -307,7 +326,7 @@ for (const p of targets) {
     rakutenMatch: rakMatch === null ? null : Math.round(rakMatch * 100),
     wrongLink,
     market,
-    ratio: Math.round(ratio * 100),
+    ratio: ratio === null ? null : Math.round(ratio * 100),
     agree,
     sources: prices.length,
   });
@@ -315,7 +334,9 @@ for (const p of targets) {
 console.log("\n");
 
 // ─── 出力 ───────────────────────────────────────────
-const off = (r) => Math.abs(r.ratio - 100);
+// 価格が取れなかったものは「ずれ」を計算できない。0扱いにすると
+// 一致しているように見えてしまうので、並べ替えでは最後に回す
+const off = (r) => (r.ratio === null ? -1 : Math.abs(r.ratio - 100));
 const byImpact = (a, b) => b.exposure - a.exposure || off(b) - off(a);
 const suspicious = results.filter((r) => off(r) >= 20).sort(byImpact);
 
@@ -355,7 +376,7 @@ console.log(`\n── 片方しか取れない / 両モールが割れる ${sing
 for (const r of single.slice(0, 25)) console.log(fmt(r));
 if (single.length > 25) console.log(`  … 他${single.length - 25}件（レポート参照）`);
 
-const ratios = results.map((r) => r.ratio).sort((a, b) => a - b);
+const ratios = results.map((r) => r.ratio).filter((x) => typeof x === "number").sort((a, b) => a - b);
 console.log(`\n── まとめ ──`);
 console.log(`  照合できた商品: ${results.length}件`);
 console.log(`  実売/登録 の中央値: ${ratios[Math.floor(ratios.length / 2)]}%`);
