@@ -355,6 +355,10 @@ const priceOnly = suspicious.filter((r) => !r.wrongLink);
 const confident = priceOnly.filter((r) => r.agree);
 const single = priceOnly.filter((r) => !r.agree);
 
+// 価格が取れていない出品は「¥null」ではなくそう書く。
+// 値が無いことと値が0円であることは別で、null がそのまま出ると壊れて見える
+const yen = (v) => (typeof v === "number" ? `¥${v.toLocaleString()}` : "価格取得できず");
+
 const fmt = (r) =>
   `  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 26).padEnd(28)}\n` +
   `          登録¥${String(r.registered).padStart(7)}  →  実売¥${String(r.market).padStart(7)}（${r.ratio}%）` +
@@ -364,9 +368,9 @@ console.log(`── ⚠ リンクが別商品を指している疑い ${mislinke
 for (const r of mislinked) {
   console.log(`  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 30)}`);
   if (r.amazonTitle && r.amazonMatch < 50)
-    console.log(`          Amazon一致${r.amazonMatch}%  ¥${r.amazon}  「${r.amazonTitle.slice(0, 46)}」`);
+    console.log(`          Amazon一致${r.amazonMatch}%  ${yen(r.amazon)}  「${r.amazonTitle.slice(0, 46)}」`);
   if (r.rakutenTitle && r.rakutenMatch < 50)
-    console.log(`          楽天一致${r.rakutenMatch}%  ¥${r.rakuten}  「${r.rakutenTitle.slice(0, 46)}」`);
+    console.log(`          楽天一致${r.rakutenMatch}%  ${yen(r.rakuten)}  「${r.rakutenTitle.slice(0, 46)}」`);
 }
 
 console.log(`\n── 両モールが一致して登録価格とずれる ${confident.length}件（確度が高い）──`);

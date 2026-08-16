@@ -15,6 +15,7 @@
  *   node scripts/lookup-amazon.mjs --asin B08L5ZQMR1,B0CL6GFW6Q
  *   node scripts/lookup-amazon.mjs --search "ロゴス USBシェードランタン 4連タイプ"
  *   node scripts/lookup-amazon.mjs --product tarp-007   # 商品名で検索し現リンクも引く
+ *   node scripts/lookup-amazon.mjs --asin B0XXXX --raw  # APIの応答をそのまま出す
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -41,6 +42,7 @@ const argVal = (n) => {
   const i = argv.indexOf(n);
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
+const RAW = argv.includes("--raw");
 
 if (!hasCredentials()) {
   console.error("Creators API の認証情報がありません（.env.local を確認）");
@@ -80,6 +82,16 @@ if (asins.length) {
   // 「引けなかった」を黙って落とさない。切り分けたいのはまさにそこ
   for (const a of asins) if (!got.has(a)) console.log(`  ${a}  ← 個別取得できません`);
   for (const e of errors) console.log(`  APIエラー: ${e.code || ""} ${e.message || JSON.stringify(e)}`);
+
+  // 価格が取れない理由を調べるための素の応答。
+  // 2026-08-16: 全件監査で309件中133件（44%）に価格が無かった。
+  // 在庫切れなのか offersV2 の形が想定と違うのかは、応答を見ないと分からない
+  if (RAW) {
+    for (const it of items) {
+      console.log(`\n  ── ${it.asin} の応答 ──`);
+      console.log(JSON.stringify(it, null, 2).split("\n").map((l) => "  " + l).join("\n"));
+    }
+  }
 }
 
 if (query) {
