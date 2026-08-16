@@ -36,6 +36,16 @@ function jstIsoString(d = new Date()) {
   return `${shifted.toISOString().slice(0, 19)}+09:00`;
 }
 
+// エラーログに日時を入れる。
+//
+// 2026-08-16: launchd のエラーログは追記のみで日時が無く、
+// 「git pull 失敗」「連続エラー3回で自動停止」が並んでいても、
+// それが今朝のものか何日も前の残骸か区別できなかった。
+// 障害の切り分けが止まるので、少なくともエラー側には必ず時刻を打つ。
+// stdout 側は起動バナーに日時が入っているのでそのままにする。
+const rawConsoleError = console.error.bind(console);
+console.error = (...args) => rawConsoleError(`[${jstDateTimeString()} JST]`, ...args);
+
 // ─── CLI ─────────────────────────────────────────────
 
 function parseArgs() {
