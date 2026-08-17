@@ -96,6 +96,23 @@ function rakutenRef(affiliateUrl) {
   return m ? { shopCode: m[1], urlCode: m[2] } : null;
 }
 
+// タイトルに選択肢が並んでいれば、サイズ・色を選ばせる親ページとみなす。
+//   「サイズ LDX+/MDX+」「3人用/４人用/6人用」「各色」「25~35リットル」
+// 全角数字・全角スラッシュがあるので NFKC で正規化してから見る。
+//
+// 「〜人用」の範囲は除く。「カマボコテント3M【4～5人用】」はテント1張りの
+// 収容人数であって選択肢ではない。スラッシュ区切りの「3人用/4人用/6人用」は
+// 選択肢なので、そちらだけ拾う
+function looksLikeVariationParent(title) {
+  const t = (title || "").normalize("NFKC");
+  return (
+    /各色|各サイズ|全[0-9]+色/.test(t) ||
+    /[0-9]+人用\s*\/\s*[0-9]+人用/.test(t) ||
+    /サイズ\s*[A-Za-z0-9+]+\s*\/\s*[A-Za-z0-9+]+/.test(t) ||
+    /[0-9]+\s*[~〜]\s*[0-9]+\s*(リットル|L|cm)\b/.test(t)
+  );
+}
+
 let rakutenFailures = 0;
 let perItemErrors = 0;
 let rateLimited = 0;
@@ -226,20 +243,28 @@ if (hasCredentials()) {
         // offersV2 に価格が無いASINは名前まで捨てられ、**そのリンクが正しい
         // 商品を指しているかの判定自体が行われなくなっていた**。
         // 価格の話とリンクの話は別なので、片方が欠けてももう片方は続ける
-        // 出品はあるのに price キーが無いものは、サイズ選択ページ（親ASIN）。
+        // 出品はあるのに price キーが無いASINがある。
         //
         // 2026-08-16: B0CYBKMWGS の応答が
         //   "offersV2": { "listings": [ { "isBuyBoxWinner": true, ... } ] }
         // で price ごと欠けていた。タイトルも「サイズ LDX+/MDX+」で、
-        // サイズごとに値段が違うため単一価格を持たない。
-        // これは価格が取れないだけの問題ではない。読者は親ページに着地して
-        // 自分でサイズを選ぶことになり、記事がMDX+を薦めていてもLDX+を
-        // 買いうる。子ASINに張り替えるべき対象として別に数える
+        // サイズごとに値段が違うため単一価格を持たないバリエーション親だった。
+        //
+        // ただし「出品はあるが価格が無い」＝親ページ、ではない。実際に数えたら
+        // 134件すべてがこの条件に当てはまり、中身は明らかに混ざっていた。
+        //   「アメニティドーム 3人用/４人用/6人用」  → 親ページ
+        //   「富士錦 パワー森林香(赤色) 30巻入り」    → 単一商品
+        //   「SUO RING 28° ICE ネック用 (アイボリー, S)」→ 色・サイズ確定済み
+        // 親ページはタイトルに選択肢が並ぶので、そこで見分ける。
+        // 見分けられないものは「理由不明」として分けて出す。
+        // 一括りにすると、直せる対象が埋もれる
         const hasListing = Boolean(it.offersV2?.listings?.length);
+        const title = it.itemInfo?.title?.displayValue || "";
         amazonPrice.set(it.asin, {
           price: typeof amount === "number" ? Math.round(amount) : null,
-          name: it.itemInfo?.title?.displayValue || "",
-          parentLike: typeof amount !== "number" && hasListing,
+          name: title,
+          noPrice: typeof amount !== "number" && hasListing,
+          parentLike: typeof amount !== "number" && hasListing && looksLikeVariationParent(title),
         });
       }
     } catch (e) {
@@ -255,8 +280,8 @@ if (hasCredentials()) {
   const noPrice = vals.filter((v) => v.price === null).length;
   const parentLike = vals.filter((v) => v.parentLike).length;
   console.log(
-    `  Amazon: ${amazonPrice.size}件取得（うち価格なし ${noPrice}件 / ` +
-      `うちサイズ選択ページの疑い ${parentLike}件）` +
+    `  Amazon: ${amazonPrice.size}件取得（価格なし ${noPrice}件 = ` +
+      `サイズ選択ページ ${parentLike}件 + 理由不明 ${noPrice - parentLike}件）` +
       (noPrice > amazonPrice.size / 2
         ? "\n  ⚠ 半数以上で価格が取れていません。両モール照合が成立しないため --apply はほぼ何もしません"
         : "")
@@ -336,6 +361,7 @@ for (const p of targets) {
     rakuten: rak?.price ?? null,
     amazonTitle: amz?.name ?? null,
     amazonParentLike: Boolean(amz?.parentLike),
+    amazonNoPrice: Boolean(amz?.noPrice),
     rakutenTitle: rak?.name ?? null,
     amazonMatch: amzMatch === null ? null : Math.round(amzMatch * 100),
     rakutenMatch: rakMatch === null ? null : Math.round(rakMatch * 100),
@@ -391,15 +417,25 @@ for (const r of mislinked) {
 // サイズ選択ページ（親ASIN）は、価格が取れないだけでなく購入導線としても弱い。
 // 読者が自分でサイズを選ぶことになり、記事が薦めた型と違うものを買いうる
 const parentAsins = results.filter((r) => r.amazonParentLike).sort(byImpact);
+const noPriceUnknown = results.filter((r) => r.amazonNoPrice && !r.amazonParentLike).sort(byImpact);
+const showList = (rows, n = 20) => {
+  for (const r of rows.slice(0, n)) {
+    console.log(`  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 26)}`);
+    console.log(`          「${(r.amazonTitle || "").slice(0, 56)}」`);
+  }
+  if (rows.length > n) console.log(`  … 他${rows.length - n}件（レポート参照）`);
+};
+
 console.log(
-  `\n── Amazonがサイズ選択ページ（親ASIN）の疑い ${parentAsins.length}件` +
-    `（子ASINに張り替えたい）──`
+  `\n── Amazonがサイズ選択ページ ${parentAsins.length}件（子ASINに張り替えたい）──`
 );
-for (const r of parentAsins.slice(0, 20)) {
-  console.log(`  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 26)}`);
-  console.log(`          「${(r.amazonTitle || "").slice(0, 56)}」`);
-}
-if (parentAsins.length > 20) console.log(`  … 他${parentAsins.length - 20}件（レポート参照）`);
+showList(parentAsins);
+
+console.log(
+  `\n── Amazonの価格が返らない（理由不明）${noPriceUnknown.length}件` +
+    `（在庫切れか、APIが価格を返さないだけか未確認）──`
+);
+showList(noPriceUnknown, 10);
 
 console.log(`\n── 両モールが一致して登録価格とずれる ${confident.length}件（確度が高い）──`);
 for (const r of confident) console.log(fmt(r));
@@ -416,7 +452,8 @@ if (perItemErrors || rateLimited)
   console.log(`  楽天: 商品固有のエラー${perItemErrors}件 / レート超過で再試行${rateLimited}件`);
 // リンクの疑いは価格のずれとは独立に数える（価格が合っていても別商品はある）
 console.log(`  別商品を指している疑い: ${mislinked.length}件 ← リンクを直す話`);
-console.log(`  サイズ選択ページの疑い: ${parentAsins.length}件 ← 子ASINに張り替える話`);
+console.log(`  サイズ選択ページ: ${parentAsins.length}件 ← 子ASINに張り替える話`);
+console.log(`  価格が返らない（理由不明）: ${noPriceUnknown.length}件 ← 要調査`);
 console.log(`  20%以上ずれ: ${suspicious.length}件`);
 console.log(`    ├ 両モール一致（価格が誤り）: ${confident.length}件 ← --apply で直せる`);
 console.log(`    └ 片方のみ・要目視: ${single.length}件`);
@@ -441,5 +478,5 @@ if (APPLY) {
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify({ ranAt: new Date().toISOString(), results, mislinked, parentAsins, confident, single }, null, 2));
+fs.writeFileSync(OUT, JSON.stringify({ ranAt: new Date().toISOString(), results, mislinked, parentAsins, noPriceUnknown, confident, single }, null, 2));
 console.log(`レポート: ${OUT}`);
