@@ -133,8 +133,25 @@ async function checkViaCreatorsApi(withUrl) {
     }
   }
 
-  /** オファーの有無と価格の有無は別物。価格が取れなくても出品があれば買える */
   const hasOffer = (item) => (item.offersV2?.listings || []).length > 0;
+  const hasPrice = (item) =>
+    typeof item.offersV2?.listings?.[0]?.price?.money?.amount === "number";
+
+  // 2026-08-16: ここは「価格が取れなくても出品があれば買える」と考えていた。
+  // だが実際の応答は
+  //   "listings": [ { "isBuyBoxWinner": true, "violatesMAP": false } ]
+  // で、価格キーごと無い。長さは1なので「オファーあり＝正常」に流れていた。
+  // これが 315件正常 / 破損0件 の中身で、全リンクの44%がこの状態だった。
+  //
+  // 富士錦 パワー森林香では、登録中の B001A4SC7I に価格が無く、
+  // 検索で出る B01L8B94O2 が ¥1,780（登録価格と同額）だった。同じ商品に
+  // ASINが2つあり、登録しているほうが死んでいる。読者は買えないページに
+  // 着地している疑いが濃い。
+  //
+  // ただし「価格が無い＝買えない」はまだ確証が薄い。しかも link-fix が
+  // 日曜7:00に自動でリンクを書き換えるため、いきなり破損に倒すと
+  // 131件が一斉に自動修正対象になる。まず警告として分離して観測する
+  const priceless = [];
 
   const classify = (p, item, errCode) => {
     if (!item) {
@@ -143,6 +160,9 @@ async function checkViaCreatorsApi(withUrl) {
     } else if (!hasOffer(item)) {
       broken.push({ product: p, result: { notFound: true, error: "取扱終了（オファー無し）" } });
       process.stdout.write(`  🚨 ${p.id} ${p.name.slice(0, 25)} → 取扱終了\n`);
+    } else if (!hasPrice(item)) {
+      priceless.push({ product: p, result: { error: "出品はあるが価格が返らない（取扱終了の疑い）" } });
+      process.stdout.write(`  ⚠️ ${p.id} ${p.name.slice(0, 25)} → 価格が返らない\n`);
     } else {
       ok.push(p);
       process.stdout.write(`  ✅ ${p.id} ${p.name.slice(0, 25)}\n`);
@@ -188,7 +208,7 @@ async function checkViaCreatorsApi(withUrl) {
     if (i + GETITEMS_BATCH < targets.length) await sleep(GETITEMS_DELAY);
   }
 
-  return { ok, broken, errors };
+  return { ok, broken, errors, priceless };
 }
 
 /** 旧方式。認証情報が無い環境向けのフォールバック */
@@ -270,7 +290,7 @@ async function main() {
     );
   }
 
-  const { ok, broken, errors } = useApi
+  const { ok, broken, errors, priceless = [] } = useApi
     ? await checkViaCreatorsApi(withUrl)
     : await checkViaHttp(withUrl);
 
@@ -287,6 +307,14 @@ async function main() {
   console.log(`✅ 正常: ${ok.length}件`);
   console.log(`🚨 リンク切れ: ${broken.length}件`);
   console.log(`⚠️ エラー: ${errors.length}件`);
+  if (priceless.length) {
+    console.log(`⚠️ 価格が返らない: ${priceless.length}件（取扱終了の疑い。読者が買えないページに着地している可能性）`);
+    for (const { product } of priceless.slice(0, 15)) {
+      console.log(`  ${product.id}: ${product.name.slice(0, 34)}`);
+    }
+    if (priceless.length > 15) console.log(`  … 他${priceless.length - 15}件（レポート参照）`);
+    console.log(`  代替ASINを探す: node scripts/lookup-amazon.mjs --product <id>`);
+  }
 
   if (broken.length > 0) {
     console.log("\n--- リンク切れ商品 ---");
@@ -351,6 +379,11 @@ async function main() {
     total: products.length,
     checked: withUrl.length,
     ok: ok.length,
+    priceless: priceless.map(({ product }) => ({
+      id: product.id,
+      name: product.name,
+      url: product.amazonUrl,
+    })),
     broken: broken.map(({ product }) => ({
       id: product.id,
       name: product.name,
