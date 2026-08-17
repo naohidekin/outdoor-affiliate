@@ -137,20 +137,25 @@ async function checkViaCreatorsApi(withUrl) {
   const hasPrice = (item) =>
     typeof item.offersV2?.listings?.[0]?.price?.money?.amount === "number";
 
-  // 2026-08-16: ここは「価格が取れなくても出品があれば買える」と考えていた。
-  // だが実際の応答は
+  // 2026-08-16: 全リンクの44%（134件）で価格が返らないことに気づき、
+  // 「登録ASINが死んでいて読者が買えないページに着地している」と考えた。
+  // **これは誤りだった。**
+  //
+  // 実際の応答は
   //   "listings": [ { "isBuyBoxWinner": true, "violatesMAP": false } ]
-  // で、価格キーごと無い。長さは1なので「オファーあり＝正常」に流れていた。
-  // これが 315件正常 / 破損0件 の中身で、全リンクの44%がこの状態だった。
+  // で価格キーごと無いが、B001A4SC7I（富士錦 パワー森林香）をブラウザで
+  // 開くと、レビュー9,494件・出品52件の現役ページで普通に買える。
+  // ページには「この商品は、Amazon.co.jp 以外の出品者から購入できます」
+  // とあり、Amazon本体のカートボックスが立っていない。
+  // Creators API はこの状態だと価格を返さないらしい。
+  // 加えてこのASINは 12巻/30巻 のバリエーション親でもあった
+  // （タイトルには選択肢が出ないので、タイトルからは判別できない）。
   //
-  // 富士錦 パワー森林香では、登録中の B001A4SC7I に価格が無く、
-  // 検索で出る B01L8B94O2 が ¥1,780（登録価格と同額）だった。同じ商品に
-  // ASINが2つあり、登録しているほうが死んでいる。読者は買えないページに
-  // 着地している疑いが濃い。
-  //
-  // ただし「価格が無い＝買えない」はまだ確証が薄い。しかも link-fix が
-  // 日曜7:00に自動でリンクを書き換えるため、いきなり破損に倒すと
-  // 131件が一斉に自動修正対象になる。まず警告として分離して観測する
+  // つまり価格が無いのはAPIの都合であって、リンクの健全性とは無関係。
+  // 元のコメント「オファーがあれば買える」のほうが正しかった。
+  // 破損には数えず、価格監査が使えない件数として記録するだけに留める。
+  // ここを破損に倒すと、健全な131件が link-fix（日曜7:00）に自動で
+  // 書き換えられる
   const priceless = [];
 
   const classify = (p, item, errCode) => {
@@ -161,8 +166,8 @@ async function checkViaCreatorsApi(withUrl) {
       broken.push({ product: p, result: { notFound: true, error: "取扱終了（オファー無し）" } });
       process.stdout.write(`  🚨 ${p.id} ${p.name.slice(0, 25)} → 取扱終了\n`);
     } else if (!hasPrice(item)) {
-      priceless.push({ product: p, result: { error: "出品はあるが価格が返らない（取扱終了の疑い）" } });
-      process.stdout.write(`  ⚠️ ${p.id} ${p.name.slice(0, 25)} → 価格が返らない\n`);
+      priceless.push({ product: p, result: { error: "価格が返らない（他出品者のみ／バリエーション親）" } });
+      process.stdout.write(`  ✅ ${p.id} ${p.name.slice(0, 25)}（価格は取得できず）\n`);
     } else {
       ok.push(p);
       process.stdout.write(`  ✅ ${p.id} ${p.name.slice(0, 25)}\n`);
@@ -295,7 +300,9 @@ async function main() {
     : await checkViaHttp(withUrl);
 
   // 監視が沈黙して壊れるのを防ぐ。8/9はこれが無くて全滅に気づけなかった
-  if (withUrl.length > 0 && ok.length === 0) {
+  // 価格が返らないものもリンクとしては正常なので、沈黙故障の判定には含める。
+  // 含めないと「全部マーケットプレイス出品」の日に誤警報が出る
+  if (withUrl.length > 0 && ok.length + priceless.length === 0) {
     console.log(
       "\n🛑 正常判定が1件もありません。チェック自体が壊れている可能性が高いです" +
         `（確認 ${withUrl.length}件 / エラー ${errors.length}件）`
@@ -304,16 +311,14 @@ async function main() {
 
   // レポート
   console.log("\n========== レポート ==========");
-  console.log(`✅ 正常: ${ok.length}件`);
+  console.log(`✅ 正常: ${ok.length + priceless.length}件（うち価格取得できず ${priceless.length}件）`);
   console.log(`🚨 リンク切れ: ${broken.length}件`);
   console.log(`⚠️ エラー: ${errors.length}件`);
   if (priceless.length) {
-    console.log(`⚠️ 価格が返らない: ${priceless.length}件（取扱終了の疑い。読者が買えないページに着地している可能性）`);
-    for (const { product } of priceless.slice(0, 15)) {
-      console.log(`  ${product.id}: ${product.name.slice(0, 34)}`);
-    }
-    if (priceless.length > 15) console.log(`  … 他${priceless.length - 15}件（レポート参照）`);
-    console.log(`  代替ASINを探す: node scripts/lookup-amazon.mjs --product <id>`);
+    console.log(
+      `ℹ️ 価格が返らない: ${priceless.length}件` +
+        `（リンクは正常。Amazon本体の出品が無い商品はAPIが価格を返さない。価格監査で使えないだけ）`
+    );
   }
 
   if (broken.length > 0) {
