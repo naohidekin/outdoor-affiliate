@@ -164,7 +164,18 @@ async function rakutenPrice(ref, productName) {
       // 打ち切りに数えるのは設定の問題（認証・IP制限）だけ。
       // shopCode が無効といった商品固有の400で全体を止めると、
       // 1件のデータ不備で残り122件の照合を失う（2026-08-11に発生）
-      const isAuth = /CLIENT_IP_NOT_ALLOWED/.test(body) || res.status === 401 || res.status === 403;
+      // 設定の問題は店舗をまたいで全部落ちる。商品固有のエラーに混ぜてはいけない。
+      //
+      // 2026-08-16: "API Configuration not found" が520件出たのに、これを
+      // 商品固有として1件ずつスキップし続け、楽天の価格が1件も取れないまま
+      // 完走した。レポートは正常な顔をしていて「安いほうに合わせる対象0件」
+      // という結論まで出した。実際は両モールが揃った商品が消えていただけ。
+      // 誤リンクの検出数も5件→3件に減ったが、これは改善ではなく
+      // 楽天側が見えなくなっただけだった
+      const isAuth =
+        /CLIENT_IP_NOT_ALLOWED|API Configuration not found|invalid.*applicationId/i.test(body) ||
+        res.status === 401 ||
+        res.status === 403;
       if (!isAuth) {
         if (++perItemErrors <= 5) {
           console.warn(`\n  楽天API ${res.status}（${ref.shopCode}）: ${body.slice(0, 120)}  ← この商品のみスキップ`);
@@ -517,6 +528,17 @@ if (APPLY) {
       ? "\n適用: --lowest --apply … 上の一覧を安いほうの価格に書き換えます"
       : "\n適用: --apply … 両モールが一致した分だけ登録価格を直します" +
           `\n      --lowest … 両モールが揃った${lowestTargets.length}件を安いほうに合わせる案を出します`
+  );
+}
+
+// 楽天が広範に落ちた回の結果で価格を判断すると、片方だけ見て決めることになる。
+// 「両モールが揃っている」前提が崩れているのに、見た目は完走したレポートになる
+const rakutenTargets = targets.filter((p) => rakutenRef(p.affiliateUrl)).length;
+if (rakutenTargets > 0 && perItemErrors > rakutenTargets * 0.2) {
+  console.log(
+    `\n🛑 楽天が広範に失敗しています（${perItemErrors}件 / 対象${rakutenTargets}件）。` +
+      `\n   この結果は楽天側が欠けた状態です。価格の判断・--apply は行わないでください。` +
+      `\n   楽天APIのアプリ設定（applicationId / accessKey）とIP許可リストを確認してください。`
   );
 }
 
