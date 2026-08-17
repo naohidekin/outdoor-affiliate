@@ -16,6 +16,8 @@
  *   node scripts/lookup-amazon.mjs --search "ロゴス USBシェードランタン 4連タイプ"
  *   node scripts/lookup-amazon.mjs --product tarp-007   # 商品名で検索し現リンクも引く
  *   node scripts/lookup-amazon.mjs --asin B0XXXX --raw  # APIの応答をそのまま出す
+ *   node scripts/lookup-amazon.mjs --asin B0XXXX --raw \
+ *     --resources itemInfo.title,offersV2.listings.price,offersV2.listings.availability
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -43,6 +45,10 @@ const argVal = (n) => {
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
 const RAW = argv.includes("--raw");
+// 価格が返らない原因を切り分けるため、要求するリソースを差し替えられるようにする。
+// 2026-08-16: 309件中134件で価格が返らず、うち親ASINで説明できるのは6件だけだった。
+// offersV2.listings.price 以外を要求すると何が返るのかを試したい
+const RESOURCES = (argVal("--resources") || "").split(",").map((x) => x.trim()).filter(Boolean);
 
 if (!hasCredentials()) {
   console.error("Creators API の認証情報がありません（.env.local を確認）");
@@ -76,7 +82,10 @@ if (productId) {
 if (asins.length) {
   console.log(`\n── ASIN直引き（${asins.length}件）──`);
   // getItems は配列ではなく { items, errors } を返す
-  const { items, errors } = await getItems(asins);
+  const { items, errors } = await getItems(
+    asins,
+    RESOURCES.length ? { resources: RESOURCES } : {}
+  );
   const got = new Set(items.map((it) => it.asin));
   for (const it of items) show(it);
   // 「引けなかった」を黙って落とさない。切り分けたいのはまさにそこ
