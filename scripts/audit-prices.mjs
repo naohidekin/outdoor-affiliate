@@ -32,7 +32,9 @@
  *   node scripts/audit-prices.mjs                 # 監査のみ（書き込まない）
  *   node scripts/audit-prices.mjs --limit 50      # 件数を絞って試す
  *   node scripts/audit-prices.mjs --ids tarp-007  # 特定商品の登録価格だけ確かめる
- *   node scripts/audit-prices.mjs --apply         # 確度の高いものだけ登録価格を直す
+ *   node scripts/audit-prices.mjs --apply         # 両モールが一致した分だけ直す
+ *   node scripts/audit-prices.mjs --lowest        # 両モールが揃っている商品の最安を提案
+ *   node scripts/audit-prices.mjs --lowest --apply
  *
  * --apply が直すのは「両モールの実売が10%以内で一致し、かつ登録価格から
  * 20%以上ずれている」ものだけ。片方しか取れないものは人間に回す。
@@ -62,6 +64,14 @@ const OUT = path.join(ROOT, "scratch", "price-audit.json");
 
 const argv = process.argv.slice(2);
 const APPLY = argv.includes("--apply");
+// 「両モールで実売が違うときは安いほうを表示する」方針（2026-08-16 決定）。
+//
+// ただし片方しか取れない商品には使えない。楽天だけ取れている商品は
+// その値が唯一の実売なので自動的に「最安」になるが、実際は転売出品の
+// ことがある（パイルドライバー 登録¥7,150 に対し楽天¥23,000＝322%。
+// 定価は7,000円台で、登録価格のほうが正しい）。
+// 両モールの値が揃っているものだけを対象にする
+const LOWEST = argv.includes("--lowest");
 const argVal = (n) => {
   const i = argv.indexOf(n);
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
@@ -437,6 +447,29 @@ console.log(
 );
 showList(noPriceUnknown, 10);
 
+// 両モールが揃っていて、安いほうが登録価格と10%以上ずれているもの。
+// 誤リンクの疑いがあるものは価格の話ではないので外す
+const lowestTargets = results
+  .filter((r) => r.sources === 2 && !r.wrongLink)
+  .map((r) => ({ ...r, lowest: Math.min(r.amazon, r.rakuten) }))
+  .filter((r) => Math.abs(r.lowest / r.registered - 1) >= 0.1)
+  .sort(byImpact);
+
+if (LOWEST) {
+  console.log(`\n── 安いほうに合わせる対象 ${lowestTargets.length}件（両モールが揃っているものだけ）──`);
+  for (const r of lowestTargets) {
+    console.log(
+      `  ${String(r.exposure).padStart(2)}記事  ${r.id.padEnd(30)} ${r.name.slice(0, 24).padEnd(26)}\n` +
+        `          登録¥${String(r.registered).padStart(7)}  →  ¥${String(r.lowest).padStart(7)}` +
+        `   Amazon:${yen(r.amazon)} 楽天:${yen(r.rakuten)}`
+    );
+  }
+  console.log(
+    `\n  ※ 片方しか取れない商品は対象外です。唯一の実売が転売高値のことがあり、` +
+      `\n    それを最安として書き込むと登録価格より悪化します`
+  );
+}
+
 console.log(`\n── 両モールが一致して登録価格とずれる ${confident.length}件（確度が高い）──`);
 for (const r of confident) console.log(fmt(r));
 
@@ -461,20 +494,30 @@ console.log(`    └ 片方のみ・要目視: ${single.length}件`);
 if (APPLY) {
   const ts = new Date().toISOString();
   const byId = new Map(products.map((p) => [p.id, p]));
+  const applySet = LOWEST
+    ? lowestTargets.map((r) => ({ id: r.id, to: r.lowest }))
+    : confident.map((r) => ({ id: r.id, to: r.market }));
   let n = 0;
-  for (const r of confident) {
+  for (const r of applySet) {
     const p = byId.get(r.id);
     if (!p) continue;
-    console.log(`  ¥${p.price} → ¥${r.market}  ${p.name.slice(0, 34)}`);
-    p.price = r.market;
+    console.log(`  ¥${p.price} → ¥${r.to}  ${p.name.slice(0, 34)}`);
+    p.price = r.to;
     p.updatedAt = ts; // 進めないと同期のauto-pullで巻き戻る
     n++;
   }
   fs.writeFileSync(PRODUCTS, JSON.stringify(products, null, 2));
-  console.log(`\nproducts.json 反映: ${n}件（両モール一致分のみ）`);
+  console.log(
+    `\nproducts.json 反映: ${n}件（${LOWEST ? "両モールが揃った商品の最安" : "両モール一致分のみ"}）`
+  );
   console.log("次: git diff で確認 → npm run db:sync -- --no-pull");
 } else {
-  console.log("\n適用: --apply … 両モールが一致した分だけ登録価格を直します");
+  console.log(
+    LOWEST
+      ? "\n適用: --lowest --apply … 上の一覧を安いほうの価格に書き換えます"
+      : "\n適用: --apply … 両モールが一致した分だけ登録価格を直します" +
+          `\n      --lowest … 両モールが揃った${lowestTargets.length}件を安いほうに合わせる案を出します`
+  );
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
