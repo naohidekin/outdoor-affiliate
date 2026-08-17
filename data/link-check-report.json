@@ -1,11 +1,23 @@
 {
   "deadVideos": [],
-  "checkedAt": "2026-08-10T14:01:26.767Z",
-  "total": 383,
-  "checked": 350,
-  "ok": 315,
+  "checkedAt": "2026-08-15T22:15:01.674Z",
+  "total": 392,
+  "checked": 357,
+  "ok": 0,
   "broken": [],
   "errors": [
+    {
+      "id": "fire-blower-bushcraft",
+      "name": "ブッシュクラフト ファイヤーブラスター 折りたたみ式 本革ケース付き",
+      "url": "https://www.amazon.co.jp/s?k=%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88+%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC+%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "kettle-coleman-packaway",
+      "name": "コールマン パッカウェイケトル",
+      "url": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
     {
       "id": "first-aid-burn-aid",
       "name": "バーンエイド やけど用救急絆創膏 湿潤ドレッシング材",
@@ -13,9 +25,9 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
-      "id": "fire-blower-bushcraft",
-      "name": "ブッシュクラフト ファイヤーブラスター 折りたたみ式 本革ケース付き",
-      "url": "https://www.amazon.co.jp/s?k=%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88+%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC+%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF&tag=camp78-22",
+      "id": "led-tent-005",
+      "name": "ブラックダイヤモンド オービター650 BD81042",
+      "url": "https://www.amazon.co.jp/s?k=%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%E3%83%80%E3%82%A4%E3%83%A4%E3%83%A2%E3%83%B3%E3%83%89%20%E3%82%AA%E3%83%BC%E3%83%93%E3%82%BF%E3%83%BC650&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -28,12 +40,6 @@
       "id": "spice-box-wood-rack",
       "name": "CAMPER 木製スパイスラック",
       "url": "https://www.amazon.co.jp/s?k=%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97+%E6%9C%A8%E8%A3%BD+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9+%E3%83%A9%E3%83%83%E3%82%AF&tag=camp78-22",
-      "reason": "検索URL（ASIN未確定）"
-    },
-    {
-      "id": "kettle-coleman-packaway",
-      "name": "コールマン パッカウェイケトル",
-      "url": "https://www.amazon.co.jp/s?k=コールマン+パッカウェイケトル&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -61,12 +67,6 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
-      "id": "led-tent-005",
-      "name": "ブラックダイヤモンド オービター650 BD81042",
-      "url": "https://www.amazon.co.jp/s?k=%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%E3%83%80%E3%82%A4%E3%83%A4%E3%83%A2%E3%83%B3%E3%83%89%20%E3%82%AA%E3%83%BC%E3%83%93%E3%82%BF%E3%83%BC650&tag=camp78-22",
-      "reason": "検索URL（ASIN未確定）"
-    },
-    {
       "id": "cooler-028",
       "name": "円網堂 ポータブル車載冷蔵冷凍庫",
       "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E9%A0%98%E5%8F%8E%E6%9B%B8%E7%99%BA%E8%A1%8C%E5%8F%AF%E3%80%91%E5%86%B7%E8%94%B5%20%E5%86%B7%E5%87%8D%20%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E5%A4%A7%E5%9E%8B%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E3%83%8F%E3%83%BC%E3%83%89%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E3%81%8A%E3%81%99%E3%81%99%E3%82%81%20%E5%86%B7%E5%87%8D%E5%BA%AB%20%E5%B0%8F%E5%9E%8B%20%E5%86%B7%E5%87%8D%E5%BA%AB%20%E8%BB%8A%E8%BC%89%E5%86%B7%E8%94%B5%E5%BA%AB%20%E8%BB%8A%E8%BC%89%E5%86%B7%E5%87%8D%E5%BA%AB%20%E5%86%B7%E5%87%8D%E3%82%B9%E3%83%88%E3%83%83%E3%82%AB%E3%83%BC%20%E9%87%A3%E3%82%8A%20%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB%E5%86%B7%E8%94%B5%E5%BA%AB%20%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB%E5%86%B7%E5%87%8D%E5%BA%AB%20%E8%BB%8A%E4%B8%AD%E6%B3%8A%20%E3%83%90%E3%83%BC%E3%83%99%E3%82%AD%E3%83%A5%E3%83%BC%20BBQ%20%E4%BA%BA%E6%B0%97%20%E9%81%93%E5%85%B7%20%E3%82%B0%E3%83%83%E3%82%BA%20%E7%94%A8%E5%85%B7%20%E3%83%84%E3%83%BC%E3%83%AB&tag=camp78-22",
@@ -85,6 +85,12 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
+      "id": "backpack-002",
+      "name": "ELMU 登山リュック 30L（レインカバー付属）",
+      "url": "https://www.amazon.co.jp/s?k=ELMU%20%E7%99%BB%E5%B1%B1%E3%83%AA%E3%83%A5%E3%83%83%E3%82%AF%2030L%EF%BC%88%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%AB%E3%83%90%E3%83%BC%E4%BB%98%E5%B1%9E%EF%BC%89&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
       "id": "heatstroke-cooling-towel",
       "name": "冷感タオル クールタオル PVA素材 瞬間冷却 繰り返し使用可",
       "url": "https://www.amazon.co.jp/s?k=冷感タオル+クールタオル+PVA+キャンプ&tag=camp78-22",
@@ -100,12 +106,6 @@
       "id": "led-tent-003",
       "name": "コールマン アウトドアクリップライトファン 2236305",
       "url": "https://www.amazon.co.jp/s?k=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%AF%E3%83%AA%E3%83%83%E3%83%97%E3%83%A9%E3%82%A4%E3%83%88%E3%83%95%E3%82%A1%E3%83%B3%202236305&tag=camp78-22",
-      "reason": "検索URL（ASIN未確定）"
-    },
-    {
-      "id": "backpack-002",
-      "name": "ELMU 登山リュック 30L（レインカバー付属）",
-      "url": "https://www.amazon.co.jp/s?k=ELMU%20%E7%99%BB%E5%B1%B1%E3%83%AA%E3%83%A5%E3%83%83%E3%82%AF%2030L%EF%BC%88%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%AB%E3%83%90%E3%83%BC%E4%BB%98%E5%B1%9E%EF%BC%89&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -145,9 +145,27 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
+      "id": "fan-007",
+      "name": "【在庫有】 扇風機 携帯扇風機 ハンディファン ポケット 4008897-01 携帯 卓上 手持 小型扇風機 ハンディ扇風機 手持ち扇風機 ミニ扇風機 USB 軽量 コンパクト 小型 充電式コードレス",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E5%9C%A8%E5%BA%AB%E6%9C%89%E3%80%91%20%E6%89%87%E9%A2%A8%E6%A9%9F%20%E6%90%BA%E5%B8%AF%E6%89%87%E9%A2%A8%E6%A9%9F%20%E3%83%8F%E3%83%B3%E3%83%87%E3%82%A3%E3%83%95%E3%82%A1%E3%83%B3%20%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%204008897-01%20%E6%90%BA%E5%B8%AF%20%E5%8D%93%E4%B8%8A%20%E6%89%8B%E6%8C%81%20%E5%B0%8F%E5%9E%8B%E6%89%87%E9%A2%A8%E6%A9%9F%20%E3%83%8F%E3%83%B3%E3%83%87%E3%82%A3%E6%89%87%E9%A2%A8%E6%A9%9F%20%E6%89%8B%E6%8C%81%E3%81%A1%E6%89%87%E9%A2%A8%E6%A9%9F%20%E3%83%9F%E3%83%8B%E6%89%87%E9%A2%A8%E6%A9%9F%20USB%20%E8%BB%BD%E9%87%8F%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E5%B0%8F%E5%9E%8B%20%E5%85%85%E9%9B%BB%E5%BC%8F%E3%82%B3%E3%83%BC%E3%83%89%E3%83%AC%E3%82%B9%20%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%81%8B%E3%82%8F%E3%81%84%E3%81%84%20%E5%8F%8E%E7%B4%8D%E3%81%97%E3%82%84%E3%81%99%E3%81%84%20%E6%8C%81%E3%81%A1%E9%81%8B%E3%81%B3%20%E7%86%B1%E4%B8%AD%E7%97%87%E5%AF%BE%E7%AD%96&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
       "id": "insect-repellent-021",
       "name": "5050WORKSHOP アロマネブライザー（コードレス）",
       "url": "https://www.amazon.co.jp/s?k=%E3%80%9010%EF%BC%85OFF%E3%82%AF%E3%83%BC%E3%83%9D%E3%83%B3%E3%80%91%E3%82%A2%E3%83%AD%E3%83%9E%E3%83%8D%E3%83%96%E3%83%A9%E3%82%A4%E3%82%B6%E3%83%BC%205050workshop%20AROMA%20NEBURIZER%EF%BC%885050%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%83%E3%83%97%20%E3%82%A2%E3%83%AD%E3%83%9E%E3%83%87%E3%82%A3%E3%83%95%E3%83%A5%E3%83%BC%E3%82%B6%E3%83%BC%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E8%99%AB%E3%82%88%E3%81%91%20%E3%82%B3%E3%83%BC%E3%83%89%E3%83%AC%E3%82%B9%20%E3%82%A2%E3%83%AD%E3%83%9E%E3%82%AA%E3%82%A4%E3%83%AB%E5%AF%BE%E5%BF%9C%20%E3%83%90%E3%83%83%E3%83%86%E3%83%AA%E3%83%BC%E5%BC%8F%20USB%20%E3%83%90%E3%83%83%E3%83%86%E3%83%AA%E3%83%BC%20%E6%8C%81%E3%81%A1%E9%81%8B%E3%81%B3%20%E9%A6%99%E3%82%8A%20%E3%83%9F%E3%82%B9%E3%83%88%20%E3%82%A8%E3%83%83%E3%82%BB%E3%83%B3%E3%82%B7%E3%83%A3%E3%83%AB%E3%82%AA%E3%82%A4%E3%83%AB%20%E5%85%85%E9%9B%BB%EF%BC%89%E3%80%90%E9%80%81%E6%96%99%E7%84%A1%E6%96%99%E3%80%91&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "fan-008",
+      "name": "★クーポンで3938円★即納★ 折りたたみ扇風機 扇風機 コードレス 4段風量調節 リモコン付き 左右90°自動首振り 上下180°角度調節 8Hタイマー 5400MAH USB充電式 7段階高さ調節",
+      "url": "https://www.amazon.co.jp/s?k=%E2%98%85%E3%82%AF%E3%83%BC%E3%83%9D%E3%83%B3%E3%81%A73938%E5%86%86%E2%98%85%E5%8D%B3%E7%B4%8D%E2%98%85%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E6%89%87%E9%A2%A8%E6%A9%9F%20%E6%89%87%E9%A2%A8%E6%A9%9F%20%E3%82%B3%E3%83%BC%E3%83%89%E3%83%AC%E3%82%B9%204%E6%AE%B5%E9%A2%A8%E9%87%8F%E8%AA%BF%E7%AF%80%20%E3%83%AA%E3%83%A2%E3%82%B3%E3%83%B3%E4%BB%98%E3%81%8D%20%E5%B7%A6%E5%8F%B390%C2%B0%E8%87%AA%E5%8B%95%E9%A6%96%E6%8C%AF%E3%82%8A%20%E4%B8%8A%E4%B8%8B180%C2%B0%E8%A7%92%E5%BA%A6%E8%AA%BF%E7%AF%80%208H%E3%82%BF%E3%82%A4%E3%83%9E%E3%83%BC%205400MAH%20USB%E5%85%85%E9%9B%BB%E5%BC%8F%207%E6%AE%B5%E9%9A%8E%E9%AB%98%E3%81%95%E8%AA%BF%E7%AF%80%20%E5%88%86%E8%A7%A3%E6%B4%97%E6%B5%84%E5%8F%AF%E8%83%BD%20%E9%9D%99%E9%9F%B3%20%E8%BB%BD%E9%87%8F%20%E6%8C%81%E3%81%A1%E9%81%8B%E3%81%B3%20%E5%8F%8E%E7%B4%8D%E4%BE%BF%E5%88%A9%20%E5%8D%93%E4%B8%8A%E7%94%A8%20%E5%BA%8A%E7%BD%AE%E3%81%8D%20%E5%AE%B6%E5%BA%AD%E7%94%A8%20%E8%81%B7%E5%A0%B4%E7%94%A8%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%81%8A%E7%9B%86%E3%81%AE%E6%97%85%E8%A1%8C&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "insect-repellent-022",
+      "name": "かぶる蚊帳◎帽子の上から被るだけ！虫除けヘッドネット 虫除け 虫よけ 防虫 虫 虫よけネット 防虫ネット ヘッドネット フェイスガード アウトドア レジャー キャンプ 釣り 登山 ハイキング 屋外 作",
+      "url": "https://www.amazon.co.jp/s?k=%E3%81%8B%E3%81%B6%E3%82%8B%E8%9A%8A%E5%B8%B3%E2%97%8E%E5%B8%BD%E5%AD%90%E3%81%AE%E4%B8%8A%E3%81%8B%E3%82%89%E8%A2%AB%E3%82%8B%E3%81%A0%E3%81%91%EF%BC%81%E8%99%AB%E9%99%A4%E3%81%91%E3%83%98%E3%83%83%E3%83%89%E3%83%8D%E3%83%83%E3%83%88%20%E8%99%AB%E9%99%A4%E3%81%91%20%E8%99%AB%E3%82%88%E3%81%91%20%E9%98%B2%E8%99%AB%20%E8%99%AB%20%E8%99%AB%E3%82%88%E3%81%91%E3%83%8D%E3%83%83%E3%83%88%20%E9%98%B2%E8%99%AB%E3%83%8D%E3%83%83%E3%83%88%20%E3%83%98%E3%83%83%E3%83%89%E3%83%8D%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A7%E3%82%A4%E3%82%B9%E3%82%AC%E3%83%BC%E3%83%89%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%83%AC%E3%82%B8%E3%83%A3%E3%83%BC%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E9%87%A3%E3%82%8A%20%E7%99%BB%E5%B1%B1%20%E3%83%8F%E3%82%A4%E3%82%AD%E3%83%B3%E3%82%B0%20%E5%B1%8B%E5%A4%96%20%E4%BD%9C%E6%A5%AD%20%E5%9C%92%E8%8A%B8%20%E3%82%AC%E3%83%BC%E3%83%87%E3%83%8B%E3%83%B3%E3%82%B0%20%E8%BE%B2%E4%BD%9C%E6%A5%AD%20%E5%A4%8F%20%E3%83%A2%E3%82%B9%E3%82%AD%E3%83%BC%E3%83%88%E3%83%8D%E3%83%83%E3%83%88%20%E9%A1%94%20%E9%A6%96%20%E3%83%A1%E3%83%BC%E3%83%AB%E4%BE%BF&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -169,9 +187,45 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
+      "id": "insect-repellent-023",
+      "name": "[ 選べる4タイプ ] 虫よけスプレー BPEファブリックスプレープロユースX5 100mL バグプロテクター BUG PROTECTOR　 虫よけ スプレータイプ アウトドア キャンプ 登山 釣り ",
+      "url": "https://www.amazon.co.jp/s?k=%5B%20%E9%81%B8%E3%81%B9%E3%82%8B4%E3%82%BF%E3%82%A4%E3%83%97%20%5D%20%E8%99%AB%E3%82%88%E3%81%91%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%20BPE%E3%83%95%E3%82%A1%E3%83%96%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%E3%83%97%E3%83%AD%E3%83%A6%E3%83%BC%E3%82%B9X5%20100mL%20%E3%83%90%E3%82%B0%E3%83%97%E3%83%AD%E3%83%86%E3%82%AF%E3%82%BF%E3%83%BC%20BUG%20PROTECTOR%E3%80%80%20%E8%99%AB%E3%82%88%E3%81%91%20%E3%82%B9%E3%83%97%E3%83%AC%E3%83%BC%E3%82%BF%E3%82%A4%E3%83%97%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E7%99%BB%E5%B1%B1%20%E9%87%A3%E3%82%8A%20%E3%82%AC%E3%83%BC%E3%83%87%E3%83%8B%E3%83%B3%E3%82%B0%20%E3%83%96%E3%83%A8%20%E3%83%A4%E3%83%9E%E3%83%93%E3%83%AB%20%E5%AE%B3%E8%99%AB%E5%AF%BE%E7%AD%96%20%E5%A4%A9%E7%84%B6%E7%94%B1%E6%9D%A5&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "insect-repellent-024",
+      "name": "屋外 蚊よけ 最強 強力 蚊取り線香 パワー森林香 赤函 3個セット 30巻入 グッズ 携帯 キャンプ 虫除け おしゃれ 防虫線香 防虫対策 ブヨ アブ",
+      "url": "https://www.amazon.co.jp/s?k=%E5%B1%8B%E5%A4%96%20%E8%9A%8A%E3%82%88%E3%81%91%20%E6%9C%80%E5%BC%B7%20%E5%BC%B7%E5%8A%9B%20%E8%9A%8A%E5%8F%96%E3%82%8A%E7%B7%9A%E9%A6%99%20%E3%83%91%E3%83%AF%E3%83%BC%E6%A3%AE%E6%9E%97%E9%A6%99%20%E8%B5%A4%E5%87%BD%203%E5%80%8B%E3%82%BB%E3%83%83%E3%83%88%2030%E5%B7%BB%E5%85%A5%20%E3%82%B0%E3%83%83%E3%82%BA%20%E6%90%BA%E5%B8%AF%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E8%99%AB%E9%99%A4%E3%81%91%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E9%98%B2%E8%99%AB%E7%B7%9A%E9%A6%99%20%E9%98%B2%E8%99%AB%E5%AF%BE%E7%AD%96%20%E3%83%96%E3%83%A8%20%E3%82%A2%E3%83%96&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
       "id": "tumbler-007",
       "name": "スタンレー クエンチャー用 スピルストッパーセット (9点)",
       "url": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%AF%E3%82%A8%E3%83%B3%E3%83%81%E3%83%A3%E3%83%BC+%E3%82%B9%E3%83%88%E3%83%83%E3%83%91%E3%83%BC&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "tarp-014",
+      "name": "ビオレ UV アクアリッチ アクア プロテクト ローション 70ml SPF50+ PA++++ 日焼け止め 水 軽い 保湿 ウォータープルーフ 通勤 通学 運動 スポーツ ビオレ biore 花王",
+      "url": "https://www.amazon.co.jp/s?k=%E3%83%93%E3%82%AA%E3%83%AC%20UV%20%E3%82%A2%E3%82%AF%E3%82%A2%E3%83%AA%E3%83%83%E3%83%81%20%E3%82%A2%E3%82%AF%E3%82%A2%20%E3%83%97%E3%83%AD%E3%83%86%E3%82%AF%E3%83%88%20%E3%83%AD%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%2070ml%20SPF50%2B%20PA%2B%2B%2B%2B%20%E6%97%A5%E7%84%BC%E3%81%91%E6%AD%A2%E3%82%81%20%E6%B0%B4%20%E8%BB%BD%E3%81%84%20%E4%BF%9D%E6%B9%BF%20%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%97%E3%83%AB%E3%83%BC%E3%83%95%20%E9%80%9A%E5%8B%A4%20%E9%80%9A%E5%AD%A6%20%E9%81%8B%E5%8B%95%20%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%84%20%E3%83%93%E3%82%AA%E3%83%AC%20biore%20%E8%8A%B1%E7%8E%8B&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "tarp-015",
+      "name": "【半額クーポン対象】カーブパンツ ワイドパンツ センタープレス ハイウエスト カジュアル オフィス レディース おすすめ おしゃれ メール便 2026春夏新作【lsbtss24-897】【即納：1-5",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E5%8D%8A%E9%A1%8D%E3%82%AF%E3%83%BC%E3%83%9D%E3%83%B3%E5%AF%BE%E8%B1%A1%E3%80%91%E3%82%AB%E3%83%BC%E3%83%96%E3%83%91%E3%83%B3%E3%83%84%20%E3%83%AF%E3%82%A4%E3%83%89%E3%83%91%E3%83%B3%E3%83%84%20%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%E3%83%AC%E3%82%B9%20%E3%83%8F%E3%82%A4%E3%82%A6%E3%82%A8%E3%82%B9%E3%83%88%20%E3%82%AB%E3%82%B8%E3%83%A5%E3%82%A2%E3%83%AB%20%E3%82%AA%E3%83%95%E3%82%A3%E3%82%B9%20%E3%83%AC%E3%83%87%E3%82%A3%E3%83%BC%E3%82%B9%20%E3%81%8A%E3%81%99%E3%81%99%E3%82%81%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%83%A1%E3%83%BC%E3%83%AB%E4%BE%BF%202026%E6%98%A5%E5%A4%8F%E6%96%B0%E4%BD%9C%E3%80%90lsbtss24-897%E3%80%91%E3%80%90%E5%8D%B3%E7%B4%8D%EF%BC%9A1-5%E5%96%B6%E6%A5%AD%E6%97%A5%E3%80%91%E3%80%90%E9%80%81%E6%96%99%E7%84%A1%E6%96%99%E3%80%91%E3%83%A1%E8%BE%BC2&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "tarp-016",
+      "name": "サンサーフ アロハシャツ スペシャルエディション 2026春夏 新作 SS39477 SUN SURF 東洋エンタープライズ THE SPACE SHIP 宇宙 スペースシップ ハワイアンシャツ 半袖",
+      "url": "https://www.amazon.co.jp/s?k=%E3%82%B5%E3%83%B3%E3%82%B5%E3%83%BC%E3%83%95%20%E3%82%A2%E3%83%AD%E3%83%8F%E3%82%B7%E3%83%A3%E3%83%84%20%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E3%82%A8%E3%83%87%E3%82%A3%E3%82%B7%E3%83%A7%E3%83%B3%202026%E6%98%A5%E5%A4%8F%20%E6%96%B0%E4%BD%9C%20SS39477%20SUN%20SURF%20%E6%9D%B1%E6%B4%8B%E3%82%A8%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%E3%83%A9%E3%82%A4%E3%82%BA%20THE%20SPACE%20SHIP%20%E5%AE%87%E5%AE%99%20%E3%82%B9%E3%83%9A%E3%83%BC%E3%82%B9%E3%82%B7%E3%83%83%E3%83%97%20%E3%83%8F%E3%83%AF%E3%82%A4%E3%82%A2%E3%83%B3%E3%82%B7%E3%83%A3%E3%83%84%20%E5%8D%8A%E8%A2%96%20%E3%82%AA%E3%83%BC%E3%83%97%E3%83%B3%E3%82%AB%E3%83%A9%E3%83%BC%20%E9%96%8B%E8%A5%9F%20%E6%97%A5%E6%9C%AC%E8%A3%BD%20%E3%83%AC%E3%83%BC%E3%83%A8%E3%83%B3%20%E3%82%A2%E3%83%A1%E3%82%AB%E3%82%B8%20%E3%83%A1%E3%83%B3%E3%82%BA%20%E5%A4%A7%E4%BA%BA%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%83%8D%E3%82%A4%E3%83%93%E3%83%BC%20%E3%83%96%E3%83%A9%E3%82%A6%E3%83%B3%20S-XXL&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "fan-009",
+      "name": "【2026新登場】キャンプ 扇風機 小型 アウトドア ミストファン 10L水タンク 20000mAh大容量 自動首振り 風量4段階調節 4段階ミスト調節 DCモーター 卓上 置き型 吊り下げ コードレ",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%902026%E6%96%B0%E7%99%BB%E5%A0%B4%E3%80%91%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E6%89%87%E9%A2%A8%E6%A9%9F%20%E5%B0%8F%E5%9E%8B%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%83%9F%E3%82%B9%E3%83%88%E3%83%95%E3%82%A1%E3%83%B3%2010L%E6%B0%B4%E3%82%BF%E3%83%B3%E3%82%AF%2020000mAh%E5%A4%A7%E5%AE%B9%E9%87%8F%20%E8%87%AA%E5%8B%95%E9%A6%96%E6%8C%AF%E3%82%8A%20%E9%A2%A8%E9%87%8F4%E6%AE%B5%E9%9A%8E%E8%AA%BF%E7%AF%80%204%E6%AE%B5%E9%9A%8E%E3%83%9F%E3%82%B9%E3%83%88%E8%AA%BF%E7%AF%80%20DC%E3%83%A2%E3%83%BC%E3%82%BF%E3%83%BC%20%E5%8D%93%E4%B8%8A%20%E7%BD%AE%E3%81%8D%E5%9E%8B%20%E5%90%8A%E3%82%8A%E4%B8%8B%E3%81%92%20%E3%82%B3%E3%83%BC%E3%83%89%E3%83%AC%E3%82%B9%20USB%E5%85%85%E9%9B%BB%E5%BC%8F%20%E3%83%AA%E3%83%A2%E3%82%B3%E3%83%B3%E4%BB%98%E3%81%8D%20%E9%81%A0%E9%9A%94%E6%93%8D%E4%BD%9C%20LED%E3%83%A9%E3%82%A4%E3%83%88%20RGB%E3%83%A9%E3%82%A4%E3%83%88%20%E9%9D%99%E9%9F%B3%20%E8%BB%8A%E4%B8%AD%E6%B3%8A%20%E9%9C%A7%E5%90%B9%E3%81%8D%20%E9%87%A3%E3%82%8A%20%E6%9A%91%E3%81%95%E5%AF%BE%E7%AD%96&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -215,6 +269,1884 @@
       "name": "WILMART USB・ソーラー充電式 LEDランタン",
       "url": "https://www.amazon.co.jp/s?k=WILMART%20USB%E3%83%BB%E3%82%BD%E3%83%BC%E3%83%A9%E3%83%BC%E5%85%85%E9%9B%BB%E5%BC%8F%20LED%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "firepit-tokyocamp",
+      "name": "Tokyo Camp焚火台",
+      "url": "https://www.amazon.co.jp/dp/B09726YGXG/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "water-jug-stanley-7.5l",
+      "name": "スタンレー ウォータージャグ 7.5L",
+      "url": "https://www.amazon.co.jp/dp/B07N9MC6LZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-sp-landnest-dome-m",
+      "name": "スノーピーク ランドネストドームM",
+      "url": "https://www.amazon.co.jp/dp/B0CMQ1DM2V?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "jackery-1000-new",
+      "name": "Jackery ポータブル電源 1000 New",
+      "url": "https://www.amazon.co.jp/dp/B0D3HJM175?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "viral-scout-1778961985579-bwqy",
+      "name": "ボウモア 15年 700ml",
+      "url": "https://www.amazon.co.jp/dp/B0045WIEVQ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cot-waq-2way",
+      "name": "WAQ 2WAYフォールディングコット",
+      "url": "https://www.amazon.co.jp/dp/B083ZWDCXN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-001",
+      "name": "コールマン 54QT スチールベルトクーラー",
+      "url": "https://www.amazon.co.jp/dp/B01GJBGX54?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-006",
+      "name": "サンライン おにやんま君",
+      "url": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-003",
+      "name": "スノーピーク エントリーIGT",
+      "url": "https://www.amazon.co.jp/dp/B0C3W5K15K?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "knife-004",
+      "name": "オピネル フォールディングナイフ No.8 ステンレス",
+      "url": "https://www.amazon.co.jp/dp/B0811Q8VN7/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-007",
+      "name": "ライオンケミカル LT 虫よけスプレー 無香料 180ml",
+      "url": "https://www.amazon.co.jp/dp/B003MOZNSU?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "growler-002",
+      "name": "ドリンクタンクス グロウラー 64oz (1.9L)",
+      "url": "https://www.amazon.co.jp/dp/B07QDYYZ4B?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cot-naturehike-greenfield",
+      "name": "Naturehike Greenfield コット",
+      "url": "https://www.amazon.co.jp/dp/B088K9B7CV?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "anker-solix-c1000-gen2",
+      "name": "Anker Solix C1000 Gen 2",
+      "url": "https://www.amazon.co.jp/dp/B0FK9YH385?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sierra-cup-uniflame",
+      "name": "ユニフレーム UFシェラカップ300 667743",
+      "url": "https://www.amazon.co.jp/dp/B007FFSUVY?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-026",
+      "name": "HiKOKI 18V コードレス冷温庫 UL18DBA（電池2個セット）",
+      "url": "https://www.amazon.co.jp/dp/B0GRZYTW1B/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-006",
+      "name": "Jetboil フラッシュ",
+      "url": "https://www.amazon.co.jp/dp/B07B2ST913/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-004",
+      "name": "GSH ソーラーLEDランタン（ミニファン付き）",
+      "url": "https://www.amazon.co.jp/dp/B088T5Q8YM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-makita-cf102dz",
+      "name": "マキタ CF102DZ",
+      "url": "https://www.amazon.co.jp/dp/B07CPFPT2P?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "pillow-logos-camp-pillow",
+      "name": "ロゴス キャンプピロー（マイクロファイバー）",
+      "url": "https://www.amazon.co.jp/dp/B0FR9JW26T/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-ecoflow-wave3",
+      "name": "EcoFlow WAVE 3",
+      "url": "https://www.amazon.co.jp/dp/B0DX7594CS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-solo-003",
+      "name": "コールマン ツーリングドーム ST",
+      "url": "https://www.amazon.co.jp/dp/B07NQQTCS1?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "neck-sony-reonpocket5",
+      "name": "Sony REON POCKET 6",
+      "url": "https://www.amazon.co.jp/dp/B0GTLBDP65?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "screen-tarp-coleman-400plus",
+      "name": "コールマン タフスクリーンタープ/400+",
+      "url": "https://www.amazon.co.jp/dp/B079LGZ62L?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-duo-004",
+      "name": "モンベル クロノスドーム 2型",
+      "url": "https://www.amazon.co.jp/dp/B00U7V4QM0?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-012",
+      "name": "スモア（Smore） チタンマグカップ 550ml 蓋付き シングルウォール",
+      "url": "https://www.amazon.co.jp/dp/B09J4NZJ8V?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "neck-thanko-lite",
+      "name": "THANKO ネッククーラーLite",
+      "url": "https://www.amazon.co.jp/dp/B0GK7GH9ML?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bluetti-eb3a",
+      "name": "BLUETTI EB3A",
+      "url": "https://www.amazon.co.jp/dp/B09XWNYZFG?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heatstroke-wbgt-meter",
+      "name": "熱中症指数計 WBGT計 温湿度計 アウトドア キャンプ用",
+      "url": "https://www.amazon.co.jp/dp/B0FDKSPXV2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-010",
+      "name": "VECELO 折りたたみアウトドアチェア（耐荷重150kg）",
+      "url": "https://www.amazon.co.jp/dp/B0CLR33LT8/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-007",
+      "name": "キャプテンスタッグ コンパクトガスツーバーナーコンロ M-8249",
+      "url": "https://www.amazon.co.jp/dp/B093CR21VB/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "lantern-stand-002",
+      "name": "コールマン ランタンスタンドIV 2000031266",
+      "url": "https://www.amazon.co.jp/dp/B01N23BHLY/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-iris-ipp2222g",
+      "name": "アイリスオーヤマ ポータブルクーラー IPP-2222G",
+      "url": "https://www.amazon.co.jp/dp/B0B41DJPZJ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "pillow-nemo-fillo-elite",
+      "name": "NEMO フィロ エリート",
+      "url": "https://www.amazon.co.jp/dp/B0DK7PR83X?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-kids-001",
+      "name": "コールマン キッズマミーアジャスタブル/C4",
+      "url": "https://www.amazon.co.jp/dp/B01ABDVVW6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "shoes-005",
+      "name": "モンベル タイオガブーツ",
+      "url": "https://www.amazon.co.jp/dp/B00F83RIJA?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-004",
+      "name": "スノーピーク ローチェア30",
+      "url": "https://www.amazon.co.jp/dp/B0BV6F52XG?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-001",
+      "name": "ヘリノックス チェアワン",
+      "url": "https://www.amazon.co.jp/dp/B00U72QEFQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-nanga-001",
+      "name": "NANGA オーロラテックスライト 450DX",
+      "url": "https://www.amazon.co.jp/dp/B0DGB651NS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "lantern-stand-004",
+      "name": "キャプテンスタッグ アルミスライドランタンスタンド UF-4",
+      "url": "https://www.amazon.co.jp/dp/B088H99FSQ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-kids-004",
+      "name": "ロゴス 丸洗い寝袋ウォーマー0",
+      "url": "https://www.amazon.co.jp/dp/B0FZLDPP35?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sierra-cup-snowpeak",
+      "name": "スノーピーク チタンシェラカップ E-104",
+      "url": "https://www.amazon.co.jp/dp/B08DKM41CN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "mat-waq-8cm",
+      "name": "WAQ インフレータブル式マット 8cm",
+      "url": "https://www.amazon.co.jp/dp/B08WPRC6Y1?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-008",
+      "name": "ユニフレーム UL-X フォールディングランタン",
+      "url": "https://www.amazon.co.jp/dp/B001QV4GP2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tumbler-003",
+      "name": "Hydro Flask All Around Tumbler 32oz",
+      "url": "https://www.amazon.co.jp/dp/B0FKLG7YRR/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "kettle-trangia-06",
+      "name": "トランギア ケトル0.6L（TR-325）",
+      "url": "https://www.amazon.co.jp/dp/B08LVDPKCJ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cot-helinox-cot-one",
+      "name": "Helinox コットワン コンバーチブル",
+      "url": "https://www.amazon.co.jp/dp/B095PZP4ZM?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f02",
+      "name": "DOD カマボコテント3 M",
+      "url": "https://www.amazon.co.jp/dp/B0CPLD4LNN/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-003",
+      "name": "SOTO レギュレーターストーブ ST-310",
+      "url": "https://www.amazon.co.jp/dp/B07N9B96L2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-003",
+      "name": "スノーピーク 焚火台L",
+      "url": "https://www.amazon.co.jp/dp/B08HMPH45X?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "hammock-unigear",
+      "name": "Unigear ハンモック パラシュートナイロン 2人用",
+      "url": "https://www.amazon.co.jp/dp/B07G147SFV/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-nanga-002",
+      "name": "NANGA オーロラテックスライト 600DX",
+      "url": "https://www.amazon.co.jp/dp/B07VDN6TMD?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooker-004",
+      "name": "スノーピーク チタントレック 900",
+      "url": "https://www.amazon.co.jp/dp/B000AR2N3K/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-003",
+      "name": "児玉兄弟商会 携帯防虫器（森林香専用ケース）",
+      "url": "https://www.amazon.co.jp/dp/B001A4KL86?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "co-detector-coalan-cl715",
+      "name": "新コスモス電機 アウトドア用一酸化炭素アラーム COALAN CL-715",
+      "url": "https://www.amazon.co.jp/dp/B0CQ1SN7T1/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-i-collect-10010577",
+      "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
+      "url": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-sp-amenity-dome-l",
+      "name": "スノーピーク アメニティドーム L",
+      "url": "https://www.amazon.co.jp/dp/B07DH5DHVM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-012",
+      "name": "キャプテンスタッグ ガスランタン M UB-3021",
+      "url": "https://www.amazon.co.jp/dp/B000AR4VZ8/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-005",
+      "name": "ユニフレーム REVOタープ II M",
+      "url": "https://www.amazon.co.jp/dp/B07QW3NNR3?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-010",
+      "name": "BOWER 日よけサンシェード（大型）",
+      "url": "https://www.amazon.co.jp/dp/B09QGHX72D/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "led-tent-002",
+      "name": "スノーピーク ほおずき ES-070",
+      "url": "https://www.amazon.co.jp/dp/B07BHRH5WC/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-001",
+      "name": "スノーピーク HDタープ シールド ヘキサ M",
+      "url": "https://www.amazon.co.jp/dp/B01G1BGRDU?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "water-jug-mintage-10l",
+      "name": "ミンテージ ウォータージャグ Water Pot Elegant 10L",
+      "url": "https://www.amazon.co.jp/dp/B07DG3NVNW/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-005",
+      "name": "DOD テキーラテーブル",
+      "url": "https://www.amazon.co.jp/dp/B09L5CH945?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-0-ttk-0007-000",
+      "name": "タトンカ タープ Tarp 4 TC 285×400cm ポリコットン",
+      "url": "https://www.amazon.co.jp/dp/B08W56LSJ2?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "trash-box-uniflame",
+      "name": "ユニフレーム UFダストスタンド4 611739",
+      "url": "https://www.amazon.co.jp/dp/B07BWFMBLS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-011",
+      "name": "ヘルスポート バランゲルドーム アウターテント＋ポール 4-6人用",
+      "url": "https://www.amazon.co.jp/dp/B0153VK4RY?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f01",
+      "name": "コールマン タフスクリーン2ルームエアー/MDX+",
+      "url": "https://www.amazon.co.jp/dp/B0CYBKMWGS/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "screen-tarp-coleman-400",
+      "name": "コールマン タフスクリーンタープ/400",
+      "url": "https://www.amazon.co.jp/dp/B092YX6TX3?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heater-iwatani-dekadan3",
+      "name": "イワタニ カセットガスストーブ デカ暖III CB-STV-DKD3",
+      "url": "https://www.amazon.co.jp/dp/B0FN821Y16/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cutting-board-tosaryu-hinoki",
+      "name": "土佐龍 四万十ひのき 軽量まな板 M",
+      "url": "https://www.amazon.co.jp/dp/B00KF917QC/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "led-tent-009",
+      "name": "キャプテンスタッグ リムーブ LEDランタンDX UK-4004",
+      "url": "https://www.amazon.co.jp/dp/B00HHMTWIA/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bp-001",
+      "name": "グレゴリー ズール30",
+      "url": "https://www.amazon.co.jp/dp/B0BVHHRBFN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "backpack-003",
+      "name": "マムート リチウム30（Lithium 30）",
+      "url": "https://www.amazon.co.jp/dp/B09KZPGM77/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "spice-box-coleman",
+      "name": "コールマン スパイスボックスII",
+      "url": "https://www.amazon.co.jp/dp/B08LVG5VTB?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-002",
+      "name": "ファン付き作業ベスト（バッテリーセット）",
+      "url": "https://www.amazon.co.jp/dp/B0GX5RMVP3/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-004",
+      "name": "Tokyo Camp 焚き火台",
+      "url": "https://www.amazon.co.jp/dp/B08CZWJ7P8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-012",
+      "name": "USB充電式 虫除けリング IPX4防水",
+      "url": "https://www.amazon.co.jp/dp/B0FNKD9FSK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "pillow-waq-camp",
+      "name": "WAQ キャンプ枕",
+      "url": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "stove-alpaca-ts77nc",
+      "name": "アルパカ プラス TS-77NC 石油ストーブ",
+      "url": "https://www.amazon.co.jp/dp/B0B9WGBWVD?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "neck-mizuno-cooling-towel",
+      "name": "ミズノ クーリングタオル",
+      "url": "https://www.amazon.co.jp/dp/B0CBJBTF5K?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fire-blower-fireside80",
+      "name": "ファイヤーサイド ファイヤーブラスター80 FB2",
+      "url": "https://www.amazon.co.jp/dp/B073SB9PGZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-004",
+      "name": "天使のスキンベープミスト プレミアム 200mL",
+      "url": "https://www.amazon.co.jp/dp/B07KQ2WZ99?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-snowpeak-pros",
+      "name": "スノーピーク ペグハンマー PRO.S N-002",
+      "url": "https://www.amazon.co.jp/dp/B08HDS8JCF/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f03",
+      "name": "スノーピーク ランドロック",
+      "url": "https://www.amazon.co.jp/dp/B01N5FYL0K?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-duo-002",
+      "name": "スノーピーク アメニティドーム S",
+      "url": "https://www.amazon.co.jp/dp/B07DH4W37W?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cutting-board-snowpeak-cs207",
+      "name": "スノーピーク マナイタセット M CS-207",
+      "url": "https://www.amazon.co.jp/dp/B07RR9HQ7V?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bp-005",
+      "name": "ミレー サースフェー 30+5",
+      "url": "https://www.amazon.co.jp/dp/B0DFLWQ6ND?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "jackery-600-plus",
+      "name": "Jackery ポータブル電源 600 Plus",
+      "url": "https://www.amazon.co.jp/dp/B0CYT9N94T?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "mat-thermarest-prolite",
+      "name": "サーマレスト プロライト",
+      "url": "https://www.amazon.co.jp/dp/B0DZGFM5SM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-coleman-northstar",
+      "name": "コールマン 2500 ノーススター LPガスランタン",
+      "url": "https://www.amazon.co.jp/dp/B08DK8B2X9/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-ymbstore-10000345",
+      "name": "軽量アルミ折りたたみアウトドアチェア",
+      "url": "https://www.amazon.co.jp/dp/B0BYM5FYHW/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "screen-tarp-fieldoor-pu",
+      "name": "FIELDOOR ワンタッチスクリーンテント 遮光PU",
+      "url": "https://www.amazon.co.jp/dp/B0DBGW8LP8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-003",
+      "name": "SOTO レンジャーストーブ ST-526",
+      "url": "https://www.amazon.co.jp/dp/B00VT0UKD2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "stove-paseco-wkh3100s",
+      "name": "パセコ WKH-3100S 対流形石油ストーブ",
+      "url": "https://www.amazon.co.jp/dp/B0B553VG7D?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "viral-scout-1778961984248-mcno",
+      "name": "モンベル シームレスダウンハガー800 #3",
+      "url": "https://www.amazon.co.jp/dp/B09DBDH7VB/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-7-zp04-1",
+      "name": "カーサイドタープ 車用 UVカット 3〜6人対応",
+      "url": "https://www.amazon.co.jp/dp/B0FKN2SS68/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-tansu-spot-23kw",
+      "name": "タンスのゲン スポットクーラー 2.3kW（窓パネル4枚付）",
+      "url": "https://www.amazon.co.jp/dp/B0B1PXB3WT?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "neck-suo-ring",
+      "name": "SUO RING 28°ICE",
+      "url": "https://www.amazon.co.jp/dp/B0CYWXNQH1?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "stanley-water-jug-7.5l",
+      "name": "スタンレー クラシックアウトドアウォータージャグ 7.5L",
+      "url": "https://www.amazon.co.jp/dp/B09SWPQWFH/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-coleman-toughwide",
+      "name": "コールマン タフワイドドームV/300 スタートパッケージ",
+      "url": "https://www.amazon.co.jp/dp/B08P5GD96X/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-004",
+      "name": "プリムス P-153 ウルトラバーナー",
+      "url": "https://www.amazon.co.jp/dp/B000AQXZME/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-001",
+      "name": "スノーピーク ギガパワーマイクロマックスウルトラライト GST-120R",
+      "url": "https://www.amazon.co.jp/dp/B007VLFI6W/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "dd-hammock-frontline",
+      "name": "DDハンモック フロントライン",
+      "url": "https://www.amazon.co.jp/dp/B07J4V5MZT/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-003",
+      "name": "YETI タンドラ 45",
+      "url": "https://www.amazon.co.jp/dp/B001COUOYK?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cutting-board-belmont-butterfly",
+      "name": "ベルモント 抗菌バタフライカッティングボード BM-138",
+      "url": "https://www.amazon.co.jp/dp/B0B1PJCMZ1/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heater-yamazen-electric-blanket",
+      "name": "山善 電気毛布",
+      "url": "https://www.amazon.co.jp/dp/B016120Q2M/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-009",
+      "name": "軽量折りたたみローチェア（耐荷重150kg・撥水加工）",
+      "url": "https://www.amazon.co.jp/dp/B0GY32R93K/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-claymore-v600plus",
+      "name": "CLAYMORE FAN V600+",
+      "url": "https://www.amazon.co.jp/dp/B0BRTZPWSF?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "trash-box-coleman",
+      "name": "コールマン ポップアップボックス コヨーテ 2000038938",
+      "url": "https://www.amazon.co.jp/dp/B09H2MNDXW?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rw-002",
+      "name": "ザ・ノースフェイス クライムライトジャケット",
+      "url": "https://www.amazon.co.jp/dp/B084HXBKX6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "water-jug-igloo-400s",
+      "name": "イグルー ウォータージャグ 400S（約7.9L）",
+      "url": "https://www.amazon.co.jp/dp/B07DNHRJ5Q/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-budget-004",
+      "name": "ネイチャーハイク CW280 ダウンシュラフ",
+      "url": "https://www.amazon.co.jp/dp/B0DRJNBSVN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-013",
+      "name": "スモア（Smore） チタンマグカップ 350ml 蓋付き シングルウォール",
+      "url": "https://www.amazon.co.jp/dp/B09J4MDLXB?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-003",
+      "name": "DOD ライダーズタープテント",
+      "url": "https://www.amazon.co.jp/dp/B078VHLW5K/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-018",
+      "name": "キャプテンスタッグ トレッカー ソロテント（前室付き）",
+      "url": "https://www.amazon.co.jp/dp/B0B38M3VTS/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "hammock-dd-frontline",
+      "name": "DDハンモック DD Frontline Hammock（フロントラインハンモック）",
+      "url": "https://www.amazon.co.jp/dp/B005FL31DM?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "kettle-uniflame-yama900",
+      "name": "ユニフレーム 山ケトル900",
+      "url": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "first-aid-tick-remover",
+      "name": "マダニ除去ツール ティックリムーバー 細型ピンセット セット",
+      "url": "https://www.amazon.co.jp/dp/B08DHT1TXK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-duo-001",
+      "name": "コールマン ツーリングドーム LX",
+      "url": "https://www.amazon.co.jp/dp/B095WDXTWV/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-005",
+      "name": "ペツル ティカ E061AA",
+      "url": "https://www.amazon.co.jp/dp/B0BLM59WSZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-009",
+      "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
+      "url": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sierra-cup-belmont",
+      "name": "ベルモント チタンシェラカップ 深型250 フォールドハンドル（メモリ付）BM-329",
+      "url": "https://www.amazon.co.jp/dp/B072N2D691?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-7-ttk-0007-000",
+      "name": "タトンカ Tarp 4 TC ポリコットンタープ 285×400cm",
+      "url": "https://www.amazon.co.jp/dp/B08W56LSJ2?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-002",
+      "name": "コールマン ナチュラルモザイクリビングテーブル 120プラス",
+      "url": "https://www.amazon.co.jp/dp/B07NQQTK54?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-dabada-10000536",
+      "name": "DABADA LEDランタン 63灯（USB・手回し・ソーラー充電）",
+      "url": "https://www.amazon.co.jp/dp/B00HZEGRBA/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "power-ecoflow-delta3-plus",
+      "name": "EcoFlow DELTA 3 Plus",
+      "url": "https://www.amazon.co.jp/dp/B0DB5WRJWN/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-014",
+      "name": "Komons アウトドアスプレー 100ml",
+      "url": "https://www.amazon.co.jp/dp/B0C39VZ95K/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "spice-box-yogoto",
+      "name": "YOGOTO スパイスボックス",
+      "url": "https://www.amazon.co.jp/dp/B0911ZM18K?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-003",
+      "name": "ルーメナー2 LUMENA2",
+      "url": "https://www.amazon.co.jp/dp/B07FBFSD9M?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "led-tent-001",
+      "name": "スノーピーク たねほおずき ES-041",
+      "url": "https://www.amazon.co.jp/dp/B0BVLJ85D2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-waq-alpha-tc",
+      "name": "WAQ Alpha TC/FT",
+      "url": "https://www.amazon.co.jp/dp/B0B7S4GJ7P?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-002",
+      "name": "SOTO ウインドマスター SOD-310",
+      "url": "https://www.amazon.co.jp/dp/B08CCNRKBK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "neck-suo-ring-plus",
+      "name": "SUO RING Plus 28°ICE",
+      "url": "https://www.amazon.co.jp/dp/B0CYLCJC6M?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-duo-005",
+      "name": "ogawa ステイシーST-II",
+      "url": "https://www.amazon.co.jp/dp/B09XF6WF66?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-007",
+      "name": "DOD ライダーズワンポールテント T1-442",
+      "url": "https://www.amazon.co.jp/dp/B01FFQJWIE?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-005",
+      "name": "MSR エリクサー3",
+      "url": "https://www.amazon.co.jp/dp/B00J1Z4BT6/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-007",
+      "name": "ロゴス USBシェードランタン（4連タイプ）",
+      "url": "https://www.amazon.co.jp/dp/B08L5ZQMR1/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-hagoogi-ot-f12",
+      "name": "HAGOOGI キャンプ扇風機 OT-F12",
+      "url": "https://www.amazon.co.jp/dp/B0BYYPXS8J?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "lantern-stand-005",
+      "name": "FIELDOOR クランプ式コンパクトランタンスタンド",
+      "url": "https://www.amazon.co.jp/dp/B0844HJT6H/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-6-p11021",
+      "name": "プリムス エクスプレス スパイダーストーブ2 P-136S",
+      "url": "https://www.amazon.co.jp/dp/B092YGCD6B?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cutting-board-silicon-foldable",
+      "name": "シリコン折りたたみまな板（バックパック・ツーリング向け汎用）",
+      "url": "https://www.amazon.co.jp/dp/B0GWMFK3XV/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-003",
+      "name": "キャプテンスタッグ ロースタイルイージーチェア",
+      "url": "https://www.amazon.co.jp/dp/B0CHD6S83K?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-longlife-global-10000378",
+      "name": "折りたたみアウトドアチェア ローチェア 軽量コンパクト",
+      "url": "https://www.amazon.co.jp/dp/B0CQY6B42F/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "kettle-gsi-glacier",
+      "name": "GSI グレイシャーステンレスケトル",
+      "url": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-004",
+      "name": "キャプテンスタッグ アルミロールテーブル",
+      "url": "https://www.amazon.co.jp/dp/B07VM6PVDW?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-013",
+      "name": "スケーター 虫除けシール 72枚入（キャラクター）",
+      "url": "https://www.amazon.co.jp/dp/B0BWCQTRYS/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "dry-net-coleman",
+      "name": "コールマン ハンギングドライネットII グリーン 2000026811",
+      "url": "https://www.amazon.co.jp/dp/B01C5HUTBU?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-logos-neos-double-xl-bg",
+      "name": "ロゴス neos PANELスクリーンドゥーブル XL-BG",
+      "url": "https://www.amazon.co.jp/dp/B0H25MS6ZT/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-duo-003",
+      "name": "DOD ライダーズワンタッチテント",
+      "url": "https://www.amazon.co.jp/dp/B00W0TQ8GY/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-001",
+      "name": "スノーピーク ギガパワーランタン 天 オート GL-100AR",
+      "url": "https://www.amazon.co.jp/dp/B000AR2P92/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-solo-002",
+      "name": "DOD ショウネンテント T1-602-TN",
+      "url": "https://www.amazon.co.jp/dp/B081FFJNVL?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-006",
+      "name": "北見ハッカ通商 ハッカ油スプレー 10mL",
+      "url": "https://www.amazon.co.jp/dp/B0013L25N0?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "co-detector-4in1",
+      "name": "4in1 一酸化炭素測定器 CO+CO₂+温度+湿度チェッカー 日本製センサー",
+      "url": "https://www.amazon.co.jp/dp/B0FPCYG8JL/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-kids-005",
+      "name": "コールマン スクールキッズ/C10",
+      "url": "https://www.amazon.co.jp/dp/B01C5HW8JQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-005",
+      "name": "コールマン ロードトリップグリル LXE",
+      "url": "https://www.amazon.co.jp/dp/B00352KRDU/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "firepit-picogrill-398",
+      "name": "ピコグリル398",
+      "url": "https://www.amazon.co.jp/dp/B08R8V78TY?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "shoes-003",
+      "name": "サロモン X ULTRA 4 GTX",
+      "url": "https://www.amazon.co.jp/dp/B08QM8RW25?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fire-blower-tokyocamp",
+      "name": "TokyoCamp 火吹き棒 伸縮式 天然木 ケース付き",
+      "url": "https://www.amazon.co.jp/dp/B0BKG2CMXJ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "field-rack-campingmoon-sts",
+      "name": "キャンピングムーン フィールドラック ステンレス T-230A",
+      "url": "https://www.amazon.co.jp/dp/B0CD7HS6MK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-008",
+      "name": "ユニフレーム テーブルトップバーナー US-D II",
+      "url": "https://www.amazon.co.jp/dp/B085Y1CY5H/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-gorilla55-10001099",
+      "name": "Bears Rock ふわ暖 封筒型寝袋（-6℃・3.5シーズン）",
+      "url": "https://www.amazon.co.jp/dp/B096NHR4BG/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tumbler-005",
+      "name": "KINTO アクティブタンブラー 600ml",
+      "url": "https://www.amazon.co.jp/dp/B0845WL4DN/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "led-tent-006",
+      "name": "キャプテンスタッグ CS ストリングライト 充電式",
+      "url": "https://www.amazon.co.jp/dp/B0DYN4MD1P/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "field-rack-uniflame-stainless",
+      "name": "ユニフレーム フィールドラック ステンレス天板Ⅲ",
+      "url": "https://www.amazon.co.jp/dp/B00AP9XYA4/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "hammock-cs-ud2019",
+      "name": "キャプテンスタッグ スチールポール 3WAYハンモックセット UD-2019",
+      "url": "https://www.amazon.co.jp/dp/B0CYRW2BQD?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "trash-box-dod",
+      "name": "DOD ステルスエックス ブラック GM1-450",
+      "url": "https://www.amazon.co.jp/dp/B07B8TT8N7/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-sp-amenity-dome-m",
+      "name": "スノーピーク アメニティドームM",
+      "url": "https://www.amazon.co.jp/dp/B0DFG51JMQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "shoes-004",
+      "name": "コロンビア セイバー5ミッド アウトドライ",
+      "url": "https://www.amazon.co.jp/dp/B0B1N72JNS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-015",
+      "name": "Moon Lence アウトドアチェア",
+      "url": "https://www.amazon.co.jp/dp/B0G29BWSFG?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-005",
+      "name": "MSR ウインドバーナー パーソナルストーブシステム",
+      "url": "https://www.amazon.co.jp/dp/B085M4YQYJ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-024",
+      "name": "ホリアキ 非常用給水バッグ 5L（3枚入）",
+      "url": "https://www.amazon.co.jp/dp/B01JHS5G9A/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "shoes-001",
+      "name": "キャラバン C1_02S",
+      "url": "https://www.amazon.co.jp/dp/B07Q1HJ74P?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-009",
+      "name": "厚手ブルーシート 3.6m×5.4m（#3000）",
+      "url": "https://www.amazon.co.jp/dp/B002P8WQMK?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-001",
+      "name": "コールマン ツーリングドームST",
+      "url": "https://www.amazon.co.jp/dp/B07NQQTCS1/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-002",
+      "name": "スノーピーク ホームアンドキャンプバーナー GS-600",
+      "url": "https://www.amazon.co.jp/dp/B07V6HXHHD/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-1-pr330033",
+      "name": "Lepro LEDランタン 1500ルーメン 電池式",
+      "url": "https://www.amazon.co.jp/dp/B08NBCKDSC/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rw-005",
+      "name": "コロンビア ワバシュジャケット",
+      "url": "https://www.amazon.co.jp/dp/B07MYRHJCK?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-solo-004",
+      "name": "モンベル ムーンライトテント1",
+      "url": "https://www.amazon.co.jp/dp/B094V9Y34V?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-nakatomi-mac10",
+      "name": "ナカトミ ミニクーラー MAC-10",
+      "url": "https://www.amazon.co.jp/dp/B085RXK7J6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "mat-waq-10cm",
+      "name": "WAQ リラクシングキャンプマット 10cm",
+      "url": "https://www.amazon.co.jp/dp/B0BG7QP5T6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "dry-net-goodsland",
+      "name": "GoodsLand 折りたたみドライネット GD-DRYNET-M（ブラック）",
+      "url": "https://www.amazon.co.jp/dp/B09JNYJTBT?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-004",
+      "name": "ブラックダイヤモンド スポット400",
+      "url": "https://www.amazon.co.jp/dp/B09Y8RG66X/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-027",
+      "name": "アイスパック付きクーラーボックス（真空断熱・5〜8L）",
+      "url": "https://www.amazon.co.jp/dp/B0H4QWP4K3/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "kettle-snowpeak-no1",
+      "name": "スノーピーク ケトルNo.1（CS-068R）",
+      "url": "https://www.amazon.co.jp/dp/B08DKN2NB8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-002",
+      "name": "コールマン インフィニティチェア",
+      "url": "https://www.amazon.co.jp/dp/B07NQQB1QX?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "trash-box-fieldoor",
+      "name": "FIELDOOR ポップアップトラッシュボックス（45L袋対応）",
+      "url": "https://www.amazon.co.jp/dp/B09F95HVB8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-budget-003",
+      "name": "Bears Rock -6℃ 封筒型シュラフ",
+      "url": "https://www.amazon.co.jp/dp/B00DSW64Z2?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-003",
+      "name": "ファン付きベスト フルセット（2026年モデル）",
+      "url": "https://www.amazon.co.jp/dp/B0FLNXGVWX/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-025",
+      "name": "U-COOL 3WAY保冷温バッグ 25L",
+      "url": "https://www.amazon.co.jp/dp/B0FH26PNQH/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "knife-002",
+      "name": "モーラナイフ Garberg Full Tang",
+      "url": "https://www.amazon.co.jp/dp/B08548NHGS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "first-aid-poison-remover",
+      "name": "ポイズンリムーバー エクストラクター 毒吸引器 キャンプ・虫刺され用",
+      "url": "https://www.amazon.co.jp/dp/B07XDWVHMF/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-004",
+      "name": "テンマクデザイン ムササビウイング 13ft TC",
+      "url": "https://www.amazon.co.jp/dp/B00URIZ7TE?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-maxshare-10060489",
+      "name": "FIELDOOR ウィンドスクリーン120（8枚連結・大型）",
+      "url": "https://www.amazon.co.jp/dp/B0BHDB5RBZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-circus-tc-dx",
+      "name": "テンマクデザイン サーカスTC DX",
+      "url": "https://www.amazon.co.jp/dp/B07XB5WX89?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f-landlock-x",
+      "name": "スノーピーク ランドロック X",
+      "url": "https://www.amazon.co.jp/dp/B0H2W4K1BZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-002",
+      "name": "スノーピーク アメニティドームM",
+      "url": "https://www.amazon.co.jp/dp/B0DFG51JMQ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-015",
+      "name": "岩鋳 Iwachu ファミリーパン 南部鉄器 スキレット 14cm IH対応",
+      "url": "https://www.amazon.co.jp/dp/B000O1P8I4?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-001",
+      "name": "サンライン おにやんま君",
+      "url": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-002",
+      "name": "ダイワ クールラインα ライトソルト S1500X",
+      "url": "https://www.amazon.co.jp/dp/B07TFMD1GD?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-socool",
+      "name": "Socool fan キャンプ扇風機",
+      "url": "https://www.amazon.co.jp/dp/B0C4KG77YJ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f06",
+      "name": "スノーピーク ランドネストシェルター",
+      "url": "https://www.amazon.co.jp/dp/B0DTNVP3KN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-001",
+      "name": "ユニフレーム 焚き火テーブル",
+      "url": "https://www.amazon.co.jp/dp/B000B5WLVU?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-uniflame-revo",
+      "name": "ユニフレーム REVOハンマー",
+      "url": "https://www.amazon.co.jp/dp/B072HVPKZ4/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "screen-tarp-captainstag-lanny",
+      "name": "キャプテンスタッグ ラニーメッシュタープテント",
+      "url": "https://www.amazon.co.jp/dp/B093CQH639?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "water-jug-captain-stag-10l",
+      "name": "キャプテンスタッグ ボルディ ウォータータンク 10L",
+      "url": "https://www.amazon.co.jp/dp/B0FH544MLG/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-snowpeak-proc",
+      "name": "スノーピーク ペグハンマー PRO.C N-001",
+      "url": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "led-tent-004",
+      "name": "ルーメナー LUMENA2X",
+      "url": "https://www.amazon.co.jp/dp/B0BP6YQ8P5/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-002",
+      "name": "富士錦 パワー森林香（赤色）30巻入り",
+      "url": "https://www.amazon.co.jp/dp/B001A4SC7I?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "shoes-002",
+      "name": "メレル モアブ3ミッド ゴアテックス",
+      "url": "https://www.amazon.co.jp/dp/B0CGHWJ35N?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rw-001",
+      "name": "モンベル ストームクルーザージャケット",
+      "url": "https://www.amazon.co.jp/dp/B0D819PXX1?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-008",
+      "name": "PERFECT POTION アウトドアボディスプレー エクストラ 100ml",
+      "url": "https://www.amazon.co.jp/dp/B073T42VH8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bp-004",
+      "name": "カリマー リッジ30 Medium",
+      "url": "https://www.amazon.co.jp/dp/B0994WD9Y3?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-6-4953571093208",
+      "name": "SOTO アミカス SOD-320 シングルバーナー",
+      "url": "https://www.amazon.co.jp/dp/B088DZTFS9?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "growler-001",
+      "name": "スタンレー クラシック真空グロウラー 1.9L",
+      "url": "https://www.amazon.co.jp/dp/B0BXKPKCW6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-001",
+      "name": "コールマン パワーハウスツーバーナー 413H",
+      "url": "https://www.amazon.co.jp/dp/B08P6FQ72M/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-lumena-prime2",
+      "name": "LUMENA FAN PRIME2",
+      "url": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-015",
+      "name": "CT-WAGON モスキートテント（キャリーワゴン用蚊帳）",
+      "url": "https://www.amazon.co.jp/dp/B0BPLN23JZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-nanga-004",
+      "name": "NANGA UDD BAG 450DX",
+      "url": "https://www.amazon.co.jp/dp/B09Z27TM7R?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sierra-cup-cs",
+      "name": "キャプテンスタッグ シェラカップ ステンレス 目盛付",
+      "url": "https://www.amazon.co.jp/dp/B01M020054/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "screen-tarp-quickcamp-3m",
+      "name": "クイックキャンプ スクリーンタープ 3m QC-ST300R",
+      "url": "https://www.amazon.co.jp/dp/B07FW8KZB2?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-004",
+      "name": "プリムス ランタン IP-2245A",
+      "url": "https://www.amazon.co.jp/dp/B000AQXZD8/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-budget-001",
+      "name": "コールマン パフォーマーIII C10",
+      "url": "https://www.amazon.co.jp/dp/B07W1SKRTF?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "table-ogawa-folding-table",
+      "name": "ogawa フォールディングテーブル",
+      "url": "https://www.amazon.co.jp/dp/B07JMBYYV5/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "field-rack-hibari",
+      "name": "HIBARI フィールドラック マットブラック（2枚セット）",
+      "url": "https://www.amazon.co.jp/dp/B08115XHZN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-coleman-rechargeable",
+      "name": "Coleman アウトドアリチャージャブルファン",
+      "url": "https://www.amazon.co.jp/dp/B09HGBR242?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-005",
+      "name": "DOD スゴイッス",
+      "url": "https://www.amazon.co.jp/dp/B08M4NX6FS?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-001",
+      "name": "ピコグリル 398",
+      "url": "https://www.amazon.co.jp/dp/B08R8V78TY?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-kids-003",
+      "name": "ロゴス 丸洗いスランバーシュラフ・2",
+      "url": "https://www.amazon.co.jp/dp/B07BPQSMHQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-yamazen-yec-m03",
+      "name": "山善 YEC-M03",
+      "url": "https://www.amazon.co.jp/dp/B09WTRZQWQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-3-c0144",
+      "name": "AND MYSELF ソフトクーラーボックス 3サイズ展開",
+      "url": "https://www.amazon.co.jp/dp/B0C13DJNRS/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-budget-005",
+      "name": "モンベル バロウバッグ #3",
+      "url": "https://www.amazon.co.jp/dp/B00IMSZ2KA?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "water-jug-bundok-foldable",
+      "name": "バンドック フォールディングジャグ 7L BD-347",
+      "url": "https://www.amazon.co.jp/dp/B08VFM1VFD/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-009",
+      "name": "カメムシブロック プラス スプレー 300ml",
+      "url": "https://www.amazon.co.jp/dp/B0CYBJ67D8?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-006",
+      "name": "スノーピーク 焚火台 L",
+      "url": "https://www.amazon.co.jp/dp/B000AR4TJQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "knife-005",
+      "name": "バークリバー ブラボー1 A2スチール",
+      "url": "https://www.amazon.co.jp/dp/B01ANJEJEK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "chair-011",
+      "name": "ヘリノックス ビーチチェア（ハイバック・メッシュ）",
+      "url": "https://www.amazon.co.jp/dp/B085632ZGY/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-003",
+      "name": "DOD いつかのタープ",
+      "url": "https://www.amazon.co.jp/dp/B07WLQ3HLR?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-poncotan-10000531",
+      "name": "ポンコタン 軽量折りたたみアウトドアチェア",
+      "url": "https://www.amazon.co.jp/dp/B094D91L2R/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-017",
+      "name": "ワンタッチビーチテント 4人用（蚊帳・フルクローズ）",
+      "url": "https://www.amazon.co.jp/dp/B0GN5FNFL6/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tumbler-004",
+      "name": "サーモス 山専ボトル ステンレスボトル FFX-901",
+      "url": "https://www.amazon.co.jp/dp/B0F1K18MLP/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "lantern-stand-001",
+      "name": "スノーピーク パイルドライバー LT-004",
+      "url": "https://www.amazon.co.jp/dp/B08X399BYT/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-006",
+      "name": "SOTO マイクロレギュレーターランタン ST-233",
+      "url": "https://www.amazon.co.jp/dp/B08MXLN5VS/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "field-rack-campingmoon",
+      "name": "キャンピングムーン フィールドラック T-230（2枚セット）",
+      "url": "https://www.amazon.co.jp/dp/B07F7WXDGN/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bp-003",
+      "name": "ドイター フューチュラ26",
+      "url": "https://www.amazon.co.jp/dp/B08YG2QK7T?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-005",
+      "name": "サーモス ソフトクーラー REF-025",
+      "url": "https://www.amazon.co.jp/dp/B07NGBHWC3/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "dry-net-logos",
+      "name": "ロゴス スタンディングドライネット 81285040",
+      "url": "https://www.amazon.co.jp/dp/B00HYTDKNY?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-livewell-10002781",
+      "name": "ナチュールクーラー 日本製クーラーバッグ（7L/15L/18L）",
+      "url": "https://www.amazon.co.jp/dp/B01EMTW6HE/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-3s-kikaku-10005573",
+      "name": "ベリアスクーラー 小型クーラーボックス 9L/17L",
+      "url": "https://www.amazon.co.jp/dp/B08Z75P937/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-001",
+      "name": "ジェントス LED ランタン EX-136S",
+      "url": "https://www.amazon.co.jp/dp/B01N7WKLUZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-budget-002",
+      "name": "ロゴス 丸洗いスランバーシュラフ・2",
+      "url": "https://www.amazon.co.jp/dp/B07BPQSMHQ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-smore-okurumi",
+      "name": "S'more スモア OKURUMI BAG 封筒型シュラフ（快適温度5〜15℃）",
+      "url": "https://www.amazon.co.jp/dp/B09VP8H8XD/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "hammock-dd-travel-bivi",
+      "name": "DD Hammocks DDトラベルハンモック / Bivi",
+      "url": "https://www.amazon.co.jp/dp/B00FQJG0WM?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "trash-box-pykes",
+      "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
+      "url": "https://www.amazon.co.jp/dp/B0DMJLGFKK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-kids-002",
+      "name": "NANGA KIDS SQUARE FOOT 300",
+      "url": "https://www.amazon.co.jp/dp/B0DXQKKM37?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tumbler-001",
+      "name": "スタンレー 真空クエンチャー H2.0 0.88L (30oz)",
+      "url": "https://www.amazon.co.jp/dp/B0D9G4YMKR/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-009",
+      "name": "HAGOOGI キャンプライト（380ルーメン・USB充電式）",
+      "url": "https://www.amazon.co.jp/dp/B0GHMZZ5NQ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "mat-coleman-highpeak",
+      "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
+      "url": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rw-004",
+      "name": "ワークマン INAREM ストレッチレインスーツ",
+      "url": "https://www.amazon.co.jp/dp/B0BVGYD8BN?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-008",
+      "name": "人感センサー付きLED非常灯（充電式）",
+      "url": "https://www.amazon.co.jp/dp/B09G9HG9XJ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-014",
+      "name": "ロゴス LOGOS BBQガンブロー 火起こし器",
+      "url": "https://www.amazon.co.jp/dp/B000FBGCBA?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-002",
+      "name": "ユニフレーム ファイアグリル",
+      "url": "https://www.amazon.co.jp/dp/B000AR5Y90?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "uniflame-field-rack",
+      "name": "ユニフレーム フィールドラック",
+      "url": "https://www.amazon.co.jp/dp/B06W9FQF9L?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rw-003",
+      "name": "ミズノ ベルグテックEXストームセイバーVI",
+      "url": "https://www.amazon.co.jp/dp/B0CTM2W7PB?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f04",
+      "name": "ogawa ピルツ15 T/C",
+      "url": "https://www.amazon.co.jp/dp/B06XPRTK55/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-f05",
+      "name": "キャプテンスタッグ CSクラシックス ワンポールテント DXオクタゴン460UV",
+      "url": "https://www.amazon.co.jp/dp/B07PM2TFW7/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "field-rack-uniflame",
+      "name": "ユニフレーム フィールドラック ブラック",
+      "url": "https://www.amazon.co.jp/dp/B06W9FQF9L?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-jikabijapan-10000002",
+      "name": "JIKABI JAPAN マルチグリドル 33cm（全熱源対応）",
+      "url": "https://www.amazon.co.jp/dp/B0D5YHT9TZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-006",
+      "name": "ミスト扇風機 20000mAh（10L水タンク・噴霧機能）",
+      "url": "https://www.amazon.co.jp/dp/B0FJKX46V1/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-014",
+      "name": "イワタニ カセットガス ジュニアランタン CB-JRL-2",
+      "url": "https://www.amazon.co.jp/dp/B001C9Y8PG/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-brave-2-outdoor-chair",
+      "name": "軽量折りたたみアウトドアチェア",
+      "url": "https://www.amazon.co.jp/dp/B0C3QN6G8S/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-002",
+      "name": "コールマン XPヘキサタープ MDX+",
+      "url": "https://www.amazon.co.jp/dp/B0CYBWG4YM?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "stove-toyotomi-rb251",
+      "name": "トヨトミ レインボーストーブ RB-251",
+      "url": "https://www.amazon.co.jp/dp/B09F5XJ24Q?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "ecoflow-river2-pro",
+      "name": "EcoFlow RIVER 2 Pro",
+      "url": "https://www.amazon.co.jp/dp/B0BFKFC9YJ?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-muranokajiya",
+      "name": "村の鍛冶屋 エリッゼステーク アルティメットハンマー",
+      "url": "https://www.amazon.co.jp/dp/B09M2RX9WB/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-solo-005",
+      "name": "テンマクデザイン パンダTC+",
+      "url": "https://www.amazon.co.jp/dp/B08B3G9XC9?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-002",
+      "name": "コールマン LED ランタン クアッドマルチパネルランタン",
+      "url": "https://www.amazon.co.jp/dp/B079NTXHSD/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heater-iwatani-kazedan",
+      "name": "イワタニ カセットガスファンヒーター 風暖",
+      "url": "https://www.amazon.co.jp/dp/B0B7BDQWCY/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heater-koizumi-electric-blanket",
+      "name": "コイズミ 電気敷毛布",
+      "url": "https://www.amazon.co.jp/dp/B0FNR6Q4DM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cutting-board-cs-uh4709",
+      "name": "キャプテンスタッグ スリム抗菌まな板包丁セット UH-4709",
+      "url": "https://www.amazon.co.jp/dp/B0H5R31GHZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-nanga-005",
+      "name": "NANGA UDD BAG 630DX",
+      "url": "https://www.amazon.co.jp/dp/B06XP9RTTK?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-solo-001",
+      "name": "バンドック ソロティピー1 TC BDK-75TC",
+      "url": "https://www.amazon.co.jp/dp/B0CY5J7J71?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-yiprefer-10002589",
+      "name": "Soomloom 2Wayランタン Helio5000",
+      "url": "https://www.amazon.co.jp/dp/B0FKT4CV7Z/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "heater-winnerwell-nomad-view-m",
+      "name": "Winnerwell Nomad View M 薪ストーブ",
+      "url": "https://www.amazon.co.jp/dp/B0792V7HY7/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-m-004",
+      "name": "ユニフレーム ツインバーナー US-1900",
+      "url": "https://www.amazon.co.jp/dp/B017973NPK/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-captainstag",
+      "name": "キャプテンスタッグ 鍛造ペグ抜きハンマー UA-4516",
+      "url": "https://www.amazon.co.jp/dp/B09137TGXH/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-ogawa-twin-piltz",
+      "name": "ogawa ツインピルツフォーク T/C",
+      "url": "https://www.amazon.co.jp/dp/B07HZ6H8VG?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cot-dod-baginbed",
+      "name": "DOD バッグインベッド",
+      "url": "https://www.amazon.co.jp/dp/B01NBXZXI9?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-maxshare-10007356",
+      "name": "FIELDOOR ワンタッチタープテント 3m×3m",
+      "url": "https://www.amazon.co.jp/dp/B00I0Q8VVG/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tent-004",
+      "name": "ノルディスク アルヘイム19.6",
+      "url": "https://www.amazon.co.jp/dp/B00C0TE622/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooler-004",
+      "name": "シマノ スペーザ ライト 250",
+      "url": "https://www.amazon.co.jp/dp/B09G6KQ223?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "light-006",
+      "name": "フェーリアランタン LEDランタン（乾電池式）",
+      "url": "https://www.amazon.co.jp/dp/B00QHXJ7VM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-canpanera-10002613",
+      "name": "BRUNO LEDランタン（電池式・無段階調光）",
+      "url": "https://www.amazon.co.jp/dp/B00TEZEGQQ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fire-blower-belmont",
+      "name": "ベルモント 焚き火ブロウパイプ BM-381 ポンプ付き",
+      "url": "https://www.amazon.co.jp/dp/B09XTQF2WW/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "cooker-003",
+      "name": "ユニフレーム fan5 DX",
+      "url": "https://www.amazon.co.jp/dp/B000B7CJW4/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tarp-006",
+      "name": "キャプテンスタッグ カージョイント タープテント車連結用",
+      "url": "https://www.amazon.co.jp/dp/B0B5GGDY3S?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "sb-nanga-003",
+      "name": "NANGA オーロラテックスライト 750DX",
+      "url": "https://www.amazon.co.jp/dp/B07THJYSN3?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "peg-hammer-snowpeak-proc-review",
+      "name": "スノーピーク ペグハンマー PRO.C N-001",
+      "url": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "rakuten-music-and-outdoor-lab-10000402",
+      "name": "SOTO マイクロトーチ ACTIVE ST-486",
+      "url": "https://www.amazon.co.jp/dp/B07N6SB9K2/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "dry-net-cs",
+      "name": "キャプテンスタッグ ポップアップドライネット UM-1903",
+      "url": "https://www.amazon.co.jp/dp/B07DNDJKBD?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-018",
+      "name": "Haven Tent ヘブンテント（蚊帳付きハンモックテント）",
+      "url": "https://www.amazon.co.jp/dp/B09KC6D33Y/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "spice-box-naturehike",
+      "name": "Naturehike スパイスバッグ",
+      "url": "https://www.amazon.co.jp/dp/B0CG5LFY4R/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-007",
+      "name": "キャプテンスタッグ 小型ガスバーナー M-7900",
+      "url": "https://www.amazon.co.jp/dp/B09PVHTDQ4/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "tumbler-002",
+      "name": "YETI Rambler 30oz Tumbler with MagSlider Lid",
+      "url": "https://www.amazon.co.jp/dp/B073WJSYMM/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "gas-lantern-013",
+      "name": "コールマン ルミエールランタン 205588",
+      "url": "https://www.amazon.co.jp/dp/B004IWR45A/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "hammock-eno-doublenest",
+      "name": "ENO DoubleNest Hammock（ダブルネストハンモック）",
+      "url": "https://www.amazon.co.jp/dp/B001DDPGNO?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-001",
+      "name": "3Wayハンディファン（手持ち・首かけ・卓上）",
+      "url": "https://www.amazon.co.jp/dp/B0GGWXK8QH/?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-005",
+      "name": "サラテクトミスト リッチリッチ30 200mL",
+      "url": "https://www.amazon.co.jp/dp/B01N6ZRSWM?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "bp-002",
+      "name": "オスプレー ケストレル38",
+      "url": "https://www.amazon.co.jp/dp/B0BYXBZRPV?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fp-005",
+      "name": "ソロストーブ レンジャー 2.0",
+      "url": "https://www.amazon.co.jp/dp/B0B7BG9YPW?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "fan-powerarq-fanlight",
+      "name": "PowerArq Fan Light",
+      "url": "https://www.amazon.co.jp/dp/B0B4NNJNM2?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "burner-s-010",
+      "name": "コールマン フェザーストーブ",
+      "url": "https://www.amazon.co.jp/dp/B079VCL973?tag=camp78-22",
+      "reason": "fetch failed"
+    },
+    {
+      "id": "insect-repellent-016",
+      "name": "レモングラス ハーブ苗（虫除け）",
+      "url": "https://www.amazon.co.jp/dp/B09WV767FW/?tag=camp78-22",
+      "reason": "fetch failed"
     }
   ],
   "noUrl": [
@@ -235,6 +2167,10 @@
       "name": "Mystic Ridge 折りたたみ焚き火台（ソロ用・ステンレス）"
     },
     {
+      "id": "sierra-cup-bundok",
+      "name": "BUNDOK シェラカップ 600ml BD-190"
+    },
+    {
       "id": "rakuten-brave-4-kot-15",
       "name": "寝袋 シュラフ 冬 コンパクト -10℃ 封筒型 枕付き"
     },
@@ -243,16 +2179,16 @@
       "name": "モンベル アルパインクッカー 16 スターターセット"
     },
     {
-      "id": "chair-008",
-      "name": "初めてのキャンプセット（レンタル・ファミリー用一式）"
+      "id": "rakuten-brave-0-10000006358",
+      "name": "防災士監修 ワンタッチテント 2-4人用 3WAY使用"
     },
     {
       "id": "tent-016",
       "name": "MW-TAKAMORI ドームテント 大人2人用 防水 フルクローズ"
     },
     {
-      "id": "rakuten-brave-0-10000006358",
-      "name": "防災士監修 ワンタッチテント 2-4人用 3WAY使用"
+      "id": "chair-008",
+      "name": "初めてのキャンプセット（レンタル・ファミリー用一式）"
     },
     {
       "id": "rakuten-k-lalala-10102906",
@@ -275,6 +2211,10 @@
       "name": "Okulu LEDランタン おしゃれ 名入れギフト対応"
     },
     {
+      "id": "tent-ratelworks-boden-g2",
+      "name": "RATELWORKS BODEN G2（ボーデンG2）"
+    },
+    {
       "id": "tarp-010",
       "name": "LAONsChoice タクティカルレインコート（完全防水）"
     },
@@ -293,10 +2233,6 @@
     {
       "id": "tarp-009",
       "name": "北摂軽太郎便 タクティカルレインコート（完全防水）"
-    },
-    {
-      "id": "tent-ratelworks-boden-g2",
-      "name": "RATELWORKS BODEN G2（ボーデンG2）"
     },
     {
       "id": "rakuten-next-online-10000136",
@@ -337,10 +2273,6 @@
     {
       "id": "tent-006",
       "name": "HOMFINE ソロテント 2人用 前室付き 4000mm耐水圧"
-    },
-    {
-      "id": "cooler-corona-pa-f85a",
-      "name": "コロナ OUTFIELD BREEZE BOX PA-F85A"
     },
     {
       "id": "chair-007",
