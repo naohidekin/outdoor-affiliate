@@ -22,7 +22,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const FILE = process.argv[2] || path.join(ROOT, "data", "articles.json");
+// フラグを位置引数と取り違えないこと。
+// --apply だけ渡したとき process.argv[2] をそのままファイル名にして
+// 「--apply が開けません」で落ちた（2026-08-16）
+const positional = process.argv.slice(2).filter((x) => !x.startsWith("--"));
+const FILE = positional[0] || path.join(ROOT, "data", "articles.json");
 const APPLY = process.argv.includes("--apply");
 
 const SECTION = `## ランドネストシェルターの設営は、実際どうだった？
