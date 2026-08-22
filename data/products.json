@@ -92,6 +92,31 @@
     "updatedAt": "2026-07-30T12:00:00+00:00"
   },
   {
+    "id": "chair-006",
+    "name": "サンライン おにやんま君",
+    "brand": "サンライン",
+    "price": 985,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/aorinetshop/cabinet/23-leisure11/010-97084.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Faorinetshop%2F10016333%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Faorinetshop%2Fi%2F10016333%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
+    "categoryId": "chair",
+    "specs": {
+      "素材": "",
+      "重量": "",
+      "座面高": "",
+      "耐荷重": "",
+      "収納サイズ": ""
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-04-15T00:00:40.431+00:00",
+    "updatedAt": "2026-08-12T10:29:21.731+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-04-15T00:00:40.431Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "jackery-1000-new",
     "name": "Jackery ポータブル電源 1000 New",
     "brand": "Jackery",
@@ -175,31 +200,6 @@
     "rating": 4.5,
     "createdAt": "2026-04-02T00:00:00+00:00",
     "updatedAt": "2026-08-05T21:40:28.008+00:00"
-  },
-  {
-    "id": "chair-006",
-    "name": "サンライン おにやんま君",
-    "brand": "サンライン",
-    "price": 985,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/aorinetshop/cabinet/23-leisure11/010-97084.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Faorinetshop%2F10016333%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Faorinetshop%2Fi%2F10016333%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
-    "categoryId": "chair",
-    "specs": {
-      "素材": "",
-      "重量": "",
-      "座面高": "",
-      "耐荷重": "",
-      "収納サイズ": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-04-15T00:00:40.431+00:00",
-    "updatedAt": "2026-08-12T10:29:21.731+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T00:00:40.431Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "uniflame-yama-kettle-900",
@@ -2314,6 +2314,32 @@
     "updatedAt": "2026-08-06T19:16:27.468+00:00"
   },
   {
+    "id": "chair-009",
+    "name": "軽量折りたたみローチェア（耐荷重150kg・撥水加工）",
+    "brand": "ひまわり生活専門店",
+    "price": 1780,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/ginto-1/cabinet/muson/ys1/0.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ucvr6.wwmjs596.g00ucvr6.wwmjtd5a/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fginto-1%2Fys1%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fginto-1%2Fi%2F10000183%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0GY32R93K/?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E3%83%81%E3%82%A7%E3%82%A2%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E6%A4%85%E5%AD%90%20%E8%BB%BD%E9%87%8F%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%81%E3%82%A7%E3%82%A2",
+    "categoryId": "chair",
+    "specs": {
+      "素材": "600Dオックスフォード",
+      "重量": "約1kg",
+      "座面高": "",
+      "耐荷重": "150kg",
+      "収納サイズ": ""
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-04-15T01:48:18.558+00:00",
+    "updatedAt": "2026-08-07T20:02:18.665+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-04-15T01:48:18.558Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "insect-repellent-004",
     "name": "天使のスキンベープミスト プレミアム 200mL",
     "brand": "フマキラー",
@@ -2384,32 +2410,6 @@
     "rating": 5,
     "createdAt": "2026-03-31T00:00:00+00:00",
     "updatedAt": "2026-08-06T15:10:26.962+00:00"
-  },
-  {
-    "id": "chair-009",
-    "name": "軽量折りたたみローチェア（耐荷重150kg・撥水加工）",
-    "brand": "ひまわり生活専門店",
-    "price": 1780,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/ginto-1/cabinet/muson/ys1/0.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ucvr6.wwmjs596.g00ucvr6.wwmjtd5a/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fginto-1%2Fys1%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fginto-1%2Fi%2F10000183%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0GY32R93K/?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E3%83%81%E3%82%A7%E3%82%A2%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E6%A4%85%E5%AD%90%20%E8%BB%BD%E9%87%8F%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%81%E3%82%A7%E3%82%A2",
-    "categoryId": "chair",
-    "specs": {
-      "素材": "600Dオックスフォード",
-      "重量": "約1kg",
-      "座面高": "",
-      "耐荷重": "150kg",
-      "収納サイズ": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-04-15T01:48:18.558+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T01:48:18.558Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "tent-duo-002",
@@ -2818,6 +2818,25 @@
     "updatedAt": "2026-08-06T15:10:25.097+00:00"
   },
   {
+    "id": "rakuten-brave-2-vl0494-1",
+    "name": "VASTLAND キャンプフィットチェア ハイタイプ",
+    "brand": "VASTLAND",
+    "price": 0,
+    "imageUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FVASTLAND%2520%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%25E3%2583%2595%25E3%2582%25A3%25E3%2583%2583%25E3%2583%2588%25E3%2583%2581%25E3%2582%25A7%25E3%2582%25A2%2520%25E3%2583%258F%25E3%2582%25A4%25E3%2582%25BF%25E3%2582%25A4%25E3%2583%2597%2F&link_type=text&ut=",
+    "amazonUrl": "",
+    "categoryId": "chair",
+    "specs": {},
+    "description": "高さ4段階調節、ハイバック帆布素材。焚き火やBBQに",
+    "rating": 0,
+    "createdAt": "2026-04-22T14:35:48.519+00:00",
+    "updatedAt": "2026-08-02T01:13:30+00:00",
+    "autoAdded": true,
+    "addedBy": "rakuten-brave",
+    "addedAt": "2026-04-22",
+    "sourceApi": "brave-rakuten"
+  },
+  {
     "id": "burner-s-001",
     "name": "スノーピーク ギガパワーマイクロマックスウルトラライト GST-120R",
     "brand": "スノーピーク",
@@ -2864,25 +2883,6 @@
     "addedBy": "article-product-agent",
     "addedAt": "2026-07-29T00:00:51.831Z",
     "sourceApi": "rakuten"
-  },
-  {
-    "id": "rakuten-brave-2-vl0494-1",
-    "name": "VASTLAND キャンプフィットチェア ハイタイプ",
-    "brand": "VASTLAND",
-    "price": 0,
-    "imageUrl": "",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FVASTLAND%2520%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%25E3%2583%2595%25E3%2582%25A3%25E3%2583%2583%25E3%2583%2588%25E3%2583%2581%25E3%2582%25A7%25E3%2582%25A2%2520%25E3%2583%258F%25E3%2582%25A4%25E3%2582%25BF%25E3%2582%25A4%25E3%2583%2597%2F&link_type=text&ut=",
-    "amazonUrl": "",
-    "categoryId": "chair",
-    "specs": {},
-    "description": "高さ4段階調節、ハイバック帆布素材。焚き火やBBQに",
-    "rating": 0,
-    "createdAt": "2026-04-22T14:35:48.519+00:00",
-    "updatedAt": "2026-08-02T01:13:30+00:00",
-    "autoAdded": true,
-    "addedBy": "rakuten-brave",
-    "addedAt": "2026-04-22",
-    "sourceApi": "brave-rakuten"
   },
   {
     "id": "insect-repellent-020",
@@ -3134,6 +3134,26 @@
     "autoAdded": false
   },
   {
+    "id": "tent-013",
+    "name": "スモア（Smore） チタンマグカップ 350ml 蓋付き シングルウォール",
+    "brand": "HOMIDO",
+    "price": 3628,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/idoga-gadget/cabinet/image-cut/solo_camp/09392310/smors001mwla350_01_r.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00st9r6.wwmjsc6d.g00st9r6.wwmjt4b7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fidoga-gadget%2Fsmorsut001mwla350%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fidoga-gadget%2Fi%2F10018444%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09J4MDLXB?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%A2%E3%82%A2%EF%BC%88Smore%EF%BC%89%20%E3%83%81%E3%82%BF%E3%83%B3%E3%83%9E%E3%82%B0%E3%82%AB%E3%83%83%E3%83%97%20350ml%20%E8%93%8B%E4%BB%98%E3%81%8D%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%82%A6%E3%82%A9%E3%83%BC%E3%83%AB",
+    "categoryId": "burner",
+    "specs": {},
+    "description": "",
+    "rating": 0,
+    "createdAt": "2026-04-15T02:21:25.768+00:00",
+    "updatedAt": "2026-08-07T09:53:05.149+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-04-15T02:21:25.768Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "sb-budget-004",
     "name": "ネイチャーハイク CW280 ダウンシュラフ",
     "brand": "Naturehike",
@@ -3154,26 +3174,6 @@
     "rating": 4.3,
     "createdAt": "2026-04-02T00:00:00+00:00",
     "updatedAt": "2026-07-30T12:00:00+00:00"
-  },
-  {
-    "id": "tent-013",
-    "name": "スモア（Smore） チタンマグカップ 350ml 蓋付き シングルウォール",
-    "brand": "HOMIDO",
-    "price": 3628,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/idoga-gadget/cabinet/image-cut/solo_camp/09392310/smors001mwla350_01_r.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00st9r6.wwmjsc6d.g00st9r6.wwmjt4b7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fidoga-gadget%2Fsmorsut001mwla350%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fidoga-gadget%2Fi%2F10018444%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B09J4MDLXB?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%A2%E3%82%A2%EF%BC%88Smore%EF%BC%89%20%E3%83%81%E3%82%BF%E3%83%B3%E3%83%9E%E3%82%B0%E3%82%AB%E3%83%83%E3%83%97%20350ml%20%E8%93%8B%E4%BB%98%E3%81%8D%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%82%A6%E3%82%A9%E3%83%BC%E3%83%AB",
-    "categoryId": "burner",
-    "specs": {},
-    "description": "",
-    "rating": 0,
-    "createdAt": "2026-04-15T02:21:25.768+00:00",
-    "updatedAt": "2026-08-07T09:53:05.149+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T02:21:25.768Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "tent-003",
@@ -4445,6 +4445,26 @@
     "updatedAt": "2026-08-06T19:16:27.468+00:00"
   },
   {
+    "id": "tarp-010",
+    "name": "LAONsChoice タクティカルレインコート（完全防水）",
+    "brand": "LAONsChoice",
+    "price": 7870,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/laonschoise/cabinet/12250252/tb5961032_5.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00up7v6.wwmjs9ba.g00up7v6.wwmjt0f6/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flaonschoise%2Fu5zwotgh7c2sngepqz2eifzwty-imp%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Flaonschoise%2Fi%2F11016518%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
+    "amazonUrl": "",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%81%8B%E3%81%A3%E3%81%B1%20%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%A6%E3%82%A7%E3%82%A2%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%A4%9A%E6%A9%9F%E8%83%BD",
+    "categoryId": "wear",
+    "specs": {},
+    "description": "",
+    "rating": 0,
+    "createdAt": "2026-04-15T02:21:27.059+00:00",
+    "updatedAt": "2026-08-01T14:36:49+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-04-15T02:21:27.059Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "led-tent-006",
     "name": "キャプテンスタッグ CS ストリングライト 充電式",
     "brand": "キャプテンスタッグ",
@@ -4466,26 +4486,6 @@
     "rating": 3.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
     "updatedAt": "2026-08-06T15:10:37.469+00:00"
-  },
-  {
-    "id": "tarp-010",
-    "name": "LAONsChoice タクティカルレインコート（完全防水）",
-    "brand": "LAONsChoice",
-    "price": 7870,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/laonschoise/cabinet/12250252/tb5961032_5.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00up7v6.wwmjs9ba.g00up7v6.wwmjt0f6/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flaonschoise%2Fu5zwotgh7c2sngepqz2eifzwty-imp%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Flaonschoise%2Fi%2F11016518%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%81%8B%E3%81%A3%E3%81%B1%20%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%A6%E3%82%A7%E3%82%A2%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%A4%9A%E6%A9%9F%E8%83%BD",
-    "categoryId": "wear",
-    "specs": {},
-    "description": "",
-    "rating": 0,
-    "createdAt": "2026-04-15T02:21:27.059+00:00",
-    "updatedAt": "2026-08-01T14:36:49+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T02:21:27.059Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "tarp-008",
@@ -4692,6 +4692,31 @@
     "updatedAt": "2026-08-06T15:10:44.346+00:00"
   },
   {
+    "id": "cooler-024",
+    "name": "ホリアキ 非常用給水バッグ 5L（3枚入）",
+    "brand": "ホリアキ",
+    "price": 921,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/officeyu/cabinet/04791052/imgrc0068763199.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rumm6.wwmjs942.g00rumm6.wwmjt50b/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fofficeyu%2Fis1074%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fofficeyu%2Fi%2F10051695%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B01JHS5G9A/?tag=camp78-22",
+    "categoryId": "cooler",
+    "specs": {
+      "容量": "5L",
+      "素材": "PE",
+      "重量": "",
+      "サイズ": "縦435×横300mm",
+      "保冷力": ""
+    },
+    "description": "",
+    "rating": 0,
+    "createdAt": "2026-07-22T00:01:09.561+00:00",
+    "updatedAt": "2026-08-06T19:16:27.468+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-07-22T00:01:09.561Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "tarp-011",
     "name": "キャンプグランド ベアーベル 利用券 3,000円分（ふるさと納税）",
     "brand": "キャンプグランド ベアーベル",
@@ -4741,28 +4766,29 @@
     "updatedAt": "2026-08-06T15:10:37.469+00:00"
   },
   {
-    "id": "cooler-024",
-    "name": "ホリアキ 非常用給水バッグ 5L（3枚入）",
-    "brand": "ホリアキ",
-    "price": 921,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/officeyu/cabinet/04791052/imgrc0068763199.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rumm6.wwmjs942.g00rumm6.wwmjt50b/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fofficeyu%2Fis1074%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fofficeyu%2Fi%2F10051695%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B01JHS5G9A/?tag=camp78-22",
-    "categoryId": "cooler",
+    "id": "tent-009",
+    "name": "厚手ブルーシート 3.6m×5.4m（#3000）",
+    "brand": "ESTOAH.home エストアホーム",
+    "price": 2642,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-estoah/cabinet/image14/z5012-msm.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rdva6.wwmjsf65.g00rdva6.wwmjt4aa/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-estoah%2Fz5012-msm%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fauc-estoah%2Fi%2F10053352%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B002P8WQMK?tag=camp78-22",
+    "categoryId": "tent",
     "specs": {
-      "容量": "5L",
-      "素材": "PE",
+      "構造": "",
+      "素材": "ポリエチレン等合成樹脂",
       "重量": "",
-      "サイズ": "縦435×横300mm",
-      "保冷力": ""
+      "サイズ": "5.4m×3.6m",
+      "耐水圧": "",
+      "収容人数": ""
     },
     "description": "",
-    "rating": 0,
-    "createdAt": "2026-07-22T00:01:09.561+00:00",
-    "updatedAt": "2026-08-06T19:16:27.468+00:00",
+    "rating": 5,
+    "createdAt": "2026-04-15T01:48:08.267+00:00",
+    "updatedAt": "2026-08-06T15:10:40.98+00:00",
     "autoAdded": true,
     "addedBy": "article-product-agent",
-    "addedAt": "2026-07-22T00:01:09.561Z",
+    "addedAt": "2026-04-15T01:48:08.268Z",
     "sourceApi": "rakuten"
   },
   {
@@ -4813,32 +4839,6 @@
     "rating": 4.5,
     "createdAt": "2026-04-01T00:00:00+00:00",
     "updatedAt": "2026-07-25T01:04:14.687+00:00"
-  },
-  {
-    "id": "tent-009",
-    "name": "厚手ブルーシート 3.6m×5.4m（#3000）",
-    "brand": "ESTOAH.home エストアホーム",
-    "price": 2642,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-estoah/cabinet/image14/z5012-msm.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00rdva6.wwmjsf65.g00rdva6.wwmjt4aa/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-estoah%2Fz5012-msm%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fauc-estoah%2Fi%2F10053352%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B002P8WQMK?tag=camp78-22",
-    "categoryId": "tent",
-    "specs": {
-      "構造": "",
-      "素材": "ポリエチレン等合成樹脂",
-      "重量": "",
-      "サイズ": "5.4m×3.6m",
-      "耐水圧": "",
-      "収容人数": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-04-15T01:48:08.267+00:00",
-    "updatedAt": "2026-08-06T15:10:40.98+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-04-15T01:48:08.268Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "peg-hammer-uniflame-revo",
@@ -5165,6 +5165,25 @@
     "autoAdded": false
   },
   {
+    "id": "fan-003",
+    "name": "ファン付きベスト フルセット（2026年モデル）",
+    "brand": "株式会社未来",
+    "price": 8510,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/keileafshop/cabinet/zd02/zd19/163.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ua506.wwmjs4bc.g00ua506.wwmjt1e1/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkeileafshop%2Fyd02-3%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkeileafshop%2Fi%2F10000442%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0FLNXGVWX/?tag=camp78-22",
+    "categoryId": "fan",
+    "specs": {},
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-07-22T00:01:00.949+00:00",
+    "updatedAt": "2026-08-06T19:16:27.468+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-07-22T00:01:00.949Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "fan-007",
     "name": "【在庫有】 扇風機 携帯扇風機 ハンディファン ポケット 4008897-01 携帯 卓上 手持 小型扇風機 ハンディ扇風機 手持ち扇風機 ミニ扇風機 USB 軽量 コンパクト 小型 充電式コードレス",
     "brand": "ガーデニングと雑貨のスイートピー",
@@ -5226,25 +5245,6 @@
     "rating": 4.1,
     "createdAt": "2026-04-02T00:00:00+00:00",
     "updatedAt": "2026-07-25T01:04:14.687+00:00"
-  },
-  {
-    "id": "fan-003",
-    "name": "ファン付きベスト フルセット（2026年モデル）",
-    "brand": "株式会社未来",
-    "price": 8510,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/keileafshop/cabinet/zd02/zd19/163.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ua506.wwmjs4bc.g00ua506.wwmjt1e1/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fkeileafshop%2Fyd02-3%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkeileafshop%2Fi%2F10000442%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0FLNXGVWX/?tag=camp78-22",
-    "categoryId": "fan",
-    "specs": {},
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-07-22T00:01:00.949+00:00",
-    "updatedAt": "2026-08-06T19:16:27.468+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-07-22T00:01:00.949Z",
-    "sourceApi": "rakuten"
   },
   {
     "id": "cooler-025",
@@ -5552,6 +5552,25 @@
     "autoAdded": false
   },
   {
+    "id": "rakuten-next-online-10000136",
+    "name": "焚き火用ウィンドスクリーン（軽量・折りたたみ）",
+    "brand": "Nextオンライン",
+    "price": 1180,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_gold/next-online/gold/nextonline/product/windscreen/samune_2.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tfbh6.wwmjs7e4.g00tfbh6.wwmjtff7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnext-online%2F10000136%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fnext-online%2Fi%2F10000136%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
+    "amazonUrl": "",
+    "categoryId": "firepit",
+    "specs": {},
+    "description": "楽天レビュー3029件、★4.63",
+    "rating": 4.63,
+    "createdAt": "2026-04-13T19:26:56.48+00:00",
+    "updatedAt": "2026-08-01T14:36:49+00:00",
+    "autoAdded": true,
+    "addedBy": "rakuten-ranking",
+    "addedAt": "2026-04-13",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "cooler-002",
     "name": "ダイワ クールラインα ライトソルト S1500X",
     "brand": "ダイワ",
@@ -5623,25 +5642,6 @@
     "rating": 4.5,
     "createdAt": "2026-03-31T00:00:00+00:00",
     "updatedAt": "2026-07-30T12:00:00+00:00"
-  },
-  {
-    "id": "rakuten-next-online-10000136",
-    "name": "焚き火用ウィンドスクリーン（軽量・折りたたみ）",
-    "brand": "Nextオンライン",
-    "price": 1180,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_gold/next-online/gold/nextonline/product/windscreen/samune_2.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00tfbh6.wwmjs7e4.g00tfbh6.wwmjtff7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnext-online%2F10000136%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fnext-online%2Fi%2F10000136%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "",
-    "categoryId": "firepit",
-    "specs": {},
-    "description": "楽天レビュー3029件、★4.63",
-    "rating": 4.63,
-    "createdAt": "2026-04-13T19:26:56.48+00:00",
-    "updatedAt": "2026-08-01T14:36:49+00:00",
-    "autoAdded": true,
-    "addedBy": "rakuten-ranking",
-    "addedAt": "2026-04-13",
-    "sourceApi": "rakuten"
   },
   {
     "id": "table-001",
@@ -5899,6 +5899,29 @@
     "sourceApi": "rakuten"
   },
   {
+    "id": "fan-lumena-prime2",
+    "name": "LUMENA FAN PRIME2",
+    "brand": "LUMENA",
+    "price": 13200,
+    "imageUrl": "https://m.media-amazon.com/images/I/81BCYVYn90L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fflaner%2F10017931%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=LUMENA%20FAN%20PRIME2",
+    "categoryId": "fan",
+    "specs": {
+      "充電": "USB-C（QC3.0対応）",
+      "重量": "約950g",
+      "サイズ": "203×162×350mm",
+      "稼働時間": "最大30時間",
+      "バッテリー": "8000mAh"
+    },
+    "description": "",
+    "rating": 4,
+    "createdAt": "2026-06-20T07:29:02.634+00:00",
+    "updatedAt": "2026-07-25T01:04:14.687+00:00",
+    "autoAdded": false
+  },
+  {
     "id": "burner-m-001",
     "name": "コールマン パワーハウスツーバーナー 413H",
     "brand": "コールマン",
@@ -5940,29 +5963,6 @@
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-16T14:25:48.942Z",
     "sourceApi": "rakuten"
-  },
-  {
-    "id": "fan-lumena-prime2",
-    "name": "LUMENA FAN PRIME2",
-    "brand": "LUMENA",
-    "price": 13200,
-    "imageUrl": "https://m.media-amazon.com/images/I/81BCYVYn90L._AC_SL1500_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fflaner%2F10017931%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=LUMENA%20FAN%20PRIME2",
-    "categoryId": "fan",
-    "specs": {
-      "充電": "USB-C（QC3.0対応）",
-      "重量": "約950g",
-      "サイズ": "203×162×350mm",
-      "稼働時間": "最大30時間",
-      "バッテリー": "8000mAh"
-    },
-    "description": "",
-    "rating": 4,
-    "createdAt": "2026-06-20T07:29:02.634+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00",
-    "autoAdded": false
   },
   {
     "id": "heatstroke-neck-cooler-kids",
@@ -6149,6 +6149,31 @@
     "updatedAt": "2026-08-06T15:10:46.028+00:00"
   },
   {
+    "id": "tarp-016",
+    "name": "サンサーフ アロハシャツ スペシャルエディション 2026春夏 新作 SS39477 SUN SURF 東洋エンタープライズ THE SPACE SHIP 宇宙 スペースシップ ハワイアンシャツ 半袖",
+    "brand": "SUN SURF（東洋エンタープライズ）",
+    "price": 35200,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/eight-g/cabinet/itempage7/ss39477_mdl.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qosr6.wwmjs049.g00qosr6.wwmjt8d5/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Feight-g%2Fss39477%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Feight-g%2Fi%2F10008156%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B5%E3%83%B3%E3%82%B5%E3%83%BC%E3%83%95%20%E3%82%A2%E3%83%AD%E3%83%8F%E3%82%B7%E3%83%A3%E3%83%84%20%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E3%82%A8%E3%83%87%E3%82%A3%E3%82%B7%E3%83%A7%E3%83%B3%202026%E6%98%A5%E5%A4%8F%20%E6%96%B0%E4%BD%9C%20SS39477%20SUN%20SURF%20%E6%9D%B1%E6%B4%8B%E3%82%A8%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%E3%83%A9%E3%82%A4%E3%82%BA%20THE%20SPACE%20SHIP%20%E5%AE%87%E5%AE%99%20%E3%82%B9%E3%83%9A%E3%83%BC%E3%82%B9%E3%82%B7%E3%83%83%E3%83%97%20%E3%83%8F%E3%83%AF%E3%82%A4%E3%82%A2%E3%83%B3%E3%82%B7%E3%83%A3%E3%83%84%20%E5%8D%8A%E8%A2%96%20%E3%82%AA%E3%83%BC%E3%83%97%E3%83%B3%E3%82%AB%E3%83%A9%E3%83%BC%20%E9%96%8B%E8%A5%9F%20%E6%97%A5%E6%9C%AC%E8%A3%BD%20%E3%83%AC%E3%83%BC%E3%83%A8%E3%83%B3%20%E3%82%A2%E3%83%A1%E3%82%AB%E3%82%B8%20%E3%83%A1%E3%83%B3%E3%82%BA%20%E5%A4%A7%E4%BA%BA%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%83%8D%E3%82%A4%E3%83%93%E3%83%BC%20%E3%83%96%E3%83%A9%E3%82%A6%E3%83%B3%20S-XXL&tag=camp78-22",
+    "categoryId": "tarp",
+    "specs": {
+      "素材": "レーヨン100%",
+      "重量": "",
+      "サイズ": "S-XXL",
+      "付属品": "専用タグ・専用ケース",
+      "耐水圧": ""
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-08-12T00:01:06.108+00:00",
+    "updatedAt": "2026-08-12T00:01:06.108+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-08-12T00:01:06.108Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "sb-budget-001",
     "name": "コールマン パフォーマーIII C10",
     "brand": "コールマン",
@@ -6217,6 +6242,29 @@
     "rating": 4.4,
     "createdAt": "2026-06-24T15:00:00+00:00",
     "updatedAt": "2026-08-06T15:10:56.72+00:00"
+  },
+  {
+    "id": "sb-kids-002",
+    "name": "NANGA KIDS SQUARE FOOT 300",
+    "brand": "NANGA",
+    "price": 27500,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/crosscamper/cabinet/coupon/1001/4/n25047b001z-otr3.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnanga-onlineshop%2F8656515399854%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0DXQKKM37?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NANGA%20KIDS%20SQUARE%20FOOT%20300",
+    "categoryId": "sleeping-bag",
+    "specs": {
+      "中綿": "リサイクルダウン300g（ダウン90%・フェザー10%）",
+      "対象": "子供用（身長110〜160cm対応・3段階調整）",
+      "形状": "封筒型（足元ワイド）",
+      "特徴": "3段階サイズ調整・大人用への移行サポート",
+      "表地・裏地": "ナイロン100%",
+      "対応シーズン": "春・秋・冬（3シーズン）"
+    },
+    "description": "NANGAが本気で作った子供用ダウンシュラフ。リサイクルダウン300gで保温性は申し分なし。身長110〜160cmまで3段階で長さ調整でき、成長しても買い替え不要。ダウンの品質と永久保証を考えれば、長く使える投資として悪くない。",
+    "rating": 5,
+    "createdAt": "2026-03-31T00:00:00+00:00",
+    "updatedAt": "2026-07-25T01:04:14.687+00:00"
   },
   {
     "id": "fan-coleman-rechargeable",
@@ -6371,6 +6419,31 @@
     "createdAt": "2026-06-20T14:29:48.757+00:00",
     "updatedAt": "2026-08-06T15:10:47.972+00:00",
     "autoAdded": false
+  },
+  {
+    "id": "tumbler-001",
+    "name": "スタンレー 真空クエンチャー H2.0 0.88L (30oz)",
+    "brand": "スタンレー",
+    "price": 5500,
+    "imageUrl": "https://jp.stanley1913.com/cdn/shop/files/Web_PNG_Square-The_Quencher_Fluted_Texture_Tumbler_30OZ_-_Cream_Gloss_-_Front.png",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fculture%2Fst-stanley5%2F",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0D9G4YMKR/?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC%20%E7%9C%9F%E7%A9%BA%E3%82%AF%E3%82%A8%E3%83%B3%E3%83%81%E3%83%A3%E3%83%BC%20H2.0%200.88L%20(30oz)",
+    "categoryId": "tumbler",
+    "specs": {
+      "口径": "ストロー付き蓋＋飲み口あり",
+      "容量": "880ml (30oz)",
+      "重量": "約482g",
+      "サイズ": "幅約9.5×高さ20cm",
+      "保冷時間": "ロックアイス約11時間",
+      "保温時間": "約7時間",
+      "本体素材": "ステンレス鋼 (真空断熱二重構造)",
+      "食洗機対応": "可"
+    },
+    "description": "蓋を外しても飲める二重構造の万能タンブラー。880mlの大容量、しっかり保冷、ハンドル付きで持ち運びやすく、職場・車内・キャンプの全シーンで使える「日常×アウトドアの正解」。後述のスピルストッパーと併用すれば、車載でもこぼれにくい盤石の構成になる。",
+    "rating": 4.7,
+    "createdAt": "2026-04-27T00:00:00+00:00",
+    "updatedAt": "2026-08-06T20:40:27.213+00:00"
   },
   {
     "id": "rakuten-brave-3-c0144",
@@ -6534,6 +6607,31 @@
     "updatedAt": "2026-08-12T10:29:21.731+00:00"
   },
   {
+    "id": "light-009",
+    "name": "HAGOOGI キャンプライト（380ルーメン・USB充電式）",
+    "brand": "HAGOOGI",
+    "price": 3580,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/hagoogi/cabinet/13341716/13341719/imgrc0101349160.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00trzx6.wwmjs17d.g00trzx6.wwmjtf43/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhagoogi%2Ff3-01%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhagoogi%2Fi%2F10000270%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0GHMZZ5NQ/?tag=camp78-22",
+    "categoryId": "light",
+    "specs": {
+      "重量": "179g",
+      "防水": "IP65",
+      "電源": "USB充電式（DC 5V／2A、リチウムイオンポリマー5000mAh）",
+      "明るさ": "380ルーメン",
+      "点灯時間": "約40時間"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-07-15T00:00:55.212+00:00",
+    "updatedAt": "2026-08-06T19:16:27.468+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-07-15T00:00:55.212Z",
+    "sourceApi": "rakuten"
+  },
+  {
     "id": "chair-011",
     "name": "ヘリノックス ビーチチェア（ハイバック・メッシュ）",
     "brand": "ヘリノックス",
@@ -6665,6 +6763,28 @@
     "sourceApi": "rakuten"
   },
   {
+    "id": "mat-coleman-highpeak",
+    "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
+    "brand": "コールマン",
+    "price": 12800,
+    "imageUrl": "https://m.media-amazon.com/images/I/513QbmXPp2L._AC_SL1500_.jpg",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r8v16.wwmjs82e.g00r8v16.wwmjtfa4/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fstore-megasports%2F64047715%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fstore-megasports%2Fi%2F10358661%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%83%BC%E3%82%A4%E3%83%B3%E3%83%95%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%9E%E3%83%83%E3%83%88%20%E3%83%8F%E3%82%A4%E3%83%94%E3%83%BC%E3%82%AF%2F%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB",
+    "categoryId": "sleeping-bag",
+    "specs": {
+      "厚さ": "10cm",
+      "収納": "72×21cm",
+      "重量": "2.7kg",
+      "サイズ": "198×68cm"
+    },
+    "description": "",
+    "rating": 4.3,
+    "createdAt": "2026-06-20T14:29:48.757+00:00",
+    "updatedAt": "2026-08-02T01:13:30+00:00",
+    "autoAdded": false
+  },
+  {
     "id": "insect-repellent-017",
     "name": "ワンタッチビーチテント 4人用（蚊帳・フルクローズ）",
     "brand": "雑貨の国のアリス",
@@ -6713,6 +6833,53 @@
     "rating": 4.7,
     "createdAt": "2026-04-27T00:00:00+00:00",
     "updatedAt": "2026-08-06T19:16:27.468+00:00"
+  },
+  {
+    "id": "rw-004",
+    "name": "ワークマン INAREM ストレッチレインスーツ",
+    "brand": "WORKMAN",
+    "price": 5500,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/w-import/cabinet/work-01/work-052.jpg?_ex=600x600",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AF%25E3%2583%25BC%25E3%2582%25AF%25E3%2583%259E%25E3%2583%25B3%2520INAREM%2520%25E3%2582%25B9%25E3%2583%2588%25E3%2583%25AC%25E3%2583%2583%25E3%2583%2581%25E3%2583%25AC%25E3%2582%25A4%25E3%2583%25B3%25E3%2582%25B9%25E3%2583%25BC%25E3%2583%2584%2F&link_type=text&ut=",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BVGYD8BN?tag=camp78-22",
+    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%9E%E3%83%B3%20INAREM%20%E3%82%B9%E3%83%88%E3%83%AC%E3%83%83%E3%83%81%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%BC%E3%83%84",
+    "categoryId": "wear",
+    "specs": {
+      "素材": "イナレム（2.5層）",
+      "重量": "約600g（上下セット・Lサイズ）",
+      "耐水圧": "15,000mm",
+      "透湿性": "15,000g/m²/24h",
+      "セット内容": "ジャケット+パンツ上下セット"
+    },
+    "description": "5千円以下で買える驚異のコスパ。キャンプや低山ハイクなら十分な性能。ストレッチ素材で動きやすい。",
+    "rating": 4.2,
+    "createdAt": "2026-04-01T00:00:00+00:00",
+    "updatedAt": "2026-07-25T01:04:14.687+00:00"
+  },
+  {
+    "id": "light-008",
+    "name": "人感センサー付きLED非常灯（充電式）",
+    "brand": "Honey sweets",
+    "price": 1980,
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/honeysweets2023/cabinet/shohin01/4573553693303.jpg?_ex=128x128",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uhhh6.wwmjsd06.g00uhhh6.wwmjt04f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhoneysweets2023%2F4573553693303%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhoneysweets2023%2Fi%2F10000132%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09G9HG9XJ/?tag=camp78-22",
+    "categoryId": "light",
+    "specs": {
+      "重量": "",
+      "防水": "IP54",
+      "電源": "リチウムイオンバッテリー(1200mAh)",
+      "明るさ": "約200ルーメン",
+      "点灯時間": "約2時間"
+    },
+    "description": "",
+    "rating": 5,
+    "createdAt": "2026-07-15T00:00:53.952+00:00",
+    "updatedAt": "2026-08-06T19:16:27.468+00:00",
+    "autoAdded": true,
+    "addedBy": "article-product-agent",
+    "addedAt": "2026-07-15T00:00:53.952Z",
+    "sourceApi": "rakuten"
   },
   {
     "id": "insect-repellent-023",
@@ -6995,31 +7162,6 @@
     "sourceApi": "rakuten"
   },
   {
-    "id": "tarp-016",
-    "name": "サンサーフ アロハシャツ スペシャルエディション 2026春夏 新作 SS39477 SUN SURF 東洋エンタープライズ THE SPACE SHIP 宇宙 スペースシップ ハワイアンシャツ 半袖",
-    "brand": "SUN SURF（東洋エンタープライズ）",
-    "price": 35200,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/eight-g/cabinet/itempage7/ss39477_mdl.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qosr6.wwmjs049.g00qosr6.wwmjt8d5/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Feight-g%2Fss39477%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Feight-g%2Fi%2F10008156%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
-    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B5%E3%83%B3%E3%82%B5%E3%83%BC%E3%83%95%20%E3%82%A2%E3%83%AD%E3%83%8F%E3%82%B7%E3%83%A3%E3%83%84%20%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E3%82%A8%E3%83%87%E3%82%A3%E3%82%B7%E3%83%A7%E3%83%B3%202026%E6%98%A5%E5%A4%8F%20%E6%96%B0%E4%BD%9C%20SS39477%20SUN%20SURF%20%E6%9D%B1%E6%B4%8B%E3%82%A8%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%E3%83%A9%E3%82%A4%E3%82%BA%20THE%20SPACE%20SHIP%20%E5%AE%87%E5%AE%99%20%E3%82%B9%E3%83%9A%E3%83%BC%E3%82%B9%E3%82%B7%E3%83%83%E3%83%97%20%E3%83%8F%E3%83%AF%E3%82%A4%E3%82%A2%E3%83%B3%E3%82%B7%E3%83%A3%E3%83%84%20%E5%8D%8A%E8%A2%96%20%E3%82%AA%E3%83%BC%E3%83%97%E3%83%B3%E3%82%AB%E3%83%A9%E3%83%BC%20%E9%96%8B%E8%A5%9F%20%E6%97%A5%E6%9C%AC%E8%A3%BD%20%E3%83%AC%E3%83%BC%E3%83%A8%E3%83%B3%20%E3%82%A2%E3%83%A1%E3%82%AB%E3%82%B8%20%E3%83%A1%E3%83%B3%E3%82%BA%20%E5%A4%A7%E4%BA%BA%20%E3%81%8A%E3%81%97%E3%82%83%E3%82%8C%20%E3%83%8D%E3%82%A4%E3%83%93%E3%83%BC%20%E3%83%96%E3%83%A9%E3%82%A6%E3%83%B3%20S-XXL&tag=camp78-22",
-    "categoryId": "tarp",
-    "specs": {
-      "素材": "レーヨン100%",
-      "重量": "",
-      "サイズ": "S-XXL",
-      "付属品": "専用タグ・専用ケース",
-      "耐水圧": ""
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-08-12T00:01:06.108+00:00",
-    "updatedAt": "2026-08-12T00:01:06.108+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-08-12T00:01:06.108Z",
-    "sourceApi": "rakuten"
-  },
-  {
     "id": "rakuten-livewell-10002781",
     "name": "ナチュールクーラー 日本製クーラーバッグ（7L/15L/18L）",
     "brand": "リブウェル 楽天市場店",
@@ -7169,29 +7311,6 @@
     "updatedAt": "2026-08-07T20:23:47.382+00:00"
   },
   {
-    "id": "sb-kids-002",
-    "name": "NANGA KIDS SQUARE FOOT 300",
-    "brand": "NANGA",
-    "price": 27500,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/crosscamper/cabinet/coupon/1001/4/n25047b001z-otr3.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnanga-onlineshop%2F8656515399854%2F&link_type=text&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJ0ZXh0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0DXQKKM37?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NANGA%20KIDS%20SQUARE%20FOOT%20300",
-    "categoryId": "sleeping-bag",
-    "specs": {
-      "中綿": "リサイクルダウン300g（ダウン90%・フェザー10%）",
-      "対象": "子供用（身長110〜160cm対応・3段階調整）",
-      "形状": "封筒型（足元ワイド）",
-      "特徴": "3段階サイズ調整・大人用への移行サポート",
-      "表地・裏地": "ナイロン100%",
-      "対応シーズン": "春・秋・冬（3シーズン）"
-    },
-    "description": "NANGAが本気で作った子供用ダウンシュラフ。リサイクルダウン300gで保温性は申し分なし。身長110〜160cmまで3段階で長さ調整でき、成長しても買い替え不要。ダウンの品質と永久保証を考えれば、長く使える投資として悪くない。",
-    "rating": 5,
-    "createdAt": "2026-03-31T00:00:00+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
-  },
-  {
     "id": "rakuten-artpiece-10000946",
     "name": "軽量コンパクト寝袋 最低使用温度-15度 オールシーズン対応",
     "brand": "ARTPIECE",
@@ -7228,31 +7347,6 @@
     "addedBy": "article-product-agent",
     "addedAt": "2026-08-12T00:00:52.745Z",
     "sourceApi": "rakuten"
-  },
-  {
-    "id": "tumbler-001",
-    "name": "スタンレー 真空クエンチャー H2.0 0.88L (30oz)",
-    "brand": "スタンレー",
-    "price": 5500,
-    "imageUrl": "https://jp.stanley1913.com/cdn/shop/files/Web_PNG_Square-The_Quencher_Fluted_Texture_Tumbler_30OZ_-_Cream_Gloss_-_Front.png",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fculture%2Fst-stanley5%2F",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0D9G4YMKR/?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC%20%E7%9C%9F%E7%A9%BA%E3%82%AF%E3%82%A8%E3%83%B3%E3%83%81%E3%83%A3%E3%83%BC%20H2.0%200.88L%20(30oz)",
-    "categoryId": "tumbler",
-    "specs": {
-      "口径": "ストロー付き蓋＋飲み口あり",
-      "容量": "880ml (30oz)",
-      "重量": "約482g",
-      "サイズ": "幅約9.5×高さ20cm",
-      "保冷時間": "ロックアイス約11時間",
-      "保温時間": "約7時間",
-      "本体素材": "ステンレス鋼 (真空断熱二重構造)",
-      "食洗機対応": "可"
-    },
-    "description": "蓋を外しても飲める二重構造の万能タンブラー。880mlの大容量、しっかり保冷、ハンドル付きで持ち運びやすく、職場・車内・キャンプの全シーンで使える「日常×アウトドアの正解」。後述のスピルストッパーと併用すれば、車載でもこぼれにくい盤石の構成になる。",
-    "rating": 4.7,
-    "createdAt": "2026-04-27T00:00:00+00:00",
-    "updatedAt": "2026-08-06T20:40:27.213+00:00"
   },
   {
     "id": "dry-net-snowpeak",
@@ -7293,100 +7387,6 @@
     "autoAdded": true,
     "addedBy": "article-product-agent",
     "addedAt": "2026-04-16T14:24:41.602Z",
-    "sourceApi": "rakuten"
-  },
-  {
-    "id": "light-009",
-    "name": "HAGOOGI キャンプライト（380ルーメン・USB充電式）",
-    "brand": "HAGOOGI",
-    "price": 3580,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/hagoogi/cabinet/13341716/13341719/imgrc0101349160.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00trzx6.wwmjs17d.g00trzx6.wwmjtf43/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhagoogi%2Ff3-01%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhagoogi%2Fi%2F10000270%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0GHMZZ5NQ/?tag=camp78-22",
-    "categoryId": "light",
-    "specs": {
-      "重量": "179g",
-      "防水": "IP65",
-      "電源": "USB充電式（DC 5V／2A、リチウムイオンポリマー5000mAh）",
-      "明るさ": "380ルーメン",
-      "点灯時間": "約40時間"
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-07-15T00:00:55.212+00:00",
-    "updatedAt": "2026-08-06T19:16:27.468+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-07-15T00:00:55.212Z",
-    "sourceApi": "rakuten"
-  },
-  {
-    "id": "mat-coleman-highpeak",
-    "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
-    "brand": "コールマン",
-    "price": 12800,
-    "imageUrl": "https://m.media-amazon.com/images/I/513QbmXPp2L._AC_SL1500_.jpg",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r8v16.wwmjs82e.g00r8v16.wwmjtfa4/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fstore-megasports%2F64047715%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fstore-megasports%2Fi%2F10358661%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%83%BC%E3%82%A4%E3%83%B3%E3%83%95%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%9E%E3%83%83%E3%83%88%20%E3%83%8F%E3%82%A4%E3%83%94%E3%83%BC%E3%82%AF%2F%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB",
-    "categoryId": "sleeping-bag",
-    "specs": {
-      "厚さ": "10cm",
-      "収納": "72×21cm",
-      "重量": "2.7kg",
-      "サイズ": "198×68cm"
-    },
-    "description": "",
-    "rating": 4.3,
-    "createdAt": "2026-06-20T14:29:48.757+00:00",
-    "updatedAt": "2026-08-02T01:13:30+00:00",
-    "autoAdded": false
-  },
-  {
-    "id": "rw-004",
-    "name": "ワークマン INAREM ストレッチレインスーツ",
-    "brand": "WORKMAN",
-    "price": 5500,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/w-import/cabinet/work-01/work-052.jpg?_ex=600x600",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AF%25E3%2583%25BC%25E3%2582%25AF%25E3%2583%259E%25E3%2583%25B3%2520INAREM%2520%25E3%2582%25B9%25E3%2583%2588%25E3%2583%25AC%25E3%2583%2583%25E3%2583%2581%25E3%2583%25AC%25E3%2582%25A4%25E3%2583%25B3%25E3%2582%25B9%25E3%2583%25BC%25E3%2583%2584%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0BVGYD8BN?tag=camp78-22",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%9E%E3%83%B3%20INAREM%20%E3%82%B9%E3%83%88%E3%83%AC%E3%83%83%E3%83%81%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%BC%E3%83%84",
-    "categoryId": "wear",
-    "specs": {
-      "素材": "イナレム（2.5層）",
-      "重量": "約600g（上下セット・Lサイズ）",
-      "耐水圧": "15,000mm",
-      "透湿性": "15,000g/m²/24h",
-      "セット内容": "ジャケット+パンツ上下セット"
-    },
-    "description": "5千円以下で買える驚異のコスパ。キャンプや低山ハイクなら十分な性能。ストレッチ素材で動きやすい。",
-    "rating": 4.2,
-    "createdAt": "2026-04-01T00:00:00+00:00",
-    "updatedAt": "2026-07-25T01:04:14.687+00:00"
-  },
-  {
-    "id": "light-008",
-    "name": "人感センサー付きLED非常灯（充電式）",
-    "brand": "Honey sweets",
-    "price": 1980,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/honeysweets2023/cabinet/shohin01/4573553693303.jpg?_ex=128x128",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uhhh6.wwmjsd06.g00uhhh6.wwmjt04f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fhoneysweets2023%2F4573553693303%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fhoneysweets2023%2Fi%2F10000132%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B09G9HG9XJ/?tag=camp78-22",
-    "categoryId": "light",
-    "specs": {
-      "重量": "",
-      "防水": "IP54",
-      "電源": "リチウムイオンバッテリー(1200mAh)",
-      "明るさ": "約200ルーメン",
-      "点灯時間": "約2時間"
-    },
-    "description": "",
-    "rating": 5,
-    "createdAt": "2026-07-15T00:00:53.952+00:00",
-    "updatedAt": "2026-08-06T19:16:27.468+00:00",
-    "autoAdded": true,
-    "addedBy": "article-product-agent",
-    "addedAt": "2026-07-15T00:00:53.952Z",
     "sourceApi": "rakuten"
   },
   {
