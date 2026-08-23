@@ -93,6 +93,16 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
           </div>
         </div>
         <div className="border-t border-line-soft mt-10 pt-6 text-center text-xs text-slate-400 space-y-2">
+          {/* 英語セクション（Snow Peak IGT 需要検証）。控えめに1本だけ置く。
+              言語やIPによる自動リダイレクトは行わない */}
+          <p>
+            <Link
+              href="/en"
+              className="text-slate-500 hover:text-lake-600 transition underline underline-offset-2"
+            >
+              English
+            </Link>
+          </p>
           <p>
             Amazonのアソシエイトとして、Camp Gear Lab
             は適格販売により収入を得ています。

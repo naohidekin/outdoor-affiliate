@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getArticlesList, getCategories } from "@/lib/db";
+import { enSitemapEntries } from "@/lib/experiments/snow-peak-igt/seo";
 
 // クローラー（Google/Bing/GPTBot等）が高頻度で叩くため1時間キャッシュ。
 // これが無いとアクセスの度にSupabaseから全記事メタを取得しEgressを消費する。
@@ -78,5 +79,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: isGuideArticle(article.title) ? 0.9 : 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...articlePages];
+  // 英語セクション（Snow Peak IGT 需要検証MVP）。
+  // 日本語版の対応ページが無いので hreflang は付けない。存在しない
+  // 対応先を宣言すると相互参照が取れず、誤ったシグナルになる
+  const englishPages = enSitemapEntries(new Date(latestArticleDate));
+
+  return [...staticPages, ...categoryPages, ...articlePages, ...englishPages];
 }
