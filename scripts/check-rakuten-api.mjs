@@ -2,27 +2,35 @@
 /**
  * 楽天APIの疎通を最小構成で確かめる（切り分け専用）
  *
- * 背景（2026-08-23）: 朝は通っていた楽天APIが途中から
- * `API Configuration not found` を返すようになった。仮説を2つ立てて
- * 2つとも外した。
+ * 背景（2026-08-23）: 楽天APIが `API Configuration not found` を返し続ける。
+ * 仮説を5つ立てて5つとも説明しきれていない。
  *   ① .env.local の RAKUTEN_APP_ID 重複でIDとキーがズレている
  *      → 2組とも完結していた。外れ
  *   ② IP制限。回線の動的IPが変わった
  *      → 現在のIPも /24 レンジも登録済みだった。外れ
+ *   ③ エンドポイント違い / ④ Origin・Referer ヘッダ
+ *      → 2×2×ヘッダ有無の全通りで失敗。外れ
+ *   ⑤ レート制限違反による application_id の利用停止
+ *      → 自分のコードに実際の違反はあった（1秒未満の間隔が3箇所）。
+ *        ただし楽天のFAQは「継続的に制限値を超えた場合」と書いており、
+ *        **数回しか叩いていない2つ目のアプリも同じエラーを返す**。
+ *        停止なら使っていないアプリは生きているはずで、説明がつかない。
  *
- * 残る変数が多いので、1リクエストずつ条件を変えて潰す。
- * 商品検索スクリプトの出力からは「どのアプリIDで叩いたか」が分からず、
- * それが切り分けを止めていた。ここでは必ず表示する（先頭8文字だけ）。
+ * 残る筋は「アプリ個別ではなくアカウント側、またはアプリ設定側」。
+ * それを確かめるには**複数のアプリIDを同条件で比べる**必要がある。
+ * 以前の版は「いま採用されている1つ」しか試せず、そこが切り分けを止めていた。
  *
- * 確かめること:
- *   1. いま採用されている applicationId はどれか
- *   2. .env.local に重複があるか（loadEnv は後勝ちで黙って上書きする）
- *   3. エンドポイントの違いで結果が変わるか
- *      openapi.rakuten.co.jp/ichibams/... … このリポジトリが使っている窓口
- *      app.rakuten.co.jp/services/api/...  … 一般的な楽天ウェブサービスの窓口
- *      前者は楽天市場会員サービス系で、アプリがそのAPI向けに設定されて
- *      いないと「設定が見つからない」になりうる
- *   4. accessKey を外すと結果が変わるか（キー不一致の切り分け）
+ * このスクリプトは .env.local にある RAKUTEN_APP_ID を**コメントアウト
+ * された行も含めて全部拾い**、それぞれで疎通を試す。
+ * 新しく作ったアプリを足すときは、.env.local に次を書く（loadEnv は
+ * この名前を読まないので、既存の設定を壊さない）:
+ *
+ *   RAKUTEN_APP_ID_TEST=<新しいアプリのID>
+ *   RAKUTEN_ACCESS_KEY_TEST=<そのアクセスキー>
+ *
+ * 読み方:
+ *   新アプリだけ通る   → 既存アプリ固有の問題。載せ替えれば復旧
+ *   新アプリも落ちる   → アカウント全体の問題。問い合わせるしかない
  *
  * 何も書き換えない。アクセスキーの値も表示しない。
  *
@@ -37,52 +45,85 @@ import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 dns.setDefaultResultOrder("ipv4first");
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+// 楽天の規定は「1つのapplication_idにつき1秒に1回以下」。
+// 切り分け中に新たな違反を積み増さないよう、間隔は広めに取る
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const GAP = 1500;
 
-// ─── .env.local の重複を先に見る ───────────────────────
-const envPath = path.join(ROOT, ".env.local");
-if (fs.existsSync(envPath)) {
+/**
+ * .env.local からアプリIDとアクセスキーの組を全部拾う。
+ *
+ * コメントアウト行（先頭 #）も対象にする。切り分けでは「いま無効に
+ * してあるほうのアプリ」こそ比較対象になるため。
+ * 組み合わせは「あるAPP_ID行の次に現れたACCESS_KEY行」で作る。
+ * .env.local は2行1組で並んでいるので、順番で数えるより崩れにくい。
+ */
+function collectApps() {
+  const envPath = path.join(ROOT, ".env.local");
+  if (!fs.existsSync(envPath)) return [];
   const lines = fs.readFileSync(envPath, "utf8").split("\n");
-  const hits = [];
-  lines.forEach((l, i) => {
-    const m = l.match(/^(RAKUTEN_APP_ID|RAKUTEN_ACCESS_KEY)=(.*)$/);
-    if (m) hits.push({ line: i + 1, key: m[1], head: m[2].trim().slice(0, 8) });
+
+  const marks = [];
+  lines.forEach((raw, i) => {
+    const commented = /^\s*#/.test(raw);
+    const l = raw.replace(/^\s*#\s*/, "");
+    const m = l.match(/^(RAKUTEN_APP_ID(?:_TEST)?|RAKUTEN_ACCESS_KEY(?:_TEST)?)=(.*)$/);
+    if (m) marks.push({ line: i + 1, key: m[1], value: m[2].trim(), commented });
   });
-  console.log("── .env.local の楽天まわり ──");
-  for (const h of hits) {
-    // アプリIDは先頭8文字だけ。アクセスキーは長さだけ
-    const shown = h.key === "RAKUTEN_APP_ID" ? `${h.head}…` : "（値は表示しません）";
-    console.log(`  ${String(h.line).padStart(3)}行  ${h.key.padEnd(20)} ${shown}`);
-  }
-  const dupIds = hits.filter((h) => h.key === "RAKUTEN_APP_ID");
-  if (dupIds.length > 1) {
-    console.log(
-      `  ⚠ RAKUTEN_APP_ID が${dupIds.length}行あります。loadEnv は後勝ちなので` +
-        `${dupIds[dupIds.length - 1].line}行目が採用されます`
-    );
-  }
+
+  const apps = [];
+  marks.forEach((m, idx) => {
+    if (!/^RAKUTEN_APP_ID/.test(m.key) || !m.value) return;
+    // このID行より後で最初に出てくるアクセスキー行を相方とする
+    const key = marks.slice(idx + 1).find((x) => /^RAKUTEN_ACCESS_KEY/.test(x.key) && x.value);
+    apps.push({
+      line: m.line,
+      appId: m.value,
+      accessKey: key?.value || null,
+      keyLine: key?.line ?? null,
+      commented: m.commented,
+      isTest: m.key.endsWith("_TEST"),
+    });
+  });
+  return apps;
+}
+
+const apps = collectApps();
+
+console.log("── .env.local にある楽天アプリ ──");
+if (apps.length === 0) {
+  console.error("  RAKUTEN_APP_ID が1つも見つかりません");
+  process.exit(1);
+}
+for (const a of apps) {
+  const state = a.isTest ? "新規テスト用" : a.commented ? "コメントアウト中" : "有効";
+  console.log(
+    `  ${String(a.line).padStart(3)}行  ${a.appId.slice(0, 8)}…  [${state}]  ` +
+      `accessKey: ${a.accessKey ? `${a.accessKey.length}文字（${a.keyLine}行）` : "なし"}`
+  );
 }
 
 loadEnv();
-const appId = process.env.RAKUTEN_APP_ID;
-const accessKey = process.env.RAKUTEN_ACCESS_KEY;
-if (!appId) {
-  console.error("\nRAKUTEN_APP_ID がありません");
-  process.exit(1);
+const active = process.env.RAKUTEN_APP_ID;
+if (active) console.log(`\n  スクリプトが実際に使うのは: ${active.slice(0, 8)}…`);
+if (!apps.some((a) => a.isTest)) {
+  console.log(
+    "\n  ヒント: 楽天Developersで**新しいアプリを1つ作り**、\n" +
+      "        .env.local に RAKUTEN_APP_ID_TEST / RAKUTEN_ACCESS_KEY_TEST として\n" +
+      "        書き足すと、既存アプリと並べて比較できます（既存設定は壊しません）"
+  );
 }
-console.log(`\n  実際に使われる applicationId: ${appId.slice(0, 8)}…`);
-console.log(`  accessKey: ${accessKey ? `あり（${accessKey.length}文字）` : "なし"}`);
 
 // ─── 疎通テスト ───────────────────────────────────────
 const ENDPOINTS = [
-  ["ichibams（このリポジトリの窓口）", "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601"],
-  ["app.rakuten.co.jp（一般的な窓口）", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"],
+  ["ichibams", "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601"],
+  ["app.rakuten", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"],
 ];
 
-async function probe(label, url, withKey, withHeaders = true) {
+async function probe(app, url, { withKey = true, withHeaders = true } = {}) {
   const params = new URLSearchParams({
-    applicationId: appId,
-    ...(withKey && accessKey ? { accessKey } : {}),
+    applicationId: app.appId,
+    ...(withKey && app.accessKey ? { accessKey: app.accessKey } : {}),
     keyword: "テント",
     hits: "1",
     format: "json",
@@ -90,8 +131,6 @@ async function probe(label, url, withKey, withHeaders = true) {
   });
   let res, body;
   try {
-    // Origin/Referer を付けているのは既存スクリプトの流儀だが、これが
-    // ichibams 側で弾かれている可能性を潰すため、外した場合も試せるようにする
     res = await fetch(
       `${url}?${params}`,
       withHeaders
@@ -100,8 +139,7 @@ async function probe(label, url, withKey, withHeaders = true) {
     );
     body = await res.text();
   } catch (e) {
-    console.log(`  ✗ ${label} … 通信エラー: ${String(e.message).slice(0, 60)}`);
-    return false;
+    return { ok: false, note: `通信エラー: ${String(e.message).slice(0, 50)}` };
   }
   if (res.ok) {
     let n = 0;
@@ -110,37 +148,58 @@ async function probe(label, url, withKey, withHeaders = true) {
     } catch {
       /* 形が違っても ok なら疎通はしている */
     }
-    console.log(`  ✅ ${label} … ${res.status} 商品${n}件`);
-    return true;
+    return { ok: true, note: `${res.status} 商品${n}件` };
   }
-  console.log(`  ✗ ${label} … ${res.status} ${body.slice(0, 110)}`);
-  return false;
+  return { ok: false, note: `${res.status} ${body.replace(/\s+/g, " ").slice(0, 90)}` };
 }
 
-console.log("\n── 疎通テスト（keyword=テント, hits=1）──");
-let anyOk = false;
-for (const [label, url] of ENDPOINTS) {
-  if (await probe(`${label} + accessKey`, url, true)) anyOk = true;
-  await sleep(1200); // 1秒1リクエストの制限を守る
-}
-// accessKey を外すと通るなら、キーとIDの対応が疑わしい
-console.log("\n── accessKey を外して再試行 ──");
-for (const [label, url] of ENDPOINTS) {
-  if (await probe(`${label} + キーなし`, url, false)) anyOk = true;
-  await sleep(1200);
+const results = [];
+for (const app of apps) {
+  const label = `${app.appId.slice(0, 8)}…${app.isTest ? "（新規）" : app.commented ? "（無効中）" : ""}`;
+  console.log(`\n── ${label} ──`);
+  for (const [name, url] of ENDPOINTS) {
+    const r = await probe(app, url);
+    console.log(`  ${r.ok ? "✅" : "✗ "} ${name} + accessKey … ${r.note}`);
+    results.push({ app: label, ok: r.ok });
+    await sleep(GAP);
+  }
+  // キーを外して通るなら、IDとキーの対応が疑わしい
+  if (app.accessKey) {
+    const r = await probe(app, ENDPOINTS[0][1], { withKey: false });
+    console.log(`  ${r.ok ? "✅" : "✗ "} ichibams + キーなし  … ${r.note}`);
+    results.push({ app: label, ok: r.ok });
+    await sleep(GAP);
+  }
+  // ヘッダを外して通るなら、ヘッダが原因
+  const r = await probe(app, ENDPOINTS[0][1], { withHeaders: false });
+  console.log(`  ${r.ok ? "✅" : "✗ "} ichibams + ヘッダなし … ${r.note}`);
+  results.push({ app: label, ok: r.ok });
+  await sleep(GAP);
 }
 
-// ヘッダを外して1回だけ試す。ここだけ通るならヘッダが原因
-console.log("\n── Origin/Referer ヘッダを外して再試行 ──");
-if (await probe("ichibams + accessKey + ヘッダなし", ENDPOINTS[0][1], true, false)) anyOk = true;
-
+// ─── 読み方 ───────────────────────────────────────────
 console.log("\n── 読み方 ──");
-if (anyOk) {
-  console.log("  通った組み合わせがあります。スクリプト側をその窓口・条件に合わせれば動きます");
+const okApps = [...new Set(results.filter((r) => r.ok).map((r) => r.app))];
+const ngApps = [...new Set(results.filter((r) => !r.ok).map((r) => r.app))].filter(
+  (a) => !okApps.includes(a)
+);
+
+if (okApps.length && ngApps.length) {
+  console.log(`  通ったアプリ: ${okApps.join(", ")}`);
+  console.log(`  落ちたアプリ: ${ngApps.join(", ")}`);
+  console.log("  → アプリ個別の問題です。通ったアプリのIDとキーを .env.local の");
+  console.log("     RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY に載せ替えれば復旧します");
+} else if (okApps.length) {
+  console.log("  全アプリで疎通しています。不通は解消しています");
 } else {
-  console.log("  すべて失敗。アプリID自体か、アカウント全体の問題です");
-  console.log("  次に見るところ:");
-  console.log("    ・楽天Developersでアプリの「編集」を開き、IP登録が保存されているか");
-  console.log("    ・そのアプリで楽天市場商品検索APIが使える設定になっているか");
-  console.log("    ・もう一方のアプリID（.env.local の別行）を有効にして再実行");
+  console.log("  すべてのアプリ・すべての条件で失敗しました。");
+  console.log("  アプリ個別ではなくアカウント側の問題と考えられます。");
+  console.log("  新しく作ったアプリでも落ちるなら、設定の作り直しでは直りません。");
+  console.log("");
+  console.log("  次にやること:");
+  console.log("    楽天ウェブサービスのヘルプページから問い合わせる");
+  console.log("    （FAQ「利用規約に違反しているか個別に確認をしたい」の窓口）");
+  console.log("    https://webservice.faq.rakuten.net/hc/ja/requests/new");
+  console.log("    伝えること: アプリID・発生日時・エラー文言・");
+  console.log("                全アプリで再現すること・登録済みのIP");
 }
