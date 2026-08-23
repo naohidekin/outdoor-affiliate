@@ -13,6 +13,8 @@ function AmazonButton({ product }: { product: Product }) {
       productId={product.id}
       placement="ranking"
       productName={product.name}
+      price={product.price}
+      rank={isAmazonPrimary(product) ? 1 : 2}
       store="amazon"
       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap amazon-btn"
     >
@@ -89,6 +91,8 @@ export default function RankingList({ products }: { products: Product[] }) {
                 productId={product.id}
                 placement="ranking"
                 productName={product.name}
+                price={product.price}
+                rank={isAmazonPrimary(product) ? 2 : 1}
                 store="rakuten"
                 className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors whitespace-nowrap rakuten-btn"
               >
@@ -102,6 +106,8 @@ export default function RankingList({ products }: { products: Product[] }) {
                 productId={product.id}
                 placement="ranking"
                 productName={product.name}
+                price={product.price}
+                rank={3}
                 store="yahoo"
                 className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
               >
@@ -114,6 +120,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                 productId={product.id}
                 placement="reviews_link"
                 productName={product.name}
+                price={product.price}
                 store="rakuten"
                 className="inline-flex items-center justify-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors whitespace-nowrap sm:ml-1"
               >

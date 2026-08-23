@@ -10,6 +10,8 @@ function AmazonButton({ product }: { product: Product }) {
       productId={product.id}
       placement="comparison_table"
       productName={product.name}
+      price={product.price}
+      rank={isAmazonPrimary(product) ? 1 : 2}
       store="amazon"
       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium transition-colors amazon-btn"
     >
@@ -150,6 +152,8 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       productId={p.id}
                       placement="comparison_table"
                       productName={p.name}
+                      price={p.price}
+                      rank={isAmazonPrimary(p) ? 2 : 1}
                       store="rakuten"
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-white transition-colors rakuten-btn"
                     >

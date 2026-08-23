@@ -42,14 +42,39 @@ export const AFFILIATE_PLACEMENTS = [
 
 export type AffiliatePlacement = (typeof AFFILIATE_PLACEMENTS)[number];
 
+/**
+ * 価格帯。EPCを価格帯ごとに見ないと、どのモールをどこで優先すべきか判断できない。
+ *
+ * 2026-08-23: Amazon EPC 6.62円 / 楽天 EPC 17.03円 という全体平均だけを見ると
+ * 「楽天に寄せるべき」に見える。だが楽天は1商品1個につき報酬上限1,000円があり
+ * （料率アップショップを除く）、実測で売上¥82,665のテントが報酬¥1,000だった。
+ * 平均は高単価の頭打ちを均してしまうので、価格帯で割って見る必要がある。
+ */
+export function priceBand(price?: number): string {
+  if (!price || price <= 0) return "unknown";
+  if (price < 5000) return "under_5k";
+  if (price < 15000) return "5k_15k";
+  if (price < 50000) return "15k_50k";
+  return "over_50k";
+}
+
 export function trackAffiliateClick(
   href: string,
   productId: string,
   store: AffiliateStore,
-  opts?: { placement?: AffiliatePlacement; productName?: string }
+  opts?: {
+    placement?: AffiliatePlacement;
+    productName?: string;
+    /** 表示していた価格（円）。登録価格であって実売とは限らない */
+    price?: number;
+    /** そのカード内でのボタンの表示順。1が上。どちらのモールを上に出したかの検証用 */
+    rank?: number;
+  }
 ) {
   const placement = opts?.placement || "unknown";
   const productName = opts?.productName || "";
+  const price = typeof opts?.price === "number" && opts.price > 0 ? Math.round(opts.price) : undefined;
+  const rank = typeof opts?.rank === "number" && opts.rank > 0 ? opts.rank : undefined;
 
   // GA4カスタムイベント（広告ブロッカーで欠落しうる。正はサーバー側ビーコン）
   if (typeof window !== "undefined" && "gtag" in window) {
@@ -63,6 +88,9 @@ export function trackAffiliateClick(
         placement,
         page_path: window.location.pathname,
         link_url: href,
+        // 価格帯別のEPCと、どちらのモールを上に出したかを見るための軸
+        ...(price !== undefined ? { price, price_band: priceBand(price) } : {}),
+        ...(rank !== undefined ? { rank } : {}),
       }
     );
   }
@@ -77,6 +105,11 @@ export function trackAffiliateClick(
       path: window.location.pathname,
       link_url: href,
       timestamp: new Date().toISOString(),
+      // Supabase 側に列を足すまで /api/track-click は無視する（entry を明示的に
+      // 組み立てているので、知らないフィールドが来ても落ちない）。
+      // 先に送っておけば、列を足した日から遡って使える形になる
+      price,
+      rank,
     });
     navigator.sendBeacon(
       "/api/track-click",

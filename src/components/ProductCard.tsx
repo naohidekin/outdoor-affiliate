@@ -7,12 +7,16 @@ import RakutenDealStamp from "./RakutenDealStamp";
 
 export default function ProductCard({ product }: { product: Product }) {
   const amazonFirst = isAmazonPrimary(product);
+  // どちらのモールを上に出したかを計測で追えるようにする。
+  // 価格帯ごとの出し分け（affiliate-priority.ts）が効いているかの検証に要る
   const amazonBtn = product.amazonUrl ? (
     <AffiliateLink
       href={product.amazonUrl}
       productId={product.id}
       placement="product_card"
       productName={product.name}
+      price={product.price}
+      rank={amazonFirst ? 1 : 2}
       store="amazon"
       className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium transition-colors amazon-btn"
     >
@@ -89,6 +93,8 @@ export default function ProductCard({ product }: { product: Product }) {
                 productId={product.id}
                 placement="product_card"
                 productName={product.name}
+                price={product.price}
+                rank={amazonFirst ? 2 : 1}
                 store="rakuten"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium text-white transition-colors rakuten-btn"
               >
@@ -102,6 +108,8 @@ export default function ProductCard({ product }: { product: Product }) {
                 productId={product.id}
                 placement="product_card"
                 productName={product.name}
+                price={product.price}
+                rank={3}
                 store="yahoo"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
               >

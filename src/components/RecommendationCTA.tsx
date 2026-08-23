@@ -19,6 +19,8 @@ function AmazonButton({
       productId={product.id}
       placement={placement}
       productName={product.name}
+      price={product.price}
+      rank={isAmazonPrimary(product) ? 1 : 2}
       store="amazon"
       className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium transition amazon-btn"
     >
@@ -87,6 +89,8 @@ export default function RecommendationCTA({
                     productId={p.id}
                     placement={placement}
                     productName={p.name}
+                    price={p.price}
+                    rank={isAmazonPrimary(p) ? 2 : 1}
                     store="rakuten"
                     className="flex-1 sm:flex-none text-center text-white px-3 py-2 rounded-lg text-xs font-medium transition rakuten-btn"
                   >
