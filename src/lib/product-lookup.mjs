@@ -122,6 +122,11 @@ export async function lookupAndRegisterProducts(candidates, opts = {}) {
 
     // 楽天検索
     const results = await searchRakuten(candidate.name, 3);
+    // 待機はリクエスト直後に置く。ループ末尾に置いていたため、
+    // 「0件だった」「正式名で重複だった」で continue すると
+    // 待たずに次のリクエストへ行っていた（2026-08-23 発覚）。
+    // 楽天の規定は1つのapplication_idにつき1秒に1回以下
+    await new Promise((r) => setTimeout(r, 1200));
     if (results.length === 0) {
       notFound++;
       continue;
@@ -162,9 +167,6 @@ export async function lookupAndRegisterProducts(candidates, opts = {}) {
     added++;
 
     console.log(`[product-lookup] + ${best.itemName.slice(0, 50)} (¥${best.itemPrice}) [${candidate.axis || "camp"}]`);
-
-    // 楽天APIレート制限対策（1リクエスト/秒）
-    await new Promise((r) => setTimeout(r, 1200));
   }
 
   if (!dryRun && added > 0) {

@@ -106,7 +106,9 @@ async function rakutenTitle(ref, productName) {
   };
   const first = await attempt(productName);
   if (first) return first;
-  await sleep(700);
+  // 1秒1リクエストの規定を守る。ここは1商品で2回投げる箇所で、
+  // 700msだと規定違反になる（2026-08-23に発覚）
+  await sleep(1200);
   return attempt(ref.urlCode);
 }
 

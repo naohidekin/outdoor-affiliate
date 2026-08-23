@@ -207,7 +207,13 @@ async function rakutenPrice(ref, productName) {
   try {
     const first = await attempt(productName);
     if (first) return first;
-    await sleep(700); // 1商品で2回投げるので、間を空けないと429を踏む
+    // 楽天の規定は「1つのapplication_idにつき1秒に1回以下」。
+    // ここは1商品で2回投げる箇所で、700msしか空けていなかった＝規定違反。
+    // 360商品×2回を1日に何度も流していたので、application_id が
+    // 利用停止になった可能性がある（2026-08-23に API Configuration not found
+    // が全リクエストで返るようになった件の有力な候補）。
+    // 待ち時間は規定より短くしない。速度より止まらないことを優先する
+    await sleep(1200);
     return await attempt(ref.urlCode);
   } catch {
     return null;
