@@ -79,7 +79,7 @@ const ENDPOINTS = [
   ["app.rakuten.co.jp（一般的な窓口）", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"],
 ];
 
-async function probe(label, url, withKey) {
+async function probe(label, url, withKey, withHeaders = true) {
   const params = new URLSearchParams({
     applicationId: appId,
     ...(withKey && accessKey ? { accessKey } : {}),
@@ -90,9 +90,14 @@ async function probe(label, url, withKey) {
   });
   let res, body;
   try {
-    res = await fetch(`${url}?${params}`, {
-      headers: { Origin: "https://camp-gear-lab.com", Referer: "https://camp-gear-lab.com/" },
-    });
+    // Origin/Referer を付けているのは既存スクリプトの流儀だが、これが
+    // ichibams 側で弾かれている可能性を潰すため、外した場合も試せるようにする
+    res = await fetch(
+      `${url}?${params}`,
+      withHeaders
+        ? { headers: { Origin: "https://camp-gear-lab.com", Referer: "https://camp-gear-lab.com/" } }
+        : {}
+    );
     body = await res.text();
   } catch (e) {
     console.log(`  ✗ ${label} … 通信エラー: ${String(e.message).slice(0, 60)}`);
@@ -124,6 +129,10 @@ for (const [label, url] of ENDPOINTS) {
   if (await probe(`${label} + キーなし`, url, false)) anyOk = true;
   await sleep(1200);
 }
+
+// ヘッダを外して1回だけ試す。ここだけ通るならヘッダが原因
+console.log("\n── Origin/Referer ヘッダを外して再試行 ──");
+if (await probe("ichibams + accessKey + ヘッダなし", ENDPOINTS[0][1], true, false)) anyOk = true;
 
 console.log("\n── 読み方 ──");
 if (anyOk) {
