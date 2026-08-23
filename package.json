@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"tests/**/*.test.ts\"",
+    "igt:check": "node scripts/igt-validate.ts",
     "verify": "npm run lint && npm run typecheck && npm test && npm run build",
     "x:generate": "node --dns-result-order=ipv4first scripts/generate-x-posts.js",
     "x:generate:auto": "node --dns-result-order=ipv4first scripts/generate-x-posts.js --auto-approve",
