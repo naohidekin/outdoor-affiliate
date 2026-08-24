@@ -99,6 +99,35 @@ npm run dev
 シートに1行増えれば成功。**フォームが出ない場合は環境変数が読めていない**
 （`.env.local` を置いたあと dev サーバーを再起動する）。
 
+### curl のレスポンスで成否を判断しない（2026-08-24 に踏んだ罠）
+
+Apps Script の `/exec` は必ず **302** を返し、実行結果は
+`script.googleusercontent.com/macros/echo?...` に置かれる。
+`curl -L` で追うと元の `Content-Type: application/json` ヘッダーを
+引き継いでしまい、Googleドライブの
+
+```
+現在、ファイルを開くことができません。
+```
+
+という **404ページが返る**。これは権限エラーにも実行エラーにも見えるが、
+**どちらでもない**。書き込み自体は成功している。
+
+実際この見た目に釣られて、権限設定とWorkspace制限を疑って2往復した。
+どちらも正常だった。
+
+**成否はシートを見て判断する。** レスポンス本文を見たいときは、
+リダイレクト先を素のGETで取り直す。
+
+```bash
+LOC=$(curl -sS -o /dev/null -w '%{redirect_url}' -X POST "<URL>" \
+  -H "Content-Type: application/json" -d '{"modelNumber":"TEST"}')
+curl -sS "$LOC"
+```
+
+なお `/api/en/model-request` は Node の `fetch` を使っており、
+リダイレクトは自動で追われる。これは curl 固有の引っかかり。
+
 ---
 
 ## 3. GA4カスタムディメンション（10分）
