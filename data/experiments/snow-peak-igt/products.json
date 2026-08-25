@@ -2,14 +2,21 @@
   {
     "id": "igt-entry",
     "productName": "エントリーIGT",
-    "aliases": ["Entry IGT"],
+    "aliases": ["Entry IGT", "Entry IGT Table"],
     "japaneseModelNumber": "CK-080R",
-    "usModelNumber": null,
+    "usModelNumber": "CK-080R",
     "status": "current",
     "confirmedSuccessorId": null,
     "compatibility": [],
-    "sourceIds": ["sp-jp-entry-igt"],
-    "lastVerifiedAt": "2026-08-24",
-    "purchaseOptions": []
+    "sourceIds": ["sp-jp-entry-igt", "sp-us-entry-igt"],
+    "lastVerifiedAt": "2026-08-25",
+    "purchaseOptions": [
+      {
+        "market": "us",
+        "merchant": "Snow Peak USA",
+        "url": "https://www.snowpeak.com/collections/tables/products/entry-igt-table",
+        "affiliate": false
+      }
+    ]
   }
 ]
