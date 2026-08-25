@@ -247,3 +247,93 @@ test("言語やIPによる強制リダイレクトを実装していない", () 
     assert.ok(!src.includes("redirect("), `${file} がリダイレクトしている`);
   }
 });
+
+// ─── gtag 未ロード時の取りこぼし ──────────────────────
+//
+// 2026-08-24: `english_hub_view` だけが記録されず、`finder_view` は
+// 記録される、という欠落が実データで出た。原因は GA4 が
+// afterInteractive で読み込まれるのに対し、表示イベントは useEffect で
+// 発火するため、初回ロードでは gtag より先に走っていたこと。
+// ソースを読むだけの検査では見つからなかったので、実際に呼んで確かめる。
+
+type FakeWindow = {
+  gtag?: (...args: unknown[]) => void;
+  dataLayer?: unknown[];
+};
+
+/** window を差し替えて trackEnEvent を1回呼ぶ */
+async function callWith(fake: FakeWindow) {
+  const g = globalThis as unknown as { window?: FakeWindow };
+  const had = "window" in g;
+  const previous = g.window;
+  g.window = fake;
+  try {
+    const { trackEnEvent } = await import(
+      "../../../src/lib/experiments/snow-peak-igt/analytics.ts"
+    );
+    trackEnEvent("english_hub_view", { page: "hub", market: "us" });
+  } finally {
+    if (had) g.window = previous;
+    else delete g.window;
+  }
+}
+
+test("gtag があれば gtag で送る", async () => {
+  const calls: unknown[][] = [];
+  const fake: FakeWindow = { gtag: (...args) => calls.push(args) };
+  await callWith(fake);
+
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0], [
+    "event",
+    "english_hub_view",
+    { page: "hub", market: "us" },
+  ]);
+  assert.equal(fake.dataLayer, undefined, "gtag があるのに dataLayer に積んでいる");
+});
+
+test("gtag が未ロードでもイベントを捨てない（dataLayer に積む）", async () => {
+  const fake: FakeWindow = {}; // gtag も dataLayer も無い状態＝初回ロード直後
+  await callWith(fake);
+
+  assert.ok(Array.isArray(fake.dataLayer), "dataLayer が作られていない");
+  assert.equal(fake.dataLayer?.length, 1, "イベントが捨てられている");
+  assert.deepEqual(fake.dataLayer?.[0], [
+    "event",
+    "english_hub_view",
+    { page: "hub", market: "us" },
+  ]);
+});
+
+test("既存の dataLayer は壊さない（既存の中身を残して追記する）", async () => {
+  const fake: FakeWindow = { dataLayer: [{ existing: true }] };
+  await callWith(fake);
+
+  assert.equal(fake.dataLayer?.length, 2);
+  assert.deepEqual(fake.dataLayer?.[0], { existing: true });
+});
+
+test("dataLayer 経由でも sanitize を通る", async () => {
+  const g = globalThis as unknown as { window?: FakeWindow };
+  const had = "window" in g;
+  const previous = g.window;
+  const fake: FakeWindow = {};
+  g.window = fake;
+  try {
+    const { trackEnEvent } = await import(
+      "../../../src/lib/experiments/snow-peak-igt/analytics.ts"
+    );
+    trackEnEvent("model_request_submit", {
+      market: "us",
+      email: "someone@example.com",
+      purpose: "free text",
+    } as never);
+  } finally {
+    if (had) g.window = previous;
+    else delete g.window;
+  }
+  const queued = JSON.stringify(fake.dataLayer);
+  assert.ok(!queued.includes("@"), "メールアドレスが積まれている");
+  assert.ok(!queued.includes("free text"), "自由入力が積まれている");
+  assert.ok(queued.includes('"market":"us"'));
+});

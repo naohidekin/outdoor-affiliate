@@ -66,13 +66,29 @@ export function sanitizeEventPayload(input: unknown): EnEventPayload {
   return out;
 }
 
-type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
+type GtagWindow = Window & {
+  gtag?: (...args: unknown[]) => void;
+  dataLayer?: unknown[];
+};
 
 /**
- * イベント送信。GA4があれば送る。無ければ開発時に確認できるようログに出す。
+ * イベント送信。送信前に必ず sanitize を通す。
+ * 呼び出し側が何を渡しても、許可リスト外は外へ出ない。
  *
- * 送信前に必ず sanitize を通す。呼び出し側が何を渡しても、
- * 許可リスト外は外へ出ない。
+ * gtag がまだ無いときは dataLayer に積む。これは必須の分岐で、
+ * 省くと**表示直後のイベントが黙って消える**。
+ *
+ * 2026-08-24 に実際に踏んだ。GA4はルートレイアウトで
+ * `strategy="afterInteractive"` で読み込まれるため、`window.gtag` が
+ * 定義されるのはハイドレーション後。ところが表示イベントは
+ * useEffect（マウント時）で発火するので、初回ロードではgtagより先に走る。
+ * 結果、`/en/` を開いても `english_hub_view` だけが記録されず、
+ * クライアント遷移で開いた `finder_view` は記録される、という
+ * 一貫性のない欠落になっていた。
+ *
+ * dataLayer に積んでおけば gtag.js がロード時にまとめて処理する
+ * （GA4の標準的な回避策）。dataLayer は gtag より先に存在しうるし、
+ * 無ければここで作ってよい。
  */
 export function trackEnEvent(name: EnEventName, payload: EnEventPayload = {}): void {
   const clean = sanitizeEventPayload(payload);
@@ -83,8 +99,16 @@ export function trackEnEvent(name: EnEventName, payload: EnEventPayload = {}): v
     w.gtag("event", name, clean);
     return;
   }
-  // GA4が未ロード（開発時・ブロッカー）。握り潰すと実装ミスに気づけない
+
+  try {
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push(["event", name, clean]);
+  } catch {
+    // dataLayer にも積めない環境。ここまで来たら諦める
+  }
+
+  // GA4が本当に来ないケース（ブロッカー等）に気づけるよう開発時は出す
   if (process.env.NODE_ENV !== "production") {
-    console.info(`[en-analytics] ${name}`, clean);
+    console.info(`[en-analytics] queued ${name}`, clean);
   }
 }
