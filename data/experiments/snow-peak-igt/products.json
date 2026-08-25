@@ -15,7 +15,8 @@
     "sourceIds": [
       "sp-jp-entry-igt",
       "sp-us-entry-igt",
-      "sp-manual-entry-igt"
+      "sp-manual-entry-igt",
+      "sp-jp-entry-igt-spec-change"
     ],
     "lastVerifiedAt": "2026-08-25",
     "purchaseOptions": [
@@ -55,6 +56,12 @@
         "text": "Do not move this product while unit items are in use. Always remove the units before moving the product.",
         "sourceIds": [
           "sp-manual-entry-igt"
+        ]
+      },
+      {
+        "text": "※CK-160リフトアップBBQBOXをセットした際、リフトアップするためのハンドルがエントリーIGTに干渉するため、焼き面をスムーズにリフトアップ/リフトダウンすることができなくなります。予めご了承ください。",
+        "sourceIds": [
+          "sp-jp-entry-igt-spec-change"
         ]
       }
     ]
@@ -116,6 +123,26 @@
         "affiliate": false
       }
     ],
+    "igtUnitCapacity": null,
+    "importantLimitations": []
+  },
+  {
+    "id": "igt-entry-ck080",
+    "productName": "エントリーIGT（CK-080）",
+    "aliases": [
+      "Entry IGT CK-080",
+      "Entry IGT (pre-2024 model)"
+    ],
+    "japaneseModelNumber": "CK-080",
+    "usModelNumber": null,
+    "status": "discontinued",
+    "confirmedSuccessorId": "igt-entry",
+    "compatibility": [],
+    "sourceIds": [
+      "sp-jp-entry-igt-spec-change"
+    ],
+    "lastVerifiedAt": "2026-08-25",
+    "purchaseOptions": [],
     "igtUnitCapacity": null,
     "importantLimitations": []
   }
