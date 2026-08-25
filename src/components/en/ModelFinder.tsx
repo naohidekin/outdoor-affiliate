@@ -8,6 +8,7 @@ import {
   compatibilityStatement,
   displayOrUnknown,
   searchProducts,
+  shouldShowSuccessor,
   successorStatement,
   type ProductRecord,
   type SearchResult,
@@ -107,18 +108,20 @@ function ProductResult({
         <Row label="Product status">
           {PRODUCT_STATUS_LABEL[product.status]}
         </Row>
-        <Row label="Confirmed successor">
-          {successor ? (
-            <>
-              {successor.productName}
-              <span className="block text-xs text-slate-500 mt-0.5">
-                {successorStatement(product)}
-              </span>
-            </>
-          ) : (
-            <span className="text-slate-500">{successorStatement(product)}</span>
-          )}
-        </Row>
+        {shouldShowSuccessor(product) ? (
+          <Row label="Confirmed successor">
+            {successor ? (
+              <>
+                {successor.productName}
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  {successorStatement(product)}
+                </span>
+              </>
+            ) : (
+              <span className="text-slate-500">{successorStatement(product)}</span>
+            )}
+          </Row>
+        ) : null}
         <Row label="Officially documented compatibility">
           {documented.length === 0 ? (
             <span className="text-slate-500">

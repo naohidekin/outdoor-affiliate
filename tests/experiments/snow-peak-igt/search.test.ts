@@ -9,6 +9,7 @@ import {
   normalizeModelNumber,
   normalizeName,
   searchProducts,
+  shouldShowSuccessor,
   successorStatement,
 } from "../../../src/lib/experiments/snow-peak-igt/core.ts";
 import {
@@ -174,5 +175,31 @@ test("米国型番が無い商品は Unknown と表示される", () => {
   assert.equal(
     displayOrUnknown(fixtureDiscontinuedNoSuccessor.usModelNumber),
     UNKNOWN_LABEL
+  );
+});
+
+// ─── 後継品の行を出すか ───────────────────────────────
+//
+// 現行品で後継品が無いのは普通のこと。それを Insufficient evidence と
+// 書くと確認不足のように読めるので、行そのものを出さない。
+// 判定表現を5つ目に増やすより正確（2026-08-25 決定）。
+
+test("現行品で後継品が無ければ、後継品の行を出さない", () => {
+  assert.equal(shouldShowSuccessor(fixtureCurrent), false);
+});
+
+test("廃番品は後継品の行を必ず出す（後継の有無が読者の関心そのもの）", () => {
+  assert.equal(shouldShowSuccessor(fixtureDiscontinuedNoSuccessor), true);
+  assert.equal(shouldShowSuccessor(fixtureDiscontinuedWithSuccessor), true);
+});
+
+test("状態が不明な商品も後継品の行を出す", () => {
+  assert.equal(shouldShowSuccessor(fixtureUnknown), true);
+});
+
+test("現行品でも後継品が記録されていれば出す", () => {
+  assert.equal(
+    shouldShowSuccessor({ ...fixtureCurrent, confirmedSuccessorId: "fixture-unknown" }),
+    true
   );
 });

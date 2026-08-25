@@ -2,13 +2,20 @@
   {
     "id": "igt-entry",
     "productName": "エントリーIGT",
-    "aliases": ["Entry IGT", "Entry IGT Table"],
+    "aliases": [
+      "Entry IGT",
+      "Renewed Entry IGT",
+      "Entry IGT Table"
+    ],
     "japaneseModelNumber": "CK-080R",
     "usModelNumber": "CK-080R",
     "status": "current",
     "confirmedSuccessorId": null,
     "compatibility": [],
-    "sourceIds": ["sp-jp-entry-igt", "sp-us-entry-igt"],
+    "sourceIds": [
+      "sp-jp-entry-igt",
+      "sp-us-entry-igt"
+    ],
     "lastVerifiedAt": "2026-08-25",
     "purchaseOptions": [
       {

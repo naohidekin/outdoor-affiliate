@@ -118,6 +118,20 @@ export function successorStatement(product: ProductRecord): EvidenceStatement {
   return EVIDENCE_STATEMENTS.insufficient;
 }
 
+/**
+ * 後継品の行を表示するか。
+ *
+ * 現行品で後継品が無いのは**普通のこと**であって、根拠が足りないわけではない。
+ * それを Insufficient evidence と書くと、確認不足のように読めて誤解を招く。
+ * 判定表現を5つ目に増やすより、行そのものを出さないほうが正確。
+ *
+ * 廃番品と状態不明の商品では、後継品の有無が読者の関心そのものなので必ず出す。
+ */
+export function shouldShowSuccessor(product: ProductRecord): boolean {
+  if (product.confirmedSuccessorId) return true;
+  return product.status !== "current";
+}
+
 /** 互換性の言い方。confirmed 以外はすべて「根拠不足」に倒す */
 export function compatibilityStatement(
   entry: CompatibilityRecord
