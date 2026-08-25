@@ -14,5 +14,21 @@
     "url": "https://www.snowpeak.com/collections/tables/products/entry-igt-table",
     "sourceType": "official_product_page",
     "lastVerifiedAt": "2026-08-25"
+  },
+  {
+    "id": "sp-jp-extension-igt",
+    "publisher": "Snow Peak Japan",
+    "title": "エクステンションIGT",
+    "url": "https://ec.snowpeak.co.jp/item/SNP0121A0087",
+    "sourceType": "official_product_page",
+    "lastVerifiedAt": "2026-08-25"
+  },
+  {
+    "id": "sp-us-extension-igt",
+    "publisher": "Snow Peak USA",
+    "title": "Extension IGT",
+    "url": "https://www.snowpeak.com/collections/tables/products/extension-igt",
+    "sourceType": "official_product_page",
+    "lastVerifiedAt": "2026-08-25"
   }
 ]

@@ -25,5 +25,30 @@
         "affiliate": false
       }
     ]
+  },
+  {
+    "id": "igt-extension",
+    "productName": "エクステンションIGT",
+    "aliases": [
+      "Extension IGT"
+    ],
+    "japaneseModelNumber": "CK-090",
+    "usModelNumber": "CK-090",
+    "status": "current",
+    "confirmedSuccessorId": null,
+    "compatibility": [],
+    "sourceIds": [
+      "sp-jp-extension-igt",
+      "sp-us-extension-igt"
+    ],
+    "lastVerifiedAt": "2026-08-25",
+    "purchaseOptions": [
+      {
+        "market": "us",
+        "merchant": "Snow Peak USA",
+        "url": "https://www.snowpeak.com/collections/tables/products/extension-igt",
+        "affiliate": false
+      }
+    ]
   }
 ]
