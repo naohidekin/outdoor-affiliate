@@ -32,6 +32,18 @@ export type SourcedFact = {
   /** 公式資料の原文。訳さない・要約しない */
   text: string;
   sourceIds: string[];
+  /**
+   * 原文の言語。既定は英語。
+   *
+   * 日本語の記述しか存在しない事実がある。たとえば CK-160 リフトアップBBQ BOX
+   * との干渉は日本の公式ページにしか書かれておらず、米国ページには無い。
+   * こちらで訳せば解釈が入る（干渉するのが「ハンドル」なのか「焼き面」なのかを
+   * 訳し違えれば意味が変わる）ので、原文のまま出して言語を明示する。
+   *
+   * 英語ページの中の日本語には lang="ja" を付ける必要もある。
+   * 付けないと読み上げソフトが英語として発音し、フォント選択も崩れる。
+   */
+  lang?: "ja" | "en";
 };
 
 export type PurchaseOption = {
@@ -399,6 +411,8 @@ export function validateProductRecord(
     const fact = f as Partial<SourcedFact>;
     if (!isNonEmptyString(fact.text))
       errors.push(`product(${id}).${where}.text is required (verbatim official wording)`);
+    if (fact.lang !== undefined && fact.lang !== "ja" && fact.lang !== "en")
+      errors.push(`product(${id}).${where}.lang must be "ja" or "en"`);
     if (!Array.isArray(fact.sourceIds) || fact.sourceIds.length === 0) {
       errors.push(`product(${id}).${where} has no sourceIds`);
       return;

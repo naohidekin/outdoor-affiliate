@@ -80,15 +80,25 @@ function Fact({
   fact,
   sources,
 }: {
-  fact: { text: string; sourceIds: string[] };
+  fact: { text: string; sourceIds: string[]; lang?: "ja" | "en" };
   sources: SourceRecord[];
 }) {
   const cited = fact.sourceIds
     .map((id) => sources.find((s) => s.id === id))
     .filter((s): s is SourceRecord => Boolean(s));
+  const isJa = fact.lang === "ja";
   return (
     <>
-      <span className="text-ink">{fact.text}</span>
+      <span className="text-ink" lang={fact.lang ?? "en"}>
+        {fact.text}
+      </span>
+      {isJa ? (
+        <span className="block text-xs text-slate-500 mt-0.5">
+          Quoted in Japanese from the Japanese official page. We do not translate
+          it here, because a translation would be our wording rather than Snow
+          Peak&apos;s.
+        </span>
+      ) : null}
       {cited.length > 0 ? (
         <span className="block text-xs text-slate-500 mt-0.5">
           {cited.map((s, i) => (

@@ -28,10 +28,12 @@
       }
     ],
     "igtUnitCapacity": {
-      "text": "Set contents: Main unit and tabletops (1 unit ×2 and Half-unit ×2)",
+      "text": "Set contents: Main unit and tabletops (1 unit x2 and Half-unit x2). The US product page describes this as three units of space.",
       "sourceIds": [
-        "sp-manual-entry-igt"
-      ]
+        "sp-manual-entry-igt",
+        "sp-us-entry-igt"
+      ],
+      "lang": "en"
     },
     "importantLimitations": [
       {
@@ -62,7 +64,8 @@
         "text": "※CK-160リフトアップBBQBOXをセットした際、リフトアップするためのハンドルがエントリーIGTに干渉するため、焼き面をスムーズにリフトアップ/リフトダウンすることができなくなります。予めご了承ください。",
         "sourceIds": [
           "sp-jp-entry-igt-spec-change"
-        ]
+        ],
+        "lang": "ja"
       }
     ]
   },
