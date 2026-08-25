@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "igt-entry",
+    "productName": "エントリーIGT",
+    "aliases": ["Entry IGT"],
+    "japaneseModelNumber": "CK-080R",
+    "usModelNumber": null,
+    "status": "current",
+    "confirmedSuccessorId": null,
+    "compatibility": [],
+    "sourceIds": ["sp-jp-entry-igt"],
+    "lastVerifiedAt": "2026-08-24",
+    "purchaseOptions": []
+  }
+]
