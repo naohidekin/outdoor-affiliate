@@ -66,49 +66,61 @@ export function sanitizeEventPayload(input: unknown): EnEventPayload {
   return out;
 }
 
-type GtagWindow = Window & {
-  gtag?: (...args: unknown[]) => void;
-  dataLayer?: unknown[];
-};
+type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
+
+// gtag が現れるまで待つ間隔と上限。
+// GA4は afterInteractive で読み込まれるので、初回ロードでは
+// 数百ms〜数秒あとに現れる。10秒待って来なければ、
+// ブロッカー等で本当に来ないと判断して諦める
+const RETRY_MS = 300;
+const MAX_WAIT_MS = 10_000;
 
 /**
- * イベント送信。送信前に必ず sanitize を通す。
- * 呼び出し側が何を渡しても、許可リスト外は外へ出ない。
+ * gtag が使えるようになってから送る。
  *
- * gtag がまだ無いときは dataLayer に積む。これは必須の分岐で、
- * 省くと**表示直後のイベントが黙って消える**。
+ * 2026-08-24、この関数で2回失敗している。記録しておく。
  *
- * 2026-08-24 に実際に踏んだ。GA4はルートレイアウトで
- * `strategy="afterInteractive"` で読み込まれるため、`window.gtag` が
- * 定義されるのはハイドレーション後。ところが表示イベントは
- * useEffect（マウント時）で発火するので、初回ロードではgtagより先に走る。
- * 結果、`/en/` を開いても `english_hub_view` だけが記録されず、
- * クライアント遷移で開いた `finder_view` は記録される、という
- * 一貫性のない欠落になっていた。
+ * ① 最初の実装は `typeof gtag !== "function"` なら**捨てていた**。
+ *    GA4は afterInteractive で読み込まれるのに対し、表示イベントは
+ *    useEffect（マウント時）で発火するため、初回ロードでは必ず
+ *    gtag より先に走る。結果 english_hub_view だけが記録されず、
+ *    クライアント遷移で開いた finder_view は記録される、という
+ *    一貫性のない欠落になった。
  *
- * dataLayer に積んでおけば gtag.js がロード時にまとめて処理する
- * （GA4の標準的な回避策）。dataLayer は gtag より先に存在しうるし、
- * 無ければここで作ってよい。
+ * ② 次に dataLayer へ積む方式にしたが、これも届かなかった。
+ *    積んだイベントはルートレイアウトの `gtag('config', ...)` より
+ *    **前**にキューへ入る。GA4は config より前のイベントコマンドを
+ *    処理しないので、積んでも捨てられる。順序の問題だった。
+ *
+ * どちらも「送った気になっていたが届いていない」形の失敗で、
+ * 画面上は何も起きないため気づきにくい。実データを見て初めて分かった。
+ *
+ * そこで順序に依存しない形にする。gtag が現れるまで待ってから送る。
+ * gtag が定義されている時点で config は済んでいるので、
+ * この経路なら順序を気にする必要がない。
  */
-export function trackEnEvent(name: EnEventName, payload: EnEventPayload = {}): void {
-  const clean = sanitizeEventPayload(payload);
-  if (typeof window === "undefined") return;
-
+function deliver(name: EnEventName, clean: EnEventPayload, waited: number): void {
   const w = window as GtagWindow;
   if (typeof w.gtag === "function") {
     w.gtag("event", name, clean);
     return;
   }
-
-  try {
-    w.dataLayer = w.dataLayer || [];
-    w.dataLayer.push(["event", name, clean]);
-  } catch {
-    // dataLayer にも積めない環境。ここまで来たら諦める
+  if (waited >= MAX_WAIT_MS) {
+    // 本当に来ない場合。握り潰すと実装ミスと区別がつかない
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[en-analytics] dropped ${name}: gtag never became available`);
+    }
+    return;
   }
+  setTimeout(() => deliver(name, clean, waited + RETRY_MS), RETRY_MS);
+}
 
-  // GA4が本当に来ないケース（ブロッカー等）に気づけるよう開発時は出す
-  if (process.env.NODE_ENV !== "production") {
-    console.info(`[en-analytics] queued ${name}`, clean);
-  }
+/**
+ * イベント送信。送信前に必ず sanitize を通す。
+ * 呼び出し側が何を渡しても、許可リスト外は外へ出ない。
+ */
+export function trackEnEvent(name: EnEventName, payload: EnEventPayload = {}): void {
+  const clean = sanitizeEventPayload(payload);
+  if (typeof window === "undefined") return;
+  deliver(name, clean, 0);
 }

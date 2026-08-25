@@ -250,20 +250,18 @@ test("言語やIPによる強制リダイレクトを実装していない", () 
 
 // ─── gtag 未ロード時の取りこぼし ──────────────────────
 //
-// 2026-08-24: `english_hub_view` だけが記録されず、`finder_view` は
-// 記録される、という欠落が実データで出た。原因は GA4 が
-// afterInteractive で読み込まれるのに対し、表示イベントは useEffect で
-// 発火するため、初回ロードでは gtag より先に走っていたこと。
-// ソースを読むだけの検査では見つからなかったので、実際に呼んで確かめる。
+// 2026-08-24、ここで2回失敗している。
+//   ① gtag が無ければイベントを捨てていた
+//   ② dataLayer に積んだが config より前に入るため届かなかった
+// どちらも画面上は何も起きず、実データを見て初めて分かった。
+// ソースを読む検査では見つからないので、実際に呼んで確かめる。
 
-type FakeWindow = {
-  gtag?: (...args: unknown[]) => void;
-  dataLayer?: unknown[];
-};
+type FakeWindow = { gtag?: (...args: unknown[]) => void };
 
-/** window を差し替えて trackEnEvent を1回呼ぶ */
-async function callWith(fake: FakeWindow) {
-  const g = globalThis as unknown as { window?: FakeWindow };
+const g = globalThis as unknown as { window?: FakeWindow };
+
+/** window を差し替えて実行し、必ず後始末する */
+async function withWindow<T>(fake: FakeWindow, fn: (send: typeof import("../../../src/lib/experiments/snow-peak-igt/analytics.ts").trackEnEvent) => Promise<T> | T): Promise<T> {
   const had = "window" in g;
   const previous = g.window;
   g.window = fake;
@@ -271,69 +269,75 @@ async function callWith(fake: FakeWindow) {
     const { trackEnEvent } = await import(
       "../../../src/lib/experiments/snow-peak-igt/analytics.ts"
     );
-    trackEnEvent("english_hub_view", { page: "hub", market: "us" });
+    return await fn(trackEnEvent);
   } finally {
     if (had) g.window = previous;
     else delete g.window;
   }
 }
 
-test("gtag があれば gtag で送る", async () => {
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+test("gtag があればすぐ送る", async () => {
   const calls: unknown[][] = [];
   const fake: FakeWindow = { gtag: (...args) => calls.push(args) };
-  await callWith(fake);
 
-  assert.equal(calls.length, 1);
+  await withWindow(fake, (send) => {
+    send("english_hub_view", { page: "hub", market: "us" });
+  });
+
+  assert.equal(calls.length, 1, "即時に送られていない");
   assert.deepEqual(calls[0], [
     "event",
     "english_hub_view",
     { page: "hub", market: "us" },
   ]);
-  assert.equal(fake.dataLayer, undefined, "gtag があるのに dataLayer に積んでいる");
 });
 
-test("gtag が未ロードでもイベントを捨てない（dataLayer に積む）", async () => {
-  const fake: FakeWindow = {}; // gtag も dataLayer も無い状態＝初回ロード直後
-  await callWith(fake);
+test("gtag が後から現れてもイベントを捨てない", async () => {
+  const calls: unknown[][] = [];
+  const fake: FakeWindow = {}; // 初回ロード直後：gtag はまだ無い
 
-  assert.ok(Array.isArray(fake.dataLayer), "dataLayer が作られていない");
-  assert.equal(fake.dataLayer?.length, 1, "イベントが捨てられている");
-  assert.deepEqual(fake.dataLayer?.[0], [
-    "event",
-    "english_hub_view",
-    { page: "hub", market: "us" },
-  ]);
+  await withWindow(fake, async (send) => {
+    send("english_hub_view", { page: "hub" });
+    assert.equal(calls.length, 0, "gtag が無いのに送っている");
+
+    // GA4 が afterInteractive で読み込まれた状況を再現
+    await wait(400);
+    fake.gtag = (...args) => calls.push(args);
+
+    await wait(700);
+  });
+
+  assert.equal(calls.length, 1, "後から現れた gtag に届いていない");
+  assert.deepEqual(calls[0], ["event", "english_hub_view", { page: "hub" }]);
 });
 
-test("既存の dataLayer は壊さない（既存の中身を残して追記する）", async () => {
-  const fake: FakeWindow = { dataLayer: [{ existing: true }] };
-  await callWith(fake);
-
-  assert.equal(fake.dataLayer?.length, 2);
-  assert.deepEqual(fake.dataLayer?.[0], { existing: true });
-});
-
-test("dataLayer 経由でも sanitize を通る", async () => {
-  const g = globalThis as unknown as { window?: FakeWindow };
-  const had = "window" in g;
-  const previous = g.window;
+test("待っている間も sanitize は効く（自由入力とメールは届かない）", async () => {
+  const calls: unknown[][] = [];
   const fake: FakeWindow = {};
-  g.window = fake;
-  try {
-    const { trackEnEvent } = await import(
-      "../../../src/lib/experiments/snow-peak-igt/analytics.ts"
-    );
-    trackEnEvent("model_request_submit", {
+
+  await withWindow(fake, async (send) => {
+    send("model_request_submit", {
       market: "us",
       email: "someone@example.com",
       purpose: "free text",
     } as never);
-  } finally {
-    if (had) g.window = previous;
-    else delete g.window;
-  }
-  const queued = JSON.stringify(fake.dataLayer);
-  assert.ok(!queued.includes("@"), "メールアドレスが積まれている");
-  assert.ok(!queued.includes("free text"), "自由入力が積まれている");
-  assert.ok(queued.includes('"market":"us"'));
+    await wait(400);
+    fake.gtag = (...args) => calls.push(args);
+    await wait(700);
+  });
+
+  const sent = JSON.stringify(calls);
+  assert.ok(sent.includes('"market":"us"'), "許可された項目が届いていない");
+  assert.ok(!sent.includes("@"), "メールアドレスが送られている");
+  assert.ok(!sent.includes("free text"), "自由入力が送られている");
+});
+
+test("dataLayer に直接積まない（config より前に入ると捨てられるため）", () => {
+  const src = read("src/lib/experiments/snow-peak-igt/analytics.ts");
+  assert.ok(
+    !src.includes("dataLayer.push"),
+    "dataLayer に積んでいる。config より前に入ると GA4 に処理されない"
+  );
 });
