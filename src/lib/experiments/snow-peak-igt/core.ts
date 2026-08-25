@@ -23,6 +23,17 @@ export type CompatibilityRecord = {
   notes?: string;
 };
 
+/**
+ * 出典付きの事実。公式に書かれている文言を**そのまま**入れる。
+ * 要約も言い換えもしない。出典が無い事実は存在しないのと同じ扱いにするため
+ * sourceIds は必須で、検証で空を弾く。
+ */
+export type SourcedFact = {
+  /** 公式資料の原文。訳さない・要約しない */
+  text: string;
+  sourceIds: string[];
+};
+
 export type PurchaseOption = {
   market: Market;
   merchant: string;
@@ -42,6 +53,25 @@ export type ProductRecord = {
   sourceIds: string[];
   lastVerifiedAt: string;
   purchaseOptions: PurchaseOption[];
+  /**
+   * IGTフレームが受けるユニット数の公式表記。
+   *
+   * IGTで「合うかどうか」を決めるのは最終的にこの数なので、
+   * ここを出せば読者は自分で照合できる。逆に言えば、これを出さずに
+   * 「合う／合わない」だけ言うのは、根拠を隠して結論だけ渡すことになる。
+   *
+   * 表記は資料によって形が違う（"1 unit ×2 and Half-unit ×2" / "2"）。
+   * 揃えようとすると解釈が入るので、原文のまま持つ。
+   */
+  igtUnitCapacity: SourcedFact | null;
+  /**
+   * 公式に明記された重要な制限。原文のまま。
+   *
+   * 当初は全商品共通の固定文で済ませていたが、それでは
+   * 「この商品固有の制限」を伝えられない。荷重上限や屋内使用の可否は
+   * 商品ごとに違い、しかも安全に関わる。
+   */
+  importantLimitations: SourcedFact[];
 };
 
 export type SourceType =
@@ -358,6 +388,33 @@ export function validateProductRecord(
       errors.push(
         `product(${id}).confirmedSuccessorId refers to unknown product "${p.confirmedSuccessorId}"`
       );
+  }
+
+  // 出典付きの事実は、原文と出典の両方が揃って初めて意味がある
+  const checkFact = (f: unknown, where: string) => {
+    if (typeof f !== "object" || f === null) {
+      errors.push(`product(${id}).${where} must be an object`);
+      return;
+    }
+    const fact = f as Partial<SourcedFact>;
+    if (!isNonEmptyString(fact.text))
+      errors.push(`product(${id}).${where}.text is required (verbatim official wording)`);
+    if (!Array.isArray(fact.sourceIds) || fact.sourceIds.length === 0) {
+      errors.push(`product(${id}).${where} has no sourceIds`);
+      return;
+    }
+    for (const sid of fact.sourceIds) {
+      if (!knownSourceIds.has(sid))
+        errors.push(`product(${id}).${where} refers to unknown source "${sid}"`);
+    }
+  };
+
+  if (p.igtUnitCapacity != null) checkFact(p.igtUnitCapacity, "igtUnitCapacity");
+
+  if (!Array.isArray(p.importantLimitations)) {
+    errors.push(`product(${id}).importantLimitations must be an array`);
+  } else {
+    p.importantLimitations.forEach((f, i) => checkFact(f, `importantLimitations[${i}]`));
   }
 
   if (!Array.isArray(p.purchaseOptions)) {

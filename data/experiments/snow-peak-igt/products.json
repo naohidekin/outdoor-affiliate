@@ -14,7 +14,8 @@
     "compatibility": [],
     "sourceIds": [
       "sp-jp-entry-igt",
-      "sp-us-entry-igt"
+      "sp-us-entry-igt",
+      "sp-manual-entry-igt"
     ],
     "lastVerifiedAt": "2026-08-25",
     "purchaseOptions": [
@@ -23,6 +24,38 @@
         "merchant": "Snow Peak USA",
         "url": "https://www.snowpeak.com/collections/tables/products/entry-igt-table",
         "affiliate": false
+      }
+    ],
+    "igtUnitCapacity": {
+      "text": "Set contents: Main unit and tabletops (1 unit ×2 and Half-unit ×2)",
+      "sourceIds": [
+        "sp-manual-entry-igt"
+      ]
+    },
+    "importantLimitations": [
+      {
+        "text": "When assembling and attaching a unit item to this product, carefully read the instructions for the unit item before use.",
+        "sourceIds": [
+          "sp-manual-entry-igt"
+        ]
+      },
+      {
+        "text": "If an outdoor-use unit item is attached to this product, do not use this product indoors.",
+        "sourceIds": [
+          "sp-manual-entry-igt"
+        ]
+      },
+      {
+        "text": "When using this product, ensure that load is applied evenly on the two legs. The load must not exceed 30 kg / 66 lbs.",
+        "sourceIds": [
+          "sp-manual-entry-igt"
+        ]
+      },
+      {
+        "text": "Do not move this product while unit items are in use. Always remove the units before moving the product.",
+        "sourceIds": [
+          "sp-manual-entry-igt"
+        ]
       }
     ]
   },
@@ -49,6 +82,41 @@
         "url": "https://www.snowpeak.com/collections/tables/products/extension-igt",
         "affiliate": false
       }
-    ]
+    ],
+    "igtUnitCapacity": {
+      "text": "IGT UNITS: 2",
+      "sourceIds": [
+        "sp-us-extension-igt"
+      ]
+    },
+    "importantLimitations": []
+  },
+  {
+    "id": "igt-mesh-tray-1unit-deep",
+    "productName": "メッシュトレー 1unit 深型",
+    "aliases": [
+      "Deep Mesh Tray 1 Unit",
+      "Mesh Tray 1 unit"
+    ],
+    "japaneseModelNumber": "CK-225",
+    "usModelNumber": "CK-225",
+    "status": "current",
+    "confirmedSuccessorId": null,
+    "compatibility": [],
+    "sourceIds": [
+      "sp-jp-mesh-tray-1unit-deep",
+      "sp-us-mesh-tray-1unit-deep"
+    ],
+    "lastVerifiedAt": "2026-08-25",
+    "purchaseOptions": [
+      {
+        "market": "us",
+        "merchant": "Snow Peak USA",
+        "url": "https://www.snowpeak.com/collections/igt-storage/products/deep-mesh-tray-1-unit",
+        "affiliate": false
+      }
+    ],
+    "igtUnitCapacity": null,
+    "importantLimitations": []
   }
 ]

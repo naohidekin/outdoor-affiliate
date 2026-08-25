@@ -154,3 +154,73 @@ test("正しい fixture データは検証を通る（検証が厳しすぎな�
   const errors = validateDataset(fixtureProducts, fixtureSources);
   assert.deepEqual(errors, [], errors.join("\n"));
 });
+
+// ─── 出典付きの事実（IGTユニット数・重要な制限） ──────
+//
+// 2026-08-25 追加。当初 Important limitations を全商品共通の固定文で
+// 実装していたが、荷重上限や屋内使用の可否は商品ごとに違い、しかも
+// 安全に関わる。公式マニュアルの原文を出典付きで持つ形に変えた。
+
+test("出典の無い igtUnitCapacity は拒否される", () => {
+  const errors = validateProductRecord(
+    { ...fixtureCurrent, igtUnitCapacity: { text: "2 units", sourceIds: [] } },
+    knownSources,
+    knownProducts
+  );
+  assert.ok(
+    errors.some((e) => e.includes("igtUnitCapacity has no sourceIds")),
+    `出典なしが素通りした: ${errors.join(" / ")}`
+  );
+});
+
+test("原文が空の igtUnitCapacity は拒否される", () => {
+  const errors = validateProductRecord(
+    { ...fixtureCurrent, igtUnitCapacity: { text: "", sourceIds: ["fixture-src-official-manual"] } },
+    knownSources,
+    knownProducts
+  );
+  assert.ok(errors.some((e) => e.includes("igtUnitCapacity.text is required")));
+});
+
+test("出典の無い importantLimitations は拒否される", () => {
+  const errors = validateProductRecord(
+    { ...fixtureCurrent, importantLimitations: [{ text: "Do not do this.", sourceIds: [] }] },
+    knownSources,
+    knownProducts
+  );
+  assert.ok(
+    errors.some((e) => e.includes("importantLimitations[0] has no sourceIds")),
+    `出典なしの制限が素通りした: ${errors.join(" / ")}`
+  );
+});
+
+test("存在しない出典を指す事実は拒否される", () => {
+  const errors = validateProductRecord(
+    {
+      ...fixtureCurrent,
+      igtUnitCapacity: { text: "2 units", sourceIds: ["no-such-source"] },
+    },
+    knownSources,
+    knownProducts
+  );
+  assert.ok(errors.some((e) => e.includes("refers to unknown source")));
+});
+
+test("本番データの事実はすべて公式資料を出典にしている", () => {
+  const officialIds = new Set(
+    productionSources
+      .filter((s) => String((s as { sourceType?: string }).sourceType || "").startsWith("official_"))
+      .map((s) => (s as { id: string }).id)
+  );
+  for (const p of productionProducts as Array<Record<string, unknown>>) {
+    const facts = [
+      ...(p.igtUnitCapacity ? [p.igtUnitCapacity] : []),
+      ...((p.importantLimitations as unknown[]) ?? []),
+    ] as Array<{ text: string; sourceIds: string[] }>;
+    for (const f of facts) {
+      for (const sid of f.sourceIds) {
+        assert.ok(officialIds.has(sid), `${p.id}: 公式以外の出典 "${sid}" を引いている`);
+      }
+    }
+  }
+});

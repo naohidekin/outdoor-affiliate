@@ -75,6 +75,41 @@ function SourceList({
   );
 }
 
+/** 出典付きの事実。原文をそのまま出し、どの資料に書いてあるかを添える */
+function Fact({
+  fact,
+  sources,
+}: {
+  fact: { text: string; sourceIds: string[] };
+  sources: SourceRecord[];
+}) {
+  const cited = fact.sourceIds
+    .map((id) => sources.find((s) => s.id === id))
+    .filter((s): s is SourceRecord => Boolean(s));
+  return (
+    <>
+      <span className="text-ink">{fact.text}</span>
+      {cited.length > 0 ? (
+        <span className="block text-xs text-slate-500 mt-0.5">
+          {cited.map((s, i) => (
+            <span key={s.id}>
+              {i > 0 ? ", " : ""}
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`underline underline-offset-2 hover:text-lake-600 rounded ${FOCUS}`}
+              >
+                {s.title}
+              </a>
+            </span>
+          ))}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 function ProductResult({
   product,
   products,
@@ -107,6 +142,13 @@ function ProductResult({
         </Row>
         <Row label="Product status">
           {PRODUCT_STATUS_LABEL[product.status]}
+        </Row>
+        <Row label="IGT unit capacity">
+          {product.igtUnitCapacity ? (
+            <Fact fact={product.igtUnitCapacity} sources={sources} />
+          ) : (
+            <Unknown />
+          )}
         </Row>
         {shouldShowSuccessor(product) ? (
           <Row label="Confirmed successor">
@@ -189,12 +231,30 @@ function ProductResult({
         </p>
       )}
 
-      <p className="mt-4 text-xs text-slate-500 leading-relaxed">
-        Important limitations: this record reflects official documentation as of
-        the verification date above. Snow Peak may change specifications at any
-        time, and the manufacturer&apos;s current information always takes
-        precedence over this page.
-      </p>
+      <div className="mt-4 pt-4 border-t border-line-soft">
+        <p className="text-xs text-slate-500 mb-2">Important limitations</p>
+        {product.importantLimitations.length > 0 ? (
+          <ul className="list-disc pl-5 space-y-1.5 text-sm text-ink mb-3">
+            {product.importantLimitations.map((f) => (
+              <li key={f.text}>
+                <Fact fact={f} sources={sources} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-slate-500 mb-3">
+            {EVIDENCE_STATEMENTS.insufficient}. We have not recorded
+            product-specific limitations from official documentation for this
+            item yet.
+          </p>
+        )}
+        <p className="text-xs text-slate-500 leading-relaxed">
+          This record reflects official documentation as of the verification date
+          above. Snow Peak may change specifications at any time, and the
+          manufacturer&apos;s current information always takes precedence over
+          this page.
+        </p>
+      </div>
     </article>
   );
 }

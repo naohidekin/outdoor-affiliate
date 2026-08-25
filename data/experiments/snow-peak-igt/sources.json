@@ -30,5 +30,29 @@
     "url": "https://www.snowpeak.com/collections/tables/products/extension-igt",
     "sourceType": "official_product_page",
     "lastVerifiedAt": "2026-08-25"
+  },
+  {
+    "id": "sp-manual-entry-igt",
+    "publisher": "Snow Peak",
+    "title": "Entry IGT CK-080R Instruction Manual Ver 1.00",
+    "url": "https://www.snowpeak.com/cdn/shop/files/CK-080R_manual_B4_web.pdf",
+    "sourceType": "official_manual",
+    "lastVerifiedAt": "2026-08-25"
+  },
+  {
+    "id": "sp-jp-mesh-tray-1unit-deep",
+    "publisher": "Snow Peak Japan",
+    "title": "メッシュトレー 1unit 深型",
+    "url": "https://ec.snowpeak.co.jp/item/SNP0115A0038",
+    "sourceType": "official_product_page",
+    "lastVerifiedAt": "2026-08-25"
+  },
+  {
+    "id": "sp-us-mesh-tray-1unit-deep",
+    "publisher": "Snow Peak USA",
+    "title": "Deep Mesh Tray 1 Unit",
+    "url": "https://www.snowpeak.com/collections/igt-storage/products/deep-mesh-tray-1-unit",
+    "sourceType": "official_product_page",
+    "lastVerifiedAt": "2026-08-25"
   }
 ]

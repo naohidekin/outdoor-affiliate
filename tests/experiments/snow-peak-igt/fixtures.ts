@@ -40,6 +40,8 @@ function base(): Omit<ProductRecord, "id" | "productName" | "status"> {
     sourceIds: ["fixture-src-official-page"],
     lastVerifiedAt: "2026-08-23",
     purchaseOptions: [],
+    igtUnitCapacity: null,
+    importantLimitations: [],
   };
 }
 
@@ -52,6 +54,13 @@ export const fixtureCurrent: ProductRecord = {
   japaneseModelNumber: "FX-100",
   usModelNumber: "FXU-100",
   status: "current",
+  igtUnitCapacity: {
+    text: "Fixture unit ×2 and Half-unit ×2",
+    sourceIds: ["fixture-src-official-manual"],
+  },
+  importantLimitations: [
+    { text: "Fixture limitation sentence.", sourceIds: ["fixture-src-official-manual"] },
+  ],
   purchaseOptions: [
     {
       market: "us",
