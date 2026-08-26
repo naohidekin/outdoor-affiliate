@@ -22,6 +22,10 @@ import HeroImage from "@/components/HeroImage";
 import RakutenDealBadge from "@/components/RakutenDealBadge";
 import { showTopCta } from "@/lib/articleCta";
 import { extractToc } from "@/lib/toc";
+import {
+  extractFaqsFromContent,
+  FAQ_HEADING_RE,
+} from "@/lib/faq-from-content";
 import TableOfContents from "@/components/TableOfContents";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
@@ -133,11 +137,19 @@ export default async function ArticlePage({
     .slice(0, 3);
 
   // 本文にFAQセクションが直書きされている記事が47本あり、システム生成FAQと
-  // 二重表示になっていた。本文側を優先し、システムFAQ（表示とFAQPage JSON-LDの
-  // 両方）を抑止する。JSON-LDだけ残すと「ページに見えている内容と構造化データの
-  // 不一致」になるため両方消す
-  const bodyHasFaq = /^##+ *よくある(ご)?質問/m.test(article.content);
+  // 二重表示になっていた。本文側を優先し、システムFAQの「表示」を抑止する。
+  //
+  // 2026-08-26 変更。以前はここで JSON-LD も一緒に捨てていた。理由は
+  // 「ページに見えている内容と構造化データの不一致」を避けるためで、判断自体は
+  // 正しい。ただし結果として公開107本のうち47本（44%）から FAQPage が消えていた。
+  // 不一致を無くす方向を変え、本文のFAQセクションから拾って出すようにする。
+  // こうすると JSON-LD は定義上まさに画面に見えている内容そのものになる。
+  const bodyHasFaq = FAQ_HEADING_RE.test(article.content);
   const faqs = bodyHasFaq ? [] : article.faqs ?? [];
+  // 表示は本文がそのまま担当するので、これは JSON-LD 専用
+  const faqsForJsonLd = bodyHasFaq
+    ? extractFaqsFromContent(article.content)
+    : faqs;
 
   // 「医師から一言」セクションをまとめ直前に注入
   const medicalAdvice = MEDICAL_ADVICE_MAP[article.slug] ?? null;
@@ -236,11 +248,11 @@ export default async function ArticlePage({
     }));
 
   const faqJsonLd =
-    faqs.length > 0
+    faqsForJsonLd.length > 0
       ? {
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: faqs.map((faq) => ({
+          mainEntity: faqsForJsonLd.map((faq) => ({
             "@type": "Question",
             name: faq.question,
             acceptedAnswer: {
