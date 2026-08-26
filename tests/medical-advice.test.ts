@@ -131,6 +131,30 @@ test("暖房記事の医師アドバイスは、子どもに固有の注意点�
   );
 });
 
+test("小児の一酸化炭素の記述が、総量ではなく体重あたりで書かれている", () => {
+  // 2026-08-26 医師レビューでの指摘。
+  // 「小児は一酸化炭素を早く多く取り込む」と書いていたが、これは不正確。
+  // 体重あたりの分時換気量が多いことから言えるのは「体重あたりでは速く
+  // 取り込む」までで、総量として大人より多いとは限らない。
+  // 「体格が小さいから症状進行が早い」も機序の説明として誤り。
+  const vague = ["早く多く", "多く取り込", "体格が小さく"];
+  const hits: string[] = [];
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.title + adv.body + adv.bullets.join("");
+    for (const w of vague) {
+      if (blob.includes(w)) hits.push(`${slug}: 「${w}」`);
+    }
+    // 一酸化炭素に触れているなら、体重あたりの枠組みで書く
+    if (/一酸化炭素/.test(blob) && /小児|子ども/.test(blob)) {
+      assert.ok(
+        /体重あたり|体重当たり/.test(blob),
+        `${slug}: 小児の一酸化炭素を体重あたりの枠組みで書いていない`
+      );
+    }
+  }
+  assert.deepEqual(hits, [], hits.join("\n"));
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない
