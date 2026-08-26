@@ -341,3 +341,21 @@ test("dataLayer に直接積まない（config より前に入ると捨てられ
     "dataLayer に積んでいる。config より前に入ると GA4 に処理されない"
   );
 });
+
+// ─── リクエスト導線を出す条件 ─────────────────────────
+//
+// 2026-08-25: データが入ったので、検索せずに送信できる状態をやめた。
+// 検索を経ずに送信されると model_request_submit ÷ result_unknown の
+// 分母を経ずに分子だけ増え、需要の強さが測れなくなる。
+
+test("データがあるときは、検索して見つからなかった場合だけリクエスト導線を出す", () => {
+  const src = read("src/components/en/ModelFinder.tsx");
+  assert.ok(
+    src.includes('{datasetEmpty || result.status === "not_found" ? ('),
+    "リクエスト導線の表示条件が not_found 限定になっていない"
+  );
+  assert.ok(
+    !src.includes('{result.status !== "found" ? ('),
+    "検索前でもフォームが出る条件が残っている"
+  );
+});

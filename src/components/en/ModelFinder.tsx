@@ -402,7 +402,17 @@ export default function ModelFinder({
         ) : null}
       </div>
 
-      {result.status !== "found" ? (
+      {/*
+        リクエスト導線を出す条件。
+        データが空のうちは検索しても何も出ないので、最初から出す。
+        データがあるなら、**1回検索して見つからなかったときだけ**出す。
+
+        検索せずに送信できると、一次指標
+        （model_request_submit ÷ result_unknown）の分母を経ずに
+        分子だけが増えて、需要の強さを測れなくなる。
+        導線を増やすより、測れることを優先する（2026-08-25）。
+      */}
+      {datasetEmpty || result.status === "not_found" ? (
         <section className="border-t border-line pt-6">
           <h2 className="text-lg font-semibold text-ink-strong">
             Can&apos;t find your model?
