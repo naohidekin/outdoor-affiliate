@@ -22,6 +22,7 @@ import HeroImage from "@/components/HeroImage";
 import RakutenDealBadge from "@/components/RakutenDealBadge";
 import { showTopCta } from "@/lib/articleCta";
 import { extractToc } from "@/lib/toc";
+import { sizedImageUrl } from "@/lib/imageSize";
 import {
   extractFaqsFromContent,
   FAQ_HEADING_RE,
@@ -170,11 +171,20 @@ export default async function ArticlePage({
     headline: article.title,
     description: article.excerpt,
     // Googleのリッチリザルトで推奨される image。記事のアイキャッチ or 掲載商品の
-    // 画像を優先し、無ければ動的生成のOGP画像（1200x630）にフォールバックする
+    // 画像を優先し、無ければ動的生成のOGP画像（1200x630）にフォールバックする。
+    //
+    // 2026-08-26 修正。ここだけ生の保存URLを使っていた。products.json には
+    // ?_ex=128x128 のような小さいサイズ指定を含むURLが39件あり、表示側は
+    // sizedImageUrl でその都度サイズを指定し直す（ProductCardは800px、
+    // HeroPhotoは1200px）ので画面は問題なかったが、構造化データだけが
+    // 128x128 を指していた。冬の主力記事 winter-camp-heating-comparison が
+    // まさにこれで、Googleが画像付きリッチリザルトの対象外にする大きさだった。
+    // 表示側と同じヘルパーを通して1200pxを要求する。
     image:
-      article.eyecatch ||
-      products.find((p) => p.imageUrl)?.imageUrl ||
-      `${baseUrl}/articles/${article.slug}/opengraph-image`,
+      sizedImageUrl(
+        article.eyecatch || products.find((p) => p.imageUrl)?.imageUrl || "",
+        1200
+      ) || `${baseUrl}/articles/${article.slug}/opengraph-image`,
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     author: {
@@ -235,7 +245,8 @@ export default async function ArticlePage({
       name: p.name,
       brand: { "@type": "Brand", name: p.brand },
       description: p.description,
-      image: p.imageUrl || undefined,
+      // Article の image と同じ理由で、保存URLそのままではなくサイズを指定し直す
+      image: p.imageUrl ? sizedImageUrl(p.imageUrl, 1200) : undefined,
       // 当サイトは販売者ではなく送客サイト。在庫・送料・配送日数・返品条件は
       // 販売店ごとに異なり事実確認もできないため出力しない（不正確な構造化
       // データはリッチリザルト除外・手動対策の原因になる）。価格とリンク先のみ
