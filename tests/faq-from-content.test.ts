@@ -143,6 +143,46 @@ test("回答が無い質問は捨てる（見出しだけ拾って空の回答�
   assert.equal(faqs[0].question, "回答のある質問？");
 });
 
+// ─── 見出しの表記ゆれ ─────────────────────────────────
+// 判定が「よくある質問」だけだった頃、本文見出しが「## FAQ」の16本は判定から
+// 漏れ、本文FAQとシステムFAQが画面に二重表示されていた。最大収益記事の
+// portable-cooler-fan-guide もその1本だった
+
+test("FAQ見出しの表記ゆれをすべて拾う", () => {
+  for (const heading of [
+    "## よくある質問",
+    "## よくあるご質問",
+    "## よくある疑問",
+    "## FAQ",
+    "## faq",
+    "## FAQ：よくある質問",
+    "## Q&A",
+    "## Q & A",
+    "### よくある質問",
+  ]) {
+    assert.ok(FAQ_HEADING_RE.test(heading), `拾えていない: ${heading}`);
+  }
+});
+
+test("FAQ語で始まるだけの別の見出しを巻き込まない", () => {
+  for (const heading of [
+    "## FAQサイトの作り方",
+    "## FAQ形式で整理するコツ",
+    "## よくある質問の答え方",
+    "## 選び方のポイント",
+  ]) {
+    assert.ok(!FAQ_HEADING_RE.test(heading), `誤って拾っている: ${heading}`);
+  }
+});
+
+test("## FAQ 見出しの本文からもQ&Aを取り出せる", () => {
+  const faqs = extractFaqsFromContent(
+    ["## FAQ", "", "### 電源は何Whいりますか？", "500Whからです。"].join("\n")
+  );
+  assert.equal(faqs.length, 1);
+  assert.equal(faqs[0].question, "電源は何Whいりますか？");
+});
+
 // ─── ページ側との接続 ─────────────────────────────────
 
 const PAGE = fs.readFileSync(
@@ -198,6 +238,24 @@ test("本文にFAQを直書きした公開記事から、1本残らずFAQを取�
     empty,
     [],
     `FAQを取り出せない記事がある（この記事から FAQPage が消える）: ${empty.join(", ")}`
+  );
+});
+
+test("本文にFAQ節を持つ公開記事では、システムFAQが表示されない（二重表示の防止）", () => {
+  // page.tsx は bodyHasFaq のときだけ表示用 faqs を空にする。判定から漏れると
+  // 本文のFAQ節とシステムFAQが画面に並ぶ。実際に16本でそうなっていた
+  const withBoth = allArticles.filter(
+    (a) =>
+      a.status === "published" &&
+      /^##+ *(?:よくある(?:ご)?質問|よくある疑問|FAQ|Q ?& ?A)(?:$|[\s：:・\-–—ー～〜（()|｜、。])/im.test(
+        a.content || ""
+      ) &&
+      !FAQ_HEADING_RE.test(a.content || "")
+  );
+  assert.deepEqual(
+    withBoth.map((a) => a.slug),
+    [],
+    "本文にFAQ節があるのに判定から漏れている＝システムFAQと二重表示になる"
   );
 });
 
