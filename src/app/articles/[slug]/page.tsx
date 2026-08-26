@@ -153,14 +153,29 @@ export default async function ArticlePage({
     : faqs;
 
   // 「医師から一言」セクションをまとめ直前に注入
+  //
+  // 2026-08-26 修正。以前は "\n## まとめ" が見つからないと
+  // contentSummaryOnward が null のままになり、描画側（下の
+  // {contentSummaryOnward ? ...}）が丸ごと通常表示に落ちるため、
+  // 医師アドバイスが1文字も出なかった。oniyamma-shinrinka-review が
+  // まさにこれで、登録されているのに一度も表示されていなかった。
+  // 安全に関する内容が、記事の書き方ひとつで静かに消えるのは筋が悪い。
+  // まとめが無ければ「関連記事」の前、それも無ければ本文末尾に置く。
   const medicalAdvice = MEDICAL_ADVICE_MAP[article.slug] ?? null;
   let contentBefore = article.content;
   let contentSummaryOnward: string | null = null;
   if (medicalAdvice) {
-    const idx = article.content.indexOf("\n## まとめ");
-    if (idx !== -1) {
+    const anchors = ["\n## まとめ", "\n## 関連記事", "\n## よくある質問"];
+    const idx = anchors
+      .map((a) => article.content.indexOf(a))
+      .filter((i) => i !== -1)
+      .sort((a, b) => a - b)[0];
+    if (idx !== undefined) {
       contentBefore = article.content.slice(0, idx);
       contentSummaryOnward = article.content.slice(idx + 1);
+    } else {
+      // 見出しが何も無い記事。末尾に置く（空文字だと描画側が落ちるので半角空白）
+      contentSummaryOnward = " ";
     }
   }
   const baseUrl = "https://camp-gear-lab.com";
