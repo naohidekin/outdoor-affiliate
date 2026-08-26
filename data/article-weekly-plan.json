@@ -1,71 +1,71 @@
 {
-  "week": "2026-W33",
-  "generatedAt": "2026-08-12T09:00:49+09:00",
+  "week": "2026-W35",
+  "generatedAt": "2026-08-26T09:00:46+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W33-01",
+      "themeId": "theme-2026-W35-01",
       "categoryId": "fan",
-      "title": "キャンプ用扇風機おすすめランキング2026年版｜テント内の熱中症対策に効く選び方",
-      "slug": "camp-fan-heatstroke-prevention-ranking-2026",
-      "angle": "熱中症リスクという安全視点から、テント内での扇風機選びを風量・静粛性・バッテリーで比較する",
+      "title": "キャンプ用ポータブルクーラー徹底比較【2026年版】冷風扇・スポットクーラーの選び方",
+      "slug": "portable-spot-cooler-camp-ranking-2026",
+      "angle": "単なる扇風機との違いを明確にしつつ、冷風扇・スポットクーラーに絞って比較するレビュー記事",
       "targetKeywords": [
-        "キャンプ 扇風機 熱中症",
-        "テント内 扇風機 おすすめ",
-        "キャンプ 熱中症対策 ファン"
+        "キャンプ スポットクーラー",
+        "ポータブル冷風扇 アウトドア",
+        "テント 冷却 クーラー"
       ],
-      "seasonRelevance": "8月はキャンプ中の熱中症リスクが最も高まる時期で、テント内の暑さ対策ニーズが急増する",
+      "seasonRelevance": "8月の猛暑でテント内の熱中症対策として冷却ギアへの需要が最高潮に達する時期",
       "priority": "high",
-      "reason": "fanカテゴリはPV・検索セッションともにダントツ1位（PV3153）で既存記事と重複しない安全対策×扇風機の切り口が狙える",
-      "scheduledPublishDate": "2026-08-14",
+      "reason": "fanカテゴリはPV・クリック・検索セッションすべてでダントツ1位かつtrendがactiveで、既存記事にないスポットクーラー特化の切り口で差別化できる",
+      "scheduledPublishDate": "2026-08-28",
       "productCount": 3,
       "productIds": [
-        "fan-007",
-        "fan-008",
-        "fan-009"
+        "fan-004",
+        "fan-makita-cf102dz",
+        "cooler-ecoflow-wave3"
       ]
     },
     {
-      "themeId": "theme-2026-W33-02",
-      "categoryId": "insect-repellent",
-      "title": "キャンプのブヨ対策完全ガイド2026年版｜蚊と違う刺され方・効く薬・予防グッズ一覧",
-      "slug": "camp-biting-midge-repellent-complete-guide-2026",
-      "angle": "蚊との違いを明確にしながら、ブヨに特化した予防・刺された後の対処・おすすめアイテムを網羅する",
+      "themeId": "theme-2026-W35-02",
+      "categoryId": "tent",
+      "title": "秋キャンプ向けテントの選び方【2026年版】9〜10月に強いおすすめ5選",
+      "slug": "autumn-camp-tent-ranking-2026",
+      "angle": "来月の季節カテゴリ（tent）を先取りし、夏の終わりから検索が増える「秋キャンプ用テント」需要を捉える先行記事",
       "targetKeywords": [
-        "キャンプ ブヨ 対策",
-        "ブヨ 虫除け おすすめ",
-        "ブヨ 刺された 対処"
+        "秋キャンプ テント",
+        "秋 テント 選び方",
+        "9月 キャンプ テントおすすめ"
       ],
-      "seasonRelevance": "8月は渓流・高原キャンプでブヨの活動が活発になるピーク時期で検索ニーズが集中する",
+      "seasonRelevance": "8月後半から「秋キャンプの準備」検索が増えはじめ、来月の季節カテゴリであるtentを先行してカバーできる",
       "priority": "high",
-      "reason": "insect-repellentは今月の季節カテゴリで来月も継続推奨、かつ既存記事は蚊・アロマ中心でブヨに特化した記事が空白になっている",
-      "scheduledPublishDate": "2026-08-16",
+      "reason": "tentカテゴリは検索セッション1162と高水準でtrendがactiveなうえ、来月の季節カテゴリ準備推奨と一致するため先行投稿で検索流入を先取りできる",
+      "scheduledPublishDate": "2026-08-30",
       "productCount": 3,
       "productIds": [
-        "insect-repellent-022",
-        "insect-repellent-023",
-        "insect-repellent-024"
+        "tent-sp-landnest-dome-m",
+        "tent-solo-003",
+        "tent-duo-004"
       ]
     },
     {
-      "themeId": "theme-2026-W33-03",
-      "categoryId": "tarp",
-      "title": "夏キャンプのタープ選び方ガイド2026年版｜日差し・通気性・UVカット率で選ぶおすすめ6選",
-      "slug": "summer-tarp-uv-ventilation-guide-2026",
-      "angle": "遮光性・UVカット率・メッシュ構造など夏特有の快適性指標に絞り込んでタープを比較する",
+      "themeId": "theme-2026-W35-03",
+      "categoryId": "cooler",
+      "title": "保冷力で選ぶクーラーボックス人気メーカー比較【2026年版】ブランド別特徴と失敗しない選び方",
+      "slug": "cooler-box-brand-comparison-2026",
+      "angle": "製品ランキングではなく「イエティ・コールマン・シマノ・ロゴス」などブランドの設計思想・保冷力・価格帯を横断比較する切り口",
       "targetKeywords": [
-        "夏 タープ おすすめ",
-        "タープ 日よけ UVカット",
-        "キャンプ 日差し対策 タープ"
+        "クーラーボックス ブランド 比較",
+        "クーラーボックス どれがいい 2026",
+        "イエティ コールマン 比較"
       ],
-      "seasonRelevance": "8月の強烈な紫外線と熱中症対策として、日差しカットに特化したタープ需要が高まる時期",
+      "seasonRelevance": "8月の季節カテゴリであり、真夏の食材管理・氷持ちに悩むキャンパーが最もクーラーを買い替え・追加購入するピーク月",
       "priority": "medium",
-      "reason": "tarpは今月の季節カテゴリで検索セッション248と活発、既存記事は雨・初心者向け設置ガイド中心のため夏の日差し対策という新切り口で差別化できる",
-      "scheduledPublishDate": "2026-08-19",
+      "reason": "coolerは8月の季節カテゴリで需要が高く、既存記事（ランキング・保冷テクニック）と重複しないブランド横断比較の切り口が検索意図のギャップを埋める",
+      "scheduledPublishDate": "2026-09-02",
       "productCount": 3,
       "productIds": [
-        "tarp-014",
-        "tarp-015",
-        "tarp-016"
+        "cooler-001",
+        "growler-002",
+        "cooler-026"
       ]
     }
   ]
