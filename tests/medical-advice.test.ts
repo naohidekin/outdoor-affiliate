@@ -155,6 +155,32 @@ test("小児の一酸化炭素の記述が、総量ではなく体重あたり�
   assert.deepEqual(hits, [], hits.join("\n"));
 });
 
+test("体表面積と脱水を、同じ文で因果としてつないでいない", () => {
+  // 2026-08-26 医師レビューでの指摘。
+  // 「体表面積が大きいので、暑さ寒さの影響を受けやすく、脱水も早い」と
+  // 書いていたが、2つは別の機序。体温調節は体表面積と調節機能の未熟さ、
+  // 脱水は体重あたりの必要水分量の多さと水分予備量の少なさ（加えて
+  // 腎の濃縮力の未熟さ、自分で補給できないこと）による。
+  // 体表面積で脱水まで説明するのは不十分。
+  const hits: string[] = [];
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    for (const sentence of blob.split(/[。！？]/)) {
+      if (/体表面積/.test(sentence) && /脱水/.test(sentence)) {
+        hits.push(`${slug}: 「${sentence.trim()}」`);
+      }
+    }
+    // 脱水に触れるなら、その機序を書く
+    if (/脱水/.test(blob)) {
+      assert.ok(
+        /水分予備量|必要な水分量|水分量が多/.test(blob),
+        `${slug}: 脱水に触れているが機序が書かれていない`
+      );
+    }
+  }
+  assert.deepEqual(hits, [], hits.join("\n"));
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない
