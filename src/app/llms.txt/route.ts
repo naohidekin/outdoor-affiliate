@@ -25,10 +25,14 @@ export async function GET() {
   const sections: string[] = [];
   for (const [catId, list] of byCategory) {
     const name = catName.get(catId) || "その他";
+    // 以前はカテゴリごとに上位15本で打ち切っていたが、tentカテゴリが20本に
+    // 増えた時点で、更新の古い5本が llms.txt から消えていた。この索引はAIに
+    // サイト全体を把握させるためのもので、載っていない記事は存在しないのと
+    // 同じになる。全記事を載せてもファイルは46KB程度（打ち切りを外して+2KB）
+    // なので、上限を置く理由がない。
     const sorted = list
       .slice()
-      .sort((x, y) => (y.updatedAt > x.updatedAt ? 1 : -1))
-      .slice(0, 15); // カテゴリごとに上位15本
+      .sort((x, y) => (y.updatedAt > x.updatedAt ? 1 : -1));
     const lines = sorted.map(
       (a) =>
         `- [${a.title}](${baseUrl}/articles/${a.slug}): ${(a.metaDescription || a.excerpt || "").slice(0, 90)}`
@@ -50,6 +54,16 @@ export async function GET() {
 - [運営者プロフィール・編集ポリシー](${baseUrl}/about): 医師監修の体制、レビュー方針、収益開示
 - [全記事一覧（サイトマップ）](${baseUrl}/sitemap.xml)
 - [RSSフィード](${baseUrl}/feed)
+
+## English pages (Snow Peak IGT)
+
+英語ページはサイト全体の翻訳ではなく、スノーピークIGTの型番照合に限定した
+実験的なセクション。sitemap.xml には載っているが、この索引にも明記しておく。
+
+- [Snow Peak IGT model number finder](${baseUrl}/en/tools/snow-peak-igt-model-finder): Look up a Snow Peak IGT model number and see whether it is current, superseded, or discontinued. Sourced from official documentation only.
+- [Snow Peak IGT model numbers explained](${baseUrl}/en/guides/snow-peak-igt-model-numbers): How Snow Peak IGT model numbers work, and how the Japanese and US catalogues line up.
+- [Methodology](${baseUrl}/en/methodology): What counts as evidence here, and what this site refuses to claim.
+- [Affiliate disclosure](${baseUrl}/en/affiliate-disclosure)
 
 ${sections.join("\n\n")}
 `;
