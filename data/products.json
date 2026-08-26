@@ -2729,23 +2729,27 @@
   },
   {
     "id": "heater-yamazen-electric-blanket",
-    "name": "山善 電気毛布",
+    "name": "山善 電気敷毛布 YMS-16",
     "brand": "山善",
     "price": 5980,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/momizistore/cabinet/imgrc0097326424.jpg?_ex=128x128",
+    "imageUrl": "https://shop.r10s.jp/momizistore/cabinet/imgrc0097326429.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ug9n6.wwmjsa40.g00ug9n6.wwmjt8da/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmomizistore%2Fb09c1ph1wz%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmomizistore%2Fi%2F10000918%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B016120Q2M/?tag=camp78-22",
     "categoryId": "heater",
     "specs": {
       "形式": "敷きタイプ",
-      "価格帯": "エントリー",
-      "手入れ": "丸洗い可（モデルによる）",
-      "消費電力": "約40〜55W"
+      "サイズ": "130×80cm",
+      "消費電力": "40W",
+      "温度調節": "弱〜強（スライド式無段階）",
+      "表面温度": "弱 約23℃／適温 約33℃／強 約53℃",
+      "手入れ": "丸洗い可（コントローラーは不可）",
+      "機能": "ダニ退治",
+      "安全装置": "温度ヒューズ"
     },
     "description": "キャンプ用電気毛布の定番格。価格が手ごろで、まず1枚試すのに向いています。ポータブル電源の容量計算がしやすい消費電力表示も助かります。",
     "rating": 0,
     "createdAt": "2026-08-03T12:46:07.841+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00"
+    "updatedAt": "2026-08-26T16:47:03.285Z"
   },
   {
     "id": "tent-017",
@@ -7268,23 +7272,29 @@
   },
   {
     "id": "heater-koizumi-electric-blanket",
-    "name": "コイズミ 電気敷毛布",
+    "name": "コイズミ 電気敷毛布 KDS-50229CT",
     "brand": "コイズミ",
     "price": 7980,
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/mypita/cabinet/sssale/kds5089ct-outletf.jpg?_ex=128x128",
+    "imageUrl": "https://shop.r10s.jp/mypita/cabinet/season/mofu/kds4081/kds50229-thum0.jpg",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00t8k06.wwmjs952.g00t8k06.wwmjt24b/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmypita%2Fkds5089ct%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmypita%2Fi%2F10000172%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0FNR6Q4DM/?tag=camp78-22",
     "categoryId": "heater",
     "specs": {
       "形式": "敷きタイプ",
-      "手入れ": "丸洗い可（モデルによる）",
-      "消費電力": "約40W",
-      "電源目安": "500Whクラスのポータブル電源で一晩"
+      "サイズ": "約140×80cm",
+      "重量": "約1.1kg",
+      "消費電力": "50W",
+      "1時間あたり消費電力量": "約35Wh",
+      "表面温度": "中央 約53℃",
+      "素材": "表面パイル 綿100%",
+      "手入れ": "水洗い可",
+      "機能": "ダニ退治／室温センサー／頭寒足熱配線／2時間切タイマー",
+      "注記": "在庫処分特価品（2022年に後継機へ世代交代・初期不良以外の返品不可）"
     },
     "description": "消費電力40W前後の省エネ敷き毛布。500Whクラスのポータブル電源でも朝まで持つので、電源なしサイトの冬キャンプで一番費用対効果が高い暖房です。シュラフの中に敷いて使います。",
     "rating": 4.8,
     "createdAt": "2026-08-03T12:46:07.841+00:00",
-    "updatedAt": "2026-08-07T20:02:18.665+00:00"
+    "updatedAt": "2026-08-26T16:47:03.285Z"
   },
   {
     "id": "cutting-board-cs-uh4709",
