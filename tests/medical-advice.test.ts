@@ -258,6 +258,34 @@ test("救急要請の基準に「受け答え」が含まれている", () => {
   }
 });
 
+test("虫よけを塗らない部位を、手のひらに限定していない", () => {
+  // 2026-08-26 医師レビューでの指摘。「手のひらには塗らない」と書いていたが
+  // 範囲が狭すぎる。子どもは手全体を口に運ぶので「子どもの手」が正しい
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/塗らない/.test(blob)) continue;
+    assert.ok(
+      !/手のひらには塗らない/.test(blob),
+      `${slug}: 「手のひらには塗らない」は範囲が狭い。「子どもの手」にする`
+    );
+  }
+});
+
+test("虫よけブレスレットの効果範囲を肯定的に断定していない", () => {
+  // 2026-08-26 医師レビューでの指摘。「守れるのは装着部の周囲だけ」と
+  // 書いていたが、これは「装着部の周囲は守れる」と読める。
+  // CDCはリストバンドを有効な防蚊対策と評価していない。
+  // 効果があるかのような線引きをせず「限定的」に留める
+  const adv = MEDICAL_ADVICE_MAP["insect-repellent-bracelet-ranking"];
+  if (!adv) return;
+  const blob = adv.title + adv.body + adv.bullets.join("。");
+  assert.ok(/限定的/.test(blob), "「効果は限定的」という表現が無い");
+  assert.ok(
+    !/装着部の周囲だけ|装着したその周りだけ/.test(blob),
+    "効果範囲を肯定的に断定している"
+  );
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない
