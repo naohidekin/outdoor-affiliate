@@ -181,6 +181,83 @@ test("体表面積と脱水を、同じ文で因果としてつないでいな�
   assert.deepEqual(hits, [], hits.join("\n"));
 });
 
+// 以下は 2026-08-26 の医師レビューで指摘を受けた点。いずれも「間違いでは
+// ないが、そのまま実行すると危ない」種類の不足だった。表現を戻すと危険が
+// 復活するので、テストで固定する。
+
+test("やけどの冷却時間を、乳幼児・広範囲へ一律に適用していない", () => {
+  // 「流水15〜20分」を条件なしで書くと、乳幼児や広範囲熱傷で冷やしすぎに
+  // よる低体温を招く。時間を書くなら範囲の限定と低体温の注意が要る
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/15〜20分|15分|20分/.test(blob)) continue;
+    assert.ok(
+      /小範囲|狭い範囲/.test(blob),
+      `${slug}: 冷却時間を書いているが、小範囲に限定していない`
+    );
+    assert.ok(
+      /低体温/.test(blob),
+      `${slug}: 冷却時間を書いているが、冷やしすぎ（低体温）の注意が無い`
+    );
+  }
+});
+
+test("灯油の誤飲で、催吐禁忌だけでなく水・牛乳も与えないと書いている", () => {
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/灯油/.test(blob) || !/飲/.test(blob)) continue;
+    if (!/吐かせ/.test(blob)) continue;
+    assert.ok(
+      /水や牛乳|牛乳も/.test(blob),
+      `${slug}: 灯油の誤飲で「水や牛乳も飲ませない」が抜けている`
+    );
+  }
+});
+
+test("一酸化炭素の警報時に、換気ではなく退避と書いている", () => {
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/警報/.test(blob)) continue;
+    assert.ok(
+      /屋外|外に出/.test(blob),
+      `${slug}: 警報時の退避が書かれていない`
+    );
+    assert.ok(
+      /戻らない|安全が確認/.test(blob),
+      `${slug}: 「安全確認まで戻らない」が抜けている`
+    );
+  }
+});
+
+test("子どもの皮膚とやけどの関係を断定していない", () => {
+  // 熱傷の深さは温度・接触時間・部位に左右される。皮膚が薄いことだけで
+  // 「深いやけどになります」と断定するのは不正確
+  const bad: string[] = [];
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    for (const s of blob.split(/[。]/)) {
+      if (!/皮膚/.test(s) || !/やけど/.test(s)) continue;
+      if (!/なりやすく|なりやすい|やすくなります/.test(s)) {
+        bad.push(`${slug}: 「${s.trim()}」`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+test("救急要請の基準に「受け答え」が含まれている", () => {
+  // 「意識がはっきりしない」だけだと、受け答えがおかしい・反応が鈍い
+  // 段階を見逃す
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/救急要請|救急車/.test(blob)) continue;
+    assert.ok(
+      /受け答え/.test(blob),
+      `${slug}: 救急要請の基準に「受け答え」が無い`
+    );
+  }
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない
