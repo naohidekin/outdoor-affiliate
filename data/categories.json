@@ -1,156 +1,156 @@
 [
   {
+    "description": "キャンプの大敵・蚊やブヨから家族を守る虫除けアイテム",
     "id": "insect-repellent",
     "name": "虫除け・虫対策",
-    "slug": "insect-repellent",
-    "description": "キャンプの大敵・蚊やブヨから家族を守る虫除けアイテム",
-    "order": 0
+    "order": 0,
+    "slug": "insect-repellent"
   },
   {
+    "description": "キャンプに欠かせないテントを比較・紹介",
     "id": "tent",
     "name": "テント",
-    "slug": "tent",
-    "description": "キャンプに欠かせないテントを比較・紹介",
-    "order": 1
+    "order": 1,
+    "slug": "tent"
   },
   {
+    "description": "キャンプサイトを明るく照らすランタン・ヘッドライト",
     "id": "light",
     "name": "ランタン・ライト",
-    "slug": "light",
-    "description": "キャンプサイトを明るく照らすランタン・ヘッドライト",
-    "order": 2
+    "order": 2,
+    "slug": "light"
   },
   {
+    "description": "快適な睡眠のためのシュラフ・マット・コット選び",
     "id": "sleeping-bag",
     "name": "シュラフ・寝袋・コット",
-    "slug": "sleeping-bag",
-    "description": "快適な睡眠のためのシュラフ・マット・コット選び",
-    "order": 3
+    "order": 3,
+    "slug": "sleeping-bag"
   },
   {
+    "description": "アウトドア料理に必須のバーナー",
     "id": "burner",
     "name": "バーナー・コンロ",
-    "slug": "burner",
-    "description": "アウトドア料理に必須のバーナー",
-    "order": 4
+    "order": 4,
+    "slug": "burner"
   },
   {
+    "description": "登山・ハイキング用バックパック",
     "id": "backpack",
     "name": "バックパック",
-    "slug": "backpack",
-    "description": "登山・ハイキング用バックパック",
-    "order": 5
+    "order": 5,
+    "slug": "backpack"
   },
   {
+    "description": "アウトドアウェアの選び方",
     "id": "wear",
     "name": "ウェア・レインウェア",
-    "slug": "wear",
-    "description": "アウトドアウェアの選び方",
-    "order": 6
+    "order": 6,
+    "slug": "wear"
   },
   {
+    "description": "足元を守る登山靴",
     "id": "shoes",
     "name": "登山靴・トレッキングシューズ",
-    "slug": "shoes",
-    "description": "足元を守る登山靴",
-    "order": 7
+    "order": 7,
+    "slug": "shoes"
   },
   {
+    "description": "キャンプの夜を彩る焚き火台",
     "id": "firepit",
     "name": "焚き火台",
-    "slug": "firepit",
-    "description": "キャンプの夜を彩る焚き火台",
-    "order": 8
+    "order": 8,
+    "slug": "firepit"
   },
   {
+    "description": "日差し・雨からサイトを守るタープ",
     "id": "tarp",
     "name": "タープ",
-    "slug": "tarp",
-    "description": "日差し・雨からサイトを守るタープ",
-    "order": 9
+    "order": 9,
+    "slug": "tarp"
   },
   {
+    "description": "快適な座り心地のアウトドアチェア",
     "id": "chair",
     "name": "キャンプチェア",
-    "slug": "chair",
-    "description": "快適な座り心地のアウトドアチェア",
-    "order": 10
+    "order": 10,
+    "slug": "chair"
   },
   {
+    "description": "調理・食事に欠かせないアウトドアテーブル",
     "id": "table",
     "name": "キャンプテーブル",
-    "slug": "table",
-    "description": "調理・食事に欠かせないアウトドアテーブル",
-    "order": 11
+    "order": 11,
+    "slug": "table"
   },
   {
+    "description": "食材・飲料を冷たくキープするクーラー",
     "id": "cooler",
     "name": "クーラーボックス",
-    "slug": "cooler",
-    "description": "食材・飲料を冷たくキープするクーラー",
-    "order": 12
+    "order": 12,
+    "slug": "cooler"
   },
   {
+    "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
     "id": "tumbler",
     "name": "タンブラー・ボトル",
-    "slug": "tumbler",
-    "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
-    "order": 13
+    "order": 13,
+    "slug": "tumbler"
   },
   {
+    "description": "夏キャンプを快適にする扇風機・ポータブルクーラー・冷感グッズ",
     "id": "fan",
     "name": "扇風機・冷却ギア",
-    "slug": "fan",
-    "description": "夏キャンプを快適にする扇風機・ポータブルクーラー・冷感グッズ",
-    "order": 14
+    "order": 14,
+    "slug": "fan"
   },
   {
+    "description": "キャンプで家電を使うためのポータブル電源・ソーラーパネル",
     "id": "portable-power",
     "name": "ポータブル電源",
-    "slug": "portable-power",
-    "description": "キャンプで家電を使うためのポータブル電源・ソーラーパネル",
-    "order": 15
+    "order": 15,
+    "slug": "portable-power"
   },
   {
+    "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
     "id": "safety",
     "name": "安全対策・救急",
-    "slug": "safety",
-    "description": "子連れキャンプの安全対策・救急用品・事故防止ガイド",
-    "order": 17
+    "order": 17,
+    "slug": "safety"
   },
   {
+    "description": "キャンプ料理を快適にするキッチン道具",
     "id": "kitchen",
     "name": "キッチンギア",
-    "slug": "kitchen",
-    "description": "キャンプ料理を快適にするキッチン道具",
-    "order": 18
+    "order": 18,
+    "slug": "kitchen"
   },
   {
+    "description": "サイトを整理するフィールドラック・ゴミ箱",
     "id": "storage",
     "name": "収納・整理",
-    "slug": "storage",
-    "description": "サイトを整理するフィールドラック・ゴミ箱",
-    "order": 19
+    "order": 19,
+    "slug": "storage"
   },
   {
+    "description": "ペグハンマー・火吹き棒など便利な小物",
     "id": "accessories",
     "name": "小物・アクセサリー",
-    "slug": "accessories",
-    "description": "ペグハンマー・火吹き棒など便利な小物",
-    "order": 20
+    "order": 20,
+    "slug": "accessories"
   },
   {
+    "description": "キャンプの贅沢なくつろぎアイテム",
     "id": "hammock",
     "name": "ハンモック",
-    "slug": "hammock",
-    "description": "キャンプの贅沢なくつろぎアイテム",
-    "order": 21
+    "order": 21,
+    "slug": "hammock"
   },
   {
+    "description": "冬キャンプの暖房。石油・薪・ガス・電気の各方式と一酸化炭素対策",
     "id": "heater",
     "name": "ストーブ・暖房",
-    "slug": "heater",
-    "description": "冬キャンプの暖房。石油・薪・ガス・電気の各方式と一酸化炭素対策",
-    "order": 22
+    "order": 22,
+    "slug": "heater"
   }
 ]
