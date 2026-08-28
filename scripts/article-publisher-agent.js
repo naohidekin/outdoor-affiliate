@@ -18,6 +18,13 @@ import {
   writeJson,
   checkArticleKillSwitch,
 } from "../src/lib/x-agent-utils.mjs";
+import {
+  reviewArticleForPublish,
+  readMedicalAdviceSlugs,
+} from "../src/lib/medical-review-gate.mjs";
+import { GRANDFATHERED_WITHOUT_MEDICAL_ADVICE } from "../src/lib/medical-review-grandfathered.mjs";
+import fs from "node:fs";
+import path from "node:path";
 
 loadEnv();
 
@@ -240,6 +247,12 @@ async function main() {
 
     console.log(`[article-publisher] 公開候補: ${candidates.length}件`);
 
+    // 医師アドバイスの登録slug。ソース（.ts）を唯一の正として読む
+    const medicalAdviceSlugs = readMedicalAdviceSlugs(
+      fs,
+      path.join(process.cwd(), "src", "lib", "medicalAdviceData.ts")
+    );
+
     for (const article of candidates) {
       console.log(`\n[article-publisher] 公開: ${article.title}`);
       console.log(`  スコア: ${article.qualityScore} / 予定日: ${article.scheduledPublishDate}`);
@@ -253,13 +266,25 @@ async function main() {
       const faqCount = (article.faqs || []).length;
       const hasMeta = (article.metaDescription || "").length >= 50;
 
+      // 医学レビューのゲート。
+      // このサイトは医師名を信頼の核にしているのに、公開前チェックは
+      // 文字数とFAQ数だけだった。医学的リスクを扱う記事が無チェックで
+      // 自動公開される状態を塞ぐ（src/lib/medical-review-gate.mjs 参照）
+      const medical = reviewArticleForPublish(
+        article,
+        (slug) => medicalAdviceSlugs.has(slug),
+        GRANDFATHERED_WITHOUT_MEDICAL_ADVICE
+      );
+
       // ブロッキングチェック（不合格なら公開スキップ）
       const blockers = [];
       if (contentLen < 2000) blockers.push(`文字数不足(${contentLen})`);
       if (faqCount < 2) blockers.push(`FAQ不足(${faqCount}問)`);
+      if (!medical.ok) blockers.push(`医師レビュー未実施(${medical.risks.join("・")})`);
 
       // 警告チェック（公開はブロックしない）
       const warnings = [];
+      if (medical.grandfathered) warnings.push(medical.reason);
       if (!hasInternalLink) warnings.push("内部リンクなし");
       if (!hasProductTag) warnings.push("商品タグなし(comparison/ranking/product)");
       if (!hasMeta) warnings.push("metaDescription短い");
@@ -269,6 +294,7 @@ async function main() {
       }
       if (blockers.length > 0) {
         console.warn(`  ✗ 品質チェック不合格: ${blockers.join(", ")}`);
+        if (!medical.ok) console.warn(`  → ${medical.reason}`);
         console.warn("  → 公開スキップ（手動確認が必要）");
         continue;
       }
