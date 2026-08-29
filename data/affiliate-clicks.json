@@ -1,71 +1,5 @@
 [
   {
-    "timestamp": "2026-05-30T01:29:24.948+00:00",
-    "path": "/articles/gas-lantern-ranking",
-    "productId": "gas-lantern-006",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-05-30T01:29:24.948+00:00",
-    "page_path": "/articles/gas-lantern-ranking",
-    "product_id": "gas-lantern-006"
-  },
-  {
-    "timestamp": "2026-05-30T01:30:22.061+00:00",
-    "path": "/articles/gas-lantern-ranking",
-    "productId": "gas-lantern-001",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-05-30T01:30:22.061+00:00",
-    "page_path": "/articles/gas-lantern-ranking",
-    "product_id": "gas-lantern-001"
-  },
-  {
-    "timestamp": "2026-05-30T01:30:50.701+00:00",
-    "path": "/articles/gas-lantern-ranking",
-    "productId": "gas-lantern-008",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-05-30T01:30:50.701+00:00",
-    "page_path": "/articles/gas-lantern-ranking",
-    "product_id": "gas-lantern-008"
-  },
-  {
-    "timestamp": "2026-05-30T05:13:37.525+00:00",
-    "path": "/articles/solo-tarp-ranking",
-    "productId": "tarp-006",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-05-30T05:13:37.525+00:00",
-    "page_path": "/articles/solo-tarp-ranking",
-    "product_id": "tarp-006"
-  },
-  {
-    "timestamp": "2026-05-30T10:43:25.358+00:00",
-    "path": "/articles/kids-sleeping-bag-ranking",
-    "productId": "sb-kids-001",
-    "productName": null,
-    "store": "rakuten",
-    "placement": null,
-    "clicked_at": "2026-05-30T10:43:25.358+00:00",
-    "page_path": "/articles/kids-sleeping-bag-ranking",
-    "product_id": "sb-kids-001"
-  },
-  {
-    "timestamp": "2026-05-30T11:46:12.399+00:00",
-    "path": "/articles/compact-chair-ranking",
-    "productId": "chair-009",
-    "productName": null,
-    "store": "rakuten",
-    "placement": null,
-    "clicked_at": "2026-05-30T11:46:12.399+00:00",
-    "page_path": "/articles/compact-chair-ranking",
-    "product_id": "chair-009"
-  },
-  {
     "timestamp": "2026-05-31T09:57:58.459+00:00",
     "path": "/articles/led-tent-light-ranking",
     "productId": "led-tent-004",
@@ -39147,5 +39081,214 @@
     "clicked_at": "2026-08-28T00:38:21.866+00:00",
     "page_path": "/articles/snow-peak-landlock-x-review",
     "product_id": "tent-f-landlock-x"
+  },
+  {
+    "timestamp": "2026-08-28T01:56:48.431+00:00",
+    "path": "/articles/family-tent-ranking",
+    "productId": "tent-f01",
+    "productName": "コールマン タフスクリーン2ルームエアー/MDX+",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T01:56:48.431+00:00",
+    "page_path": "/articles/family-tent-ranking",
+    "product_id": "tent-f01"
+  },
+  {
+    "timestamp": "2026-08-28T02:16:45.589+00:00",
+    "path": "/articles/cot-vs-mat-comparison",
+    "productId": "mat-waq-8cm",
+    "productName": "WAQ インフレータブル式マット 8cm",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T02:16:45.589+00:00",
+    "page_path": "/articles/cot-vs-mat-comparison",
+    "product_id": "mat-waq-8cm"
+  },
+  {
+    "timestamp": "2026-08-28T02:19:36.221+00:00",
+    "path": "/articles/cot-vs-mat-comparison",
+    "productId": "mat-waq-8cm",
+    "productName": "WAQ インフレータブル式マット 8cm",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T02:19:36.221+00:00",
+    "page_path": "/articles/cot-vs-mat-comparison",
+    "product_id": "mat-waq-8cm"
+  },
+  {
+    "timestamp": "2026-08-28T06:21:17.266+00:00",
+    "path": "/articles/soto-st310-vs-iwatani-junior",
+    "productId": "burner-s-003",
+    "productName": "SOTO レギュレーターストーブ ST-310",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T06:21:17.266+00:00",
+    "page_path": "/articles/soto-st310-vs-iwatani-junior",
+    "product_id": "burner-s-003"
+  },
+  {
+    "timestamp": "2026-08-28T06:21:29.47+00:00",
+    "path": "/articles/soto-st310-vs-iwatani-junior",
+    "productId": "burner-s-003",
+    "productName": "SOTO レギュレーターストーブ ST-310",
+    "store": "rakuten",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T06:21:29.47+00:00",
+    "page_path": "/articles/soto-st310-vs-iwatani-junior",
+    "product_id": "burner-s-003"
+  },
+  {
+    "timestamp": "2026-08-28T06:21:39.524+00:00",
+    "path": "/articles/soto-st310-vs-iwatani-junior",
+    "productId": "burner-s-003",
+    "productName": "SOTO レギュレーターストーブ ST-310",
+    "store": "yahoo",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T06:21:39.524+00:00",
+    "page_path": "/articles/soto-st310-vs-iwatani-junior",
+    "product_id": "burner-s-003"
+  },
+  {
+    "timestamp": "2026-08-28T06:21:49.765+00:00",
+    "path": "/articles/soto-st310-vs-iwatani-junior",
+    "productId": "burner-s-009",
+    "productName": "イワタニ ジュニアコンパクトバーナー CB-JCB",
+    "store": "rakuten",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T06:21:49.765+00:00",
+    "page_path": "/articles/soto-st310-vs-iwatani-junior",
+    "product_id": "burner-s-009"
+  },
+  {
+    "timestamp": "2026-08-28T06:21:53.957+00:00",
+    "path": "/articles/soto-st310-vs-iwatani-junior",
+    "productId": "burner-s-009",
+    "productName": "イワタニ ジュニアコンパクトバーナー CB-JCB",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T06:21:53.957+00:00",
+    "page_path": "/articles/soto-st310-vs-iwatani-junior",
+    "product_id": "burner-s-009"
+  },
+  {
+    "timestamp": "2026-08-28T06:35:53.181+00:00",
+    "path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "productId": "tent-sp-amenity-dome-l",
+    "productName": "スノーピーク アメニティドーム L",
+    "store": "yahoo",
+    "placement": "recommended",
+    "clicked_at": "2026-08-28T06:35:53.181+00:00",
+    "page_path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "product_id": "tent-sp-amenity-dome-l"
+  },
+  {
+    "timestamp": "2026-08-28T11:07:13.718+00:00",
+    "path": "/articles/budget-sleeping-bag-ranking",
+    "productId": "sb-budget-005",
+    "productName": "モンベル バロウバッグ #3",
+    "store": "amazon",
+    "placement": "ranking",
+    "clicked_at": "2026-08-28T11:07:13.718+00:00",
+    "page_path": "/articles/budget-sleeping-bag-ranking",
+    "product_id": "sb-budget-005"
+  },
+  {
+    "timestamp": "2026-08-28T11:43:11.55+00:00",
+    "path": "/articles/camp-kerosene-stove-comparison",
+    "productId": "stove-paseco-wkh3100s",
+    "productName": "パセコ WKH-3100S 対流形石油ストーブ",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-08-28T11:43:11.55+00:00",
+    "page_path": "/articles/camp-kerosene-stove-comparison",
+    "product_id": "stove-paseco-wkh3100s"
+  },
+  {
+    "timestamp": "2026-08-28T13:09:16.804+00:00",
+    "path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "productId": "tent-sp-amenity-dome-l",
+    "productName": "スノーピーク アメニティドーム L",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T13:09:16.804+00:00",
+    "page_path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "product_id": "tent-sp-amenity-dome-l"
+  },
+  {
+    "timestamp": "2026-08-28T14:23:25.875+00:00",
+    "path": "/articles/portable-cooler-fan-guide",
+    "productId": "cooler-yamazen-yec-m03",
+    "productName": "山善 YEC-M03",
+    "store": "rakuten",
+    "placement": "recommended",
+    "clicked_at": "2026-08-28T14:23:25.875+00:00",
+    "page_path": "/articles/portable-cooler-fan-guide",
+    "product_id": "cooler-yamazen-yec-m03"
+  },
+  {
+    "timestamp": "2026-08-28T14:23:28.152+00:00",
+    "path": "/articles/portable-cooler-fan-guide",
+    "productId": "cooler-yamazen-yec-m03",
+    "productName": "山善 YEC-M03",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-08-28T14:23:28.152+00:00",
+    "page_path": "/articles/portable-cooler-fan-guide",
+    "product_id": "cooler-yamazen-yec-m03"
+  },
+  {
+    "timestamp": "2026-08-28T14:57:17.232+00:00",
+    "path": "/articles/family-tent-ranking",
+    "productId": "tent-f02",
+    "productName": "DOD カマボコテント3 M",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-08-28T14:57:17.232+00:00",
+    "page_path": "/articles/family-tent-ranking",
+    "product_id": "tent-f02"
+  },
+  {
+    "timestamp": "2026-08-28T15:08:19.816+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rw-005",
+    "productName": "コロンビア ワバシュジャケット",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-08-28T15:08:19.816+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rw-005"
+  },
+  {
+    "timestamp": "2026-08-28T15:08:31.576+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rw-004",
+    "productName": "ワークマン INAREM ストレッチレインスーツ",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-08-28T15:08:31.576+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rw-004"
+  },
+  {
+    "timestamp": "2026-08-28T15:15:02.049+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rw-005",
+    "productName": "コロンビア ワバシュジャケット",
+    "store": "rakuten",
+    "placement": "comparison_table",
+    "clicked_at": "2026-08-28T15:15:02.049+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rw-005"
+  },
+  {
+    "timestamp": "2026-08-28T16:01:44.358+00:00",
+    "path": "/articles/portable-cooler-fan-guide",
+    "productId": "cooler-yamazen-yec-m03",
+    "productName": "山善 YEC-M03",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-08-28T16:01:44.358+00:00",
+    "page_path": "/articles/portable-cooler-fan-guide",
+    "product_id": "cooler-yamazen-yec-m03"
   }
 ]
