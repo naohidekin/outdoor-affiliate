@@ -345,6 +345,51 @@ test("記事本文がディートの回避を安全策として勧めていな�
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
+test("冷却材による障害を「低温やけど」と呼んでいない", () => {
+  // 2026-08-28 医師レビューでの指摘。用語の誤り。
+  // 「低温やけど」は湯たんぽなど比較的低温の熱源による熱傷を指す。
+  // 保冷剤や冷却プレートによる障害は「凍傷」「寒冷障害」であって、
+  // やけどではない。冷やす道具の説明でこの語を使うと、対処も変わってくる
+  const bad: string[] = [];
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.title + adv.body + adv.bullets.join("。");
+    for (const s of blob.split(/[。]/)) {
+      if (!/低温やけど/.test(s)) continue;
+      if (/保冷剤|冷却プレート|冷やす|クーラー|凍/.test(s))
+        bad.push(`${slug}: 冷却の文脈で「低温やけど」を使っている「${s.trim().slice(0, 60)}」`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+test("低体温の対応に、着替えが無い場合の逃げ道が書かれている", () => {
+  // 2026-08-28 医師レビューでの指摘。
+  // 「濡れた衣類は最優先で脱がせる」だけだと、乾いた着替えが無い屋外で
+  // 脱がせてさらに冷やすことになる。上から防水・保温する選択肢が要る
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/低体温/.test(blob)) continue;
+    if (!/濡れ/.test(blob)) continue;
+    assert.ok(
+      /着替えが無い|着替えがない|上から防水|上から保温/.test(blob),
+      `${slug}: 濡れた衣類の扱いに、乾いた着替えが無い場合の指示が無い`
+    );
+  }
+});
+
+test("温かい飲み物を与える条件が書かれている", () => {
+  // 意識障害や強い眠気があるときは誤嚥の危険がある。
+  // 「意識がはっきりしているときだけ」では足りず、自分で飲み込めるかまで見る
+  for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
+    const blob = adv.body + adv.bullets.join("。");
+    if (!/温かい.*飲み物|温かいノンアルコール/.test(blob)) continue;
+    assert.ok(
+      /飲み込め|むせず|誤嚥/.test(blob),
+      `${slug}: 温かい飲み物を与える条件に、自分で飲み込めるかの確認が無い`
+    );
+  }
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない
