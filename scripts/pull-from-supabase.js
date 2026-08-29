@@ -20,7 +20,7 @@ import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
 import { loadEnv, readJson } from "../src/lib/x-agent-utils.mjs";
-import { stableJsonString } from "../src/lib/stable-json.mjs";
+import { stableDataFileString } from "../src/lib/stable-json.mjs";
 
 loadEnv();
 
@@ -111,7 +111,7 @@ function writeJsonAtomic(filename, data) {
   const tmppath = `${filepath}.tmp`;
   // 正規化して書く。Supabaseとの往復でキー順や時刻表記が揺れ、内容が
   // 同じでも毎回 git の差分になっていた（src/lib/stable-json.mjs 参照）
-  fs.writeFileSync(tmppath, stableJsonString(data));
+  fs.writeFileSync(tmppath, stableDataFileString(filename, data));
   fs.renameSync(tmppath, filepath);
 }
 

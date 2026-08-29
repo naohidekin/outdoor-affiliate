@@ -286,6 +286,65 @@ test("虫よけブレスレットの効果範囲を肯定的に断定してい�
   );
 });
 
+// ─── 本文側の医学記述 ─────────────────────────────────
+//
+// 2026-08-26。医師レビューの指摘を医師アドバイス（MEDICAL_ADVICE_MAP）にだけ
+// 反映して、記事本文を見ていなかった。その結果、同じページに矛盾する2つの
+// 指示が並んでいた。
+//   kids-camp-first-aid-kit  本文「流水で最低10分間」/ ボックス「小範囲なら15〜20分」
+//   family-camp-safety-guide 本文「流水で最低15〜20分」（条件なし）
+// ボックスだけ守っても意味がない。本文も同じ基準で見張る。
+
+test("記事本文のやけど冷却時間に、小範囲の限定と低体温の注意がある", () => {
+  const bad: string[] = [];
+  for (const a of allArticles) {
+    if (a.status !== "published") continue;
+    // 冷却の文脈での「◯分」だけを対象にする。「冷凍庫で10分で凍る」のような
+    // 製品の説明まで拾うと機能しない
+    const cooling = (a.content.match(/[^。\n]*流水[^。\n]*\d+\s*[〜~]?\s*\d*\s*分[^。\n]*/g) ?? [])
+      // やけどの応急処置の文だけを対象にする。当初は「冷やし」を含む文を
+      // 拾っていたが、保冷剤の「流水なら15〜20分で凍るので冷やし直せる」まで
+      // 引っかかった。冷却時間という同じ形をしていても別の話
+      .filter((s) => /やけど|火傷|患部/.test(s))
+      .filter((s) => !/凍る|再凍結|凍結|溶け/.test(s));
+    if (cooling.length === 0) continue;
+    const blob = a.content;
+    if (!/小範囲|狭い範囲/.test(blob))
+      bad.push(`${a.slug}: 冷却時間を書いているが小範囲に限定していない`);
+    if (!/低体温/.test(blob))
+      bad.push(`${a.slug}: 冷却時間を書いているが冷やしすぎ（低体温）の注意が無い`);
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+test("記事本文で「体が小さいから」を機序として使っていない", () => {
+  // 体格そのものは機序ではない。体重に対する体表面積の比、体温調節機能の
+  // 未熟さ、体重あたりの呼吸量の多さ、が正しい説明
+  const bad: string[] = [];
+  for (const a of allArticles) {
+    if (a.status !== "published") continue;
+    for (const s of a.content.split(/[。\n]/)) {
+      if (/体(が|格が)小さい/.test(s) && /冷え|体温|熱|呼吸|吸収|受け取/.test(s))
+        bad.push(`${a.slug}: 「${s.trim().slice(0, 60)}」`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+test("記事本文がディートの回避を安全策として勧めていない", () => {
+  // 「ディート不使用のものが安心」は、年齢と回数を守れば使える成分を
+  // 避けさせる書き方で、docs/repellent-age-standard.md と矛盾する
+  const bad: string[] = [];
+  for (const a of allArticles) {
+    if (a.status !== "published") continue;
+    for (const s of a.content.split(/[。\n]/)) {
+      if (/ディート不使用[^。]*(安心|安全)|ディートを避け[^。]*(安心|安全)/.test(s))
+        bad.push(`${a.slug}: 「${s.trim().slice(0, 60)}」`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
 test("医師アドバイスに薬機法・医療法で問題になる表現が入っていない", () => {
   // docs/x-post-skill.md の方針をここにも適用する。
   // 効能効果の断定、診断行為、治療の指示は書かない

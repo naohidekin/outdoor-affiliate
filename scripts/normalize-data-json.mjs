@@ -18,7 +18,11 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { stableJsonString, normalizeJsonValue } from "../src/lib/stable-json.mjs";
+import {
+  stableDataFileString,
+  normalizeJsonValue,
+  sortTopLevelRecords,
+} from "../src/lib/stable-json.mjs";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const FILES = ["articles.json", "products.json", "categories.json"];
@@ -45,17 +49,21 @@ for (const name of FILES) {
     process.exit(1);
   }
 
-  const after = stableJsonString(data);
+  const after = stableDataFileString(name, data);
 
   if (before === after) {
     console.log(`[normalize] ✓ ${name} は既に正規化済み`);
     continue;
   }
 
-  // 意味が変わっていないことを確認してから書く
-  const same =
-    JSON.stringify(normalizeJsonValue(JSON.parse(before))) ===
-    JSON.stringify(normalizeJsonValue(JSON.parse(after)));
+  // 意味が変わっていないことを確認してから書く。
+  // トップレベルの並び替えは意図した変更なので、比較の前に両側を揃える
+  // （揃えずに比較していたら、並び替えの導入時にこの確認が正しく止めた）
+  const canonical = (text) =>
+    JSON.stringify(
+      normalizeJsonValue(sortTopLevelRecords(name, JSON.parse(text)))
+    );
+  const same = canonical(before) === canonical(after);
   if (!same) {
     console.error(`[normalize] ❌ ${name} の内容が変わってしまう。中断します`);
     process.exit(1);

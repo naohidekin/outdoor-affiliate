@@ -34,3 +34,38 @@ export function normalizeJsonValue(value) {
 export function stableJsonString(data) {
   return JSON.stringify(normalizeJsonValue(data), null, 2) + "\n";
 }
+
+// ─── トップレベルの並び順 ─────────────────────────────
+// 詳細は stable-json.ts の同じ箇所のコメントを参照。
+// レコード集合の3ファイルだけ、安定したキーで並べる。
+// affiliate-clicks.json のようなログはソートすると読めなくなるので除外する。
+const SORTED_DATA_FILES = new Set([
+  "articles.json",
+  "products.json",
+  "categories.json",
+]);
+
+function sortKeyOf(record) {
+  if (record === null || typeof record !== "object") return null;
+  for (const key of ["id", "slug"]) {
+    if (typeof record[key] === "string" && record[key]) return record[key];
+  }
+  return null;
+}
+
+export function sortTopLevelRecords(filename, data) {
+  if (!SORTED_DATA_FILES.has(filename)) return data;
+  if (!Array.isArray(data)) return data;
+  const keys = data.map(sortKeyOf);
+  if (keys.some((k) => k === null)) return data;
+  if (new Set(keys).size !== keys.length) return data;
+  return data
+    .map((record, i) => ({ record, key: keys[i] }))
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+    .map((x) => x.record);
+}
+
+/** data/<filename> に書く正規の文字列。並び順まで含めて安定させる */
+export function stableDataFileString(filename, data) {
+  return stableJsonString(sortTopLevelRecords(filename, data));
+}

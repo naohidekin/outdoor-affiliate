@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { getArticles, getCategories, getProducts } from "./db";
 import { isSupabaseConfigured } from "./supabase";
-import { stableJsonString } from "./stable-json";
+import { stableDataFileString } from "./stable-json";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -23,7 +23,7 @@ function writeJsonAtomic(filename: string, data: unknown): void {
   const tmppath = `${filepath}.tmp`;
   // 正規化して書く。Supabaseとの往復でキー順や時刻表記が揺れ、内容が
   // 同じでも毎回 git の差分になっていた（stable-json.ts のコメント参照）
-  fs.writeFileSync(tmppath, stableJsonString(data));
+  fs.writeFileSync(tmppath, stableDataFileString(filename, data));
   fs.renameSync(tmppath, filepath);
 }
 

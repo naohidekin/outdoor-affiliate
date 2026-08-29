@@ -1,38 +1,10 @@
 [
   {
-    "description": "キャンプの大敵・蚊やブヨから家族を守る虫除けアイテム",
-    "id": "insect-repellent",
-    "name": "虫除け・虫対策",
-    "order": 0,
-    "slug": "insect-repellent"
-  },
-  {
-    "description": "キャンプに欠かせないテントを比較・紹介",
-    "id": "tent",
-    "name": "テント",
-    "order": 1,
-    "slug": "tent"
-  },
-  {
-    "description": "キャンプサイトを明るく照らすランタン・ヘッドライト",
-    "id": "light",
-    "name": "ランタン・ライト",
-    "order": 2,
-    "slug": "light"
-  },
-  {
-    "description": "快適な睡眠のためのシュラフ・マット・コット選び",
-    "id": "sleeping-bag",
-    "name": "シュラフ・寝袋・コット",
-    "order": 3,
-    "slug": "sleeping-bag"
-  },
-  {
-    "description": "アウトドア料理に必須のバーナー",
-    "id": "burner",
-    "name": "バーナー・コンロ",
-    "order": 4,
-    "slug": "burner"
+    "description": "ペグハンマー・火吹き棒など便利な小物",
+    "id": "accessories",
+    "name": "小物・アクセサリー",
+    "order": 20,
+    "slug": "accessories"
   },
   {
     "description": "登山・ハイキング用バックパック",
@@ -42,32 +14,11 @@
     "slug": "backpack"
   },
   {
-    "description": "アウトドアウェアの選び方",
-    "id": "wear",
-    "name": "ウェア・レインウェア",
-    "order": 6,
-    "slug": "wear"
-  },
-  {
-    "description": "足元を守る登山靴",
-    "id": "shoes",
-    "name": "登山靴・トレッキングシューズ",
-    "order": 7,
-    "slug": "shoes"
-  },
-  {
-    "description": "キャンプの夜を彩る焚き火台",
-    "id": "firepit",
-    "name": "焚き火台",
-    "order": 8,
-    "slug": "firepit"
-  },
-  {
-    "description": "日差し・雨からサイトを守るタープ",
-    "id": "tarp",
-    "name": "タープ",
-    "order": 9,
-    "slug": "tarp"
+    "description": "アウトドア料理に必須のバーナー",
+    "id": "burner",
+    "name": "バーナー・コンロ",
+    "order": 4,
+    "slug": "burner"
   },
   {
     "description": "快適な座り心地のアウトドアチェア",
@@ -77,13 +28,6 @@
     "slug": "chair"
   },
   {
-    "description": "調理・食事に欠かせないアウトドアテーブル",
-    "id": "table",
-    "name": "キャンプテーブル",
-    "order": 11,
-    "slug": "table"
-  },
-  {
     "description": "食材・飲料を冷たくキープするクーラー",
     "id": "cooler",
     "name": "クーラーボックス",
@@ -91,18 +35,53 @@
     "slug": "cooler"
   },
   {
-    "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
-    "id": "tumbler",
-    "name": "タンブラー・ボトル",
-    "order": 13,
-    "slug": "tumbler"
-  },
-  {
     "description": "夏キャンプを快適にする扇風機・ポータブルクーラー・冷感グッズ",
     "id": "fan",
     "name": "扇風機・冷却ギア",
     "order": 14,
     "slug": "fan"
+  },
+  {
+    "description": "キャンプの夜を彩る焚き火台",
+    "id": "firepit",
+    "name": "焚き火台",
+    "order": 8,
+    "slug": "firepit"
+  },
+  {
+    "description": "キャンプの贅沢なくつろぎアイテム",
+    "id": "hammock",
+    "name": "ハンモック",
+    "order": 21,
+    "slug": "hammock"
+  },
+  {
+    "description": "冬キャンプの暖房。石油・薪・ガス・電気の各方式と一酸化炭素対策",
+    "id": "heater",
+    "name": "ストーブ・暖房",
+    "order": 22,
+    "slug": "heater"
+  },
+  {
+    "description": "キャンプの大敵・蚊やブヨから家族を守る虫除けアイテム",
+    "id": "insect-repellent",
+    "name": "虫除け・虫対策",
+    "order": 0,
+    "slug": "insect-repellent"
+  },
+  {
+    "description": "キャンプ料理を快適にするキッチン道具",
+    "id": "kitchen",
+    "name": "キッチンギア",
+    "order": 18,
+    "slug": "kitchen"
+  },
+  {
+    "description": "キャンプサイトを明るく照らすランタン・ヘッドライト",
+    "id": "light",
+    "name": "ランタン・ライト",
+    "order": 2,
+    "slug": "light"
   },
   {
     "description": "キャンプで家電を使うためのポータブル電源・ソーラーパネル",
@@ -119,11 +98,18 @@
     "slug": "safety"
   },
   {
-    "description": "キャンプ料理を快適にするキッチン道具",
-    "id": "kitchen",
-    "name": "キッチンギア",
-    "order": 18,
-    "slug": "kitchen"
+    "description": "足元を守る登山靴",
+    "id": "shoes",
+    "name": "登山靴・トレッキングシューズ",
+    "order": 7,
+    "slug": "shoes"
+  },
+  {
+    "description": "快適な睡眠のためのシュラフ・マット・コット選び",
+    "id": "sleeping-bag",
+    "name": "シュラフ・寝袋・コット",
+    "order": 3,
+    "slug": "sleeping-bag"
   },
   {
     "description": "サイトを整理するフィールドラック・ゴミ箱",
@@ -133,24 +119,38 @@
     "slug": "storage"
   },
   {
-    "description": "ペグハンマー・火吹き棒など便利な小物",
-    "id": "accessories",
-    "name": "小物・アクセサリー",
-    "order": 20,
-    "slug": "accessories"
+    "description": "調理・食事に欠かせないアウトドアテーブル",
+    "id": "table",
+    "name": "キャンプテーブル",
+    "order": 11,
+    "slug": "table"
   },
   {
-    "description": "キャンプの贅沢なくつろぎアイテム",
-    "id": "hammock",
-    "name": "ハンモック",
-    "order": 21,
-    "slug": "hammock"
+    "description": "日差し・雨からサイトを守るタープ",
+    "id": "tarp",
+    "name": "タープ",
+    "order": 9,
+    "slug": "tarp"
   },
   {
-    "description": "冬キャンプの暖房。石油・薪・ガス・電気の各方式と一酸化炭素対策",
-    "id": "heater",
-    "name": "ストーブ・暖房",
-    "order": 22,
-    "slug": "heater"
+    "description": "キャンプに欠かせないテントを比較・紹介",
+    "id": "tent",
+    "name": "テント",
+    "order": 1,
+    "slug": "tent"
+  },
+  {
+    "description": "キャンプから日常まで使える保冷タンブラー・ボトル",
+    "id": "tumbler",
+    "name": "タンブラー・ボトル",
+    "order": 13,
+    "slug": "tumbler"
+  },
+  {
+    "description": "アウトドアウェアの選び方",
+    "id": "wear",
+    "name": "ウェア・レインウェア",
+    "order": 6,
+    "slug": "wear"
   }
 ]

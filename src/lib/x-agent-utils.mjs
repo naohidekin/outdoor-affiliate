@@ -12,6 +12,7 @@ import path from "path";
 import dns from "dns";
 import https from "https";
 import { fileURLToPath } from "url";
+import { stableDataFileString } from "./stable-json.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
@@ -95,7 +96,11 @@ export function writeJson(filename, data) {
   }
 
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf-8");
+    // 正規化して書く。キー順・時刻表記・トップレベルの並び順を揃えないと、
+    // 内容が同じでも毎回 git の差分になる（src/lib/stable-json.mjs 参照）。
+    // 19本のスクリプトがこの関数を使っており、ここを直さないと
+    // Supabase側だけ正規化しても日次パイプラインが上書きしてしまう
+    fs.writeFileSync(filePath, stableDataFileString(filename, data), "utf-8");
   } catch (err) {
     if (err && (err.code === "EROFS" || err.code === "EACCES")) {
       console.warn(`[writeJson] ${filename} 書き込みスキップ（read-only fs）: ${err.code}`);
