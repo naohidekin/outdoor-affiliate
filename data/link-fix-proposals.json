@@ -1,21 +1,36 @@
 {
-  "generatedAt": "2026-08-22T22:00:09.319Z",
-  "reportCheckedAt": "2026-08-22T21:32:03.152Z",
+  "generatedAt": "2026-08-29T22:00:08.150Z",
+  "reportCheckedAt": "2026-08-29T21:32:02.134Z",
   "quarantined": [
     {
-      "id": "mat-waq-10cm",
-      "name": "WAQ リラクシングキャンプマット 10cm",
-      "brand": "WAQ",
-      "oldUrl": "https://www.amazon.co.jp/dp/B0BG7QP5T6?tag=camp78-22",
-      "quarantinedAt": "2026-08-22T22:00:09.319Z",
+      "id": "peg-hammer-snowpeak-proc",
+      "name": "スノーピーク ペグハンマー PRO.C N-001",
+      "brand": "スノーピーク",
+      "oldUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
+      "quarantinedAt": "2026-08-29T22:00:08.150Z",
       "candidate": {
-        "asin": "B0BZ8SRF4K",
-        "title": "WAQ リラクシングキャンプマット 厚手 10cm 車中泊マット 特殊ウレタン 軽量 r値 10.5 【ミニバンにぴったり】自動膨張 連結可能 特大バルブ搭載 災害時 防災 インフレータブルマット エアーマット アウトドア 車中泊 キャンプ 寝袋 (マット10cm(D)&ピローセット(オリーブ))",
-        "price": 23680,
-        "url": "https://www.amazon.co.jp/dp/B0BZ8SRF4K?tag=camp78-22"
+        "asin": "B000AR2OBG",
+        "title": "スノーピーク 交換用銅ヘッド N-001-1",
+        "price": 3167,
+        "url": "https://www.amazon.co.jp/dp/B000AR2OBG?tag=camp78-22"
       },
-      "confidence": 100,
-      "searchUrl": "https://www.amazon.co.jp/s?k=WAQ%20WAQ%20%E3%83%AA%E3%83%A9%E3%82%AF%E3%82%B7%E3%83%B3%E3%82%B0%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%9E%E3%83%83%E3%83%88%2010cm"
+      "confidence": 50,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
+    },
+    {
+      "id": "peg-hammer-snowpeak-proc-review",
+      "name": "スノーピーク ペグハンマー PRO.C N-001",
+      "brand": "スノーピーク",
+      "oldUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
+      "quarantinedAt": "2026-08-29T22:00:08.150Z",
+      "candidate": {
+        "asin": "B000AR2OBG",
+        "title": "スノーピーク 交換用銅ヘッド N-001-1",
+        "price": 3167,
+        "url": "https://www.amazon.co.jp/dp/B000AR2OBG?tag=camp78-22"
+      },
+      "confidence": 50,
+      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
     }
   ],
   "falsePositives": [],
