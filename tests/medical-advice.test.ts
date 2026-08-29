@@ -236,8 +236,12 @@ test("子どもの皮膚とやけどの関係を断定していない", () => {
   for (const [slug, adv] of Object.entries(MEDICAL_ADVICE_MAP)) {
     const blob = adv.body + adv.bullets.join("。");
     for (const s of blob.split(/[。]/)) {
-      if (!/皮膚/.test(s) || !/やけど/.test(s)) continue;
-      if (!/なりやすく|なりやすい|やすくなります/.test(s)) {
+      // 対象は「皮膚が薄いこと」を根拠にした記述。当初は皮膚とやけどを含む
+      // 全文を見ていたが、「水蒸気は皮膚の上で水に戻るときに熱を放出する」
+      // のような物理の説明まで拾った。あれは皮膚の厚さの話ではない
+      if (!/皮膚[^、。]*薄/.test(s) || !/やけど/.test(s)) continue;
+      // 「ことがあります」も条件付きの言い方として認める
+      if (!/なりやすく|なりやすい|やすくなります|ことがあります/.test(s)) {
         bad.push(`${slug}: 「${s.trim()}」`);
       }
     }
