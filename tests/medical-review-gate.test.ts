@@ -69,13 +69,28 @@ test("医学リスクがあり医師アドバイスが無い新規記事は止�
   assert.ok(r.risks.includes("一酸化炭素"));
 });
 
-test("猶予リストにある既存記事は止めないが、警告は返す", () => {
-  const slug = [...GRANDFATHERED][0] as string;
-  const article = published.find((a) => a.slug === slug)!;
-  const r = reviewArticleForPublish(article, has(new Set()), GRANDFATHERED);
+test("猶予リストにある記事は止めないが、警告は返す", () => {
+  // 猶予リストは 2026-08-28 に空になった（29本すべてに医師アドバイスを
+  // 書き終えた）。実データが無くなっても、猶予の仕組み自体は動いている
+  // 必要があるので、架空のslugで挙動を検証する
+  const fake = new Set(["some-grandfathered-article"]);
+  const r = reviewArticleForPublish(
+    { slug: "some-grandfathered-article", content: "一酸化炭素に注意。" },
+    has(new Set()),
+    fake
+  );
   assert.equal(r.ok, true);
   assert.equal(r.grandfathered, true);
   assert.ok(r.reason?.includes("猶予中"));
+});
+
+test("猶予リストが空になっている（29本すべてに医師アドバイスを書いた）", () => {
+  // 空を維持するのが目標。増えたら上の LIMIT テストが落ちる
+  assert.equal(
+    GRANDFATHERED.size,
+    0,
+    `猶予が ${GRANDFATHERED.size} 本残っています: ${[...GRANDFATHERED].join(", ")}`
+  );
 });
 
 // ─── 猶予リストの健全性 ───────────────────────────────
@@ -83,7 +98,7 @@ test("猶予リストにある既存記事は止めないが、警告は返す",
 test("猶予リストが増えていない（減らすためのリスト）", () => {
   // 新規記事を猶予リストに足して通す、という抜け道を塞ぐ。
   // 記事を書いたら医師アドバイスを書く。リストに足すのではない
-  const LIMIT = 11; // 2026-08-28 時点（29→21→11）。増やさない。減らしたらこの数字も下げる
+  const LIMIT = 0; // 2026-08-28 時点（29→21→11→0）。増やさない。減らしたらこの数字も下げる
   assert.ok(
     GRANDFATHERED.size <= LIMIT,
     `猶予リストが ${GRANDFATHERED.size} 本に増えています（上限 ${LIMIT}）。` +
