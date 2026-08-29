@@ -1,5 +1,5 @@
 // 医師アドバイス未登録のまま公開されている既存記事。
-// 2026-08-26 時点で 29 本。新規記事は medical-review-gate が公開を止めるが、
+// 2026-08-28 時点で 21 本。新規記事は medical-review-gate が公開を止めるが、
 // 既存を一斉に止めるとパイプラインが詰まるため、ここに挙げたものだけ猶予する。
 //
 // このリストは減らすためのもので、増やすためのものではない。
@@ -7,14 +7,7 @@
 // tests/medical-review-gate.test.ts がリストの増加を検出する。
 
 export const GRANDFATHERED_WITHOUT_MEDICAL_ADVICE = new Set([
-  "winter-sleeping-bag-ranking", // 一酸化炭素・やけど・低体温
-  "autumn-camp-complete-guide", // 一酸化炭素・低体温
-  "autumn-winter-camp-cold-gear-guide", // 一酸化炭素・低体温
   "landnest-shelter-vs-2room-comparison", // 一酸化炭素・熱中症
-  "neck-cooler-ranking", // やけど・熱中症
-  "single-burner-ranking", // 一酸化炭素・やけど
-  "summer-camp-heat-gear-guide", // 熱中症・虫よけ成分
-  "winter-camp-beginners-checklist", // 一酸化炭素・低体温
   "autumn-camp-clothing-layering-guide", // 低体温
   "budget-sleeping-bag-ranking", // 低体温
   "camping-beginner-gear-checklist", // 一酸化炭素
@@ -24,7 +17,6 @@ export const GRANDFATHERED_WITHOUT_MEDICAL_ADVICE = new Set([
   "gas-lantern-ranking", // 一酸化炭素
   "growler-comparison-summer-ice", // やけど
   "gw-camp-checklist-2026", // 虫よけ成分
-  "kids-sleeping-bag-ranking", // 一酸化炭素
   "landlock-vs-landnest-shelter", // 一酸化炭素
   "led-lantern-ranking", // 一酸化炭素
   "led-tent-light-ranking", // 一酸化炭素
