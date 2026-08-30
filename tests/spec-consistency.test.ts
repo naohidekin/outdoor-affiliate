@@ -54,23 +54,45 @@ test("記事本文に焚火台Lの板厚 2.5mm が残っていない", () => {
   assert.deepEqual(hits, [], `公式は1.5mmです:\n${hits.join("\n")}`);
 });
 
-test("アメニティドームMの対応人数がカードと本文で食い違っていない", () => {
-  // 公式は3〜5名。「4〜5人用」も「3人」も誤り
-  assert.match(
-    spec("tent-002", "定員"),
-    /3〜5名/,
-    "tent-002 の定員が公式（3〜5名）と違う"
-  );
-  const hits = scan(
-    (l) =>
-      /アメニティドーム|アメドM/.test(l) &&
-      /定員\s*[:：]?\s*3人|定員3人|Mの3人|定員\s*4〜5人用/.test(l)
-  );
-  assert.deepEqual(
-    hits,
-    [],
-    `公式は3〜5名（快適な目安3〜4名）です:\n${hits.join("\n")}`
-  );
+test("アメニティドームMのスペックが公式と一致する", () => {
+  // スノーピーク公式 SDE-001RH
+  assert.match(spec("tent-002", "定員"), /3〜5名/, "定員が公式と違う");
+  assert.match(spec("tent-002", "重量"), /8\s*kg/, "重量が公式（8kg）と違う");
+  assert.match(spec("tent-002", "収納サイズ"), /74×22×25/, "収納サイズが違う");
+});
+
+/**
+ * アメニティドームMのスペックを本文に書いている記事。
+ * 行単位で「アメニティドーム」を含むかを見る方法では拾えなかった。
+ * 表の行が `| 定員 | 4〜5人用 |` の形で、製品名を含まないため
+ * （2026-08-30に実際に取りこぼした）。記事単位で見る。
+ */
+const AMENITY_DOME_M_ARTICLES = [
+  "tent-setup-tips-spring",
+  "compact-tent-ranking",
+  "amenity-dome-vs-tough-wide-dome",
+  "amenity-dome-vs-landnest-dome",
+];
+
+test("アメニティドームMの記事に古い数値が残っていない", () => {
+  const WRONG: Array<[RegExp, string]> = [
+    [/4〜5人用|4～5人用/, "定員は3〜5名（快適な目安3〜4名）"],
+    [/定員\s*[|｜]?\s*3人|定員3人|Mの3人/, "定員は3〜5名"],
+    [/5\.2\s*kg/, "重量は8kg"],
+    [/62×22/, "収納サイズは74×22×25(h)cm"],
+  ];
+  const hits: string[] = [];
+  for (const slug of AMENITY_DOME_M_ARTICLES) {
+    const a = published.find((x) => x.slug === slug);
+    assert.ok(a, `${slug} が公開記事に無い（削除された？）`);
+    (a!.content ?? "").split("\n").forEach((line, i) => {
+      for (const [re, correct] of WRONG) {
+        if (re.test(line))
+          hits.push(`${slug} L${i + 1}（${correct}）: ${line.trim().slice(0, 60)}`);
+      }
+    });
+  }
+  assert.deepEqual(hits, [], `古い数値が残っています:\n${hits.join("\n")}`);
 });
 
 // 未確認のまま残っている食い違い。メーカー公式を見るまで直せないので、
