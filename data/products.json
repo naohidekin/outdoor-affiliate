@@ -952,27 +952,29 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E6%96%B0%E3%82%B3%E3%82%B9%E3%83%A2%E3%82%B9%E9%9B%BB%E6%A9%9F%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E7%94%A8%E4%B8%80%E9%85%B8%E5%8C%96%E7%82%AD%E7%B4%A0%E3%82%A2%E3%83%A9%E3%83%BC%E3%83%A0%20COALAN%20CL-715"
   },
   {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2B%E4%B8%80%E9%85%B8%E5%8C%96%E7%82%AD%E7%B4%A0%E3%83%81%E3%82%A7%E3%83%83%E3%82%AB%E3%83%BC%2BCG1-559",
-    "amazonUrl": "https://www.amazon.co.jp/s?k=DOD%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E7%94%A8%E4%B8%80%E9%85%B8%E5%8C%96%E7%82%AD%E7%B4%A0%E3%83%81%E3%82%A7%E3%83%83%E3%82%AB%E3%83%BC2%20CG1-559&tag=camp78-22",
     "autoAdded": false,
     "brand": "DOD",
     "categoryId": "safety",
     "createdAt": "2026-06-21T08:44:41.000Z",
     "description": "アウトドアブランドDODのキャンプ専用COチェッカー。日本製センサーを搭載し、CO濃度を数値で常時表示。警報が鳴る前に濃度上昇傾向を把握できる。4,000〜5,000円前後の手頃な価格でコスパ重視の人に人気。",
     "id": "co-detector-dod-cg1559",
-    "imageUrl": "",
-    "name": "DOD キャンプ用一酸化炭素チェッカー2 CG1-559",
-    "price": 4950,
+    "imageUrl": "https://item-shopping.c.yimg.jp/i/n/aprice_4580742230577_i_20260707182644",
+    "name": "DOD キャンプ用一酸化炭素チェッカー2 CG1-559-BK",
+    "price": 11000,
     "rating": 4.2,
     "specs": {
-      "サイズ": "手のひらサイズ・コンパクト",
-      "センサー": "日本製センサー搭載",
-      "表示": "CO濃度数値リアルタイム表示",
-      "連続使用": "約12時間",
-      "電源": "単4乾電池3本"
+      "サイズ": "約W4.6×D1.5×H7.2cm",
+      "センサー": "日本製センサー（原産国は中国）",
+      "動作温度": "-5〜50℃",
+      "動作湿度": "15〜90%RH",
+      "希望小売価格": "¥15,400（DOD STORE価格）",
+      "測定範囲": "0〜999ppm",
+      "表示": "CO濃度をリアルタイム数値表示",
+      "重量": "約65g",
+      "電源": "CR2032×2個（テスター電池同梱・新品は別途用意）"
     },
-    "updatedAt": "2026-07-25T01:04:14.687Z",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E7%94%A8%E4%B8%80%E9%85%B8%E5%8C%96%E7%82%AD%E7%B4%A0%E3%83%81%E3%82%A7%E3%83%83%E3%82%AB%E3%83%BC2%20CG1-559"
+    "updatedAt": "2026-08-30T15:38:19.335Z",
+    "yahooUrl": "https://store.shopping.yahoo.co.jp/aprice/4580742230577.html"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%2B%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%2BNo.1",
