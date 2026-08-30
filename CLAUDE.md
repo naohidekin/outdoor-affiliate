@@ -1,4 +1,5 @@
 @AGENTS.md
+@docs/local-files.md
 
 # Claude Code 運用フロー（2026-07-20 策定・最優先ルール）
 
