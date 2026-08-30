@@ -57,21 +57,37 @@
 
 ---
 
-## 2. 管理画面から削除してよいもの（未参照）
+## 2. 削除した重複（2026-08-30 完了）
 
-どの記事からも参照されていない側。**左を残し、右を削除。**
+どの記事からも参照されていない側を消した。**左を残し、右を削除した。**
 
-| 残す | 削除する | 備考 |
+**削除は2手が要る。片方だけだと戻る。**
+
+1. 管理画面（`/admin/products`）で削除 → Supabase から消える
+2. `data/products.json` からも削除 → 次の `db:sync` での復活を防ぐ
+
+`db:sync` は upsert なので、②を忘れると同期した瞬間に書き戻される。
+実際に①の直後、6件とも products.json に残っていた。
+`tests/product-hygiene.test.ts` が以後これを検出する。
+
+なお管理画面の一覧は当初 名前・ブランド・カテゴリ・価格 しか出さず、
+検索も名前とブランドしか見ていなかった。ところが下の6組のうち4組は
+そこが完全に一致していて、**画面からは消し分けられなかった**。
+商品名の下にIDを表示し、IDでも検索できるようにして解決した。
+
+| 残す | 削除した | 見分けかた |
 |---|---|---|
-| `burner-s-009` | `rakuten-i-collect-10010577` | イワタニ ジュニアコンパクトバーナー |
-| `insect-repellent-001` | `chair-006` | おにやんま君。**削除する側は categoryId が `chair`** |
-| `fp-001` | `firepit-picogrill-398` | ピコグリル398 |
-| `uniflame-yama-kettle-900` | `kettle-uniflame-yama900` | 削除側は affiliateUrl 無し |
-| `peg-hammer-snowpeak-proc` | `peg-hammer-snowpeak-proc-review` | ペグハンマー PRO.C |
-| `sb-budget-002` | `sb-kids-003` | ロゴス 丸洗いスランバーシュラフ・2 |
+| `burner-s-009` ¥3,742 | `rakuten-i-collect-10010577` ¥4,500 | 価格が違う |
+| `insect-repellent-001` | `chair-006` | 同名・同価格。**削除側は categoryId が `chair`**（虫よけなのにキャンプチェア） |
+| `fp-001` | `firepit-picogrill-398` | 「ピコグリル 398」と「ピコグリル398」の空白だけ |
+| `uniflame-yama-kettle-900` | `kettle-uniflame-yama900` | 同名・同価格。**削除側は楽天リンク無し**（残す側にはある） |
+| `peg-hammer-snowpeak-proc` | `peg-hammer-snowpeak-proc-review` | 同名・同価格・同リンク。IDでしか区別できない |
+| `sb-budget-002` | `sb-kids-003` | 同名・同価格・同リンク。IDでしか区別できない |
 
-上の3組（焚火台L・アメニティドームM・ツーリングドームST）は、
-**どちらの数値が正しいか確定してから**削除すること。誤っている側の
+商品総数 392 → 386。
+
+下の3組（焚火台L・アメニティドームM・ツーリングドームST）は**まだ消していない**。
+**どちらの数値が正しいか確定してから**削除する。誤っている側の
 数値が正しければ、残す側を直してから消す必要がある。
 
 ---

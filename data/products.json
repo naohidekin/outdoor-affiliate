@@ -693,31 +693,6 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%82%B9%E3%82%B4%E3%82%A4%E3%83%83%E3%82%B9"
   },
   {
-    "addedAt": "2026-04-15T00:00:40.431Z",
-    "addedBy": "article-product-agent",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00qgxl6.wwmjse59.g00qgxl6.wwmjt175/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Faorinetshop%2F10016333%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Faorinetshop%2Fi%2F10016333%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B084L1JYHB?tag=camp78-22",
-    "autoAdded": true,
-    "brand": "サンライン",
-    "categoryId": "chair",
-    "createdAt": "2026-04-15T00:00:40.431Z",
-    "description": "",
-    "id": "chair-006",
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/aorinetshop/cabinet/23-leisure11/010-97084.jpg?_ex=600x600",
-    "name": "サンライン おにやんま君",
-    "price": 985,
-    "rating": 5,
-    "sourceApi": "rakuten",
-    "specs": {
-      "収納サイズ": "",
-      "座面高": "",
-      "素材": "",
-      "耐荷重": "",
-      "重量": ""
-    },
-    "updatedAt": "2026-08-12T10:29:21.731Z"
-  },
-  {
     "addedAt": "2026-04-15T00:00:41.656Z",
     "addedBy": "article-product-agent",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ufqo6.wwmjs272.g00ufqo6.wwmjtf5c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnovasangyo%2Fdclyzdy%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fnovasangyo%2Fi%2F10003192%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
@@ -2437,28 +2412,6 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=TokyoCamp%20%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92%20%E4%BC%B8%E7%B8%AE%E5%BC%8F%20%E5%A4%A9%E7%84%B6%E6%9C%A8%20%E3%82%B1%E3%83%BC%E3%82%B9%E4%BB%98%E3%81%8D"
   },
   {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uc086.wwmjs999.g00uc086.wwmjt45f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fitemstore-oosaka%2F20240913023909_45%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fitemstore-oosaka%2Fi%2F10037968%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B08R8V78TY?tag=camp78-22",
-    "brand": "ピコグリル",
-    "categoryId": "firepit",
-    "createdAt": "2026-05-18T16:52:46.770Z",
-    "description": "",
-    "id": "firepit-picogrill-398",
-    "imageUrl": "https://m.media-amazon.com/images/I/51qTEsOZN7L._AC_SL1500_.jpg",
-    "name": "ピコグリル398",
-    "price": 17300,
-    "rating": 4.3,
-    "specs": {
-      "収納": "A4サイズ",
-      "火床": "38.5×26cm",
-      "素材": "ステンレス",
-      "組立": "3パーツ",
-      "重量": "約450g"
-    },
-    "updatedAt": "2026-08-06T15:10:35.784Z",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%94%E3%82%B3%E3%82%B0%E3%83%AA%E3%83%AB398"
-  },
-  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftokyocamp%2F10000000%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09726YGXG/?tag=camp78-22",
     "brand": "TokyoCamp",
@@ -3936,21 +3889,6 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%88%E3%83%A9%E3%83%B3%E3%82%AE%E3%82%A2%20%E3%82%B1%E3%83%88%E3%83%AB0.6L%EF%BC%88TR-325%EF%BC%89"
   },
   {
-    "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B007FFSUJQ?tag=camp78-22",
-    "brand": "ユニフレーム",
-    "categoryId": "kitchen",
-    "createdAt": "2026-06-24T23:54:43.618Z",
-    "description": "",
-    "id": "kettle-uniflame-yama900",
-    "imageUrl": "https://m.media-amazon.com/images/I/71s+BRhNe0L._AC_SL1500_.jpg",
-    "name": "ユニフレーム 山ケトル900",
-    "price": 5500,
-    "rating": 0,
-    "specs": {},
-    "updatedAt": "2026-08-10T21:08:07.728Z"
-  },
-  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00t8jt6.wwmjs10b.g00t8jt6.wwmjt104/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnature-natural%2Fmorakniv5%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fnature-natural%2Fi%2F10000220%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
     "amazonUrl": "",
     "brand": "Morakniv",
@@ -4884,30 +4822,6 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
   },
   {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00pn5f6.wwmjsf22.g00pn5f6.wwmjt103/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fnaturum%2F7116%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fnaturum%2Fi%2F15090890%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
-    "brand": "スノーピーク",
-    "categoryId": "accessories",
-    "createdAt": "2026-06-24T17:00:00.000Z",
-    "description": "スノーピークの銅ヘッドペグハンマー。打撃時の衝撃を銅が吸収し、鍛造ペグを少ない打数で打ち込める。ヘッド交換が可能で長く使える定番ハンマー。",
-    "id": "peg-hammer-snowpeak-proc-review",
-    "imageUrl": "https://m.media-amazon.com/images/I/51zXGjaOvjL._AC_SL1500_.jpg",
-    "name": "スノーピーク ペグハンマー PRO.C N-001",
-    "price": 8470,
-    "rating": 4.8,
-    "specs": {
-      "サイズ": "φ35×120×290mm",
-      "ヘッド": "銅（ブロンズ）+ スチール黒電着塗装",
-      "ベルト": "付属",
-      "ペグ抜き": "フック式",
-      "品番": "N-001",
-      "柄": "かしの木",
-      "重量": "670g"
-    },
-    "updatedAt": "2026-07-30T12:00:00.000Z",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
-  },
-  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00thr56.wwmjs08f.g00thr56.wwmjt90c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152048-sanjo%2F018s035%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ff152048-sanjo%2Fi%2F10002697%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08HDS8JCF/?tag=camp78-22",
     "brand": "スノーピーク",
@@ -5519,25 +5433,6 @@
   {
     "addedAt": "2026-04-13",
     "addedBy": "rakuten-ranking",
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r5de6.wwmjs98d.g00r5de6.wwmjtbba/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fi-collect%2F0003180%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fi-collect%2Fi%2F10010577%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B01J59SGCK/?tag=camp78-22",
-    "autoAdded": true,
-    "brand": "イワタニ",
-    "categoryId": "burner",
-    "createdAt": "2026-04-13T19:26:57.790Z",
-    "description": "楽天レビュー607件、★4.72",
-    "id": "rakuten-i-collect-10010577",
-    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/i-collect/cabinet/item02/2000002479.jpg?_ex=600x600",
-    "name": "イワタニ ジュニアコンパクトバーナー CB-JCB",
-    "price": 4500,
-    "rating": 4.72,
-    "sourceApi": "rakuten",
-    "specs": {},
-    "updatedAt": "2026-08-26T11:50:47.836Z"
-  },
-  {
-    "addedAt": "2026-04-13",
-    "addedBy": "rakuten-ranking",
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ulg26.wwmjsf23.g00ulg26.wwmjtad7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fjikabijapan%2F01%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fjikabijapan%2Fi%2F10000002%2F&rafcid=wsc_i_is_dcc7372b-ebb9-4fa0-bf58-3b07813a8db5",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0D5YHT9TZ/?tag=camp78-22",
     "autoAdded": true,
@@ -6058,29 +5953,6 @@
     },
     "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NANGA%20KIDS%20SQUARE%20FOOT%20300"
-  },
-  {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00r7ld6.wwmjs955.g00r7ld6.wwmjtc2f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbiccamera%2F4981325499778%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fbiccamera%2Fi%2F11861130%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B07BPQSMHQ?tag=camp78-22",
-    "brand": "ロゴス",
-    "categoryId": "sleeping-bag",
-    "createdAt": "2026-03-31T00:00:00.000Z",
-    "description": "洗濯機で丸洗いできるロゴスの定番封筒型シュラフ。子供が汚しても気にならない。2つを連結すれば親子で一緒に寝られる。適正温度2℃まで対応でコスパ抜群の入門モデル。",
-    "id": "sb-kids-003",
-    "imageUrl": "https://m.media-amazon.com/images/P/B07BPQSMHQ.01._SCLZZZZZZZ_SX522_.jpg",
-    "name": "ロゴス 丸洗いスランバーシュラフ・2",
-    "price": 4980,
-    "rating": 4,
-    "specs": {
-      "サイズ": "約190×75cm",
-      "形状": "封筒型",
-      "特徴": "丸洗い可・連結可・収納袋付き",
-      "素材": "モイスポリ（吸汗性素材）",
-      "適正温度": "2℃まで",
-      "重量": "約1.4kg"
-    },
-    "updatedAt": "2026-08-06T14:53:38.502Z",
-    "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AD%E3%82%B4%E3%82%B9%20%E4%B8%B8%E6%B4%97%E3%81%84%E3%82%B9%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B7%E3%83%A5%E3%83%A9%E3%83%95%E3%83%BB2"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AD%25E3%2582%25B4%25E3%2582%25B9%2520%25E4%25B8%25B8%25E6%25B4%2597%25E3%2581%2584%25E5%25AF%259D%25E8%25A2%258B%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2583%259E%25E3%2583%25BC0%2F&link_type=text&ut=",

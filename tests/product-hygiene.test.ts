@@ -158,19 +158,56 @@ test("公開記事に載る商品に、購入リンクか入手方法のどち�
   );
 });
 
+/**
+ * 2026-08-30 に管理画面（Supabase）から削除した重複商品。
+ * `db:sync` は upsert なので、**ローカルのJSONに残っていると次の同期で
+ * 復活する**。実際に削除直後の products.json には6件とも残っていた。
+ * 管理画面での削除とJSONからの削除は別作業で、片方だけやると戻る。
+ */
+const DELETED_DUPLICATES = [
+  "rakuten-i-collect-10010577",
+  "chair-006",
+  "firepit-picogrill-398",
+  "kettle-uniflame-yama900",
+  "peg-hammer-snowpeak-proc-review",
+  "sb-kids-003",
+];
+
+/** 各ペアで残したほう。消し間違いを検出する */
+const KEPT_COUNTERPARTS = [
+  "burner-s-009",
+  "insect-repellent-001",
+  "fp-001",
+  "uniflame-yama-kettle-900",
+  "peg-hammer-snowpeak-proc",
+  "sb-budget-002",
+];
+
+test("管理画面で削除した重複商品がJSONに残っていない", () => {
+  const ids = new Set(products.map((p) => p.id));
+  const revived = DELETED_DUPLICATES.filter((id) => ids.has(id));
+  assert.deepEqual(
+    revived,
+    [],
+    `管理画面から削除済みの商品が products.json に残っています: ${revived.join(", ")}。` +
+      `このまま db:sync すると Supabase に復活します`
+  );
+});
+
+test("重複ペアで残したほうが消えていない", () => {
+  // 名前・価格・ブランドが同一のペアがあり、逆を消す事故が起こりうる。
+  // 残すほうは公開記事から参照されている
+  const ids = new Set(products.map((p) => p.id));
+  const lost = KEPT_COUNTERPARTS.filter((id) => !ids.has(id));
+  assert.deepEqual(lost, [], `残すはずの商品が消えています: ${lost.join(", ")}`);
+});
+
 test("重複の調査結果が記録されている", () => {
   const p = path.join(ROOT, "docs", "product-duplicates-2026-08-28.md");
   assert.ok(fs.existsSync(p), "docs/product-duplicates-2026-08-28.md が無い");
   const doc = fs.readFileSync(p, "utf8");
-  // 削除は管理画面からしかできないので、どれを消すかが読める状態を保つ
-  for (const id of [
-    "rakuten-i-collect-10010577",
-    "chair-006",
-    "firepit-picogrill-398",
-    "kettle-uniflame-yama900",
-    "peg-hammer-snowpeak-proc-review",
-    "sb-kids-003",
-  ]) {
-    assert.ok(doc.includes(id), `削除候補 ${id} が記録から消えている`);
+  // どれを消したかが読める状態を保つ。再発時の突き合わせに要る
+  for (const id of DELETED_DUPLICATES) {
+    assert.ok(doc.includes(id), `削除した ${id} が記録から消えている`);
   }
 });
