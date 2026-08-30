@@ -16,13 +16,20 @@ const allArticles: Array<{
 
 const bySlug = new Map(allArticles.map((a) => [a.slug, a]));
 
-test("医師アドバイスは実在する公開記事だけを指している", () => {
-  // slugを打ち間違えても何も表示されないだけで、静かに効かないまま残る
+test("医師アドバイスは実在する記事を指している", () => {
+  // slugを打ち間違えても何も表示されないだけで、静かに効かないまま残る。
+  //
+  // 当初は「公開記事だけ」を条件にしていたが、循環していた。
+  // 医学リスクを扱う下書きは医師アドバイスが無いと公開できず
+  // （medical-review-gate）、その医師アドバイスは公開記事にしか
+  // 書けない、という組み合わせで身動きが取れなくなる。
+  // 下書きも認める。archived と存在しないslugは引き続き弾く
   const bad: string[] = [];
   for (const slug of Object.keys(MEDICAL_ADVICE_MAP)) {
     const a = bySlug.get(slug);
     if (!a) bad.push(`${slug}: 記事が存在しない`);
-    else if (a.status !== "published") bad.push(`${slug}: ${a.status}`);
+    else if (a.status !== "published" && a.status !== "draft")
+      bad.push(`${slug}: ${a.status}`);
   }
   assert.deepEqual(bad, [], bad.join("\n"));
 });
