@@ -106,3 +106,70 @@ test("未確認の食い違いが記録されている", () => {
     assert.ok(doc.includes(key), `${key} の記録が消えている`);
   }
 });
+
+// ─── シリーズ内の大小逆転 ───────────────────────────────
+//
+// 2026-08-30、スペックの誤りを機械的に洗おうとして失敗した記録。
+//
+// 最初に試したのは「別製品と重量が同値なら混入を疑う」という検査だった。
+// アメニティドームMの 5.2kg が別製品からの混入だったので筋は良さそうに
+// 見えたが、実際には小数つき重量を持つ108件が76通りの値に収まるため、
+// 一致は起きて当たり前で、20通りが重複していた。32件を「疑わしい」と
+// 出したが中身はほぼ雑音。耐水圧の1500/2000mm一致も業界標準値なので同じ。
+//
+// 一方、シリーズ内の大小逆転（Sのほうが M より高い・重い）は数が少なく、
+// 出たものは実際に怪しい。こちらを残す。
+
+test("同シリーズでサイズと価格・重量が逆転していない", () => {
+  const RANK: Record<string, number> = { S: 1, M: 2, L: 3, XL: 4 };
+  const kg = (v?: string) => {
+    const m = (v ?? "").match(/([\d.]+)\s*kg/);
+    return m ? parseFloat(m[1]) : null;
+  };
+  type Item = { p: (typeof products)[number]; rank: number; sz: string };
+  const series = new Map<string, Item[]>();
+  for (const p of products as Array<{
+    id: string; name: string; brand?: string; price?: number;
+    specs?: Record<string, string>;
+  }>) {
+    const m = (p.name ?? "").match(/^(.*?)\s*(S|M|L|XL)$/);
+    if (!m || !p.brand) continue;
+    const key = `${p.brand}|${m[1].trim()}`;
+    if (!series.has(key)) series.set(key, []);
+    series.get(key)!.push({ p, rank: RANK[m[2]], sz: m[2] });
+  }
+
+  const bad: string[] = [];
+  for (const [key, items] of series) {
+    for (const s of items)
+      for (const l of items) {
+        // 同じサイズ記号どうしは重複レコードなので対象外
+        if (s.rank >= l.rank) continue;
+        const sp = (s.p as { price?: number }).price;
+        const lp = (l.p as { price?: number }).price;
+        if (sp && lp && sp > lp)
+          bad.push(`${key}: ${s.sz}(${s.p.id}) ¥${sp} > ${l.sz}(${l.p.id}) ¥${lp}`);
+        const ws = kg(s.p.specs?.["重量"]);
+        const wl = kg(l.p.specs?.["重量"]);
+        if (ws && wl && ws > wl)
+          bad.push(`${key}: ${s.sz}(${s.p.id}) ${ws}kg > ${l.sz}(${l.p.id}) ${wl}kg`);
+      }
+  }
+  // 未確認の逆転。メーカー公式はこの作業環境から到達できないため直せない。
+  // 確認できたら値を直してここから消す。減らすためのリスト。
+  //
+  // アメニティドームS の ¥44,000 は、重複レコード tent-sp-amenity-dome-m の
+  // 価格と同じ。S の室内高 120cm も、その重複レコードが持っていた値と同じ。
+  // 値が混ざった痕跡がここにも出ている。
+  const KNOWN = ["スノーピーク|スノーピーク アメニティドーム: S(tent-duo-002)"];
+  const unknown = bad.filter((b) => !KNOWN.some((k) => b.startsWith(k)));
+  assert.deepEqual(
+    unknown,
+    [],
+    `小さいモデルのほうが高い/重いのは不自然です。メーカー公式で確認してください:\n${unknown.join("\n")}`
+  );
+
+  const fixed = KNOWN.filter((k) => !bad.some((b) => b.startsWith(k)));
+  if (fixed.length > 0)
+    console.log(`  [注意] 逆転が解消したので KNOWN から消せます: ${fixed.join(", ")}`);
+});
