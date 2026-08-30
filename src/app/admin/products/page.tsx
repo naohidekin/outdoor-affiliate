@@ -240,9 +240,13 @@ export default function AdminProducts() {
   const getCategoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name || "未分類";
 
+  // IDも検索対象にする。重複商品の整理では「名前も価格もブランドも同一で
+  // IDだけが違う」ペアを消し分ける必要があり、名前とブランドだけでは
+  // どちらを消すか画面から選べなかった（2026-08-30）
   const filtered = products.filter((p) =>
     !search || p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand.toLowerCase().includes(search.toLowerCase())
+    p.brand.toLowerCase().includes(search.toLowerCase()) ||
+    p.id.toLowerCase().includes(search.toLowerCase())
   );
 
   const fieldClass = "w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800 text-sm";
@@ -488,7 +492,12 @@ export default function AdminProducts() {
             ) : (
               filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50 transition">
-                  <td className="px-5 py-3 text-sm text-gray-800 font-medium max-w-xs truncate">{p.name}</td>
+                  <td className="px-5 py-3 text-sm text-gray-800 font-medium max-w-xs">
+                    <div className="truncate">{p.name}</div>
+                    {/* 重複ペアは名前・ブランド・価格まで同一のことがある。
+                        消し分けにはIDを見るしかない */}
+                    <div className="text-xs text-gray-400 font-mono truncate">{p.id}</div>
+                  </td>
                   <td className="px-5 py-3 text-sm text-gray-500">{p.brand}</td>
                   <td className="px-5 py-3 text-sm text-gray-500">{getCategoryName(p.categoryId)}</td>
                   <td className="px-5 py-3 text-sm text-gray-600">
