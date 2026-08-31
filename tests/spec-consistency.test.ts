@@ -95,16 +95,96 @@ test("アメニティドームMの記事に古い数値が残っていない", (
   assert.deepEqual(hits, [], `古い数値が残っています:\n${hits.join("\n")}`);
 });
 
-// 未確認のまま残っている食い違い。メーカー公式を見るまで直せないので、
-// 「まだ残っている」ことを記録として残す。解消したらこのテストを消す。
-test("未確認の食い違いが記録されている", () => {
+// 2026-08-31、ネットワークポリシーが広がってメーカー公式に到達できるように
+// なった。上の「未確認」だった3件は公式で確認して解消したので、その記録が
+// 台帳に残っていることを確認する。
+test("公式で確認した記録が台帳に残っている", () => {
   const doc = fs.readFileSync(
     path.join(ROOT, "docs", "product-duplicates-2026-08-28.md"),
     "utf8"
   );
-  for (const key of ["未確認", "ツーリングドームST"]) {
+  for (const key of ["2026-08-31", "ツーリングドームST", "SDE-001RH"]) {
     assert.ok(doc.includes(key), `${key} の記録が消えている`);
   }
+});
+
+// ─── 2026-08-31 にメーカー公式で確認した値 ─────────────
+//
+// 出典は各社の公式サイトと取扱説明書PDF。
+//   アメニティドーム S/M/L  SDE-002 / SDE-001RH / SDE-003RD 取説のスペック図
+//   ランドネストドームM     SDE-260 取説のスペック図
+//   ツーリングドームST      コールマン公式 商品ページ（型番2000038141）
+//   ファイアグリル          ユニフレーム公式 No.683040
+//   54QTスチールベルトクーラー / タフスクリーン2ルームエアー MDX+  コールマン公式
+//
+// 誤っていた値の多くは「別サイズの製品の数値」が混ざったもので、
+// とくに室内高120cm（本当はSの値）はMの記事3本に広がっていた。
+
+test("アメニティドームのサイズが公式と一致する", () => {
+  // M（SDE-001RH）室内265×265×150(h) / フライ全長505・全幅280
+  assert.match(spec("tent-002", "サイズ（展開時）"), /505×280×150/);
+  assert.match(spec("tent-002", "インナーサイズ"), /265×265×150/);
+  // S（SDE-002）室内220×150×120(h)
+  assert.match(spec("tent-duo-002", "インナーサイズ"), /220×150×120/);
+  assert.match(spec("tent-duo-002", "収容人数"), /2〜3名/);
+  // L（SDE-003RD）室内295×295×165(h) / 重量9.8kg / 4〜5名
+  assert.match(spec("tent-sp-amenity-dome-l", "定員"), /4〜5名/);
+  assert.match(spec("tent-sp-amenity-dome-l", "重量"), /9\.8\s*kg/);
+  assert.match(spec("tent-sp-amenity-dome-l", "インナーサイズ"), /295×295×165/);
+});
+
+test("ツーリングドームSTのスペックが公式と一致する", () => {
+  for (const id of ["tent-001", "tent-solo-003"]) {
+    const all = JSON.stringify(products.find((p) => p.id === id)?.specs ?? {});
+    assert.match(all, /210×120×100/, `${id} の展開サイズが公式と違う`);
+    assert.match(all, /φ19×49/, `${id} の収納サイズが公式と違う`);
+    assert.match(all, /約4\s*kg/, `${id} の重量が公式（約4kg）と違う`);
+    // フロアは2,000mmではなく約1,500mm
+    assert.doesNotMatch(all, /フロア[^」]{0,6}2[,]?000/, `${id} のフロア耐水圧が違う`);
+  }
+});
+
+test("ランドネストドームMのスペックが公式と一致する", () => {
+  assert.match(spec("tent-sp-landnest-dome-m", "室内高"), /170\s*cm/);
+  assert.match(spec("tent-sp-landnest-dome-m", "重量"), /8\.7\s*kg/);
+});
+
+test("記事本文に、別サイズから混入した古い数値が残っていない", () => {
+  // アメニティドームMの室内高120cm は本当はSの値。定員5〜6人用はLの誤り。
+  const WRONG: Array<[string[], RegExp, string]> = [
+    [
+      ["amenity-dome-vs-tough-wide-dome", "amenity-dome-vs-landnest-dome", "compact-tent-ranking"],
+      /室内高[^。|]{0,8}120\s*cm|120\s*cm[^。|]{0,10}座るのがやっと/,
+      "アメニティドームMの室内高は150cm（120cmはSの値）",
+    ],
+    [
+      ["snow-peak-amenity-dome-l-10year-review"],
+      /5〜6人|5～6人/,
+      "アメニティドームLの定員は4〜5名",
+    ],
+    [
+      ["tent-setup-tips-spring", "compact-tent-ranking"],
+      /200×120×100|56×14\s*cm/,
+      "ツーリングドームSTは210×120×100(h)cm / 収納 約φ19×49cm",
+    ],
+    [
+      ["amenity-dome-vs-tough-wide-dome"],
+      /フロア[^|]{0,8}3[,]?000/,
+      "アメニティドームMのフロア耐水圧は1,800mm",
+    ],
+  ];
+  const hits: string[] = [];
+  for (const [slugs, re, correct] of WRONG) {
+    for (const slug of slugs) {
+      const a = published.find((x) => x.slug === slug);
+      if (!a) continue;
+      (a.content ?? "").split("\n").forEach((line, i) => {
+        if (re.test(line))
+          hits.push(`${slug} L${i + 1}（${correct}）: ${line.trim().slice(0, 60)}`);
+      });
+    }
+  }
+  assert.deepEqual(hits, [], `別サイズの数値が混ざっています:\n${hits.join("\n")}`);
 });
 
 // ─── シリーズ内の大小逆転 ───────────────────────────────
