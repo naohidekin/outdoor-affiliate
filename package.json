@@ -66,7 +66,8 @@
     "indexnow:all": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs",
     "indexnow:dry": "node --dns-result-order=ipv4first scripts/indexnow-submit.mjs --dry-run",
     "sync:main": "bash scripts/sync-main.sh",
-    "data:normalize": "node scripts/normalize-data-json.mjs"
+    "data:normalize": "node scripts/normalize-data-json.mjs",
+    "report:rakuten": "node scripts/analyze-rakuten-orders.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
