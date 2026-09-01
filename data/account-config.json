@@ -173,6 +173,14 @@
       "weeklyCount": 1,
       "approval": "auto"
     },
+    "trend_deepdive": {
+      "axis": "camp",
+      "weeklyCount": 1,
+      "maxWeekly": 2,
+      "approval": "batch",
+      "isThread": true,
+      "note": "アウトドアの時流に乗った深掘りスレッド→記事誘導。本物のトレンド時のみ発火し上限は週2本（該当なしなら生成しない）。リンクは linkRules（本文禁止・リプ欄）に従う。発火条件・雛形・自己チェックは docs/x-trend-deepdive-spec.md 参照"
+    },
     "rakuten_room_pick": {
       "axis": "camp",
       "weeklyCount": 1,
@@ -191,7 +199,8 @@
       "article_promo",
       "seasonal_hook",
       "repost_rewrite",
-      "rakuten_room_pick"
+      "rakuten_room_pick",
+      "trend_deepdive"
     ],
     "manual": [
       "doc_health_tip"
