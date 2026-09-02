@@ -167,6 +167,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%89%E3%82%A4%E3%82%BF%E3%83%BC%20%E3%83%95%E3%83%A5%E3%83%BC%E3%83%81%E3%83%A5%E3%83%A926"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25AB%25E3%2583%25AA%25E3%2583%259E%25E3%2583%25BC%2520%25E3%2583%25AA%25E3%2583%2583%25E3%2582%25B830%2520Medium%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0994WD9Y3?tag=camp78-22",
     "brand": "karrimor",
     "categoryId": "backpack",
@@ -185,7 +186,7 @@
       "背面長": "Small/Medium",
       "重量": "1,300g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AB%E3%83%AA%E3%83%9E%E3%83%BC%20%E3%83%AA%E3%83%83%E3%82%B830%20Medium"
   },
   {
@@ -822,6 +823,7 @@
   {
     "addedAt": "2026-04-16T14:25:24.701Z",
     "addedBy": "article-product-agent",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2Fwakufimac%2520%25E3%2582%25A2%25E3%2582%25A6%25E3%2583%2588%25E3%2583%2589%25E3%2582%25A2%2520%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%2520%25E3%2583%2581%25E3%2582%25A7%25E3%2582%25A2%2520%25E3%2583%2581%25E3%2582%25A7%25E3%2582%25A2%25E3%2583%25BC%2520%25E8%2582%2598%25E4%25BB%2598%2520%25E4%25B8%2580%25E4%25BA%25BA%25E6%258E%259B%25E3%2581%2591%2520%25E6%259C%25A8%25E8%25A3%25BD%2520%25E3%2582%25BD%25E3%2583%25AD%2520%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%2520%25E8%25BB%25BD%25E9%2587%258F%2520%25E3%2582%25B3%25E3%2583%25B3%25E3%2583%2591%25E3%2582%25AF%25E3%2583%2588%2520%25E4%25BD%258E%25E3%2582%2581%2520%25E8%25BB%25BD%25E3%2581%2584%2520%25E6%258A%2598%25E3%2582%258A%25E3%2581%259F%25E3%2581%259F%25E3%2581%25BF%2520%25E7%2594%25A8%25E5%2593%2581%2520%25E9%2581%2593%25E5%2585%25B7%2520%25E4%25BA%25BA%25E6%25B0%2597%2520%25E8%2582%2598%25E4%25BB%2598%25E3%2581%258D%2520%25E4%25B8%2580%25E4%25BA%25BA%25E7%2594%25A8%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=wakufimac%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%83%81%E3%82%A7%E3%82%A2%20%E3%83%81%E3%82%A7%E3%82%A2%E3%83%BC%20%E8%82%98%E4%BB%98%20%E4%B8%80%E4%BA%BA%E6%8E%9B%E3%81%91%20%E6%9C%A8%E8%A3%BD%20%E3%82%BD%E3%83%AD%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E8%BB%BD%E9%87%8F%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E4%BD%8E%E3%82%81%20%E8%BB%BD%E3%81%84%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%20%E7%94%A8%E5%93%81%20%E9%81%93%E5%85%B7%20%E4%BA%BA%E6%B0%97%20%E8%82%98%E4%BB%98%E3%81%8D%20%E4%B8%80%E4%BA%BA%E7%94%A8&tag=camp78-22",
     "autoAdded": true,
     "brand": "トップセンス",
@@ -835,7 +837,7 @@
     "rating": 3,
     "sourceApi": "rakuten",
     "specs": {},
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-01T14:36:49.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=wakufimac%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%83%81%E3%82%A7%E3%82%A2%20%E3%83%81%E3%82%A7%E3%82%A2%E3%83%BC"
   },
   {
@@ -977,6 +979,7 @@
     "yahooUrl": "https://store.shopping.yahoo.co.jp/aprice/4580742230577.html"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%2B%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%2BNo.1",
     "amazonUrl": "",
     "brand": "スノーピーク",
     "categoryId": "burner",
@@ -994,10 +997,11 @@
       "素材": "アルミニウム合金（ハードアノダイズド）",
       "重量": "約468g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%E3%82%BB%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%20No.1"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%A2%E3%83%B3%E3%83%99%E3%83%AB%2B%E3%82%A2%E3%83%AB%E3%83%91%E3%82%A4%E3%83%B3%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%2B16",
     "amazonUrl": "",
     "brand": "モンベル",
     "categoryId": "burner",
@@ -1015,7 +1019,7 @@
       "素材": "アルミニウム合金",
       "重量": "約360g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%B3%E3%83%99%E3%83%AB%20%E3%82%A2%E3%83%AB%E3%83%91%E3%82%A4%E3%83%B3%E3%82%AF%E3%83%83%E3%82%AB%E3%83%BC%2016%20%E3%82%B9%E3%82%BF%E3%83%BC%E3%82%BF%E3%83%BC%E3%82%BB%E3%83%83%E3%83%88"
   },
   {
@@ -1770,6 +1774,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%20UM-1903"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FGoodsLand%2B%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09JNYJTBT?tag=camp78-22",
     "brand": "GoodsLand",
     "categoryId": "kitchen",
@@ -1786,7 +1791,7 @@
       "タイプ": "折りたたみ吊り下げ式",
       "材質": "ポリエステル・スチール"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T15:10:47.971Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=GoodsLand%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E3%83%89%E3%83%A9%E3%82%A4%E3%83%8D%E3%83%83%E3%83%88%20GD-DRYNET-M%EF%BC%88%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%EF%BC%89"
   },
   {
@@ -2325,6 +2330,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%99%E3%83%AB%E3%83%A2%E3%83%B3%E3%83%88%20%E7%84%9A%E3%81%8D%E7%81%AB%E3%83%96%E3%83%AD%E3%82%A6%E3%83%91%E3%82%A4%E3%83%97%20BM-381%20%E3%83%9D%E3%83%B3%E3%83%97%E4%BB%98%E3%81%8D"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%2B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88+%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC+%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF&tag=camp78-22",
     "brand": "ブッシュクラフト",
     "categoryId": "firepit",
@@ -2341,7 +2347,7 @@
       "収納時": "9.2cm",
       "重量": "約26g（本体＋ケース）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E5%BC%8F%20%E6%9C%AC%E9%9D%A9%E3%82%B1%E3%83%BC%E3%82%B9%E4%BB%98%E3%81%8D"
   },
   {
@@ -2367,6 +2373,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%82%B5%E3%82%A4%E3%83%89%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%A4%E3%83%BC%E3%83%96%E3%83%A9%E3%82%B9%E3%82%BF%E3%83%BC80%20FB2"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E6%9D%91%E3%81%AE%E9%8D%9B%E5%86%B6%E5%B1%8B%2B%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E6%9D%91%E3%81%AE%E9%8D%9B%E5%86%B6%E5%B1%8B+%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92+37cm&tag=camp78-22",
     "brand": "村の鍛冶屋",
     "categoryId": "firepit",
@@ -2383,7 +2390,7 @@
       "素材": "アルミニウム",
       "重量": "約25g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-10T20:32:56.786Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E6%9D%91%E3%81%AE%E9%8D%9B%E5%86%B6%E5%B1%8B%20%E3%82%A2%E3%83%AB%E3%83%9F%E3%82%AB%E3%83%A9%E3%83%BC%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92%2037cm"
   },
   {
@@ -2431,6 +2438,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Tokyo%20Camp%E7%84%9A%E7%81%AB%E5%8F%B0"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%84%E3%81%91%E3%81%A9%2B%E6%B9%BF%E6%BD%A4%2B%E3%83%89%E3%83%AC%E3%83%83%E3%82%B7%E3%83%B3%E3%82%B0%E6%9D%90",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%90%E3%83%BC%E3%83%B3%E3%82%A8%E3%82%A4%E3%83%89%20%E3%82%84%E3%81%91%E3%81%A9%E7%94%A8%E6%95%91%E6%80%A5%E7%B5%86%E5%89%B5%E8%86%8F%20%E6%B9%BF%E6%BD%A4%E3%83%89%E3%83%AC%E3%83%83%E3%82%B7%E3%83%B3%E3%82%B0%E6%9D%90&tag=camp78-22",
     "autoAdded": false,
     "brand": "バーンエイド",
@@ -2448,7 +2456,7 @@
       "用途": "軽度〜中等度のやけど保護",
       "素材": "湿潤ドレッシング材（非固着性）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%90%E3%83%BC%E3%83%B3%E3%82%A8%E3%82%A4%E3%83%89%20%E3%82%84%E3%81%91%E3%81%A9%E7%94%A8%E6%95%91%E6%80%A5%E7%B5%86%E5%89%B5%E8%86%8F%20%E6%B9%BF%E6%BD%A4%E3%83%89%E3%83%AC%E3%83%83%E3%82%B7%E3%83%B3%E3%82%B0%E6%9D%90"
   },
   {
@@ -2475,6 +2483,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%9D%E3%82%A4%E3%82%BA%E3%83%B3%E3%83%AA%E3%83%A0%E3%83%BC%E3%83%90%E3%83%BC%20%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%83%BC%20%E6%AF%92%E5%90%B8%E5%BC%95%E5%99%A8%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%BB%E8%99%AB%E5%88%BA%E3%81%95%E3%82%8C%E7%94%A8"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%9E%E3%83%80%E3%83%8B%2B%E9%99%A4%E5%8E%BB%2B%E3%83%86%E3%82%A3%E3%83%83%E3%82%AF%E3%83%AA%E3%83%A0%E3%83%BC%E3%83%90%E3%83%BC",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08DHT1TXK/?tag=camp78-22",
     "autoAdded": false,
     "brand": "汎用",
@@ -2492,7 +2501,7 @@
       "用途": "マダニの安全な除去",
       "素材": "ステンレス"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-11T12:38:15.960Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%9E%E3%83%80%E3%83%8B%E9%99%A4%E5%8E%BB%E3%83%84%E3%83%BC%E3%83%AB%20%E3%83%86%E3%82%A3%E3%83%83%E3%82%AF%E3%83%AA%E3%83%A0%E3%83%BC%E3%83%90%E3%83%BC%20%E7%B4%B0%E5%9E%8B%E3%83%94%E3%83%B3%E3%82%BB%E3%83%83%E3%83%88%20%E3%82%BB%E3%83%83%E3%83%88"
   },
   {
@@ -2764,6 +2773,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%AB%E3%83%9F%E3%82%A8%E3%83%BC%E3%83%AB%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20205588"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25A4%25E3%2583%25AF%25E3%2582%25BF%25E3%2583%258B%2520%25E3%2582%25AB%25E3%2582%25BB%25E3%2583%2583%25E3%2583%2588%25E3%2582%25AC%25E3%2582%25B9%25E3%2583%25A9%25E3%2583%25B3%25E3%2582%25BF%25E3%2583%25B3%2520CB-SLG-3%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B001C9Y8PG/?tag=camp78-22",
     "brand": "イワタニ",
     "categoryId": "light",
@@ -2780,7 +2790,7 @@
       "明るさ": "約100燭光",
       "点火方式": "圧電点火"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%A4%E3%83%AF%E3%82%BF%E3%83%8B%20%E3%82%AB%E3%82%BB%E3%83%83%E3%83%88%E3%82%AC%E3%82%B9%20%E3%82%B8%E3%83%A5%E3%83%8B%E3%82%A2%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20CB-JRL-2"
   },
   {
@@ -2832,6 +2842,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%89%E3%83%AA%E3%83%B3%E3%82%AF%E3%82%BF%E3%83%B3%E3%82%AF%E3%82%B9%20%E3%82%B0%E3%83%AD%E3%82%A6%E3%83%A9%E3%83%BC%2064oz%20(1.9L)"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2582%25BF%25E3%2583%25B3%25E3%2583%25AC%25E3%2583%25BC%2B%25E3%2582%25A2%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%2595%25E3%2583%25AD%25E3%2583%25BC%2B%25E3%2582%25B8%25E3%2583%25A3%25E3%2582%25B0%2B1.9L%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC+%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC+%E3%82%B8%E3%83%A3%E3%82%B0+1.9L&tag=camp78-22",
     "autoAdded": false,
     "brand": "スタンレー",
@@ -2851,7 +2862,7 @@
       "opening": "ストロー式",
       "weight": "約680g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%AC%E3%83%BC%20%E3%82%A2%E3%82%A4%E3%82%B9%E3%83%95%E3%83%AD%E3%83%BC%20%E3%83%95%E3%83%AA%E3%83%83%E3%83%97%E3%82%B9%E3%83%88%E3%83%AD%E3%83%BC%20%E7%9C%9F%E7%A9%BA%E3%82%B8%E3%83%A3%E3%82%B0%201.9L"
   },
   {
@@ -2947,6 +2958,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=ENO%20DoubleNest%20Hammock%EF%BC%88%E3%83%80%E3%83%96%E3%83%AB%E3%83%8D%E3%82%B9%E3%83%88%E3%83%8F%E3%83%B3%E3%83%A2%E3%83%83%E3%82%AF%EF%BC%89"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FUnigear%2B%25E3%2583%2588%25E3%2583%25A9%25E3%2583%2599%25E3%2583%25AB%25E3%2583%258F%25E3%2583%25B3%25E3%2583%25A2%25E3%2583%2583%25E3%2582%25AF%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07G147SFV/?tag=camp78-22",
     "brand": "Unigear",
     "categoryId": "hammock",
@@ -2965,7 +2977,7 @@
       "蚊帳": "なし",
       "重量": "約940g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-07T20:23:47.382Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Unigear%20%E3%83%8F%E3%83%B3%E3%83%A2%E3%83%83%E3%82%AF%20%E3%83%91%E3%83%A9%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%88%E3%83%8A%E3%82%A4%E3%83%AD%E3%83%B3%202%E4%BA%BA%E7%94%A8"
   },
   {
@@ -3100,6 +3112,7 @@
     "updatedAt": "2026-08-26T17:03:12.474Z"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E5%86%B7%E6%84%9F%E3%82%BF%E3%82%AA%E3%83%AB%2B%E3%82%AF%E3%83%BC%E3%83%AB%E3%82%BF%E3%82%AA%E3%83%AB%2BPVA",
     "amazonUrl": "https://www.amazon.co.jp/s?k=冷感タオル+クールタオル+PVA+キャンプ&tag=camp78-22",
     "autoAdded": false,
     "brand": "汎用",
@@ -3117,10 +3130,11 @@
       "素材": "PVA（ポリビニールアルコール）",
       "繰り返し": "繰り返し使用・洗濯可能"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-02T01:13:30.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E5%86%B7%E6%84%9F%E3%82%BF%E3%82%AA%E3%83%AB%20%E3%82%AF%E3%83%BC%E3%83%AB%E3%82%BF%E3%82%AA%E3%83%AB%20PVA%E7%B4%A0%E6%9D%90%20%E7%9E%AC%E9%96%93%E5%86%B7%E5%8D%B4%20%E7%B9%B0%E3%82%8A%E8%BF%94%E3%81%97%E4%BD%BF%E7%94%A8%E5%8F%AF"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E5%AD%90%E3%81%A9%E3%82%82%2B%E3%83%8D%E3%83%83%E3%82%AF%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%2B%E9%9B%BB%E5%8B%95",
     "amazonUrl": "https://www.amazon.co.jp/s?k=ネッククーラー+子ども用+電動&tag=camp78-22",
     "autoAdded": false,
     "brand": "汎用",
@@ -3139,10 +3153,11 @@
       "連続使用": "約5〜8時間（モードによる）",
       "重量": "軽量設計"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-02T01:13:30.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%8D%E3%83%83%E3%82%AF%E3%82%AF%E3%83%BC%E3%83%A9%E3%83%BC%20%E5%AD%90%E3%81%A9%E3%82%82%E7%94%A8%20%E9%9B%BB%E5%8B%95%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWBGT%E8%A8%88%2B%E7%86%B1%E4%B8%AD%E7%97%87%E6%8C%87%E6%95%B0%E8%A8%88",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0FDKSPXV2/?tag=camp78-22",
     "autoAdded": false,
     "brand": "汎用",
@@ -3160,7 +3175,7 @@
       "用途": "キャンプ・スポーツ・屋外活動",
       "電源": "電池式"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-11T12:38:15.959Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E7%86%B1%E4%B8%AD%E7%97%87%E6%8C%87%E6%95%B0%E8%A8%88%20WBGT%E8%A8%88%20%E6%B8%A9%E6%B9%BF%E5%BA%A6%E8%A8%88%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E7%94%A8"
   },
   {
@@ -3815,6 +3830,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%91%E3%83%83%E3%82%AB%E3%82%A6%E3%82%A7%E3%82%A4%E3%82%B1%E3%83%88%E3%83%AB"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FGSI%2520%25E3%2582%25B0%25E3%2583%25AC%25E3%2582%25A4%25E3%2582%25B7%25E3%2583%25A3%25E3%2583%25BC%2520%25E3%2582%25B1%25E3%2583%2588%25E3%2583%25AB%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22",
     "brand": "GSI",
     "categoryId": "kitchen",
@@ -3831,7 +3847,7 @@
       "材質": "18-8ステンレス",
       "重量": "290g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-10T21:08:07.728Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=GSI%20%E3%82%B0%E3%83%AC%E3%82%A4%E3%82%B7%E3%83%A3%E3%83%BC%E3%82%B9%E3%83%86%E3%83%B3%E3%83%AC%E3%82%B9%E3%82%B1%E3%83%88%E3%83%AB"
   },
   {
@@ -3901,6 +3917,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%BC%E3%83%A9%E3%83%8A%E3%82%A4%E3%83%95%20Companion%20MG%20Stainless"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A2%25E3%2583%25BC%25E3%2583%25A9%25E3%2583%258A%25E3%2582%25A4%25E3%2583%2595%2520Garberg%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08548NHGS?tag=camp78-22",
     "brand": "Morakniv",
     "categoryId": "kitchen",
@@ -3920,10 +3937,11 @@
       "刃渡り": "109mm",
       "重量": "175g（シース含む）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T15:10:40.980Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%BC%E3%83%A9%E3%83%8A%E3%82%A4%E3%83%95%20Garberg%20Full%20Tang"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%83%99%25E3%82%A2%25E3%82%A2%25E3%83%B3%25E3%83%89%25E3%82%B5%25E3%83%B3%2520%25E3%83%96%25E3%83%83%25E3%82%B7%25E3%83%A5%25E3%82%AF%25E3%83%A9%25E3%83%95%25E3%83%88%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=Bear+Son+Bushcraft+knife&tag=camp78-22",
     "brand": "Bear & Son",
     "categoryId": "kitchen",
@@ -3943,7 +3961,7 @@
       "刃渡り": "117mm",
       "重量": "165g（シース含む）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-02T01:13:30.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%99%E3%82%A2%E3%83%BC%EF%BC%86%E3%82%B5%E3%83%B3%20%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E3%83%8A%E3%82%A4%E3%83%95"
   },
   {
@@ -4044,6 +4062,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%89IV%202000031266"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%AF%25E3%2582%25A4%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%2520QC-LH220%2F&link_type=text&ut=",
     "amazonUrl": "",
     "brand": "QUICKCAMP",
     "categoryId": "light",
@@ -4066,7 +4085,7 @@
       "重量": "約1.5kg",
       "高さ調整": "無段階"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E6%8A%98%E3%82%8A%E3%81%9F%E3%81%9F%E3%81%BF%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%89%20QC-LH220"
   },
   {
@@ -4585,6 +4604,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88%20%E3%83%97%E3%83%AD%E3%83%A9%E3%82%A4%E3%83%88"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ%2520%25E3%2583%25AA%25E3%2583%25A9%25E3%2582%25AF%25E3%2582%25B7%25E3%2583%25B3%25E3%2582%25B0%25E3%2582%25AD%25E3%2583%25A3%25E3%2583%25B3%25E3%2583%2597%25E3%2583%259E%25E3%2583%2583%25E3%2583%2588%252010cm%2F&link_type=text&ut=",
     "amazonUrl": "",
     "autoAdded": false,
     "brand": "WAQ",
@@ -4602,7 +4622,7 @@
       "収納": "74×21cm",
       "重量": "3.0kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-22T22:00:09.319Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=WAQ%20%E3%83%AA%E3%83%A9%E3%82%AF%E3%82%B7%E3%83%B3%E3%82%B0%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%9E%E3%83%83%E3%83%88%2010cm"
   },
   {
@@ -4852,6 +4872,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20REVO%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%83%AD%E3%82%B4%E3%82%B9+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0FR9JW26T/?tag=camp78-22",
     "brand": "ロゴス",
     "categoryId": "sleeping-bag",
@@ -4869,7 +4890,7 @@
       "素材": "マイクロファイバー・ポリエステル綿",
       "重量": "190g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-07T20:02:18.665Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AD%E3%82%B4%E3%82%B9%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%83%94%E3%83%AD%E3%83%BC%EF%BC%88%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%83%95%E3%82%A1%E3%82%A4%E3%83%90%E3%83%BC%EF%BC%89"
   },
   {
@@ -4893,6 +4914,7 @@
     "updatedAt": "2026-07-10T23:18:37.535Z"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNEMO+%E3%83%95%E3%82%A3%E3%83%AD+%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DK7PR83X?tag=camp78-22",
     "brand": "NEMO",
     "categoryId": "sleeping-bag",
@@ -4910,10 +4932,11 @@
       "素材": "表面：20D ナイロン・底面：グリッパー素材",
       "重量": "53g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T15:10:19.696Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NEMO%20%E3%83%95%E3%82%A3%E3%83%AD%20%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSea+to+Summit+%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9+%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0+%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
     "amazonUrl": "",
     "brand": "Sea to Summit",
     "categoryId": "sleeping-bag",
@@ -4931,10 +4954,11 @@
       "素材": "75D タフタナイロン",
       "重量": "62g（レギュラー）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Sea%20to%20Summit%20%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%E3%83%94%E3%83%AD%E3%83%BC"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88+%E3%83%8D%E3%82%AA%E3%82%A8%E3%82%A2%E3%83%BC+%E3%83%94%E3%83%AD%E3%83%BC%2F&link_type=text&ut=",
     "amazonUrl": "",
     "brand": "Therm-a-Rest",
     "categoryId": "sleeping-bag",
@@ -4952,10 +4976,11 @@
       "素材": "75D タフタポリエステル",
       "重量": "59g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88%20%E3%83%8D%E3%82%AA%E3%82%A8%E3%82%A2%E3%83%BC%E3%83%94%E3%83%AD%E3%83%BC"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22",
     "brand": "WAQ",
     "categoryId": "sleeping-bag",
@@ -4973,7 +4998,7 @@
       "素材": "カバー：ポリエステルマイクロファイバー・中材：ウレタンフォーム+エア",
       "重量": "290g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T15:10:23.121Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=WAQ%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95"
   },
   {
@@ -5734,6 +5759,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%9F%E3%82%BA%E3%83%8E%20%E3%83%99%E3%83%AB%E3%82%B0%E3%83%86%E3%83%83%E3%82%AFEX%E3%82%B9%E3%83%88%E3%83%BC%E3%83%A0%E3%82%BB%E3%82%A4%E3%83%90%E3%83%BCVI"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AF%25E3%2583%25BC%25E3%2582%25AF%25E3%2583%259E%25E3%2583%25B3%2520INAREM%2520%25E3%2582%25B9%25E3%2583%2588%25E3%2583%25AC%25E3%2583%2583%25E3%2583%2581%25E3%2583%25AC%25E3%2582%25A4%25E3%2583%25B3%25E3%2582%25B9%25E3%2583%25BC%25E3%2583%2584%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0BVGYD8BN?tag=camp78-22",
     "brand": "WORKMAN",
     "categoryId": "wear",
@@ -5751,7 +5777,7 @@
       "透湿性": "15,000g/m²/24h",
       "重量": "約600g（上下セット・Lサイズ）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%9E%E3%83%B3%20INAREM%20%E3%82%B9%E3%83%88%E3%83%AC%E3%83%83%E3%83%81%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%BC%E3%83%84"
   },
   {
@@ -5843,6 +5869,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Bears%20Rock%20-6%E2%84%83%20%E5%B0%81%E7%AD%92%E5%9E%8B%E3%82%B7%E3%83%A5%E3%83%A9%E3%83%95"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%258D%25E3%2582%25A4%25E3%2583%2581%25E3%2583%25A3%25E3%2583%25BC%25E3%2583%258F%25E3%2582%25A4%25E3%2582%25AF%2520CW280%2520%25E3%2583%2580%25E3%2582%25A6%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A5%25E3%2583%25A9%25E3%2583%2595%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DRJNBSVN?tag=camp78-22",
     "brand": "Naturehike",
     "categoryId": "sleeping-bag",
@@ -5860,7 +5887,7 @@
       "洗濯": "手洗い可",
       "重量": "約630g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%8D%E3%82%A4%E3%83%81%E3%83%A3%E3%83%BC%E3%83%8F%E3%82%A4%E3%82%AF%20CW280%20%E3%83%80%E3%82%A6%E3%83%B3%E3%82%B7%E3%83%A5%E3%83%A9%E3%83%95"
   },
   {
@@ -5932,6 +5959,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NANGA%20KIDS%20SQUARE%20FOOT%20300"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25AD%25E3%2582%25B4%25E3%2582%25B9%2520%25E4%25B8%25B8%25E6%25B4%2597%25E3%2581%2584%25E5%25AF%259D%25E8%25A2%258B%25E3%2582%25A6%25E3%2582%25A9%25E3%2583%25BC%25E3%2583%259E%25E3%2583%25BC0%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0FZLDPP35?tag=camp78-22",
     "brand": "ロゴス",
     "categoryId": "sleeping-bag",
@@ -5950,7 +5978,7 @@
       "適正温度": "0℃まで",
       "重量": "約1.7kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AD%E3%82%B4%E3%82%B9%20%E4%B8%B8%E6%B4%97%E3%81%84%E5%AF%9D%E8%A2%8B%E3%82%A6%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%BC0"
   },
   {
@@ -6134,6 +6162,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20%E3%83%A9%E3%83%8B%E3%83%BC%E3%83%A1%E3%83%83%E3%82%B7%E3%83%A5%E3%82%BF%E3%83%BC%E3%83%97%E3%83%86%E3%83%B3%E3%83%88"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%BF%E3%83%95%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%2F400%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B092YX6TX3?tag=camp78-22",
     "autoAdded": false,
     "brand": "コールマン",
@@ -6152,10 +6181,11 @@
       "耐水圧": "約2,000mm",
       "重量": "約12.5kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-02T01:13:30.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%BF%E3%83%95%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%2F400"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%BF%E3%83%95%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%2F400%2B%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B079LGZ62L?tag=camp78-22",
     "autoAdded": false,
     "brand": "コールマン",
@@ -6174,10 +6204,11 @@
       "耐水圧": "約2,000mm",
       "重量": "約12kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-02T01:13:30.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%BF%E3%83%95%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%2F400%2B"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FFIELDOOR%2520%25E3%2583%25AF%25E3%2583%25B3%25E3%2582%25BF%25E3%2583%2583%25E3%2583%2581%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2583%2586%25E3%2583%25B3%25E3%2583%2588%2520%25E9%2581%25AE%25E5%2585%2589PU%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DBGW8LP8?tag=camp78-22",
     "autoAdded": false,
     "brand": "FIELDOOR",
@@ -6196,7 +6227,7 @@
       "耐水圧": "16,000mm",
       "重量": "約7kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T15:10:25.097Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=FIELDOOR%20%E3%83%AF%E3%83%B3%E3%82%BF%E3%83%83%E3%83%81%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%83%86%E3%83%B3%E3%83%88%20%E9%81%AE%E5%85%89PU"
   },
   {
@@ -6466,6 +6497,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9II"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNaturehike%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%2590%25E3%2583%2583%25E3%2582%25B0%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0CG5LFY4R/?tag=camp78-22",
     "brand": "Naturehike",
     "categoryId": "kitchen",
@@ -6477,10 +6509,11 @@
     "price": 2200,
     "rating": 0,
     "specs": {},
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-10T21:08:07.728Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Naturehike%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%90%E3%83%83%E3%82%B0"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2586%25E3%2583%25B3%25E3%2583%259E%25E3%2582%25AF%25E3%2583%2587%25E3%2582%25B6%25E3%2582%25A4%25E3%2583%25B3%2520SOLUM%2520%25E3%2582%25B9%25E3%2583%2591%25E3%2582%25A4%25E3%2582%25B9%25E3%2583%259C%25E3%2583%2583%25E3%2582%25AF%25E3%2582%25B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3+%E3%82%BD%E3%83%AB%E3%83%A0+%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9&tag=camp78-22",
     "brand": "テンマクデザイン",
     "categoryId": "kitchen",
@@ -6492,7 +6525,7 @@
     "price": 6578,
     "rating": 0,
     "specs": {},
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-10T21:08:07.728Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%C3%97%20SOLUM%20%E3%82%B9%E3%83%91%E3%82%A4%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9"
   },
   {
@@ -6633,6 +6666,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20%E7%84%9A%E3%81%8D%E7%81%AB%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%259E%25E3%2583%25B3%2520%25E3%2583%258A%25E3%2583%2581%25E3%2583%25A5%25E3%2583%25A9%25E3%2583%25AB%25E3%2583%25A2%25E3%2582%25B6%25E3%2582%25A4%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%2593%25E3%2583%25B3%25E3%2582%25B0%25E3%2583%2586%25E3%2583%25BC%25E3%2583%2596%25E3%2583%25AB%2520120%25E3%2583%2597%25E3%2583%25A9%25E3%2582%25B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07NQQTK54?tag=camp78-22",
     "brand": "コールマン",
     "categoryId": "table",
@@ -6650,7 +6684,7 @@
       "重量": "約4.5kg",
       "高さ": "2段階調整"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%8A%E3%83%81%E3%83%A5%E3%83%A9%E3%83%AB%E3%83%A2%E3%82%B6%E3%82%A4%E3%82%AF%E3%83%AA%E3%83%93%E3%83%B3%E3%82%B0%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%20120%E3%83%97%E3%83%A9%E3%82%B9"
   },
   {
@@ -6833,6 +6867,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%E3%83%A0%E3%82%B5%E3%82%B5%E3%83%93%E3%82%A6%E3%82%A4%E3%83%B3%E3%82%B0%2013ft%20TC"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A6%25E3%2583%258B%25E3%2583%2595%25E3%2583%25AC%25E3%2583%25BC%25E3%2583%25A0%2520REVO%25E3%2582%25BF%25E3%2583%25BC%25E3%2583%2597%2520II%2520M%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07QW3NNR3?tag=camp78-22",
     "brand": "ユニフレーム",
     "categoryId": "tarp",
@@ -6850,7 +6885,7 @@
       "耐水圧": "1,800mm",
       "重量": "約2.6kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20REVO%E3%82%BF%E3%83%BC%E3%83%97%20II%20M"
   },
   {
@@ -7158,6 +7193,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%A2%E3%83%A1%E3%83%8B%E3%83%86%E3%82%A3%E3%83%89%E3%83%BC%E3%83%A0M"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2520%25E3%2583%25A9%25E3%2582%25A4%25E3%2583%2580%25E3%2583%25BC%25E3%2582%25BA%25E3%2582%25BF%25E3%2583%25BC%25E3%2583%2597%25E3%2583%2586%25E3%2583%25B3%25E3%2583%2588%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B078VHLW5K/?tag=camp78-22",
     "brand": "DOD",
     "categoryId": "tent",
@@ -7176,7 +7212,7 @@
       "設営時間": "約15分",
       "重量": "約3.8kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%BA%E3%82%BF%E3%83%BC%E3%83%97%E3%83%86%E3%83%B3%E3%83%88"
   },
   {
@@ -7637,6 +7673,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%84%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E3%83%89%E3%83%BC%E3%83%A0%20LX"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2583%258E%25E3%2583%25BC%25E3%2583%2594%25E3%2583%25BC%25E3%2582%25AF%2520%25E3%2582%25A2%25E3%2583%25A1%25E3%2583%258B%25E3%2583%2586%25E3%2582%25A3%25E3%2583%2589%25E3%2583%25BC%25E3%2583%25A0%2520S%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07DH4W37W?tag=camp78-22",
     "brand": "スノーピーク",
     "categoryId": "tent",
@@ -7654,7 +7691,7 @@
       "耐水圧": "1,800mm（フライ）",
       "重量": "約5kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%A2%E3%83%A1%E3%83%8B%E3%83%86%E3%82%A3%E3%83%89%E3%83%BC%E3%83%A0%20S"
   },
   {
@@ -7680,6 +7717,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%BA%E3%83%AF%E3%83%B3%E3%82%BF%E3%83%83%E3%83%81%E3%83%86%E3%83%B3%E3%83%88"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%25A2%25E3%2583%25B3%25E3%2583%2599%25E3%2583%25AB%2520%25E3%2582%25AF%25E3%2583%25AD%25E3%2583%258E%25E3%2582%25B9%25E3%2583%2589%25E3%2583%25BC%25E3%2583%25A0%25202%25E5%259E%258B%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00U7V4QM0?tag=camp78-22",
     "brand": "モンベル",
     "categoryId": "tent",
@@ -7697,10 +7735,11 @@
       "耐水圧": "2,000mm",
       "重量": "約2.43kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%B3%E3%83%99%E3%83%AB%20%E3%82%AF%E3%83%AD%E3%83%8E%E3%82%B9%E3%83%89%E3%83%BC%E3%83%A0%202%E5%9E%8B"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2Fogawa%2520%25E3%2582%25B9%25E3%2583%2586%25E3%2582%25A4%25E3%2582%25B7%25E3%2583%25BCST-II%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09XF6WF66?tag=camp78-22",
     "brand": "ogawa",
     "categoryId": "tent",
@@ -7718,7 +7757,7 @@
       "耐水圧": "1,800mm",
       "重量": "約3.9kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=ogawa%20%E3%82%B9%E3%83%86%E3%82%A4%E3%82%B7%E3%83%BCST-II"
   },
   {
@@ -8006,6 +8045,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%90%E3%83%B3%E3%83%89%E3%83%83%E3%82%AF%20%E3%82%BD%E3%83%AD%E3%83%86%E3%82%A3%E3%83%94%E3%83%BC1%20TC%20BDK-75TC"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2520%25E3%2582%25B7%25E3%2583%25A7%25E3%2582%25A6%25E3%2583%258D%25E3%2583%25B3%25E3%2583%2586%25E3%2583%25B3%25E3%2583%2588%2520T1-602-TN%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B081FFJNVL?tag=camp78-22",
     "brand": "DOD",
     "categoryId": "tent",
@@ -8024,7 +8064,7 @@
       "設営サイズ": "237×102×115cm",
       "重量": "2.6kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-06T03:27:45.539Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%82%B7%E3%83%A7%E3%82%A6%E3%83%8D%E3%83%B3%E3%83%86%E3%83%B3%E3%83%88%20T1-602-TN"
   },
   {
@@ -8074,6 +8114,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%B3%E3%83%99%E3%83%AB%20%E3%83%A0%E3%83%BC%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%88%E3%83%86%E3%83%B3%E3%83%881"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2583%2586%25E3%2583%25B3%25E3%2583%259E%25E3%2582%25AF%25E3%2583%2587%25E3%2582%25B6%25E3%2582%25A4%25E3%2583%25B3%2520%25E3%2583%2591%25E3%2583%25B3%25E3%2583%2580TC%252B%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B08B3G9XC9?tag=camp78-22",
     "brand": "テンマクデザイン",
     "categoryId": "tent",
@@ -8092,10 +8133,11 @@
       "設営サイズ": "270×270×170cm",
       "重量": "5.4kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%E3%83%91%E3%83%B3%E3%83%80TC%2B"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2583%258E%25E3%2583%25BC%25E3%2583%2594%25E3%2583%25BC%25E3%2582%25AF%2520%25E3%2582%25A2%25E3%2583%25A1%25E3%2583%258B%25E3%2583%2586%25E3%2582%25A3%25E3%2583%2589%25E3%2583%25BC%25E3%2583%25A0%2520L%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07DH5DHVM/?tag=camp78-22",
     "autoAdded": false,
     "brand": "スノーピーク",
@@ -8115,7 +8157,7 @@
       "設営時間": "約20分",
       "重量": "約8.5kg"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-30T12:00:00.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%A2%E3%83%A1%E3%83%8B%E3%83%86%E3%82%A3%E3%83%89%E3%83%BC%E3%83%A0%20L"
   },
   {
@@ -8190,6 +8232,7 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E3%82%B3%E3%83%A8%E3%83%BC%E3%83%86%202000038938"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FDOD%2B%E3%82%B9%E3%83%86%E3%83%AB%E3%82%B9%E3%82%A8%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07B8TT8N7/?tag=camp78-22",
     "brand": "DOD",
     "categoryId": "storage",
@@ -8208,10 +8251,11 @@
       "構造": "アコーディオン式・前面3パネル開閉",
       "重量": "約1.6kg（BK）"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-07T20:23:47.382Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=DOD%20%E3%82%B9%E3%83%86%E3%83%AB%E3%82%B9%E3%82%A8%E3%83%83%E3%82%AF%E3%82%B9%20%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%20GM1-450"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FFIELDOOR%2B%E3%83%88%E3%83%A9%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09F95HVB8?tag=camp78-22",
     "brand": "FIELDOOR",
     "categoryId": "storage",
@@ -8229,10 +8273,11 @@
       "対応袋サイズ": "45Lゴミ袋",
       "重量": "約850g"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-07-25T01:04:14.687Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=FIELDOOR%20%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%83%88%E3%83%A9%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%EF%BC%8845L%E8%A2%8B%E5%AF%BE%E5%BF%9C%EF%BC%89"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FPYKES%2BPEAK%2B%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%82%B4%E3%83%9F%E7%AE%B1%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B0DMJLGFKK/?tag=camp78-22",
     "brand": "PYKES PEAK",
     "categoryId": "storage",
@@ -8248,7 +8293,7 @@
       "タイプ": "ポップアップ式・折りたたみ収納",
       "対象": "グループキャンプ・長期キャンプ向け"
     },
-    "updatedAt": "2026-09-02T10:13:48.177Z",
+    "updatedAt": "2026-08-07T20:23:47.382Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=PYKES%20PEAK%20%E3%83%9D%E3%83%83%E3%83%97%E3%82%A2%E3%83%83%E3%83%97%E3%82%B4%E3%83%9F%E7%AE%B1%2040L%2F60L"
   },
   {
