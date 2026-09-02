@@ -24,7 +24,7 @@ import { loadEnv } from "../src/lib/x-agent-utils.mjs";
 loadEnv();
 
 const RAKUTEN_API_URL =
-  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
 if (!appId || !accessKey) {

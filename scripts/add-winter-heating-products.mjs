@@ -42,7 +42,7 @@ const REPORT = path.join(ROOT, "scratch", "winter-heating-products.json");
 // - 従来の app.rakuten.co.jp: applicationId のみ。IP制限なし
 // 既定はichibamsを使い、IP拒否されたら従来エンドポイントへ自動で切り替える
 const RAKUTEN_API_URL =
-  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const RAKUTEN_API_URL_LEGACY =
   "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
 const RAKUTEN_AFFILIATE_ID =

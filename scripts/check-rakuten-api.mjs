@@ -116,7 +116,7 @@ if (!apps.some((a) => a.isTest)) {
 
 // ─── 疎通テスト ───────────────────────────────────────
 const ENDPOINTS = [
-  ["ichibams", "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601"],
+  ["ichibams", "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"],
   ["app.rakuten", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"],
 ];
 

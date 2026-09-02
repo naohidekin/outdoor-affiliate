@@ -54,9 +54,17 @@ const ROOT = path.join(__dirname, "..");
 const PRODUCTS = path.join(ROOT, "data", "products.json");
 const REPORT = path.join(ROOT, "scratch", "affiliate-link-fixes.json");
 
+// バージョンは 20260701（2026-09-02 に 20220601 から更新）。
+// 古いほうは API Configuration not found を返すだけになっていた。
+// エラー文面が認証の失敗に見えるので、原因の切り分けに丸1日かかった。
+// 変えるときは webservice.rakuten.co.jp/documentation/ichiba-item-search の
+// 「リクエストURL」を見ること。リポジトリ全体で12箇所に同じURLが
+// 直書きされていて、全部同時に止まっていた
 const RAKUTEN_API_URL =
-  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
-// accessKeyのIP許可リストで弾かれたとき用（外出先など）。IP制限が無い従来系
+  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
+// accessKeyのIP許可リストで弾かれたとき用（外出先など）。IP制限が無い従来系。
+// ただし楽天がアプリIDをUUID形式に移行したため、こちらは
+// specify valid applicationId を返すようになっている。到達しても直らない
 const RAKUTEN_API_URL_LEGACY =
   "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
 let useLegacy = false;

@@ -31,7 +31,7 @@ const PRODUCTS_PATH = path.join(__dirname, "..", "data", "products.json");
 const dryRun = process.argv.includes("--dry-run");
 
 const RAKUTEN_API_URL =
-  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+  "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const APP_ID = process.env.RAKUTEN_APP_ID;
 const ACCESS_KEY = process.env.RAKUTEN_ACCESS_KEY;
 const AFFILIATE_ID =
