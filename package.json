@@ -68,7 +68,8 @@
     "sync:main": "bash scripts/sync-main.sh",
     "data:normalize": "node scripts/normalize-data-json.mjs",
     "report:rakuten": "node scripts/analyze-rakuten-orders.mjs",
-    "check:rakuten": "node --dns-result-order=ipv4first scripts/preflight-rakuten.mjs"
+    "check:rakuten": "node --dns-result-order=ipv4first scripts/preflight-rakuten.mjs",
+    "fix:amazon-parent": "node --dns-result-order=ipv4first scripts/fix-amazon-parent-asins.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
