@@ -14,9 +14,15 @@
  * 商品名のサイズ表記と価格の整合が取れたものだけを提案する。
  *
  * 使い方（Macで実行。Amazonの認証情報が要る）:
- *   node scripts/fix-amazon-parent-asins.mjs           # dry-run
- *   node scripts/fix-amazon-parent-asins.mjs --apply
- *   node scripts/fix-amazon-parent-asins.mjs --id tent-002   # 1件だけ
+ *   npm run fix:amazon-parent                    # dry-run。候補を出す
+ *   npm run fix:amazon-parent -- --apply         # 自動判定できた分だけ適用
+ *   npm run fix:amazon-parent -- --id tent-002   # 1件だけ調べる
+ *
+ * 候補が複数出て絞れないときは、目で選んで ASIN を直接指定する:
+ *   npm run fix:amazon-parent -- --set tent-002=B0CQYPVFY7,growler-001=B0DHZPNPF9
+ *
+ * --set は検索を行わない。指定されたASINをそのまま書く（門番も通らない）ので、
+ * 商品ページを開いて現物を確認してから使うこと。
  *
  * 安全装置:
  * - 候補が親ASINらしい（「各色」「3人用/4人用」等）なら採用しない。
@@ -51,6 +57,49 @@ const ONLY = (() => {
   const i = process.argv.indexOf("--id");
   return i > -1 ? new Set((process.argv[i + 1] ?? "").split(",")) : null;
 })();
+
+/** --set id=ASIN,id=ASIN 。目で選んだ結果を直接書く */
+const SET = (() => {
+  const i = process.argv.indexOf("--set");
+  if (i < 0) return null;
+  const map = new Map();
+  for (const pair of (process.argv[i + 1] ?? "").split(",")) {
+    const [id, asin] = pair.split("=");
+    if (!id || !/^[A-Z0-9]{10}$/.test(asin ?? "")) {
+      console.error(`--set の書式が違います: 「${pair}」（id=ASIN10桁）`);
+      process.exit(1);
+    }
+    map.set(id, asin);
+  }
+  return map;
+})();
+
+// --set は検索しないので認証情報が要らない
+if (SET) {
+  const rawP = JSON.parse(fs.readFileSync(PRODUCTS, "utf8"));
+  const list = Array.isArray(rawP) ? rawP : rawP.products;
+  const now = new Date().toISOString();
+  let n = 0;
+  for (const [id, asin] of SET) {
+    const p = list.find((x) => x.id === id);
+    if (!p) {
+      console.error(`${id} が products.json に無い`);
+      process.exit(1);
+    }
+    console.log(`${id}: ${asinOf(p.amazonUrl) ?? "(なし)"} → ${asin}  ${p.name}`);
+    p.amazonUrl = `https://www.amazon.co.jp/dp/${asin}/?tag=camp78-22`;
+    p.updatedAt = now;
+    n++;
+  }
+  if (!APPLY) {
+    console.log("\ndry-run です。--apply を足すと書き込みます");
+    process.exit(0);
+  }
+  fs.writeFileSync(PRODUCTS, JSON.stringify(list, null, 2) + "\n");
+  console.log(`\n${n}件の amazonUrl を書き換えました`);
+  console.log("次: npm run data:normalize && git diff で確認");
+  process.exit(0);
+}
 
 if (!hasCredentials()) {
   console.error("Amazonの認証情報がありません（.env.local を確認）。Macで実行してください");
