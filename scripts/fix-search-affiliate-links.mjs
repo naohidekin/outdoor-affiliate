@@ -263,12 +263,33 @@ async function searchRakuten(keyword) {
     format: "json",
     formatVersion: "2",
   });
-  const res = await fetch(`${useLegacy ? RAKUTEN_API_URL_LEGACY : RAKUTEN_API_URL}?${params}`, {
+  // 2026-09-03: 14件目で ETIMEDOUT の未捕捉例外が出てプロセスごと落ち、
+  // それまでの提案が全部消えた。49件×最大6キーワードを叩くので、
+  // 一度くらいはタイムアウトすると考えて組む。3回まで待って再試行し、
+  // それでも駄目ならこの1件だけ諦めて次へ進む
+  const url = `${useLegacy ? RAKUTEN_API_URL_LEGACY : RAKUTEN_API_URL}?${params}`;
+  const opts = {
     headers: {
       Origin: "https://camp-gear-lab.com",
       Referer: "https://camp-gear-lab.com/",
     },
-  });
+    signal: AbortSignal.timeout(20_000),
+  };
+  let res;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      res = await fetch(url, opts);
+      break;
+    } catch (e) {
+      if (attempt >= 3) {
+        console.warn(`  通信エラー（${attempt}回試行）: ${keyword.slice(0, 30)} — ${e.message}`);
+        return [];
+      }
+      const wait = attempt * 3000;
+      console.warn(`  通信エラー、${wait / 1000}秒後に再試行（${attempt}/3）: ${e.message}`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     if (body.includes("CLIENT_IP_NOT_ALLOWED") && !useLegacy) {
