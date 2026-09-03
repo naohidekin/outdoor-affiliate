@@ -6254,6 +6254,25 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%97%203m%20QC-ST300R"
   },
   {
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcasting%2F4969363118363%2F&link_type=text",
+    "brand": "シマノ",
+    "categoryId": "cooler",
+    "createdAt": "2026-09-03T22:36:15.331Z",
+    "description": "釣り用として定評のあるシマノのハードクーラー。35Lでキャスター付きなので、満載でも一人で運べる。イエティより手が届きやすく、コールマンより氷が長持ちする価格帯。",
+    "id": "shimano-002",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/casting/cabinet/xm285/4969363118363.jpg",
+    "name": "シマノ スペーザ ベイシス 350 キャスター NS-D35Y",
+    "price": 30800,
+    "rating": 0,
+    "sourceApi": "rakuten",
+    "specs": {
+      "キャスター": "あり",
+      "型番": "NS-D35Y",
+      "容量": "35L"
+    },
+    "updatedAt": "2026-09-03T22:36:54.780Z"
+  },
+  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00q6s66.wwmjs6f1.g00q6s66.wwmjt236/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fapolloex%2Fc1-02s-670%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fapolloex%2Fi%2F10037735%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07Q1HJ74P?tag=camp78-22",
     "brand": "Caravan",

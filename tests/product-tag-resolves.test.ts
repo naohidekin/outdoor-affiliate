@@ -25,11 +25,9 @@ const read = <T,>(f: string): T[] =>
   JSON.parse(fs.readFileSync(path.join(ROOT, "data", f), "utf8"));
 
 // 既知の壊れ。直したらここから消す。増やさないこと。
-const KNOWN_MISSING = [
-  // shimano-002 が products.json に無い。本文が名指ししている
-  // 「シマノ スペーザ ベイシス 350」を登録するか、タグから外すかの判断待ち
-  "cooler-box-brand-comparison-2026",
-];
+// 既知の壊れ。空であること。増やさないこと。
+// 2026-09-04: shimano-002（シマノ スペーザ ベイシス 350）を登録して解消した
+const KNOWN_MISSING: string[] = [];
 
 // 下書きの構成メモには `{{comparison:tarp-XXX,...}}` のように
 // **コードスパンの中に**書かれたタグがある。あれは説明であって出力ではない
