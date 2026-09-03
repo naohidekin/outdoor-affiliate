@@ -62,7 +62,9 @@ const QUOTE_RE = /^[>\s]*[-*][ \t]*[「"][^\n]{4,}[」"][ \t]*$/gm;
 // spring-sleeping-bag-guide の3記事が「引用0行」と報告されていたのが発覚のきっかけ。
 // 見出しからの距離で判定するので、結論ボックスや内部リンクの引用は拾わない。
 const HEAD_LINE_RE = /^[>\s]*(?:#{2,4}\s*)?\*{0,2}\s*(?:口コミ|レビュー|ユーザーの声)/;
-const SKIP_RE = /^[>\s]*(?:\*\*(?:結論|向いている人|向いていない人))|https?:\/\//;
+// 結論ボックス・リンクを含む案内行は購入者の声ではない。
+// 内部リンク（](/articles/...）も除く。2026-09-04 追加
+const SKIP_RE = /^[>\s]*(?:\*\*(?:結論|向いている人|向いていない人))|https?:\/\/|\]\(/;
 function voicesUnderHeads(content) {
   const lines = content.split("\n");
   const found = [];
@@ -97,7 +99,12 @@ for (const a of articles) {
   // 見出し以外でAmazonをレビューの出典として書いている文
   const inline = [...c.matchAll(/[^\n。]{0,40}Amazon[^\n。]{0,12}(?:レビュー|口コミ|評価)[^\n。]{0,40}/gi)]
     .map((m) => m[0].trim())
-    .filter((t) => !/で(口コミ|レビュー)を(もっと)?(見る|確認)/.test(t)); // CTAリンクは対象外
+    // CTAリンク・誘導文は対象外。規約でも「口コミをもっと見る」の誘導は認められている
+    // （転載が問題であって誘導は問題ない）。商品名やボタンの案内が挟まる書き方も拾う
+    .filter(
+      (t) =>
+        !/(?:で|から)[^。]{0,24}(?:口コミ|レビュー)を(?:もっと)?(?:見る|確認|チェック)/.test(t)
+    );
   if (!heads.length && !quotes.length && !voices.length && !inline.length) continue;
   rows.push({
     slug: a.slug,
