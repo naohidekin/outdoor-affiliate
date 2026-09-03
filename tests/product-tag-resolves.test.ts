@@ -26,17 +26,20 @@ const read = <T,>(f: string): T[] =>
 
 // 既知の壊れ。直したらここから消す。増やさないこと。
 const KNOWN_MISSING = [
-  // 下書き。本文がプレースホルダのまま（tarp-XXX / YYY / ZZZ）。
-  // 載せる3枚を決めてから差し替える
-  "summer-tarp-uv-ventilation-guide-2026",
-  // shimano-002 が products.json に無い。型番を確認して登録するか、
-  // タグごと外すかの判断が要る
+  // shimano-002 が products.json に無い。本文が名指ししている
+  // 「シマノ スペーザ ベイシス 350」を登録するか、タグから外すかの判断待ち
   "cooler-box-brand-comparison-2026",
 ];
 
+// 下書きの構成メモには `{{comparison:tarp-XXX,...}}` のように
+// **コードスパンの中に**書かれたタグがある。あれは説明であって出力ではない
+// ので、コードブロックとコードスパンを外してから拾う（2026-09-04）
+const stripCode = (s: string): string =>
+  s.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
+
 const tagIds = (content: string): string[] => {
   const out: string[] = [];
-  for (const m of content.matchAll(/\{\{(?:product|comparison):([^}]+)\}\}/g))
+  for (const m of stripCode(content).matchAll(/\{\{(?:product|comparison):([^}]+)\}\}/g))
     out.push(...m[1].split(",").map((s) => s.trim()).filter(Boolean));
   return [...new Set(out)];
 };
