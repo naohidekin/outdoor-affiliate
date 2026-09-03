@@ -75,7 +75,9 @@ function voicesUnderHeads(content) {
       if (j > i + 1 && HEAD_LINE_RE.test(lines[j])) break;   // 次のレビュー見出し
       if (SKIP_RE.test(t)) continue;                         // 結論ボックス・リンク行
       const isQuote = t.startsWith(">") && t.replace(/^>+\s*/, "").length > 14;
-      const isKagi = /^-?\s*[「"].+[」"]/.test(t);
+      // 箇条書きの声、または行まるごとが引用のもの。
+      // 「〜」なら…のように文の途中で括弧を使う地の文は拾わない
+      const isKagi = /^-\s*[「"]/.test(t) || /^[「"][^」"]*[」"][。、]?$/.test(t);
       if (isQuote || isKagi) found.push(t.slice(0, 120));
     }
   }
