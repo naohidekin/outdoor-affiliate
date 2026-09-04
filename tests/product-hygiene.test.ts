@@ -107,7 +107,6 @@ test("公開記事に載る商品名が長すぎない", () => {
 // 欠けているのは説得力に直結する。楽天API復旧後に埋める。
 // このリストは減らすためのもの。新しく増えたらテストが落ちる。
 const KNOWN_MISSING_IMAGE = new Set([
-  "co-detector-dod-cg1559",
   "first-aid-burn-aid",
   "heatstroke-cooling-towel",
   "heatstroke-neck-cooler-kids",

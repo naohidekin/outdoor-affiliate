@@ -380,3 +380,51 @@ test("ドライネット記事の件数表記と実際の掲載数が合って�
   );
   assert.equal((a!.productIds ?? []).length, 4, "productIds の数が合っていません");
 });
+
+// ─── 2026-09-04 シングルバーナー記事の重量とカテゴリ ─────────
+//
+// 「山に持っていくなら本体100g以下」と書いた4台のうち3台が誤っていた。
+// US-D II の62gに至っては、実物が約880gのCB缶卓上バーナーで、
+// カテゴリごと違っていた（OD缶の登山向けとして推していた）。
+//
+//   ウインドマスター SOD-310  67g   SOTO公式（バーナー＋3本ゴトク）
+//   ギガパワーマイクロマックス 56g   スノーピーク公式楽天店（記事は73g）
+//   プリムス P-153           116g   イワタニ・プリムス正規品（記事は75g・100g超）
+//   ユニフレーム US-D II     880g   ユニフレーム公式（記事は62g・CB缶の卓上機）
+
+test("シングルバーナーの登録重量が公式値である", () => {
+  assert.match(spec("burner-s-002", "重量"), /67\s*g/, "ウインドマスターは67g");
+  assert.match(spec("burner-s-001", "重量"), /56\s*g/, "マイクロマックスは56g");
+  assert.match(spec("burner-s-004", "重量"), /116\s*g/, "P-153は116g");
+  assert.match(spec("burner-s-008", "重量"), /880\s*g/, "US-D IIは約880g");
+  assert.match(spec("burner-s-008", "対応ガス"), /CB缶/, "US-D IIはCB缶");
+});
+
+test("US-D II をOD缶・登山向けとして扱っていない", () => {
+  const withIds: Array<{ slug: string; content: string }> = read("articles.json");
+  const a = withIds.find((x) => x.slug === "single-burner-ranking");
+  assert.ok(a, "single-burner-ranking が消えている");
+  const c = a!.content;
+  // OD缶の比較表に入っていないこと
+  const odTable = c.match(/\{\{comparison:burner-s-002[^}]*\}\}/)?.[0] ?? "";
+  assert.ok(
+    !odTable.includes("burner-s-008"),
+    "US-D II がOD缶の比較表に戻っています（実物はCB缶の卓上バーナー）"
+  );
+  // 100g以下の文脈に名前が出ていないこと
+  const hits = c
+    .split("\n")
+    .filter((l) => /100\s*g\s*以下/.test(l) && /US-D/.test(l));
+  assert.deepEqual(hits, [], `US-D II は約880gです:\n${hits.join("\n")}`);
+});
+
+test("「100g以下」と書いた製品が実際に100g以下である", () => {
+  const withIds: Array<{ slug: string; content: string }> = read("articles.json");
+  const a = withIds.find((x) => x.slug === "single-burner-ranking");
+  const line = (a!.content.split("\n").find((l) => /100\s*g\s*以下/.test(l)) ?? "");
+  // 「◯◯（56g）」の形で挙がっている重量を拾い、全部100g以下かを見る
+  const grams = [...line.matchAll(/（(\d+)\s*g）/g)].map((m) => Number(m[1]));
+  assert.ok(grams.length > 0, "100g以下の段落から重量を拾えませんでした");
+  const over = grams.filter((g) => g > 100);
+  assert.deepEqual(over, [], `100g以下の説明に100g超が混ざっています: ${over.join(", ")}g`);
+});
