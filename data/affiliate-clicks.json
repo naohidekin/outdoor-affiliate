@@ -1,16 +1,5 @@
 [
   {
-    "timestamp": "2026-06-05T06:53:59.613+00:00",
-    "path": "/articles/duo-tent-ranking",
-    "productId": "tent-duo-003",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-06-05T06:53:59.613+00:00",
-    "page_path": "/articles/duo-tent-ranking",
-    "product_id": "tent-duo-003"
-  },
-  {
     "timestamp": "2026-06-06T04:20:28.289+00:00",
     "path": "/articles/cooler-box-ranking",
     "productId": "cooler-002",
@@ -42117,5 +42106,214 @@
     "clicked_at": "2026-09-03T00:43:50.307+00:00",
     "page_path": "/articles/single-burner-ranking",
     "product_id": "burner-s-003"
+  },
+  {
+    "timestamp": "2026-09-03T06:18:59.403+00:00",
+    "path": "/articles/backpack-ranking",
+    "productId": "bp-001",
+    "productName": "グレゴリー ズール30",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T06:18:59.403+00:00",
+    "page_path": "/articles/backpack-ranking",
+    "product_id": "bp-001"
+  },
+  {
+    "timestamp": "2026-09-03T07:25:35.702+00:00",
+    "path": "/articles/camping-beginner-gear-checklist",
+    "productId": "sb-budget-002",
+    "productName": "ロゴス 丸洗いスランバーシュラフ・2",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T07:25:35.702+00:00",
+    "page_path": "/articles/camping-beginner-gear-checklist",
+    "product_id": "sb-budget-002"
+  },
+  {
+    "timestamp": "2026-09-03T07:37:46.907+00:00",
+    "path": "/articles/camp-pillow-ranking",
+    "productId": "pillow-waq-camp",
+    "productName": "WAQ キャンプ枕",
+    "store": "yahoo",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T07:37:46.907+00:00",
+    "page_path": "/articles/camp-pillow-ranking",
+    "product_id": "pillow-waq-camp"
+  },
+  {
+    "timestamp": "2026-09-03T07:37:54.943+00:00",
+    "path": "/articles/camp-pillow-ranking",
+    "productId": "pillow-waq-camp",
+    "productName": "WAQ キャンプ枕",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T07:37:54.943+00:00",
+    "page_path": "/articles/camp-pillow-ranking",
+    "product_id": "pillow-waq-camp"
+  },
+  {
+    "timestamp": "2026-09-03T08:58:47.798+00:00",
+    "path": "/articles/portable-cooler-fan-guide",
+    "productId": "cooler-yamazen-yec-m03",
+    "productName": "山善 YEC-M03",
+    "store": "rakuten",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T08:58:47.798+00:00",
+    "page_path": "/articles/portable-cooler-fan-guide",
+    "product_id": "cooler-yamazen-yec-m03"
+  },
+  {
+    "timestamp": "2026-09-03T12:13:58.705+00:00",
+    "path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "productId": "tent-sp-amenity-dome-l",
+    "productName": "スノーピーク アメニティドーム L",
+    "store": "amazon",
+    "placement": "product_card",
+    "clicked_at": "2026-09-03T12:13:58.705+00:00",
+    "page_path": "/articles/snow-peak-amenity-dome-l-10year-review",
+    "product_id": "tent-sp-amenity-dome-l"
+  },
+  {
+    "timestamp": "2026-09-03T14:12:49.451+00:00",
+    "path": "/articles/nanga-sleeping-bag-comparison",
+    "productId": "inline",
+    "productName": "",
+    "store": "rakuten",
+    "placement": "body_text",
+    "clicked_at": "2026-09-03T14:12:49.451+00:00",
+    "page_path": "/articles/nanga-sleeping-bag-comparison",
+    "product_id": "inline"
+  },
+  {
+    "timestamp": "2026-09-03T15:36:53.364+00:00",
+    "path": "/articles/summer-camp-heat-gear-guide",
+    "productId": "led-tent-003",
+    "productName": "コールマン アウトドアクリップライトファン 2236305",
+    "store": "rakuten",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T15:36:53.364+00:00",
+    "page_path": "/articles/summer-camp-heat-gear-guide",
+    "product_id": "led-tent-003"
+  },
+  {
+    "timestamp": "2026-09-03T15:37:12.142+00:00",
+    "path": "/articles/summer-camp-heat-gear-guide",
+    "productId": "led-tent-003",
+    "productName": "コールマン アウトドアクリップライトファン 2236305",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T15:37:12.142+00:00",
+    "page_path": "/articles/summer-camp-heat-gear-guide",
+    "product_id": "led-tent-003"
+  },
+  {
+    "timestamp": "2026-09-03T16:06:58.871+00:00",
+    "path": "/articles/trekking-shoes-ranking",
+    "productId": "shoes-004",
+    "productName": "コロンビア セイバー5ミッド アウトドライ",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T16:06:58.871+00:00",
+    "page_path": "/articles/trekking-shoes-ranking",
+    "product_id": "shoes-004"
+  },
+  {
+    "timestamp": "2026-09-03T16:58:16.811+00:00",
+    "path": "/articles/firepit-beginner-guide",
+    "productId": "fp-003",
+    "productName": "スノーピーク 焚火台L",
+    "store": "rakuten",
+    "placement": "product_card",
+    "clicked_at": "2026-09-03T16:58:16.811+00:00",
+    "page_path": "/articles/firepit-beginner-guide",
+    "product_id": "fp-003"
+  },
+  {
+    "timestamp": "2026-09-03T20:49:37.419+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-003",
+    "productName": "コールマン アウトドアクリップライトファン 2236305",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T20:49:37.419+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-003"
+  },
+  {
+    "timestamp": "2026-09-03T21:44:32.686+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-001",
+    "productName": "スノーピーク たねほおずき ES-041",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T21:44:32.686+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-001"
+  },
+  {
+    "timestamp": "2026-09-03T21:52:20.327+00:00",
+    "path": "/articles/family-tent-ranking",
+    "productId": "tent-f02",
+    "productName": "DOD カマボコテント3 M",
+    "store": "yahoo",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T21:52:20.327+00:00",
+    "page_path": "/articles/family-tent-ranking",
+    "product_id": "tent-f02"
+  },
+  {
+    "timestamp": "2026-09-03T22:02:36.823+00:00",
+    "path": "/articles/portable-cooler-fan-guide",
+    "productId": "cooler-iris-ipp2222g",
+    "productName": "アイリスオーヤマ ポータブルクーラー IPP-2222G",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T22:02:36.823+00:00",
+    "page_path": "/articles/portable-cooler-fan-guide",
+    "product_id": "cooler-iris-ipp2222g"
+  },
+  {
+    "timestamp": "2026-09-03T22:03:15.863+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-001",
+    "productName": "スノーピーク たねほおずき ES-041",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T22:03:15.863+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-001"
+  },
+  {
+    "timestamp": "2026-09-03T22:03:23.126+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-002",
+    "productName": "スノーピーク ほおずき ES-070",
+    "store": "amazon",
+    "placement": "recommended",
+    "clicked_at": "2026-09-03T22:03:23.126+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-002"
+  },
+  {
+    "timestamp": "2026-09-03T22:06:37.528+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-003",
+    "productName": "コールマン アウトドアクリップライトファン 2236305",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-03T22:06:37.528+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-003"
+  },
+  {
+    "timestamp": "2026-09-04T00:55:35.168+00:00",
+    "path": "/articles/water-jug-ranking",
+    "productId": "water-jug-stanley-7.5l",
+    "productName": "スタンレー ウォータージャグ 7.5L",
+    "store": "amazon",
+    "placement": "article_end",
+    "clicked_at": "2026-09-04T00:55:35.168+00:00",
+    "page_path": "/articles/water-jug-ranking",
+    "product_id": "water-jug-stanley-7.5l"
   }
 ]
