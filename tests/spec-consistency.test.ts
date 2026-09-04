@@ -284,3 +284,58 @@ test("旧ランドロックのフレームをスチールと書いていない",
   const hits = scan((l) => /ランドロック/.test(l) && /スチール(ポール|フレーム|製)/.test(l));
   assert.deepEqual(hits, [], `旧ランドロックもA6061アルミです:\n${hits.join("\n")}`);
 });
+
+// ─── 2026-09-04 アメニティドームの世代交代 ─────────────────
+//
+// スノーピークがアメニティドームS/M/Lを終了し、アメニティドーム2（SD-020・
+// 2名用）／3（SD-030・3名用）に切り替えた。公式では旧S/M/Lとも在庫切れの
+// セール品のみ。旧Lに相当する後継は無い。
+// 掲載記事5本の主役を後継モデルに差し替えたので、戻らないよう固定する。
+
+test("アメニティドーム2/3が公式値で登録されている", () => {
+  // SD-020 / SD-030 取扱説明書 p.17 のスペック図
+  assert.match(spec("tent-sp-amenity-dome-2", "型番"), /SD-020/);
+  assert.match(spec("tent-sp-amenity-dome-2", "対応人数"), /2名/);
+  assert.match(spec("tent-sp-amenity-dome-2", "サイズ（展開時）"), /390×240×130/);
+  assert.match(spec("tent-sp-amenity-dome-3", "型番"), /SD-030/);
+  assert.match(spec("tent-sp-amenity-dome-3", "対応人数"), /3名/);
+  assert.match(spec("tent-sp-amenity-dome-3", "サイズ（展開時）"), /515×280×165/);
+  // 旧Mと同じインナー寸法。ここが「3が旧Mの後継」の根拠
+  assert.match(spec("tent-sp-amenity-dome-3", "インナーサイズ"), /265×265/);
+  assert.match(spec("tent-002", "インナーサイズ"), /265×265/);
+});
+
+test("アメニティドームの記事が旧M（tent-002）を主役に戻していない", () => {
+  const SWITCHED = [
+    "compact-tent-ranking",
+    "tent-setup-tips-spring",
+    "amenity-dome-vs-tough-wide-dome",
+    "amenity-dome-vs-landnest-dome",
+  ];
+  const withIds: Array<{ slug: string; status: string; content: string; productIds?: string[] }> =
+    read("articles.json");
+  const bad: string[] = [];
+  for (const slug of SWITCHED) {
+    const a = withIds.find((x) => x.slug === slug);
+    assert.ok(a, `${slug} が消えている`);
+    if ((a!.productIds ?? []).includes("tent-002"))
+      bad.push(`${slug}: productIds に tent-002 が戻っている`);
+    if (/\{\{(?:product|comparison):[^}]*tent-002[,}]/.test(a!.content ?? ""))
+      bad.push(`${slug}: 本文の商品タグが tent-002 を指している`);
+  }
+  assert.deepEqual(bad, [], `後継（tent-sp-amenity-dome-3）に差し替え済みです:\n${bad.join("\n")}`);
+});
+
+test("世代交代の注記が各記事に残っている", () => {
+  const NEED = [
+    "compact-tent-ranking",
+    "amenity-dome-vs-tough-wide-dome",
+    "amenity-dome-vs-landnest-dome",
+    "snow-peak-amenity-dome-l-10year-review",
+  ];
+  const missing = NEED.filter((slug) => {
+    const a = published.find((x) => x.slug === slug);
+    return !a || !/アメニティドーム\s?[23]|世代交代/.test(a.content ?? "");
+  });
+  assert.deepEqual(missing, [], `後継モデルへの言及が消えています: ${missing.join(", ")}`);
+});

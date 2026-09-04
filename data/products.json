@@ -8166,6 +8166,58 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%86%E3%83%B3%E3%83%9E%E3%82%AF%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%E3%83%91%E3%83%B3%E3%83%80TC%2B"
   },
   {
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0FDB8QW62?tag=camp78-22",
+    "autoAdded": false,
+    "brand": "スノーピーク",
+    "categoryId": "tent",
+    "createdAt": "2026-09-04T01:08:41.777Z",
+    "description": "アメニティドームSの後継にあたる2名用モデル。アウトフレーム構造でインナーを吊り下げ式にしたことで、インナーを付けたまま設営・撤収できる。前室の正面パネルにサイドウォールが付き、雨の吹き込みを抑えられる。",
+    "id": "tent-sp-amenity-dome-2",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0125A0645/SNP0125A0645_x_c101.jpg",
+    "name": "スノーピーク アメニティドーム2",
+    "price": 65780,
+    "rating": 0,
+    "specs": {
+      "インナーサイズ": "220×160×130(h)cm",
+      "サイズ（展開時）": "390×240×130(h)cm",
+      "フレーム": "A7001",
+      "収納サイズ": "64×21×27(h)cm",
+      "型番": "SD-020",
+      "対応人数": "2名",
+      "構造": "アウトフレーム・吊り下げ式インナー（付けたまま設営・撤収可）",
+      "耐水圧": "1,800mmミニマム（フライ・ボトムとも）",
+      "重量": "5.9kg"
+    },
+    "updatedAt": "2026-09-04T01:08:41.777Z"
+  },
+  {
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0FDBB3PWK?tag=camp78-22",
+    "autoAdded": false,
+    "brand": "スノーピーク",
+    "categoryId": "tent",
+    "createdAt": "2026-09-04T01:08:41.777Z",
+    "description": "アメニティドームMの後継にあたる3名用モデル。インナーは265×265cmで旧Mと同じだが、室内高が150cmから165cmに上がった。アウトフレーム構造でインナーを付けたまま設営・撤収でき、雨天でもインナーを濡らさずに立てられる。",
+    "id": "tent-sp-amenity-dome-3",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0125A0646/SNP0125A0646_x_c101.jpg",
+    "name": "スノーピーク アメニティドーム3",
+    "price": 76780,
+    "rating": 0,
+    "specs": {
+      "インナーサイズ": "265×265×165(h)cm",
+      "サイズ（展開時）": "515×280×165(h)cm",
+      "フレーム": "A7001",
+      "収納サイズ": "71×22×26(h)cm",
+      "型番": "SD-030",
+      "対応人数": "3名",
+      "構造": "アウトフレーム・吊り下げ式インナー（付けたまま設営・撤収可）",
+      "耐水圧": "1,800mmミニマム（フライ・ボトムとも）",
+      "重量": "9.0kg"
+    },
+    "updatedAt": "2026-09-04T01:08:41.777Z"
+  },
+  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B9%25E3%2583%258E%25E3%2583%25BC%25E3%2583%2594%25E3%2583%25BC%25E3%2582%25AF%2520%25E3%2582%25A2%25E3%2583%25A1%25E3%2583%258B%25E3%2583%2586%25E3%2582%25A3%25E3%2583%2589%25E3%2583%25BC%25E3%2583%25A0%2520L%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07DH5DHVM/?tag=camp78-22",
     "autoAdded": false,
@@ -8223,7 +8275,7 @@
     "id": "tent-sp-landnest-dome-m",
     "imageUrl": "https://image.rakuten.co.jp/snowpeak-official/cabinet/09899554/09901262/sde-260_01.jpg",
     "name": "スノーピーク ランドネストドームM",
-    "price": 38280,
+    "price": 29800,
     "rating": 4.5,
     "specs": {
       "インナーサイズ": "265×265×170(h)cm",
@@ -8237,7 +8289,7 @@
       "通気性": "メッシュ2+ベンチレーション2",
       "重量": "約8.7kg"
     },
-    "updatedAt": "2026-08-31T10:48:14.359Z",
+    "updatedAt": "2026-09-04T01:14:58.542Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%A9%E3%83%B3%E3%83%89%E3%83%8D%E3%82%B9%E3%83%88%E3%83%89%E3%83%BC%E3%83%A0M"
   },
   {
