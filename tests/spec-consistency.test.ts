@@ -428,3 +428,40 @@ test("「100g以下」と書いた製品が実際に100g以下である", () => 
   const over = grams.filter((g) => g > 100);
   assert.deepEqual(over, [], `100g以下の説明に100g超が混ざっています: ${over.join(", ")}g`);
 });
+
+// ストームクルーザーは現行モデル（品番 #1128733）からゴアテックスをやめ、
+// モンベル独自の「スーパー ドライテック」に変わっている（2026-09-04にモンベル
+// 公式オンラインストアで確認）。旧ゴアテックス版はアウトレット枠にしか残っていない。
+//
+//   素材     ゴアテックス3レイヤー  → スーパー ドライテック 3レイヤー
+//   耐水圧   50,000mm以上           → 20,000mm以上（旧版も20,000mm以上だった）
+//   透湿性   35,000g/m²/24h         → 40,000g/m²/24h
+//
+// 記事4本が「ゴアテックス3レイヤーで254g」と推していた。公式を見た読者に
+// すぐ嘘だと分かる状態だったので、機械で戻りを止める。
+test("ストームクルーザーをゴアテックスとして扱っていない", () => {
+  const withDesc: Array<{ id: string; description?: string; specs?: Record<string, string> }> =
+    read("products.json");
+  const rw = withDesc.find((p) => p.id === "rw-001");
+  assert.ok(rw, "rw-001（ストームクルーザー）が消えている");
+  const material = rw!.specs?.["素材"] ?? "";
+  assert.ok(
+    !/ゴアテックス|GORE/i.test(material),
+    `rw-001 の素材がゴアテックスに戻っています: ${material}`
+  );
+  assert.ok(
+    !/ゴアテックス|GORE/i.test(rw!.description ?? ""),
+    "rw-001 の説明文がゴアテックスに戻っています"
+  );
+
+  // 本文でも、ストームクルーザーとゴアテックスを同じ行で結びつけない
+  const bad: string[] = [];
+  for (const a of published) {
+    for (const line of a.content.split("\n")) {
+      if (/ストームクルーザー/.test(line) && /ゴアテックス|GORE/i.test(line)) {
+        bad.push(`${a.slug}: ${line.trim().slice(0, 80)}`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], `ストームクルーザーをゴアテックスと書いています:\n${bad.join("\n")}`);
+});
