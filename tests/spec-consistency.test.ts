@@ -339,3 +339,43 @@ test("世代交代の注記が各記事に残っている", () => {
   });
   assert.deepEqual(missing, [], `後継モデルへの言及が消えています: ${missing.join(", ")}`);
 });
+
+// ─── 2026-09-04 実在しない商品を消した ─────────────────────
+//
+// 「スノーピーク テーブルドライネット UG-370 ¥5,500」は実在しなかった。
+// 記事のCTAリンクが item.rakuten.co.jp/styl-us/ug370/ を指していて、その中身は
+// UGGのムートンブーツ。ショップの商品コードがたまたま ug370 だったところから
+// 品番「UG-370」が拾われ、その周りに商品が組み立てられたとみられる。
+//
+// 裏取り: スノーピーク公式カタログ2,229件・楽天公式ショップ(404)・楽天全体検索・
+// Amazon検索のいずれにも該当なし。品番CS-370は実在するが「ピッツ トング」。
+//
+// 自動追加のパイプラインが同じ経路でまた作る可能性があるので、機械で止める。
+
+test("実在しなかったドライネットが復活していない", () => {
+  const gone = products.find((p) => p.id === "dry-net-snowpeak");
+  assert.equal(gone, undefined, "dry-net-snowpeak は実在しない商品です");
+
+  const hits = scan((l) => /テーブルドライネット/.test(l));
+  assert.deepEqual(hits, [], `スノーピークにドライネットはありません:\n${hits.join("\n")}`);
+});
+
+test("UGGのブーツにリンクしている記事が無い", () => {
+  // styl-us/ug370 は「UGG クラシックウルトラミニ」。ドライネットではない
+  const hits = scan((l) => /styl-us\/ug370/.test(l));
+  assert.deepEqual(hits, [], `リンク先がムートンブーツです:\n${hits.join("\n")}`);
+});
+
+test("ドライネット記事の件数表記と実際の掲載数が合っている", () => {
+  const withIds: Array<{ slug: string; content: string; productIds?: string[] }> =
+    read("articles.json");
+  const a = withIds.find((x) => x.slug === "dry-net-ranking");
+  assert.ok(a, "dry-net-ranking が消えている");
+  const ranked = (a!.content.match(/^### \d+位:/gm) ?? []).length;
+  assert.equal(ranked, 4, "ランキングの項目数が変わっています");
+  assert.ok(
+    a!.content.includes("おすすめドライネット4選"),
+    "見出しの件数が実際の掲載数と合っていません"
+  );
+  assert.equal((a!.productIds ?? []).length, 4, "productIds の数が合っていません");
+});
