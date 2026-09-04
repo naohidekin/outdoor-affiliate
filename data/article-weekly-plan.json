@@ -1,72 +1,72 @@
 {
-  "week": "2026-W35",
-  "generatedAt": "2026-08-26T09:00:46+09:00",
   "articles": [
     {
-      "themeId": "theme-2026-W35-01",
-      "categoryId": "fan",
-      "title": "キャンプ用ポータブルクーラー徹底比較【2026年版】冷風扇・スポットクーラーの選び方",
-      "slug": "portable-spot-cooler-camp-ranking-2026",
-      "angle": "単なる扇風機との違いを明確にしつつ、冷風扇・スポットクーラーに絞って比較するレビュー記事",
-      "targetKeywords": [
-        "キャンプ スポットクーラー",
-        "ポータブル冷風扇 アウトドア",
-        "テント 冷却 クーラー"
-      ],
-      "seasonRelevance": "8月の猛暑でテント内の熱中症対策として冷却ギアへの需要が最高潮に達する時期",
+      "angle": "9月〜11月の気温変化に対応できる寝袋の選び方を快適温度帯・素材・形状の3軸で体系的に解説する入門ガイド",
+      "categoryId": "sleeping-bag",
       "priority": "high",
-      "reason": "fanカテゴリはPV・クリック・検索セッションすべてでダントツ1位かつtrendがactiveで、既存記事にないスポットクーラー特化の切り口で差別化できる",
-      "scheduledPublishDate": "2026-08-28",
       "productCount": 3,
       "productIds": [
-        "fan-004",
-        "fan-makita-cf102dz",
-        "cooler-ecoflow-wave3"
-      ]
+        "cot-dod-baginbed",
+        "cot-helinox-cot-one",
+        "cot-naturehike-greenfield"
+      ],
+      "reason": "sleeping-bagはclicks28d:113・trend:activeで伸び代があり、既存記事は品番比較やコット対決が中心のため『選び方ガイド（秋特化）』の切り口が完全に空いている",
+      "scheduledPublishDate": "2026-09-04",
+      "seasonRelevance": "9月は朝晩の冷え込みが始まり「今の寝袋で大丈夫か」と検索する初心者が急増する時期で、来月の季節カテゴリ準備にも先行できる",
+      "slug": "autumn-sleeping-bag-how-to-choose-guide",
+      "targetKeywords": [
+        "秋キャンプ 寝袋 選び方",
+        "寝袋 快適温度 秋",
+        "シュラフ 秋冬 おすすめ"
+      ],
+      "themeId": "theme-2026-W36-01",
+      "title": "秋キャンプの寝袋どう選ぶ？快適温度帯・素材・形状を徹底解説【2026年版】"
     },
     {
-      "themeId": "theme-2026-W35-02",
+      "angle": "秋の夜長に映える焚き火台をソロ・デュオ・ファミリーの人数規模別に分けてランキング形式で紹介し、選び方の基準も明示する",
+      "categoryId": "firepit",
+      "priority": "high",
+      "productCount": 3,
+      "productIds": [
+        "fire-blower-belmont",
+        "fire-blower-bushcraft",
+        "fire-blower-fireside80"
+      ],
+      "reason": "firepitは来月の重点カテゴリであり、既存記事はソロ特化・ビギナーガイド・製品対決が中心で『秋×人数別ランキング』の切り口が未開拓",
+      "scheduledPublishDate": "2026-09-06",
+      "seasonRelevance": "9月後半から焚き火需要が一気に高まり、来月の季節カテゴリ（firepit）の主力記事として先行インデックスを獲得できる",
+      "slug": "autumn-firepit-ranking-2026",
+      "targetKeywords": [
+        "焚き火台 秋キャンプ おすすめ",
+        "焚き火台 ランキング 2026",
+        "焚き火台 ファミリー 選び方"
+      ],
+      "themeId": "theme-2026-W36-02",
+      "title": "秋キャンプの焚き火台おすすめランキング5選！ソロ〜ファミリー別に選び方を紹介【2026年版】"
+    },
+    {
+      "angle": "落ち葉・朝露・急な冷え込みなど秋特有の環境下でテントを快適に使いこなすための設営・撤収テクニックをステップ形式で解説する",
       "categoryId": "tent",
-      "title": "秋キャンプ向けテントの選び方【2026年版】9〜10月に強いおすすめ5選",
-      "slug": "autumn-camp-tent-ranking-2026",
-      "angle": "来月の季節カテゴリ（tent）を先取りし、夏の終わりから検索が増える「秋キャンプ用テント」需要を捉える先行記事",
-      "targetKeywords": [
-        "秋キャンプ テント",
-        "秋 テント 選び方",
-        "9月 キャンプ テントおすすめ"
-      ],
-      "seasonRelevance": "8月後半から「秋キャンプの準備」検索が増えはじめ、来月の季節カテゴリであるtentを先行してカバーできる",
       "priority": "high",
-      "reason": "tentカテゴリは検索セッション1162と高水準でtrendがactiveなうえ、来月の季節カテゴリ準備推奨と一致するため先行投稿で検索流入を先取りできる",
-      "scheduledPublishDate": "2026-08-30",
       "productCount": 3,
       "productIds": [
-        "tent-sp-landnest-dome-m",
-        "tent-solo-003",
-        "tent-duo-004"
-      ]
-    },
-    {
-      "themeId": "theme-2026-W35-03",
-      "categoryId": "cooler",
-      "title": "保冷力で選ぶクーラーボックス人気メーカー比較【2026年版】ブランド別特徴と失敗しない選び方",
-      "slug": "cooler-box-brand-comparison-2026",
-      "angle": "製品ランキングではなく「イエティ・コールマン・シマノ・ロゴス」などブランドの設計思想・保冷力・価格帯を横断比較する切り口",
-      "targetKeywords": [
-        "クーラーボックス ブランド 比較",
-        "クーラーボックス どれがいい 2026",
-        "イエティ コールマン 比較"
+        "rakuten-brave-0-10000006358",
+        "rakuten-brave-0-ttk-0007-000",
+        "tent-001"
       ],
-      "seasonRelevance": "8月の季節カテゴリであり、真夏の食材管理・氷持ちに悩むキャンパーが最もクーラーを買い替え・追加購入するピーク月",
-      "priority": "medium",
-      "reason": "coolerは8月の季節カテゴリで需要が高く、既存記事（ランキング・保冷テクニック）と重複しないブランド横断比較の切り口が検索意図のギャップを埋める",
-      "scheduledPublishDate": "2026-09-02",
-      "productCount": 3,
-      "productIds": [
-        "cooler-001",
-        "growler-002",
-        "cooler-026"
-      ]
+      "reason": "tentカテゴリはサイト最大のトラフィック源だが、既存記事はランキングや製品比較が中心で『設営・撤収テクニック（秋特化）』という実用ノウハウ記事が未存在",
+      "scheduledPublishDate": "2026-09-09",
+      "seasonRelevance": "9月は今月の季節カテゴリかつtentはclicks28d:227・searchSessions:1369と最大トラフィック源であり、テクニック系は季節を問わず検索される常緑コンテンツになる",
+      "slug": "autumn-tent-setup-takedown-technique-guide",
+      "targetKeywords": [
+        "秋キャンプ テント 設営",
+        "テント 撤収 コツ 秋",
+        "テント 結露 秋 対策"
+      ],
+      "themeId": "theme-2026-W36-03",
+      "title": "秋キャンプにおすすめのテント設営・撤収テクニック完全ガイド【2026年版】"
     }
-  ]
+  ],
+  "generatedAt": "2026-09-02T00:00:55.000Z",
+  "week": "2026-W36"
 }

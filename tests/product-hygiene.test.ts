@@ -171,6 +171,9 @@ const DELETED_DUPLICATES = [
   "kettle-uniflame-yama900",
   "peg-hammer-snowpeak-proc-review",
   "sb-kids-003",
+  // 2026-09-02 追加。tent-002 と Amazon の ASIN が同一（B0DFG51JMQ）だった。
+  // アメニティドームS の価格 ¥44,000 と室内高 120cm が汚染された出どころ
+  "tent-sp-amenity-dome-m",
 ];
 
 /** 各ペアで残したほう。消し間違いを検出する */
@@ -181,6 +184,7 @@ const KEPT_COUNTERPARTS = [
   "uniflame-yama-kettle-900",
   "peg-hammer-snowpeak-proc",
   "sb-budget-002",
+  "tent-002",
 ];
 
 test("管理画面で削除した重複商品がJSONに残っていない", () => {

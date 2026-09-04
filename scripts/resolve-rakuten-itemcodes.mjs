@@ -43,7 +43,7 @@ const VERIFY = argv.includes("--verify");
 const li = argv.indexOf("--limit");
 const LIMIT = li !== -1 ? parseInt(argv[li + 1], 10) || Infinity : Infinity;
 
-const API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

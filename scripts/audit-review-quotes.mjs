@@ -56,6 +56,36 @@ const HEAD_RE =
 // 「」または "" で囲った箇条書き。購入者の声として読める形
 const QUOTE_RE = /^[>\s]*[-*][ \t]*[「"][^\n]{4,}[」"][ \t]*$/gm;
 
+// 見出しの直後に置かれた「購入者の声」。2026-09-03 追加。
+// 引用ブロック（>）で書かれ「」も箇条書き記号も無い形が QUOTE_RE を素通りしていた。
+// 星評価の削除作業で、compact-tent-ranking / winter-sleeping-bag-ranking /
+// spring-sleeping-bag-guide の3記事が「引用0行」と報告されていたのが発覚のきっかけ。
+// 見出しからの距離で判定するので、結論ボックスや内部リンクの引用は拾わない。
+const HEAD_LINE_RE = /^[>\s]*(?:#{2,4}\s*)?\*{0,2}\s*(?:口コミ|レビュー|ユーザーの声)/;
+// 結論ボックス・リンクを含む案内行は購入者の声ではない。
+// 内部リンク（](/articles/...）も除く。2026-09-04 追加
+const SKIP_RE = /^[>\s]*(?:\*\*(?:結論|向いている人|向いていない人))|https?:\/\/|\]\(/;
+function voicesUnderHeads(content) {
+  const lines = content.split("\n");
+  const found = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!HEAD_LINE_RE.test(lines[i])) continue;
+    for (let j = i + 1; j < Math.min(i + 12, lines.length); j++) {
+      const t = lines[j].trim();
+      if (!t) continue;
+      if (/^#{1,4}\s/.test(t)) break;                       // 次の見出しで打ち切り
+      if (j > i + 1 && HEAD_LINE_RE.test(lines[j])) break;   // 次のレビュー見出し
+      if (SKIP_RE.test(t)) continue;                         // 結論ボックス・リンク行
+      const isQuote = t.startsWith(">") && t.replace(/^>+\s*/, "").length > 14;
+      // 箇条書きの声、または行まるごとが引用のもの。
+      // 「〜」なら…のように文の途中で括弧を使う地の文は拾わない
+      const isKagi = /^-\s*[「"]/.test(t) || /^[「"][^」"]*[」"][。、]?$/.test(t);
+      if (isQuote || isKagi) found.push(t.slice(0, 120));
+    }
+  }
+  return found;
+}
+
 const rows = [];
 for (const a of articles) {
   if (a.status !== "published") continue;
@@ -64,11 +94,18 @@ for (const a of articles) {
   const heads = [...c.matchAll(HEAD_RE)].map((m) => m[3].trim());
   const amazonHeads = heads.filter((h) => /amazon/i.test(h));
   const quotes = [...c.matchAll(QUOTE_RE)].map((m) => m[0].trim());
+  // 見出し直下の声。quotes と重複する行は落とす
+  const voices = voicesUnderHeads(c).filter((v) => !quotes.includes(v));
   // 見出し以外でAmazonをレビューの出典として書いている文
   const inline = [...c.matchAll(/[^\n。]{0,40}Amazon[^\n。]{0,12}(?:レビュー|口コミ|評価)[^\n。]{0,40}/gi)]
     .map((m) => m[0].trim())
-    .filter((t) => !/で(口コミ|レビュー)を(もっと)?(見る|確認)/.test(t)); // CTAリンクは対象外
-  if (!heads.length && !quotes.length && !inline.length) continue;
+    // CTAリンク・誘導文は対象外。規約でも「口コミをもっと見る」の誘導は認められている
+    // （転載が問題であって誘導は問題ない）。商品名やボタンの案内が挟まる書き方も拾う
+    .filter(
+      (t) =>
+        !/(?:で|から)[^。]{0,24}(?:口コミ|レビュー)を(?:もっと)?(?:見る|確認|チェック)/.test(t)
+    );
+  if (!heads.length && !quotes.length && !voices.length && !inline.length) continue;
   rows.push({
     slug: a.slug,
     title: a.title,
@@ -76,35 +113,43 @@ for (const a of articles) {
     heads,
     amazonHeads,
     quotes,
+    voices,
     inline,
   });
 }
 
-rows.sort((x, y) => y.clicks30d - x.clicks30d || y.quotes.length - x.quotes.length);
+rows.sort(
+  (x, y) =>
+    y.clicks30d - x.clicks30d ||
+    y.quotes.length + y.voices.length - (x.quotes.length + x.voices.length)
+);
 
 const sum = (f) => rows.reduce((n, r) => n + f(r), 0);
 console.log(`口コミ引用の監査: ${rows.length}記事`);
 console.log(`  「」付きの箇条書き        : ${sum((r) => r.quotes.length)}行`);
+console.log(`  見出し直下の声（引用ブロック含む）: ${sum((r) => r.voices.length)}行`);
 console.log(`  見出し（全体）            : ${sum((r) => r.heads.length)}個`);
 console.log(`  うち出典にAmazonを書くもの: ${sum((r) => r.amazonHeads.length)}個 ← 機械的に直せる`);
 console.log(`  本文でAmazonレビューに言及: ${sum((r) => r.inline.length)}箇所`);
 
 if (SLUG || LIST) {
   for (const r of rows) {
-    if (!SLUG && r.quotes.length === 0 && r.amazonHeads.length === 0 && r.inline.length === 0) continue;
+    if (!SLUG && r.quotes.length === 0 && r.voices.length === 0 && r.amazonHeads.length === 0 && r.inline.length === 0)
+      continue;
     console.log(`\n──── ${r.slug}（30日 ${r.clicks30d}クリック）────`);
     console.log(`  ${r.title.slice(0, 56)}`);
     if (r.amazonHeads.length) console.log(`  出典Amazonの見出し: ${[...new Set(r.amazonHeads)].join(" / ")}`);
     if (r.inline.length) for (const t of r.inline.slice(0, 3)) console.log(`  本文: ${t.slice(0, 70)}`);
-    for (const q of r.quotes.slice(0, SLUG ? 999 : 4)) console.log(`  ${q.slice(0, 76)}`);
-    if (!SLUG && r.quotes.length > 4) console.log(`  … 他${r.quotes.length - 4}行`);
+    const all = [...r.quotes, ...r.voices];
+    for (const q of all.slice(0, SLUG ? 999 : 4)) console.log(`  ${q.slice(0, 76)}`);
+    if (!SLUG && all.length > 4) console.log(`  … 他${all.length - 4}行`);
   }
 } else {
   console.log(`\n── 優先度順（上位15記事）──`);
   for (const r of rows.slice(0, 15)) {
     console.log(
       `  ${String(r.clicks30d).padStart(3)}クリック  ${r.slug.padEnd(38)} ` +
-        `引用${String(r.quotes.length).padStart(2)}行 / Amazon見出し${r.amazonHeads.length}`
+        `引用${String(r.quotes.length + r.voices.length).padStart(2)}行 / Amazon見出し${r.amazonHeads.length}`
     );
   }
   console.log(`\n詳細: --list ／ 1記事: --slug <slug>`);

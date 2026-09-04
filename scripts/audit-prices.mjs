@@ -80,7 +80,7 @@ const LIMIT = parseInt(argVal("--limit") || "", 10) || Infinity;
 // 特定の商品だけ調べたい場合。1件の登録価格を確かめるのに全件回すのは無駄
 const IDS = new Set((argVal("--ids") || "").split(",").map((s) => s.trim()).filter(Boolean));
 
-const RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

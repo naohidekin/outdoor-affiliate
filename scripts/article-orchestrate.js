@@ -370,6 +370,18 @@ async function weeklyPipeline(dryRun) {
     return false;
   }
 
+  // 1.5 楽天APIの疎通確認
+  //
+  // 2026-09-02: 楽天APIが10日間止まっていたのに誰も気づかなかった。
+  // エンドポイントのバージョンが古く、価格監査・相場チェック・リンク検査・
+  // 記事生成の商品取得が同時に死んでいた。実害も出ていて、タトンカ
+  // Tarp 4 TC の登録価格が実売の5倍のまま放置されていた。
+  //
+  // 止めずに続ける。楽天が落ちていても記事生成の大半は動くし、
+  // ここで止めるとパイプライン全体が毎日死ぬ。必要なのは中断ではなく
+  // 「気づくこと」なので、失敗を大きく出して先へ進む。
+  await runAgent("preflight-rakuten.mjs", [], { optional: true, timeout: 60_000 });
+
   // 2. バックアップ
   if (!dryRun) {
     await runAgent("supervisor-agent.js", ["--backup"]);

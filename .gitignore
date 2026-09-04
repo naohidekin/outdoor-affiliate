@@ -69,3 +69,4 @@ scratch/manual-affiliate-links.txt
 scratch/
 data/price-history.json
 data/price-held-back.json
+/data/rakuten-health.json

@@ -46,7 +46,7 @@ const argv = process.argv.slice(2);
 const APPLY = argv.includes("--apply");
 const ALLOW_AMAZON = argv.includes("--allow-amazon");
 
-const RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+const RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const appId = process.env.RAKUTEN_APP_ID;
 const accessKey = process.env.RAKUTEN_ACCESS_KEY;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
