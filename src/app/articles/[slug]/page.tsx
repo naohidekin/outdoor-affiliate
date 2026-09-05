@@ -10,6 +10,8 @@ import {
   getProductsByIds,
   getCategoryById,
 } from "@/lib/db";
+import GuideLink from "@/components/GuideLink";
+import { getAvailableGearGuides } from "@/lib/gearGuides";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
@@ -114,6 +116,8 @@ export default async function ArticlePage({
     getPublishedArticlesList(),
   ]);
   const nextReads = getNextReads(article, allArticles);
+  const gearGuide = getAvailableGearGuides(allArticles).find((guide) =>
+    (guide.categoryIds as readonly string[]).includes(article.categoryId));
   const toc = extractToc(article.content);
   const primaryProducts = getPrimaryProducts(article, products).slice(0, 3);
   const editorialPicks = getEditorialPicks(article.slug, products);
@@ -464,6 +468,12 @@ export default async function ArticlePage({
         )}
 
         <ArticleNextReads articleSlug={article.slug} items={nextReads} />
+        {gearGuide && <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-10">
+            <GuideLink href={`/gear-guides#${gearGuide.id}`} guideId={gearGuide.id} placement="article" className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist border border-line p-5">
+              <span><span className="block text-sm text-slate-500 mb-1">関連する道具も、まとめて検討する</span><span className="text-base font-semibold text-ink-strong">{gearGuide.label}</span></span>
+              <span className="text-sm font-semibold text-lake-600">選び方ガイドへ →</span>
+            </GuideLink>
+          </div>}
 
         {/* PR表記（ページ最下部） */}
         <div className="max-w-4xl mx-auto px-4 pb-10">

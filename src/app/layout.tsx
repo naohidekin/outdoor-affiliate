@@ -70,7 +70,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <Script id="ga-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0F2R4RX636');`}
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0F2R4RX636');window.dispatchEvent(new Event('camp-analytics-ready'));`}
         </Script>
         {/* バリューコマース LinkSwitch: shopping.yahoo.co.jp への直リンクを
             クリック時にアフィリエイトリンクへ自動変換する */}

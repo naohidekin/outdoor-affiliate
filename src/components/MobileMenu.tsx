@@ -33,7 +33,7 @@ export default function MobileMenu({ categories }: MobileMenuProps) {
         <nav id="mobile-navigation" aria-label="メインナビゲーション" className="absolute top-16 left-0 right-0 bg-white border-b border-line shadow-lg z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto">
           <div className="max-w-6xl mx-auto px-4 py-3 grid grid-cols-2 gap-1 border-b border-line-soft">
             {[
-              { href: "/#gear-guides", label: "ギアを選ぶ" },
+              { href: "/gear-guides", label: "ギアを選ぶ" },
               { href: "/#field-notes", label: "使った道具の記録" },
               { href: "/articles", label: "記事を探す" },
               { href: "/about", label: "書き手について" },

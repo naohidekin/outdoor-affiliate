@@ -16,12 +16,13 @@ interface ProductRow {
   stores: StoreMap;
 }
 interface Data {
-  period: { days: number; start: string };
+  period: { days: number; start: string; end: string };
   total: number;
   byStore: StoreMap;
   byPlacement?: Record<string, number>;
   articleRanking: ArticleRow[];
   productRanking: ProductRow[];
+  journeyRanking: (ArticleRow & { productId: string; name: string; placement: string })[];
 }
 
 const PLACEMENT_LABEL: Record<string, string> = {
@@ -30,6 +31,10 @@ const PLACEMENT_LABEL: Record<string, string> = {
   comparison_table: "比較表",
   recommended: "おすすめCTA",
   body_text: "本文リンク",
+  article_end: "記事末尾",
+  reviews_link: "口コミリンク",
+  room_collection: "ROOMコレクション",
+  footer_room: "フッターのROOM",
   unknown: "不明",
   "(計測前)": "計測前(旧データ)",
 };
@@ -69,16 +74,20 @@ export default function AffiliateAnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    setData(null);
     setLoading(true);
     setError(null);
-    fetch(`/api/affiliate-analytics?days=${days}`)
+    fetch(`/api/affiliate-analytics?days=${days}`, { signal: controller.signal })
       .then(async (r) => {
-        if (!r.ok) throw new Error(`API error (${r.status})`);
-        return r.json();
+        const body = await r.json();
+        if (!r.ok) throw new Error(body.error || `API error (${r.status})`);
+        return body;
       })
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .then((body) => { if (!controller.signal.aborted) setData(body); })
+      .catch((e) => { if (!controller.signal.aborted) setError(e.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [days]);
 
   const maxArticle = Math.max(1, ...(data?.articleRanking.map((a) => a.clicks) || [1]));
@@ -87,9 +96,9 @@ export default function AffiliateAnalyticsPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📈 アフィリ分析（記事別）</h1>
+          <h1 className="text-2xl font-bold text-gray-900">アフィリエイトの送客分析</h1>
           <p className="text-sm text-gray-500 mt-1">
-            どの記事・どの商品からアフィリンクがクリックされたか（自前の affiliate_clicks 集計）
+            記事・商品・ボタン位置ごとの販売店へのクリック。注文数・購入者数・確定報酬とは異なります。
           </p>
         </div>
         <div className="flex gap-2">
@@ -97,6 +106,7 @@ export default function AffiliateAnalyticsPage() {
             <button
               key={d}
               onClick={() => setDays(d)}
+              aria-pressed={days === d}
               className={`px-3 py-1.5 rounded text-sm font-medium ${
                 days === d ? "bg-gray-900 text-white" : "bg-white text-gray-600 border border-gray-300"
               }`}
@@ -112,6 +122,9 @@ export default function AffiliateAnalyticsPage() {
 
       {data && (
         <>
+          <p className="text-sm text-gray-500 mb-4">
+            {new Date(data.period.start).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })} 〜 {new Date(data.period.end).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}（日本時間）
+          </p>
           {/* KPI */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -130,8 +143,8 @@ export default function AffiliateAnalyticsPage() {
           {data.byPlacement && Object.keys(data.byPlacement).length > 0 && (
             <>
               <h2 className="text-lg font-bold text-gray-900 mb-2">ボタン位置別クリック</h2>
-              <p className="text-xs text-gray-500 mb-2">
-                どの位置のボタンが押されているか。位置ごとの強弱が分かると、商品自体の弱さとボタン配置の弱さを切り分けられます（2026-07-12計測開始）。
+              <p className="text-sm text-gray-500 mb-2">
+                どの位置のボタンが押されているか。表示回数が異なるので、クリック数だけで位置の優劣は判断できません。表示回数との比較はGA4で確認します。
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
                 {Object.entries(data.byPlacement)
@@ -157,7 +170,7 @@ export default function AffiliateAnalyticsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs text-gray-400 mr-2">{i + 1}</span>
-                    <a href={a.path} target="_blank" className="text-sm text-gray-900 hover:text-green-700 hover:underline">
+                    <a href={a.path || undefined} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-900 hover:text-green-700 hover:underline">
                       {a.title}
                     </a>
                     <p className="text-xs text-gray-400 truncate">{a.path}</p>
@@ -172,6 +185,24 @@ export default function AffiliateAnalyticsPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <h2 className="text-lg font-bold text-gray-900 mb-2">記事 × 商品 × ボタン位置</h2>
+          <p className="text-sm text-gray-500 mb-3">改善する商品案内を具体的に探せます。クリックの多い順に表示します。</p>
+          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 mb-8">
+            {data.journeyRanking.length === 0 && <p className="p-4 text-sm text-gray-500">この期間のクリックデータはありません。</p>}
+            {data.journeyRanking.slice(0, 50).map((row) => <div key={JSON.stringify([row.path, row.productId, row.placement])} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-gray-500 break-words">{row.title}</p>
+                  <p className="mt-1 text-base font-medium text-gray-900 break-words">{row.name}</p>
+                  <p className="mt-1 text-sm text-gray-500">{PLACEMENT_LABEL[row.placement] || row.placement}</p>
+                </div>
+                <span className="text-lg font-bold text-gray-900 shrink-0">{row.clicks}</span>
+              </div>
+              <div className="mt-2"><StoreBadges stores={row.stores} /></div>
+            </div>)}
+            {data.journeyRanking.length > 50 && <p className="p-4 text-sm text-gray-500">上位50件を表示しています。総クリック数は全件を集計しています。</p>}
           </div>
 
           {/* 商品別ランキング */}

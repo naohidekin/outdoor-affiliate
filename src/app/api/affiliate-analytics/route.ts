@@ -1,82 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
+import { aggregateAffiliateClicks, collectAffiliateClicks, type AffiliateClickRow } from "@/lib/affiliateAnalytics";
 
 export const runtime = "nodejs";
 
-type ClickRow = { product_id: string; store: string; page_path: string; clicked_at: string; placement?: string | null };
-type Agg = { clicks: number; stores: Record<string, number> };
-
-function bump(map: Record<string, Agg>, key: string, store: string) {
-  if (!map[key]) map[key] = { clicks: 0, stores: {} };
-  map[key].clicks += 1;
-  map[key].stores[store] = (map[key].stores[store] || 0) + 1;
-}
-
 export async function GET(req: NextRequest) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
-  }
-
+  if (!(await isAuthenticated())) return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   const daysRaw = parseInt(req.nextUrl.searchParams.get("days") || "28", 10);
   const days = Math.min(365, Math.max(1, Number.isFinite(daysRaw) ? daysRaw : 28));
-  const start = new Date(Date.now() - days * 86400000).toISOString();
-
-  const supabase = getSupabase();
-  if (!supabase) {
-    return NextResponse.json({ error: "supabase not configured" }, { status: 500 });
+  const end = new Date().toISOString();
+  const start = new Date(new Date(end).getTime() - days * 86400000).toISOString();
+  try {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase is not configured");
+    const [rows, articleResult, productResult] = await Promise.all([
+      collectAffiliateClicks(async (afterId) => {
+        const { data, error } = await supabase.from("affiliate_clicks")
+          .select("id, product_id, store, page_path, clicked_at, placement")
+          .gte("clicked_at", start).lt("clicked_at", end)
+          .gt("id", afterId).order("id", { ascending: true }).limit(500);
+        if (error) throw new Error(error.message);
+        return (data ?? []) as AffiliateClickRow[];
+      }),
+      supabase.from("articles").select("slug, title"),
+      supabase.from("products").select("id, name"),
+    ]);
+    if (articleResult.error || productResult.error) throw new Error("Could not load report labels");
+    const titleBySlug = new Map<string, string>((articleResult.data ?? []).map((a) => [a.slug, a.title]));
+    const nameById = new Map<string, string>((productResult.data ?? []).map((p) => [p.id, p.name]));
+    return NextResponse.json({ period: { days, start, end }, ...aggregateAffiliateClicks(rows, titleBySlug, nameById) }, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
+  } catch (error) {
+    console.error("[affiliate-analytics]", error instanceof Error ? error.message : "Report failed");
+    return NextResponse.json({ error: "集計を取得できませんでした。期間を短くするか、時間をおいて再試行してください。" }, { status: 503 });
   }
-
-  const [{ data: clicks }, { data: arts }, { data: prods }] = await Promise.all([
-    supabase
-      .from("affiliate_clicks")
-      .select("product_id, store, page_path, clicked_at, placement")
-      .gte("clicked_at", start),
-    supabase.from("articles").select("slug, title"),
-    supabase.from("products").select("id, name"),
-  ]);
-
-  const titleBySlug = new Map<string, string>((arts || []).map((a) => [a.slug, a.title]));
-  const nameById = new Map<string, string>((prods || []).map((p) => [p.id, p.name]));
-
-  const rows = (clicks || []) as ClickRow[];
-  const byStore: Record<string, number> = {};
-  const byArticle: Record<string, Agg> = {};
-  const byProduct: Record<string, Agg> = {};
-  const byPlacement: Record<string, number> = {};
-
-  for (const c of rows) {
-    const store = c.store || "other";
-    byStore[store] = (byStore[store] || 0) + 1;
-    // placementはSQL移行前の既存行だとnull → 「(計測前)」に寄せる
-    const placement = c.placement || "(計測前)";
-    byPlacement[placement] = (byPlacement[placement] || 0) + 1;
-    bump(byArticle, c.page_path || "(不明)", store);
-    bump(byProduct, c.product_id || "(不明)", store);
-  }
-
-  const articleRanking = Object.entries(byArticle)
-    .map(([path, v]) => {
-      const slug = path.replace(/^\/articles\//, "").replace(/\/$/, "");
-      return { path, title: titleBySlug.get(slug) || path, clicks: v.clicks, stores: v.stores };
-    })
-    .sort((a, b) => b.clicks - a.clicks);
-
-  const productRanking = Object.entries(byProduct)
-    .map(([productId, v]) => ({
-      productId,
-      name: nameById.get(productId) || productId,
-      clicks: v.clicks,
-      stores: v.stores,
-    }))
-    .sort((a, b) => b.clicks - a.clicks);
-
-  return NextResponse.json({
-    period: { days, start },
-    total: rows.length,
-    byStore,
-    byPlacement,
-    articleRanking,
-    productRanking,
-  });
 }

@@ -1,35 +1,10 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
-import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import type { AffiliatePlacement } from "@/lib/trackAffiliateClick";
-import AffiliateLink from "./AffiliateLink";
+import ProductMerchantLinks from "./ProductMerchantLinks";
 import { sizedImageUrl } from "@/lib/imageSize";
 import { getProductSpecs } from "@/lib/productSpecs";
 import type { EditorialPick } from "@/lib/articleEditorial";
-
-function AmazonButton({
-  product,
-  placement,
-}: {
-  product: Product;
-  placement: AffiliatePlacement;
-}) {
-  if (!product.amazonUrl) return null;
-  return (
-    <AffiliateLink
-      href={product.amazonUrl}
-      productId={product.id}
-      placement={placement}
-      productName={product.name}
-      price={product.price}
-      rank={isAmazonPrimary(product) ? 1 : 2}
-      store="amazon"
-      className="flex-1 sm:flex-none text-center min-h-11 px-3 py-3 rounded-lg text-sm font-medium transition amazon-btn"
-    >
-      Amazonで見る
-    </AffiliateLink>
-  );
-}
 
 export default function RecommendationCTA({
   products,
@@ -52,7 +27,7 @@ export default function RecommendationCTA({
         <p className="text-sm font-semibold">
           {title ?? (picks.length ? "条件に合うモデルを選ぶ" : "掲載モデルの価格を確認")}
         </p>
-        <p className="text-xs text-lake-100 mt-0.5">
+        <p className="text-sm text-lake-100 mt-1 leading-relaxed">
           {subtitle ?? "価格は登録時点の参考情報です。最新の価格・付属品は販売店で確認してください。"}
         </p>
       </div>
@@ -93,35 +68,8 @@ export default function RecommendationCTA({
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2 shrink-0 sm:flex sm:flex-col sm:w-40">
-                {isAmazonPrimary(p) && <AmazonButton product={p} placement={placement} />}
-                {p.affiliateUrl && (
-                  <AffiliateLink
-                    href={p.affiliateUrl}
-                    productId={p.id}
-                    placement={placement}
-                    productName={p.name}
-                    price={p.price}
-                    rank={isAmazonPrimary(p) ? 2 : 1}
-                    store="rakuten"
-                    className="flex-1 sm:flex-none text-center text-white min-h-11 px-3 py-3 rounded-lg text-sm font-medium transition rakuten-btn"
-                  >
-                    楽天で見る
-                  </AffiliateLink>
-                )}
-                {!isAmazonPrimary(p) && <AmazonButton product={p} placement={placement} />}
-                {p.yahooUrl && (
-                  <AffiliateLink
-                    href={p.yahooUrl}
-                    productId={p.id}
-                    placement={placement}
-                    productName={p.name}
-                    store="yahoo"
-                    className="flex-1 sm:flex-none text-center bg-white hover:bg-red-50 text-red-600 border border-red-200 min-h-11 px-3 py-3 rounded-lg text-sm font-medium transition"
-                  >
-                    Yahoo!で見る
-                  </AffiliateLink>
-                )}
+              <div className="shrink-0 sm:w-44">
+                <ProductMerchantLinks product={p} placement={placement} layout="sidebar" />
               </div>
             </div>
           );

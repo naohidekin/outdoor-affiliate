@@ -3,6 +3,9 @@ import { toJsonLd } from "@/lib/jsonld";
 import Image from "next/image";
 import Link from "next/link";
 import { getPublicCategories, getPublishedArticlesList, getProductsByIds } from "@/lib/db";
+import GearGuideTopics from "@/components/GearGuideTopics";
+import AffiliateLink from "@/components/AffiliateLink";
+import { getAvailableGearGuides } from "@/lib/gearGuides";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
@@ -32,6 +35,8 @@ export default async function Home() {
     getPublishedArticlesList(),
   ]);
 
+  const gearGuides = getAvailableGearGuides(articles);
+
   // 安全ガイド導線 4記事を特定
   const SAFETY_GUIDE_SLUGS = [
     "family-camp-safety-guide",
@@ -52,7 +57,7 @@ export default async function Home() {
   const seasonalArticles = findArticles(seasonal.slugs);
   const latestArticles = [...articles]
     .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
-    .slice(0, 6);
+    .slice(0, 3);
 
   // Fetch only the products needed by visible cards, not the entire archive.
   const displayedArticles = [...featuredArticles, ...latestArticles];
@@ -149,24 +154,24 @@ export default async function Home() {
       <Header categories={categories} />
       <main className="flex-1">
         <section className="border-b border-line bg-white">
-          <div className="max-w-6xl mx-auto px-4 py-10 md:py-14 grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
+          <div className="max-w-6xl mx-auto px-4 py-7 md:py-10 grid lg:grid-cols-[1.15fr_1fr] gap-8 lg:gap-14 items-center">
             <div>
-              <p className="text-sm font-medium text-lake-600 mb-5">小児科医・二児の父のキャンプノート</p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-strong leading-[1.4] tracking-tight">
+              <p className="text-sm font-medium text-lake-600 mb-3">小児科医・二児の父のキャンプノート</p>
+              <h1 className="text-3xl sm:text-4xl font-semibold text-ink-strong leading-[1.4] tracking-tight">
                 家族の時間が増える、<br />キャンプ道具選び。
               </h1>
-              <p className="mt-5 text-base text-slate-600 leading-loose max-w-xl">
+              <p className="mt-4 text-base text-slate-600 leading-loose max-w-xl">
                 設営がラクか。子どもと眠れるか。安全に使えるか。<br className="hidden sm:block" />
                 10年使った道具の記録と、買う前に知りたい比較を届けます。
               </p>
-              <div className="flex flex-wrap gap-3 mt-7">
-                <Link href="#gear-guides" className="rounded-lg bg-lake-600 hover:bg-lake-700 px-5 py-3 text-sm font-semibold text-white transition">ギアを比較する →</Link>
-                <Link href="#field-notes" className="rounded-lg border border-line px-5 py-3 text-sm font-medium text-ink hover:bg-mist transition">使い続けた道具を読む</Link>
+              <div className="mt-5"><GearGuideTopics guides={gearGuides} /></div>
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-sm">
+                <Link href="/articles" className="inline-flex min-h-11 items-center text-lake-600 font-semibold hover:underline">商品名から記事を探す →</Link>
+                <Link href="/about" className="inline-flex min-h-11 items-center text-slate-500 underline underline-offset-4">書き手と編集方針</Link>
               </div>
-              <Link href="/about" className="inline-block mt-6 text-sm text-slate-500 underline underline-offset-4 hover:text-lake-700">書き手と、このサイトについて</Link>
             </div>
             <div className="overflow-hidden rounded-2xl border border-line bg-snow">
-              <div className="relative h-40 sm:h-48">
+              <div className="relative h-32 sm:h-48 lg:h-56">
                 <Image src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80" alt="" fill sizes="(min-width: 1024px) 500px, 100vw" className="object-cover" preload />
               </div>
               <div className="p-5 sm:p-6">
@@ -222,7 +227,7 @@ export default async function Home() {
               </h2>
               <p className="text-sm text-slate-500 mt-1">小児科医の視点で整理する、虫・暑さ・寒さへの備え</p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               {safetyGuideArticles.map((article) => (
                 <Link
                   key={article.id}
@@ -323,11 +328,11 @@ export default async function Home() {
 
         {/* 楽天ROOM まとめ買い導線 */}
         <section className="max-w-6xl mx-auto px-4 pb-16">
-          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-6 sm:p-8">
+          <div className="bg-white border border-line rounded-2xl p-6 sm:p-8">
             <div className="mb-5">
               <span className="inline-block text-xs font-semibold tracking-widest text-red-500 uppercase mb-2">楽天ROOM</span>
-              <h2 className="text-xl font-semibold text-ink-strong">テーマ別ギアをまとめて見る</h2>
-              <p className="text-sm text-slate-500 mt-1">シーン・季節・スタイル別にまとめたコレクション。気になるセットをチェック。</p>
+              <h2 className="text-xl font-semibold text-ink-strong">楽天ROOMのコレクション</h2>
+              <p className="text-sm text-slate-500 mt-1">広告リンクを含みます。テーマ別に掲載した道具を販売店で確認できます。</p>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
               {/* 既存のROOMコレクションへの導線を維持 */}
@@ -339,18 +344,20 @@ export default async function Home() {
                 { label: "焚き火まわりセット", desc: "焚き火台・リフレクター・鉄板を一式で", icon: "🔥", href: "https://room.rakuten.co.jp/room_naomaru/1800012447451128" },
                 { label: "防災兼用 キャンプギア", desc: "停電・避難でも使えるアウトドア道具", icon: "🏕️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289290411" },
               ].map(({ label, desc, icon, href }) => (
-                <a
+                <AffiliateLink
+                  productId={`room-${href.split("/").pop()}`}
+                  productName={label}
+                  store="rakuten"
+                  placement="room_collection"
                   key={label}
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow sponsored"
                   className="flex-none w-[140px] sm:w-[160px] flex flex-col items-center gap-2 bg-white border border-red-100 rounded-xl p-4 text-center hover:border-red-300 hover:shadow-sm transition group snap-start"
                 >
                   <span className="text-2xl">{icon}</span>
-                  <span className="text-xs font-medium text-slate-700 group-hover:text-red-600 leading-snug">{label}</span>
-                  <span className="text-xs text-slate-400 leading-snug line-clamp-2">{desc}</span>
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-red-600 leading-snug">{label}</span>
+                  <span className="text-xs text-slate-500 leading-snug line-clamp-2">{desc}</span>
                   <span className="text-xs text-red-400 font-medium mt-auto">楽天ROOMで見る →</span>
-                </a>
+                </AffiliateLink>
               ))}
             </div>
           </div>
