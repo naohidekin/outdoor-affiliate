@@ -6,19 +6,20 @@ import { getPublicCategories, getPublishedArticlesList, getProductsByIds } from 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleCard from "@/components/ArticleCard";
+import { FEATURED_SLUGS, getPrimaryProducts, getSeasonalFeature } from "@/lib/articleEditorial";
 import { getCategoryIcon } from "@/lib/category-icons";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
 export const metadata: Metadata = {
-  title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Camp Gear Lab",
+  title: "家族のキャンプ道具選び｜小児科医・二児の父のCamp Gear Lab",
   description:
-    "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。子連れキャンプの救急対策、熱中症予防、虫除け選びなど、安全性を重視した実用レビューサイトです。",
+    "設営の負担、家族の寝心地、安全対策からキャンプ道具を選ぶ。小児科医・二児の父が、10年使った道具の記録と仕様比較、子連れキャンプの準備ガイドを届けます。",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "現役小児科医が選ぶ、家族で安全に楽しむアウトドアギア | Camp Gear Lab",
+    title: "家族のキャンプ道具選び｜小児科医・二児の父のCamp Gear Lab",
     description:
       "現役小児科医・キャンプ歴10年の運営者が、家族で安全に楽しめるアウトドアギアを医師目線で比較・検証。",
     url: "/",
@@ -42,17 +43,25 @@ export default async function Home() {
     .map((slug) => articles.find((a) => a.slug === slug))
     .filter((a): a is NonNullable<typeof a> => a !== undefined);
 
-  // ArticleCard用: 全記事の商品を一括取得してサムネイルを引き当て
-  const allProductIds = [...new Set(articles.flatMap((a) => a.productIds))];
-  const allProducts = allProductIds.length > 0
-    ? await getProductsByIds(allProductIds)
-    : [];
-  const productMap = new Map(allProducts.map((p) => [p.id, p]));
-
-  // 新着記事: publishedAt 降順で最新6件
+  const findArticles = (slugs: readonly string[]) => slugs
+    .map((slug) => articles.find((article) => article.slug === slug))
+    .filter((article): article is NonNullable<typeof article> => Boolean(article));
+  const featuredArticles = findArticles(FEATURED_SLUGS);
+  const fieldReview = findArticles(["snow-peak-amenity-dome-l-10year-review"])[0];
+  const seasonal = getSeasonalFeature(Number(new Intl.DateTimeFormat("en", { month: "numeric", timeZone: "Asia/Tokyo" }).format(new Date())));
+  const seasonalArticles = findArticles(seasonal.slugs);
   const latestArticles = [...articles]
     .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
     .slice(0, 6);
+
+  // Fetch only the products needed by visible cards, not the entire archive.
+  const displayedArticles = [...featuredArticles, ...latestArticles];
+  const productIds = [...new Set(displayedArticles.flatMap((article) => article.productIds))];
+  const products = productIds.length ? await getProductsByIds(productIds) : [];
+  const productMap = new Map(products.map((product) => [product.id, product]));
+  const thumbnailFor = (article: typeof articles[number]) => getPrimaryProducts(article,
+    article.productIds.flatMap((id) => productMap.has(id) ? [productMap.get(id)!] : [])
+  ).find((product) => product.imageUrl);
 
   const baseUrl = "https://camp-gear-lab.com";
 
@@ -114,7 +123,7 @@ export default async function Home() {
     url: baseUrl,
     mainEntity: {
       "@type": "ItemList",
-      itemListElement: articles.slice(0, 6).map((a, i) => ({
+      itemListElement: [...new Map(displayedArticles.map((article) => [article.id, article])).values()].map((a, i) => ({
         "@type": "ListItem",
         position: i + 1,
         url: `${baseUrl}/articles/${a.slug}`,
@@ -139,97 +148,79 @@ export default async function Home() {
       />
       <Header categories={categories} />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative bg-ink-strong text-white overflow-hidden border-b border-line">
-          {/* LCP対策: CSS背景ではなく img として即時読み込みさせる */}
-          <div className="absolute inset-0 opacity-25">
-            <Image
-              src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80"
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover"
-              style={{ objectPosition: "center 40%" }}
-              loading="eager"
-              fetchPriority="high"
-            />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-strong via-ink-strong/70 to-ink-strong/30" />
-          <div className="max-w-6xl mx-auto px-4 py-24 md:py-32 relative">
-            <p className="text-lake-200 font-medium text-xs tracking-[0.25em] uppercase mb-4">
-              Gear Reviews & Comparisons
-            </p>
-            <h1 className="text-3xl md:text-5xl font-semibold mb-5 leading-tight tracking-tight">
-              現役小児科医・キャンプ歴10年の父が、
-              <br />
-              家族目線でギアを比較します
-            </h1>
-            <p className="text-slate-300 text-base md:text-lg max-w-lg leading-relaxed">
-              実際に使って分かったリアルな情報を、子ども連れの安全性と実用性を重視してお届けします
-            </p>
-            {/* 3本柱カード */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-2xl">
-              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
-                <p className="text-lake-200 font-semibold text-sm mb-1">🩺 医師目線で安全性をチェック</p>
-                <p className="text-white/70 text-xs leading-relaxed">虫刺され、熱中症、低体温、食中毒、一酸化炭素など、本当に気をつけたいリスクからギアを選びます。</p>
+        <section className="border-b border-line bg-white">
+          <div className="max-w-6xl mx-auto px-4 py-10 md:py-14 grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
+            <div>
+              <p className="text-sm font-medium text-lake-600 mb-5">小児科医・二児の父のキャンプノート</p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-strong leading-[1.4] tracking-tight">
+                家族の時間が増える、<br />キャンプ道具選び。
+              </h1>
+              <p className="mt-5 text-base text-slate-600 leading-loose max-w-xl">
+                設営がラクか。子どもと眠れるか。安全に使えるか。<br className="hidden sm:block" />
+                10年使った道具の記録と、買う前に知りたい比較を届けます。
+              </p>
+              <div className="flex flex-wrap gap-3 mt-7">
+                <Link href="#gear-guides" className="rounded-lg bg-lake-600 hover:bg-lake-700 px-5 py-3 text-sm font-semibold text-white transition">ギアを比較する →</Link>
+                <Link href="#field-notes" className="rounded-lg border border-line px-5 py-3 text-sm font-medium text-ink hover:bg-mist transition">使い続けた道具を読む</Link>
               </div>
-              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
-                <p className="text-lake-200 font-semibold text-sm mb-1">🏕️ キャンプ歴10年の実体験で選ぶ</p>
-                <p className="text-white/70 text-xs leading-relaxed">カタログスペックだけでなく、設営・撤収・収納・子どもの使いやすさまで確認します。</p>
-              </div>
-              <div className="bg-white/8 border border-white/15 rounded-xl p-4">
-                <p className="text-lake-200 font-semibold text-sm mb-1">📋 迷ったらすぐ選べる比較表</p>
-                <p className="text-white/70 text-xs leading-relaxed">予算別・年齢別・季節別に、最初に買う候補を絞って紹介します。</p>
-              </div>
+              <Link href="/about" className="inline-block mt-6 text-sm text-slate-500 underline underline-offset-4 hover:text-lake-700">書き手と、このサイトについて</Link>
             </div>
-            <div className="flex flex-wrap gap-2 mt-8">
-              {categories.slice(0, 6).map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/category/${c.slug}`}
-                  className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white px-4 py-2 rounded-full text-sm transition border border-white/15 hover:border-lake-200"
-                >
-                  <span className="text-lake-200">{getCategoryIcon(c.slug, "sm")}</span>
-                  {c.name}
-                </Link>
-              ))}
+            <div className="overflow-hidden rounded-2xl border border-line bg-snow">
+              <div className="relative h-40 sm:h-48">
+                <Image src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80" alt="" fill sizes="(min-width: 1024px) 500px, 100vw" className="object-cover" preload />
+              </div>
+              <div className="p-5 sm:p-6">
+                <h2 className="text-lg font-semibold text-ink-strong">{seasonal.label}</h2>
+                <p className="mt-1 text-sm text-slate-500">{seasonal.description}</p>
+                <div className="mt-4 divide-y divide-line">
+                  {seasonalArticles.map((article) => (
+                    <Link key={article.id} href={`/articles/${article.slug}`} className="flex gap-3 justify-between py-3 text-sm font-medium leading-relaxed text-ink hover:text-lake-700">
+                      <span className="line-clamp-2">{article.title}</span><span aria-hidden="true" className="text-lake-600 shrink-0">→</span>
+                    </Link>
+                  ))}
+                  {seasonalArticles.length === 0 && <Link href="/articles" className="block py-3 text-sm text-lake-700">キャンプの準備ガイドを探す →</Link>}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 新着記事 */}
-        {latestArticles.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 py-12 border-b border-line">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-ink-strong tracking-tight">新着記事</h2>
-              <p className="text-sm text-slate-500 mt-1">最近追加されたギアレビュー・ガイド</p>
+        <section id="gear-guides" className="max-w-6xl mx-auto px-4 py-12 md:py-16 scroll-mt-20">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-7">
+            <div><p className="text-xs text-lake-600 font-semibold tracking-widest mb-2">GEAR GUIDES</p><h2 className="text-2xl font-semibold text-ink-strong">買う前の迷いを、ここから。</h2><p className="text-sm text-slate-500 mt-2">広さ・設営・予算。家族の条件に合う一台を選ぶ。</p></div>
+            <Link href="/articles" className="text-sm font-medium text-lake-600 hover:text-lake-700">すべての記事 →</Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredArticles.map((article) => <ArticleCard key={article.id} article={article} category={categories.find((category) => category.id === article.categoryId)} thumbnailProduct={thumbnailFor(article)} />)}
+          </div>
+        </section>
+
+        <section id="field-notes" className="max-w-6xl mx-auto px-4 pb-12 scroll-mt-20">
+          <div className="grid md:grid-cols-[1fr_2fr] overflow-hidden rounded-2xl border border-line bg-white">
+            <div className="bg-lake-50 p-7 md:p-9 flex flex-col justify-between gap-6">
+              <p className="text-xs font-semibold tracking-widest text-lake-700">FIELD NOTES</p>
+              <div><p className="text-4xl font-semibold tracking-tight text-ink-strong">2016—2026</p><p className="mt-2 text-sm text-slate-600">家族と使い続けた道具の記録</p></div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latestArticles.map((article) => {
-                const cat = categories.find((c) => c.id === article.categoryId);
-                const thumbPid = article.productIds[0];
-                const thumbProduct = thumbPid ? productMap.get(thumbPid) : undefined;
-                return (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    category={cat}
-                    thumbnailProduct={thumbProduct}
-                  />
-                );
-              })}
+            <div className="p-7 md:p-9">
+              <h2 className="text-xl sm:text-2xl font-semibold leading-relaxed text-ink-strong">10年使ったテント。<br />次の一張りを、どう選んだか。</h2>
+              <p className="mt-4 text-sm leading-loose text-slate-600">アメニティドームLを使ってきた父として、よかった点も、買い替えで重視したことも。長く使う道具を選ぶための手がかりを残します。</p>
+              <div className="flex flex-wrap gap-x-6 gap-y-3 mt-5 text-sm font-semibold text-lake-600">
+                {fieldReview && <Link href={`/articles/${fieldReview.slug}`} className="hover:underline underline-offset-4">10年レビューを読む →</Link>}
+                {featuredArticles.some((article) => article.slug === "landlock-vs-landnest-shelter") && <Link href="/articles/landlock-vs-landnest-shelter" className="hover:underline underline-offset-4">買い替え候補の比較を読む →</Link>}
+                <Link href="/about" className="hover:underline underline-offset-4">運営者について →</Link>
+              </div>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* 安全ガイド導線 */}
         {safetyGuideArticles.length > 0 && (
           <section className="max-w-6xl mx-auto px-4 py-12 border-b border-line">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-ink-strong tracking-tight">
-                まず読むべき安全ギアガイド
+                子どもと出かける前に、確認したいこと
               </h2>
-              <p className="text-sm text-slate-500 mt-1">子連れキャンプの入口として</p>
+              <p className="text-sm text-slate-500 mt-1">小児科医の視点で整理する、虫・暑さ・寒さへの備え</p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {safetyGuideArticles.map((article) => (
@@ -251,6 +242,30 @@ export default async function Home() {
                   </span>
                 </Link>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* 新着記事 */}
+        {latestArticles.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 py-12 border-b border-line">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-ink-strong tracking-tight">新着記事</h2>
+              <p className="text-sm text-slate-500 mt-1">最近追加されたギアレビュー・ガイド</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestArticles.map((article) => {
+                const cat = categories.find((c) => c.id === article.categoryId);
+                const thumbProduct = thumbnailFor(article);
+                return (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    category={cat}
+                    thumbnailProduct={thumbProduct}
+                  />
+                );
+              })}
             </div>
           </section>
         )}
@@ -315,8 +330,7 @@ export default async function Home() {
               <p className="text-sm text-slate-500 mt-1">シーン・季節・スタイル別にまとめたコレクション。気になるセットをチェック。</p>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
-              {/* 季節に合う6件に絞る（8月時点: 夏対策を先頭に）。12件全部並べると
-                  トップが長くなりすぎ、本命の記事導線を押し下げるため */}
+              {/* 既存のROOMコレクションへの導線を維持 */}
               {[
                 { label: "夏キャンプ 虫対策セット", desc: "蚊・ブヨ・アブ対策の定番ギアを厳選", icon: "🦟", href: "https://room.rakuten.co.jp/room_naomaru/1800012289285534" },
                 { label: "子ども連れ 暑さ対策", desc: "扇風機・クーラー・日よけの涼感セット", icon: "☀️", href: "https://room.rakuten.co.jp/room_naomaru/1800012289288356" },
@@ -334,8 +348,8 @@ export default async function Home() {
                 >
                   <span className="text-2xl">{icon}</span>
                   <span className="text-xs font-medium text-slate-700 group-hover:text-red-600 leading-snug">{label}</span>
-                  <span className="text-[10px] text-slate-400 leading-snug line-clamp-2">{desc}</span>
-                  <span className="text-[10px] text-red-400 font-medium mt-auto">楽天ROOMで見る →</span>
+                  <span className="text-xs text-slate-400 leading-snug line-clamp-2">{desc}</span>
+                  <span className="text-xs text-red-400 font-medium mt-auto">楽天ROOMで見る →</span>
                 </a>
               ))}
             </div>

@@ -8,7 +8,6 @@ interface Props {
 }
 
 export default function HeroSplit({ productA, productB }: Props) {
-  const shortName = (name: string) => name.substring(0, 18);
 
   return (
     <div className="relative w-full h-[200px] md:h-[280px] overflow-hidden rounded-xl mb-8 flex">
@@ -24,8 +23,8 @@ export default function HeroSplit({ productA, productB }: Props) {
             preload
           />
         </div>
-        <p className="text-[11px] font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">
-          {shortName(productA.name)}
+        <p className="text-xs font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">
+          {productA.name}
         </p>
       </div>
 
@@ -50,8 +49,8 @@ export default function HeroSplit({ productA, productB }: Props) {
             className="object-contain"
           />
         </div>
-        <p className="text-[11px] font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">
-          {shortName(productB.name)}
+        <p className="text-xs font-semibold text-ink-strong text-center mt-2 leading-tight line-clamp-2 w-full">
+          {productB.name}
         </p>
       </div>
     </div>

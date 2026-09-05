@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { sizedImageUrl } from "@/lib/imageSize";
 import { Article, Category, Product } from "@/lib/types";
+import { getArticleLabel } from "@/lib/articleEditorial";
 
 interface Props {
   article: Article;
@@ -18,17 +19,17 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
   return (
     <Link
       href={`/articles/${article.slug}`}
-      className="group block bg-white rounded-xl border border-line hover:border-lake-200 hover:bg-lake-50/20 transition overflow-hidden"
+      className="article-card group grid grid-cols-[4rem_minmax(0,1fr)] items-start gap-3 p-4 sm:block sm:p-0 bg-white rounded-xl border border-line hover:border-lake-200 hover:bg-lake-50/20 transition overflow-hidden"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-[16/10] bg-mist border-b border-line-soft overflow-hidden">
-        {article.eyecatch || thumbProduct ? (
+      <div className="relative aspect-square sm:aspect-[16/10] rounded-lg sm:rounded-none bg-mist sm:border-b border-line-soft overflow-hidden">
+        {article.eyecatch || thumbProduct?.imageUrl ? (
           <Image
             src={sizedImageUrl(article.eyecatch || thumbProduct!.imageUrl, 640)}
-            alt={article.title}
+            alt=""
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 639px) 64px, (max-width: 1024px) 50vw, 33vw"
+            className={`${article.eyecatch ? "object-cover" : "object-contain p-2 sm:p-6 bg-white"} transition-transform duration-500 motion-reduce:transition-none group-hover:scale-[1.03]`}
             loading="lazy"
           />
         ) : (
@@ -36,14 +37,14 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
             {fallbackIcon}
           </div>
         )}
-        {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-lake-600/70" />
+        <span className="hidden sm:inline-block absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-ink border border-line-soft">{getArticleLabel(article)}</span>
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="min-w-0 sm:p-5">
+        <p className="sm:hidden mb-1.5 text-xs font-medium text-lake-700">{getArticleLabel(article)}</p>
         {category && (
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="hidden sm:flex items-center gap-1.5 mb-2">
             <span className="text-lake-600">
               {getCategoryIcon(category.slug, "sm"
               )}
@@ -53,14 +54,14 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
             </span>
           </div>
         )}
-        <h3 className="font-semibold text-ink-strong text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-lake-700 transition">
+        <h3 className="font-semibold text-ink-strong text-base leading-relaxed sm:mb-2 sm:line-clamp-3 group-hover:text-lake-700 transition">
           {article.title}
         </h3>
-        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+        <p className="hidden sm:line-clamp-2 text-sm text-slate-500 leading-relaxed">
           {article.excerpt}
         </p>
         {article.publishedAt && (
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-slate-500 mt-2 sm:mt-3">
             {new Date(article.publishedAt).toLocaleDateString("ja-JP")}
           </p>
         )}

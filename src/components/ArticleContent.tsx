@@ -11,6 +11,7 @@ import YouTubeEmbed from "./YouTubeEmbed";
 import BodyLink from "./BodyLink";
 import { headingId } from "@/lib/toc";
 import type { ReactNode } from "react";
+import TableScroll from "./TableScroll";
 
 // 見出しレンダラー用: 子要素（strong/リンク等を含みうる）を平文化する。
 // 目次（lib/toc.ts extractToc）と同じ headingId に通すことでアンカー一致を保証
@@ -25,9 +26,10 @@ function textOf(node: ReactNode): string {
 interface Props {
   content: string;
   products: Product[];
+  showProductFallback?: boolean;
 }
 
-export default function ArticleContent({ content, products }: Props) {
+export default function ArticleContent({ content, products, showProductFallback = true }: Props) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // {{price:商品ID}} を現在の登録価格に差し替える。
@@ -49,12 +51,12 @@ export default function ArticleContent({ content, products }: Props) {
   );
 
   // フォールバック: productIds がありながら本文に商品タグが無い記事には
-  // 末尾に RankingList を自動挿入する (画像が一切出ない問題の対策)
+  // 末尾に順位のない商品一覧を挿入する。本文を分割する呼び出し元では無効にする。
   const hasProductTag = /\{\{(?:product|comparison|ranking):/.test(content);
-  const showFallbackRanking = !hasProductTag && products.length > 0;
+  const showFallbackRanking = showProductFallback && !hasProductTag && products.length > 0;
 
   return (
-    <div className="prose max-w-none">
+    <div className="article-body min-w-0">
       {parts.map((part, i) => {
         // Product card
         const productMatch = part.match(/\{\{product:([^}]+)\}\}/);
@@ -119,29 +121,30 @@ export default function ArticleContent({ content, products }: Props) {
         // Regular markdown
         if (part.trim()) {
           return (
-            <ReactMarkdown
-              key={i}
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({ href, children }) => (
-                  <BodyLink href={href}>{children}</BodyLink>
-                ),
-                // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
-                // 逃げを確保
-                h2: ({ children }) => (
-                  <h2 id={headingId(textOf(children))} className="scroll-mt-24">
-                    {children}
-                  </h2>
-                ),
-                table: ({ children, ...props }) => (
-                  <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                    <table {...props}>{children}</table>
-                  </div>
-                ),
-              }}
-            >
-              {part}
-            </ReactMarkdown>
+            <div key={i} className="prose max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ href, children }) => (
+                    <BodyLink href={href}>{children}</BodyLink>
+                  ),
+                  // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
+                  // 逃げを確保
+                  h2: ({ children }) => (
+                    <h2 id={headingId(textOf(children))} className="scroll-mt-24">
+                      {children}
+                    </h2>
+                  ),
+                  table: ({ children, ...props }) => (
+                    <TableScroll>
+                      <table {...props}>{children}</table>
+                    </TableScroll>
+                  ),
+                }}
+              >
+                {part}
+              </ReactMarkdown>
+            </div>
           );
         }
 
@@ -153,7 +156,7 @@ export default function ArticleContent({ content, products }: Props) {
           <h2 className="text-2xl font-semibold text-ink-strong tracking-tight mb-6 pb-2 border-b border-lake-100">
             この記事で紹介した製品
           </h2>
-          <RankingList products={products} />
+          <RankingList products={products} ranked={false} />
         </div>
       )}
     </div>

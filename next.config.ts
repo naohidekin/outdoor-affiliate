@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Supervised local preview host; only affects the development server.
+  allowedDevOrigins: ["terminal.local"],
   async redirects() {
     return [
       // /category は page.tsx が存在せず 404 になるため恒久リダイレクト
