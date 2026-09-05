@@ -1,28 +1,13 @@
 {
-  "generatedAt": "2026-08-29T22:00:08.150Z",
-  "reportCheckedAt": "2026-08-29T21:32:02.134Z",
+  "generatedAt": "2026-09-05T22:00:09.887Z",
+  "reportCheckedAt": "2026-09-05T21:31:58.757Z",
   "quarantined": [
     {
       "id": "peg-hammer-snowpeak-proc",
       "name": "スノーピーク ペグハンマー PRO.C N-001",
       "brand": "スノーピーク",
       "oldUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
-      "quarantinedAt": "2026-08-29T22:00:08.150Z",
-      "candidate": {
-        "asin": "B000AR2OBG",
-        "title": "スノーピーク 交換用銅ヘッド N-001-1",
-        "price": 3167,
-        "url": "https://www.amazon.co.jp/dp/B000AR2OBG?tag=camp78-22"
-      },
-      "confidence": 50,
-      "searchUrl": "https://www.amazon.co.jp/s?k=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%83%9A%E3%82%B0%E3%83%8F%E3%83%B3%E3%83%9E%E3%83%BC%20PRO.C%20N-001"
-    },
-    {
-      "id": "peg-hammer-snowpeak-proc-review",
-      "name": "スノーピーク ペグハンマー PRO.C N-001",
-      "brand": "スノーピーク",
-      "oldUrl": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22",
-      "quarantinedAt": "2026-08-29T22:00:08.150Z",
+      "quarantinedAt": "2026-09-05T22:00:09.887Z",
       "candidate": {
         "asin": "B000AR2OBG",
         "title": "スノーピーク 交換用銅ヘッド N-001-1",
