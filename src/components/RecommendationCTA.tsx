@@ -4,6 +4,8 @@ import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import type { AffiliatePlacement } from "@/lib/trackAffiliateClick";
 import AffiliateLink from "./AffiliateLink";
 import { sizedImageUrl } from "@/lib/imageSize";
+import { getProductSpecs } from "@/lib/productSpecs";
+import type { EditorialPick } from "@/lib/articleEditorial";
 
 function AmazonButton({
   product,
@@ -33,11 +35,13 @@ export default function RecommendationCTA({
   products,
   title,
   subtitle,
+  picks = [],
   placement = "recommended",
 }: {
   products: Product[];
   title?: string;
   subtitle?: string;
+  picks?: EditorialPick[];
   placement?: AffiliatePlacement;
 }) {
   if (products.length === 0) return null;
@@ -46,38 +50,44 @@ export default function RecommendationCTA({
     <div className="my-6 rounded-xl border border-lake-100 bg-lake-50/60 overflow-hidden">
       <div className="px-5 py-3 bg-lake-600 text-white">
         <p className="text-sm font-semibold">
-          {title ?? `迷ったらこの${products.length}つ — まず候補を絞る`}
+          {title ?? (picks.length ? "条件に合うモデルを選ぶ" : "掲載モデルの価格を確認")}
         </p>
         <p className="text-xs text-lake-100 mt-0.5">
-          {subtitle ?? "予算・用途に合わせて選んでください"}
+          {subtitle ?? "価格は登録時点の参考情報です。最新の価格・付属品は販売店で確認してください。"}
         </p>
       </div>
       <div className="divide-y divide-lake-100">
-        {products.map((p, i) => {
-          // 主要スペックを最大2件抽出
-          const topSpecs = Object.entries(p.specs).slice(0, 2);
+        {products.map((p) => {
+          const topSpecs = getProductSpecs(p, 2);
+          const pick = picks.find((entry) => entry.productId === p.id);
           return (
             <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-lake-600 text-white text-xs font-bold flex items-center justify-center">
-                  {i + 1}
-                </span>
                 {p.imageUrl && (
                   <Image
                     src={sizedImageUrl(p.imageUrl, 96)}
                     alt={p.name}
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 object-contain rounded shrink-0"
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0"
                   />
                 )}
                 <div className="min-w-0">
+                  {pick && (
+                    <p className="text-sm font-semibold text-lake-700 mb-1">{pick.audience}</p>
+                  )}
                   <p className="text-sm font-semibold text-ink-strong leading-snug">{p.name}</p>
-                  <p className="text-base font-bold text-lake-700 mt-0.5">¥{p.price.toLocaleString()}</p>
+                  <p className="text-base font-bold text-lake-700 mt-1">{p.price > 0 ? `¥${p.price.toLocaleString()}` : "価格は販売店で確認"}</p>
                   {topSpecs.length > 0 && (
                     <p className="text-xs text-slate-500 mt-0.5">
                       {topSpecs.map(([k, v]) => `${k}: ${v}`).join(" / ")}
                     </p>
+                  )}
+                  {pick && (
+                    <div className="mt-3 space-y-1 text-sm leading-relaxed text-slate-600">
+                      <p><span className="mr-2 rounded bg-white px-2 py-0.5 text-xs text-lake-700">{pick.evidence}</span>{pick.reason}</p>
+                      <p><span className="font-medium text-ink">選ぶ前に：</span>{pick.caution}</p>
+                    </div>
                   )}
                 </div>
               </div>

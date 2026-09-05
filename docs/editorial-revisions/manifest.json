@@ -1,0 +1,70 @@
+{
+  "preparedAt": "2026-09-05",
+  "status": "awaiting-author-review",
+  "revisions": [
+    {
+      "slug": "kids-insect-repellent-camping-guide",
+      "baseSnapshotUpdatedAt": "2026-08-30T03:55:35.429Z",
+      "contentFile": "kids-insect-repellent-camping-guide.md",
+      "requiresReview": [
+        "medical",
+        "author"
+      ],
+      "reason": "ディートとイカリジンの年齢基準、天然成分の推奨、商品順位の矛盾を解消。未確認の家族体験・購入者の引用を削除。",
+      "fields": {
+        "excerpt": "子連れキャンプの虫よけを、衣服・蚊帳・肌用の虫よけ剤に分けて整理。ディートとイカリジンの年齢・回数の違い、製品表示の確認点を解説します。",
+        "metaDescription": "子どものキャンプの虫よけは、衣服・蚊帳と年齢に合う製品を組み合わせて準備。ディート・イカリジンの使用基準、乳児への塗り方、選び方を整理します。",
+        "productIds": [],
+        "faqs": [
+          {
+            "question": "赤ちゃんに虫よけ剤は使えますか？",
+            "answer": "ディートは生後6ヶ月未満には使用しません。イカリジンには年齢制限がありませんが、乳児は衣服・蚊帳を優先し、必要な場合に製品表示どおり使用します。"
+          },
+          {
+            "question": "イカリジンは何度でも使ってよいですか？",
+            "answer": "年齢による使用回数の制限はありませんが、必要以上に繰り返さず、製品に記載された量や塗り直しの目安に従ってください。"
+          },
+          {
+            "question": "スプレー、蚊帳、シールはどう選べばよいですか？",
+            "answer": "蚊帳は空間への虫の侵入、肌用の虫よけ剤は露出した肌への対策です。香りのシールは対象害虫や効能を確認せずに肌用の虫よけ剤の代わりにしないでください。"
+          }
+        ]
+      },
+      "sources": [
+        "docs/repellent-age-standard.md",
+        "https://www.earth.jp/saratect/safety/deet/",
+        "https://www.earth.jp/saratect/safety/icaridin/"
+      ]
+    },
+    {
+      "slug": "snow-peak-amenity-dome-l-10year-review",
+      "baseSnapshotUpdatedAt": "2026-08-26T15:31:18.961Z",
+      "contentFile": "snow-peak-amenity-dome-l-10year-review.md",
+      "requiresReview": [
+        "author"
+      ],
+      "reason": "2026年7月の買い替えと8月の初張りを反映。愛用ギア正本にない修理・実測・旅先のエピソードや、前室調理の推奨を削除。",
+      "fields": {
+        "excerpt": "2016年から約10年使ったアメニティドームLとメッシュタープ。2026年のランドネストシェルターへの買い替えで重視した設営の負担と、初張りの記録を紹介します。",
+        "metaDescription": "アメニティドームLを2016年から約10年使用した記録。家族の寝室としての実感と、2026年にランドネストシェルターへ買い替えた理由、初張りで気づいた点を紹介します。",
+        "faqs": [
+          {
+            "question": "アメニティドームLは今もメインで使っていますか？",
+            "answer": "2016年から約10年使い、2026年7月に次のメインとしてランドネストシェルター Black Frame Editionを購入しました。"
+          },
+          {
+            "question": "買い替えでは何を重視しましたか？",
+            "answer": "設営の負担です。アメドLとメッシュタープの組み合わせから2ルームに移り、我が家の用途と予算に合うかを考えました。"
+          },
+          {
+            "question": "新しいテントの初回の設営時間は？",
+            "answer": "2026年8月の初張りは大人2人で30分でした。運営者の初回の記録であり、すべての方に同じ時間を保証するものではありません。"
+          }
+        ]
+      },
+      "sources": [
+        "docs/author-gear.md"
+      ]
+    }
+  ]
+}

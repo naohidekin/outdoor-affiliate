@@ -1,5 +1,6 @@
 import { Product } from "@/lib/types";
 import { isAmazonPrimary } from "@/lib/affiliate-priority";
+import { getProductSpecs } from "@/lib/productSpecs";
 import AffiliateLink from "./AffiliateLink";
 
 function AmazonButton({ product }: { product: Product }) {
@@ -23,14 +24,11 @@ function AmazonButton({ product }: { product: Product }) {
 export default function ComparisonTable({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
 
-  const allKeys = new Set<string>();
-  products.forEach((p) => Object.keys(p.specs).forEach((k) => allKeys.add(k)));
-  // 4商品以上の表では、過半数の商品に値がない行（歯抜け行）を非表示にする。
-  // 2〜3商品のA vs B比較表は固有スペック行も見せたいので従来通り全行表示。
-  const specKeys = Array.from(allKeys).filter((key) => {
-    if (products.length < 4) return true;
-    const filled = products.filter((p) => p.specs[key]).length;
-    return filled * 2 >= products.length;
+  const specs = new Map(products.map((p) => [p.id, new Map(getProductSpecs(p))]));
+  const allKeys = new Set(products.flatMap((p) => [...specs.get(p.id)!.keys()]));
+  const specKeys = [...allKeys].filter((key) => {
+    const filled = products.filter((p) => specs.get(p.id)?.has(key)).length;
+    return filled > 0 && (products.length < 4 || filled * 2 >= products.length);
   });
 
   return (
@@ -47,7 +45,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                 key={p.id}
                 className="bg-ink text-white px-4 py-4 text-center text-sm font-semibold border-l border-white/10 min-w-[150px]"
               >
-                <div className="text-[11px] font-normal text-slate-400 mb-0.5 tracking-wide">
+                <div className="text-xs font-normal text-slate-400 mb-0.5 tracking-wide">
                   {p.brand}
                 </div>
                 <div className="leading-tight">
@@ -67,48 +65,11 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
             {products.map((p) => (
               <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
                 <span className="text-xl font-semibold text-lake-700 tracking-tight">
-                  ¥{p.price.toLocaleString()}
+                  {p.price > 0 ? `¥${p.price.toLocaleString()}` : "販売店で確認"}
                 </span>
               </td>
             ))}
           </tr>
-
-          {/* 評価行（全商品が未評価なら行ごと出さない。「0 / 5」は低評価なのか
-              未評価なのか読者に伝わらず、かえって信頼を落とすため） */}
-          {products.some((p) => (p.rating ?? 0) > 0) && (
-            <tr className="border-b border-line bg-white">
-              <td className="px-4 py-4 text-sm font-semibold text-ink-strong sticky left-0 bg-white z-[5]">
-                総合評価
-              </td>
-              {products.map((p) => (
-                <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
-                  {(p.rating ?? 0) > 0 ? (
-                    <>
-                      <div className="flex justify-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span
-                            key={star}
-                            className={`text-lg ${
-                              star <= Math.floor(p.rating)
-                                ? "text-amber-400"
-                                : star - 0.5 <= p.rating
-                                ? "text-amber-300"
-                                : "text-slate-200"
-                            }`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">{p.rating} / 5</div>
-                    </>
-                  ) : (
-                    <span className="text-xs text-slate-400">未評価</span>
-                  )}
-                </td>
-              ))}
-            </tr>
-          )}
 
           {/* スペック行 */}
           {specKeys.map((key, i) => (
@@ -126,7 +87,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                   key={p.id}
                   className="px-4 py-3.5 text-sm text-center text-ink border-l border-line-soft"
                 >
-                  {p.specs[key] || (
+                  {specs.get(p.id)?.get(key) || (
                     <span className="text-slate-300">—</span>
                   )}
                 </td>
@@ -189,7 +150,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
                       placement="reviews_link"
                       productName={p.name}
                       store="rakuten"
-                      className="text-center text-[11px] text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
+                      className="text-center text-xs text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
                     >
                       楽天で口コミを見る →
                     </AffiliateLink>

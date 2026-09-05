@@ -25,9 +25,10 @@ function textOf(node: ReactNode): string {
 interface Props {
   content: string;
   products: Product[];
+  showProductFallback?: boolean;
 }
 
-export default function ArticleContent({ content, products }: Props) {
+export default function ArticleContent({ content, products, showProductFallback = true }: Props) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // {{price:商品ID}} を現在の登録価格に差し替える。
@@ -49,9 +50,9 @@ export default function ArticleContent({ content, products }: Props) {
   );
 
   // フォールバック: productIds がありながら本文に商品タグが無い記事には
-  // 末尾に RankingList を自動挿入する (画像が一切出ない問題の対策)
+  // 末尾に順位のない商品一覧を挿入する。本文を分割する呼び出し元では無効にする。
   const hasProductTag = /\{\{(?:product|comparison|ranking):/.test(content);
-  const showFallbackRanking = !hasProductTag && products.length > 0;
+  const showFallbackRanking = showProductFallback && !hasProductTag && products.length > 0;
 
   return (
     <div className="prose max-w-none">
@@ -153,7 +154,7 @@ export default function ArticleContent({ content, products }: Props) {
           <h2 className="text-2xl font-semibold text-ink-strong tracking-tight mb-6 pb-2 border-b border-lake-100">
             この記事で紹介した製品
           </h2>
-          <RankingList products={products} />
+          <RankingList products={products} ranked={false} />
         </div>
       )}
     </div>

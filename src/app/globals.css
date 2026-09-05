@@ -101,6 +101,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:where(a, button, summary, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-lake-600);
+  outline-offset: 4px;
+}
+
 /* ============================================================
    Prose (記事本文)
    旧緑/茶/ベージュ系を全て Lake トークンに置換

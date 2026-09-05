@@ -23,7 +23,7 @@ function AmazonButton({ product }: { product: Product }) {
   );
 }
 
-export default function RankingList({ products }: { products: Product[] }) {
+export default function RankingList({ products, ranked = true }: { products: Product[]; ranked?: boolean }) {
   if (products.length === 0) return null;
 
   return (
@@ -36,11 +36,11 @@ export default function RankingList({ products }: { products: Product[] }) {
           {product.affiliateUrl && <RakutenDealStamp />}
           {/* Header row: rank + image + (name on desktop) */}
           <div className="flex gap-4 items-start">
-            <div className="flex-shrink-0">
+            {ranked && <div className="flex-shrink-0">
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-lake-50 text-lake-700 border border-lake-100 font-semibold text-xs">
                 {i + 1}位
               </div>
-            </div>
+            </div>}
 
             {product.imageUrl && (
               <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-mist relative">
@@ -49,7 +49,7 @@ export default function RankingList({ products }: { products: Product[] }) {
                   alt={product.name}
                   fill
                   sizes="96px"
-                  className="object-cover"
+                  className="object-contain p-2"
                   loading="lazy"
                 />
               </div>
@@ -60,13 +60,6 @@ export default function RankingList({ products }: { products: Product[] }) {
                 <p className="text-xs text-slate-500 tracking-wide">{product.brand}</p>
               )}
               <h3 className="font-semibold text-ink-strong mb-1 leading-snug">{product.name}</h3>
-              {product.rating > 0 && (
-                <div className="text-amber-400 text-sm">
-                  {"★".repeat(Math.floor(product.rating))}
-                  {product.rating % 1 >= 0.5 ? "☆" : ""}
-                  <span className="text-slate-500 ml-1">{product.rating}</span>
-                </div>
-              )}
               {product.price > 0 && (
                 <span className="text-lg font-semibold text-lake-700 tracking-tight block mt-1">
                   ¥{product.price.toLocaleString()}

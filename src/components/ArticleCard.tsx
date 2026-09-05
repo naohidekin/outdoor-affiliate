@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { sizedImageUrl } from "@/lib/imageSize";
 import { Article, Category, Product } from "@/lib/types";
+import { getArticleLabel } from "@/lib/articleEditorial";
 
 interface Props {
   article: Article;
@@ -22,13 +23,13 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
     >
       {/* Thumbnail */}
       <div className="relative aspect-[16/10] bg-mist border-b border-line-soft overflow-hidden">
-        {article.eyecatch || thumbProduct ? (
+        {article.eyecatch || thumbProduct?.imageUrl ? (
           <Image
             src={sizedImageUrl(article.eyecatch || thumbProduct!.imageUrl, 640)}
             alt={article.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`${article.eyecatch ? "object-cover" : "object-contain p-6 bg-white"} transition-transform duration-500 motion-reduce:transition-none group-hover:scale-[1.03]`}
             loading="lazy"
           />
         ) : (
@@ -36,8 +37,7 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
             {fallbackIcon}
           </div>
         )}
-        {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-lake-600/70" />
+        <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-ink border border-line-soft">{getArticleLabel(article)}</span>
       </div>
 
       {/* Content */}
@@ -53,7 +53,7 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
             </span>
           </div>
         )}
-        <h3 className="font-semibold text-ink-strong text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-lake-700 transition">
+        <h3 className="font-semibold text-ink-strong text-base leading-relaxed mb-2 line-clamp-3 group-hover:text-lake-700 transition">
           {article.title}
         </h3>
         <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">

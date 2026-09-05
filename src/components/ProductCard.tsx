@@ -3,9 +3,11 @@ import { Product } from "@/lib/types";
 import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import { sizedImageUrl } from "@/lib/imageSize";
 import AffiliateLink from "./AffiliateLink";
+import { getProductSpecs } from "@/lib/productSpecs";
 import RakutenDealStamp from "./RakutenDealStamp";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const specs = getProductSpecs(product, 3);
   const amazonFirst = isAmazonPrimary(product);
   // どちらのモールを上に出したかを計測で追えるようにする。
   // 価格帯ごとの出し分け（affiliate-priority.ts）が効いているかの検証に要る
@@ -43,24 +45,14 @@ export default function ProductCard({ product }: { product: Product }) {
           <p className="text-xs text-slate-500 mb-1 tracking-wide">{product.brand}</p>
         )}
         <h3 className="font-semibold text-ink-strong mb-2 leading-snug">{product.name}</h3>
-        {product.rating > 0 && (
-          <div className="flex items-center gap-1 mb-2">
-            <span className="text-amber-400 text-sm">
-              {"★".repeat(Math.floor(product.rating))}
-              {product.rating % 1 >= 0.5 ? "☆" : ""}
-            </span>
-            <span className="text-xs text-slate-500">{product.rating}</span>
-          </div>
-        )}
         {product.description && (
           <p className="text-sm text-slate-600 mb-3 line-clamp-3 leading-relaxed">
             {product.description}
           </p>
         )}
-        {Object.keys(product.specs).length > 0 && (
+        {specs.length > 0 && (
           <div className="text-xs text-slate-500 mb-3 space-y-1 border-t border-line-soft pt-3">
-            {Object.entries(product.specs)
-              .slice(0, 3)
+            {specs
               .map(([key, val]) => (
                 <div key={key} className="flex justify-between">
                   <span>{key}</span>

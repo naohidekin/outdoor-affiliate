@@ -16,6 +16,8 @@ import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
 import MedicalAdvice from "@/components/MedicalAdvice";
 import RecommendationCTA from "@/components/RecommendationCTA";
+import RankingList from "@/components/RankingList";
+import { getEditorialPicks, getPrimaryProducts } from "@/lib/articleEditorial";
 import AffiliateDisclosure from "@/components/AffiliateDisclosure";
 import { MEDICAL_ADVICE_MAP } from "@/lib/medicalAdviceData";
 import HeroImage from "@/components/HeroImage";
@@ -417,7 +419,7 @@ export default async function ArticlePage({
             <>
               <AffiliateDisclosure variant="inline" />
               {showTopCta(article.slug) && (
-                <RecommendationCTA products={products.slice(0, 3)} />
+                <RecommendationCTA products={getPrimaryProducts(article, products).slice(0, 3)} picks={getEditorialPicks(article.slug, products)} />
               )}
             </>
           )}
@@ -432,22 +434,28 @@ export default async function ArticlePage({
           {/* Article body */}
           {contentSummaryOnward ? (
             <>
-              <ArticleContent content={contentBefore} products={products} />
+              <ArticleContent content={contentBefore} products={products} showProductFallback={false} />
               <MedicalAdvice {...medicalAdvice!} />
-              <ArticleContent content={contentSummaryOnward} products={products} />
+              <ArticleContent content={contentSummaryOnward} products={products} showProductFallback={false} />
             </>
           ) : (
-            <ArticleContent content={article.content} products={products} />
+            <ArticleContent content={article.content} products={products} showProductFallback={false} />
           )}
 
-          {/* 記事末尾 購入導線（読了直後が最も購買意欲が高い） */}
+          {/* 商品タグのない記事も、順序を順位に変換せず一度だけ全商品を表示。 */}
           {products.length > 0 && (
-            <RecommendationCTA
-              products={products.slice(0, 3)}
-              title={`この記事で紹介した${Math.min(products.length, 3)}つ`}
-              subtitle="気になるモデルがあれば、在庫と価格をチェックしてみてください"
-              placement="article_end"
-            />
+            /\{\{(?:product|comparison|ranking):/.test(article.content) ? (
+              <RecommendationCTA
+                products={getPrimaryProducts(article, products).slice(0, 3)}
+                picks={getEditorialPicks(article.slug, products)}
+                placement="article_end"
+              />
+            ) : (
+              <section className="mt-10" aria-label="この記事で紹介した製品">
+                <h2 className="text-xl font-semibold text-ink-strong">この記事で紹介した製品</h2>
+                <RankingList products={products} ranked={false} />
+              </section>
+            )
           )}
         </article>
 
@@ -506,7 +514,7 @@ export default async function ArticlePage({
         {otherCategoryArticles.length > 0 && (
           <section className="max-w-4xl mx-auto px-4 pb-12">
             <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
-              他のカテゴリの人気記事
+              あわせて読みたい
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {otherCategoryArticles.map((a) => {

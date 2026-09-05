@@ -14,22 +14,25 @@ export default function Header({ categories }: { categories: Category[] }) {
               Camp Gear Lab
             </span>
           </Link>
-          <nav className="hidden md:flex items-center gap-1">
-            {categories.slice(0, 6).map((c) => (
+          <nav aria-label="メインナビゲーション" className="hidden lg:flex items-center gap-1">
+            <Link href="/#gear-guides" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">ギアを選ぶ</Link>
+            <Link href="/#field-notes" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">使った道具の記録</Link>
+            {categories.filter((c) => c.id === "safety").map((c) => (
               <Link
                 key={c.id}
                 href={`/category/${c.slug}`}
                 className="text-sm text-slate-600 hover:text-lake-600 transition px-3 py-2 rounded-lg hover:bg-lake-50 font-medium"
               >
-                {c.name}
+                子連れの安全対策
               </Link>
             ))}
             <Link
-              href="/about"
+              href="/articles"
               className="text-sm text-slate-600 hover:text-lake-600 transition px-3 py-2 rounded-lg hover:bg-lake-50 font-medium"
             >
-              About
+              記事を探す
             </Link>
+            <Link href="/about" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">書き手について</Link>
           </nav>
           <MobileMenu categories={categories} />
         </div>
