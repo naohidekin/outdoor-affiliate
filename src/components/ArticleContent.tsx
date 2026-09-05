@@ -11,6 +11,7 @@ import YouTubeEmbed from "./YouTubeEmbed";
 import BodyLink from "./BodyLink";
 import { headingId } from "@/lib/toc";
 import type { ReactNode } from "react";
+import TableScroll from "./TableScroll";
 
 // 見出しレンダラー用: 子要素（strong/リンク等を含みうる）を平文化する。
 // 目次（lib/toc.ts extractToc）と同じ headingId に通すことでアンカー一致を保証
@@ -55,7 +56,7 @@ export default function ArticleContent({ content, products, showProductFallback 
   const showFallbackRanking = showProductFallback && !hasProductTag && products.length > 0;
 
   return (
-    <div className="prose max-w-none">
+    <div className="article-body min-w-0">
       {parts.map((part, i) => {
         // Product card
         const productMatch = part.match(/\{\{product:([^}]+)\}\}/);
@@ -120,29 +121,30 @@ export default function ArticleContent({ content, products, showProductFallback 
         // Regular markdown
         if (part.trim()) {
           return (
-            <ReactMarkdown
-              key={i}
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({ href, children }) => (
-                  <BodyLink href={href}>{children}</BodyLink>
-                ),
-                // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
-                // 逃げを確保
-                h2: ({ children }) => (
-                  <h2 id={headingId(textOf(children))} className="scroll-mt-24">
-                    {children}
-                  </h2>
-                ),
-                table: ({ children, ...props }) => (
-                  <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                    <table {...props}>{children}</table>
-                  </div>
-                ),
-              }}
-            >
-              {part}
-            </ReactMarkdown>
+            <div key={i} className="prose max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ href, children }) => (
+                    <BodyLink href={href}>{children}</BodyLink>
+                  ),
+                  // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
+                  // 逃げを確保
+                  h2: ({ children }) => (
+                    <h2 id={headingId(textOf(children))} className="scroll-mt-24">
+                      {children}
+                    </h2>
+                  ),
+                  table: ({ children, ...props }) => (
+                    <TableScroll>
+                      <table {...props}>{children}</table>
+                    </TableScroll>
+                  ),
+                }}
+              >
+                {part}
+              </ReactMarkdown>
+            </div>
           );
         }
 

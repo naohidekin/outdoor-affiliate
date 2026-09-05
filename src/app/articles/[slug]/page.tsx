@@ -350,7 +350,7 @@ export default async function ArticlePage({
       ))}
       <Header categories={categories} />
       <main className="flex-1">
-        <article className="max-w-4xl mx-auto px-4 py-12">
+        <article className="article-page max-w-4xl mx-auto px-5 sm:px-6 pt-6 sm:pt-10 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-slate-500 mb-6" aria-label="パンくず">
             <Link href="/" className="hover:text-lake-600 transition">
@@ -369,20 +369,18 @@ export default async function ArticlePage({
             )}
           </nav>
 
-          <HeroImage article={article} products={products} />
-
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong leading-tight mb-5">
+          <h1 className="article-title text-[1.625rem] sm:text-3xl md:text-4xl font-semibold tracking-tight text-ink-strong leading-[1.5] mb-4">
             {article.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mb-10 pb-4 border-b border-line">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mb-5 pb-4 border-b border-line">
             <Link
               href="/about"
               className="inline-flex items-center gap-1.5 text-slate-600 hover:text-lake-600 transition"
             >
-              <span>🩺</span>
+              <span aria-hidden="true">🩺</span>
               <span className="font-medium">ギア男（現役小児科開業医）</span>
-              <span className="text-slate-400">監修・執筆</span>
+              <span className="text-xs text-slate-500">監修・執筆</span>
             </Link>
             {(article.updatedAt ?? article.publishedAt) && (
               <time className="text-slate-500">
@@ -406,6 +404,15 @@ export default async function ArticlePage({
             )}
           </div>
 
+          <HeroImage article={article} products={products} />
+
+          {/* 目次（H2が4本以上の記事のみ。3.4万字級の長文で目的の見出しへ
+              飛べない問題への対策。<details>ベースでJS不要） */}
+          {(() => {
+            const toc = extractToc(article.content);
+            return toc.length >= 4 ? <TableOfContents items={toc} /> : null;
+          })()}
+
           {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示）。
               安全・医学系記事では冒頭の販売色を消すため出さない */}
           {showTopCta(article.slug) && products.some((p) => p.affiliateUrl) && (
@@ -423,13 +430,6 @@ export default async function ArticlePage({
               )}
             </>
           )}
-
-          {/* 目次（H2が4本以上の記事のみ。3.4万字級の長文で目的の見出しへ
-              飛べない問題への対策。<details>ベースでJS不要） */}
-          {(() => {
-            const toc = extractToc(article.content);
-            return toc.length >= 4 ? <TableOfContents items={toc} /> : null;
-          })()}
 
           {/* Article body */}
           {contentSummaryOnward ? (
@@ -461,7 +461,7 @@ export default async function ArticlePage({
 
         {/* FAQ section */}
         {faqs.length > 0 && (
-          <section className="max-w-4xl mx-auto px-4 pb-12">
+          <section className="max-w-4xl mx-auto px-5 sm:px-6 pb-12">
             <h2 className="text-2xl font-semibold text-ink-strong tracking-tight mb-6">
               よくある質問
             </h2>
@@ -488,7 +488,7 @@ export default async function ArticlePage({
 
         {/* Related articles */}
         {relatedArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-4 pb-12">
+          <section className="max-w-4xl mx-auto px-5 sm:px-6 pb-12">
             <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
               関連する記事
             </h2>
@@ -512,7 +512,7 @@ export default async function ArticlePage({
         )}
         {/* Other category articles */}
         {otherCategoryArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-4 pb-12">
+          <section className="max-w-4xl mx-auto px-5 sm:px-6 pb-12">
             <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
               あわせて読みたい
             </h2>

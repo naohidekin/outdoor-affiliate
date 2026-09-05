@@ -11,9 +11,9 @@ export default function MedicalAdvice({ title, body, bullets }: MedicalAdvicePro
       <h3 className="flex items-center gap-2 font-bold text-emerald-900 text-base mb-3">
         🩺 医師から一言：{title}
       </h3>
-      <p className="text-gray-800 leading-relaxed text-sm">{body}</p>
+      <p className="text-gray-800 leading-loose text-base">{body}</p>
       {bullets.length > 0 && (
-        <ul className="list-disc pl-5 mt-3 space-y-1 text-gray-800 text-sm">
+        <ul className="list-disc pl-5 mt-3 space-y-3 text-gray-800 text-base leading-relaxed">
           {bullets.map((b, i) => (
             <li key={i}>{b}</li>
           ))}

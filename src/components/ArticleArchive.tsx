@@ -49,17 +49,26 @@ export default function ArticleArchive({ articles, categories, thumbs }: Props) 
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="キーワードで探す（例: テント 夏 シュラフ）"
-          className="w-full sm:max-w-md px-4 py-2.5 rounded-xl border border-line bg-white text-sm focus:outline-none focus:border-lake-300 focus:ring-2 focus:ring-lake-100"
+          placeholder="キーワードで記事を探す"
+          className="w-full sm:max-w-md min-h-11 px-4 py-3 rounded-xl border border-line bg-white text-base focus:outline-none focus:border-lake-300 focus:ring-2 focus:ring-lake-100"
           aria-label="記事をキーワードで検索"
         />
       </div>
 
-      {/* カテゴリチップ */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="sm:hidden mb-5">
+        <label htmlFor="article-category" className="block mb-2 text-sm font-medium text-slate-600">カテゴリで絞り込む</label>
+        <select id="article-category" value={categoryId ?? ""} onChange={(event) => setCategoryId(event.target.value || null)} className="w-full min-h-11 rounded-xl border border-line bg-white px-4 py-3 text-base text-ink">
+          <option value="">すべて（{articles.length}）</option>
+          {usedCategories.map((c) => <option key={c.id} value={c.id}>{c.name}（{c.count}）</option>)}
+        </select>
+      </div>
+
+      {/* 広い画面ではカテゴリを一覧で選べる */}
+      <div className="hidden sm:flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setCategoryId(null)}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+          aria-pressed={categoryId === null}
+          className={`min-h-11 px-3 py-2 rounded-full text-sm font-medium border transition ${
             categoryId === null
               ? "bg-lake-600 text-white border-lake-600"
               : "bg-white text-slate-600 border-line hover:border-lake-200"
@@ -71,7 +80,8 @@ export default function ArticleArchive({ articles, categories, thumbs }: Props) 
           <button
             key={c.id}
             onClick={() => setCategoryId(categoryId === c.id ? null : c.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+            aria-pressed={categoryId === c.id}
+            className={`min-h-11 px-3 py-2 rounded-full text-sm font-medium border transition ${
               categoryId === c.id
                 ? "bg-lake-600 text-white border-lake-600"
                 : "bg-white text-slate-600 border-line hover:border-lake-200"
@@ -82,9 +92,14 @@ export default function ArticleArchive({ articles, categories, thumbs }: Props) 
         ))}
       </div>
 
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p role="status" className="text-sm text-slate-500">{filtered.length}件の記事</p>
+        {(query || categoryId) && <button onClick={() => { setQuery(""); setCategoryId(null); }} className="min-h-11 px-2 text-sm text-lake-700 underline underline-offset-4">条件をクリア</button>}
+      </div>
+
       {/* 記事グリッド */}
       {filtered.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
           {filtered.map((a) => (
             <ArticleCard
               key={a.id}

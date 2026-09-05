@@ -22,7 +22,7 @@ export default function MobileMenu({ categories }: MobileMenuProps) {
       <button
         ref={toggleRef}
         onClick={() => setOpen(!open)}
-        className="p-2 text-slate-600 hover:text-lake-600 transition"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-lake-50 hover:text-lake-600 transition"
         aria-label={open ? "メニューを閉じる" : "メニューを開く"}
         aria-expanded={open}
         aria-controls="mobile-navigation"
@@ -45,7 +45,7 @@ export default function MobileMenu({ categories }: MobileMenuProps) {
                 key={c.id}
                 href={`/category/${c.slug}`}
                 onClick={() => setOpen(false)}
-                className="text-sm text-slate-600 hover:text-lake-600 transition px-3 py-2.5 rounded-lg hover:bg-lake-50 font-medium"
+                className="flex min-h-11 items-center text-sm text-slate-600 hover:text-lake-600 transition px-3 py-3 rounded-lg hover:bg-lake-50 font-medium"
               >
                 {c.name}
               </Link>

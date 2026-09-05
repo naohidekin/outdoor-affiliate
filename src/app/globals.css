@@ -101,6 +101,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+main {
+  min-width: 0;
+}
+
 :where(a, button, summary, input, select, textarea):focus-visible {
   outline: 2px solid var(--color-lake-600);
   outline-offset: 4px;
@@ -116,15 +120,16 @@ body {
   line-height: 1.85;
   letter-spacing: 0.005em;
   color: var(--text-base);
+  overflow-wrap: anywhere;
 }
 
 .prose h2 {
   margin-top: 2.75em;
   margin-bottom: 0.85em;
   padding-bottom: 0.4em;
-  font-size: 1.625rem;        /* 26px */
+  font-size: clamp(1.375rem, 3.5vw, 1.625rem);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.55;
   color: var(--text-strong);
   border-bottom: 1px solid var(--color-lake-100);
   letter-spacing: 0.005em;
@@ -192,7 +197,7 @@ body {
   border-radius: 0 0.5rem 0.5rem 0;
   color: var(--text-muted);
   font-style: normal;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .prose blockquote p {
@@ -237,6 +242,8 @@ body {
 
 /* Images */
 .prose img {
+  max-width: 100%;
+  height: auto;
   border-radius: 0.5rem;
   border: 1px solid var(--color-line);
   margin: 1.5em 0;
@@ -256,15 +263,66 @@ body {
 }
 
 /* Tables */
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-400) var(--color-mist);
+}
+
+.table-scroll:focus-visible {
+  outline: 2px solid var(--color-lake-600);
+  outline-offset: -2px;
+}
+
+.product-comparison {
+  --comparison-label-width: 6rem;
+  --comparison-product-width: 12rem;
+  table-layout: fixed;
+  min-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+@media (min-width: 640px) {
+  .product-comparison {
+    --comparison-label-width: 8rem;
+    --comparison-product-width: 14rem;
+  }
+}
+
 .prose table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
-  margin: 1.75em 0;
+  margin: 0;
   font-size: 0.9375rem;
-  border: 1px solid var(--color-line);
-  border-radius: 0.5rem;
-  overflow: hidden;
-  min-width: max-content;
+  line-height: 1.7;
+}
+
+.prose table :is(th, td) {
+  min-width: 10rem;
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+}
+
+.prose table :is(th, td):first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 6rem;
+  max-width: 9rem;
+  background: var(--color-white);
+  box-shadow: 1px 0 var(--color-line);
+}
+
+.prose table thead th:first-child {
+  background: var(--color-ink-strong);
+}
+
+.prose table tbody tr:nth-child(even) > :first-child {
+  background: var(--color-mist);
 }
 
 .prose thead tr {
@@ -295,10 +353,6 @@ body {
 
 .prose tbody tr:nth-child(even) {
   background: var(--color-mist);
-}
-
-.prose tbody tr:hover {
-  background: var(--color-lake-50);
 }
 
 /* Figure / Caption */
@@ -353,74 +407,22 @@ body {
   background-color: #131A22;
 }
 
-/* ─── 楽天の買い時ハンコ（RakutenDealStamp） ─────────────
-   商品カード右上に「バシッ」と押される朱印風スタンプ。
-   買い時の日（5と0のつく日・セール期間）だけ自動表示される */
-.rakuten-stamp {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  width: 104px;
-  height: 104px;
-  border-radius: 9999px;
+/* Sale information stays in the reading flow, clear of product images. */
+.rakuten-deal-note {
   display: flex;
-  flex-direction: column;
+  width: fit-content;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 1px;
-  background: rgba(255, 252, 252, 0.94);
-  border: 3px solid #dc2626;
-  box-shadow:
-    inset 0 0 0 2.5px #fffcfc,
-    inset 0 0 0 4.5px rgba(220, 38, 38, 0.85),
-    0 3px 8px rgba(0, 0, 0, 0.14);
-  color: #dc2626;
-  text-align: center;
-  line-height: 1.05;
-  pointer-events: none;
-  transform: rotate(-12deg);
-  animation: stamp-in 0.28s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.375rem;
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
-.rakuten-stamp-top {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-}
-.rakuten-stamp-main {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-.rakuten-stamp-sub {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-/* スマホでは商品名と被らないよう一回り控えめに */
-@media (max-width: 640px) {
-  .rakuten-stamp {
-    width: 84px;
-    height: 84px;
-  }
-  .rakuten-stamp-top { font-size: 10px; }
-  .rakuten-stamp-main { font-size: 14px; }
-  .rakuten-stamp-sub { font-size: 10px; }
-}
-@keyframes stamp-in {
-  0% {
-    opacity: 0;
-    transform: rotate(-12deg) scale(1.8);
-  }
-  70% {
-    opacity: 1;
-    transform: rotate(-12deg) scale(0.92);
-  }
-  100% {
-    opacity: 1;
-    transform: rotate(-12deg) scale(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .rakuten-stamp { animation: none; }
+
+.product-card > .rakuten-deal-note {
+  margin: 1rem 1rem 0;
 }

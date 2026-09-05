@@ -80,7 +80,7 @@ export default async function ArticlesPage() {
       />
       <Header categories={categories} />
       <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 py-6 sm:py-12">
           <nav className="text-sm text-slate-500 mb-6" aria-label="パンくず">
             <Link href="/" className="hover:text-lake-600 transition">
               ホーム
