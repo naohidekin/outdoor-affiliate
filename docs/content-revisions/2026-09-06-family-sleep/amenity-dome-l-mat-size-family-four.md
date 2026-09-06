@@ -50,6 +50,8 @@
 
 [コールマン ハイピーク／シングル（2000036153）の価格・在庫を楽天市場で確認する](https://hb.afl.rakuten.co.jp/hgc/g00r8v16.wwmjs82e.g00r8v16.wwmjtfa4/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fstore-megasports%2F64047715%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fstore-megasports%2Fi%2F10358661%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe)
 
+[コールマン ハイピーク／シングルの出品状況をAmazonで確認する](https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22)
+
 ## 候補2：ダブル2枚で、継ぎ目を減らす
 
 同シリーズの「キャンパーインフレーターマットハイピーク／ダブル（2000036154）」は、公式の使用時サイズが約200×128×10cm。収納時は約直径31×70cm、重量は約5kgです。[コールマン公式仕様](https://ec.coleman.co.jp/category/243/2000036154.html)
