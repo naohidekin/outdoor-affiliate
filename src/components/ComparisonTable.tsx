@@ -1,26 +1,7 @@
 import { Product } from "@/lib/types";
-import { isAmazonPrimary } from "@/lib/affiliate-priority";
 import { getProductSpecs } from "@/lib/productSpecs";
-import AffiliateLink from "./AffiliateLink";
+import ProductMerchantLinks from "./ProductMerchantLinks";
 import TableScroll from "./TableScroll";
-
-function AmazonButton({ product }: { product: Product }) {
-  if (!product.amazonUrl) return null;
-  return (
-    <AffiliateLink
-      href={product.amazonUrl}
-      productId={product.id}
-      placement="comparison_table"
-      productName={product.name}
-      price={product.price}
-      rank={isAmazonPrimary(product) ? 1 : 2}
-      store="amazon"
-      className="inline-flex items-center justify-center min-h-11 px-4 py-3 rounded-lg text-sm font-medium transition-colors amazon-btn"
-    >
-      Amazonで見る
-    </AffiliateLink>
-  );
-}
 
 export default function ComparisonTable({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
@@ -67,7 +48,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
           {/* 価格行 */}
           <tr className="border-b border-line bg-lake-50">
             <th scope="row" className="px-4 py-4 text-left text-sm font-semibold text-ink-strong sticky left-0 bg-lake-50 z-[5]">
-              価格
+              参考価格
             </th>
             {products.map((p) => (
               <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
@@ -105,64 +86,14 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
           {/* 購入リンク行 */}
           <tr className="bg-white border-t border-line">
             <th scope="row" className="px-4 py-4 text-left text-sm font-semibold text-slate-600 sticky left-0 bg-white z-[5]">
-              購入する
+              販売店
             </th>
             {products.map((p) => (
               <td
                 key={p.id}
                 className="px-4 py-4 text-center border-l border-line-soft"
               >
-                <div className="flex flex-col gap-2 items-stretch">
-                  {isAmazonPrimary(p) && <AmazonButton product={p} />}
-                  {p.affiliateUrl ? (
-                    <AffiliateLink
-                      href={p.affiliateUrl}
-                      productId={p.id}
-                      placement="comparison_table"
-                      productName={p.name}
-                      price={p.price}
-                      rank={isAmazonPrimary(p) ? 2 : 1}
-                      store="rakuten"
-                      className="inline-flex items-center justify-center min-h-11 px-4 py-3 rounded-lg text-sm font-medium text-white transition-colors rakuten-btn"
-                    >
-                      楽天市場で見る
-                    </AffiliateLink>
-                  ) : (
-                    // 購入リンクが無い商品。specsに「入手方法」があればその実情を
-                    // 表示する（例: メーカー公式ストア限定の抽選販売品）。
-                    // 一律「準備中」だと入手不可の商品で誤解を招くため
-                    !isAmazonPrimary(p) && (
-                      <span className="text-slate-400 text-xs">
-                        {p.specs?.["入手方法"] ?? "準備中"}
-                      </span>
-                    )
-                  )}
-                  {!isAmazonPrimary(p) && <AmazonButton product={p} />}
-                  {p.yahooUrl && (
-                    <AffiliateLink
-                      href={p.yahooUrl}
-                      productId={p.id}
-                      placement="comparison_table"
-                      productName={p.name}
-                      store="yahoo"
-                      className="inline-flex items-center justify-center min-h-11 px-4 py-3 rounded-lg text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      Yahoo!で見る
-                    </AffiliateLink>
-                  )}
-                  {p.affiliateUrl && (
-                    <AffiliateLink
-                      href={p.affiliateUrl}
-                      productId={p.id}
-                      placement="reviews_link"
-                      productName={p.name}
-                      store="rakuten"
-                      className="flex items-center justify-center min-h-11 text-center text-sm text-slate-500 hover:text-lake-600 underline underline-offset-2 transition-colors pt-1"
-                    >
-                      楽天で口コミを見る →
-                    </AffiliateLink>
-                  )}
-                </div>
+                <ProductMerchantLinks product={p} placement="comparison_table" layout="stacked" />
               </td>
             ))}
           </tr>

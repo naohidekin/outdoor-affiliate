@@ -15,7 +15,7 @@ export default function Header({ categories }: { categories: Category[] }) {
             </span>
           </Link>
           <nav aria-label="メインナビゲーション" className="hidden lg:flex items-center gap-1">
-            <Link href="/#gear-guides" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">ギアを選ぶ</Link>
+            <Link href="/gear-guides" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">ギアを選ぶ</Link>
             <Link href="/#field-notes" className="text-sm text-slate-600 hover:text-lake-600 px-3 py-2 rounded-lg hover:bg-lake-50 font-medium">使った道具の記録</Link>
             {categories.filter((c) => c.id === "safety").map((c) => (
               <Link

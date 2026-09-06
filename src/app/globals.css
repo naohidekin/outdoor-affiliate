@@ -426,3 +426,13 @@ main {
 .product-card > .rakuten-deal-note {
   margin: 1rem 1rem 0;
 }
+
+/* 記事内リンクの着地点を固定ヘッダーとスマホの移動ナビの下に置く。 */
+.article-page [id] {
+  scroll-margin-top: 9rem;
+}
+@media (min-width: 640px) {
+  .article-page [id] {
+    scroll-margin-top: 6rem;
+  }
+}

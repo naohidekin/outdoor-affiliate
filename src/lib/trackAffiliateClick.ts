@@ -1,5 +1,6 @@
 // アフィリエイトクリック計測（GA4 + /api/track-click ビーコン）
 // AffiliateLink コンポーネントと記事本文内のインラインリンクで共用する
+import { trackEvent } from "./trackEvent.ts";
 
 export type AffiliateStore = "amazon" | "rakuten" | "yahoo" | "valuecommerce";
 
@@ -19,8 +20,15 @@ const AFFILIATE_HOSTS: [RegExp, AffiliateStore][] = [
 ];
 
 export function detectAffiliateStore(href: string): AffiliateStore | null {
+  let hostname: string;
+  try {
+    const url = new URL(href);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    hostname = url.hostname;
+  } catch { return null; }
   for (const [pattern, store] of AFFILIATE_HOSTS) {
-    if (pattern.test(href)) return store;
+    // Check the actual host, not a merchant name in an unrelated URL's query.
+    if (new RegExp(`(?:^|\\.)${pattern.source}$`).test(hostname)) return store;
   }
   return null;
 }
@@ -37,21 +45,16 @@ export const AFFILIATE_PLACEMENTS = [
   "article_end", // おすすめCTA（記事末尾・読了直後）
   "reviews_link", // 「楽天で口コミをもっと見る」リンク
   "body_text", // 本文インラインリンク
+  "room_collection", // トップページの楽天ROOMコレクション
+  "footer_room", // フッターの楽天ROOM
   "unknown",
 ] as const;
 
 export type AffiliatePlacement = (typeof AFFILIATE_PLACEMENTS)[number];
 
-/**
- * 価格帯。EPCを価格帯ごとに見ないと、どのモールをどこで優先すべきか判断できない。
- *
- * 2026-08-23: Amazon EPC 6.62円 / 楽天 EPC 17.03円 という全体平均だけを見ると
- * 「楽天に寄せるべき」に見える。だが楽天は1商品1個につき報酬上限1,000円があり
- * （料率アップショップを除く）、実測で売上¥82,665のテントが報酬¥1,000だった。
- * 平均は高単価の頭打ちを均してしまうので、価格帯で割って見る必要がある。
- */
+/** Display-price bands for comparisons within matching pages and periods. */
 export function priceBand(price?: number): string {
-  if (!price || price <= 0) return "unknown";
+  if (!price || !Number.isFinite(price) || price <= 0) return "unknown";
   if (price < 5000) return "under_5k";
   if (price < 15000) return "5k_15k";
   if (price < 50000) return "15k_50k";
@@ -73,29 +76,24 @@ export function trackAffiliateClick(
 ) {
   const placement = opts?.placement || "unknown";
   const productName = opts?.productName || "";
-  const price = typeof opts?.price === "number" && opts.price > 0 ? Math.round(opts.price) : undefined;
-  const rank = typeof opts?.rank === "number" && opts.rank > 0 ? opts.rank : undefined;
+  const price = typeof opts?.price === "number" && Number.isFinite(opts.price) && opts.price > 0 ? Math.round(opts.price) : undefined;
+  const rank = typeof opts?.rank === "number" && Number.isInteger(opts.rank) && opts.rank > 0 ? opts.rank : undefined;
 
-  // GA4カスタムイベント（広告ブロッカーで欠落しうる。正はサーバー側ビーコン）
-  if (typeof window !== "undefined" && "gtag" in window) {
-    (window as unknown as { gtag: (...args: unknown[]) => void }).gtag(
-      "event",
-      "affiliate_click",
-      {
-        product_id: productId,
-        product_name: productName,
-        merchant: store,
-        placement,
-        page_path: window.location.pathname,
-        link_url: href,
-        // 価格帯別のEPCと、どちらのモールを上に出したかを見るための軸
-        ...(price !== undefined ? { price, price_band: priceBand(price) } : {}),
-        ...(rank !== undefined ? { rank } : {}),
-      }
-    );
-  }
+  if (typeof window === "undefined") return;
+  // Both transports can be blocked. A GA4 error must not prevent the beacon.
+  trackEvent("affiliate_click", {
+    product_id: productId,
+    product_name: productName,
+    merchant: store,
+    placement,
+    page_path: window.location.pathname,
+    link_url: href,
+    // 価格帯別のEPCと、どちらのモールを上に出したかを見るための軸
+    ...(price !== undefined ? { price, price_band: priceBand(price) } : {}),
+    ...(rank !== undefined ? { rank } : {}),
+  });
 
-  // ファーストパーティのビーコン記録（こちらが正の計測。ブロッカーに強い）
+  // Independent same-origin click log. Delivery can still fail; this is not purchase data.
   try {
     const data = JSON.stringify({
       productId,
@@ -105,16 +103,21 @@ export function trackAffiliateClick(
       path: window.location.pathname,
       link_url: href,
       timestamp: new Date().toISOString(),
-      // Supabase 側に列を足すまで /api/track-click は無視する（entry を明示的に
-      // 組み立てているので、知らないフィールドが来ても落ちない）。
-      // 先に送っておけば、列を足した日から遡って使える形になる
+      // These dimensions currently persist in GA4 only. The server intentionally
+      // ignores them until its schema changes; historical values cannot be recovered.
       price,
       rank,
     });
-    navigator.sendBeacon(
-      "/api/track-click",
-      new Blob([data], { type: "application/json" })
-    );
+    let queued = false;
+    try {
+      queued = typeof navigator.sendBeacon === "function" && navigator.sendBeacon(
+        "/api/track-click", new Blob([data], { type: "application/json" })
+      );
+    } catch { /* Try the same-origin keepalive fallback below. */ }
+    if (!queued) void fetch("/api/track-click", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: data, keepalive: true, credentials: "same-origin",
+    }).catch(() => { /* Navigation must not wait for analytics. */ });
   } catch {
     // ignore
   }

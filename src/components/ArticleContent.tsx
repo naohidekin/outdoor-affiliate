@@ -12,6 +12,7 @@ import BodyLink from "./BodyLink";
 import { headingId } from "@/lib/toc";
 import type { ReactNode } from "react";
 import TableScroll from "./TableScroll";
+import { hasProductComparison } from "@/lib/articleNavigation";
 
 // 見出しレンダラー用: 子要素（strong/リンク等を含みうる）を平文化する。
 // 目次（lib/toc.ts extractToc）と同じ headingId に通すことでアンカー一致を保証
@@ -27,9 +28,10 @@ interface Props {
   content: string;
   products: Product[];
   showProductFallback?: boolean;
+  comparisonAnchor?: boolean;
 }
 
-export default function ArticleContent({ content, products, showProductFallback = true }: Props) {
+export default function ArticleContent({ content, products, showProductFallback = true, comparisonAnchor = false }: Props) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // {{price:商品ID}} を現在の登録価格に差し替える。
@@ -49,6 +51,9 @@ export default function ArticleContent({ content, products, showProductFallback 
   const parts = resolved.split(
     /(\{\{(?:product|comparison|ranking|youtube):[^}]+\}\})/g
   );
+  const comparisonIndex = comparisonAnchor
+    ? parts.findIndex((part) => hasProductComparison(part, products))
+    : -1;
 
   // フォールバック: productIds がありながら本文に商品タグが無い記事には
   // 末尾に順位のない商品一覧を挿入する。本文を分割する呼び出し元では無効にする。
@@ -81,7 +86,7 @@ export default function ArticleContent({ content, products, showProductFallback 
             .filter(Boolean) as Product[];
           if (prods.length > 0) {
             return (
-              <div key={i} className="not-prose">
+              <div key={i} id={i === comparisonIndex ? "article-comparison" : undefined} tabIndex={i === comparisonIndex ? -1 : undefined} className="not-prose">
                 <ComparisonTable products={prods} />
               </div>
             );

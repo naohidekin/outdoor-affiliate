@@ -1,0 +1,33 @@
+{
+  "preparedAt": "2026-09-05",
+  "status": "draft",
+  "articles": [
+    {
+      "slug": "amenity-dome-l-mat-size-family-four",
+      "contentFile": "amenity-dome-l-mat-size-family-four.md",
+      "fields": {
+        "title": "アメニティドームLのマットサイズは？家族4人の敷き方と選び方",
+        "categoryId": "tent",
+        "status": "draft",
+        "excerpt": "アメニティドームLの専用マットサイズと、家族4人分の寝床を作る選び方。シングル4枚・ダブル2枚の幅をメーカー仕様から計算し、購入前に確認する点を整理します。",
+        "metaDescription": "アメニティドームLのマットは何cm？純正フロアマット290×290cmを基準に、コールマンとWAQの家族4人分の配置を計算。グランドシートとの違い、厚み・収納・出入りの確認点を紹介します。",
+        "productIds": [],
+        "tags": ["アメニティドームL", "インフレーターマット", "マットサイズ", "ファミリーキャンプ"],
+        "faqs": [],
+        "publishedAt": null
+      },
+      "sourcesCheckedAt": "2026-09-05",
+      "sources": [
+        "https://ec.snowpeak.co.jp/item/SNP0122A0501",
+        "https://ec.snowpeak.co.jp/item/SNP0122A0504",
+        "https://ec.coleman.co.jp/category/243/2000036153.html",
+        "https://ec.coleman.co.jp/category/243/2000036154.html",
+        "https://waq-online.com/products/waq-m8-1",
+        "https://waq-online.com/blogs/movie/movie-6"
+      ],
+      "evidence": "メーカー仕様と配置計算。テント内での実地確認、寝心地、子どもの使用体験は未検証。",
+      "commercialPlan": "対象品番を確認した販売店リンクを、各候補の注意点の後に設置する。マット以外のテント本体は冒頭で販売しない。現行の商品DBにあるカードを自動で付けず、品番・リンク照合後に追加する。",
+      "publishNotes": "本文先頭のH1はタイトル欄に移して本文から除く。FAQは本文にあるのでfields.faqsは空のまま。最新DBでslugの未使用を確認して新規作成し、IDと日時は作成時に発行する。既存記事JSON全体を上書きしない。公開後、10年レビューとコット比較から文脈に合う内部リンクを追加する。"
+    }
+  ]
+}

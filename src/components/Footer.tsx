@@ -1,3 +1,4 @@
+import AffiliateLink from "./AffiliateLink";
 import Link from "next/link";
 import { Mountain, ExternalLink } from "lucide-react";
 import { Category } from "@/lib/types";
@@ -56,6 +57,7 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
               商品リンクから購入いただくと運営費の一部になります。
             </p>
             <ul className="mt-3 space-y-2 text-sm">
+              <li><Link href="/gear-guides" className="text-lake-600 hover:underline font-medium">目的からギアを選ぶ →</Link></li>
               <li>
                 <Link
                   href="/about"
@@ -81,15 +83,17 @@ export default function Footer({ categories = [] }: { categories?: Category[] })
                 </Link>
               </li>
             </ul>
-            <a
+            <AffiliateLink
               href="https://room.rakuten.co.jp/room_naomaru/items"
-              target="_blank"
-              rel="noopener noreferrer nofollow sponsored"
+              productId="room-all-items"
+              productName="楽天ROOMの掲載アイテム"
+              store="rakuten"
+              placement="footer_room"
               className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs font-medium hover:bg-rose-100 transition"
             >
               <ExternalLink className="w-3 h-3" />
               楽天ROOM
-            </a>
+            </AffiliateLink>
           </div>
         </div>
         <div className="border-t border-line-soft mt-10 pt-6 text-center text-xs text-slate-400 space-y-2">

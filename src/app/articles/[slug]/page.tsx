@@ -9,8 +9,9 @@ import {
   getArticleBySlug,
   getProductsByIds,
   getCategoryById,
-  getArticlesByCategory,
 } from "@/lib/db";
+import GuideLink from "@/components/GuideLink";
+import { getAvailableGearGuides } from "@/lib/gearGuides";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
@@ -30,6 +31,11 @@ import {
   FAQ_HEADING_RE,
 } from "@/lib/faq-from-content";
 import TableOfContents from "@/components/TableOfContents";
+import ArticleReadingNav from "@/components/ArticleReadingNav";
+import ArticleNextReads from "@/components/ArticleNextReads";
+import { getNextReads } from "@/lib/articleNextReads";
+import { hasProductComparison } from "@/lib/articleNavigation";
+import { ChevronDown, ShoppingBag } from "lucide-react";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
 
@@ -103,41 +109,20 @@ export default async function ArticlePage({
   if (!article) notFound();
   if (article.status !== "published" && !isPreview) notFound();
 
-  const [categories, category, products, sameCategoryArticles, allArticles] =
-    await Promise.all([
-      getPublicCategories(),
-      getCategoryById(article.categoryId),
-      getProductsByIds(article.productIds),
-      getArticlesByCategory(article.categoryId),
-      getPublishedArticlesList(),
-    ]);
-  // 共通商品数 × 10 − 経過日数 でスコアリング（productIds共通が最優先）
-  // ISR(6h)ごとに再計算されるサーバーコンポーネントなので現在時刻の参照は安全
-  // eslint-disable-next-line react-hooks/purity
-  const renderedAt = Date.now();
-  const scoreRelevance = (a: { productIds?: string[]; publishedAt?: string | null }) => {
-    const shared = (a.productIds ?? []).filter((id) =>
-      (article.productIds ?? []).includes(id)
-    ).length;
-    const daysSince =
-      (renderedAt - new Date(a.publishedAt ?? 0).getTime()) / 86400000;
-    return shared * 10 - Math.min(daysSince, 365);
-  };
-
-  const relatedArticles = sameCategoryArticles
-    .filter((a) => a.id !== article.id)
-    .sort((a, b) => scoreRelevance(b) - scoreRelevance(a))
-    .slice(0, 3);
-
-  const otherCategoryArticles = allArticles
-    .filter(
-      (a) =>
-        a.status === "published" &&
-        a.id !== article.id &&
-        a.categoryId !== article.categoryId
-    )
-    .sort((a, b) => scoreRelevance(b) - scoreRelevance(a))
-    .slice(0, 3);
+  const [categories, category, products, allArticles] = await Promise.all([
+    getPublicCategories(),
+    getCategoryById(article.categoryId),
+    getProductsByIds(article.productIds),
+    getPublishedArticlesList(),
+  ]);
+  const nextReads = getNextReads(article, allArticles);
+  const gearGuide = getAvailableGearGuides(allArticles).find((guide) =>
+    (guide.categoryIds as readonly string[]).includes(article.categoryId));
+  const toc = extractToc(article.content);
+  const primaryProducts = getPrimaryProducts(article, products).slice(0, 3);
+  const editorialPicks = getEditorialPicks(article.slug, products);
+  const hasTopProducts = showTopCta(article.slug) && primaryProducts.length > 0;
+  const hasComparison = hasProductComparison(article.content, products);
 
   // 本文にFAQセクションが直書きされている記事が47本あり、システム生成FAQと
   // 二重表示になっていた。本文側を優先し、システムFAQの「表示」を抑止する。
@@ -180,6 +165,7 @@ export default async function ArticlePage({
       contentSummaryOnward = " ";
     }
   }
+  const comparisonBeforeSummary = hasProductComparison(contentBefore, products);
   const baseUrl = "https://camp-gear-lab.com";
 
   const articleJsonLd = {
@@ -406,48 +392,43 @@ export default async function ArticlePage({
 
           <HeroImage article={article} products={products} />
 
-          {/* 目次（H2が4本以上の記事のみ。3.4万字級の長文で目的の見出しへ
-              飛べない問題への対策。<details>ベースでJS不要） */}
-          {(() => {
-            const toc = extractToc(article.content);
-            return toc.length >= 4 ? <TableOfContents items={toc} /> : null;
-          })()}
+          <ArticleReadingNav articleSlug={article.slug} hasToc={toc.length >= 4} hasComparison={hasComparison} hasProducts={hasTopProducts} />
+          {toc.length >= 4 && <TableOfContents items={toc} />}
 
-          {/* 楽天の買い時バナー（5と0のつく日・セール期間に自動表示）。
-              安全・医学系記事では冒頭の販売色を消すため出さない */}
-          {showTopCta(article.slug) && products.some((p) => p.affiliateUrl) && (
-            <RakutenDealBadge />
+          {/* 広告表示は折りたたみの外に置き、本文より先に見えるようにする。 */}
+          {products.length > 0 && <AffiliateDisclosure variant="inline" />}
+          {hasTopProducts && (
+            <details id="article-shopping" className="group mb-8 rounded-xl border border-lake-100 bg-lake-50/40 open:bg-white">
+              <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 px-4 py-4 text-ink-strong">
+                <ShoppingBag size={19} className="shrink-0 text-lake-600" aria-hidden="true" />
+                <span className="text-base font-semibold">商品価格・選び方を確認</span>
+                <ChevronDown size={18} className="ml-auto shrink-0 text-lake-600 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="px-3 sm:px-5 pb-1 border-t border-lake-100">
+                {primaryProducts.some((p) => p.affiliateUrl) && <RakutenDealBadge />}
+                <RecommendationCTA products={primaryProducts} picks={editorialPicks} />
+              </div>
+            </details>
           )}
 
-          {/* 記事冒頭 購入導線（広告表示は導線より前に置く＝ステマ規制対応）。
-              PR表記は冒頭CTAを出さない記事でも必ず表示する（本文中の
-              アフィリエイトリンクに対する表示義務は変わらないため） */}
-          {products.length > 0 && (
-            <>
-              <AffiliateDisclosure variant="inline" />
-              {showTopCta(article.slug) && (
-                <RecommendationCTA products={getPrimaryProducts(article, products).slice(0, 3)} picks={getEditorialPicks(article.slug, products)} />
-              )}
-            </>
-          )}
-
-          {/* Article body */}
-          {contentSummaryOnward ? (
-            <>
-              <ArticleContent content={contentBefore} products={products} showProductFallback={false} />
-              <MedicalAdvice {...medicalAdvice!} />
-              <ArticleContent content={contentSummaryOnward} products={products} showProductFallback={false} />
-            </>
-          ) : (
-            <ArticleContent content={article.content} products={products} showProductFallback={false} />
-          )}
+          <div id="article-reading-content" tabIndex={-1}>
+            {contentSummaryOnward ? (
+              <>
+                <ArticleContent content={contentBefore} products={products} showProductFallback={false} comparisonAnchor={comparisonBeforeSummary} />
+                <MedicalAdvice {...medicalAdvice!} />
+                <ArticleContent content={contentSummaryOnward} products={products} showProductFallback={false} comparisonAnchor={!comparisonBeforeSummary && hasComparison} />
+              </>
+            ) : (
+              <ArticleContent content={article.content} products={products} showProductFallback={false} comparisonAnchor={hasComparison} />
+            )}
+          </div>
 
           {/* 商品タグのない記事も、順序を順位に変換せず一度だけ全商品を表示。 */}
           {products.length > 0 && (
             /\{\{(?:product|comparison|ranking):/.test(article.content) ? (
               <RecommendationCTA
-                products={getPrimaryProducts(article, products).slice(0, 3)}
-                picks={getEditorialPicks(article.slug, products)}
+                products={primaryProducts}
+                picks={editorialPicks}
                 placement="article_end"
               />
             ) : (
@@ -486,62 +467,13 @@ export default async function ArticlePage({
           </section>
         )}
 
-        {/* Related articles */}
-        {relatedArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-5 sm:px-6 pb-12">
-            <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
-              関連する記事
-            </h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {relatedArticles.map((a) => (
-                <Link
-                  key={a.id}
-                  href={`/articles/${a.slug}`}
-                  className="bg-white rounded-xl transition p-4 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
-                >
-                  <h3 className="font-semibold text-ink-strong text-sm mb-1 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
-                    {a.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                    {a.excerpt}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-        {/* Other category articles */}
-        {otherCategoryArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-5 sm:px-6 pb-12">
-            <h2 className="text-xl font-semibold text-ink-strong tracking-tight mb-6">
-              あわせて読みたい
-            </h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {otherCategoryArticles.map((a) => {
-                const cat = categories.find((c) => c.id === a.categoryId);
-                return (
-                  <Link
-                    key={a.id}
-                    href={`/articles/${a.slug}`}
-                    className="bg-white rounded-xl transition p-4 border border-line hover:border-lake-200 hover:bg-lake-50/30 group"
-                  >
-                    {cat && (
-                      <span className="inline-block text-xs text-lake-700 font-medium bg-lake-50 border border-lake-100 px-2 py-0.5 rounded-full mb-2">
-                        {cat.name}
-                      </span>
-                    )}
-                    <h3 className="font-semibold text-ink-strong text-sm mb-1 line-clamp-2 leading-snug group-hover:text-lake-700 transition">
-                      {a.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {a.excerpt}
-                    </p>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        <ArticleNextReads articleSlug={article.slug} items={nextReads} />
+        {gearGuide && <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-10">
+            <GuideLink href={`/gear-guides#${gearGuide.id}`} guideId={gearGuide.id} placement="article" className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist border border-line p-5">
+              <span><span className="block text-sm text-slate-500 mb-1">関連する道具も、まとめて検討する</span><span className="text-base font-semibold text-ink-strong">{gearGuide.label}</span></span>
+              <span className="text-sm font-semibold text-lake-600">選び方ガイドへ →</span>
+            </GuideLink>
+          </div>}
 
         {/* PR表記（ページ最下部） */}
         <div className="max-w-4xl mx-auto px-4 pb-10">
