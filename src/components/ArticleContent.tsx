@@ -9,6 +9,7 @@ import ComparisonTable from "./ComparisonTable";
 import RankingList from "./RankingList";
 import YouTubeEmbed from "./YouTubeEmbed";
 import BodyLink from "./BodyLink";
+import { buildAffiliateProductIndex, resolveAffiliateProduct, type TrackingProduct } from "@/lib/affiliateProduct";
 import { headingId } from "@/lib/toc";
 import type { ReactNode } from "react";
 import TableScroll from "./TableScroll";
@@ -27,11 +28,13 @@ function textOf(node: ReactNode): string {
 interface Props {
   content: string;
   products: Product[];
+  trackingProducts?: TrackingProduct[];
   showProductFallback?: boolean;
   comparisonAnchor?: boolean;
 }
 
-export default function ArticleContent({ content, products, showProductFallback = true, comparisonAnchor = false }: Props) {
+export default function ArticleContent({ content, products, trackingProducts = products, showProductFallback = true, comparisonAnchor = false }: Props) {
+  const trackingIndex = buildAffiliateProductIndex(trackingProducts);
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // {{price:商品ID}} を現在の登録価格に差し替える。
@@ -131,7 +134,7 @@ export default function ArticleContent({ content, products, showProductFallback 
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({ href, children }) => (
-                    <BodyLink href={href}>{children}</BodyLink>
+                    <BodyLink href={href} product={resolveAffiliateProduct(href || "", trackingIndex)}>{children}</BodyLink>
                   ),
                   // 目次からのアンカージャンプ用ID。scroll-mt で固定ヘッダー分の
                   // 逃げを確保

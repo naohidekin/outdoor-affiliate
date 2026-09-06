@@ -8,6 +8,7 @@ import {
   getPublishedArticlesList,
   getArticleBySlug,
   getProductsByIds,
+  getTrackingProducts,
   getCategoryById,
 } from "@/lib/db";
 import GuideLink from "@/components/GuideLink";
@@ -35,6 +36,7 @@ import ArticleReadingNav from "@/components/ArticleReadingNav";
 import ArticleNextReads from "@/components/ArticleNextReads";
 import { getNextReads } from "@/lib/articleNextReads";
 import { hasProductComparison } from "@/lib/articleNavigation";
+import { detectAffiliateStore } from "@/lib/trackAffiliateClick";
 import { ChevronDown, ShoppingBag } from "lucide-react";
 
 export const revalidate = 21600; // ISR: 6時間（Egress削減・2026-07-24）
@@ -109,11 +111,12 @@ export default async function ArticlePage({
   if (!article) notFound();
   if (article.status !== "published" && !isPreview) notFound();
 
-  const [categories, category, products, allArticles] = await Promise.all([
+  const [categories, category, products, allArticles, trackingProducts] = await Promise.all([
     getPublicCategories(),
     getCategoryById(article.categoryId),
     getProductsByIds(article.productIds),
     getPublishedArticlesList(),
+    getTrackingProducts().catch(() => []), // Analytics lookup must not prevent article rendering.
   ]);
   const nextReads = getNextReads(article, allArticles);
   const gearGuide = getAvailableGearGuides(allArticles).find((guide) =>
@@ -122,6 +125,7 @@ export default async function ArticlePage({
   const primaryProducts = getPrimaryProducts(article, products).slice(0, 3);
   const editorialPicks = getEditorialPicks(article.slug, products);
   const hasTopProducts = showTopCta(article.slug) && primaryProducts.length > 0;
+  const hasInlineAffiliate = (article.content.match(/https?:\/\/[^\s)<>]+/g) || []).some((href) => detectAffiliateStore(href));
   const hasComparison = hasProductComparison(article.content, products);
 
   // 本文にFAQセクションが直書きされている記事が47本あり、システム生成FAQと
@@ -396,7 +400,7 @@ export default async function ArticlePage({
           {toc.length >= 4 && <TableOfContents items={toc} />}
 
           {/* 広告表示は折りたたみの外に置き、本文より先に見えるようにする。 */}
-          {products.length > 0 && <AffiliateDisclosure variant="inline" />}
+          {(products.length > 0 || hasInlineAffiliate) && <AffiliateDisclosure variant="inline" />}
           {hasTopProducts && (
             <details id="article-shopping" className="group mb-8 rounded-xl border border-lake-100 bg-lake-50/40 open:bg-white">
               <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 px-4 py-4 text-ink-strong">
@@ -414,12 +418,12 @@ export default async function ArticlePage({
           <div id="article-reading-content" tabIndex={-1}>
             {contentSummaryOnward ? (
               <>
-                <ArticleContent content={contentBefore} products={products} showProductFallback={false} comparisonAnchor={comparisonBeforeSummary} />
+                <ArticleContent content={contentBefore} products={products} trackingProducts={trackingProducts} showProductFallback={false} comparisonAnchor={comparisonBeforeSummary} />
                 <MedicalAdvice {...medicalAdvice!} />
-                <ArticleContent content={contentSummaryOnward} products={products} showProductFallback={false} comparisonAnchor={!comparisonBeforeSummary && hasComparison} />
+                <ArticleContent content={contentSummaryOnward} products={products} trackingProducts={trackingProducts} showProductFallback={false} comparisonAnchor={!comparisonBeforeSummary && hasComparison} />
               </>
             ) : (
-              <ArticleContent content={article.content} products={products} showProductFallback={false} comparisonAnchor={hasComparison} />
+              <ArticleContent content={article.content} products={products} trackingProducts={trackingProducts} showProductFallback={false} comparisonAnchor={hasComparison} />
             )}
           </div>
 

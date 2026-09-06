@@ -2,58 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getSupabase } from "@/lib/supabase";
 import { AFFILIATE_PLACEMENTS } from "@/lib/trackAffiliateClick";
-import { getProducts } from "@/lib/db";
+import { getTrackingProducts } from "@/lib/db";
+import { buildAffiliateProductIndex, resolveAffiliateProduct, type AffiliateProduct } from "@/lib/affiliateProduct";
 
-// 記事本文のリンク（BodyLink）は商品IDを持たないため "inline" を送ってくる。
-// そのままだと週30件前後のクリックがどの商品か分からず、記事本文の
-// 導線改善が効いたかを商品単位で測れない（2026-08-13に判明）。
-// ビーコンには link_url が含まれているので、リンク先から商品を逆引きする。
+// 旧ページから送られる inline は、現在の本文リンクと共通のロジックで解決する。
 const INLINE_SENTINEL = "inline";
 
-let linkIndex: Map<string, { id: string; name: string }> | null = null;
+let linkIndex: Map<string, AffiliateProduct | null> | null = null;
 let linkIndexAt = 0;
 const INDEX_TTL_MS = 10 * 60 * 1000;
 
-/** リンク先を一意に指す部分だけを取り出す（ASIN / 楽天の店舗＋商品コード） */
-function linkKey(url: string): string | null {
-  let u = url;
-  try {
-    u = decodeURIComponent(url);
-  } catch {
-    /* エンコードが壊れていてもそのまま試す */
-  }
-  const asin = u.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
-  if (asin) return `amazon:${asin[1].toUpperCase()}`;
-  const rakuten = u.match(/item\.rakuten\.co\.jp\/([^/]+)\/([^/?&]+)/);
-  if (rakuten) return `rakuten:${rakuten[1]}/${rakuten[2]}`;
-  const rakutenCatalog = u.match(/product\.rakuten\.co\.jp\/product\/-\/([A-Za-z0-9]+)/);
-  if (rakutenCatalog) return `rakuten-catalog:${rakutenCatalog[1]}`;
-  // 検索ページ行きのリンクは指す商品が定まらないので逆引きしない
-  return null;
-}
-
+// Compatibility for already-open pages that still send the legacy sentinel.
 async function resolveProductByLink(url: string) {
-  if (!url) return null;
-  const key = linkKey(url);
-  if (!key) return null;
   if (!linkIndex || Date.now() - linkIndexAt > INDEX_TTL_MS) {
     try {
-      const products = await getProducts();
-      const idx = new Map<string, { id: string; name: string }>();
-      for (const p of products) {
-        for (const candidate of [p.affiliateUrl, p.amazonUrl]) {
-          const k = candidate ? linkKey(candidate) : null;
-          // 同じリンクを複数商品が持つ場合は先勝ち（重複登録は別途整理中）
-          if (k && !idx.has(k)) idx.set(k, { id: p.id, name: p.name });
-        }
-      }
-      linkIndex = idx;
+      linkIndex = buildAffiliateProductIndex(await getTrackingProducts());
       linkIndexAt = Date.now();
-    } catch {
-      return null; // 逆引きできなくても計測そのものは続ける
-    }
+    } catch { return null; }
   }
-  return linkIndex.get(key) ?? null;
+  return resolveAffiliateProduct(url, linkIndex);
 }
 
 export async function POST(req: NextRequest) {

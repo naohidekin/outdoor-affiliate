@@ -1,6 +1,6 @@
 export interface AffiliateClickRow {
   id: number; product_id: string; store: string; page_path: string;
-  clicked_at: string; placement?: string | null;
+  clicked_at: string; placement?: string | null; product_name?: string | null;
 }
 
 /** Keyset pagination: don't mistake a provider's row limit for the full period. */
@@ -29,6 +29,8 @@ function bump(map: Map<string, Aggregate>, key: string, store: string) {
 }
 
 export function aggregateAffiliateClicks(rows: AffiliateClickRow[], titleBySlug: Map<string, string>, nameById: Map<string, string>) {
+  const recordedNames = new Map(rows.filter((row) => row.product_name?.trim()).map((row) => [row.product_id, row.product_name!.trim()]));
+  const productName = (id: string) => nameById.get(id) || recordedNames.get(id) || (id === "inline" ? "本文リンク（商品未特定）" : id);
   const byStore = counts(), byPlacement = counts();
   const byArticle = new Map<string, Aggregate>(), byProduct = new Map<string, Aggregate>();
   const byJourney = new Map<string, Aggregate>();
@@ -46,10 +48,10 @@ export function aggregateAffiliateClicks(rows: AffiliateClickRow[], titleBySlug:
   return {
     total: rows.length, byStore, byPlacement,
     articleRanking: [...byArticle].map(([path, value]) => ({ path, title: titleFor(path), ...value })).sort(descending),
-    productRanking: [...byProduct].map(([productId, value]) => ({ productId, name: nameById.get(productId) || productId, ...value })).sort(descending),
+    productRanking: [...byProduct].map(([productId, value]) => ({ productId, name: productName(productId), ...value })).sort(descending),
     journeyRanking: [...byJourney].map(([key, value]) => {
       const [path, productId, placement] = JSON.parse(key) as string[];
-      return { path, title: titleFor(path), productId, name: nameById.get(productId) || productId, placement, ...value };
+      return { path, title: titleFor(path), productId, name: productName(productId), placement, ...value };
     }).sort(descending),
   };
 }

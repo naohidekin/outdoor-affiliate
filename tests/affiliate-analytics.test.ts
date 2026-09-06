@@ -44,3 +44,13 @@ test("不正な保存済みURLを管理画面の外部リンクにしない", ()
   assert.equal(result.byStore["__proto__"], 1);
   assert.equal(result.byPlacement["__proto__"], 1);
 });
+
+
+test("商品台帳にないクリックも記録時の名称を使い、未特定と明示する", () => {
+  const result = aggregateAffiliateClicks([
+    row(1, { product_id: "removed-id", product_name: "記録時の商品名" }),
+    row(2, { product_id: "inline" }),
+  ], new Map(), new Map());
+  assert.equal(result.productRanking[0].name, "記録時の商品名");
+  assert.equal(result.productRanking[1].name, "本文リンク（商品未特定）");
+});

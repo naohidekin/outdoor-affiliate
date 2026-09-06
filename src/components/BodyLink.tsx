@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { affiliateProductKey, isInternalArticleLink, type AffiliateProduct } from "@/lib/affiliateProduct";
 import {
   detectAffiliateStore,
   trackAffiliateClick,
@@ -15,15 +16,13 @@ import {
 export default function BodyLink({
   href,
   children,
+  product,
 }: {
   href?: string;
   children?: ReactNode;
+  product?: AffiliateProduct;
 }) {
-  const isInternal =
-    !href ||
-    href.startsWith("/") ||
-    href.startsWith("#") ||
-    href.includes("camp-gear-lab.com");
+  const isInternal = isInternalArticleLink(href);
   const store = !isInternal && href ? detectAffiliateStore(href) : null;
 
   if (isInternal) {
@@ -33,12 +32,15 @@ export default function BodyLink({
     <a
       href={href}
       target="_blank"
+      data-product-id={store ? product?.id || affiliateProductKey(href || "") || "inline" : undefined}
       rel={store ? "nofollow sponsored noopener noreferrer" : "noopener noreferrer"}
       {...(store &&
         href && {
-          onClick: () =>
-            trackAffiliateClick(href, "inline", store, {
+          onClick: (event: React.MouseEvent<HTMLAnchorElement>) =>
+            trackAffiliateClick(href, product?.id || affiliateProductKey(href) || "inline", store, {
               placement: "body_text",
+              productName: product?.name,
+              linkText: event.currentTarget.textContent || "",
             }),
         })}
     >

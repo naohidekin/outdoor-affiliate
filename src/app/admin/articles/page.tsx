@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { Article, Category, Product } from "@/lib/types";
 
+async function loadEditorData() {
+  const responses = await Promise.all([fetch("/api/articles"), fetch("/api/categories"), fetch("/api/products")]);
+  if (responses.some((response) => !response.ok)) throw new Error("記事管理データを取得できませんでした。再読み込みしてください。");
+  const [articles, categories, products] = await Promise.all(responses.map((response) => response.json()));
+  return { articles: articles as Article[], categories: categories as Category[], products: products as Product[] };
+}
+
 export default function AdminArticles() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -15,6 +22,7 @@ export default function AdminArticles() {
     categoryId: "",
     content: "",
     excerpt: "",
+    metaDescription: "",
     productIds: [] as string[],
     status: "draft" as "draft" | "published",
     scheduledPublishDate: "",
@@ -23,20 +31,30 @@ export default function AdminArticles() {
   const [filterAuto, setFilterAuto] = useState<"all" | "auto" | "manual">("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published">("all");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [loadError, setLoadError] = useState("");
 
   async function fetchData() {
-    const [artRes, catRes, prodRes] = await Promise.all([
-      fetch("/api/articles"),
-      fetch("/api/categories"),
-      fetch("/api/products"),
-    ]);
-    setArticles(await artRes.json());
-    setCategories(await catRes.json());
-    setProducts(await prodRes.json());
+    try {
+      const data = await loadEditorData();
+      setArticles(data.articles);
+      setCategories(data.categories);
+      setProducts(data.products);
+      setLoadError("");
+    } catch (error) { setLoadError(error instanceof Error ? error.message : "読み込みに失敗しました"); }
   }
+
+  useEffect(() => {
+    let active = true;
+    void loadEditorData().then((data) => {
+      if (!active) return;
+      setArticles(data.articles);
+      setCategories(data.categories);
+      setProducts(data.products);
+    }).catch((error) => {
+      if (active) setLoadError(error instanceof Error ? error.message : "読み込みに失敗しました");
+    });
+    return () => { active = false; };
+  }, []);
 
   function openNew() {
     setForm({
@@ -45,6 +63,7 @@ export default function AdminArticles() {
       categoryId: "",
       content: "",
       excerpt: "",
+      metaDescription: "",
       productIds: [],
       status: "draft",
       scheduledPublishDate: "",
@@ -61,6 +80,7 @@ export default function AdminArticles() {
       categoryId: article.categoryId,
       content: article.content,
       excerpt: article.excerpt,
+      metaDescription: article.metaDescription || "",
       productIds: article.productIds,
       status: article.status,
       scheduledPublishDate: (article.scheduledPublishDate || "").slice(0, 10),
@@ -197,7 +217,6 @@ export default function AdminArticles() {
   });
 
   async function copyXPostText(article: Article) {
-    const cat = categories.find((c) => c.id === article.categoryId);
     const catTags = CATEGORY_HASHTAGS[article.categoryId] || "";
     const excerpt = article.excerpt.length > 100
       ? article.excerpt.slice(0, 100) + "..."
@@ -287,6 +306,20 @@ https://camp-gear-lab.com/articles/${article.slug}
                   className="w-full px-3 py-2 border rounded-lg text-gray-800 focus:outline-none focus:ring-1 focus:ring-green-500"
                   placeholder="記事の概要を入力..."
                 />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="meta-description" className="block text-sm font-medium text-gray-700 mb-1">
+                  検索・SNS用の説明文
+                </label>
+                <textarea
+                  id="meta-description"
+                  value={form.metaDescription}
+                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="空欄なら記事の概要を使用します"
+                />
+                <p className="text-xs text-gray-500 mt-1">本文や紹介商品を変更したときは、この説明文も確認してください。空欄で保存すると概要に連動します。</p>
               </div>
 
               {/* Toolbar */}
@@ -464,6 +497,7 @@ https://camp-gear-lab.com/articles/${article.slug}
 
   return (
     <div>
+      {loadError && <p role="alert" className="mb-4 text-red-700">{loadError}</p>}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-800">記事管理</h1>
         <button

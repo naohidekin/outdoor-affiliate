@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
     categoryId: body.categoryId || "",
     content: body.content || "",
     excerpt: body.excerpt || "",
+    metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
     productIds: body.productIds || [],
     status: body.status || "draft",
     createdAt: now,
@@ -136,6 +137,7 @@ export async function PUT(request: NextRequest) {
   const updated: Article = {
     ...existing,
     ...body,
+    metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : existing.metaDescription,
     updatedAt: now,
     publishedAt:
       body.status === "published" && !existing.publishedAt ? now : existing.publishedAt,

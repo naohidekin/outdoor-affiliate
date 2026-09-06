@@ -68,6 +68,8 @@ export function trackAffiliateClick(
   opts?: {
     placement?: AffiliatePlacement;
     productName?: string;
+    /** Visible anchor label, distinct from a verified catalogue product name. */
+    linkText?: string;
     /** 表示していた価格（円）。登録価格であって実売とは限らない */
     price?: number;
     /** そのカード内でのボタンの表示順。1が上。どちらのモールを上に出したかの検証用 */
@@ -88,6 +90,7 @@ export function trackAffiliateClick(
     placement,
     page_path: window.location.pathname,
     link_url: href,
+    ...(opts?.linkText ? { link_text: opts.linkText.trim().slice(0, 100) } : {}),
     // 価格帯別のEPCと、どちらのモールを上に出したかを見るための軸
     ...(price !== undefined ? { price, price_band: priceBand(price) } : {}),
     ...(rank !== undefined ? { rank } : {}),

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const [rows, articleResult, productResult] = await Promise.all([
       collectAffiliateClicks(async (afterId) => {
         const { data, error } = await supabase.from("affiliate_clicks")
-          .select("id, product_id, store, page_path, clicked_at, placement")
+          .select("id, product_id, product_name, store, page_path, clicked_at, placement")
           .gte("clicked_at", start).lt("clicked_at", end)
           .gt("id", afterId).order("id", { ascending: true }).limit(500);
         if (error) throw new Error(error.message);

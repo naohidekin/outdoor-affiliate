@@ -3,6 +3,7 @@ import path from "path";
 import { cache } from "react";
 import { getSupabase, isSupabaseConfigured } from "./supabase";
 import { Category, Product, Article } from "./types";
+import type { TrackingProduct } from "./affiliateProduct";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -218,6 +219,16 @@ export async function getProducts(): Promise<Product[]> {
   if (error) throw error;
   return (data || []).map(toProduct);
 }
+
+// Only the link catalogue is needed for inline attribution; keep descriptions/images out of the query.
+export const getTrackingProducts = cache(async (): Promise<TrackingProduct[]> => {
+  if (!isSupabaseConfigured()) return readLocalJson<Product>("products.json");
+  const { data, error } = await getSupabase().from("products")
+    .select("id, name, affiliate_url, amazon_url, yahoo_url");
+  if (error) throw error;
+  return (data || []).map((row) => ({ id: row.id, name: row.name,
+    affiliateUrl: row.affiliate_url || "", amazonUrl: row.amazon_url || "", yahooUrl: row.yahoo_url || "" }));
+});
 
 export async function getProductById(
   id: string

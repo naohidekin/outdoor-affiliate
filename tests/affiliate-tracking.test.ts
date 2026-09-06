@@ -81,3 +81,19 @@ test("非表示・画面外ボタンは数えず、半分以上表示された�
     assert.equal(seen, 1);
   });
 });
+
+
+test("本文商品IDと名称をGA4・独自ログへ同じ値で送る", () => {
+  let ga: Record<string, unknown> = {};
+  let payload: Record<string, unknown> = {};
+  withGlobals({
+    window: { location: { pathname: "/articles/storage" }, gtag: (_cmd: string, event: string, data: Record<string, unknown>) => { assert.equal(event, "affiliate_click"); ga = data; } },
+    navigator: { sendBeacon: () => false },
+    fetch: (_url: string, options: RequestInit) => { payload = JSON.parse(options.body as string); return Promise.resolve(); },
+  }, () => trackAffiliateClick("https://item.rakuten.co.jp/waqoutdoor/waq-hpa1/", "rakuten:waqoutdoor/waq-hpa1", "rakuten", { placement: "body_text", linkText: "ポンプの価格を確認" }));
+  assert.equal(ga.product_id, payload.productId);
+  assert.equal(ga.product_name, payload.productName);
+  assert.equal(ga.placement, payload.placement);
+  assert.equal(ga.link_text, "ポンプの価格を確認");
+  assert.notEqual(ga.product_id, "inline");
+});
