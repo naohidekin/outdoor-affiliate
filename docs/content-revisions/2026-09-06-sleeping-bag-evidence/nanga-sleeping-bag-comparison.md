@@ -135,4 +135,3 @@ NANGAの修理案内ではファスナー交換は有償の項目にあります
 - [冬キャンプの寝袋と補助暖房の注意点](/articles/winter-sleeping-bag-ranking)
 - [子供用寝袋のサイズと温度表示](/articles/kids-sleeping-bag-ranking)
 - [コットとマットの選び方](/articles/cot-vs-mat-comparison)
-

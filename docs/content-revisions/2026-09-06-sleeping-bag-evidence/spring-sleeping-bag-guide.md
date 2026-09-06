@@ -118,4 +118,3 @@ NANGAの永久保証にも有償修理や対応できない場合があります
 - [NANGA5モデルの違いと保証](/articles/nanga-sleeping-bag-comparison)
 - [子供用寝袋の選び方](/articles/kids-sleeping-bag-ranking)
 - [家族分のマットの収納と空気抜き](/articles/inflatable-mat-storage-bag-guide)
-

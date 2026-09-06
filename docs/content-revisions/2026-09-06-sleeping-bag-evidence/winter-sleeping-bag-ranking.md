@@ -128,4 +128,3 @@ NANGAの永久保証は、すべての修理が無料になる制度ではあり
 - [春秋用寝袋の温度表示と家族向け3候補](/articles/spring-sleeping-bag-guide)
 - [子供用寝袋のサイズと選び方](/articles/kids-sleeping-bag-ranking)
 - [家族で使うコットとマットの比較](/articles/cot-vs-mat-comparison)
-
