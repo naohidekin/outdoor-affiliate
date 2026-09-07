@@ -310,8 +310,8 @@ export default function AdminProducts() {
                   className={fieldClass} placeholder="例: 29800" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">評価 (0〜5)</label>
-                <input type="number" min={0} max={5} step={0.5} value={form.rating}
+                <label htmlFor="product-rating" className="block text-xs font-medium text-gray-600 mb-1">評価 (0〜5)</label>
+                <input id="product-rating" type="number" min={0} max={5} step="any" value={form.rating}
                   onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) || 0 })}
                   className={fieldClass} />
               </div>
