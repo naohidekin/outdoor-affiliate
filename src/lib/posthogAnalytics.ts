@@ -1,5 +1,10 @@
 import type { PostHog } from "posthog-js";
 
+// Public, write-only project token supplied by the site owner (project 598025).
+// This is intentionally client-visible; never put a personal/secret API key here.
+const projectToken = process.env.NEXT_PUBLIC_POSTHOG_KEY ?? "phc_o4dSo9dyJdSeyfbRvPEMp5cSucteFDaQtLATEtrGpyYr";
+const projectHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+
 const allowedEvents = new Set([
   "$pageview", "article_view", "comparison_view", "affiliate_offer_view",
   "affiliate_click", "guide_navigation", "article_navigation",
@@ -25,8 +30,8 @@ function enabled() {
   return typeof window !== "undefined"
     && window.location?.hostname === "camp-gear-lab.com"
     && isAnalyticsPath(window.location.pathname)
-    && Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY)
-    && /^https:\/\/(us|eu)\.i\.posthog\.com$/.test(process.env.NEXT_PUBLIC_POSTHOG_HOST || "");
+    && Boolean(projectToken)
+    && /^https:\/\/(us|eu)\.i\.posthog\.com$/.test(projectHost);
 }
 
 export function getPostHog(): Promise<PostHog | undefined> {
@@ -35,8 +40,8 @@ export function getPostHog(): Promise<PostHog | undefined> {
   if (!loading) loading = import("posthog-js").then(({ default: posthog }) => {
     // Navigation may have changed during the dynamic import.
     if (!enabled()) { loading = undefined; return undefined; }
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+    posthog.init(projectToken, {
+      api_host: projectHost,
       person_profiles: "never",
       autocapture: false,
       capture_pageview: false,
