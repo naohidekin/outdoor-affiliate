@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import PostHogAnalytics from "@/components/PostHogAnalytics";
 
 // weightを個別指定すると日本語の~124 unicode-range分割×ウェイト数の@font-face宣言が
 // 全てレンダリングブロッキングCSSに入る（3ウェイトで276KB）。両フォントとも可変フォント
@@ -65,6 +66,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-snow text-ink">
         {children}
+        <PostHogAnalytics />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-0F2R4RX636"
           strategy="afterInteractive"

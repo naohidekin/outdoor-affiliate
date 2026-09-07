@@ -1,9 +1,16 @@
+import { capturePostHog } from "./posthogAnalytics.ts";
+
 const pending: [string, Record<string, string | number>][] = [];
 let awaitingInit = false;
 
 /** Analytics must never interrupt navigation or the independent click beacon. */
 export function trackEvent(name: string, parameters: Record<string, string | number>) {
   if (typeof window === "undefined") return;
+  capturePostHog(name, parameters);
+  sendToGA(name, parameters);
+}
+
+function sendToGA(name: string, parameters: Record<string, string | number>) {
   try {
     const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
     if (typeof gtag === "function") {
@@ -16,7 +23,7 @@ export function trackEvent(name: string, parameters: Record<string, string | num
         awaitingInit = true;
         window.addEventListener("camp-analytics-ready", () => {
           awaitingInit = false;
-          for (const [event, values] of pending.splice(0)) trackEvent(event, values);
+          for (const [event, values] of pending.splice(0)) sendToGA(event, values);
         }, { once: true });
       }
     }
