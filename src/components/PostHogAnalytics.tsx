@@ -29,7 +29,7 @@ export default function PostHogAnalytics() {
         mutation.disconnect();
       }
     });
-    const observeTables = () => document.querySelectorAll("table.product-comparison thead").forEach(el => observer?.observe(el));
+    const observeTables = () => document.querySelectorAll("table.product-comparison thead, [data-comparison-start]").forEach(el => observer?.observe(el));
     observeTables();
     // Supports streamed/late rendered article content.
     const mutation = new MutationObserver(observeTables);

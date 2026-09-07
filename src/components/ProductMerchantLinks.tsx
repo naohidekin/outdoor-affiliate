@@ -1,6 +1,6 @@
 import type { Product } from "@/lib/types";
 import type { AffiliatePlacement } from "@/lib/trackAffiliateClick";
-import { getProductMerchants } from "@/lib/productMerchants";
+import { getProductMerchants, isMerchantSearch } from "@/lib/productMerchants";
 import AffiliateLink from "./AffiliateLink";
 
 export default function ProductMerchantLinks({ product, placement, layout = "responsive" }: {
@@ -15,11 +15,12 @@ export default function ProductMerchantLinks({ product, placement, layout = "res
     <div className={`grid gap-2 ${columns}`}>
       {merchants.map(({ href, store, label, rank }) => <AffiliateLink key={store} href={href} store={store} rank={rank}
         productId={product.id} productName={product.name} price={product.price} placement={placement}
-        ariaLabel={`${product.name}の価格・在庫を${label}で確認（新しいタブ）`}
+        ariaLabel={`${product.name}の価格・在庫を${label}で${isMerchantSearch(href) ? "検索" : "確認"}（新しいタブ）`}
         className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold leading-relaxed transition-colors ${store === "amazon" ? "amazon-btn" : store === "rakuten" ? "rakuten-btn text-white" : "border border-line bg-white text-ink hover:bg-mist"}`}>
-        <span>{label}</span><span aria-hidden="true">↗</span>
+        <span>{label}{isMerchantSearch(href) ? "で検索" : ""}</span><span aria-hidden="true">↗</span>
       </AffiliateLink>)}
     </div>
+    {product.specs?.["購入時の注意"] && <p className="mt-3 text-xs leading-relaxed text-slate-600">{product.specs["購入時の注意"]}</p>}
     <p className="mt-2 text-xs leading-relaxed text-slate-500">送料・付属品・販売条件は各販売店でご確認ください。</p>
   </div>;
 }

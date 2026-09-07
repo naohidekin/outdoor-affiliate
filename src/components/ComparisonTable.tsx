@@ -14,6 +14,28 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
   });
 
   return (
+    <>
+      <section className="not-prose my-7 space-y-4 md:hidden" aria-label="商品スペック比較">
+        <p data-comparison-start className="text-sm leading-relaxed text-slate-600">商品ごとに仕様と購入先を確認できます。参考価格と販売店の現在価格は異なる場合があります。</p>
+        {products.map((p) => (
+          <div key={p.id} className="min-w-0 overflow-hidden rounded-xl border border-line bg-white p-4">
+            <p className="text-xs text-slate-500">{p.brand}</p>
+            <h3 className="mt-1 break-words text-base font-semibold leading-relaxed text-ink-strong">{p.name}</h3>
+            <p className="my-3 text-sm text-slate-600">参考価格 <span className="font-semibold text-lake-700">{p.price > 0 ? `¥${p.price.toLocaleString()}` : "販売店で確認"}</span></p>
+            <dl className="mb-4 divide-y divide-line-soft text-sm">
+              {specKeys.slice(0, 3).map((key) => <div key={key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 py-2">
+                <dt className="break-words text-slate-500">{key}</dt><dd className="min-w-0 break-words text-ink">{specs.get(p.id)?.get(key) || "記載なし"}</dd>
+              </div>)}
+            </dl>
+            {specKeys.length > 3 && <details className="mb-4 rounded-lg bg-mist p-3">
+              <summary className="cursor-pointer py-1 text-sm font-medium">その他の仕様を見る</summary>
+              <dl className="mt-2 space-y-3 text-sm">{specKeys.slice(3).map((key) => <div key={key}><dt className="text-slate-500">{key}</dt><dd className="mt-1 break-words text-ink">{specs.get(p.id)?.get(key) || "記載なし"}</dd></div>)}</dl>
+            </details>}
+            <ProductMerchantLinks product={p} placement="comparison_table" />
+          </div>
+        ))}
+      </section>
+      <div className="hidden md:block">
     <TableScroll label="商品スペック比較表">
       <table className="product-comparison border-collapse bg-white" style={{ width: `calc(var(--comparison-label-width) + ${products.length} * var(--comparison-product-width))` }}>
         <caption className="sr-only">掲載商品の価格と仕様の比較</caption>
@@ -100,5 +122,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
         </tbody>
       </table>
     </TableScroll>
+      </div>
+    </>
   );
 }

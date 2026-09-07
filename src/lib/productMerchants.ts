@@ -14,3 +14,17 @@ export function getProductMerchants(product: Product) {
     catch { return false; }
   }).map((merchant, index) => ({ ...merchant, rank: index + 1 }));
 }
+
+/** Label search destinations explicitly; do not imply a specific SKU is selected. */
+export function isMerchantSearch(href: string): boolean {
+  try {
+    const url = new URL(href);
+    if (url.hostname === "hb.afl.rakuten.co.jp") {
+      const target = url.searchParams.get("pc");
+      if (target) return isMerchantSearch(target);
+    }
+    return ((url.hostname === "www.amazon.co.jp" || url.hostname === "amazon.co.jp") && url.pathname === "/s")
+      || url.hostname === "search.rakuten.co.jp"
+      || (url.hostname === "shopping.yahoo.co.jp" && url.pathname.startsWith("/search"));
+  } catch { return false; }
+}

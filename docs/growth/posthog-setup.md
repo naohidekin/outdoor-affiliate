@@ -32,3 +32,15 @@ Camp Gear Lab専用プロジェクトを作成し、以下を本番環境に設�
 - https://posthog.com/docs/libraries/js/config
 - https://posthog.com/docs/libraries/js/usage
 - https://posthog.com/docs/session-replay/privacy
+
+## 2026-09-07 追加確認
+
+ユーザーからイベント受信を確認したとの報告あり。こちらのブラウザーではPostHogに未ログインのため、ダッシュボード作成と集計結果の確認は未実施。
+比較表の到達イベントはモバイルの商品カード導入部にも対応。非表示のデスクトップ表はIntersectionObserverの到達対象にならない。
+
+次に作るレポート：
+- ファネルA：article_view → affiliate_click。同一セッションで集計。
+- ファネルB：article_view → comparison_view → affiliate_click。同一セッションで集計。
+- 記事URLとデバイス種別で分け、merchant / placementでクリックの内訳を確認。
+- 同じ期間のAmazon・楽天レポートと合わせて評価する。クリックを注文と扱わず、単一トラッキングIDから記事別報酬を推定しない。
+- 少数アクセスの短期間比較から勝ち負けを断定しない。まず同じ曜日を含む期間で基準値を集める。
