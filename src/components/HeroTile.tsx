@@ -20,12 +20,12 @@ export default function HeroTile({ products }: Props) {
           key={p.id}
           className="flex min-w-0 flex-col overflow-hidden bg-white border-r border-line-soft last:border-r-0"
         >
-          <div className="relative min-h-0 flex-1">
+          <div className="relative mx-auto min-h-0 w-full max-w-24 md:max-w-32 flex-1">
             <Image
               src={sizedImageUrl(p.imageUrl, 600)}
               alt={p.name}
               fill
-              sizes={`(max-width: 896px) ${Math.floor(100 / cols)}vw, ${Math.floor(896 / cols)}px`}
+              sizes="(max-width: 768px) 96px, 128px"
               className="object-contain p-3"
               // preloadはLCP候補（先頭タイル）だけ。全タイルを先読みすると
               // かえって重要リソースを遅らせる

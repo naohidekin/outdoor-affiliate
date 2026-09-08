@@ -11,15 +11,17 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="product-card relative border border-line rounded-2xl overflow-hidden bg-white">
       {product.affiliateUrl && <RakutenDealStamp />}
       {product.imageUrl && (
-        <div className="relative h-52 sm:h-72 bg-white overflow-hidden">
-          <Image
-            src={sizedImageUrl(product.imageUrl, 800)}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 800px"
-            className="object-contain p-5"
-            loading="lazy"
-          />
+        <div className="flex h-52 sm:h-72 items-center justify-center bg-white overflow-hidden">
+          <div className="relative size-44 sm:size-60 max-w-full">
+            <Image
+              src={sizedImageUrl(product.imageUrl, 800)}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 176px, 240px"
+              className="object-contain p-2"
+              loading="lazy"
+            />
+          </div>
         </div>
       )}
       <div className="p-5">
