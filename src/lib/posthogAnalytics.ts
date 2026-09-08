@@ -1,3 +1,4 @@
+import { isAnalyticsExcluded } from "./analyticsExclusion.ts";
 import type { PostHog } from "posthog-js";
 
 // Public, write-only project token supplied by the site owner (project 598025).
@@ -30,6 +31,7 @@ function enabled() {
   return typeof window !== "undefined"
     && window.location?.hostname === "camp-gear-lab.com"
     && isAnalyticsPath(window.location.pathname)
+    && !isAnalyticsExcluded()
     && Boolean(projectToken)
     && /^https:\/\/(us|eu)\.i\.posthog\.com$/.test(projectHost);
 }
@@ -83,7 +85,7 @@ export function capturePostHog(name: string, values: Record<string, string | num
   if (!allowedEvents.has(name) || !enabled()) return;
   const path = window.location.pathname;
   void getPostHog().then((ph) => {
-    if (!ph || window.location.pathname !== path) return;
+    if (!ph || !enabled() || window.location.pathname !== path) return;
     ph.capture(name, { ...posthogProperties(values), page_path: path });
   }).catch(() => {});
 }

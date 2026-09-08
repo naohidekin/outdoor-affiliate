@@ -1,3 +1,4 @@
+import { ANALYTICS_EXCLUSION_COOKIE, ANALYTICS_EXCLUSION_MAX_AGE } from "@/lib/analyticsExclusion";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPassword, createSessionToken, SESSION_TOKEN } from "@/lib/auth";
 
@@ -17,6 +18,7 @@ export async function POST(request: NextRequest) {
     path: "/",
   });
 
+  response.cookies.set(ANALYTICS_EXCLUSION_COOKIE, "1", { path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: ANALYTICS_EXCLUSION_MAX_AGE });
   return response;
 }
 

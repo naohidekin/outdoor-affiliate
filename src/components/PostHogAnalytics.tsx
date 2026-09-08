@@ -1,5 +1,6 @@
 "use client";
 
+import { isAnalyticsExcluded } from "@/lib/analyticsExclusion";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { capturePostHog, getPostHog, isAnalyticsPath, stopPostHogReplay } from "@/lib/posthogAnalytics";
@@ -7,7 +8,16 @@ import { capturePostHog, getPostHog, isAnalyticsPath, stopPostHogReplay } from "
 export default function PostHogAnalytics() {
   const pathname = usePathname();
   useEffect(() => {
-    if (!isAnalyticsPath(pathname)) { stopPostHogReplay(); return; }
+    const stopIfExcluded = () => { if (isAnalyticsExcluded()) stopPostHogReplay(); };
+    window.addEventListener("camp-analytics-preference", stopIfExcluded);
+    window.addEventListener("focus", stopIfExcluded);
+    return () => {
+      window.removeEventListener("camp-analytics-preference", stopIfExcluded);
+      window.removeEventListener("focus", stopIfExcluded);
+    };
+  }, []);
+  useEffect(() => {
+    if (isAnalyticsExcluded() || !isAnalyticsPath(pathname)) { stopPostHogReplay(); return; }
     let cancelled = false;
     capturePostHog("$pageview", { page_path: pathname });
     const article = /^\/articles\/([^/]+)\/?$/.exec(pathname);

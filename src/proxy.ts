@@ -1,3 +1,4 @@
+import { ANALYTICS_EXCLUSION_COOKIE, ANALYTICS_EXCLUSION_MAX_AGE } from "@/lib/analyticsExclusion";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -72,7 +73,9 @@ export async function proxy(request: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.cookies.set(ANALYTICS_EXCLUSION_COOKIE, "1", { path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: ANALYTICS_EXCLUSION_MAX_AGE });
+  return response;
 }
 
 export const config = {

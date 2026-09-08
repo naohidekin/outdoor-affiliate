@@ -1,3 +1,4 @@
+import { isAnalyticsExcluded } from "./analyticsExclusion.ts";
 import type { Product } from "./types.ts";
 
 export function hasProductComparison(content: string, products: Pick<Product, "id">[]): boolean {
@@ -17,7 +18,7 @@ export function trackArticleNavigation(
   area: ArticleNavigationArea,
   targetSlug?: string,
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || isAnalyticsExcluded()) return;
   try {
     const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
     if (typeof gtag !== "function") return;

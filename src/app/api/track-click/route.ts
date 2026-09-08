@@ -1,3 +1,5 @@
+import { ANALYTICS_EXCLUSION_COOKIE } from "@/lib/analyticsExclusion";
+import { isAuthenticated } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getSupabase } from "@/lib/supabase";
@@ -25,6 +27,9 @@ async function resolveProductByLink(url: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (req.cookies.get(ANALYTICS_EXCLUSION_COOKIE)?.value === "1" || await isAuthenticated()) {
+      return NextResponse.json({ ok: true, excluded: true });
+    }
     const body = await req.json();
 
     // 計測汚染対策: store はホワイトリスト、productId は形式検証、単純botは除外

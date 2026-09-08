@@ -1,3 +1,4 @@
+import { analyticsGuardScript } from "@/lib/analyticsExclusion";
 import type { Metadata } from "next";
 import { Noto_Sans_JP, Inter } from "next/font/google";
 import Script from "next/script";
@@ -66,6 +67,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-snow text-ink">
         {children}
+        <Script id="analytics-exclusion" strategy="beforeInteractive">{analyticsGuardScript}</Script>
         <PostHogAnalytics />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-0F2R4RX636"

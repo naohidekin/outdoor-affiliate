@@ -1,3 +1,4 @@
+import { isAnalyticsExcluded } from "./analyticsExclusion.ts";
 import { capturePostHog } from "./posthogAnalytics.ts";
 
 const pending: [string, Record<string, string | number>][] = [];
@@ -5,12 +6,13 @@ let awaitingInit = false;
 
 /** Analytics must never interrupt navigation or the independent click beacon. */
 export function trackEvent(name: string, parameters: Record<string, string | number>) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || isAnalyticsExcluded()) return;
   capturePostHog(name, parameters);
   sendToGA(name, parameters);
 }
 
 function sendToGA(name: string, parameters: Record<string, string | number>) {
+  if (isAnalyticsExcluded()) { pending.length = 0; return; }
   try {
     const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
     if (typeof gtag === "function") {

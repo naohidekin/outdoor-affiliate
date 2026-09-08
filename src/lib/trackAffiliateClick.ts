@@ -1,5 +1,6 @@
 // アフィリエイトクリック計測（GA4 + /api/track-click ビーコン）
 // AffiliateLink コンポーネントと記事本文内のインラインリンクで共用する
+import { isAnalyticsExcluded } from "./analyticsExclusion.ts";
 import { trackEvent } from "./trackEvent.ts";
 
 export type AffiliateStore = "amazon" | "rakuten" | "yahoo" | "valuecommerce";
@@ -81,7 +82,7 @@ export function trackAffiliateClick(
   const price = typeof opts?.price === "number" && Number.isFinite(opts.price) && opts.price > 0 ? Math.round(opts.price) : undefined;
   const rank = typeof opts?.rank === "number" && Number.isInteger(opts.rank) && opts.rank > 0 ? opts.rank : undefined;
 
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || isAnalyticsExcluded()) return;
   // Both transports can be blocked. A GA4 error must not prevent the beacon.
   trackEvent("affiliate_click", {
     product_id: productId,

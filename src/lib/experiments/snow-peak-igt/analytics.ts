@@ -1,3 +1,4 @@
+import { isAnalyticsExcluded } from "../../analyticsExclusion.ts";
 /**
  * 英語セクションの計測アダプタ
  *
@@ -100,6 +101,7 @@ const MAX_WAIT_MS = 10_000;
  * この経路なら順序を気にする必要がない。
  */
 function deliver(name: EnEventName, clean: EnEventPayload, waited: number): void {
+  if (isAnalyticsExcluded()) return;
   const w = window as GtagWindow;
   if (typeof w.gtag === "function") {
     w.gtag("event", name, clean);
