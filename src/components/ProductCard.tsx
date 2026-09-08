@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import { sizedImageUrl } from "@/lib/imageSize";
+import { productImagePresentation } from "@/lib/productImagePresentation";
 import ProductMerchantLinks from "./ProductMerchantLinks";
 import { getProductSpecs } from "@/lib/productSpecs";
 import RakutenDealStamp from "./RakutenDealStamp";
@@ -12,13 +13,14 @@ export default function ProductCard({ product }: { product: Product }) {
       {product.affiliateUrl && <RakutenDealStamp />}
       {product.imageUrl && (
         <div className="flex h-52 sm:h-72 items-center justify-center bg-white overflow-hidden">
-          <div className="relative size-44 sm:size-60 max-w-full">
+          <div className="relative size-44 sm:size-60 max-w-full overflow-hidden">
             <Image
               src={sizedImageUrl(product.imageUrl, 800)}
               alt={product.name}
               fill
               sizes="(max-width: 640px) 176px, 240px"
               className="object-contain p-2"
+              style={productImagePresentation(product.imageUrl)}
               loading="lazy"
             />
           </div>
