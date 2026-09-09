@@ -1,7 +1,28 @@
 {
   "articles": [
     {
-      "angle": "9月〜11月の気温変化に対応できる寝袋の選び方を快適温度帯・素材・形状の3軸で体系的に解説する入門ガイド",
+      "angle": "「初めて秋キャンプに行く」人が迷わず選べるよう、設営のしやすさ・保温性・価格帯の3軸で候補を絞り込む実践ガイド",
+      "categoryId": "tent",
+      "priority": "high",
+      "productCount": 3,
+      "productIds": [
+        "tent-020",
+        "tent-021",
+        "tent-022"
+      ],
+      "reason": "tentカテゴリはclicks28d 223・searchSessions 1496とサイト最高水準の需要を誇り、既存記事にない「初心者×秋デビュー」の切り口で新規流入を狙える",
+      "scheduledPublishDate": "2026-09-11",
+      "seasonRelevance": "9月は夏キャンプの経験者が秋本番に向けてテントを買い替え・追加検討するピークタイミング",
+      "slug": "autumn-camp-tent-beginner-guide-2026",
+      "targetKeywords": [
+        "秋キャンプ テント 初心者",
+        "テント おすすめ 秋 寒さ対策"
+      ],
+      "themeId": "theme-2026-W37-01",
+      "title": "秋キャンプデビューに最適な初心者向けテント選び方ガイド【2026年版】"
+    },
+    {
+      "angle": "メーカー表記の「快適温度」「限界温度」の意味を正確に解説し、9〜11月の標高・地域別に必要なスペックを逆算できる選び方記事",
       "categoryId": "sleeping-bag",
       "priority": "high",
       "productCount": 3,
@@ -10,63 +31,37 @@
         "cot-helinox-cot-one",
         "cot-naturehike-greenfield"
       ],
-      "reason": "sleeping-bagはclicks28d:113・trend:activeで伸び代があり、既存記事は品番比較やコット対決が中心のため『選び方ガイド（秋特化）』の切り口が完全に空いている",
-      "scheduledPublishDate": "2026-09-04",
-      "seasonRelevance": "9月は朝晩の冷え込みが始まり「今の寝袋で大丈夫か」と検索する初心者が急増する時期で、来月の季節カテゴリ準備にも先行できる",
-      "slug": "autumn-sleeping-bag-how-to-choose-guide",
+      "reason": "sleeping-bagカテゴリはclicks28d 210で高パフォーマンスかつ来月の推奨カテゴリでもあり、温度スペックの読み方という既存記事にない実用角度で差別化できる",
+      "scheduledPublishDate": "2026-09-13",
+      "seasonRelevance": "朝晩の冷え込みが始まる9月は「今の寝袋では寒いかも」と買い替え検討が急増する季節",
+      "slug": "autumn-sleeping-bag-temperature-rating-guide-2026",
       "targetKeywords": [
-        "秋キャンプ 寝袋 選び方",
-        "寝袋 快適温度 秋",
-        "シュラフ 秋冬 おすすめ"
+        "秋キャンプ 寝袋 何℃対応",
+        "シュラフ 快適温度 限界温度 違い"
       ],
-      "themeId": "theme-2026-W36-01",
-      "title": "秋キャンプの寝袋どう選ぶ？快適温度帯・素材・形状を徹底解説【2026年版】"
+      "themeId": "theme-2026-W37-02",
+      "title": "秋キャンプの寝袋は何℃対応が必要？快適温度・限界温度の正しい読み方【2026年版】"
     },
     {
-      "angle": "秋の夜長に映える焚き火台をソロ・デュオ・ファミリーの人数規模別に分けてランキング形式で紹介し、選び方の基準も明示する",
+      "angle": "灰の処理・煤汚れ・サイト原状回復まで、焚き火台を長く使うためのアフターケア全工程を初心者向けに実践解説",
       "categoryId": "firepit",
-      "priority": "high",
+      "priority": "medium",
       "productCount": 3,
       "productIds": [
-        "fire-blower-belmont",
-        "fire-blower-bushcraft",
-        "fire-blower-fireside80"
+        "firepit-001"
       ],
-      "reason": "firepitは来月の重点カテゴリであり、既存記事はソロ特化・ビギナーガイド・製品対決が中心で『秋×人数別ランキング』の切り口が未開拓",
-      "scheduledPublishDate": "2026-09-06",
-      "seasonRelevance": "9月後半から焚き火需要が一気に高まり、来月の季節カテゴリ（firepit）の主力記事として先行インデックスを獲得できる",
-      "slug": "autumn-firepit-ranking-2026",
+      "reason": "firepitは今月・来月ともに季節カテゴリで推奨されており、ランキング・比較記事が既存で充実している中、片付け・メンテナンスという実用サポート角度が未開拓",
+      "scheduledPublishDate": "2026-09-16",
+      "seasonRelevance": "秋キャンプシーズン到来で焚き火デビューする人が増え、使い方だけでなく「片付け方が分からない」という検索需要が高まる",
+      "slug": "firepit-cleanup-ash-disposal-guide-2026",
       "targetKeywords": [
-        "焚き火台 秋キャンプ おすすめ",
-        "焚き火台 ランキング 2026",
-        "焚き火台 ファミリー 選び方"
+        "焚き火台 片付け 灰 処理",
+        "焚き火 後片付け やり方"
       ],
-      "themeId": "theme-2026-W36-02",
-      "title": "秋キャンプの焚き火台おすすめランキング5選！ソロ〜ファミリー別に選び方を紹介【2026年版】"
-    },
-    {
-      "angle": "落ち葉・朝露・急な冷え込みなど秋特有の環境下でテントを快適に使いこなすための設営・撤収テクニックをステップ形式で解説する",
-      "categoryId": "tent",
-      "priority": "high",
-      "productCount": 3,
-      "productIds": [
-        "rakuten-brave-0-10000006358",
-        "rakuten-brave-0-ttk-0007-000",
-        "tent-001"
-      ],
-      "reason": "tentカテゴリはサイト最大のトラフィック源だが、既存記事はランキングや製品比較が中心で『設営・撤収テクニック（秋特化）』という実用ノウハウ記事が未存在",
-      "scheduledPublishDate": "2026-09-09",
-      "seasonRelevance": "9月は今月の季節カテゴリかつtentはclicks28d:227・searchSessions:1369と最大トラフィック源であり、テクニック系は季節を問わず検索される常緑コンテンツになる",
-      "slug": "autumn-tent-setup-takedown-technique-guide",
-      "targetKeywords": [
-        "秋キャンプ テント 設営",
-        "テント 撤収 コツ 秋",
-        "テント 結露 秋 対策"
-      ],
-      "themeId": "theme-2026-W36-03",
-      "title": "秋キャンプにおすすめのテント設営・撤収テクニック完全ガイド【2026年版】"
+      "themeId": "theme-2026-W37-03",
+      "title": "焚き火台の後片付けを劇的に楽にするグッズ＆手順まとめ【2026年版】"
     }
   ],
-  "generatedAt": "2026-09-02T00:00:55.000Z",
-  "week": "2026-W36"
+  "generatedAt": "2026-09-09T00:00:57.000Z",
+  "week": "2026-W37"
 }

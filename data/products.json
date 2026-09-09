@@ -1373,14 +1373,15 @@
     "price": 59800,
     "rating": 0,
     "specs": {
-      "サイズ": "315×264×580mm",
-      "入手方法": "コロナストア限定・抽選販売",
+      "サイズ": "幅264×奥行580×高さ315mm（脚を除く）",
+      "入手方法": "コロナストア。2026年9月7日確認時、公式は今季販売終了と案内",
       "冷却方式": "コンプレッサー式",
-      "消費電力": "180W",
-      "重量": "13.6kg",
-      "電源": "AC100V"
+      "冷房能力": "0.42/0.48kW（50/60Hz）",
+      "消費電力": "180/200W（50/60Hz）",
+      "重量": "本体12.0kg（付属品込み13.5kg）",
+      "電源": "AC100V（50/60Hz）"
     },
-    "updatedAt": "2026-08-02T01:13:30.000Z"
+    "updatedAt": "2026-09-07T08:21:10.792Z"
   },
   {
     "affiliateUrl": "",
@@ -1434,20 +1435,20 @@
     "brand": "アイリスオーヤマ",
     "categoryId": "fan",
     "createdAt": "2026-07-17T11:17:24.653Z",
-    "description": "2.2kW・4.5〜7畳対応の工事不要ポータブルクーラー。内部洗浄モード・リモコン・タイマー付きで、家庭とキャンプの兼用に向く大手ブランドの安心モデルです。",
+    "description": "窓パネルと排気ダクトを使うポータブルクーラー。設置場所・付属品・使用条件を購入前に確認してください。",
     "id": "cooler-iris-ipp2222g",
     "imageUrl": "https://m.media-amazon.com/images/I/41Xo08TY8CL._SL500_.jpg",
     "name": "アイリスオーヤマ ポータブルクーラー IPP-2222G",
     "price": 49980,
-    "rating": 4.2,
+    "rating": 0,
     "specs": {
-      "冷房能力": "2.2kW",
-      "対応畳数": "4.5〜7畳",
-      "排水": "ノンドレン方式",
-      "機能": "内部洗浄・タイマー・リモコン",
-      "発売": "2022年モデル"
+      "サイズ": "幅315×奥行395×高さ770mm",
+      "冷風能力": "2.0/2.2kW（50/60Hz）",
+      "消費電力": "490/600W（50/60Hz）",
+      "重量": "約24kg",
+      "電源": "100V（50/60Hz）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z"
+    "updatedAt": "2026-09-07T08:25:54.036Z"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00s8b06.wwmjs92c.g00s8b06.wwmjt33a/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fgbft-ltd%2Ffi-0z0l-2tv5%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fgbft-ltd%2Fi%2F10023578%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
@@ -1455,20 +1456,20 @@
     "brand": "ナカトミ",
     "categoryId": "fan",
     "createdAt": "2026-07-17T11:17:24.653Z",
-    "description": "約13kg・2万円台前半で買える最小クラスのコンプレッサー式クーラー。冷房能力0.43kWのため車中泊やコット周りのピンポイント冷却向けです。",
+    "description": "部分冷房向けのミニクーラー。設置場所と排熱経路を確認し、取扱説明書の使用条件に従ってください。",
     "id": "cooler-nakatomi-mac10",
     "imageUrl": "https://m.media-amazon.com/images/I/31bQBhWYjRL._SL500_.jpg",
     "name": "ナカトミ ミニクーラー MAC-10",
     "price": 26800,
-    "rating": 3.9,
+    "rating": 0,
     "specs": {
-      "サイズ": "295×295×440mm",
-      "冷房能力": "0.43kW（50Hz）",
-      "消費電力": "約188W",
-      "用途": "車中泊・ソロのピンポイント冷却",
-      "重量": "約13kg"
+      "サイズ": "幅295×奥行295×高さ440mm",
+      "冷房能力": "0.41/0.43kW（50/60Hz）",
+      "消費電力": "188/215W（50/60Hz）",
+      "重量": "約13kg",
+      "電源": "単相100V（50/60Hz）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z"
+    "updatedAt": "2026-09-07T08:25:34.194Z"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftansu%2F7980000000%2F&link_type=text&ut=",
@@ -1476,20 +1477,17 @@
     "brand": "タンスのゲン",
     "categoryId": "fan",
     "createdAt": "2026-07-16T13:45:43.522Z",
-    "description": "冷房能力2.3kW・6〜10畳対応の工事不要ポータブルクーラー。窓パネル4枚付きでテラス窓にも対応し、ノンドレン構造で排水いらず。電源サイトのキャンプと自宅の兼用に向きます。",
+    "description": "家庭用スポットクーラー。販売先で選択する能力・商品番号・窓パネル構成を確認してください。キャンプでの使用可否は設置条件の確認が必要です。",
     "id": "cooler-tansu-spot-23kw",
     "imageUrl": "https://m.media-amazon.com/images/I/41qunJiLRXL._SL500_.jpg",
     "name": "タンスのゲン スポットクーラー 2.3kW（窓パネル4枚付）",
     "price": 29999,
-    "rating": 4.3,
+    "rating": 0,
     "specs": {
-      "付属": "窓パネル4枚（テラス窓対応）",
-      "冷房能力": "2.3kW",
-      "対応畳数": "6〜10畳",
-      "排水": "ノンドレン構造",
-      "除湿能力": "約25L/日"
+      "付属品": "窓パネルの構成・対応寸法を販売先で確認",
+      "比較対象": "2.3kWタイプ。選択中の販売仕様を確認"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z"
+    "updatedAt": "2026-09-07T08:26:55.520Z"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmons-onlineshop%2Fc10xusarxr%2F&link_type=text&ut=",
@@ -1505,13 +1503,14 @@
     "price": 18654,
     "rating": 4,
     "specs": {
-      "サイズ": "270×266×432mm",
+      "サイズ": "幅270×奥行266×高さ432mm",
       "冷却方式": "コンプレッサー式",
-      "消費電力": "170W",
+      "冷媒": "R134a",
+      "消費電力": "170/190W（50/60Hz）",
       "重量": "10kg",
-      "電源": "AC100V"
+      "電源": "AC100V（50/60Hz）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T08:23:02.156Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E5%B1%B1%E5%96%84%20YEC-M03"
   },
   {
@@ -2406,6 +2405,31 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=TokyoCamp%20%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92%20%E4%BC%B8%E7%B8%AE%E5%BC%8F%20%E5%A4%A9%E7%84%B6%E6%9C%A8%20%E3%82%B1%E3%83%BC%E3%82%B9%E4%BB%98%E3%81%8D"
   },
   {
+    "addedAt": "2026-09-09T00:01:07.323Z",
+    "addedBy": "article-product-agent",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00uq9x6.wwmjse71.g00uq9x6.wwmjt6f0/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftsunagu2017%2F4jz5q3nlbwb776xahxd6kkdmnq%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ftsunagu2017%2Fi%2F10100597%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E7%84%9A%E3%81%8D%E7%81%AB%E3%82%B7%E3%83%BC%E3%83%88%20%E7%84%9A%E3%81%8D%E7%81%AB%E5%8F%B0%E3%82%B7%E3%83%BC%E3%83%88%20%E3%82%B9%E3%83%91%E3%83%83%E3%82%BF%E3%82%B7%E3%83%BC%E3%83%88%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%83%81%E3%82%AF%E3%83%81%E3%82%AF%E3%81%97%E3%81%AA%E3%81%84%20%E8%80%90%E7%86%B1%20%E8%80%90%E7%81%AB%20%E9%98%B2%E7%82%8E%20%E9%98%B2%E7%81%AB%20%E5%9C%B0%E9%9D%A2%E4%BF%9D%E8%AD%B7%20%E8%8A%9D%E7%94%9F%E4%BF%9D%E8%AD%B7%20%E8%96%AA%E3%83%90%E3%83%83%E3%82%B0%20%E9%BB%92%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E7%94%A8%E5%93%81%20%E3%82%B0%E3%83%AA%E3%83%AB%20BBQ%20%E3%82%BD%E3%83%AD%20%E3%83%95%E3%82%A1%E3%83%9F%E3%83%AA%E3%83%BC%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E8%BB%BD%E9%87%8F%20%E5%8F%8E%E7%B4%8D%20%E6%90%BA%E5%B8%AF%20%E3%83%AC%E3%82%B8%E3%83%A3%E3%83%BC%E7%94%A8%E5%93%81%20%E9%9B%A3%E7%87%83%20%E7%81%AB%E3%81%AE%E7%B2%89%E5%AF%BE%E7%AD%96%20%E4%B8%8B%20%E9%AB%98%E8%80%90%E4%B9%85%E6%80%A7%20%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0&tag=camp78-22",
+    "autoAdded": true,
+    "brand": "TsuNaGu2017",
+    "categoryId": "firepit",
+    "createdAt": "2026-09-09T00:01:07.323Z",
+    "description": "",
+    "id": "firepit-001",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/tsunagu2017/cabinet/12933374/4497449_6.jpg?_ex=128x128",
+    "name": "焚き火シート 焚き火台シート スパッタシート キャンプ チクチクしない 耐熱 耐火 防炎 防火 地面保護 芝生保護 薪バッグ 黒 アウトドア用品 グリル BBQ ソロ ファミリー コンパクト 軽量 収",
+    "price": 2100,
+    "rating": 0,
+    "sourceApi": "rakuten",
+    "specs": {
+      "サイズ": "",
+      "収納サイズ": "",
+      "素材": "ガラス繊維（両面シリコンコーティング）",
+      "耐荷重": "",
+      "重量": ""
+    },
+    "updatedAt": "2026-09-09T00:01:07.323Z"
+  },
+  {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ftokyocamp%2F10000000%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B09726YGXG/?tag=camp78-22",
     "brand": "TokyoCamp",
@@ -3083,7 +3107,7 @@
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ug9n6.wwmjsa40.g00ug9n6.wwmjt8da/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmomizistore%2Fb09c1ph1wz%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmomizistore%2Fi%2F10000918%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B016120Q2M/?tag=camp78-22",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E5%B1%B1%E5%96%84+YMS-16&tag=camp78-22",
     "brand": "山善",
     "categoryId": "heater",
     "createdAt": "2026-08-03T12:46:07.841Z",
@@ -3091,19 +3115,19 @@
     "id": "heater-yamazen-electric-blanket",
     "imageUrl": "https://shop.r10s.jp/momizistore/cabinet/imgrc0097326430.jpg",
     "name": "山善 電気敷毛布 YMS-16",
-    "price": 5980,
+    "price": 0,
     "rating": 0,
     "specs": {
       "サイズ": "130×80cm",
-      "安全装置": "温度ヒューズ",
       "形式": "敷きタイプ",
-      "手入れ": "丸洗い可（コントローラーは不可）",
+      "手入れ": "本体丸洗い可（ドラム式洗濯機・コントローラーは不可）",
       "機能": "ダニ退治",
       "消費電力": "40W",
-      "温度調節": "弱〜強（スライド式無段階）",
-      "表面温度": "弱 約23℃／適温 約33℃／強 約53℃"
+      "温度調節": "弱〜強",
+      "表面温度": "弱 約23℃／適温 約33℃／強 約53℃",
+      "購入時の注意": "Amazonは型番検索です。YMS-16かどうかを確認してください。屋外での使用可否と使用条件は取扱説明書をご確認ください。"
     },
-    "updatedAt": "2026-08-26T17:03:12.474Z"
+    "updatedAt": "2026-09-07T16:54:04.420Z"
   },
   {
     "affiliateUrl": "",
@@ -4134,21 +4158,22 @@
     "brand": "スノーピーク",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "テント内の常夜灯として世界中のキャンパーに愛用されるスノーピークの名作。シリコンストラップで張り綱やポールに吊るせる。重さ41gの軽さで就寝前のほんのり灯に最適。",
+    "description": "電球色相当の光を無段階で調節できる、小型の乾電池式LEDランタン。最大60lm、重量57g（電池除く）。磁石付きのループで取り付けられ、寝室の補助照明として候補になります。",
     "id": "led-tent-001",
     "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0119A0108/SNP0119A0108_x_c101.jpg",
     "name": "スノーピーク たねほおずき ES-041",
-    "price": 3520,
+    "price": 0,
     "rating": 5,
     "specs": {
-      "吊り下げ": "シリコンストラップ付き",
-      "明るさ": "最大30lm",
-      "点灯時間": "最大100時間（低輝度）",
-      "調光": "無段階調光（ひねり操作）",
-      "重量": "約41g（電池含む）",
-      "電源": "単4電池×3本"
+      "サイズ": "直径62×高さ75mm",
+      "明るさ": "最大60lm",
+      "点灯時間": "Hi約60時間／Low約100時間",
+      "調光": "無段階調光・Hi-Low／Strobe／疑似ゆらぎ",
+      "重量": "57g（電池を除く）",
+      "防滴": "IPX4級相当",
+      "電源": "単4形アルカリ乾電池3本"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T14:30:27.124Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%81%9F%E3%81%AD%E3%81%BB%E3%81%8A%E3%81%9A%E3%81%8D%20ES-041"
   },
   {
@@ -4157,21 +4182,22 @@
     "brand": "スノーピーク",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "たねほおずきの上位版。「ゆらぎモード」がキャンプの夜に最高の雰囲気をつくる。80lmあればテント内の読書も十分。たねほおずきと2個使いが定番の組み合わせ。",
+    "description": "通常点灯・おやすみ・ゆらぎモードを備える暖色系のLEDランタン。各モードで無段階調光できます。単3電池3本のほか、指定USB電源や別売充電池パックに対応します。",
     "id": "led-tent-002",
-    "imageUrl": "https://m.media-amazon.com/images/P/B07BHRH5WC.01._SCLZZZZZZZ_SX522_.jpg",
+    "imageUrl": "https://img.snowpeak.co.jp/img/item/SNP01/SNP0115A0065/SNP0115A0065_x_c101.jpg",
     "name": "スノーピーク ほおずき ES-070",
-    "price": 5280,
+    "price": 0,
     "rating": 5,
     "specs": {
-      "吊り下げ": "シリコンストラップ付き",
-      "明るさ": "最大80lm",
-      "点灯時間": "最大130時間（低輝度）",
-      "調光": "無段階調光 + ゆらぎモード",
-      "重量": "約120g（電池含む）",
-      "電源": "単3電池×3本"
+      "サイズ": "直径107×高さ87mm（コード除く）",
+      "明るさ": "100lm（USB接続Hi時）",
+      "点灯時間": "約10時間（アルカリ電池・徐々に照度低下）",
+      "調光": "各モードで無段階調光",
+      "重量": "165g（電池を除く）",
+      "防滴": "IPX4（USBキャップを閉じた状態）",
+      "電源": "単3形アルカリ乾電池3本／指定USB電源／別売充電池パック"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T14:31:55.142Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%81%BB%E3%81%8A%E3%81%9A%E3%81%8D%20ES-070"
   },
   {
@@ -4180,21 +4206,21 @@
     "brand": "コールマン",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "クリップでテントのフレームに挟めるコールマンの定番。フック吊り下げとクリップ固定の両方に対応で設置自由度が高い。2,000円台のコスパで手に取りやすい入門ランタン。",
+    "description": "卓上・クリップ・マグネットで設置する充電式ライト付きファン。照明と送風を組み合わせたい場面の候補です。単3電池式ではありません。",
     "id": "led-tent-003",
     "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2236305/2236305.jpg",
     "name": "コールマン アウトドアクリップライトファン 2236305",
-    "price": 2200,
+    "price": 5830,
     "rating": 4,
     "specs": {
-      "吊り下げ": "フック＋クリップ付き",
-      "明るさ": "最大120lm",
-      "点灯時間": "最大9時間（Hi）",
-      "調光": "3段階",
-      "重量": "約175g（電池含む）",
-      "電源": "単3電池×3本"
+      "サイズ": "約13×11×21cm",
+      "明るさ": "約250/130/60lm（High/Medium/Low）",
+      "点灯時間": "ライトのみ約5.5/11/22.5時間（High/Medium/Low）",
+      "設置": "卓上・クリップ・マグネット",
+      "重量": "約500g",
+      "電源": "内蔵リチウムイオン電池4,400mAh（USB-C充電）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T11:06:32.162Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E3%82%AF%E3%83%AA%E3%83%83%E3%83%97%E3%83%A9%E3%82%A4%E3%83%88%E3%83%95%E3%82%A1%E3%83%B3%202236305"
   },
   {
@@ -4203,21 +4229,23 @@
     "brand": "LUMENA",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "900lmの圧倒的な明るさを持つUSB-C充電式ランタン。テント内だけでなくサイト全体を照らすメインランタンにもなる。スマホ充電機能付きで緊急時にも役立つ万能機。",
+    "description": "USB-C対応のLUMENA2X。明るさは100〜1,500lmで、内蔵バッテリーは10,000mAh。主照明の候補ですが、最低設定も100lmのため、弱い常夜灯とは用途を分けて選びます。",
     "id": "led-tent-004",
     "imageUrl": "https://ec.treasure-f.com/images/1082000405053733/450/1082000405053733_01_5056.jpeg",
     "name": "ルーメナー LUMENA2X",
-    "price": 6600,
+    "price": 16280,
     "rating": 4.5,
     "specs": {
-      "吊り下げ": "折り畳みフック付き",
-      "明るさ": "最大900lm",
-      "点灯時間": "最大40時間",
-      "調光": "無段階調光",
-      "重量": "約130g",
-      "電源": "USB-C充電式（内蔵バッテリー）"
+      "充電時間": "約5時間（5V2Aアダプター使用時）",
+      "明るさ": "100〜1,500lm",
+      "点灯時間": "High約8時間／Low約100時間",
+      "設置": "付属磁石フック",
+      "購入時の注意": "楽天のリンク先はシェード付きセットです。本体単品と価格・付属品が異なります。選択カラーの型番と充電端子も確認してください。",
+      "重量": "約280g（2X販売ページ掲載値）",
+      "防水等級": "IP67",
+      "電源": "USB-C充電式・内蔵10,000mAh"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T16:56:23.057Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AB%E3%83%BC%E3%83%A1%E3%83%8A%E3%83%BC%20LUMENA2X"
   },
   {
@@ -4226,21 +4254,21 @@
     "brand": "Black Diamond",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "登山用品ブランドBlack Diamondのテントランタン。電池とUSBのどちらでも使えるハイブリッド電源が強み。登山からキャンプまで幅広く使え、品質の信頼性はトップクラス。",
+    "description": "最大650ルーメンの充電式ランタン。USB-Cで充電する5,200mAhバッテリーを内蔵し、卓上・吊り下げの両方に対応します。乾電池式ではありません。",
     "id": "led-tent-005",
-    "imageUrl": "https://www.lostarrow.co.jp/img/goods/L/BD81006002_L.webp",
+    "imageUrl": "https://www.bluesheep.co.jp/img/goods/9/BD81042001_9.webp",
     "name": "ブラックダイヤモンド オービター650 BD81042",
-    "price": 7700,
+    "price": 11110,
     "rating": 4.5,
     "specs": {
-      "吊り下げ": "フック付き収納袋",
-      "明るさ": "最大250lm",
-      "点灯時間": "最大70時間",
-      "調光": "無段階調光",
-      "重量": "約160g（電池含む）",
-      "電源": "単4電池×4本 or USB充電"
+      "明るさ": "最大650lm",
+      "点灯時間": "4/10/240時間（高/中/低照度）",
+      "設置": "卓上・吊り下げ",
+      "重量": "508g",
+      "防水等級": "IPX4",
+      "電源": "内蔵リチウムイオン充電池5,200mAh（USB-C充電）"
     },
-    "updatedAt": "2026-07-25T01:04:14.687Z",
+    "updatedAt": "2026-09-07T11:05:47.539Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF%E3%83%80%E3%82%A4%E3%83%A4%E3%83%A2%E3%83%B3%E3%83%89%20%E3%82%AA%E3%83%BC%E3%83%93%E3%82%BF%E3%83%BC650%20BD81042"
   },
   {
@@ -4249,21 +4277,22 @@
     "brand": "キャプテンスタッグ",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "2,000円以下で買えるシリコン製テントランタン。柔らかいシリコンボディで落としても安心。入門機として最初の1台に最適で、子どもに持たせるナイトランタンとしても活躍する。",
+    "description": "8mのコードでテントの出入口などを飾る充電式ライト。全点灯時は約200lm、重量約190g。本体の連続使用時間は約3時間なので、一晩中使う主照明とは用途を分けて選びます。",
     "id": "led-tent-006",
-    "imageUrl": "https://www.captainstag.net/item_img/l/UK-4028.jpg",
-    "name": "キャプテンスタッグ CS ストリングライト 充電式",
-    "price": 2280,
+    "imageUrl": "https://store.captainstag.net/html/upload/save_image/UK-4075.jpg",
+    "name": "キャプテンスタッグ CS ストリングライト UK-4075（オリーブ）",
+    "price": 2750,
     "rating": 3.5,
     "specs": {
-      "吊り下げ": "フック付き",
-      "明るさ": "最大160lm",
-      "点灯時間": "最大100時間",
-      "調光": "3段階",
-      "重量": "約95g（電池含む）",
-      "電源": "単4電池×3本"
+      "サイズ": "本体90×90×50mm・コード8m",
+      "充電時間": "約3時間",
+      "明るさ": "約200lm（全点灯時）",
+      "点灯時間": "本体約3時間",
+      "重量": "約190g",
+      "防水": "生活防水",
+      "電源": "内蔵リチウムイオン電池2,000mAh／3.7V（USB-C充電）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-07T11:28:22.939Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20CS%20%E3%82%B9%E3%83%88%E3%83%AA%E3%83%B3%E3%82%B0%E3%83%A9%E3%82%A4%E3%83%88%20%E5%85%85%E9%9B%BB%E5%BC%8F"
   },
   {
@@ -4272,20 +4301,20 @@
     "brand": "キャプテンスタッグ",
     "categoryId": "light",
     "createdAt": "2026-04-26T17:08:54.309Z",
-    "description": "取り外して懐中電灯としても使えるキャプテンスタッグのLEDランタン。テント内吊り下げ・手持ちの2WAY使用が可能。",
+    "description": "取り外せるライトを備えた乾電池式ランタン。ランタン本体と分離ライトで必要な電池が異なります。乾電池を除いて約780gあるため、軽量な天井吊り下げ用とは分けて選びます。",
     "id": "led-tent-009",
     "imageUrl": "https://m.media-amazon.com/images/P/B00HHMTWIA.01._SCLZZZZZZZ_SX522_.jpg",
     "name": "キャプテンスタッグ リムーブ LEDランタンDX UK-4004",
-    "price": 2918,
+    "price": 0,
     "rating": 3.8,
     "specs": {
-      "使用方法": "吊り下げ・手持ち2WAY",
-      "明るさ": "約100lm",
-      "点灯時間": "約8時間",
-      "防水": "生活防水",
-      "電源": "単3電池×3本"
+      "サイズ": "約134×127×255mm（持ち手を除く）",
+      "使用方法": "ライト取り外し可能",
+      "点灯時間": "ランタン15灯約50時間・30灯約25時間／ライト5灯約20時間・15灯約7時間",
+      "重量": "約780g（乾電池を除く）",
+      "電源": "ランタン＝単1形4本／ライト＝単4形3本（別売）"
     },
-    "updatedAt": "2026-08-06T15:10:21.418Z",
+    "updatedAt": "2026-09-07T14:31:03.308Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%AD%E3%83%A3%E3%83%97%E3%83%86%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%83%E3%82%B0%20%E3%83%AA%E3%83%A0%E3%83%BC%E3%83%96%20LED%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3DX%20UK-4004"
   },
   {
@@ -7622,6 +7651,84 @@
     "specs": {},
     "updatedAt": "2026-08-01T14:36:49.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%9E%E3%82%A8%E3%83%92%E3%83%AD%E3%83%89%E3%83%BC%E3%83%A0%20%E3%83%87%E3%83%A5%E3%82%AA%20DUO%20%E3%83%87%E3%82%A4%E3%83%88%E3%83%8A%20%E8%BB%BD%E9%87%8F"
+  },
+  {
+    "addedAt": "2026-09-09T00:00:58.945Z",
+    "addedBy": "article-product-agent",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u7a36.wwmjsb37.g00u7a36.wwmjta5f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ff032069-kitakami%2Fc0326%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ff032069-kitakami%2Fi%2F10001207%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%81%B5%E3%82%8B%E3%81%95%E3%81%A8%E7%B4%8D%E7%A8%8E%E3%80%91%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%20%E3%83%99%E3%82%A2%E3%83%BC%E3%83%99%E3%83%AB%20%5B%20%E5%88%A9%E7%94%A8%E5%88%B81%2C000%E5%86%86%C3%973%E6%9E%9A%20%5D%20%E5%A4%8F%E6%B2%B9%20%E9%AB%98%E5%8E%9F%20%E3%81%92%E3%81%A8%E3%81%86%20%E5%A4%A7%E8%87%AA%E7%84%B6%20%E6%B8%A9%E6%B3%89%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0%20%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E7%84%9A%E7%81%AB%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%B1%B1%20%E6%98%A5%20%E5%A4%8F%20%E7%A7%8B%20%E5%86%AC&tag=camp78-22",
+    "autoAdded": true,
+    "brand": "キャンプグランド ベアーベル",
+    "categoryId": "tent",
+    "createdAt": "2026-09-09T00:00:58.944Z",
+    "description": "",
+    "id": "tent-020",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/f032069-kitakami/cabinet/09303104/imgrc0092137269.jpg?_ex=128x128",
+    "name": "【ふるさと納税】キャンプグランド ベアーベル [ 利用券1,000円×3枚 ] 夏油 高原 げとう 大自然 温泉 キャンプ グランピング ブッシュクラフト 焚火 アウトドア 山 春 夏 秋 冬",
+    "price": 13000,
+    "rating": 0,
+    "sourceApi": "rakuten",
+    "specs": {
+      "サイズ": "",
+      "収容人数": "",
+      "構造": "",
+      "素材": "",
+      "耐水圧": "",
+      "重量": ""
+    },
+    "updatedAt": "2026-09-09T00:00:58.945Z"
+  },
+  {
+    "addedAt": "2026-09-09T00:01:00.478Z",
+    "addedBy": "article-product-agent",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00u7a36.wwmjsb37.g00u7a36.wwmjta5f/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ff032069-kitakami%2Fh0078%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ff032069-kitakami%2Fi%2F10001210%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%81%B5%E3%82%8B%E3%81%95%E3%81%A8%E7%B4%8D%E7%A8%8E%E3%80%91%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%20%E3%83%99%E3%82%A2%E3%83%BC%E3%83%99%E3%83%AB%20%5B%20%E5%88%A9%E7%94%A8%E5%88%B81%2C000%E5%86%86%C3%9710%E6%9E%9A%20%5D%20%E5%A4%8F%E6%B2%B9%20%E9%AB%98%E5%8E%9F%20%E3%81%92%E3%81%A8%E3%81%86%20%E5%A4%A7%E8%87%AA%E7%84%B6%20%E6%B8%A9%E6%B3%89%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0%20%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E7%84%9A%E7%81%AB%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%B1%B1%20%E6%98%A5%20%E5%A4%8F%20%E7%A7%8B%20%E5%86%AC&tag=camp78-22",
+    "autoAdded": true,
+    "brand": "キャンプグランド ベアーベル",
+    "categoryId": "tent",
+    "createdAt": "2026-09-09T00:01:00.478Z",
+    "description": "",
+    "id": "tent-021",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/f032069-kitakami/cabinet/09303104/imgrc0092140435.jpg?_ex=128x128",
+    "name": "【ふるさと納税】キャンプグランド ベアーベル [ 利用券1,000円×10枚 ] 夏油 高原 げとう 大自然 温泉 キャンプ グランピング ブッシュクラフト 焚火 アウトドア 山 春 夏 秋 冬",
+    "price": 50000,
+    "rating": 0,
+    "sourceApi": "rakuten",
+    "specs": {
+      "サイズ": "",
+      "収容人数": "",
+      "構造": "",
+      "素材": "",
+      "耐水圧": "",
+      "重量": ""
+    },
+    "updatedAt": "2026-09-09T00:01:00.478Z"
+  },
+  {
+    "addedAt": "2026-09-09T00:01:02.847Z",
+    "addedBy": "article-product-agent",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ugmo6.wwmjseff.g00ugmo6.wwmjt326/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsnowpeak-official%2Ftp-259%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsnowpeak-official%2Fi%2F10001411%2F&rafcid=wsc_i_is_44594e80-9277-44b8-a91d-732a342d13ac",
+    "amazonUrl": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%82%B9%E3%83%BC%E3%83%91%E3%83%BCSALE%E9%99%90%E5%AE%9A%E2%98%85P5%E5%80%8D%E3%80%91%E3%80%90%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E5%85%AC%E5%BC%8F%E3%80%91%E3%80%90%E6%B0%B8%E4%B9%85%E4%BF%9D%E8%A8%BC%E4%BB%98%E3%80%91snowpeak%20%E3%83%A9%E3%83%B3%E3%83%89%E3%83%8D%E3%82%B9%E3%83%88%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%BF%E3%83%BC%20TP-259%20%E3%83%86%E3%83%B3%E3%83%88%20%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%BF%E3%83%BC%20%E5%AE%A4%E5%86%85%20%E9%98%B2%E5%AF%92%20%E7%A7%8B%20%E7%A7%8B%E7%94%A8%20%E5%86%AC%20%E5%86%AC%E7%94%A8%20%E5%A4%A7%E5%9E%8B%204%E4%BA%BA%E7%94%A8%20%E8%80%90%E6%B0%B4%20%E7%B0%A1%E5%8D%98%20%E8%A8%AD%E5%96%B6%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E7%94%A8%E5%93%81%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2&tag=camp78-22",
+    "autoAdded": true,
+    "brand": "snow peak（スノーピーク）",
+    "categoryId": "tent",
+    "createdAt": "2026-09-09T00:01:02.847Z",
+    "description": "",
+    "id": "tent-022",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/snowpeak-official/cabinet/newthumb202403_p/tp-259_p5.jpg?_ex=128x128",
+    "name": "【スーパーSALE限定★P5倍】【スノーピーク 公式】【永久保証付】snowpeak ランドネストシェルター TP-259 テント シェルター 室内 防寒 秋 秋用 冬 冬用 大型 4人用 耐水 簡単",
+    "price": 87780,
+    "rating": 4.88,
+    "sourceApi": "rakuten",
+    "specs": {
+      "サイズ": "",
+      "収容人数": "4人用",
+      "構造": "2ルームシェルター",
+      "素材": "75Dポリエステルタフタ、210Dポリエステルオックス、A6061アルミフレーム",
+      "耐水圧": "1,800mm（ルーフ・ウォール・ボトム部）、450mm（スカート部）",
+      "重量": "16.5kg"
+    },
+    "updatedAt": "2026-09-09T00:01:02.847Z"
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ssmw6.wwmjsa63.g00ssmw6.wwmjt181/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fwild-1%2F4988325125263%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fwild-1%2Fi%2F10002226%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
