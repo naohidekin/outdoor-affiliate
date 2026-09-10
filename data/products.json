@@ -6,20 +6,23 @@
     "brand": "Anker",
     "categoryId": "portable-power",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "description": "",
+    "description": "容量1024Wh・定格出力1550W、重量約11.3kgのGen 2モデルです。通常充電は約60分、最短約54分は20℃でアプリの超急速充電モードを使う場合のメーカー値です。初代C1000やソーラーパネル付きセットと区別して選んでください。",
     "id": "anker-solix-c1000-gen2",
     "imageUrl": "https://m.media-amazon.com/images/I/51YsPaYII9L._AC_SL1500_.jpg",
     "name": "Anker Solix C1000 Gen 2",
-    "price": 99990,
+    "price": 0,
     "rating": 4.5,
     "specs": {
-      "充電時間": "約54分",
-      "出力ポート": "10口",
+      "USB-A": "最大12W×1",
+      "USB-C": "最大100W×2、最大15W×1",
+      "サイズ": "約38.4×20.8×24.4cm",
+      "充電時間": "最短約54分（20℃・アプリ超急速設定、通常約60分）",
       "定格出力": "1550W",
       "容量": "1024Wh",
-      "重量": "11.3kg"
+      "購入時の注意": "C1000とC1000 Gen 2は別モデルです。ソーラーパネル付きセットとの違いも確認してください。",
+      "重量": "約11.3kg"
     },
-    "updatedAt": "2026-08-06T15:10:21.418Z",
+    "updatedAt": "2026-09-08T14:53:47.537Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Anker%20Solix%20C1000%20Gen%202"
   },
   {
@@ -1839,16 +1842,17 @@
     "id": "ecoflow-river2-pro",
     "imageUrl": "https://m.media-amazon.com/images/I/61xhzHQK8wL._AC_SL1500_.jpg",
     "name": "EcoFlow RIVER 2 Pro",
-    "price": 99700,
+    "price": 0,
     "rating": 4.3,
     "specs": {
-      "充電時間": "約70分",
       "出力ポート": "11口",
       "定格出力": "800W",
       "容量": "768Wh",
-      "重量": "7.8kg"
+      "販売状況": "公式ストア販売終了",
+      "購入時の注意": "販売店の残存在庫・中古品・保証条件を確認してください。RIVERシリーズの別モデルとの混同に注意。",
+      "重量": "約8.25kg（現行公式掲載値）"
     },
-    "updatedAt": "2026-08-03T21:56:35.594Z",
+    "updatedAt": "2026-09-08T01:40:34.277Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=EcoFlow%20RIVER%202%20Pro"
   },
   {
@@ -3787,20 +3791,20 @@
     "brand": "Jackery",
     "categoryId": "portable-power",
     "createdAt": "2026-06-20T10:53:28.965Z",
-    "description": "",
+    "description": "容量1070Wh・定格出力1500W、重量約10.8kgのポータブル電源です。電気毛布などの消費電力と使用時間から必要容量を確認し、運搬できる重さかを合わせて選びます。本体単品とソーラーパネル付きセットは別商品です。",
     "id": "jackery-1000-new",
     "imageUrl": "https://m.media-amazon.com/images/I/51cgrzCirhL._AC_SL1500_.jpg",
     "name": "Jackery ポータブル電源 1000 New",
-    "price": 119800,
+    "price": 0,
     "rating": 4.6,
     "specs": {
-      "充電時間": "約1時間",
-      "出力ポート": "7口",
+      "充電時間": "通常約1.7時間／緊急充電モード約1時間（メーカー条件による）",
       "定格出力": "1500W",
       "容量": "1070Wh",
-      "重量": "10.8kg"
+      "購入時の注意": "1000 Newの本体単品とソーラーパネル付きセットは別商品です。1000シリーズの別モデルとの混同に注意してください。",
+      "重量": "約10.8kg"
     },
-    "updatedAt": "2026-08-06T15:10:14.609Z",
+    "updatedAt": "2026-09-08T14:52:27.057Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Jackery%20%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB%E9%9B%BB%E6%BA%90%201000%20New"
   },
   {
@@ -4231,7 +4235,7 @@
     "createdAt": "2026-04-01T00:00:00.000Z",
     "description": "USB-C対応のLUMENA2X。明るさは100〜1,500lmで、内蔵バッテリーは10,000mAh。主照明の候補ですが、最低設定も100lmのため、弱い常夜灯とは用途を分けて選びます。",
     "id": "led-tent-004",
-    "imageUrl": "https://ec.treasure-f.com/images/1082000405053733/450/1082000405053733_01_5056.jpeg",
+    "imageUrl": "https://m.media-amazon.com/images/I/615+gHGEg9L._AC_SL1500_.jpg",
     "name": "ルーメナー LUMENA2X",
     "price": 16280,
     "rating": 4.5,
@@ -4240,12 +4244,12 @@
       "明るさ": "100〜1,500lm",
       "点灯時間": "High約8時間／Low約100時間",
       "設置": "付属磁石フック",
-      "購入時の注意": "楽天のリンク先はシェード付きセットです。本体単品と価格・付属品が異なります。選択カラーの型番と充電端子も確認してください。",
+      "購入時の注意": "Amazonのリンク先は2X・メタルブラック、楽天はシェード付きセットです。楽天の迷彩グリーンはType-Bと販売先に記載されており、USB-Cモデルとは異なります。2X・USB-Cの型番と色、付属品を選択画面で確認してください。",
       "重量": "約280g（2X販売ページ掲載値）",
       "防水等級": "IP67",
       "電源": "USB-C充電式・内蔵10,000mAh"
     },
-    "updatedAt": "2026-09-07T16:56:23.057Z",
+    "updatedAt": "2026-09-08T23:07:47.761Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AB%E3%83%BC%E3%83%A1%E3%83%8A%E3%83%BC%20LUMENA2X"
   },
   {
@@ -5036,15 +5040,18 @@
     "id": "power-ecoflow-delta3-plus",
     "imageUrl": "https://m.media-amazon.com/images/I/61I0m5mXdcL._AC_SL1500_.jpg",
     "name": "EcoFlow DELTA 3 Plus",
-    "price": 74800,
+    "price": 0,
     "rating": 4.5,
     "specs": {
+      "AC充電時間": "最短56分（メーカー条件による）",
+      "サイズ": "約39.8×20.2×28.4cm",
       "バッテリー": "リン酸鉄（LFP）",
-      "定格出力": "1800W（X-Boost対応）",
-      "容量": "1024Wh（拡張5120Wh）",
-      "重量": "約11.5kg"
+      "定格出力": "1500W（日本向け仕様）",
+      "容量": "1024Wh",
+      "購入時の注意": "本体とソーラーパネル・拡張バッテリーのセットは別商品です。X-Boostの対応電力は定格出力ではありません。",
+      "重量": "約12.5kg"
     },
-    "updatedAt": "2026-08-08T06:24:40.452Z"
+    "updatedAt": "2026-09-08T01:39:00.187Z"
   },
   {
     "addedAt": "2026-04-13",
