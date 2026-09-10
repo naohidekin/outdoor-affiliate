@@ -67,5 +67,7 @@ data/x/ideas.jsonl
 # 衝突するためGit管理から外す（再生成は --init でいつでも可能）
 scratch/manual-affiliate-links.txt
 scratch/
+data/seo/
+.seo-runtime/
 data/price-history.json
 data/price-held-back.json

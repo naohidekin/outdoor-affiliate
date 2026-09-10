@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "maxActiveExperiments": 3,
+  "maxNewPerRun": 1,
+  "budget": {
+    "targetCreditsPerOperationRun": 50,
+    "maxWeeklyOperationCredits": 200,
+    "maxMetricsAgeHours": 72,
+    "paidUsd": "unknown unless an external invoice is recorded"
+  },
+  "models": {
+    "gpt-6-astra": {
+      "role": "selection, evidence approval, causal evaluation, and publication decisions",
+      "maxInputTokens": null,
+      "maxOutputTokens": null
+    },
+    "gpt-5.6-terra": { "role": "bounded research and code" },
+    "gpt-5.6-luna": { "role": "deterministic extraction support only" },
+    "none": { "role": "metrics collection and preflight" }
+  },
+  "measurement": {
+    "country": "jpn",
+    "device": "separate cohorts; never aggregate a cohort after approval",
+    "gscDateBasis": "America/Los_Angeles",
+    "operationTimezone": "Asia/Tokyo",
+    "checkpointsDays": [7, 14, 28, 42]
+  },
+  "publicationManifestAuthoritativeSource": "scripts/seo/publish.mjs validateManifest"
+}
