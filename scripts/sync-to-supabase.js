@@ -21,6 +21,7 @@ import fs from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { loadEnv, readJson, writeJson } from "../src/lib/x-agent-utils.mjs";
+import { guardArticleRows, seoRoot, withPublicationLock } from "./seo/article-guard.mjs";
 
 loadEnv();
 
@@ -145,7 +146,8 @@ async function syncTable(table, localData, toRow, label, syncState) {
   const supabaseIds = await getSupabaseIds(table);
   const prevSyncedIds = new Set(syncState[table] || []);
 
-  const rows = localData.map(toRow);
+  const mappedRows = localData.map(toRow);
+  const rows = table === "articles" ? guardArticleRows(mappedRows, seoRoot()) : mappedRows;
   const toSync = [];
   let adminDeleted = 0;
 
@@ -300,7 +302,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+(dryRun ? main() : withPublicationLock(seoRoot(), main)).catch((err) => {
   console.error("[sync-to-supabase] エラー:", err.message);
   process.exit(1);
 });
