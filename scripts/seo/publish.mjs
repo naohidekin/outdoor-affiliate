@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { withProcessLock } from './process-lock.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore, publicationEventFromJournal } from './state.mjs';
@@ -39,11 +40,8 @@ function findArticle(articles, id) {
   if (matches.length !== 1) throw new Error('Expected exactly one local authoritative article');
   return matches[0];
 }
-function applyLocal(file, manifest, journal) {
-  const lock = `${file}.lock`;
-  let fd;
-  try { fd = fs.openSync(lock, 'wx'); } catch { throw new Error('Local articles locked by another writer'); }
-  try {
+async function applyLocal(file, manifest, journal) {
+  return withProcessLock(`${file}.flock`, async () => {
     const { raw, articles } = readArticles(file);
     const local = findArticle(articles, manifest.articleId);
     if (articleHash(local) === articleHash(journal.after)) return;
@@ -51,7 +49,7 @@ function applyLocal(file, manifest, journal) {
     const updated = articles.map(a => a.id === manifest.articleId ? { ...a, ...manifest.patches, updatedAt: journal.after.updated_at } : a);
     if (fs.readFileSync(file, 'utf8') !== raw) throw new Error('Local article file changed concurrently');
     atomicJson(file, updated);
-  } finally { fs.closeSync(fd); fs.unlinkSync(lock); }
+  });
 }
 // Fail closed when rendered HTML cannot demonstrate the changed material. A 200
 // response alone is never a publication verification. Markdown is rendered by
@@ -117,8 +115,9 @@ export function supabaseAdapter(client) {
 export async function publishExperiment(manifest, options) {
   validateManifest(manifest);
   const { db, root = seoRoot(), articlesFile = path.join(root, 'mirror/articles.json'), apply = false, revalidateSecret, fetchImpl = fetch, now = jstNow, onStatus = async () => {}, authorize = async () => { throw new Error('Persistent experiment approval authorization required'); } } = options;
-  // Dry-run still validates remote and local evidence, but never creates files,
-  // acquires locks, changes experiment state, or contacts revalidation.
+  // Dry-run validates evidence under a read-only lease. It never changes
+  // articles, journals or experiment state, and sends no DB writes or ISR calls.
+  // Its OS lock file is permanent, but no in-flight marker is created.
   const run = async () => {
     await authorize(manifest);
     const snapshotFile = path.join(root, 'snapshots', `${manifest.experimentId}.json`);
@@ -151,7 +150,7 @@ export async function publishExperiment(manifest, options) {
     try {
       journal.status = 'remote_applied';
       await onStatus('remote_applied', journal);
-      applyLocal(articlesFile, manifest, journal);
+      await applyLocal(articlesFile, manifest, journal);
       const response = await fetchImpl('https://camp-gear-lab.com/api/revalidate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-revalidate-secret': revalidateSecret }, body: JSON.stringify({ slug: manifest.slug, categoryId: current.category_id }), signal: AbortSignal.timeout(30000) });
       if (!response.ok) throw new Error(`ISR revalidation failed: ${response.status}`);
       const publicResponse = await fetchImpl(`https://camp-gear-lab.com/articles/${encodeURIComponent(manifest.slug)}`, { cache: 'no-store', signal: AbortSignal.timeout(30000) });
@@ -173,7 +172,7 @@ export async function publishExperiment(manifest, options) {
       return { status: 'verification_pending', experimentId: manifest.experimentId, error: error.message, snapshotFile };
     }
   };
-  return apply ? withPublicationLock(root, run) : run();
+  return withPublicationLock(root, run, { readOnly: !apply });
 }
 
 async function main() {

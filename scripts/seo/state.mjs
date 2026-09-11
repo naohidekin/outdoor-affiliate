@@ -1,3 +1,4 @@
+import { withProcessLock } from './process-lock.mjs';
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -41,7 +42,7 @@ function decodeUndefined(value) {
   return value;
 }
 function statePath(root) { return path.join(root, "state.json"); }
-function lockPath(root) { return path.join(root, ".state.lock"); }
+function lockPath(root) { return path.join(root, ".state.flock"); }
 function policyPath(root) { return path.join(root, "policy.json"); }
 function defaultState() { return { schemaVersion: 1, experiments: [] }; }
 
@@ -114,25 +115,6 @@ async function assertVerifiedPublicationJournal(root, experiment, input) {
   assert(journal.manifestHash === input.manifestHash, "publication journal manifest hash mismatch");
   assert(experiment.approval?.manifestHash === journal.manifestHash, "approved manifest hash does not match publication journal");
 }
-async function acquire(root, now) {
-  await fs.mkdir(root, { recursive: true });
-  const token = crypto.randomUUID();
-  try {
-    const handle = await fs.open(lockPath(root), "wx", 0o600);
-    await handle.writeFile(JSON.stringify({ pid: process.pid, token, createdAt: isoNow(now) }));
-    await handle.close();
-  } catch (error) {
-    if (error.code === "EEXIST") throw new Error(`active lock at ${lockPath(root)}; refusing to steal it`);
-    throw error;
-  }
-  return async () => {
-    try {
-      const lock = JSON.parse(await fs.readFile(lockPath(root), "utf8"));
-      if (lock.token === token) await fs.rm(lockPath(root), { force: true });
-    } catch (error) { if (error.code !== "ENOENT") throw error; }
-  };
-}
-
 export function getDueCheckpoints(experiment, now = new Date().toISOString()) {
   if (!experiment?.publishedAt || experiment.status !== "observing") return [];
   const publishedAt = Date.parse(experiment.publishedAt);
@@ -219,13 +201,12 @@ export function createStore({ root, dryRun = false, now, policy: suppliedPolicy,
       const state = await readJson(statePath(root), defaultState());
       return fn(state, await policy(), true);
     }
-    const release = await acquire(root, now);
-    try {
+    return withProcessLock(lockPath(root), async () => {
       const state = await readJson(statePath(root), defaultState());
       const result = await fn(state, await policy(), false);
       await atomicJson(statePath(root), state);
       return result;
-    } finally { await release(); }
+    });
   }
   async function get(id) { return clone((await readJson(statePath(root), defaultState())).experiments.find((item) => item.id === id)); }
   async function mustGet(state, id) { const item = state.experiments.find((entry) => entry.id === id); assert(item, `experiment not found: ${id}`); return item; }
@@ -233,13 +214,12 @@ export function createStore({ root, dryRun = false, now, policy: suppliedPolicy,
     root,
     async init() {
       if (dryRun) return { root, dryRun: true, policy: await policy() };
-      const release = await acquire(root, now);
-      try {
+      return withProcessLock(lockPath(root), async () => {
         const state = await readJson(statePath(root), defaultState());
         await atomicJson(statePath(root), state);
         try { await fs.access(policyPath(root)); } catch (error) { if (error.code === "ENOENT") await atomicJson(policyPath(root), { ...DEFAULT_POLICY, ...(suppliedPolicy || {}) }); else throw error; }
         return { root, policy: await policy() };
-      } finally { await release(); }
+      });
     },
     async list() { return clone((await readJson(statePath(root), defaultState())).experiments); },
     get,

@@ -1,3 +1,4 @@
+import { withProcessLock } from './process-lock.mjs';
 import { seoRoot } from './article-guard.mjs';
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -175,17 +176,14 @@ function aggregate(parsed, id, kind, sourcePaths) {
 }
 
 async function writeLocked(file, update) {
-  const lock = `${file}.lock`;
-  await fs.mkdir(lock);
-  try {
+  return withProcessLock(`${file}.flock`, async () => {
     let state = { schemaVersion: 1, rateDate: RATE_DATE, sources: SOURCES, runs: [] };
     try { state = JSON.parse(await fs.readFile(file, "utf8")); } catch (error) { if (error.code !== "ENOENT") throw error; }
     const next = update(state);
     const temp = `${file}.${process.pid}.tmp`;
     await fs.writeFile(temp, JSON.stringify(next, null, 2) + "\n");
     await fs.rename(temp, file);
-  }
-  finally { await fs.rm(lock, { recursive: true, force: true }); }
+  });
 }
 
 export async function main(argv = process.argv.slice(2)) {

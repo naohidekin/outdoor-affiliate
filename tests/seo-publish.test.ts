@@ -56,6 +56,9 @@ test('refuses stale hash and timestamp, missing timestamp, unapproved content, f
 test('apply requires revalidation secret and state authorization before writes', async t => {
   const f = fixture(t);
   await assert.rejects(publishExperiment(f.manifest, { ...f.options, apply: true, revalidateSecret: '' }), /REVALIDATE_SECRET/);
+  assert.equal(f.writes, 0);
+  // Simulate explicit operator clearance after proving no DB request was sent.
+  fs.unlinkSync(path.join(f.root, '.publication.in-flight.json'));
   await assert.rejects(publishExperiment(f.manifest, { ...f.options, apply: true, authorize: undefined }), /Persistent experiment approval/);
   assert.equal(f.writes, 0);
 });
@@ -122,10 +125,16 @@ test('CAS race retains durable recovery snapshot and never calls HTTP', async t 
   assert.deepEqual(guardArticleRows([f.row], f.root), []);
 });
 
-test('ambiguous remote write is recovered by durable after fingerprint', async t => {
+test('ambiguous remote write blocks until DB reconciliation then recovers without reapply', async t => {
   const f = fixture(t);
   await assert.rejects(publishExperiment(f.manifest, { ...f.options, apply: true, db: { ...f.options.db, compareAndSwap: async (...args: any[]) => { await f.options.db.compareAndSwap(...args); throw new Error('network disconnected after commit'); } } }), /disconnected/);
   assert.equal(f.writes, 1);
+  await assert.rejects(publishExperiment(f.manifest, { ...f.options, apply: true }), /in-flight marker/);
+  assert.equal(f.writes, 1);
+  // Operator verifies the finished remote write and explicitly clears the fence.
+  const journal = JSON.parse(fs.readFileSync(path.join(f.root, 'snapshots/exp-1.json'), 'utf8'));
+  assert.equal(articleHash(f.remote), articleHash(journal.after));
+  fs.unlinkSync(path.join(f.root, '.publication.in-flight.json'));
   const result = await publishExperiment(f.manifest, { ...f.options, apply: true });
   assert.equal(result.status, 'verified'); assert.equal(f.writes, 1);
 });
