@@ -302,7 +302,7 @@ async function main() {
   }
 }
 
-(dryRun ? main() : withPublicationLock(seoRoot(), main)).catch((err) => {
+withPublicationLock(seoRoot(), main, { readOnly: dryRun }).catch((err) => {
   console.error("[sync-to-supabase] エラー:", err.message);
   process.exit(1);
 });
