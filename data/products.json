@@ -2659,24 +2659,23 @@
     "brand": "スノーピーク",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "スノーピークのガスランタン最高峰。圧電着火で火花1つで点火できる。明るさ・品質ともにOD缶ランタンのリファレンス機。迷ったらこれを選べば間違いない。",
+    "description": "本体125g、80W相当の小型ガスランタン。屋外の手元灯として検討するモデルです。サイト全体の照明やテント内用とは用途を分け、指定燃料とマントルを確認してください。価格・在庫・セット内容は販売先で確認できます。",
     "id": "gas-lantern-001",
     "imageUrl": "https://m.media-amazon.com/images/P/B000AR2P92.01._SCLZZZZZZZ_SX522_.jpg",
     "name": "スノーピーク ギガパワーランタン 天 オート GL-100AR",
-    "price": 15400,
+    "price": 0,
     "rating": 5,
     "specs": {
       "サイズ": "φ59×95mm",
-      "マントル": "1枚",
       "収納サイズ": "62×65×103mm",
-      "対応ガス": "OD缶",
-      "明るさ": "約80W相当",
+      "対応ガス": "スノーピーク指定OD缶",
+      "明るさ": "80W相当",
       "点火方式": "自動点火（圧電）",
-      "燃焼時間": "約1.5時間（250g缶）",
+      "用途": "屋外専用",
       "素材": "ステンレス、アルミニウム合金、ブラス、耐熱ガラス",
       "重量": "125g"
     },
-    "updatedAt": "2026-09-04T08:17:43.900Z",
+    "updatedAt": "2026-09-09T02:19:29.563Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E3%82%AE%E3%82%AC%E3%83%91%E3%83%AF%E3%83%BC%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20%E5%A4%A9%20%E3%82%AA%E3%83%BC%E3%83%88%20GL-100AR"
   },
   {
@@ -2685,21 +2684,24 @@
     "brand": "プリムス",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "スウェーデン発プリムスの定番ガスランタン。スノーピークより低価格でクオリティは同等。シンプルな構造で故障が少なく、長年使い続けられる信頼性がある。",
+    "description": "スリガラスのホヤとワイヤーサスペンダーを備える小型のOD缶ランタン。IP-2245A-Sは圧電点火装置付きで、本体約200gです。テーブル周辺の照明向き。購入時は旧型と区別して型番・指定燃料・付属品を確認してください。",
     "id": "gas-lantern-004",
     "imageUrl": "https://www.iwatani-primus.co.jp/products/primus/products/combustion-equipment/ip-2245a-s/images/img_01.jpg",
-    "name": "プリムス ランタン IP-2245A",
+    "name": "プリムス 2245ランタン 点火装置付 IP-2245A-S",
     "price": 8780,
     "rating": 4.5,
     "specs": {
-      "マントル": "1枚",
-      "対応ガス": "OD缶",
-      "明るさ": "約130W相当",
-      "点火方式": "手動（ライター別途）",
-      "燃焼時間": "約2.5時間（250g缶）",
-      "重量": "約170g（本体のみ）"
+      "ガス消費量": "30g/h",
+      "付属品": "プラスチックハードケース",
+      "使用マントル": "IP-8052N（マントルA）",
+      "対応ガス": "プリムス指定OD缶",
+      "明るさ": "約370ルクス（メーカー公表値）",
+      "点火方式": "圧電点火装置付き",
+      "燃焼時間": "約8時間（IP-250タイプガス使用時）",
+      "用途": "屋外専用",
+      "重量": "約200g（本体）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-09T02:13:08.894Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%97%E3%83%AA%E3%83%A0%E3%82%B9%20%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20IP-2245A"
   },
   {
@@ -2708,22 +2710,23 @@
     "brand": "SOTO",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "マイクロレギュレーター搭載で冬でも安定した火力を発揮。気温が下がるとガス圧が落ちる問題をSOTOが解決した。6,000円以下でこの機能は圧倒的コスパ。",
+    "description": "ハーフスクリーンカラーホヤとリフレクターを備えた、屋外用CB缶ランタン。パワーブースターを標準装備。本体1.3kgのため、軽量な携帯灯ではなく車で運ぶサイト照明向きです。表示価格はメーカー希望小売価格（税込）。購入時は販売先の価格・セット内容と指定燃料を確認してください。",
     "id": "gas-lantern-006",
     "imageUrl": "https://soto.shinfuji.co.jp/wp-content/uploads/products/ST-233_01-1-1024x2106.jpg",
-    "name": "SOTO マイクロレギュレーターランタン ST-233",
-    "price": 5980,
+    "name": "SOTO 虫の寄りにくいランタン ST-233",
+    "price": 11550,
     "rating": 5,
     "specs": {
-      "マントル": "1枚",
-      "対応ガス": "CB缶（ST-760等）",
-      "明るさ": "約230W相当",
-      "点火方式": "手動（ライター別途）",
-      "燃焼時間": "約4時間（250g缶）",
-      "特徴": "虫が寄りにくい波長の光",
-      "重量": "約120g（本体のみ）"
+      "サイズ": "直径136×高さ375mm（使用時）／高さ225mm（収納時）",
+      "付属品": "マントル1枚（ボンベ別売）",
+      "対応ガス": "SOTO専用CB缶（ST-760・ST-700）",
+      "明るさ": "230W相当（ST-760）／210W相当（ST-700）",
+      "点火方式": "圧電点火",
+      "燃焼時間": "約3時間（ST-760）／約3.5時間（ST-700）",
+      "用途": "屋外専用",
+      "重量": "1.3kg（本体のみ）"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-09T02:11:13.618Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=SOTO%20%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%83%AC%E3%82%AE%E3%83%A5%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%20ST-233"
   },
   {
@@ -2732,21 +2735,24 @@
     "brand": "ユニフレーム",
     "categoryId": "light",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "日本の新潟発ユニフレームのフォールディングランタン。プリムス2245Aに匹敵する明るさを折り畳みコンパクト設計で実現。国産ブランドへのこだわりがある人に刺さる一台。",
+    "description": "ホヤが本体に収まる屋外用CB缶ランタン。本体約1.4kgで、車で運ぶサイト照明向きです。クリア（620106）はメーカー公式で2024年生産終了と案内されています。購入先で新品・中古の区別、在庫、型番、付属品を確認してください。",
     "id": "gas-lantern-008",
     "imageUrl": "https://www.uniflame.co.jp/wordpress/wp-content/uploads/2014/02/070627_0076S2_SQ-400x400.jpg",
-    "name": "ユニフレーム UL-X フォールディングランタン",
-    "price": 7700,
+    "name": "ユニフレーム フォールディングガスランタン UL-X クリア 620106",
+    "price": 0,
     "rating": 4.5,
     "specs": {
-      "マントル": "1枚",
-      "対応ガス": "CB缶専用",
-      "明るさ": "約240W相当（プレミアムガス使用時）",
-      "点火方式": "手動（ライター別途）",
-      "燃焼時間": "約3.5時間（250g缶）",
-      "重量": "約120g（本体のみ）"
+      "サイズ": "約13.5×12×35.5cm（使用時）／高さ21cm（収納時）",
+      "付属品": "マントル1枚",
+      "対応ガス": "ユニフレーム指定CB缶",
+      "明るさ": "240W相当（プレミアムガス）／210W相当（レギュラーガス）",
+      "点火方式": "圧電点火",
+      "燃焼時間": "約4時間（プレミアムガス）／約5時間（レギュラーガス）",
+      "用途": "屋外専用",
+      "販売状況": "クリア620106は2024年生産終了",
+      "重量": "約1.4kg"
     },
-    "updatedAt": "2026-08-06T15:10:17.994Z",
+    "updatedAt": "2026-09-09T02:12:07.471Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A6%E3%83%8B%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%20UL-X%20%E3%83%95%E3%82%A9%E3%83%BC%E3%83%AB%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3"
   },
   {
@@ -3111,11 +3117,11 @@
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00ug9n6.wwmjsa40.g00ug9n6.wwmjt8da/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmomizistore%2Fb09c1ph1wz%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fmomizistore%2Fi%2F10000918%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/s?k=%E5%B1%B1%E5%96%84+YMS-16&tag=camp78-22",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09C1PH1WZ/?tag=camp78-22",
     "brand": "山善",
     "categoryId": "heater",
     "createdAt": "2026-08-03T12:46:07.841Z",
-    "description": "キャンプ用電気毛布の定番格。価格が手ごろで、まず1枚試すのに向いています。ポータブル電源の容量計算がしやすい消費電力表示も助かります。",
+    "description": "130×80cm・消費電力40Wの電気敷毛布。サイズと電源容量の計算を確認するための掲載例です。キャンプでの動作確認済み製品ではありません。使用場所・対象者・就寝時の設定は取扱説明書を確認してください。本体は洗えますが、ドラム式洗濯機は使用できません。",
     "id": "heater-yamazen-electric-blanket",
     "imageUrl": "https://shop.r10s.jp/momizistore/cabinet/imgrc0097326430.jpg",
     "name": "山善 電気敷毛布 YMS-16",
@@ -3129,9 +3135,9 @@
       "消費電力": "40W",
       "温度調節": "弱〜強",
       "表面温度": "弱 約23℃／適温 約33℃／強 約53℃",
-      "購入時の注意": "Amazonは型番検索です。YMS-16かどうかを確認してください。屋外での使用可否と使用条件は取扱説明書をご確認ください。"
+      "購入時の注意": "Amazon・楽天ともYMS-16の商品ページです。購入画面で型番・サイズ・付属品を確認してください。屋外での使用可否と使用条件は取扱説明書をご確認ください。"
     },
-    "updatedAt": "2026-09-07T16:54:04.420Z"
+    "updatedAt": "2026-09-09T05:06:37.517Z"
   },
   {
     "affiliateUrl": "",
@@ -4414,25 +4420,28 @@
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Facetech%2Fl570-5041%2F&link_type=text&ut=",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0BLM59WSZ/?tag=camp78-22",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0BP9Q7KPZ/?tag=camp78-22",
     "brand": "Petzl",
     "categoryId": "light",
     "createdAt": "2026-03-31T00:00:00.000Z",
-    "description": "ペツルのエントリーモデル。コンパクトで軽量、キャンプや登山入門に最適。赤色モードで夜間の手元作業にも対応。",
+    "description": "大人が夜間の移動で両手を空けたいときの比較候補。掲載仕様はE061AAで、現行E061ABとは区別してください。画像とAmazonリンクはブルーの並行輸入品です。楽天は色・在庫を選択画面で確認してください。国内保証や付属品の条件は販売者ごとに確認が必要です。",
     "id": "light-005",
-    "imageUrl": "https://m.media-amazon.com/images/I/31+Qo5n-R2L._SL500_.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/61t93rxn9JL._AC_SL1500_.jpg",
     "name": "ペツル ティカ E061AA",
-    "price": 3300,
+    "price": 0,
     "rating": 4,
     "specs": {
-      "明るさ": "最大300ルーメン",
-      "点灯時間": "最大120時間",
-      "照射距離": "最大80m",
-      "重量": "87g",
-      "防水": "IPX4",
-      "電源": "単4電池×3本"
+      "モード": "白色・赤色",
+      "型番": "E061AA（世代を確認）",
+      "明るさ": "最大350ルーメン（乾電池）",
+      "点灯時間": "最長110時間（弱・7ルーメン）",
+      "照射距離": "最大70m（強）",
+      "耐水性": "IPX4",
+      "購入時の注意": "Amazonはブルーの並行輸入品。色・保証・付属品は販売先で確認",
+      "重量": "94g（販売ページ掲載値）",
+      "電源": "単4電池3本／専用コア別売"
     },
-    "updatedAt": "2026-07-18T12:40:16.421Z"
+    "updatedAt": "2026-09-09T09:54:34.422Z"
   },
   {
     "addedAt": "2026-06-10T00:01:03.382Z",
@@ -4562,16 +4571,16 @@
   },
   {
     "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00radh6.wwmjs744.g00radh6.wwmjt473/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsupersportsxebio%2F104161531011%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsupersportsxebio%2Fi%2F10711063%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B08DK8B2X9/?tag=camp78-22",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B00I03IDX0/?tag=camp78-22",
     "autoAdded": false,
     "brand": "コールマン",
     "categoryId": "light",
     "createdAt": "2026-06-30T15:00:00.000Z",
-    "description": "コールマンの定番ガスランタン。OD缶を装着するだけで320CP/200W相当の明るさが得られる、ポンピング不要の手軽さが魅力。1998年発売のロングセラーで、炎の温かい灯りとサイト全体を照らす光量を兼ね備える。",
+    "description": "約200W相当の屋外用LPガスランタン。点火装置付きでポンピングは不要です。画像とAmazonリンクはグリーン2000015520。写真のLPガス缶は別売です。購入先ごとに色・型番・付属品・新品／中古・在庫を確認してください。",
     "id": "light-coleman-northstar",
-    "imageUrl": "https://ec.coleman.co.jp/client_info/COLEMANJAPAN/itemimage/2000015520/2000015520.jpg",
+    "imageUrl": "https://m.media-amazon.com/images/I/61Q-ag2gA+L._AC_SL1378_.jpg",
     "name": "コールマン 2500 ノーススター LPガスランタン",
-    "price": 9900,
+    "price": 0,
     "rating": 4.8,
     "specs": {
       "サイズ": "約φ14.5 x 26cm",
@@ -4583,7 +4592,7 @@
       "燃焼時間": "約4〜8時間（470g缶使用時）",
       "重量": "約1.3kg"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-09T02:18:33.612Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%202500%20%E3%83%8E%E3%83%BC%E3%82%B9%E3%82%B9%E3%82%BF%E3%83%BC%20LP%E3%82%AC%E3%82%B9%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3"
   },
   {
