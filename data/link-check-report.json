@@ -1,15 +1,10 @@
 {
   "deadVideos": [],
-  "checkedAt": "2026-09-05T21:31:58.757Z",
-  "total": 387,
-  "checked": 349,
-  "ok": 173,
+  "checkedAt": "2026-09-12T21:31:56.566Z",
+  "total": 394,
+  "checked": 355,
+  "ok": 176,
   "priceless": [
-    {
-      "id": "anker-solix-c1000-gen2",
-      "name": "Anker Solix C1000 Gen 2",
-      "url": "https://www.amazon.co.jp/dp/B0FK9YH385?tag=camp78-22"
-    },
     {
       "id": "bp-001",
       "name": "グレゴリー ズール30",
@@ -61,6 +56,11 @@
       "url": "https://www.amazon.co.jp/dp/B07N9B96L2/?tag=camp78-22"
     },
     {
+      "id": "burner-s-004",
+      "name": "プリムス P-153 ウルトラバーナー",
+      "url": "https://www.amazon.co.jp/dp/B000AQXZME/?tag=camp78-22"
+    },
+    {
       "id": "burner-s-006",
       "name": "Jetboil フラッシュ",
       "url": "https://www.amazon.co.jp/dp/B07B2ST913/?tag=camp78-22"
@@ -86,11 +86,6 @@
       "url": "https://www.amazon.co.jp/dp/B0CHD6S83K?tag=camp78-22"
     },
     {
-      "id": "chair-004",
-      "name": "スノーピーク ローチェア30",
-      "url": "https://www.amazon.co.jp/dp/B0BV6F52XG?tag=camp78-22"
-    },
-    {
       "id": "chair-005",
       "name": "DOD スゴイッス",
       "url": "https://www.amazon.co.jp/dp/B08M4NX6FS?tag=camp78-22"
@@ -99,6 +94,11 @@
       "id": "chair-009",
       "name": "軽量折りたたみローチェア（耐荷重150kg・撥水加工）",
       "url": "https://www.amazon.co.jp/dp/B0GY32R93K/?tag=camp78-22"
+    },
+    {
+      "id": "chair-010",
+      "name": "VECELO 折りたたみアウトドアチェア（耐荷重150kg）",
+      "url": "https://www.amazon.co.jp/dp/B0CLR33LT8/?tag=camp78-22"
     },
     {
       "id": "co-detector-coalan-cl715",
@@ -166,6 +166,16 @@
       "url": "https://www.amazon.co.jp/dp/B0FJKX46V1/?tag=camp78-22"
     },
     {
+      "id": "fan-lumena-prime2",
+      "name": "LUMENA FAN PRIME2",
+      "url": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22"
+    },
+    {
+      "id": "fan-powerarq-fanlight",
+      "name": "PowerArq Fan Light",
+      "url": "https://www.amazon.co.jp/dp/B0B4NNJNM2?tag=camp78-22"
+    },
+    {
       "id": "fan-socool",
       "name": "Socool fan キャンプ扇風機",
       "url": "https://www.amazon.co.jp/dp/B0C4KG77YJ?tag=camp78-22"
@@ -174,6 +184,11 @@
       "id": "fire-blower-belmont",
       "name": "ベルモント 焚き火ブロウパイプ BM-381 ポンプ付き",
       "url": "https://www.amazon.co.jp/dp/B09XTQF2WW/?tag=camp78-22"
+    },
+    {
+      "id": "firepit-tokyocamp",
+      "name": "Tokyo Camp焚火台",
+      "url": "https://www.amazon.co.jp/dp/B09726YGXG/?tag=camp78-22"
     },
     {
       "id": "first-aid-poison-remover",
@@ -187,7 +202,7 @@
     },
     {
       "id": "gas-lantern-006",
-      "name": "SOTO マイクロレギュレーターランタン ST-233",
+      "name": "SOTO 虫の寄りにくいランタン ST-233",
       "url": "https://www.amazon.co.jp/dp/B08MXLN5VS/?tag=camp78-22"
     },
     {
@@ -216,6 +231,11 @@
       "url": "https://www.amazon.co.jp/dp/B001DDPGNO?tag=camp78-22"
     },
     {
+      "id": "heater-yamazen-electric-blanket",
+      "name": "山善 電気敷毛布 YMS-16",
+      "url": "https://www.amazon.co.jp/dp/B09C1PH1WZ/?tag=camp78-22"
+    },
+    {
       "id": "insect-repellent-002",
       "name": "富士錦 パワー森林香（赤色）30巻入り",
       "url": "https://www.amazon.co.jp/dp/B001A4SC7I?tag=camp78-22"
@@ -234,11 +254,6 @@
       "id": "insect-repellent-018",
       "name": "Haven Tent ヘブンテント（蚊帳付きハンモックテント）",
       "url": "https://www.amazon.co.jp/dp/B09KC6D33Y/?tag=camp78-22"
-    },
-    {
-      "id": "kettle-gsi-glacier",
-      "name": "GSI グレイシャーステンレスケトル",
-      "url": "https://www.amazon.co.jp/dp/B00598LQ9M?tag=camp78-22"
     },
     {
       "id": "kettle-snowpeak-no1",
@@ -286,21 +301,6 @@
       "url": "https://www.amazon.co.jp/dp/B07FBFSD9M?tag=camp78-22"
     },
     {
-      "id": "light-004",
-      "name": "ブラックダイヤモンド スポット400",
-      "url": "https://www.amazon.co.jp/dp/B09Y8RG66X/?tag=camp78-22"
-    },
-    {
-      "id": "light-005",
-      "name": "ペツル ティカ E061AA",
-      "url": "https://www.amazon.co.jp/dp/B0BLM59WSZ/?tag=camp78-22"
-    },
-    {
-      "id": "light-coleman-northstar",
-      "name": "コールマン 2500 ノーススター LPガスランタン",
-      "url": "https://www.amazon.co.jp/dp/B08DK8B2X9/?tag=camp78-22"
-    },
-    {
       "id": "mat-coleman-highpeak",
       "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
       "url": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22"
@@ -319,6 +319,11 @@
       "id": "neck-suo-ring",
       "name": "SUO RING 28°ICE",
       "url": "https://www.amazon.co.jp/dp/B0CYWXNQH1?tag=camp78-22"
+    },
+    {
+      "id": "neck-thanko-lite",
+      "name": "THANKO ネッククーラーLite",
+      "url": "https://www.amazon.co.jp/dp/B0GK7GH9ML?tag=camp78-22"
     },
     {
       "id": "peg-hammer-snowpeak-pros",
@@ -404,11 +409,6 @@
       "id": "sb-kids-001",
       "name": "コールマン キッズマミーアジャスタブル/C4",
       "url": "https://www.amazon.co.jp/dp/B01ABDVVW6?tag=camp78-22"
-    },
-    {
-      "id": "sb-kids-002",
-      "name": "NANGA KIDS SQUARE FOOT 300",
-      "url": "https://www.amazon.co.jp/dp/B0DXQKKM37?tag=camp78-22"
     },
     {
       "id": "sb-kids-004",
@@ -636,14 +636,14 @@
       "url": "https://www.amazon.co.jp/dp/B0CMQ1DM2V?tag=camp78-22"
     },
     {
+      "id": "trash-box-dod",
+      "name": "DOD ステルスエックス ブラック GM1-450",
+      "url": "https://www.amazon.co.jp/dp/B07B8TT8N7/?tag=camp78-22"
+    },
+    {
       "id": "trash-box-fieldoor",
       "name": "FIELDOOR ポップアップトラッシュボックス（45L袋対応）",
       "url": "https://www.amazon.co.jp/dp/B09F95HVB8?tag=camp78-22"
-    },
-    {
-      "id": "trash-box-pykes",
-      "name": "PYKES PEAK ポップアップゴミ箱 40L/60L",
-      "url": "https://www.amazon.co.jp/dp/B0DMJLGFKK/?tag=camp78-22"
     },
     {
       "id": "viral-scout-1778961984248-mcno",
@@ -666,13 +666,7 @@
       "url": "https://www.amazon.co.jp/dp/B07DNHRJ5Q/?tag=camp78-22"
     }
   ],
-  "broken": [
-    {
-      "id": "peg-hammer-snowpeak-proc",
-      "name": "スノーピーク ペグハンマー PRO.C N-001",
-      "url": "https://www.amazon.co.jp/dp/B0DHS2DFCZ/?tag=camp78-22"
-    }
-  ],
+  "broken": [],
   "errors": [
     {
       "id": "backpack-002",
@@ -750,6 +744,12 @@
       "id": "fire-blower-murauchi",
       "name": "村の鍛冶屋 アルミカラー火吹き棒 37cm",
       "url": "https://www.amazon.co.jp/s?k=%E6%9D%91%E3%81%AE%E9%8D%9B%E5%86%B6%E5%B1%8B+%E7%81%AB%E5%90%B9%E3%81%8D%E6%A3%92+37cm&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "firepit-001",
+      "name": "焚き火シート 焚き火台シート スパッタシート キャンプ チクチクしない 耐熱 耐火 防炎 防火 地面保護 芝生保護 薪バッグ 黒 アウトドア用品 グリル BBQ ソロ ファミリー コンパクト 軽量 収",
+      "url": "https://www.amazon.co.jp/s?k=%E7%84%9A%E3%81%8D%E7%81%AB%E3%82%B7%E3%83%BC%E3%83%88%20%E7%84%9A%E3%81%8D%E7%81%AB%E5%8F%B0%E3%82%B7%E3%83%BC%E3%83%88%20%E3%82%B9%E3%83%91%E3%83%83%E3%82%BF%E3%82%B7%E3%83%BC%E3%83%88%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%83%81%E3%82%AF%E3%83%81%E3%82%AF%E3%81%97%E3%81%AA%E3%81%84%20%E8%80%90%E7%86%B1%20%E8%80%90%E7%81%AB%20%E9%98%B2%E7%82%8E%20%E9%98%B2%E7%81%AB%20%E5%9C%B0%E9%9D%A2%E4%BF%9D%E8%AD%B7%20%E8%8A%9D%E7%94%9F%E4%BF%9D%E8%AD%B7%20%E8%96%AA%E3%83%90%E3%83%83%E3%82%B0%20%E9%BB%92%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%E7%94%A8%E5%93%81%20%E3%82%B0%E3%83%AA%E3%83%AB%20BBQ%20%E3%82%BD%E3%83%AD%20%E3%83%95%E3%82%A1%E3%83%9F%E3%83%AA%E3%83%BC%20%E3%82%B3%E3%83%B3%E3%83%91%E3%82%AF%E3%83%88%20%E8%BB%BD%E9%87%8F%20%E5%8F%8E%E7%B4%8D%20%E6%90%BA%E5%B8%AF%20%E3%83%AC%E3%82%B8%E3%83%A3%E3%83%BC%E7%94%A8%E5%93%81%20%E9%9B%A3%E7%87%83%20%E7%81%AB%E3%81%AE%E7%B2%89%E5%AF%BE%E7%AD%96%20%E4%B8%8B%20%E9%AB%98%E8%80%90%E4%B9%85%E6%80%A7%20%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0&tag=camp78-22",
       "reason": "検索URL（ASIN未確定）"
     },
     {
@@ -921,6 +921,24 @@
       "reason": "検索URL（ASIN未確定）"
     },
     {
+      "id": "tent-020",
+      "name": "【ふるさと納税】キャンプグランド ベアーベル [ 利用券1,000円×3枚 ] 夏油 高原 げとう 大自然 温泉 キャンプ グランピング ブッシュクラフト 焚火 アウトドア 山 春 夏 秋 冬",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%81%B5%E3%82%8B%E3%81%95%E3%81%A8%E7%B4%8D%E7%A8%8E%E3%80%91%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%20%E3%83%99%E3%82%A2%E3%83%BC%E3%83%99%E3%83%AB%20%5B%20%E5%88%A9%E7%94%A8%E5%88%B81%2C000%E5%86%86%C3%973%E6%9E%9A%20%5D%20%E5%A4%8F%E6%B2%B9%20%E9%AB%98%E5%8E%9F%20%E3%81%92%E3%81%A8%E3%81%86%20%E5%A4%A7%E8%87%AA%E7%84%B6%20%E6%B8%A9%E6%B3%89%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0%20%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E7%84%9A%E7%81%AB%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%B1%B1%20%E6%98%A5%20%E5%A4%8F%20%E7%A7%8B%20%E5%86%AC&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "tent-021",
+      "name": "【ふるさと納税】キャンプグランド ベアーベル [ 利用券1,000円×10枚 ] 夏油 高原 げとう 大自然 温泉 キャンプ グランピング ブッシュクラフト 焚火 アウトドア 山 春 夏 秋 冬",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%81%B5%E3%82%8B%E3%81%95%E3%81%A8%E7%B4%8D%E7%A8%8E%E3%80%91%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%20%E3%83%99%E3%82%A2%E3%83%BC%E3%83%99%E3%83%AB%20%5B%20%E5%88%A9%E7%94%A8%E5%88%B81%2C000%E5%86%86%C3%9710%E6%9E%9A%20%5D%20%E5%A4%8F%E6%B2%B9%20%E9%AB%98%E5%8E%9F%20%E3%81%92%E3%81%A8%E3%81%86%20%E5%A4%A7%E8%87%AA%E7%84%B6%20%E6%B8%A9%E6%B3%89%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%94%E3%83%B3%E3%82%B0%20%E3%83%96%E3%83%83%E3%82%B7%E3%83%A5%E3%82%AF%E3%83%A9%E3%83%95%E3%83%88%20%E7%84%9A%E7%81%AB%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2%20%E5%B1%B1%20%E6%98%A5%20%E5%A4%8F%20%E7%A7%8B%20%E5%86%AC&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
+      "id": "tent-022",
+      "name": "【スーパーSALE限定★P5倍】【スノーピーク 公式】【永久保証付】snowpeak ランドネストシェルター TP-259 テント シェルター 室内 防寒 秋 秋用 冬 冬用 大型 4人用 耐水 簡単",
+      "url": "https://www.amazon.co.jp/s?k=%E3%80%90%E3%82%B9%E3%83%BC%E3%83%91%E3%83%BCSALE%E9%99%90%E5%AE%9A%E2%98%85P5%E5%80%8D%E3%80%91%E3%80%90%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%94%E3%83%BC%E3%82%AF%20%E5%85%AC%E5%BC%8F%E3%80%91%E3%80%90%E6%B0%B8%E4%B9%85%E4%BF%9D%E8%A8%BC%E4%BB%98%E3%80%91snowpeak%20%E3%83%A9%E3%83%B3%E3%83%89%E3%83%8D%E3%82%B9%E3%83%88%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%BF%E3%83%BC%20TP-259%20%E3%83%86%E3%83%B3%E3%83%88%20%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%BF%E3%83%BC%20%E5%AE%A4%E5%86%85%20%E9%98%B2%E5%AF%92%20%E7%A7%8B%20%E7%A7%8B%E7%94%A8%20%E5%86%AC%20%E5%86%AC%E7%94%A8%20%E5%A4%A7%E5%9E%8B%204%E4%BA%BA%E7%94%A8%20%E8%80%90%E6%B0%B4%20%E7%B0%A1%E5%8D%98%20%E8%A8%AD%E5%96%B6%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E7%94%A8%E5%93%81%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%89%E3%82%A2&tag=camp78-22",
+      "reason": "検索URL（ASIN未確定）"
+    },
+    {
       "id": "tumbler-006",
       "name": "STTOKE リーケージプルーフタンブラー（240/355/470ml）",
       "url": "https://www.amazon.co.jp/s?k=STTOKE+%E3%82%BF%E3%83%B3%E3%83%96%E3%83%A9%E3%83%BC&tag=camp78-22",
@@ -977,6 +995,10 @@
     {
       "id": "mat-waq-10cm",
       "name": "WAQ リラクシングキャンプマット 10cm"
+    },
+    {
+      "id": "peg-hammer-snowpeak-proc",
+      "name": "スノーピーク ペグハンマー PRO.C N-001"
     },
     {
       "id": "pillow-nemo-fillo",
