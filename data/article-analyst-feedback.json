@@ -2,221 +2,228 @@
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "clicks7d": 44,
-      "pv7d": 358,
-      "searchSessions": 355,
+      "clicks28d": 198,
+      "pv28d": 1524,
+      "searchSessions": 1516,
       "trend": "active"
     },
     {
       "categoryId": "sleeping-bag",
-      "clicks7d": 60,
-      "pv7d": 153,
-      "searchSessions": 147,
-      "trend": "active"
-    },
-    {
-      "categoryId": "tarp",
-      "clicks7d": 3,
-      "pv7d": 98,
-      "searchSessions": 106,
-      "trend": "active"
-    },
-    {
-      "categoryId": "light",
-      "clicks7d": 22,
-      "pv7d": 70,
-      "searchSessions": 57,
-      "trend": "active"
-    },
-    {
-      "categoryId": "wear",
-      "clicks7d": 8,
-      "pv7d": 58,
-      "searchSessions": 53,
+      "clicks28d": 249,
+      "pv28d": 514,
+      "searchSessions": 466,
       "trend": "active"
     },
     {
       "categoryId": "fan",
-      "clicks7d": 3,
-      "pv7d": 47,
-      "searchSessions": 43,
+      "clicks28d": 114,
+      "pv28d": 488,
+      "searchSessions": 463,
+      "trend": "active"
+    },
+    {
+      "categoryId": "light",
+      "clicks28d": 108,
+      "pv28d": 254,
+      "searchSessions": 220,
+      "trend": "active"
+    },
+    {
+      "categoryId": "tarp",
+      "clicks28d": 5,
+      "pv28d": 245,
+      "searchSessions": 295,
       "trend": "active"
     },
     {
       "categoryId": "burner",
-      "clicks7d": 14,
-      "pv7d": 32,
-      "searchSessions": 49,
-      "trend": "active"
-    },
-    {
-      "categoryId": "backpack",
-      "clicks7d": 16,
-      "pv7d": 32,
-      "searchSessions": 23,
+      "clicks28d": 55,
+      "pv28d": 104,
+      "searchSessions": 166,
       "trend": "active"
     },
     {
       "categoryId": "insect-repellent",
-      "clicks7d": 1,
-      "pv7d": 19,
-      "searchSessions": 29,
+      "clicks28d": 12,
+      "pv28d": 91,
+      "searchSessions": 95,
+      "trend": "active"
+    },
+    {
+      "categoryId": "backpack",
+      "clicks28d": 41,
+      "pv28d": 84,
+      "searchSessions": 61,
+      "trend": "active"
+    },
+    {
+      "categoryId": "wear",
+      "clicks28d": 5,
+      "pv28d": 83,
+      "searchSessions": 109,
+      "trend": "active"
+    },
+    {
+      "categoryId": "kitchen",
+      "clicks28d": 39,
+      "pv28d": 75,
+      "searchSessions": 97,
       "trend": "active"
     }
   ],
   "effectivePatterns": [
-    "CTR >= 2.0% の記事: landlock-vs-landnest-shelter, snow-peak-amenity-dome-l-10year-review, tarp-tent-layout-site-guide, budget-sleeping-bag-ranking, family-tent-ranking, camp-pillow-ranking, snow-peak-landlock-x-review, led-tent-light-ranking, portable-cooler-fan-guide, autumn-camp-clothing-layering-guide, single-burner-ranking, backpack-ranking, landnest-shelter-vs-2room-comparison, camp-insect-repellent-guide, gas-lantern-ranking, kids-sleeping-bag-ranking, rainwear-ranking",
-    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年版】などの年版表記を必ず含める。全5記事中5記事が該当し、検索ユーザーの「最新情報」ニーズに応えることで高CTRを獲得している。\"}",
-    "{\"rule\":\"複数モデル比較・選択肢提示ルール\",\"description\":\"「vs」「〇選」「比較」など複数の選択肢を提示する構成を取る。上位5記事中4記事が該当し、ユーザーの購買意思決定を支援するコンテンツが高PVを獲得している。\"}",
-    "{\"rule\":\"具体的数値・スペック明示ルール\",\"description\":\"「1万円以下」「4〜6人用」「10年使った」など具体的な数値をタイトルに盛り込む。抽象的な表現より検索意図とのマッチ精度が上がり、クリック率が向上する。\"}",
-    "{\"rule\":\"権威性・信頼性訴求ルール\",\"description\":\"「正直レビュー」「本音で比較」「コスパ最強」など書き手の実体験や率直な評価を前面に出す表現を使う。広告的でない中立・信頼感のある訴求がエンゲージメントを高める。\"}",
-    "{\"rule\":\"ターゲット×用途の明確化ルール\",\"description\":\"「ファミリー」「初心者向け」「サイト別」など読者属性や使用シーンをタイトルで限定する。ペルソナが明確なほど検索キーワードとの一致率が高まり、離脱率が下がる。\"}"
+    "CTR >= 2.0% の記事: landlock-vs-landnest-shelter, portable-cooler-fan-guide, snow-peak-amenity-dome-l-10year-review, snow-peak-landlock-x-review, tarp-tent-layout-site-guide, family-tent-ranking, led-tent-light-ranking, budget-sleeping-bag-ranking, landnest-shelter-vs-2room-comparison, camp-pillow-ranking, single-burner-ranking, camp-insect-repellent-guide, nanga-sleeping-bag-comparison, backpack-ranking, autumn-camp-clothing-layering-guide, elfield-discontinued-successor-guide, kids-sleeping-bag-ranking, water-jug-ranking, gas-lantern-ranking, spring-sleeping-bag-guide",
+    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年版】【2026年】【2026年新型】など年号を明記する。情報の鮮度を示し検索意図に合致するため、全5記事中5記事が採用している最重要パターン。\"}",
+    "{\"rule\":\"比較・対決構造ルール\",\"description\":\"「AvsB」「3モデル比較」「おすすめ比較」など複数選択肢を並べる構造をタイトルに含める。購買検討段階のユーザーの意思決定ニーズに刺さり、上位5記事中3記事が採用。\"}",
+    "{\"rule\":\"具体的ブランド・製品名の明示ルール\",\"description\":\"「スノーピーク ランドロック」「アメニティドームL」「TP-672」など固有名詞・型番をタイトルに入れる。指名検索・ロングテールキーワードを取り込み、5記事中4記事が採用。\"}",
+    "{\"rule\":\"ユーザー課題・用途の言語化ルール\",\"description\":\"「真夏キャンプを涼しくする方法」「10年使った正直レビュー」「サイト別おすすめ配置パターン」など読者が抱える具体的な課題・シチュエーションをタイトルまたは副題に含める。共感と検索マッチ率を高める。\"}",
+    "{\"rule\":\"徹底解説・網羅性の訴求ルール\",\"description\":\"「徹底解説」「メリット・デメリット・後継機との比較まで」「実例集」など記事の深さ・網羅性をタイトルで宣言する。ユーザーが『この1記事で解決できる』と判断しクリック率・滞在時間を向上させる。\"}"
   ],
-  "period": "7d",
+  "period": "28d",
   "suggestions": [
     "来月の季節カテゴリ: firepit, sleeping-bag, light — 準備推奨"
   ],
   "topArticles": [
     {
       "categoryId": "tent",
-      "clicks7d": 4,
-      "ctr": 3.7,
-      "pv7d": 109,
+      "clicks28d": 30,
+      "ctr": 6,
+      "pv28d": 500,
       "slug": "landlock-vs-landnest-shelter"
     },
     {
+      "categoryId": "fan",
+      "clicks28d": 114,
+      "ctr": 23.4,
+      "pv28d": 488,
+      "slug": "portable-cooler-fan-guide"
+    },
+    {
       "categoryId": "tent",
-      "clicks7d": 12,
-      "ctr": 14,
-      "pv7d": 86,
+      "clicks28d": 34,
+      "ctr": 9.6,
+      "pv28d": 353,
       "slug": "snow-peak-amenity-dome-l-10year-review"
     },
     {
+      "categoryId": "tent",
+      "clicks28d": 24,
+      "ctr": 9.5,
+      "pv28d": 252,
+      "slug": "snow-peak-landlock-x-review"
+    },
+    {
       "categoryId": "tarp",
-      "clicks7d": 3,
-      "ctr": 3.8,
-      "pv7d": 78,
+      "clicks28d": 5,
+      "ctr": 2,
+      "pv28d": 245,
       "slug": "tarp-tent-layout-site-guide"
     },
     {
+      "categoryId": "tent",
+      "clicks28d": 87,
+      "ctr": 42.4,
+      "pv28d": 205,
+      "slug": "family-tent-ranking"
+    },
+    {
+      "categoryId": "light",
+      "clicks28d": 73,
+      "ctr": 39.9,
+      "pv28d": 183,
+      "slug": "led-tent-light-ranking"
+    },
+    {
       "categoryId": "sleeping-bag",
-      "clicks7d": 40,
-      "ctr": 67.8,
-      "pv7d": 59,
+      "clicks28d": 118,
+      "ctr": 79.7,
+      "pv28d": 148,
       "slug": "budget-sleeping-bag-ranking"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 20,
-      "ctr": 34.5,
-      "pv7d": 58,
-      "slug": "family-tent-ranking"
-    },
-    {
-      "categoryId": "sleeping-bag",
-      "clicks7d": 19,
-      "ctr": 32.8,
-      "pv7d": 58,
-      "slug": "camp-pillow-ranking"
-    },
-    {
-      "categoryId": "tent",
-      "clicks7d": 3,
-      "ctr": 5.5,
-      "pv7d": 55,
-      "slug": "snow-peak-landlock-x-review"
-    },
-    {
-      "categoryId": "light",
-      "clicks7d": 12,
-      "ctr": 22.6,
-      "pv7d": 53,
-      "slug": "led-tent-light-ranking"
-    },
-    {
-      "categoryId": "fan",
-      "clicks7d": 3,
-      "ctr": 6.4,
-      "pv7d": 47,
-      "slug": "portable-cooler-fan-guide"
-    },
-    {
-      "categoryId": "wear",
-      "clicks7d": 2,
-      "ctr": 4.9,
-      "pv7d": 41,
-      "slug": "autumn-camp-clothing-layering-guide"
-    },
-    {
-      "categoryId": "burner",
-      "clicks7d": 14,
-      "ctr": 43.8,
-      "pv7d": 32,
-      "slug": "single-burner-ranking"
-    },
-    {
-      "categoryId": "backpack",
-      "clicks7d": 16,
-      "ctr": 50,
-      "pv7d": 32,
-      "slug": "backpack-ranking"
-    },
-    {
-      "categoryId": "tent",
-      "clicks7d": 5,
-      "ctr": 15.6,
-      "pv7d": 32,
+      "clicks28d": 16,
+      "ctr": 11.9,
+      "pv28d": 134,
       "slug": "landnest-shelter-vs-2room-comparison"
     },
     {
-      "categoryId": "tarp",
-      "clicks7d": 0,
-      "ctr": 0,
-      "pv7d": 20,
-      "slug": "tarp-setup-guide-for-beginners"
+      "categoryId": "sleeping-bag",
+      "clicks28d": 53,
+      "ctr": 40.5,
+      "pv28d": 131,
+      "slug": "camp-pillow-ranking"
     },
     {
-      "categoryId": "sleeping-bag",
-      "clicks7d": 0,
-      "ctr": 0,
-      "pv7d": 19,
-      "slug": "nanga-sleeping-bag-comparison"
+      "categoryId": "burner",
+      "clicks28d": 55,
+      "ctr": 52.9,
+      "pv28d": 104,
+      "slug": "single-burner-ranking"
     },
     {
       "categoryId": "insect-repellent",
-      "clicks7d": 1,
-      "ctr": 5.3,
-      "pv7d": 19,
+      "clicks28d": 12,
+      "ctr": 13.2,
+      "pv28d": 91,
       "slug": "camp-insect-repellent-guide"
     },
     {
+      "categoryId": "sleeping-bag",
+      "clicks28d": 7,
+      "ctr": 8.2,
+      "pv28d": 85,
+      "slug": "nanga-sleeping-bag-comparison"
+    },
+    {
+      "categoryId": "backpack",
+      "clicks28d": 41,
+      "ctr": 48.8,
+      "pv28d": 84,
+      "slug": "backpack-ranking"
+    },
+    {
+      "categoryId": "wear",
+      "clicks28d": 5,
+      "ctr": 6,
+      "pv28d": 83,
+      "slug": "autumn-camp-clothing-layering-guide"
+    },
+    {
       "categoryId": "tent",
-      "clicks7d": 0,
-      "ctr": 0,
-      "pv7d": 18,
-      "slug": "camping-beginner-gear-checklist"
+      "clicks28d": 7,
+      "ctr": 8.8,
+      "pv28d": 80,
+      "slug": "elfield-discontinued-successor-guide"
+    },
+    {
+      "categoryId": "sleeping-bag",
+      "clicks28d": 47,
+      "ctr": 59.5,
+      "pv28d": 79,
+      "slug": "kids-sleeping-bag-ranking"
+    },
+    {
+      "categoryId": "kitchen",
+      "clicks28d": 39,
+      "ctr": 52,
+      "pv28d": 75,
+      "slug": "water-jug-ranking"
     },
     {
       "categoryId": "light",
-      "clicks7d": 10,
-      "ctr": 58.8,
-      "pv7d": 17,
+      "clicks28d": 35,
+      "ctr": 49.3,
+      "pv28d": 71,
       "slug": "gas-lantern-ranking"
     },
     {
       "categoryId": "sleeping-bag",
-      "clicks7d": 1,
-      "ctr": 5.9,
-      "pv7d": 17,
-      "slug": "kids-sleeping-bag-ranking"
-    },
-    {
-      "categoryId": "wear",
-      "clicks7d": 6,
-      "ctr": 35.3,
-      "pv7d": 17,
-      "slug": "rainwear-ranking"
+      "clicks28d": 24,
+      "ctr": 33.8,
+      "pv28d": 71,
+      "slug": "spring-sleeping-bag-guide"
     }
   ],
-  "updatedAt": "2026-09-15T01:00:11.000Z"
+  "updatedAt": "2026-09-16T00:00:12.000Z"
 }
