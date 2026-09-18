@@ -1,38 +1,5 @@
 [
   {
-    "timestamp": "2026-06-19T07:16:32.338+00:00",
-    "path": "/articles/backpack-ranking",
-    "productId": "bp-003",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-06-19T07:16:32.338+00:00",
-    "page_path": "/articles/backpack-ranking",
-    "product_id": "bp-003"
-  },
-  {
-    "timestamp": "2026-06-19T07:19:58.135+00:00",
-    "path": "/articles/family-tent-ranking",
-    "productId": "tent-f02",
-    "productName": null,
-    "store": "amazon",
-    "placement": null,
-    "clicked_at": "2026-06-19T07:19:58.135+00:00",
-    "page_path": "/articles/family-tent-ranking",
-    "product_id": "tent-f02"
-  },
-  {
-    "timestamp": "2026-06-19T21:29:31.215+00:00",
-    "path": "/articles/rainwear-ranking",
-    "productId": "rw-003",
-    "productName": null,
-    "store": "rakuten",
-    "placement": null,
-    "clicked_at": "2026-06-19T21:29:31.215+00:00",
-    "page_path": "/articles/rainwear-ranking",
-    "product_id": "rw-003"
-  },
-  {
     "timestamp": "2026-06-20T13:36:24.934+00:00",
     "path": "/articles/led-tent-light-ranking",
     "productId": "led-tent-001",
@@ -47254,5 +47221,137 @@
     "clicked_at": "2026-09-16T21:40:15.671+00:00",
     "page_path": "/articles/camp-knife-ranking",
     "product_id": "knife-002"
+  },
+  {
+    "timestamp": "2026-09-17T01:29:03.165+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rakuten:mizunoshop/a2mg8a01",
+    "productName": "",
+    "store": "rakuten",
+    "placement": "body_text",
+    "clicked_at": "2026-09-17T01:29:03.165+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rakuten:mizunoshop/a2mg8a01"
+  },
+  {
+    "timestamp": "2026-09-17T01:29:10.294+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rw-003",
+    "productName": "ミズノ ベルグテックEXストームセイバーVI",
+    "store": "amazon",
+    "placement": "body_text",
+    "clicked_at": "2026-09-17T01:29:10.294+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rw-003"
+  },
+  {
+    "timestamp": "2026-09-17T05:33:52.954+00:00",
+    "path": "/articles/duo-tent-ranking",
+    "productId": "tent-duo-002",
+    "productName": "スノーピーク アメニティドーム S",
+    "store": "amazon",
+    "placement": "ranking",
+    "clicked_at": "2026-09-17T05:33:52.954+00:00",
+    "page_path": "/articles/duo-tent-ranking",
+    "product_id": "tent-duo-002"
+  },
+  {
+    "timestamp": "2026-09-17T07:14:42.93+00:00",
+    "path": "/articles/duo-tent-ranking",
+    "productId": "tent-duo-005",
+    "productName": "ogawa ステイシーST-II",
+    "store": "amazon",
+    "placement": "ranking",
+    "clicked_at": "2026-09-17T07:14:42.93+00:00",
+    "page_path": "/articles/duo-tent-ranking",
+    "product_id": "tent-duo-005"
+  },
+  {
+    "timestamp": "2026-09-17T08:34:36.355+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "amazon:B0DWRQ3HBT",
+    "productName": "",
+    "store": "amazon",
+    "placement": "body_text",
+    "clicked_at": "2026-09-17T08:34:36.355+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "amazon:B0DWRQ3HBT"
+  },
+  {
+    "timestamp": "2026-09-17T08:34:38.411+00:00",
+    "path": "/articles/rainwear-ranking",
+    "productId": "rakuten:montbell/1128703",
+    "productName": "",
+    "store": "rakuten",
+    "placement": "body_text",
+    "clicked_at": "2026-09-17T08:34:38.411+00:00",
+    "page_path": "/articles/rainwear-ranking",
+    "product_id": "rakuten:montbell/1128703"
+  },
+  {
+    "timestamp": "2026-09-17T12:26:07.876+00:00",
+    "path": "/articles/led-tent-light-ranking",
+    "productId": "led-tent-005",
+    "productName": "ブラックダイヤモンド オービター650 BD81042",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-17T12:26:07.876+00:00",
+    "page_path": "/articles/led-tent-light-ranking",
+    "product_id": "led-tent-005"
+  },
+  {
+    "timestamp": "2026-09-17T22:52:03.56+00:00",
+    "path": "/articles/landnest-shelter-vs-2room-comparison",
+    "productId": "tent-ratelworks-boden-g2",
+    "productName": "RATELWORKS BODEN G2（ボーデンG2）",
+    "store": "rakuten",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-17T22:52:03.56+00:00",
+    "page_path": "/articles/landnest-shelter-vs-2room-comparison",
+    "product_id": "tent-ratelworks-boden-g2"
+  },
+  {
+    "timestamp": "2026-09-18T00:23:24.278+00:00",
+    "path": "/articles/single-burner-ranking",
+    "productId": "burner-s-002",
+    "productName": "SOTO ウインドマスター SOD-310",
+    "store": "rakuten",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-18T00:23:24.278+00:00",
+    "page_path": "/articles/single-burner-ranking",
+    "product_id": "burner-s-002"
+  },
+  {
+    "timestamp": "2026-09-18T00:23:28.52+00:00",
+    "path": "/articles/single-burner-ranking",
+    "productId": "burner-s-002",
+    "productName": "SOTO ウインドマスター SOD-310",
+    "store": "amazon",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-18T00:23:28.52+00:00",
+    "page_path": "/articles/single-burner-ranking",
+    "product_id": "burner-s-002"
+  },
+  {
+    "timestamp": "2026-09-18T00:23:39.216+00:00",
+    "path": "/articles/single-burner-ranking",
+    "productId": "burner-s-002",
+    "productName": "SOTO ウインドマスター SOD-310",
+    "store": "yahoo",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-18T00:23:39.216+00:00",
+    "page_path": "/articles/single-burner-ranking",
+    "product_id": "burner-s-002"
+  },
+  {
+    "timestamp": "2026-09-18T00:23:48.02+00:00",
+    "path": "/articles/single-burner-ranking",
+    "productId": "burner-s-004",
+    "productName": "プリムス P-153 ウルトラバーナー",
+    "store": "yahoo",
+    "placement": "comparison_table",
+    "clicked_at": "2026-09-18T00:23:48.02+00:00",
+    "page_path": "/articles/single-burner-ranking",
+    "product_id": "burner-s-004"
   }
 ]
