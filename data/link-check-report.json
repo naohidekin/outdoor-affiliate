@@ -1,9 +1,9 @@
 {
   "deadVideos": [],
-  "checkedAt": "2026-09-12T21:31:56.566Z",
+  "checkedAt": "2026-09-19T21:31:57.071Z",
   "total": 394,
   "checked": 355,
-  "ok": 176,
+  "ok": 177,
   "priceless": [
     {
       "id": "bp-001",
@@ -126,6 +126,11 @@
       "url": "https://www.amazon.co.jp/dp/B0DX7594CS?tag=camp78-22"
     },
     {
+      "id": "cooler-tansu-spot-23kw",
+      "name": "タンスのゲン スポットクーラー 2.3kW（窓パネル4枚付）",
+      "url": "https://www.amazon.co.jp/dp/B0B1PXB3WT?tag=camp78-22"
+    },
+    {
       "id": "cot-dod-baginbed",
       "name": "DOD バッグインベッド",
       "url": "https://www.amazon.co.jp/dp/B01NBXZXI9?tag=camp78-22"
@@ -169,11 +174,6 @@
       "id": "fan-lumena-prime2",
       "name": "LUMENA FAN PRIME2",
       "url": "https://www.amazon.co.jp/dp/B0C8N5L5KH?tag=camp78-22"
-    },
-    {
-      "id": "fan-powerarq-fanlight",
-      "name": "PowerArq Fan Light",
-      "url": "https://www.amazon.co.jp/dp/B0B4NNJNM2?tag=camp78-22"
     },
     {
       "id": "fan-socool",
@@ -229,11 +229,6 @@
       "id": "hammock-eno-doublenest",
       "name": "ENO DoubleNest Hammock（ダブルネストハンモック）",
       "url": "https://www.amazon.co.jp/dp/B001DDPGNO?tag=camp78-22"
-    },
-    {
-      "id": "heater-yamazen-electric-blanket",
-      "name": "山善 電気敷毛布 YMS-16",
-      "url": "https://www.amazon.co.jp/dp/B09C1PH1WZ/?tag=camp78-22"
     },
     {
       "id": "insect-repellent-002",
@@ -304,11 +299,6 @@
       "id": "mat-coleman-highpeak",
       "name": "コールマン キャンパーインフレーターマット ハイピーク/シングル",
       "url": "https://www.amazon.co.jp/dp/B0BW32V4N6?tag=camp78-22"
-    },
-    {
-      "id": "mat-thermarest-prolite",
-      "name": "サーマレスト プロライト",
-      "url": "https://www.amazon.co.jp/dp/B0DZGFM5SM/?tag=camp78-22"
     },
     {
       "id": "neck-mizuno-cooling-towel",
@@ -389,6 +379,11 @@
       "id": "sb-budget-001",
       "name": "コールマン パフォーマーIII C10",
       "url": "https://www.amazon.co.jp/dp/B07W1SKRTF?tag=camp78-22"
+    },
+    {
+      "id": "sb-budget-002",
+      "name": "ロゴス 丸洗いスランバーシュラフ・2",
+      "url": "https://www.amazon.co.jp/dp/B07BPQSMHQ?tag=camp78-22"
     },
     {
       "id": "sb-budget-003",
@@ -496,11 +491,6 @@
       "url": "https://www.amazon.co.jp/dp/B072N2D691?tag=camp78-22"
     },
     {
-      "id": "spice-box-coleman",
-      "name": "コールマン スパイスボックスII",
-      "url": "https://www.amazon.co.jp/dp/B08LVG5VTB?tag=camp78-22"
-    },
-    {
       "id": "stove-alpaca-ts77nc",
       "name": "アルパカ プラス TS-77NC 石油ストーブ",
       "url": "https://www.amazon.co.jp/dp/B0B9WGBWVD?tag=camp78-22"
@@ -574,6 +564,11 @@
       "id": "tent-007",
       "name": "DOD ライダーズワンポールテント T1-442",
       "url": "https://www.amazon.co.jp/dp/B01FFQJWIE?tag=camp78-22"
+    },
+    {
+      "id": "tent-013",
+      "name": "スモア（Smore） チタンマグカップ 350ml 蓋付き シングルウォール",
+      "url": "https://www.amazon.co.jp/dp/B09J4MDLXB?tag=camp78-22"
     },
     {
       "id": "tent-duo-004",
