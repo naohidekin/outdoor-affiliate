@@ -21,6 +21,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { selectDateRangeMetricValues } from "../src/lib/ga4-date-range.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -90,8 +91,7 @@ async function getGA4Stats() {
     },
   });
 
-  const current = res.data.rows?.[0]?.metricValues || [];
-  const previous = res.data.rows?.[1]?.metricValues || [];
+  const { current, previous } = selectDateRangeMetricValues(res.data.rows);
 
   const metrics = {
     pageViews: parseInt(current[0]?.value || "0"),
