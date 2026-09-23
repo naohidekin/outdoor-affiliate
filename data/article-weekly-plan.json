@@ -1,29 +1,7 @@
 {
   "articles": [
     {
-      "angle": "リビングと寝室が一体化した2ルームテントに絞り、秋の冷え込み・結露対策の観点から比較する",
-      "categoryId": "tent",
-      "priority": "high",
-      "productCount": 3,
-      "productIds": [
-        "rakuten-brave-0-10000006358",
-        "rakuten-brave-0-ttk-0007-000",
-        "tent-001"
-      ],
-      "reason": "tentカテゴリはPV・クリック数ともにサイト最高値で、既存記事にない『2ルーム特化×秋冷え対策』の切り口が検索意図の空白を埋める",
-      "scheduledPublishDate": "2026-09-18",
-      "seasonRelevance": "9月は秋キャンプシーズン入りの時期でテント需要が急増しており、今月の最優先カテゴリ。PV1,524・clicks198と全カテゴリトップのデータが裏付ける",
-      "slug": "autumn-2room-tent-ranking-2026",
-      "targetKeywords": [
-        "2ルームテント おすすめ",
-        "秋キャンプ テント 2ルーム",
-        "ファミリーテント 秋"
-      ],
-      "themeId": "theme-2026-W38-01",
-      "title": "秋キャンプ向け2ルームテントおすすめランキング【2026年版】"
-    },
-    {
-      "angle": "地面からの冷気遮断に特化し、ハイコット・ローコットの使い分けと断熱マットとの組み合わせ術まで解説する",
+      "angle": "シュラフ単体ではなく、コット・マットとの組み合わせで「快眠システム」を構築する視点で解説する。",
       "categoryId": "sleeping-bag",
       "priority": "high",
       "productCount": 3,
@@ -32,41 +10,63 @@
         "cot-helinox-cot-one",
         "cot-naturehike-greenfield"
       ],
-      "reason": "sleeping-bagカテゴリはclicks249でサイト全体2位の高エンゲージメントを示し、既存のcot-vs-mat-comparisonとは異なる『秋冬×コット単体ランキング』の切り口で新規需要を獲得できる",
-      "scheduledPublishDate": "2026-09-20",
-      "seasonRelevance": "9月末から朝晩の気温が下がり始め、地面冷気対策としてコットへの関心が高まる秋キャンプ準備の時期に直結する",
-      "slug": "autumn-winter-cot-ranking-2026",
+      "reason": "sleeping-bagカテゴリはclicks28d 269・trend activeで最も収益貢献度が高く、既存記事にない「3点セット運用」という新角度で差別化できるため。",
+      "scheduledPublishDate": "2026-09-25",
+      "seasonRelevance": "9月は日中と夜間の寝床での体感温度差が大きく、シュラフ単品ではなくシステム全体の最適化ニーズが高まる時期。",
+      "slug": "autumn-sleeping-system-3set-guide-2026",
       "targetKeywords": [
-        "コット おすすめ 秋冬",
-        "キャンプ コット 冷気対策",
-        "ハイコット ローコット 違い"
+        "秋キャンプ 寝袋 コット 組み合わせ",
+        "シュラフ マット 選び方",
+        "秋キャンプ 睡眠 寒さ対策"
       ],
-      "themeId": "theme-2026-W38-02",
-      "title": "秋冬キャンプ用コット選びの完全ガイド【2026年版】"
+      "themeId": "theme-2026-W39-01",
+      "title": "秋キャンプのシュラフ・コット・マット「3点セット」組み合わせ術【2026年版】"
     },
     {
-      "angle": "来月の重点カテゴリを先行攻略し、『料理もできる・ソロ〜ファミリー別』の用途軸で焚き火台を選ぶ基準を明示する",
+      "angle": "秋テント選びで見落とされがちな「結露対策・通気性設計」にフォーカスし、失敗しやすい初心者の疑問を解消する。",
+      "categoryId": "tent",
+      "priority": "high",
+      "productCount": 3,
+      "productIds": [
+        "tent-023",
+        "tent-024",
+        "tent-025"
+      ],
+      "reason": "tentカテゴリはPV 1450・searchSessions 1429でサイト最大流入源だが、「結露」切り口は既存記事に存在せず、秋の旬クエリを確実に獲得できるため。",
+      "scheduledPublishDate": "2026-09-27",
+      "seasonRelevance": "9〜10月は朝晩の気温低下で結露が急増し、初心者がトラブルを検索するピーク。",
+      "slug": "autumn-camp-tent-condensation-guide-2026",
+      "targetKeywords": [
+        "テント 結露 対策",
+        "秋キャンプ テント 選び方 結露",
+        "インナーテント 結露 防ぐ"
+      ],
+      "themeId": "theme-2026-W39-02",
+      "title": "秋キャンプ初心者が「結露」で失敗しないテントの選び方・対策ガイド【2026年版】"
+    },
+    {
+      "angle": "焚き火台を「眺める道具」ではなく「調理ギア」として選ぶ実用視点で、料理対応スペックを軸にランキング化する。",
       "categoryId": "firepit",
       "priority": "medium",
       "productCount": 3,
       "productIds": [
-        "fire-blower-belmont",
-        "fire-blower-bushcraft",
-        "fire-blower-fireside80"
+        "firepit-002",
+        "firepit-003",
+        "firepit-004"
       ],
-      "reason": "来月の重点カテゴリであるfirepitを早期に仕込み、既存のautumn-firepit-ranking-2026とは『料理兼用×家族構成別』という異なる切り口で差別化する",
-      "scheduledPublishDate": "2026-09-23",
-      "seasonRelevance": "10月の季節カテゴリとして準備推奨されており、9月中に公開することで秋キャンプ計画中のユーザーを先回りして取り込める",
-      "slug": "autumn-firepit-feature-ranking-2026",
+      "reason": "firepitは来月の季節カテゴリ推奨で今から仕込む必要があり、既存記事未カバーの「調理特化」角度で焚き火×料理の複合ニーズを取り込めるため。",
+      "scheduledPublishDate": "2026-09-30",
+      "seasonRelevance": "秋は焚き火需要が本格化し、来月（10月）の季節カテゴリfirepit上位獲得に向けた先行コンテンツとして最適。",
+      "slug": "firepit-cooking-grill-dutch-oven-ranking-2026",
       "targetKeywords": [
-        "焚き火台 おすすめ 秋",
-        "焚き火台 料理 兼用",
-        "焚き火台 ファミリー ソロ 選び方"
+        "焚き火台 料理 おすすめ",
+        "焚き火台 ダッチオーブン 対応",
+        "焚き火 グリル ランキング"
       ],
-      "themeId": "theme-2026-W38-03",
-      "title": "秋キャンプで映える焚き火台の選び方＆おすすめ5選【2026年版】"
+      "themeId": "theme-2026-W39-03",
+      "title": "焚き火台を「料理」に使い倒す！グリル・ダッチオーブン対応モデルおすすめランキング【2026年版】"
     }
   ],
-  "generatedAt": "2026-09-16T00:00:49.000Z",
-  "week": "2026-W38"
+  "generatedAt": "2026-09-23T00:00:54.000Z",
+  "week": "2026-W39"
 }
