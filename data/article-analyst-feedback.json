@@ -2,68 +2,75 @@
   "categoryTrends": [
     {
       "categoryId": "tent",
-      "clicks7d": 59,
-      "pv7d": 434,
-      "searchSessions": 341,
+      "clicks7d": 68,
+      "pv7d": 418,
+      "searchSessions": 390,
       "trend": "active"
     },
     {
       "categoryId": "tarp",
       "clicks7d": 3,
-      "pv7d": 142,
-      "searchSessions": 144,
+      "pv7d": 136,
+      "searchSessions": 147,
       "trend": "active"
     },
     {
       "categoryId": "sleeping-bag",
-      "clicks7d": 66,
-      "pv7d": 119,
-      "searchSessions": 116,
+      "clicks7d": 65,
+      "pv7d": 122,
+      "searchSessions": 121,
       "trend": "active"
     },
     {
       "categoryId": "light",
-      "clicks7d": 15,
-      "pv7d": 80,
-      "searchSessions": 68,
+      "clicks7d": 17,
+      "pv7d": 87,
+      "searchSessions": 75,
       "trend": "active"
     },
     {
       "categoryId": "wear",
-      "clicks7d": 16,
+      "clicks7d": 12,
       "pv7d": 72,
-      "searchSessions": 51,
+      "searchSessions": 54,
       "trend": "active"
     },
     {
       "categoryId": "fan",
-      "clicks7d": 7,
-      "pv7d": 46,
-      "searchSessions": 41,
+      "clicks7d": 8,
+      "pv7d": 50,
+      "searchSessions": 45,
+      "trend": "active"
+    },
+    {
+      "categoryId": "burner",
+      "clicks7d": 18,
+      "pv7d": 34,
+      "searchSessions": 30,
       "trend": "active"
     },
     {
       "categoryId": "shoes",
-      "clicks7d": 21,
-      "pv7d": 16,
-      "searchSessions": 6,
+      "clicks7d": 19,
+      "pv7d": 21,
+      "searchSessions": 10,
       "trend": "active"
     },
     {
-      "categoryId": "insect-repellent",
-      "clicks7d": 0,
-      "pv7d": 10,
-      "searchSessions": 12,
-      "trend": "low"
+      "categoryId": "backpack",
+      "clicks7d": 8,
+      "pv7d": 16,
+      "searchSessions": 11,
+      "trend": "active"
     }
   ],
   "effectivePatterns": [
-    "CTR >= 2.0% の記事: tarp-tent-layout-site-guide, landlock-vs-landnest-shelter, snow-peak-amenity-dome-l-10year-review, camp-pillow-ranking, family-tent-ranking, led-tent-light-ranking, budget-sleeping-bag-ranking, landnest-shelter-vs-2room-comparison, portable-cooler-fan-guide, autumn-camp-clothing-layering-guide, snow-peak-landlock-x-review, rainwear-ranking, gas-lantern-ranking, camping-beginner-gear-checklist, solo-tent-ranking, amenity-dome-vs-landnest-dome, trekking-shoes-ranking, elfield-discontinued-successor-guide",
-    "{\"rule\":\"年版明記ルール\",\"description\":\"タイトルに【2026年版】のような年号バッジを必ず入れる。全5記事中5記事が該当し、検索ユーザーの「最新情報か」という不安を解消し、CTRを高める。\",\"examples\":[\"【2026年版】\",\"【2026年】\"]}",
-    "{\"rule\":\"具体的数字・スペック明示ルール\",\"description\":\"「5選」「3モデル比較」「4〜6人用」「10年使った」など具体的な数字をタイトルに盛り込む。読者が記事の規模感・対象を瞬時に把握でき、クリック意欲が上がる。\",\"examples\":[\"おすすめ5選\",\"3モデル比較\",\"10年使った\",\"4〜6人用\"]}",
-    "{\"rule\":\"比較・対決フォーマットルール\",\"description\":\"「vs」「比較」「どれ？」など複数選択肢を並べて比べる構造をタイトルで示す。購買検討フェーズのユーザーの意図に直撃し、高PVを獲得しやすい。\",\"examples\":[\"ランドロック vs ランドネストシェルター\",\"3モデル比較\",\"最強はどれ？\",\"徹底比較\"]}",
-    "{\"rule\":\"ユーザー属性・用途の明示ルール\",\"description\":\"「ファミリー」「家族4〜6人用」「サイト別」など対象ユーザーや使用シーンをタイトルに入れる。検索キーワードとの一致率が上がり、自分ごと化されたCTRを生む。\",\"examples\":[\"ファミリーテント\",\"家族4〜6人用\",\"サイト別おすすめ配置パターン\"]}",
-    "{\"rule\":\"本音・正直訴求ルール\",\"description\":\"「正直レビュー」「本音で比較」など客観性・誠実さを示すワードを入れる。広告色を嫌うユーザーの信頼を獲得し、直帰率低下・回遊増加につながる。\",\"examples\":[\"正直レビュー\",\"本音で比較\",\"メリット・デメリット\"]}"
+    "CTR >= 2.0% の記事: tarp-tent-layout-site-guide, landlock-vs-landnest-shelter, snow-peak-amenity-dome-l-10year-review, camp-pillow-ranking, led-tent-light-ranking, family-tent-ranking, portable-cooler-fan-guide, landnest-shelter-vs-2room-comparison, budget-sleeping-bag-ranking, autumn-camp-clothing-layering-guide, snow-peak-landlock-x-review, rainwear-ranking, gas-lantern-ranking, trekking-shoes-ranking, solo-tent-ranking, camping-beginner-gear-checklist, multi-burner-ranking, amenity-dome-vs-landnest-dome, backpack-ranking, single-burner-ranking",
+    "{\"rule\":\"年版明記による鮮度アピール\",\"description\":\"全記事タイトルに【2026年版】または【2026年】を含み、情報の最新性を明示することで検索クリック率を高めている\",\"examples\":[\"【2026年版】\",\"【2026年】\"]}",
+    "{\"rule\":\"複数選択肢の比較・網羅構成\",\"description\":\"「〇選」「〇モデル比較」「実例集」など複数の選択肢を並べる構成を採用し、一記事で意思決定まで完結できる価値を提示している\",\"examples\":[\"おすすめ5選\",\"3モデル比較\",\"レイアウト実例集\",\"おすすめ7選\"]}",
+    "{\"rule\":\"比較軸・選び方の明示\",\"description\":\"「メリット・デメリット」「明るさ・電池寿命」「エア・ハイブリッド・綿枕の違いと選び方」など具体的な評価軸をタイトルに入れ、読者の判断基準を先出しする\",\"examples\":[\"メリット・デメリット・後継機との比較\",\"吊り下げ方・明るさ・電池寿命で徹底比較\",\"違いと選び方を徹底比較\"]}",
+    "{\"rule\":\"固有名詞・ブランド名の直接記載\",\"description\":\"「スノーピーク」「ランドロック」「アメニティドームL」など検索需要の高い固有名詞をタイトル冒頭付近に配置し、指名検索・ブランド検索を取り込んでいる\",\"examples\":[\"スノーピーク ランドロック vs ランドネストシェルター\",\"スノーピーク アメニティドームL\"]}",
+    "{\"rule\":\"実体験・権威性を示す言葉の付加\",\"description\":\"「10年使った正直レビュー」「徹底比較」「おすすめ」など一次情報・専門性を感じさせる修飾語を加え、信頼性と差別化を図っている\",\"examples\":[\"10年使った正直レビュー\",\"徹底比較\",\"サイト別おすすめ配置パターン\"]}"
   ],
   "period": "7d",
   "suggestions": [
@@ -73,143 +80,143 @@
     {
       "categoryId": "tarp",
       "clicks7d": 3,
-      "ctr": 2.1,
-      "pv7d": 142,
+      "ctr": 2.2,
+      "pv7d": 136,
       "slug": "tarp-tent-layout-site-guide"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 7,
-      "ctr": 5.9,
-      "pv7d": 118,
+      "clicks7d": 15,
+      "ctr": 12.5,
+      "pv7d": 120,
       "slug": "landlock-vs-landnest-shelter"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 8,
-      "ctr": 9.9,
-      "pv7d": 81,
+      "clicks7d": 9,
+      "ctr": 10.2,
+      "pv7d": 88,
       "slug": "snow-peak-amenity-dome-l-10year-review"
     },
     {
       "categoryId": "sleeping-bag",
-      "clicks7d": 19,
-      "ctr": 27.1,
-      "pv7d": 70,
+      "clicks7d": 25,
+      "ctr": 33.3,
+      "pv7d": 75,
       "slug": "camp-pillow-ranking"
     },
     {
-      "categoryId": "tent",
-      "clicks7d": 21,
-      "ctr": 31.3,
-      "pv7d": 67,
-      "slug": "family-tent-ranking"
-    },
-    {
       "categoryId": "light",
-      "clicks7d": 12,
-      "ctr": 20.7,
-      "pv7d": 58,
+      "clicks7d": 13,
+      "ctr": 20.6,
+      "pv7d": 63,
       "slug": "led-tent-light-ranking"
     },
     {
-      "categoryId": "sleeping-bag",
-      "clicks7d": 47,
-      "ctr": 95.9,
-      "pv7d": 49,
-      "slug": "budget-sleeping-bag-ranking"
+      "categoryId": "tent",
+      "clicks7d": 23,
+      "ctr": 37.1,
+      "pv7d": 62,
+      "slug": "family-tent-ranking"
+    },
+    {
+      "categoryId": "fan",
+      "clicks7d": 8,
+      "ctr": 16,
+      "pv7d": 50,
+      "slug": "portable-cooler-fan-guide"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 2,
-      "ctr": 4.1,
+      "clicks7d": 4,
+      "ctr": 8.2,
       "pv7d": 49,
       "slug": "landnest-shelter-vs-2room-comparison"
     },
     {
-      "categoryId": "fan",
-      "clicks7d": 7,
-      "ctr": 15.2,
-      "pv7d": 46,
-      "slug": "portable-cooler-fan-guide"
+      "categoryId": "sleeping-bag",
+      "clicks7d": 40,
+      "ctr": 85.1,
+      "pv7d": 47,
+      "slug": "budget-sleeping-bag-ranking"
     },
     {
       "categoryId": "wear",
       "clicks7d": 1,
-      "ctr": 2.4,
-      "pv7d": 41,
+      "ctr": 2.3,
+      "pv7d": 43,
       "slug": "autumn-camp-clothing-layering-guide"
     },
     {
       "categoryId": "tent",
       "clicks7d": 1,
-      "ctr": 2.4,
-      "pv7d": 41,
+      "ctr": 2.6,
+      "pv7d": 39,
       "slug": "snow-peak-landlock-x-review"
     },
     {
       "categoryId": "wear",
-      "clicks7d": 15,
-      "ctr": 48.4,
-      "pv7d": 31,
+      "clicks7d": 11,
+      "ctr": 37.9,
+      "pv7d": 29,
       "slug": "rainwear-ranking"
     },
     {
       "categoryId": "light",
-      "clicks7d": 3,
-      "ctr": 13.6,
-      "pv7d": 22,
+      "clicks7d": 4,
+      "ctr": 16.7,
+      "pv7d": 24,
       "slug": "gas-lantern-ranking"
     },
     {
-      "categoryId": "tent",
-      "clicks7d": 2,
-      "ctr": 11.1,
-      "pv7d": 18,
-      "slug": "camping-beginner-gear-checklist"
-    },
-    {
-      "categoryId": "tent",
-      "clicks7d": 9,
-      "ctr": 52.9,
-      "pv7d": 17,
-      "slug": "solo-tent-ranking"
-    },
-    {
-      "categoryId": "tent",
-      "clicks7d": 5,
-      "ctr": 29.4,
-      "pv7d": 17,
-      "slug": "amenity-dome-vs-landnest-dome"
-    },
-    {
       "categoryId": "shoes",
-      "clicks7d": 21,
-      "ctr": 131.3,
-      "pv7d": 16,
+      "clicks7d": 19,
+      "ctr": 90.5,
+      "pv7d": 21,
       "slug": "trekking-shoes-ranking"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 4,
-      "ctr": 26.7,
-      "pv7d": 15,
-      "slug": "elfield-discontinued-successor-guide"
+      "clicks7d": 10,
+      "ctr": 47.6,
+      "pv7d": 21,
+      "slug": "solo-tent-ranking"
     },
     {
       "categoryId": "tent",
-      "clicks7d": 0,
-      "ctr": 0,
-      "pv7d": 11,
-      "slug": "zane-arts-discontinued-alternatives-2026"
+      "clicks7d": 2,
+      "ctr": 10,
+      "pv7d": 20,
+      "slug": "camping-beginner-gear-checklist"
     },
     {
-      "categoryId": "insect-repellent",
-      "clicks7d": 0,
-      "ctr": 0,
-      "pv7d": 10,
-      "slug": "insect-repellent-spray-ranking"
+      "categoryId": "burner",
+      "clicks7d": 13,
+      "ctr": 68.4,
+      "pv7d": 19,
+      "slug": "multi-burner-ranking"
+    },
+    {
+      "categoryId": "tent",
+      "clicks7d": 4,
+      "ctr": 21.1,
+      "pv7d": 19,
+      "slug": "amenity-dome-vs-landnest-dome"
+    },
+    {
+      "categoryId": "backpack",
+      "clicks7d": 8,
+      "ctr": 50,
+      "pv7d": 16,
+      "slug": "backpack-ranking"
+    },
+    {
+      "categoryId": "burner",
+      "clicks7d": 5,
+      "ctr": 33.3,
+      "pv7d": 15,
+      "slug": "single-burner-ranking"
     }
   ],
-  "updatedAt": "2026-09-25T01:00:10.000Z"
+  "updatedAt": "2026-09-26T01:00:10.000Z"
 }
