@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createHash } from "node:crypto";
 import { toJsonLd } from "@/lib/jsonld";
 import Link from "next/link";
 import { draftMode } from "next/headers";
@@ -340,7 +341,10 @@ export default async function ArticlePage({
       ))}
       <Header categories={categories} />
       <main className="flex-1">
-        <article className="article-page max-w-4xl mx-auto px-5 sm:px-6 pt-6 sm:pt-10 pb-12">
+        <article
+          className="article-page max-w-4xl mx-auto px-5 sm:px-6 pt-6 sm:pt-10 pb-12"
+          data-review-content-sha256={createHash("sha256").update(article.content, "utf8").digest("hex")}
+        >
           {/* Breadcrumb */}
           <nav className="text-sm text-slate-500 mb-6" aria-label="パンくず">
             <Link href="/" className="hover:text-lake-600 transition">
