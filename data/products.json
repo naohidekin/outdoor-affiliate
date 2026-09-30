@@ -4718,7 +4718,7 @@
     "updatedAt": "2026-08-01T14:36:49.000Z"
   },
   {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00radh6.wwmjs744.g00radh6.wwmjt473/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsupersportsxebio%2F104161531011%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsupersportsxebio%2Fi%2F10711063%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fcoleman%2Fcol4730%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B00I03IDX0/?tag=camp78-22",
     "autoAdded": false,
     "brand": "コールマン",
@@ -4740,7 +4740,7 @@
       "燃焼時間": "約4〜8時間（470g缶使用時）",
       "重量": "約1.3kg"
     },
-    "updatedAt": "2026-09-09T02:18:33.612Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%202500%20%E3%83%8E%E3%83%BC%E3%82%B9%E3%82%B9%E3%82%BF%E3%83%BC%20LP%E3%82%AC%E3%82%B9%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3"
   },
   {
@@ -5099,47 +5099,39 @@
     "updatedAt": "2026-07-10T23:18:37.535Z"
   },
   {
-    "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B0DK7PR83X?tag=camp78-22",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/_RTLink143831?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FNEMO+%E3%83%95%E3%82%A3%E3%83%AD+%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88%2F",
+    "amazonUrl": "",
     "brand": "NEMO",
     "categoryId": "sleeping-bag",
     "createdAt": "2026-06-24T16:01:56.241Z",
-    "description": "53gの超軽量エアピロー。底面に滑り止め素材を採用しており、シュラフの上でずれにくい。",
+    "description": "携行性を重視する人向けのエア式枕。購入先で流通モデルの型番・仕様を確認してください。",
     "id": "pillow-nemo-fillo-elite",
     "imageUrl": "https://m.media-amazon.com/images/I/61agDDE1jPL._AC_SL1500_.jpg",
     "name": "NEMO フィロ エリート",
-    "price": 7480,
+    "price": 0,
     "rating": 4.1,
     "specs": {
-      "使用時サイズ": "36×25×9cm",
-      "収納時サイズ": "7×5cm",
-      "特徴": "滑り止め底面・ツイストバルブ",
-      "素材": "表面：20D ナイロン・底面：グリッパー素材",
-      "重量": "53g"
+      "種類": "エア式"
     },
-    "updatedAt": "2026-09-02T22:29:29.775Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=NEMO%20%E3%83%95%E3%82%A3%E3%83%AD%20%E3%82%A8%E3%83%AA%E3%83%BC%E3%83%88"
   },
   {
-    "affiliateUrl": "",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/_RTLink143831?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FSea+to+Summit+%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9+%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%2F",
     "amazonUrl": "",
     "brand": "Sea to Summit",
     "categoryId": "sleeping-bag",
     "createdAt": "2026-06-24T16:01:56.241Z",
-    "description": "軽量コンパクトの定番エアピロー。62gで収納サイズは手のひら以下。バルブ1つで膨らませ・排気ができる。",
+    "description": "エア式のキャンプ枕。流通モデルによって仕様が異なるため、購入先でモデル名・型番・仕様を確認してください。",
     "id": "pillow-sea-to-summit-aeros",
     "imageUrl": "https://image.rakuten.co.jp/canpanera/cabinet/item203/item_s07137_0.jpg",
     "name": "Sea to Summit エアロスプレミアムピロー",
-    "price": 4480,
+    "price": 0,
     "rating": 4.3,
     "specs": {
-      "使用時サイズ": "36×24×11cm（レギュラー）",
-      "収納時サイズ": "8×3.5cm",
-      "特徴": "マルチファンクションバルブ・枕カバー付き",
-      "素材": "75D タフタナイロン",
-      "重量": "62g（レギュラー）"
+      "種類": "エア式"
     },
-    "updatedAt": "2026-09-02T22:29:29.775Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=Sea%20to%20Summit%20%E3%82%A8%E3%82%A2%E3%83%AD%E3%82%B9%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%E3%83%94%E3%83%AD%E3%83%BC"
   },
   {
@@ -5165,25 +5157,21 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B5%E3%83%BC%E3%83%9E%E3%83%AC%E3%82%B9%E3%83%88%20%E3%83%8D%E3%82%AA%E3%82%A8%E3%82%A2%E3%83%BC%E3%83%94%E3%83%AD%E3%83%BC"
   },
   {
-    "affiliateUrl": "",
-    "amazonUrl": "https://www.amazon.co.jp/dp/B098QW43JT?tag=camp78-22",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/_RTLink143831?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2FWAQ+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95%2F",
+    "amazonUrl": "",
     "brand": "WAQ",
     "categoryId": "sleeping-bag",
     "createdAt": "2026-06-24T16:01:56.241Z",
-    "description": "ウレタンとエアのハイブリッド構造。自宅の枕に近い感触で、車キャンプに最適。",
+    "description": "車移動で寝心地を重視する人向けの候補。購入先で現行モデルの型番・仕様・付属品を確認してください。",
     "id": "pillow-waq-camp",
     "imageUrl": "https://m.media-amazon.com/images/I/41aIpDAozZS._AC_SL1500_.jpg",
     "name": "WAQ キャンプ枕",
-    "price": 3980,
+    "price": 0,
     "rating": 4.2,
     "specs": {
-      "使用時サイズ": "40×28×12cm",
-      "収納時サイズ": "12×10cm",
-      "特徴": "ハイブリッド構造・マイクロファイバーカバー付属",
-      "素材": "カバー：ポリエステルマイクロファイバー・中材：ウレタンフォーム+エア",
-      "重量": "290g"
+      "種類": "ハイブリッド式"
     },
-    "updatedAt": "2026-09-02T22:29:29.775Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=WAQ%20%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97%E6%9E%95"
   },
   {
@@ -5886,20 +5874,21 @@
     "brand": "モンベル",
     "categoryId": "wear",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "登山用レインウェアの大定番。ゴアテックス3レイヤーで254gは驚異的な軽さ。迷ったらこれを選べば間違いない。",
+    "description": "スーパー ドライテック3レイヤーを採用した防水透湿ジャケット。品番1128733。",
     "id": "rw-001",
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/mk-mart2/cabinet/imgrc0137767733.jpg?_ex=600x600",
-    "name": "モンベル ストームクルーザージャケット",
-    "price": 26400,
+    "name": "モンベル ストームクルーザー ジャケット Men's #1128733",
+    "price": 0,
     "rating": 4.7,
     "specs": {
-      "収納サイズ": "約φ9×17cm",
-      "素材": "ゴアテックス3レイヤー",
-      "耐水圧": "50,000mm以上",
-      "透湿性": "35,000g/m²/24h",
-      "重量": "254g（Lサイズ）"
+      "収納サイズ": "8×8×15cm（1L）",
+      "品番": "1128733",
+      "素材": "スーパー ドライテック3レイヤー（表：30Dバリスティックナイロン・リップストップ）",
+      "耐水圧": "20,000mm以上",
+      "透湿性": "40,000g/m²/24h",
+      "重量": "平均254g"
     },
-    "updatedAt": "2026-07-30T12:00:00.000Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%A2%E3%83%B3%E3%83%99%E3%83%AB%20%E3%82%B9%E3%83%88%E3%83%BC%E3%83%A0%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%B6%E3%83%BC%E3%82%B8%E3%83%A3%E3%82%B1%E3%83%83%E3%83%88"
   },
   {
@@ -5952,20 +5941,20 @@
     "brand": "WORKMAN",
     "categoryId": "wear",
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "description": "5千円以下で買える驚異のコスパ。キャンプや低山ハイクなら十分な性能。ストレッチ素材で動きやすい。",
+    "description": "耐水圧20,000mm、透湿性25,000g/m²/24hのジャケット・パンツ上下セット。",
     "id": "rw-004",
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/w-import/cabinet/work-01/work-052.jpg?_ex=600x600",
-    "name": "ワークマン INAREM ストレッチレインスーツ",
+    "name": "ワークマン INAREM ストレッチレインスーツ NR001",
     "price": 5500,
     "rating": 4.2,
     "specs": {
       "セット内容": "ジャケット+パンツ上下セット",
-      "素材": "イナレム（2.5層）",
-      "耐水圧": "15,000mm",
-      "透湿性": "15,000g/m²/24h",
-      "重量": "約600g（上下セット・Lサイズ）"
+      "商品番号": "NR001",
+      "素材": "表側：ポリエステル100%、裏側：ポリエステル100%",
+      "耐水圧": "20,000mm",
+      "透湿性": "25,000g/m²/24h"
     },
-    "updatedAt": "2026-09-02T22:29:29.775Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%9E%E3%83%B3%20INAREM%20%E3%82%B9%E3%83%88%E3%83%AC%E3%83%83%E3%83%81%E3%83%AC%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%BC%E3%83%84"
   },
   {
@@ -5991,25 +5980,24 @@
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%AD%E3%83%B3%E3%83%93%E3%82%A2%20%E3%83%AF%E3%83%90%E3%82%B7%E3%83%A5%E3%82%B8%E3%83%A3%E3%82%B1%E3%83%83%E3%83%88"
   },
   {
-    "affiliateUrl": "https://hb.afl.rakuten.co.jp/hgc/g00radh6.wwmjs744.g00radh6.wwmjt473/_RTLink143831?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsupersportsxebio%2F106901014011%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsupersportsxebio%2Fi%2F10711173%2F&rafcid=wsc_i_is_f0eb3f97-d0e0-4c08-a88f-382e0807bebe",
+    "affiliateUrl": "https://hb.afl.rakuten.co.jp/ichiba/18eb3228.621d8df3.18eb3229.ec5f8d49/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25B3%25E3%2583%25BC%25E3%2583%25AB%25E3%2583%259E%25E3%2583%25B3%25202000034775%2F&link_type=text&ut=",
     "amazonUrl": "https://www.amazon.co.jp/dp/B07W1SKRTF?tag=camp78-22",
     "brand": "コールマン",
     "categoryId": "sleeping-bag",
     "createdAt": "2026-04-02T00:00:00.000Z",
-    "description": "5千円台で丸洗い可能な封筒型シュラフ。春〜秋の3シーズンキャンプの入門に最適。",
+    "description": "快適温度10℃以上の封筒型。約1.1kgで洗濯機による丸洗いに対応。",
     "id": "sb-budget-001",
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/lbreath/cabinet/07927366/10334800/10690101401.jpg?_ex=600x600",
     "name": "コールマン パフォーマーIII C10",
-    "price": 5480,
+    "price": 0,
     "rating": 4.2,
     "specs": {
-      "下限温度": "5℃",
       "中綿": "ポリエステル",
-      "快適温度": "10℃",
-      "洗濯": "丸洗い可",
-      "重量": "約1.4kg"
+      "快適温度": "10℃以上",
+      "洗濯": "洗濯機で丸洗い可",
+      "重量": "約1.1kg"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%9E%E3%83%B3%20%E3%83%91%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%BCIII%20C10"
   },
   {
@@ -6018,20 +6006,19 @@
     "brand": "ロゴス",
     "categoryId": "sleeping-bag",
     "createdAt": "2026-04-02T00:00:00.000Z",
-    "description": "5千円以下で快適温度2℃対応。独自の中綿で保温力高め。コスパで選ぶなら最有力候補。",
+    "description": "適正温度2℃まで（防寒着を着て寝る想定）。総重量約1.8kgで、丸洗いに対応。",
     "id": "sb-budget-002",
     "imageUrl": "https://m.media-amazon.com/images/P/B07BPQSMHQ.01._SCLZZZZZZZ_SX522_.jpg",
     "name": "ロゴス 丸洗いスランバーシュラフ・2",
-    "price": 4980,
+    "price": 0,
     "rating": 4.3,
     "specs": {
-      "下限温度": "-2℃",
       "中綿": "ダイナチューブファイバー",
-      "快適温度": "2℃",
       "洗濯": "丸洗い可",
-      "重量": "約1.7kg"
+      "適正温度": "2℃まで（防寒着を着て寝る想定）",
+      "重量": "約1.8kg"
     },
-    "updatedAt": "2026-09-03T23:22:34.565Z",
+    "updatedAt": "2026-09-30T17:15:16.000Z",
     "yahooUrl": "https://shopping.yahoo.co.jp/search?p=%E3%83%AD%E3%82%B4%E3%82%B9%20%E4%B8%B8%E6%B4%97%E3%81%84%E3%82%B9%E3%83%A9%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B7%E3%83%A5%E3%83%A9%E3%83%95%E3%83%BB2"
   },
   {
