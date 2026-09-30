@@ -73,7 +73,7 @@ export default function RecommendationCTA({
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-ink-strong leading-snug">{p.name}</p>
-                  <p className="text-base font-bold text-lake-700 mt-0.5">¥{p.price.toLocaleString()}</p>
+                  <p className="text-base font-bold text-lake-700 mt-0.5">{p.price > 0 ? `¥${p.price.toLocaleString()}` : "価格は販売先で確認"}</p>
                   {topSpecs.length > 0 && (
                     <p className="text-xs text-slate-500 mt-0.5">
                       {topSpecs.map(([k, v]) => `${k}: ${v}`).join(" / ")}

@@ -67,7 +67,7 @@ export default function ComparisonTable({ products }: { products: Product[] }) {
             {products.map((p) => (
               <td key={p.id} className="px-4 py-4 text-center border-l border-line-soft">
                 <span className="text-xl font-semibold text-lake-700 tracking-tight">
-                  ¥{p.price.toLocaleString()}
+                  {p.price > 0 ? `¥${p.price.toLocaleString()}` : "価格は販売先で確認"}
                 </span>
               </td>
             ))}
