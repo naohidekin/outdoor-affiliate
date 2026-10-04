@@ -1,9 +1,9 @@
 {
   "deadVideos": [],
-  "checkedAt": "2026-09-26T21:31:58.545Z",
+  "checkedAt": "2026-10-03T21:31:58.654Z",
   "total": 400,
-  "checked": 361,
-  "ok": 174,
+  "checked": 359,
+  "ok": 171,
   "priceless": [
     {
       "id": "bp-001",
@@ -96,11 +96,6 @@
       "url": "https://www.amazon.co.jp/dp/B0CLR33LT8/?tag=camp78-22"
     },
     {
-      "id": "chair-015",
-      "name": "Moon Lence アウトドアチェア",
-      "url": "https://www.amazon.co.jp/dp/B0G29BWSFG?tag=camp78-22"
-    },
-    {
       "id": "co-detector-coalan-cl715",
       "name": "新コスモス電機 アウトドア用一酸化炭素アラーム COALAN CL-715",
       "url": "https://www.amazon.co.jp/dp/B0CQ1SN7T1/?tag=camp78-22"
@@ -151,6 +146,11 @@
       "url": "https://www.amazon.co.jp/dp/B0B1PJCMZ1/?tag=camp78-22"
     },
     {
+      "id": "dd-hammock-frontline",
+      "name": "DDハンモック フロントライン",
+      "url": "https://www.amazon.co.jp/dp/B07J4V5MZT/?tag=camp78-22"
+    },
+    {
       "id": "dry-net-coleman",
       "name": "コールマン ハンギングドライネットII グリーン 2000026811",
       "url": "https://www.amazon.co.jp/dp/B01C5HUTBU?tag=camp78-22"
@@ -179,6 +179,11 @@
       "id": "fan-socool",
       "name": "Socool fan キャンプ扇風機",
       "url": "https://www.amazon.co.jp/dp/B0C4KG77YJ?tag=camp78-22"
+    },
+    {
+      "id": "field-rack-hibari",
+      "name": "HIBARI フィールドラック マットブラック（2枚セット）",
+      "url": "https://www.amazon.co.jp/dp/B08115XHZN?tag=camp78-22"
     },
     {
       "id": "fire-blower-belmont",
@@ -231,6 +236,11 @@
       "url": "https://www.amazon.co.jp/dp/B001DDPGNO?tag=camp78-22"
     },
     {
+      "id": "heater-winnerwell-nomad-view-m",
+      "name": "Winnerwell Nomad View M 薪ストーブ",
+      "url": "https://www.amazon.co.jp/dp/B0792V7HY7/?tag=camp78-22"
+    },
+    {
       "id": "heater-yamazen-electric-blanket",
       "name": "山善 電気敷毛布 YMS-16",
       "url": "https://www.amazon.co.jp/dp/B09C1PH1WZ/?tag=camp78-22"
@@ -249,11 +259,6 @@
       "id": "insect-repellent-008",
       "name": "PERFECT POTION アウトドアボディスプレー エクストラ 100ml",
       "url": "https://www.amazon.co.jp/dp/B073T42VH8?tag=camp78-22"
-    },
-    {
-      "id": "insect-repellent-018",
-      "name": "Haven Tent ヘブンテント（蚊帳付きハンモックテント）",
-      "url": "https://www.amazon.co.jp/dp/B09KC6D33Y/?tag=camp78-22"
     },
     {
       "id": "kettle-snowpeak-no1",
@@ -346,6 +351,11 @@
       "url": "https://www.amazon.co.jp/dp/B00TEZEGQQ/?tag=camp78-22"
     },
     {
+      "id": "rakuten-dabada-10000536",
+      "name": "DABADA LEDランタン 63灯（USB・手回し・ソーラー充電）",
+      "url": "https://www.amazon.co.jp/dp/B00HZEGRBA/?tag=camp78-22"
+    },
+    {
       "id": "rakuten-gorilla55-10001099",
       "name": "Bears Rock ふわ暖 封筒型寝袋（-6℃・3.5シーズン）",
       "url": "https://www.amazon.co.jp/dp/B096NHR4BG/?tag=camp78-22"
@@ -362,7 +372,7 @@
     },
     {
       "id": "rw-001",
-      "name": "モンベル ストームクルーザージャケット",
+      "name": "モンベル ストームクルーザー ジャケット Men's #1128733",
       "url": "https://www.amazon.co.jp/dp/B0D819PXX1?tag=camp78-22"
     },
     {
@@ -377,7 +387,7 @@
     },
     {
       "id": "rw-004",
-      "name": "ワークマン INAREM ストレッチレインスーツ",
+      "name": "ワークマン INAREM ストレッチレインスーツ NR001",
       "url": "https://www.amazon.co.jp/dp/B0BVGYD8BN?tag=camp78-22"
     },
     {
@@ -654,11 +664,6 @@
       "id": "trash-box-fieldoor",
       "name": "FIELDOOR ポップアップトラッシュボックス（45L袋対応）",
       "url": "https://www.amazon.co.jp/dp/B09F95HVB8?tag=camp78-22"
-    },
-    {
-      "id": "viral-scout-1778961984248-mcno",
-      "name": "モンベル シームレスダウンハガー800 #3",
-      "url": "https://www.amazon.co.jp/dp/B09DBDH7VB/?tag=camp78-22"
     },
     {
       "id": "water-jug-bundok-foldable",
@@ -1051,12 +1056,20 @@
       "name": "NEMO ニーモ フィッロ Fillo キャンプ枕"
     },
     {
+      "id": "pillow-nemo-fillo-elite",
+      "name": "NEMO フィロ エリート"
+    },
+    {
       "id": "pillow-sea-to-summit-aeros",
       "name": "Sea to Summit エアロスプレミアムピロー"
     },
     {
       "id": "pillow-thermarest-neoair",
       "name": "サーマレスト ネオエアーピロー"
+    },
+    {
+      "id": "pillow-waq-camp",
+      "name": "WAQ キャンプ枕"
     },
     {
       "id": "rakuten-artpiece-10000946",
