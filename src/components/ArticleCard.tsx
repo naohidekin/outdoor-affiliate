@@ -61,7 +61,9 @@ export default function ArticleCard({ article, category, thumbnailProduct }: Pro
         </p>
         {article.publishedAt && (
           <p className="text-xs text-slate-400 mt-3">
-            {new Date(article.publishedAt).toLocaleDateString("ja-JP")}
+            {new Date(article.publishedAt).toLocaleDateString("ja-JP", {
+              timeZone: "Asia/Tokyo",
+            })}
           </p>
         )}
       </div>
