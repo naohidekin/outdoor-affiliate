@@ -111,7 +111,8 @@ export default function AdminArticles() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      alert(err.error || "保存に失敗しました");
+      const warnings = Array.isArray(err.warnings) ? err.warnings.join("\n") : "";
+      alert(`${err.error || "保存に失敗しました"}${warnings ? `\n${warnings}` : ""}`);
       if (res.status === 401) {
         window.location.href = "/admin/login";
       }
@@ -199,7 +200,8 @@ export default function AdminArticles() {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      alert(err.error || "公開に失敗しました");
+      const warnings = Array.isArray(err.warnings) ? err.warnings.join("\n") : "";
+      alert(`${err.error || "公開に失敗しました"}${warnings ? `\n${warnings}` : ""}`);
       if (res.status === 401) {
         window.location.href = "/admin/login";
       }
