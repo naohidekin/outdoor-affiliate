@@ -385,6 +385,7 @@ export default async function ArticlePage({
                   year: "numeric",
                   month: "long",
                   day: "numeric",
+                  timeZone: "Asia/Tokyo",
                 })}
               </time>
             )}
