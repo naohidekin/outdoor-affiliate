@@ -9192,5 +9192,81 @@
     "addedAt": null,
     "sourceApi": null,
     "availability": null
+  },
+  {
+    "id": "showa-temres02winter-l",
+    "name": "SHOWA TEMRES 02winter Lサイズ",
+    "brand": "ショーワグローブ",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/41ZTf9At2CL._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B07YLZNBTM/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "wear",
+    "specs": {
+      "カフ": "非防水",
+      "本体": "ポリウレタン全面コーティング・透湿防水",
+      "サイズ": "L"
+    },
+    "description": "手袋本体は透湿防水、カフは非防水。耐熱・耐切創・絶縁用途ではありません。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:03:35+00:00",
+    "updatedAt": "2026-10-16T03:03:35+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
+  },
+  {
+    "id": "tnf-etip-nn62613-black-l",
+    "name": "THE NORTH FACE Etip Glove NN62613 ブラック L",
+    "brand": "THE NORTH FACE",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/31BOgvAY3-L._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0G4D1GBK3/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "wear",
+    "specs": {
+      "品番": "NN62613",
+      "機能": "タッチスクリーン対応",
+      "色・サイズ": "ブラック・L"
+    },
+    "description": "タッチスクリーン対応フリースグローブ。防水・耐熱仕様ではありません。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:03:35+00:00",
+    "updatedAt": "2026-10-16T03:03:35+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
+  },
+  {
+    "id": "mechanix-coldwork-original-l",
+    "name": "Mechanix Wear ColdWork Original L CWKMG-58-010",
+    "brand": "Mechanix Wear",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/41O4ABahs1L._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B08HSMH8BJ/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "wear",
+    "specs": {
+      "掌側": "タッチ対応合成皮革",
+      "甲側": "撥水SoftShell",
+      "保温材": "60g 3M Thinsulate Eco",
+      "型番・サイズ": "CWKMG-58-010・L"
+    },
+    "description": "甲側撥水SoftShellの防寒作業グローブ。完全防水・耐熱仕様ではありません。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:03:35+00:00",
+    "updatedAt": "2026-10-16T03:03:35+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
   }
 ]
