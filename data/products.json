@@ -9268,5 +9268,79 @@
     "addedAt": null,
     "sourceApi": null,
     "availability": null
+  },
+  {
+    "id": "maruka-a25l-022524",
+    "name": "マルカ 湯たんぽ A2.5L 袋付 022524",
+    "brand": "マルカ",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/41Ooc4wXXWL._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B005SKARC8/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "heater",
+    "specs": {
+      "容量": "2.5L",
+      "付属品": "袋付",
+      "対応熱源": "直火・IH"
+    },
+    "description": "2.5Lの金属製湯たんぽ。直火・IH対応、袋付。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:04:44+00:00",
+    "updatedAt": "2026-10-16T03:04:44+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
+  },
+  {
+    "id": "maruka-mini-a-my600a",
+    "name": "マルカ ミニゆたA 600ml MY-600A",
+    "brand": "マルカ",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/41MCQP7Xj3L._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B09D365F89/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "heater",
+    "specs": {
+      "容量": "600ml",
+      "対応熱源": "直火のみ（IH不可）"
+    },
+    "description": "600mlの小型湯たんぽ。直火対応、IH不可。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:04:44+00:00",
+    "updatedAt": "2026-10-16T03:04:44+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
+  },
+  {
+    "id": "maruka-njf22",
+    "name": "マルカ NEWじょうご不要湯たんぽ 2.2L NJF-22",
+    "brand": "マルカ",
+    "price": 0,
+    "imageUrl": "https://m.media-amazon.com/images/I/51MESP8QUeL._SL500_.jpg",
+    "affiliateUrl": "",
+    "amazonUrl": "https://www.amazon.co.jp/dp/B0CD7MKYZJ/?tag=camp78-22",
+    "yahooUrl": null,
+    "categoryId": "heater",
+    "specs": {
+      "容量": "2.2L",
+      "注水口": "本体中央の大口",
+      "対応熱源": "直火・IH"
+    },
+    "description": "2.2Lの金属製湯たんぽ。中央の大口から注水・排水しやすい形状。",
+    "rating": 0,
+    "createdAt": "2026-10-16T03:04:44+00:00",
+    "updatedAt": "2026-10-16T03:04:44+00:00",
+    "autoAdded": false,
+    "addedBy": null,
+    "addedAt": null,
+    "sourceApi": null,
+    "availability": null
   }
 ]
