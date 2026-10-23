@@ -17,6 +17,8 @@ import { getAvailableGearGuides } from "@/lib/gearGuides";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ArticleContent from "@/components/ArticleContent";
+import PegGuideContent from "@/components/PegGuideContent";
+import { PEG_GUIDE_SLUG } from "@/lib/pegs/selector";
 import MedicalAdvice from "@/components/MedicalAdvice";
 import RecommendationCTA from "@/components/RecommendationCTA";
 import RankingList from "@/components/RankingList";
@@ -111,11 +113,12 @@ export default async function ArticlePage({
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
   if (article.status !== "published" && !isPreview) notFound();
+  const isPegGuide = article.slug === PEG_GUIDE_SLUG;
 
   const [categories, category, products, allArticles, trackingProducts] = await Promise.all([
     getPublicCategories(),
     getCategoryById(article.categoryId),
-    getProductsByIds(article.productIds),
+    getProductsByIds(isPegGuide ? [] : article.productIds),
     getPublishedArticlesList(),
     getTrackingProducts().catch(() => []), // Analytics lookup must not prevent article rendering.
   ]);
@@ -405,7 +408,7 @@ export default async function ArticlePage({
           {toc.length >= 4 && <TableOfContents items={toc} />}
 
           {/* 広告表示は折りたたみの外に置き、本文より先に見えるようにする。 */}
-          {(products.length > 0 || hasInlineAffiliate) && <AffiliateDisclosure variant="inline" />}
+          {(isPegGuide || products.length > 0 || hasInlineAffiliate) && <AffiliateDisclosure variant="inline" />}
           {hasTopProducts && (
             <details id="article-shopping" className="group mb-8 rounded-xl border border-lake-100 bg-lake-50/40 open:bg-white">
               <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 px-4 py-4 text-ink-strong">
@@ -421,7 +424,9 @@ export default async function ArticlePage({
           )}
 
           <div id="article-reading-content" tabIndex={-1}>
-            {contentSummaryOnward ? (
+            {isPegGuide ? (
+              <PegGuideContent content={article.content} trackingProducts={trackingProducts} />
+            ) : contentSummaryOnward ? (
               <>
                 <ArticleContent content={contentBefore} products={products} trackingProducts={trackingProducts} showProductFallback={false} comparisonAnchor={comparisonBeforeSummary} />
                 <MedicalAdvice {...medicalAdvice!} />
