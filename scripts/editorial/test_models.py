@@ -101,6 +101,29 @@ class ModelTests(unittest.TestCase):
         self.assertFalse(reviewed['passed'])
         self.assertEqual(7, reviewed['score'])
 
+    def test_review_uses_unrounded_criteria_mean_and_keeps_model_issues(self):
+        checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
+        fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
+                  'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
+        low = dict(zip(fields, [8] * 5 + [7] * 6))
+        fake = Fake(response(dict(REVIEW, score=7.8, criteria=low, observations=['No medical claim'])))
+        result = Models(ENV, fake).review(bundle(), checks)
+        self.assertEqual(result['score'], 82 / 11)
+        self.assertFalse(result['passed'])
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        for phrase in ('issues must contain ONLY required corrections or blockers', 'observations',
+                       'pending future human approval', 'unrounded mean', 'never round 7.4545 up'):
+            self.assertIn(phrase, prompt)
+        high = dict(zip(fields, [8] * 6 + [7] * 5))
+        passing = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
+                                                  observations=['No medical claim'])))).review(bundle(), checks)
+        self.assertTrue(passing['passed'])
+        self.assertEqual(passing['issues'], [])
+        blocked = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
+                                                 issues=['Unsupported claim'])))).review(bundle(), checks)
+        self.assertFalse(blocked['passed'])
+        self.assertEqual(blocked['issues'], ['Unsupported claim'])
+
     def test_research_complete_evidence_headers_usage(self):
         ctx = context()
         ctx["longEvidence"] = "z" * 12000 + "END-EVIDENCE"
@@ -144,6 +167,8 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(result[field], ctx[source])
             self.assertIsNot(result[field], ctx[source])
         payload = fake.calls[0][2]
+        self.assertIn('Do not create an empty ## FAQ heading', payload['messages'][0]['content'])
+        self.assertIn('let the structured article.faqs render', payload['messages'][0]['content'])
         self.assertEqual(payload['output_config'], {'format': {'type': 'json_schema', 'schema': WRITER_SCHEMA}})
         self.assertNotIn('response_format', payload)
         def objects(schema):
@@ -168,6 +193,35 @@ class ModelTests(unittest.TestCase):
         payload['products'] = [{'id': 'tent-a', 'price': 0}]
         with self.assertRaisesRegex(ModelError, 'Invalid writer response fields'):
             Models(ENV, Fake(response(payload))).draft({'productIds': ['tent-a']}, context())
+
+    def test_draft_assembles_only_missing_verified_product_cards(self):
+        b = bundle()
+        original = b['article']['content'].replace('{{product:tent-a}}', '')
+        b['article']['content'] = original
+        fake = Fake(writer_response(b))
+        result = Models(ENV, fake).draft({'productIds': ['tent-a']}, context())
+        self.assertEqual(result['article']['content'], original + '\n\n{{product:tent-a}}')
+        self.assertIn('{{product:exact-ID}} for every selected product', fake.calls[0][2]['messages'][0]['content'])
+        for tag in ('{{product:tent-a}}', '{{comparison:tent-a}}', '{{ranking:tent-a}}'):
+            b = bundle()
+            b['article']['content'] = b['article']['content'].replace('{{product:tent-a}}', tag)
+            result = Models(ENV, Fake(writer_response(b))).draft({}, context())
+            self.assertEqual(result['article']['content'], b['article']['content'])
+        b = bundle()
+        b['article']['content'] = b['article']['content'].replace('{{product:tent-a}}', '`{{product:tent-a}}`')
+        result = Models(ENV, Fake(writer_response(b))).draft({}, context())
+        self.assertTrue(result['article']['content'].endswith('\n\n{{product:tent-a}}'))
+
+    def test_draft_card_assembly_rejects_unknown_id_and_post_insert_overflow(self):
+        b = bundle()
+        b['article']['content'] = b['article']['content'].replace('{{product:tent-a}}', '{{product:ghost}}')
+        with self.assertRaisesRegex(ModelError, 'Unknown product ID'):
+            Models(ENV, Fake(writer_response(b))).draft({}, context())
+        b = bundle()
+        prefix = '## Choice\n[設営](/articles/setup) [撤収](/articles/pack)\n'
+        b['article']['content'] = prefix + '文' * (5000 - len(prefix))
+        with self.assertRaisesRegex(ModelError, 'Article length outside'):
+            Models(ENV, Fake(writer_response(b))).draft({}, context())
 
     def test_overrides_and_nonretry_auth_bad_request(self):
         for status in (400, 401, 500):

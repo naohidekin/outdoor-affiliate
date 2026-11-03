@@ -13,7 +13,7 @@ import time
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
-from quality import _protected, inspect_polish
+from quality import SHORTCODE, _protected, _without_code, inspect_polish
 
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -286,9 +286,13 @@ class Models:
             "those verified records are assembled locally. article must contain slug,title,"
             "categoryId,content,excerpt (at least 20 characters),metaDescription (50-160 characters),faqs (3-5 "
             "objects with nonempty question and answer),tags (list),productIds,author (exactly ギア男). "
+            "Do not create an empty ## FAQ heading or any empty FAQ section in article.content: "
+            "either write the actual question-and-answer pairs under that heading or omit the body heading "
+            "and let the structured article.faqs render. Keep the required body length unchanged. "
             "Content length by brief.format: ranking/comparison 5000-8000 characters; guide/how-to 3000-5000; "
             "review 2000-3500. Include 2-3 distinct internal Markdown links /articles/slug. "
-            "Ranking/comparison must include concrete {{comparison:exact-product-ids}} tags. Use ONLY supplied verified catalog/specifications/references and exact product IDs. "
+            "Include {{product:exact-ID}} for every selected product so verified purchase cards can render. "
+            "Ranking/comparison must also include concrete {{comparison:exact-product-ids}} tags. Use ONLY supplied verified catalog/specifications/references and exact product IDs. "
             "Use supplied CLAUDE/SKILL article template, no body H1. "
             "Never invent ownership, experiences, prices, reviews, medical advice or claims. Without verified experiences "
             "explicitly label the article as research. No synthetic missing data. Resolve editorial purpose, reader, "
@@ -340,6 +344,18 @@ class Models:
             _require(faq, ("question", "answer"))
             if set(faq) != {"question", "answer"} or not _text(faq["question"]) or not _text(faq["answer"]):
                 raise ModelError("Incomplete FAQ")
+        if article["productIds"] != selected_ids:
+            raise ModelError("Article product IDs do not match supplied products")
+        used_ids = set()
+        for match in SHORTCODE.finditer(_without_code(article["content"])):
+            tag_ids = [pid.strip() for pid in match.group(2).split(",")]
+            if any(pid not in selected_ids for pid in tag_ids):
+                raise ModelError("Unknown product ID in article component")
+            used_ids.update(tag_ids)
+        missing_ids = [pid for pid in selected_ids if pid not in used_ids]
+        if missing_ids:
+            separator = '' if article["content"].endswith('\n\n') else '\n\n'
+            article["content"] += separator + '\n\n'.join('{{product:' + pid + '}}' for pid in missing_ids)
         lengths = {"ranking": (5000, 8000), "comparison": (5000, 8000), "guide": (3000, 5000),
                    "how-to": (3000, 5000), "review": (2000, 3500)}
         format_name = result["brief"]["format"]
@@ -422,7 +438,10 @@ class Models:
         result, usage = self._call(
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
             "Return {passed:boolean,score:number,facts:boolean,images:boolean,affiliate:boolean,medical:boolean,"
-            "render:boolean,evidence:object,issues:list}. Score 0-10; pass threshold 7.5. "
+            "render:boolean,evidence:object,issues:list,observations?:list}. Score 0-10; pass threshold 7.5. "
+            "issues must contain ONLY required corrections or blockers. Put nonblocking observations in optional "
+            "observations, never issues: do not list positive checks such as no medical claim, acknowledged limits "
+            "of LLM render verification, or pending future human approval as failures. Do not hide real blockers. "
             "Never certify live images, affiliate destinations or rendering from LLM opinion. Missing independent "
             "evidence must fail. checks.evidence.facts certifies catalog product specifications ONLY; it does not "
             "certify every claim in the article. Independently audit every factual claim and inference in the title, "
@@ -435,7 +454,9 @@ class Models:
             "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
             "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and also return criteria "
             "with eleven numeric 0-10 scores: wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
-            "comparison_table,internal_links,faq,word_count. Overall score must not exceed their mean. "
+            "comparison_table,internal_links,faq,word_count. passed=true requires empty issues and the actual "
+            "unrounded mean of all eleven criteria to be at least 7.5; never round 7.4545 up. Overall score "
+            "must not exceed their mean. "
             "For social proposals every claim must be supported by checks.factualSource; numeric/URL checks alone "
             "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
             "Model assertions are opinions and cannot substitute for external evidence.",
