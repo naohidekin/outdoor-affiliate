@@ -399,7 +399,7 @@ class ModelTests(unittest.TestCase):
         sent = json.loads(prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
         self.assertEqual(sent['bundle']['article']['content'], b['article']['content'])
         self.assertEqual(sent['bundle']['brief'], b['brief'])
-        for constraint in ('220 weighted', 'hard limit 280', 'each non-ASCII', 'friend questions',
+        for constraint in ('160 weighted', 'hard limit 280', 'each non-ASCII', 'friend questions',
                            'unsupported winter performance', 'unknown measurement conditions differ',
                            'warming/insulating gas-can advice'):
             self.assertIn(constraint, prompt)
@@ -417,14 +417,98 @@ class ModelTests(unittest.TestCase):
                                ('広告' + 'あ' * 138, True), ('広告' + 'あ' * 139, False),
                                ('広告' + '🏕' * 138, True), ('広告' + '🏕' * 139, False),
                                ('広告' + 'a' * 217, True), ('', False), ('   ', False)]:
-            fake = Fake(response({'text': text, 'replyText': url}))
+            fake = Fake(response({'text': text, 'replyText': url}), response({'text': text, 'replyText': url}))
             with self.subTest(weight=sum(1 if ord(c) < 128 else 2 for c in text)):
                 if accepted:
                     self.assertEqual(Models(ENV, fake).social(b, url)['text'], text)
                 else:
                     with self.assertRaises(ModelError):
                         Models(ENV, fake).social(b, url)
-                self.assertEqual(len(fake.calls), 1)
+                self.assertEqual(len(fake.calls), 1 if accepted else 2)
+
+    def test_social_repairs_one_local_length_and_disclosure_failure_with_original_source(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['article']['content'] += '\nPR 2kg 公表仕様。'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = copy.deepcopy(dict(verified=True, url=url,
+            content=b['article']['content'], images=b['images']))
+        original = copy.deepcopy(b)
+        previous = dict(text='あ' * 200, replyText=url)
+        first = response(previous)
+        first['id'] = 'attempt-1'
+        good = dict(text='広告 PR 公表仕様2kg。用途を確認します。', replyText=url)
+        second = response(good)
+        second['id'] = 'attempt-2'
+        fake = Fake(first, second)
+        artifacts = []
+        model = Models(ENV, fake, artifact_sink=artifacts.append)
+        result = model.social(b, url)
+        self.assertEqual(result['text'], good['text'])
+        self.assertEqual(b, original)
+        self.assertEqual(len(fake.calls), 2)
+        self.assertEqual([a['responseId'] for a in artifacts], ['attempt-1', 'attempt-2'])
+        prompts = [c[2]['messages'][0]['content'] for c in fake.calls]
+        payload = json.loads(prompts[1].split('Return ONLY a complete JSON object, no fences or commentary.\n')[1])
+        self.assertEqual(payload['bundle'], original)
+        self.assertEqual(payload['previousCandidate'], previous)
+        self.assertEqual(payload['validation']['weightedLength'], 400)
+        self.assertEqual(payload['validation']['missingDisclosures'], ['広告', 'PR'])
+        self.assertIn('weighted_length_exceeds_280', payload['validation']['reasons'])
+        for prompt in prompts:
+            for required in ('160 weighted', 'hard limit 280', '1-2', 'Do not summarize every', 'Never truncate'):
+                self.assertIn(required, prompt)
+        self.assertTrue(all('anthropic.com' in call[0] for call in fake.calls))
+
+    def test_social_repair_is_bounded_and_final_candidate_revalidated(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        bad = dict(text='広告' + 'あ' * 200, replyText=url)
+        for final in (bad, dict(text='開示なし', replyText=url),
+                      dict(text='広告 支持された仕様', replyText=url + '?changed=1')):
+            fake = Fake(response(bad), response(final), response(dict(text='広告 本文', replyText=url)))
+            with self.subTest(final=final), self.assertRaises(ModelError):
+                Models(ENV, fake).social(b, url)
+            self.assertEqual(len(fake.calls), 2)
+
+    def test_social_pr_marker_requires_explicit_disclosure_not_product_prefix(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['article']['content'] += '\nPR'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        fake = Fake(response(dict(text='広告 Product 2kg', replyText=url)),
+                    response(dict(text='広告 PR 公表仕様2kg', replyText=url)))
+        self.assertEqual(Models(ENV, fake).social(b, url)['text'], '広告 PR 公表仕様2kg')
+        self.assertEqual(len(fake.calls), 2)
+
+    def test_social_transport_failure_during_repair_never_starts_third_generation(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        for failure in (http(500), TimeoutError('unknown')):
+            fake = Fake(response(dict(text='広告' + 'あ' * 200, replyText=url)), failure,
+                        response(dict(text='広告 本文', replyText=url)))
+            with self.subTest(failure=type(failure)), self.assertRaises(ModelError):
+                Models(ENV, fake).social(b, url)
+            self.assertEqual(len(fake.calls), 2)
+
+    def test_social_does_not_content_retry_transport_or_unknown_completion(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        truncated = response(dict(text='広告 本文', replyText=url))
+        truncated['stop_reason'] = 'max_tokens'
+        for error in (http(400), http(401), http(500), TimeoutError('unknown'),
+                      response(None, raw='not JSON'), truncated):
+            fake = Fake(error, response(dict(text='広告 本文', replyText=url)))
+            with self.subTest(error=type(error)), self.assertRaises(ModelError):
+                Models(ENV, fake).social(b, url)
+            self.assertEqual(len(fake.calls), 1)
 
     def test_social_reply_is_exact_url_and_legacy_three_artifact_shapes_are_rejected(self):
         b = bundle()
@@ -477,7 +561,8 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(Models(ENV, Fake(response({'text': text, 'replyText': url}))).social(b, url)['text'], text)
         for marker in ('広告', 'アフィリエイト', 'PR', '#ad', 'affiliate', 'sponsored'):
             with self.subTest(marker=marker), self.assertRaisesRegex(ModelError, 'disclosure removed'):
-                Models(ENV, Fake(response({'text': text.replace(marker, ''), 'replyText': url}))).social(b, url)
+                Models(ENV, Fake(response({'text': text.replace(marker, ''), 'replyText': url}),
+                                 response({'text': text.replace(marker, ''), 'replyText': url}))).social(b, url)
 
     def test_truncation_missing_usage_transport_errors_are_sanitized(self):
         truncated = response(THEMES)

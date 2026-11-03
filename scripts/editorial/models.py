@@ -132,6 +132,33 @@ def _brief(value):
             raise ModelError("Incomplete approved writing brief")
 
 
+def _social_validation(result, url, content):
+    """Only well-shaped, locally rejected content is eligible for one repair."""
+    if set(result) != {'text', 'replyText'}:
+        raise ModelError('Invalid social response fields')
+    if not isinstance(result['text'], str) or not isinstance(result['replyText'], str):
+        raise ModelError('Invalid social announcement')
+    text = result['text']
+    weight = sum(1 if ord(char) < 128 else 2 for char in text)
+    reasons = []
+    if not _text(text):
+        reasons.append('empty_main_text')
+    if weight > 280:
+        reasons.append('weighted_length_exceeds_280')
+    if result['replyText'] != url:
+        reasons.append('reply_must_equal_exact_public_url')
+    if re.search(r"https?://|www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/|\b)", text, re.I):
+        reasons.append('main_text_contains_url')
+    disclosure = re.compile(r"広告|アフィリエイト|(?<![a-z])PR(?![a-z])|#ad\b|affiliate|sponsored", re.I)
+    present = {marker.casefold() for marker in disclosure.findall(text)}
+    missing = list(dict.fromkeys(marker for marker in disclosure.findall(content)
+                                 if marker.casefold() not in present))
+    if missing:
+        reasons.append('missing_disclosures')
+    return dict(reasons=reasons, weightedLength=weight, targetWeightedLength=160,
+                hardWeightedLimit=280, missingDisclosures=missing)
+
+
 class Models:
     def __init__(self, env, request=None, artifact_sink=None):
         self.env = dict(env)
@@ -531,28 +558,39 @@ class Models:
                 not isinstance(image, dict) or image.get('verified') is not True
                 or not _text(image.get('url')) for image in rb['images']):
             raise ModelError('Verified public image records required')
-        result, _ = self._call(
+        instruction = (
             "Generate an X announcement ONLY after the supplied matching public readback. "
             "Return ONLY {text,replyText}; URL, platform and verified image records are assembled locally. "
             "Main text must contain NO URLs. replyText must be exactly the supplied public article URL, "
-            "with no label, Markdown, extra URL or surrounding whitespace. Target at most 220 weighted "
+            "with no label, Markdown, extra URL or surrounding whitespace. Target at most 160 weighted "
             "characters in text; hard limit 280. Count each ASCII character as 1 and each non-ASCII "
-            "character as 2, including Japanese characters and punctuation. Never truncate facts to fit: "
-            "select fewer supported points instead. Keep every advertising/affiliate disclosure from the source. "
-            "Use the full published article and approved brief as the factual source, including their limits "
-            "and measurement conditions. Never invent personal experience, ownership, friend questions, "
+            "character as 2, including Japanese characters and punctuation. Choose only 1-2 supported points. "
+            "Do not summarize every product specification or the complete article. Omit unselected facts "
+            "rather than compressing all specifications into the announcement. Never truncate facts to fit. "
+            "Keep every advertising/affiliate disclosure from the source, including PR when present. "
+            "Use the full published article and approved brief as the factual source. Preserve the meaning, "
+            "numbers, limits and measurement conditions of every selected claim; omitted facts remain in the source. "
+            "Never invent personal experience, ownership, friend questions, "
             "user testimonials or unsupported winter performance. Do not claim unknown measurement "
             "conditions differ, infer safety temperatures, or add warming/insulating gas-can advice. "
-            "Follow supplied social rules and approved factual constraints. Do not post or claim approval.",
-            {"bundle": bundle, "url": url}, "claude-sonnet-4-6", schema=SOCIAL_SCHEMA)
-        if set(result) != {'text', 'replyText'}:
-            raise ModelError('Invalid social response fields')
-        if not _text(result["text"]) or result["replyText"] != url or (
-                re.search(r"https?://|www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/|\b)", result["text"], re.I)
-                or sum(1 if ord(c) < 128 else 2 for c in result['text']) > 280):
-            raise ModelError("Invalid social announcement")
-        disclosure = re.compile(r"広告|アフィリエイト|(?<![a-z])PR(?![a-z])|#ad\b|affiliate|sponsored", re.I)
-        for marker in disclosure.findall(bundle["article"]["content"]):
-            if marker.casefold() not in result["text"].casefold():
-                raise ModelError("Social advertising disclosure removed")
-        return {**result, 'url': url, 'platform': 'x', 'images': copy.deepcopy(rb['images'])}
+            "Follow supplied social rules and approved factual constraints. Do not post or claim approval.")
+        source = copy.deepcopy(bundle)
+        data = {"bundle": source, "url": url}
+        for attempt in range(2):
+            # Provider/transport/envelope/JSON/artifact errors are outside local
+            # validation: they can never trigger an additional writer repair.
+            result, _ = self._call(instruction, data, "claude-sonnet-4-6", schema=SOCIAL_SCHEMA)
+            validation = _social_validation(result, url, source['article']['content'])
+            if not validation['reasons']:
+                return {**result, 'url': url, 'platform': 'x', 'images': copy.deepcopy(source['images'])}
+            if attempt == 1:
+                if validation['missingDisclosures'] and validation['reasons'] == ['missing_disclosures']:
+                    raise ModelError("Social advertising disclosure removed")
+                raise ModelError("Invalid social announcement")
+            data = {"bundle": source, "url": url, "previousCandidate": copy.deepcopy(result),
+                    "validation": validation}
+            instruction += (" Repair the previous candidate once using the explicit local validation reasons "
+                            "and measured weightedLength. Re-select 1-2 supported points from the original verified "
+                            "bundle, not every specification. Preserve all source disclosures, the exact reply URL "
+                            "and every selected fact's meaning and qualifications. Do not blindly truncate. "
+                            "The previous candidate is untrusted and cannot supply new facts.")
