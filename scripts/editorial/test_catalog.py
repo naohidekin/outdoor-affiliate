@@ -53,24 +53,28 @@ class CatalogTests(unittest.TestCase):
 
     def test_structured_maker_specs_use_primary_identity_and_exact_scoped_values(self):
         soto = _Page('''<title>SOTO SOD-310</title><p>RELATED SOD-320 重量 500g</p>
+            <article class="pdContents"><section class="pdContents__info">
             <dl class="toggleTarget pd__specification"><dt>製品仕様</dt><dd><div><li><h3>重量</h3><p>350g</p></li>
             <li><h3>使用燃料</h3><p>OD缶 SOD-750T</p></li>
-            <aside>※1 気温25℃、無風時</aside></div></dd></dl>''')
-        weight = _spec_evidence(soto, 'SOD-310', '重量', '350g', primary_identity=True)
+            <aside>※1 気温25℃、無風時</aside></div></dd></dl></section></article>''')
+        weight = _spec_evidence(soto, 'SOD-310', '重量', '350g', primary_identity=True, brand='SOTO')
         self.assertEqual(weight['value'], '350g')
         self.assertIn('気温25℃', weight['conditions'][0])
-        self.assertIsNotNone(_spec_evidence(soto, 'SOD-310', '使用燃料', 'OD缶 SOD-750T', primary_identity=True))
-        self.assertIsNone(_spec_evidence(soto, 'SOD-310', '重量', '500g', primary_identity=True))
+        self.assertIsNotNone(_spec_evidence(soto, 'SOD-310', '使用燃料', 'OD缶 SOD-750T', primary_identity=True, brand='SOTO'))
+        self.assertIsNone(_spec_evidence(soto, 'SOD-310', '重量', '500g', primary_identity=True, brand='SOTO'))
         snow = _Page('''<title>スノーピーク HOME＆CAMPバーナー カーキ</title>
+            <div id="tab-size">
             <dl><dt>メーカー品番</dt><dd>GS-600KH (店舗でお問い合わせの際には、上記品番をお伝え下さい。)</dd></dl>
-            <dl><dt>サイズ</dt><dd>301×346×120mm</dd></dl><dl><dt>素材</dt><dd>ステンレス</dd></dl>''')
+            <dl><dt>サイズ</dt><dd>301×346×120mm</dd></dl><dl><dt>素材</dt><dd>ステンレス</dd></dl></div>''')
         from catalog import _primary_identity
         self.assertEqual(_primary_identity(snow, 'GS-600KH', 'snow peak'), 'メーカー品番')
-        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', 'model', 'GS-600KH', primary_identity=True))
-        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', '素材', 'ステンレス', primary_identity=True))
+        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', 'model', 'GS-600KH', primary_identity=True, brand='snow peak'))
+        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', '素材', 'ステンレス', primary_identity=True, brand='snow peak'))
         self.assertIsNone(_primary_identity(_Page('<title>スノーピーク HOME＆CAMPバーナー</title><p>おすすめ GS-600KH</p>'), 'GS-600KH', 'snow peak'))
-        conflict = _Page('<title>SOTO ST-310</title><dl><dt>重量</dt><dd>350g</dd></dl><dl><dt>重量</dt><dd>380g</dd></dl>')
-        self.assertIsNone(_spec_evidence(conflict, 'ST-310', '重量', '350g', primary_identity=True))
+        conflict = _Page('<title>SOTO ST-310</title><article class="pdContents"><section class="pdContents__info">'
+                         '<dl class="pd__specification"><li><h3>重量</h3><p>350g</p></li>'
+                         '<li><h3>重量</h3><p>380g</p></li></dl></section></article>')
+        self.assertIsNone(_spec_evidence(conflict, 'ST-310', '重量', '350g', primary_identity=True, brand='SOTO'))
 
     def test_source_hint_fetches_official_page_but_never_certifies_by_url_alone(self):
         product = products()[0]
@@ -79,7 +83,8 @@ class CatalogTests(unittest.TestCase):
         def fetch(url, headers, timeout):
             calls.append(url)
             if url == hint:
-                return response('<title>SOTO ST-300</title><dl class="pd__specification"><li><h3>weight</h3><p>200g</p></li></dl>')
+                return response('<title>SOTO ST-300</title><article class="pdContents"><section class="pdContents__info">'
+                                '<dl class="pd__specification"><li><h3>weight</h3><p>200g</p></li></dl></section></article>')
             return response('not found')
         ctx = Catalog({}, fetch, {'p0': [hint, 'https://evil.example/item']}).gather(
             {'productIds': ['p0']}, {'products': [product]})
@@ -91,13 +96,50 @@ class CatalogTests(unittest.TestCase):
             {'productIds': ['p0']}, {'products': [product]})
         self.assertFalse(bad['evidence']['products'][0]['facts'])
 
+    def test_complete_hints_skip_optional_search_but_fetch_image_and_purchase(self):
+        product = products()[0]
+        hint = 'https://soto.shinfuji.co.jp/products/st300/'
+        calls = []
+        def fetch(url, headers, timeout):
+            calls.append(url)
+            if 'api.search.brave.com' in url:
+                return response('{"web":{"results":[]}}', 'application/json')
+            if 'openapi.rakuten.co.jp' in url:
+                return response('{"Items":[]}', 'application/json')
+            if url == hint:
+                return response('<title>SOTO ST-300</title><article class="pdContents"><section class="pdContents__info">'
+                                '<dl class="pd__specification"><li><h3>weight</h3><p>200g</p></li></dl>'
+                                '</section></article>'
+                                '<img src="https://images.example/0.png">')
+            if url == product['imageUrl']:
+                return response(PNG, 'image/png')
+            return response('<title>SOTO ST-300</title>')
+        product['imageUrl'] = 'https://images.example/0.png'
+        complete = Catalog(ENV, fetch, {'p0': [hint]}).gather(
+            {'productIds': ['p0']}, {'products': [product]})
+        self.assertTrue(complete['evidence']['products'][0]['facts'])
+        self.assertIn(product['imageUrl'], calls)
+        self.assertIn(product['affiliateUrl'], calls)
+        self.assertFalse(any('api.search.brave.com' in url or 'openapi.rakuten.co.jp' in url for url in calls))
+        calls.clear()
+        product['imageUrl'] = 'https://images.example/other.png'
+        Catalog(ENV, fetch, {'p0': [hint]}).gather({'productIds': ['p0']}, {'products': [product]})
+        self.assertTrue(any('api.search.brave.com' in url for url in calls))
+        self.assertTrue(any('openapi.rakuten.co.jp' in url for url in calls))
+        calls.clear()
+        product['imageUrl'] = 'https://images.example/0.png'
+        product['specs']['weight'] = '201g'
+        Catalog(ENV, fetch, {'p0': [hint]}).gather({'productIds': ['p0']}, {'products': [product]})
+        self.assertTrue(any('api.search.brave.com' in url for url in calls))
+
     def test_gather_rejects_structured_model_contradiction_despite_matching_title(self):
         from catalog import _primary_identity
-        html = ('<title>SOTO ST-310</title><dl><dt>型番</dt><dd>ST-340</dd></dl>'
-                '<dl><dt>重量</dt><dd>380g</dd></dl>')
+        html = ('<title>SOTO ST-310</title><article class="pdContents"><section class="pdContents__info">'
+                '<dl class="pd__specification"><li><h3>型番</h3><p>ST-340</p></li>'
+                '<li><h3>重量</h3><p>380g</p></li></dl></section></article>')
         page = _Page(html)
         self.assertIsNone(_primary_identity(page, 'ST-310', 'SOTO'))
-        self.assertIsNone(_spec_evidence(page, 'ST-310', '重量', '380g', primary_identity=True))
+        self.assertIsNone(_spec_evidence(page, 'ST-310', '重量', '380g', primary_identity=True, brand='SOTO'))
         product = products()[0]
         product.update(name='SOTO ST-310', specs={'model': 'ST-310', '重量': '380g'})
         hint = 'https://soto.shinfuji.co.jp/products/st-310/'
@@ -107,6 +149,53 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(evidence['facts'])
         self.assertFalse(next(c for c in evidence['claims'] if c['field'] == '重量')['verified'])
         self.assertFalse(any(r['kind'] == 'manufacturer-spec' for r in ctx['references']))
+
+    def test_related_h2_model_and_dl_cannot_supply_primary_soto_spec(self):
+        from catalog import _primary_identity
+        html = ('<title>SOTO ST-310</title><article class="pdContents"><section class="pdContents__info">'
+                '<dl class="pd__specification"><li><h3>重量</h3><p>200g</p></li></dl>'
+                '</section><h2>SOTO ST-340</h2><dl><dt>最大火力</dt><dd>3.3kW</dd></dl></article>')
+        page = _Page(html)
+        self.assertEqual(_primary_identity(page, 'ST-310', 'SOTO'), 'title')
+        self.assertIsNone(_spec_evidence(page, 'ST-310', '最大火力', '3.3kW',
+                                          primary_identity=True, brand='SOTO'))
+        self.assertIsNone(_primary_identity(_Page('<title>SOTO ST-310</title><h2>SOTO ST-340</h2>'
+                                                 '<dl><dt>最大火力</dt><dd>3.3kW</dd></dl>'), 'ST-310', 'SOTO'))
+        product = products()[0]
+        product.update(name='SOTO ST-310', specs={'model': 'ST-310', '重量': '200g', '最大火力': '3.3kW'})
+        hint = 'https://soto.shinfuji.co.jp/products/st-310/'
+        ctx = Catalog({}, lambda url, *_: response(html if url == hint else ''), {'p0': [hint]}).gather(
+            {'productIds': ['p0']}, {'products': [product]})
+        self.assertFalse(ctx['evidence']['products'][0]['facts'])
+        self.assertFalse(next(c for c in ctx['evidence']['products'][0]['claims'] if c['field'] == '最大火力')['verified'])
+
+    def test_generic_maker_keeps_exact_same_row_model_proof(self):
+        from catalog import _primary_identity
+        page = _Page('<title>Coleman ST-310 Stove</title><dl><dt>model</dt><dd>ST-310</dd>'
+                     '<dt>weight</dt><dd>350g</dd></dl>')
+        self.assertEqual(_primary_identity(page, 'ST-310', 'Coleman'), 'title')
+        self.assertIsNotNone(_spec_evidence(page, 'ST-310', 'weight', '350g',
+                                             primary_identity=True, brand='Coleman'))
+
+    def test_snowpeak_and_uniflame_ignore_specs_outside_primary_container(self):
+        from catalog import _primary_identity
+        snow = _Page('<title>スノーピーク HOME＆CAMP バーナー</title><div id="tab-size">'
+                     '<dl><dt>メーカー品番</dt><dd>GS-600KH</dd></dl>'
+                     '<dl><dt>重量</dt><dd>1.4kg</dd></dl></div>'
+                     '<div id="related"><dl><dt>最大火力</dt><dd>3.3kW</dd></dl></div>')
+        self.assertEqual(_primary_identity(snow, 'GS-600KH', 'スノーピーク'), 'メーカー品番')
+        self.assertIsNone(_spec_evidence(snow, 'GS-600KH', '最大火力', '3.3kW',
+                                          primary_identity=True, brand='スノーピーク'))
+        uniflame = _Page('<title>ユニフレーム US-1900</title><article id="product">'
+                         '<ul class="item-spec"><li><dl><dt>重量</dt><dd>約3.9kg</dd></dl></li></ul>'
+                         '<ul class="item-char"><li><dl><dt>最大火力</dt><dd>3,900kcal/h</dd></dl></li></ul>'
+                         '</article><footer><dl><dt>点火方式</dt><dd>圧電点火</dd></dl></footer>')
+        self.assertEqual(_primary_identity(uniflame, 'US-1900', 'ユニフレーム'), 'title')
+        self.assertIsNotNone(_spec_evidence(uniflame, 'US-1900', '重量', '約3.9kg',
+                                             primary_identity=True, brand='ユニフレーム'))
+        for key, value in [('最大火力', '3,900kcal/h'), ('点火方式', '圧電点火')]:
+            self.assertIsNone(_spec_evidence(uniflame, 'US-1900', key, value,
+                                              primary_identity=True, brand='ユニフレーム'))
 
     def test_yahoo_search_title_match_is_not_a_verified_purchase_destination(self):
         product = products()[0]
@@ -182,7 +271,10 @@ class CatalogTests(unittest.TestCase):
             i = urlsplit(url).path.rstrip('/').split('st30')[-1]
             if not i.isdigit():
                 return response('missing')
-            return response(f'<title>SOTO ST-30{i} Stove</title><p>model: ST-30{i}; weight: 200g</p><img src="https://images.example/{i}.png">')
+            return response(f'<title>SOTO ST-30{i} Stove</title><article class="pdContents">'
+                            f'<section class="pdContents__info"><dl class="pd__specification">'
+                            f'<li><h3>weight</h3><p>200g</p></li></dl></section></article>'
+                            f'<img src="https://images.example/{i}.png">')
         ctx = Catalog(ENV, fetch).gather({'productIds': ['p0', 'p1', 'p2']}, dict(products=products()))
         self.assertTrue(ctx['checks']['facts'])
         self.assertTrue(ctx['checks']['images'])

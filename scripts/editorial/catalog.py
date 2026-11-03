@@ -121,15 +121,18 @@ class _Page(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.title, self.text, self.images = '', '', []
         self.in_title, self.skip = False, 0
-        self.units, self.scopes, self.structured = [], [], []
+        self.units, self.scopes, self.structured, self.dom = [], [], [], []
         self.feed(source)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag not in ('area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'):
+            self.dom.append((tag, attrs))
         if tag in ('script', 'style', 'noscript'):
             self.skip += 1
         if not self.skip and tag in ('tr', 'dl', 'li', 'p', 'td', 'th', 'dt', 'dd', 'h3', 'aside'):
-            self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'asides': [], 'class': attrs.get('class', '')})
+            self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'asides': [],
+                                'class': attrs.get('class', ''), 'ancestors': tuple(self.dom)})
         if tag == 'title':
             self.in_title = True
         if tag == 'img' and attrs.get('src'):
@@ -161,6 +164,9 @@ class _Page(HTMLParser):
             self.skip = max(0, self.skip - 1)
         if tag == 'title':
             self.in_title = False
+        index = next((i for i in range(len(self.dom) - 1, -1, -1) if self.dom[i][0] == tag), None)
+        if index is not None:
+            del self.dom[index:]
 
     def handle_data(self, data):
         if not self.skip:
@@ -186,9 +192,37 @@ def _pairs(unit):
     return []
 
 
-def _structured_model_codes(page):
+def _has_ancestor(unit, tag, attr, value):
+    return any(name == tag and value in (attrs.get(attr, '').split() if attr == 'class' else (attrs.get(attr),))
+               for name, attrs in unit['ancestors'])
+
+
+def _primary_units(page, brand):
+    brand = brand.casefold()
+    if brand == 'soto':
+        spec_dls = [unit for unit in page.structured if unit['kind'] == 'dl'
+                    and 'pd__specification' in unit['class'].split()
+                    and _has_ancestor(unit, 'article', 'class', 'pdContents')
+                    and _has_ancestor(unit, 'section', 'class', 'pdContents__info')]
+        if len(spec_dls) != 1:
+            return []
+        return [unit for unit in page.structured if unit['kind'] == 'li'
+                and _has_ancestor(unit, 'article', 'class', 'pdContents')
+                and _has_ancestor(unit, 'section', 'class', 'pdContents__info')
+                and _has_ancestor(unit, 'dl', 'class', 'pd__specification')]
+    if brand in ('snow peak', 'スノーピーク'):
+        return [unit for unit in page.structured if unit['kind'] == 'dl'
+                and _has_ancestor(unit, 'div', 'id', 'tab-size')]
+    if brand in ('uniflame', 'ユニフレーム'):
+        return [unit for unit in page.structured if unit['kind'] == 'dl'
+                and _has_ancestor(unit, 'article', 'id', 'product')
+                and _has_ancestor(unit, 'ul', 'class', 'item-spec')]
+    return []
+
+
+def _structured_model_codes(units):
     model_labels = {label.casefold() for label in SPEC_LABELS['model']}
-    return [(label.strip(), value.strip()) for unit in page.structured
+    return [(label.strip(), value.strip()) for unit in units
             for label, value in _pairs(unit) if label.strip().casefold() in model_labels]
 
 
@@ -196,7 +230,10 @@ def _primary_identity(page, model, brand):
     brand_names = {'snow peak', 'スノーピーク'} if brand.casefold() in ('snow peak', 'スノーピーク') else {brand.casefold()}
     if not any(name in page.title.casefold() for name in brand_names if name):
         return None
-    model_codes = _structured_model_codes(page)
+    units = _primary_units(page, brand)
+    if brand.casefold() in ('soto', 'snow peak', 'スノーピーク', 'uniflame', 'ユニフレーム') and not units:
+        return None
+    model_codes = _structured_model_codes(units)
     if model_codes:
         matches = [(label, value) for label, value in model_codes if re.fullmatch(
             re.escape(model) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', value.strip(), re.I)]
@@ -206,30 +243,25 @@ def _primary_identity(page, model, brand):
     return 'title' if model_matches(model, page.title) else None
 
 
-def _spec_evidence(page, model, key, value, primary_identity=False):
-    """Require a model-bound row/list/paragraph and a named value pair.
-
-    Page titles and separate product blocks never supply missing model binding.
-    Multi-model units and ambiguous/multiple values for a label stay unverified.
-    """
+def _spec_evidence(page, model, key, value, primary_identity=False, brand=None):
+    """Match exact values in a known primary scope, or in one model-bound legacy unit."""
     labels = next((v for v in SPEC_LABELS.values() if key.casefold() in [x.casefold() for x in v]), None)
     if labels is None and re.search(r'[^\x00-\x7f]', key):
         labels = (key,)
     if labels is None:
         return None
     label_set = {s.casefold() for s in labels}
-    if primary_identity:
-        model_codes = _structured_model_codes(page)
+    units = _primary_units(page, brand or '') if primary_identity else []
+    if primary_identity and (brand or '').casefold() in ('soto', 'snow peak', 'スノーピーク', 'uniflame', 'ユニフレーム') and not units:
+        return None
+    if primary_identity and units:
+        model_codes = _structured_model_codes(units)
         if model_codes and (len(model_codes) != 1 or not re.fullmatch(
                 re.escape(model) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', model_codes[0][1], re.I)):
             return None
         matches = []
-        soto_spec = any(unit['kind'] == 'dl' and 'pd__specification' in unit['class'] for unit in page.structured)
-        for unit in page.structured:
-            if soto_spec and unit['kind'] != 'li':
-                continue
-            if unit['kind'] == 'dl' and 'pd__specification' in unit['class']:
-                continue  # SOTO values belong to individual li units.
+        soto_spec = (brand or '').casefold() == 'soto'
+        for unit in units:
             pairs = _pairs(unit)
             if any(label.strip().casefold() in {s.casefold() for s in SPEC_LABELS['model']}
                    and not model_matches(model, source_value) for label, source_value in pairs):
@@ -249,14 +281,15 @@ def _spec_evidence(page, model, key, value, primary_identity=False):
             aside = [v for tag, v in unit['cells'] if tag == 'aside']
             if soto_spec:
                 aside += [v for block in page.structured if block['kind'] == 'dl' and 'pd__specification' in block['class']
+                          and _has_ancestor(block, 'article', 'class', 'pdContents')
+                          and _has_ancestor(block, 'section', 'class', 'pdContents__info')
                           for v in block['asides']]
             return {'unit': unit['kind'], 'model': model, 'field': key, 'value': value,
                     'excerpt': unit['text'][:500], 'conditions': aside[:3]}
         if key.casefold() in {s.casefold() for s in SPEC_LABELS['model']} and value.casefold() == model.casefold():
             return {'unit': 'primary identity', 'model': model, 'field': key, 'value': value,
                     'excerpt': page.title[:300], 'conditions': []}
-        if page.structured:
-            return None
+        return None
     for unit in page.units:
         text, kind = unit['text'], unit['kind']
         if len(text) > (240 if kind == 'p' else 500) or not model_matches(model, text):
@@ -534,7 +567,15 @@ class Catalog:
                             maker_pages.append((res, parsed))
                     except (CatalogError, ValueError):
                         item['issues'].append('manufacturer page unavailable')
-                if self.env.get('BRAVE_API_KEY'):
+                specs = product.get('specs') or {}
+                image_url = product.get('imageUrl', '')
+                hints_complete = bool(model and maker_pages and specs and image_url
+                    and all(isinstance(value, str) and value and any(
+                        _spec_evidence(parsed, model, key, value, primary_identity=True, brand=product.get('brand', ''))
+                        for _, parsed in maker_pages) for key, value in specs.items())
+                    and any(image_url in [urljoin(res['url'], src) for src in parsed.images]
+                            for res, parsed in maker_pages))
+                if not hints_complete and self.env.get('BRAVE_API_KEY'):
                     data = self._json('https://api.search.brave.com/res/v1/web/search?' + urlencode({'q': product['brand'] + ' ' + product['name'] + ' 公式 仕様', 'count': 5}),
                                       {'X-Subscription-Token': self.env['BRAVE_API_KEY'], 'Accept': 'application/json'})
                     for found in data.get('web', {}).get('results', [])[:5]:
@@ -548,7 +589,7 @@ class Catalog:
                                     maker_pages.append((res, parsed))
                             except CatalogError:
                                 item['issues'].append('manufacturer page unavailable')
-                if self.env.get('RAKUTEN_APP_ID') and self.env.get('RAKUTEN_ACCESS_KEY'):
+                if not hints_complete and self.env.get('RAKUTEN_APP_ID') and self.env.get('RAKUTEN_ACCESS_KEY'):
                     data = self._json('https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701?' + urlencode({
                         'applicationId': self.env['RAKUTEN_APP_ID'], 'accessKey': self.env['RAKUTEN_ACCESS_KEY'],
                         'keyword': product['name'], 'hits': 5, 'formatVersion': 2}),
@@ -572,7 +613,8 @@ class Catalog:
                     item['claims'].append({'field': key, 'verified': False})
                     continue
                 proof = next(((res['url'], binding) for res, parsed in maker_pages
-                              for binding in [_spec_evidence(parsed, model, key, value, primary_identity=True)] if binding), None)
+                              for binding in [_spec_evidence(parsed, model, key, value, primary_identity=True,
+                                                            brand=product.get('brand', ''))] if binding), None)
                 source, binding = proof if proof else (None, None)
                 item['claims'].append({'field': key, 'text': value, 'url': source, 'binding': binding,
                                        'verified': proof is not None, 'checkedAt': checked_at})
