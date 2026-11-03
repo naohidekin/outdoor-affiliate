@@ -82,7 +82,7 @@ class _PinnedHTTPS(http.client.HTTPSConnection):
 
 
 def model_matches(model, title):
-    return bool(model and re.search(r'(?<![\w-])' + re.escape(model) + r'(?![\w-])', title, re.I))
+    return bool(model and re.search(r'(?<![A-Za-z0-9_/-])' + re.escape(model) + r'(?![A-Za-z0-9_/-])', title, re.I))
 
 
 def _model(product):
@@ -95,20 +95,41 @@ def _model(product):
     return codes[0] if len(codes) == 1 else ''
 
 
+def _decode_html(body, content_type):
+    """Decode only supported web encodings; never silently replace identity bytes."""
+    aliases = {'utf-8': 'utf-8', 'utf8': 'utf-8', 'euc-jp': 'euc_jp',
+               'euc_jp': 'euc_jp', 'shift_jis': 'cp932', 'shift-jis': 'cp932',
+               'sjis': 'cp932', 'windows-31j': 'cp932', 'cp932': 'cp932'}
+    header = re.search(r'charset\s*=\s*["\']?([a-zA-Z0-9_-]+)', content_type, re.I)
+    charset = header.group(1) if header else None
+    if not charset:
+        # HTML meta declarations are ASCII even on legacy Japanese pages.
+        prefix = body[:4096].decode('ascii', errors='ignore')
+        meta = re.search(r'<meta\b[^>]*charset\s*=\s*["\']?([a-zA-Z0-9_-]+)', prefix, re.I)
+        charset = meta.group(1) if meta else 'utf-8'
+    encoding = aliases.get(charset.casefold())
+    if not encoding:
+        raise CatalogError('unsupported HTML charset')
+    try:
+        return body.decode(encoding)
+    except UnicodeError:
+        raise CatalogError('invalid HTML encoding') from None
+
+
 class _Page(HTMLParser):
     def __init__(self, source):
         super().__init__(convert_charrefs=True)
         self.title, self.text, self.images = '', '', []
         self.in_title, self.skip = False, 0
-        self.units, self.scopes = [], []
+        self.units, self.scopes, self.structured = [], [], []
         self.feed(source)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag in ('script', 'style', 'noscript'):
             self.skip += 1
-        if not self.skip and tag in ('tr', 'dl', 'p', 'td', 'th', 'dt', 'dd'):
-            self.scopes.append({'kind': tag, 'parts': [], 'cells': []})
+        if not self.skip and tag in ('tr', 'dl', 'li', 'p', 'td', 'th', 'dt', 'dd', 'h3', 'aside'):
+            self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'class': attrs.get('class', '')})
         if tag == 'title':
             self.in_title = True
         if tag == 'img' and attrs.get('src'):
@@ -125,6 +146,10 @@ class _Page(HTMLParser):
                 unit['text'] = ' '.join(' '.join(unit.pop('parts')).split())
                 if tag in ('tr', 'dl', 'p'):
                     self.units.append(unit)
+                if tag == 'dl':
+                    self.structured.append(unit)
+                elif tag == 'li' and any(s['kind'] == 'dl' and 'pd__specification' in s['class'] for s in self.scopes):
+                    self.structured.append(unit)
                 elif self.scopes:
                     self.scopes[-1]['cells'].append((tag, unit['text']))
         if tag in ('script', 'style', 'noscript'):
@@ -141,19 +166,81 @@ class _Page(HTMLParser):
             self.title += data
 
 
-SPEC_LABELS = {'model': ('model', 'modelNumber', '型番', '品番', 'モデル番号'),
+SPEC_LABELS = {'model': ('model', 'modelNumber', '型番', '品番', 'モデル番号', 'メーカー品番'),
                'weight': ('weight', '重量', '質量', '重さ'),
-               'size': ('size', 'サイズ', '寸法'), 'capacity': ('capacity', '容量')}
+               'size': ('size', 'サイズ', '寸法', '製品サイズ'), 'capacity': ('capacity', '容量')}
+def _pairs(unit):
+    cells = unit['cells']
+    if unit['kind'] == 'dl':
+        return [(cells[n][1], cells[n + 1][1]) for n in range(len(cells) - 1)
+                if cells[n][0] == 'dt' and cells[n + 1][0] == 'dd']
+    if unit['kind'] == 'li':
+        labels = [v for tag, v in cells if tag == 'h3']
+        values = [v for tag, v in cells if tag == 'p']
+        return [(labels[0], values[0])] if len(labels) == len(values) == 1 else []
+    return []
 
 
-def _spec_evidence(page, model, key, value):
+def _primary_identity(page, model, brand):
+    brand_names = {'snow peak', 'スノーピーク'} if brand.casefold() in ('snow peak', 'スノーピーク') else {brand.casefold()}
+    if not any(name in page.title.casefold() for name in brand_names if name):
+        return None
+    maker_codes = [value for unit in page.structured if unit['kind'] == 'dl'
+                   for label, value in _pairs(unit) if label.strip() == 'メーカー品番']
+    if maker_codes:
+        matches = [value for value in maker_codes if re.fullmatch(
+            re.escape(model) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', value.strip(), re.I)]
+        return 'メーカー品番' if len(maker_codes) == len(matches) == 1 else None
+    return 'title' if model_matches(model, page.title) else None
+
+
+def _spec_evidence(page, model, key, value, primary_identity=False):
     """Require a model-bound row/list/paragraph and a named value pair.
 
     Page titles and separate product blocks never supply missing model binding.
     Multi-model units and ambiguous/multiple values for a label stay unverified.
     """
-    labels = next((v for v in SPEC_LABELS.values() if key.casefold() in [x.casefold() for x in v]), (key,))
+    labels = next((v for v in SPEC_LABELS.values() if key.casefold() in [x.casefold() for x in v]), None)
+    if labels is None and re.search(r'[^\x00-\x7f]', key):
+        labels = (key,)
+    if labels is None:
+        return None
     label_set = {s.casefold() for s in labels}
+    if primary_identity:
+        matches = []
+        soto_spec = any(unit['kind'] == 'dl' and 'pd__specification' in unit['class'] for unit in page.structured)
+        for unit in page.structured:
+            if soto_spec and unit['kind'] != 'li':
+                continue
+            if unit['kind'] == 'dl' and 'pd__specification' in unit['class']:
+                continue  # SOTO values belong to individual li units.
+            pairs = _pairs(unit)
+            if any(label.strip().casefold() in {s.casefold() for s in SPEC_LABELS['model']}
+                   and not model_matches(model, source_value) for label, source_value in pairs):
+                continue
+            for label, source_value in pairs:
+                if label.strip().rstrip(':：').casefold() not in label_set:
+                    continue
+                source_value = source_value.strip()
+                exact = source_value == value.strip()
+                if key.casefold() in {s.casefold() for s in SPEC_LABELS['model']}:
+                    exact = bool(re.fullmatch(re.escape(value.strip()) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', source_value, re.I))
+                matches.append((unit, source_value, exact))
+        if matches:
+            if len(matches) != 1 or not matches[0][2]:
+                return None
+            unit, source_value, _ = matches[0]
+            aside = [v for tag, v in unit['cells'] if tag == 'aside']
+            if soto_spec:
+                aside += [v for block in page.structured if block['kind'] == 'dl' and 'pd__specification' in block['class']
+                          for tag, v in block['cells'] if tag == 'aside']
+            return {'unit': unit['kind'], 'model': model, 'field': key, 'value': value,
+                    'excerpt': unit['text'][:500], 'conditions': aside[:3]}
+        if key.casefold() in {s.casefold() for s in SPEC_LABELS['model']} and value.casefold() == model.casefold():
+            return {'unit': 'primary identity', 'model': model, 'field': key, 'value': value,
+                    'excerpt': page.title[:300], 'conditions': []}
+        if page.structured:
+            return None
     for unit in page.units:
         text, kind = unit['text'], unit['kind']
         if len(text) > (240 if kind == 'p' else 500) or not model_matches(model, text):
@@ -185,7 +272,8 @@ def _spec_evidence(page, model, key, value):
                         pairs.append((label, match[1]))
         values = [v.strip() for label, v in pairs if label.strip().rstrip(':：').casefold() in label_set]
         if values == [value.strip()]:
-            return {'unit': kind, 'model': model, 'field': key, 'value': value}
+            return {'unit': kind, 'model': model, 'field': key, 'value': value,
+                    'excerpt': text[:500], 'conditions': []}
     return None
 
 
@@ -272,29 +360,37 @@ def _camel(row):
 
 
 class Catalog:
-    def __init__(self, env, fetcher=None):
+    def __init__(self, env, fetcher=None, source_hints=None):
         self.env, self.fetcher = dict(env), fetcher
+        self.source_hints = dict(source_hints or {})
 
     def health(self):
         return {'envKeys': {key: bool(self.env.get(key)) for key in ENV_KEYS},
                 'readonly': True, 'networkChecked': False}
 
-    def request(self, url, headers=None):
+    def request(self, url, headers=None, allowed_domains=None):
         """Bounded GET; pinned DNS, no proxies, redirects rechecked before use."""
         headers = dict(headers or {})
         try:
             for hop in range(6):
                 p, addresses = safe_url(url, resolve=self.fetcher is None)
+                if allowed_domains and not any(p.hostname == d or p.hostname.endswith('.' + d) for d in allowed_domains):
+                    raise CatalogError('manufacturer host rejected')
                 if self.fetcher:
                     result = self.fetcher(url, dict(headers), 20)
                 else:
-                    conn = _PinnedHTTPS(p.hostname, addresses[0])
-                    try:
-                        conn.request('GET', p.path + ('?' + p.query if p.query else ''), headers=headers)
-                        res = conn.getresponse()
-                        result = {'status': res.status, 'headers': dict(res.getheaders()), 'body': res.read(MAX_BYTES + 1)}
-                    finally:
-                        conn.close()
+                    for address in addresses:
+                        conn = _PinnedHTTPS(p.hostname, address)
+                        try:
+                            conn.request('GET', p.path + ('?' + p.query if p.query else ''), headers=headers)
+                            res = conn.getresponse()
+                            result = {'status': res.status, 'headers': dict(res.getheaders()), 'body': res.read(MAX_BYTES + 1)}
+                            break
+                        except OSError:
+                            if address == addresses[-1]:
+                                raise
+                        finally:
+                            conn.close()
                 status = result['status']
                 rh = {k.lower(): v for k, v in result.get('headers', {}).items()}
                 if status in (301, 302, 303, 307, 308):
@@ -398,21 +494,33 @@ class Catalog:
                     'claims': [], 'destinations': [], 'issues': [], 'checkedAt': checked_at}
             maker_pages, mall_pages = [], []
             def page(url, kind):
-                res = self.request(url)
+                res = self.request(url, allowed_domains=domains if kind == 'manufacturer' else None)
                 if not res['headers'].get('content-type', '').lower().startswith('text/html'):
                     raise CatalogError('HTML required')
-                parsed = _Page(res['body'].decode('utf-8', errors='replace'))
-                match = model_matches(model, parsed.title) and product.get('brand', '').casefold() in parsed.title.casefold()
+                parsed = _Page(_decode_html(res['body'], res['headers'].get('content-type', '')))
+                identity = _primary_identity(parsed, model, product.get('brand', '')) if kind == 'manufacturer' else None
+                match = bool(identity) if kind == 'manufacturer' else (model_matches(model, parsed.title) and product.get('brand', '').casefold() in parsed.title.casefold())
                 # Store evidence of exact comparisons, never user review text.
                 if match:
                     references.append({'productId': pid, 'kind': kind, 'url': res['url'], 'checkedAt': checked_at,
-                                       'text': 'Title contains catalog brand and exact model: ' + model})
+                                       'text': 'Brand title and primary identity (' + (identity or 'title') + '): ' + model})
                 return res, parsed, match
             try:
+                domains = MAKERS.get(product.get('brand', '').casefold(), ())
+                for url in self.source_hints.get(pid, []):
+                    try:
+                        host = urlsplit(url).hostname or ''
+                        if not any(host == d or host.endswith('.' + d) for d in domains):
+                            continue
+                        res, parsed, match = page(url, 'manufacturer')
+                        final_host = urlsplit(res['url']).hostname or ''
+                        if match and any(final_host == d or final_host.endswith('.' + d) for d in domains):
+                            maker_pages.append((res, parsed))
+                    except (CatalogError, ValueError):
+                        item['issues'].append('manufacturer page unavailable')
                 if self.env.get('BRAVE_API_KEY'):
                     data = self._json('https://api.search.brave.com/res/v1/web/search?' + urlencode({'q': product['brand'] + ' ' + product['name'] + ' 公式 仕様', 'count': 5}),
                                       {'X-Subscription-Token': self.env['BRAVE_API_KEY'], 'Accept': 'application/json'})
-                    domains = MAKERS.get(product.get('brand', '').casefold(), ())
                     for found in data.get('web', {}).get('results', [])[:5]:
                         url = found.get('url', '')
                         host = urlsplit(url).hostname or ''
@@ -448,10 +556,14 @@ class Catalog:
                     item['claims'].append({'field': key, 'verified': False})
                     continue
                 proof = next(((res['url'], binding) for res, parsed in maker_pages
-                              for binding in [_spec_evidence(parsed, model, key, value)] if binding), None)
+                              for binding in [_spec_evidence(parsed, model, key, value, primary_identity=True)] if binding), None)
                 source, binding = proof if proof else (None, None)
                 item['claims'].append({'field': key, 'text': value, 'url': source, 'binding': binding,
                                        'verified': proof is not None, 'checkedAt': checked_at})
+                if proof:
+                    references.append({'productId': pid, 'kind': 'manufacturer-spec', 'url': source,
+                                       'checkedAt': checked_at, 'field': key,
+                                       'text': binding['excerpt'], 'conditions': binding['conditions']})
             item['facts'] = bool(model and maker_pages and specs and all(c['verified'] for c in item['claims']))
             # Descriptions, subjective ratings, price and availability are NOT certified by specs.
             item['unverifiedFields'] = ['description', 'rating', 'price', 'availability']

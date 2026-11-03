@@ -75,7 +75,7 @@ class Runtime:
         self.models = models or Models(self.env)
         if catalog is None:
             from catalog import Catalog
-            catalog = Catalog(self.env)
+            catalog = Catalog(self.env, source_hints=config.get('sourceHints', {}))
         self.catalog = catalog
         self.slack = slack or Slack(config)
         self.renderer = renderer or self._render

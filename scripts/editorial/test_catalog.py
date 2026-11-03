@@ -33,6 +33,64 @@ def response(body, kind='text/html', status=200, headers=None):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_legacy_japanese_html_charset(self):
+        from catalog import _decode_html
+        html = '<meta charset="EUC-JP"><title>スノーピーク GS600</title>'
+        self.assertIn('スノーピーク', _decode_html(html.encode('euc_jp'), 'text/html'))
+        html = '<title>スノーピーク GS600</title>'
+        self.assertEqual(_decode_html(html.encode('shift_jis'), 'text/html; charset=Shift_JIS'), html)
+        with self.assertRaises(CatalogError):
+            _decode_html(b'<meta charset="utf-7">+not-html', 'text/html')
+
+    def test_marketing_keys_cannot_be_certified_as_specs(self):
+        self.assertIsNone(_spec_evidence(_Page('<p>ST-310 benefit: best stove</p>'),
+                                         'ST-310', 'benefit', 'best stove'))
+
+    def test_japanese_model_boundaries_preserve_exact_ascii_sku(self):
+        self.assertTrue(model_matches('GS600', 'スノーピークGS600バーナー'))
+        for title in ['GS600KH', 'GS6000', 'GS-600', 'XGS600']:
+            self.assertFalse(model_matches('GS600', title))
+
+    def test_structured_maker_specs_use_primary_identity_and_exact_scoped_values(self):
+        soto = _Page('''<title>SOTO SOD-310</title><p>RELATED SOD-320 重量 500g</p>
+            <dl class="toggleTarget pd__specification"><li><h3>重量</h3><p>350g</p></li>
+            <li><h3>使用燃料</h3><p>OD缶 SOD-750T</p></li>
+            <aside>※1 気温25℃、無風時</aside></dl>''')
+        weight = _spec_evidence(soto, 'SOD-310', '重量', '350g', primary_identity=True)
+        self.assertEqual(weight['value'], '350g')
+        self.assertIn('気温25℃', weight['conditions'][0])
+        self.assertIsNotNone(_spec_evidence(soto, 'SOD-310', '使用燃料', 'OD缶 SOD-750T', primary_identity=True))
+        self.assertIsNone(_spec_evidence(soto, 'SOD-310', '重量', '500g', primary_identity=True))
+        snow = _Page('''<title>スノーピーク HOME＆CAMPバーナー カーキ</title>
+            <dl><dt>メーカー品番</dt><dd>GS-600KH (店舗でお問い合わせの際には、上記品番をお伝え下さい。)</dd></dl>
+            <dl><dt>サイズ</dt><dd>301×346×120mm</dd></dl><dl><dt>素材</dt><dd>ステンレス</dd></dl>''')
+        from catalog import _primary_identity
+        self.assertEqual(_primary_identity(snow, 'GS-600KH', 'snow peak'), 'メーカー品番')
+        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', 'model', 'GS-600KH', primary_identity=True))
+        self.assertIsNotNone(_spec_evidence(snow, 'GS-600KH', '素材', 'ステンレス', primary_identity=True))
+        self.assertIsNone(_primary_identity(_Page('<title>スノーピーク HOME＆CAMPバーナー</title><p>おすすめ GS-600KH</p>'), 'GS-600KH', 'snow peak'))
+        conflict = _Page('<title>SOTO ST-310</title><dl><dt>重量</dt><dd>350g</dd></dl><dl><dt>重量</dt><dd>380g</dd></dl>')
+        self.assertIsNone(_spec_evidence(conflict, 'ST-310', '重量', '350g', primary_identity=True))
+
+    def test_source_hint_fetches_official_page_but_never_certifies_by_url_alone(self):
+        product = products()[0]
+        hint = 'https://soto.shinfuji.co.jp/products/st300/'
+        calls = []
+        def fetch(url, headers, timeout):
+            calls.append(url)
+            if url == hint:
+                return response('<title>SOTO ST-300</title><dl class="pd__specification"><li><h3>weight</h3><p>200g</p></li></dl>')
+            return response('not found')
+        ctx = Catalog({}, fetch, {'p0': [hint, 'https://evil.example/item']}).gather(
+            {'productIds': ['p0']}, {'products': [product]})
+        self.assertIn(hint, calls)
+        self.assertNotIn('https://evil.example/item', calls)
+        self.assertTrue(ctx['evidence']['products'][0]['facts'])
+        self.assertTrue(any(r['kind'] == 'manufacturer-spec' and '200g' in r['text'] for r in ctx['references']))
+        bad = Catalog({}, lambda *a: response('<title>SOTO ST-300</title>'), {'p0': [hint]}).gather(
+            {'productIds': ['p0']}, {'products': [product]})
+        self.assertFalse(bad['evidence']['products'][0]['facts'])
+
     def test_yahoo_search_title_match_is_not_a_verified_purchase_destination(self):
         product = products()[0]
         product['yahooUrl'] = 'https://shopping.yahoo.co.jp/search?p=SOTO+ST-300'
@@ -120,6 +178,21 @@ class CatalogTests(unittest.TestCase):
         c = Catalog({}, lambda *a: response('', status=302, headers={'location': 'https://127.0.0.1/secret'}))
         with self.assertRaises(CatalogError):
             c.request('https://example.com')
+
+    def test_pinned_transport_tries_second_validated_public_address(self):
+        public = [(10, 1, 6, '', ('2001:4860:4860::8888', 443)),
+                  (2, 1, 6, '', ('8.8.8.8', 443))]
+        with patch('catalog.socket.getaddrinfo', return_value=public), patch('catalog._PinnedHTTPS') as conn:
+            instance = conn.return_value
+            instance.request.side_effect = [OSError(65, 'No route to host'), None]
+            result = instance.getresponse.return_value
+            result.status = 200
+            result.getheaders.return_value = [('content-type', 'text/html')]
+            result.read.return_value = b'<title>OK</title>'
+            fetched = Catalog({}).request('https://maker.example/item')
+            self.assertEqual(fetched['body'], b'<title>OK</title>')
+            self.assertEqual([call.args[1] for call in conn.call_args_list],
+                             ['2001:4860:4860::8888', '8.8.8.8'])
 
     def test_secret_reflection_never_leaves_context_or_authenticated_redirect(self):
         secret = 'private-service-role-test-token'

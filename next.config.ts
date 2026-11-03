@@ -93,6 +93,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "ec.coleman.co.jp" },
       { protocol: "https", hostname: "lumena.co.jp" },
       { protocol: "https", hostname: "img.snowpeak.co.jp" },
+      { protocol: "https", hostname: "snowpeak-ec.s3.amazonaws.com", pathname: "/sys-master/AmazonS3Images/**" },
       { protocol: "https", hostname: "www.dod.camp" },
       { protocol: "https", hostname: "japan.nordisk.eu" },
       { protocol: "https", hostname: "www.iwatani-primus.co.jp" },
