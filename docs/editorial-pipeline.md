@@ -263,3 +263,8 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - @camp_gear_lab / 1343879420470206464の公開情報を確認。OAuth1は両機401（v1 code89）、本人は管理場所不明。22:12の読取専用preflightも未成功。private social-connection.jsonに記録。
 - socialPostingEnabled=falseを維持。カードは接続復旧待ちと、承認内容を保存し接続確認後に投稿する旨を明示。認証復旧・対象アカウントpreflight成功・有効化後、別途承認された版の本文と画像、記事URL返信を投稿し、X照合後にSlackへ結果を通知する。
 - 実X投稿・実投稿readbackは未実施。契約同意・キー再発行なし。開発者アカウント確認と投稿認証の復旧が残る。旧投稿ジョブは無効のまま。通常runnerは22:12:07 completed、報告の重複送信なし。
+
+## 2026-11-03 22:55 JST — X認証復旧・承認待ち
+
+- 本人がOAuth1アクセストークンとコンシューマーキーの各ペアを再生成し、既存envへ安全入力で保存。22:55:17と22:55:43にusers/meが成功、対象userId1343879420470206464と一致。socialPostingEnabled=trueへ変更。新規契約・権限追加なし。
+- 通常runnerは22:55:57 completed、SNS3件はsocial_review・承認nullで投稿ゼロ。実投稿確認はSlackのexact版承認待ち。接続復旧案内を既存Slackスレッドへ送信（1793714169.751269）。カードの復旧待ち文言はこの案内で解消を通知、承認版は変更していない。
