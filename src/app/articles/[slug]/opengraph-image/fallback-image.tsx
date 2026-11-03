@@ -38,6 +38,14 @@ export default async function Image({ params }: {
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article || (article.status !== "published" && !(await draftMode()).isEnabled)) return new Response(null, { status: 404 });
+  const card = article.generationMeta?.socialCard;
+  if (card?.width === 1200 && card.height === 630 && card.contentType === "image/png" && /^[a-f0-9]{64}$/.test(card.sha256)) {
+    try {
+      const origin = new URL(process.env.SUPABASE_URL || "").origin;
+      if (origin.startsWith("https://") && card.url === `${origin}/storage/v1/object/public/editorial-social-cards/${card.sha256.slice(0, 2)}/${card.sha256}.png`)
+        return new Response(null, { status: 307, headers: { Location: card.url, "Cache-Control": "no-store" } });
+    } catch { /* Invalid manifests keep the legacy fallback. */ }
+  }
   const category = article ? await getCategoryById(article.categoryId) : null;
 
   const title = article?.title ?? "Camp Gear Lab";
