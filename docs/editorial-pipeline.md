@@ -2,7 +2,8 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**新パイプラインはmacproへ配備済み（runtime `bce2d8c`）。初回3記事は実素材検証・校正・実render・独立審査・draft stageを経て、17:11:33／17:11:43／17:11:53 JSTにSlack配信完了。現在は本人のexact版公開承認待ちで、承認・本番公開はまだない。**
+**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified（3件の承認カードtsも記録済み）。GS 8.8、CB 8.6、SOTO 8.6で、現在は**記事公開とは別のSNS承認待ち**。Xへの投稿・予約は行っていない。実行版はmacpro runtime `05c4c3e`。
+analyticsは実データから既存記事改善候補3件をSEO state rootの `editorial-insights/latest.json` へ出力済み。`reportsEnabled: true` のGUI試運転は21:40:50 JSTに完了。週次2026-11-02週と月次2026-10月のSlack送達・readbackがverified。旧Air Codexの`camp-gear-lab-seo` automationはPAUSEDを確認済み。通常の`com.naohide.camp-slack-review`は継続する。次のSEO施策枠は11月5日（木）で、新しい改善施策はまだ実行していない。今週の新規記事候補3枠は使用済みで、次の通常制作開始は11月11日（水）09時JST以降。
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
 本番の記事承認・公開の実績と、接続試験・合成データの試験を区別する。最新検証結果は末尾を参照する。
@@ -25,17 +26,19 @@ Geminiだけは既存 `gemini-writing` スキル専用の `~/.codex/gemini-writi
 |---|---|
 | `runtime.py` | 制作、校正、機械検証、render、上位審査、draft保存、Slack配信、承認spool処理、承認版公開、SNS引継ぎを統合。端末内flock、health・attention・usageを記録 |
 | `ledger.py` | private SQLite正本、JST週枠、未公開上限、版指紋、審査、記事/SNS別承認、変更時失効、未知副作用の再実行停止、Codexバックアップ承認 |
-| `models.py` | Claudeによる候補選定・執筆・上位審査・SNS原稿、Gemini 3.8 Flash校正、完全brief、厳格JSON・保護データ境界・usage記録 |
+| `models.py` | Claudeによる候補選定・執筆・上位審査・SNS原稿、Gemini 3.8 Flash校正、完全brief、厳格JSON・保護データ境界・usage記録。SNS生成はnative JSON schemaの `{text,replyText}` を要求し、公開URL・verified画像・platformをローカルで結合 |
 | `catalog.py` | Supabase既存商品・記事・カテゴリ・クリックの読取、公式仕様の型番照合、画像取得とSHA-256、購入先のlive照合。public DNS固定・リダイレクト再検証 |
 | `quality.py` | 本文H1、商品ID/shortcode/「◯選」、内部リンク、FAQ、metaDescription、画像metadata・購入先URL・NA証跡、校正保護要素の順序/内容を機械検証 |
 | `render-preview.mjs` | 隔離Nextアプリで実コンポーネントをdesktop/mobile表示、privateスクリーンショット、画像・H1・overflow・shortcode・購入CTA計測と遷移先検査 |
 | `publish.mjs` | draft stage、exact版・既存商品照合、共通SEO公開ロック、CAS公開、DB/cache/public HTML readback、承認画像bytes再照合 |
-| `slack.py` / `slack-api.mjs` | 既存Bot/認証受信経路を利用した本文分割・FAQ・画像・記事/SNS承認カード配信、Bot identityと配信内容readback、送信間隔制御、認証受信側からの署名検証済spool受渡し |
+| `slack.py` / `presentation.py` / `slack-api.mjs` | 既存Bot/認証受信経路を利用。Markdown本文・商品カード・購入先・FAQ・画像を読みやすく表示し、記事/SNS承認ボタンはnonceと版を内部値で拘束。Bot identityと配信内容readback、送信間隔制御、署名検証済spool受渡しを維持 |
+| `analytics.py` / `reporting.py` | GSC・GA4の収集済み指標から既存記事改善候補と週次／月次報告を組み立てる。改善候補3件の出力、週次2026-11-02週と月次2026-10月のSlack送達・readbackを実証済み。期間・欠測・平均掲載順位の意味を保つ |
 | `install.py` | LaunchAgent生成と任意load。`com.naohide.camp-slack-review`、300秒間隔、RunAtLoad、JST、privateログ。資格情報はコピーしない |
 
-`runtime.py --config <host-local-config> status|preflight|tick|produce|deliver|retry|approve-from-codex` が入口。
+`runtime.py --config <host-local-config> status|preflight|tick|produce|deliver|retry|approve-from-codex|report` が入口。
 `preflight` はSlack auth.testとGemini接続検査であり、全経路の稼働保証ではない。
 `produce` は明示的な手動制作入口。水曜09時以降の開始条件は定期実行の `tick` が適用する。
+host-local設定の `reportsEnabled: true` で報告を有効化し、`seoStateRoot` はSEO収集結果、`seoRepo` は月次の専用収集処理、`analyticsRoot` は集計snapshotの保存先を指定する。`report --kind weekly|monthly|editorial` は手動実行入口で、同期間のverified受領情報を再利用する。通常は300秒tickが期日到来後に送る。送達結果が不明な場合は自動再送せず照合する。
 `install.py --config <host-local-config>` はplist準備、`--load` 付きはGUI domainへのbootstrapを伴う。
 本書更新では配備・load・外部送信・公開を実行しない。
 
@@ -46,6 +49,7 @@ Geminiだけは既存 `gemini-writing` スキル専用の `~/.codex/gemini-writi
 - LaunchAgentは**300秒ごと**にtickし、ログイン後のRunAtLoadでも再開する。
   **JST水曜09時以降、その週の日曜まで**制作が可能。毎水曜09時ちょうどの実行保証ではない。
   tickの制作は1記事ずつ。週3枠は候補作成数の上限であり、週3記事の公開保証ではない。
+- 報告は同じtickで**週次は月曜20時、編集状況は木曜20時、月次は毎月5日20時JST**以降に処理する。月次は前月のJST暦月を対象とする。手動`report --kind`は期日前の同期間も対象にできるが、verified済み期間を重複送信しない。11月3日に検証済みの2026-10月分を11月5日枠の受領情報とし、通常の次回月次は12月5日の2026-11月分となる。
 - 週境界は**JST月曜00時**。同週の候補は最大**3**。未公開でrejected以外のjobも最大**3**で、held/errorも枠を使う。
   上限で新規制作を止め、拒否・保留・失敗を理由に無限補充しない。同一slugは既存jobを再利用する。
 - 週をまたいだcandidateは同じjobで再開可能。error/held/rejectedをtickが無条件に制作し直すとは扱わない。
@@ -140,9 +144,10 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
 
 - 記事公開のDB/cache/public readbackがverifiedになった後だけSNS原稿を作る。
   公開本文・画像を根拠にClaude生成→Gemini 3.8校正→上位7.5審査→**記事と別のSNS承認**。
-- 現proposalはtext / replyText / url / images / platform=x。本文にURLを置かず、正確な公開URLを返信へ置く。
+- ClaudeのSNS生成応答はnative JSON schemaの `text` / `replyText` のみ。本文にURLを置かず、返信は正確な公開URLのみとし、加重280文字を上限とする。公開URL・verified画像・`platform=x` はローカルで組み立てる。
   告知案全体の独立fingerprintを使い、変更時はSNS再審査・再承認。
   SNS予定日時/予約を現schemaが実装しているとは書かない。
+- Slackの承認表示は内部ID・hash・点数・選定理由を本文に出さず、承認ボタンの内部値には正確なrequest・nonce・版を保持する。記事側は実ページに表示する商品説明・仕様・参考価格・画像・購入先を確認可能にし、本文にあるFAQを重複させない。SNS承認カードはXへの投稿が手動であることを示す。
 - SNS承認後は `social-outbox/<revision>.json` に **`approved_manual_post_pending`** を記録しSlackへ通知する。
   **自動投稿・自動予約は行わない**。本人が原稿を利用するか、Codexアプリへ投稿を別途依頼する。
   手動投稿後の外部投稿ID/readback収集までをこのrunnerが実装済みとは扱わない。
@@ -168,13 +173,14 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
 
 | 検証 | 結果・根拠 |
 |---|---|
-| 全Python試験（最新の全体実行） | Air・macproとも143件成功。その後の画像metadata対応を含む全体145件実行は未確認 |
-| Slack追加修正後の限定試験 | `test_slack.py` 12件成功。上記全体143件とは実行範囲・時点を分ける |
+| 全Python試験 | macpro runtime `05c4c3e` で211件成功。別途collector試験5件成功。実送達は別行のreadbackで確認 |
+| 最新の限定試験 | `test_slack.py` 19件、`test_analytics.py` 18件、`test_models.py` 48件、`test_reporting.py` 11件、`test_runtime.py` 23件成功。各変更時点のローカル結果であり、配備後の実送達ではない |
 | macproのpublish試験 | 22件成功。空201・readback必須・added_at暦日を含む |
 | 先行するmacpro実render検証 | 33件成功、skip 0。この結果は今回のSlack修正後の再実行結果ではない |
 | 新runtime GUI preflight | Slack認証・Gemini 3.8 Flash実呼出し成功 |
 | 実商品素材 | 5商品・仕様41項目・購入先10件（楽天/Amazon）と公式掲載画像を実接続で確認。価格・在庫・全記事主張の包括認証ではない |
-| 初回3記事のSlack配信 | 17:11:33／43／53 JSTに完了。審査scoreはGS 8.090909／SOTO 8.090909／CB 8.0。本人承認・本番公開は未実施 |
+| 初回3記事とSNS | 記事は本人のexact版承認後、19:52 JSTまでに3件とも公開readback verified。SNSはGS 8.8、CB 8.6、SOTO 8.6で、3件ともGemini検証・独立審査・Slack配信readback verified。SNS承認待ちで、X投稿・予約なし |
+| 定期報告のGUI試運転 | `reportsEnabled: true` で21:40:50 JST完了。週次2026-11-02週と月次2026-10月のSlack送達・readback verified。旧Air Codex automationはPAUSED、macproの通常SlackレビューLaunchAgentは継続 |
 
 実装・ローカル試験は完了している。Pythonのcatalog/ledger/models/quality/runtime/slack試験、
 Nodeのpublish/render契約試験とmacpro実render、GUI Slack単体認証は、新runtime preflight・常駐・本番公開とは別の検証。
@@ -202,7 +208,7 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 最終検証後、macproの新generation/publication flagsをtrueにし、旧SEO adapterのeditorial_enabledをfalseに変更。
   SEOの計測・施策枠は維持。Telegramはfalseのまま。公開flagは本人のexact版承認を免除するものではない。
 - 初回の実候補選定と1本目の素材検証をGUIの単発実行で開始。通常は水曜09時JST以降に週3枠を処理する。
-- 承認済み実記事の公開はまだ実行していない。公開試験は隔離データの契約試験であり、実際の公開実績に数えない。
+- この時点では承認済み実記事の公開はまだ実行していなかった。後続の公開結果は末尾に記録する。
 - 実商品カタログでは仕様・画像の同一性・購入先が未確認の候補を観測。3枠の設定を3原稿完成と報告しない。
 - SNSは公開確認後の原稿生成・独立審査・別承認・手動投稿引継ぎまで。X投稿や予約を済ませたとは報告しない。
 - 初回3候補のうち1件は素材・仕様・購入先の未検証で本文制作前に停止、2件は候補段階。
@@ -240,5 +246,9 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
   既送信分はprivate outbound receiptと実読戻しを照合して再利用し、同じ本文・画像の盲目的な再送はしていない。
 - runtime `bce2d8c`：初回3記事の本文・FAQ・商品・画像・購入導線・表示の確認と、Slack本文／画像／承認カードのreadbackが完了。
   GSは17:11:33 JST（score 8.090909）、SOTOは17:11:43 JST（8.090909）、CBは17:11:53 JST（8.0）に配信完了。
-  3件とも本人のexact版公開承認待ち。本人承認・本番公開・公開後SNS処理は未実施。
+  これは公開前の履歴。3件ともその後のexact版承認に基づき19:52 JSTまでに公開readback verifiedとなった。
   定期運用は単一macpro・300秒tick・水曜09時JST以降の週3候補上限／未公開3件上限を維持し、承認待ちによる上限を無視して補充しない。
+- 旧SEO editorial bridgeはhost-local設定で無効。SEO側の新promptは新記事制作・SNS承認をSlack-first runtimeへ委ね、analytics改善入力は鮮度・欠測を確認して既存記事改善に使う指示へ更新。週次／月次レポートの配備・実送達は別途証拠を確認する。
+- runtime `a5490e8`：公開済み3記事を根拠にしたSNS原稿がClaude→Gemini 3.8→Claudeを通過。GS 8.8、CB 8.6、SOTO 8.6で、3件とも既存Slackスレッドへの配信とreadbackがverified。記事は再承認待ちに戻していない。SNSだけ本人の別承認待ちで、X投稿・予約なし。macproでPython196件・collector5件成功。
+- analyticsの実データで既存記事改善候補3件を `editorial-insights/latest.json` へ出力。これは新記事の候補追加やSEO改善の成果ではない。この時点では週次／月次report機能は設定falseで、本文の完成・実送達は未確認だった。今週の候補3枠は使用済み、次の通常制作は11月11日（水）09時JST以降。
+- runtime `05c4c3e` をmacproへ配備し、Python211件・collector5件成功。host-local `reportsEnabled` をtrueにしてGUI試運転を完了（21:40:50 JST）。週次2026-11-02週と月次2026-10月のSlack送達・readbackはそれぞれverified。旧Air Codex `camp-gear-lab-seo` automationはPAUSEDを確認し、通常の`com.naohide.camp-slack-review`は継続。月次2026-10月分は11月5日枠として送達済みなので、通常の次回月次は12月5日の2026-11月分。次のSEO施策枠は11月5日（木）で、新しい改善施策の実行実績はまだない。X投稿は引き続き本人承認後の手動引継ぎのみ。
