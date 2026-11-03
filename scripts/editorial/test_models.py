@@ -376,6 +376,27 @@ class ModelTests(unittest.TestCase):
         self.assertIn('No indoor use claim', prompt)
         self.assertNotIn('output_config', fake.calls[0][2])
 
+    def test_social_review_scopes_published_source_and_cannot_override_machine_evidence(self):
+        source = bundle()
+        source['article']['status'] = 'draft'  # Historical bundle status is not publication state.
+        proposal = {'text': '広告 公表仕様の紹介', 'replyText': 'https://camp-gear-lab.com/articles/tent'}
+        subject = {'source': source, 'proposal': proposal, 'article': {'content': proposal['text']}}
+        checks = {'evidence': FLAGS, 'publicationReadback': {'verified': True},
+                  'factualSource': source['article']['content']}
+        fake = Fake(response(REVIEW))
+        self.assertTrue(Models(ENV, fake).review(subject, checks)['passed'])
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        for phrase in ('When bundle.proposal is present', 'checks.publicationReadback',
+                       'historical source.article.status is not current', 'lack of your own browser is not itself failure',
+                       'Missing or contradictory independent evidence must still fail'):
+            self.assertIn(phrase, prompt)
+        for missing in ('images', 'render'):
+            weakened = dict(checks, evidence=dict(FLAGS, **{missing: False}))
+            result = Models(ENV, Fake(response(REVIEW))).review(subject, weakened)
+            self.assertFalse(result['passed'])
+            self.assertFalse(result[missing])
+            self.assertIn('Missing independent ' + missing + ' evidence', result['issues'])
+
     def test_social_requires_public_content_and_images_readback(self):
         b = bundle()
         url = "https://camp-gear-lab.com/articles/tent"

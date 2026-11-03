@@ -505,6 +505,12 @@ class Models:
             "unrounded mean of all eleven criteria to be at least 7.5; never round 7.4545 up. Overall score "
             "must not exceed their mean. Include observations as a list (empty if none) and evidence as exactly "
             "{summary:string}. "
+            "When bundle.proposal is present, review that SNS proposal, not the source article as a new draft. "
+            "Use checks.publicationReadback for publication status; historical source.article.status is not current. "
+            "For images and render, audit consistency of the supplied independent verification records. "
+            "Their flags may pass when those records support them; lack of your own browser is not itself failure. "
+            "For SNS, render means verified platform format and length, not re-rendering the source article. "
+            "Missing or contradictory independent evidence must still fail; never replace it with model opinion. "
             "For social proposals every claim must be supported by checks.factualSource; numeric/URL checks alone "
             "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
             "Model assertions are opinions and cannot substitute for external evidence.",
