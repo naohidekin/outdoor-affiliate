@@ -1,111 +1,193 @@
-# Camp Gear Lab 編集パイプライン（現状と計画）
+# Camp Gear Lab 編集パイプライン（実装と配備状況）
 
-本書は編集パイプラインの全体像を記録する。**現状の機能と未配備の計画を区別**して読むこと。
+## 0. 現在状態（2026-11-03 JST）
 
-**確認済みの事実（2026-10-30 時点）**: 既存の **Slack 本文配信**と**本人確認結果の受付**は live。ただし**公開許可は false**。本人確認結果の受付は**記事版公開承認と同一視しない**。
+**新パイプラインは実装済み。macproへの配備、GUIでのSlack認証・Gemini校正接続、Slack接続確認メッセージの送信とreadback、常駐tickを確認した。制作・公開の有効化状態は末尾の配備記録を参照する。**
+「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
+実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
+本番の記事承認・公開の実績と、接続試験・合成データの試験を区別する。最新検証結果は末尾を参照する。
 
-**未配備**: **Slack記事版承認→公開接続、複数候補、画像プレビュー、SNS別承認、内部台帳/cap の新設計**。ここに書く cap・内部台帳・記事版指紋承認は**新設計であり、本変更は文書のみ**。配備はまだしていない。
+2026-10-30時点の既存Slack本文配信・本人確認結果受付（公開許可false）は過去の確認記録。
+それだけでは、新しいexact版公開承認の配備・認証・稼働を証明しない。
 
-## 0. 読み方の前提
+## 実行時の資格情報
 
-- live なのは既存の Slack 本文配信と本人確認結果の受付（公開許可は false）。未配備は上記の新設計項目。cap・内部台帳・記事版指紋承認は**未配備の新設計**。本書だけで実行しない。各スキルも同様。
-- 「Slack統合全体が未配備」と読ませない。**既存 live 部分と未配備部分を区別**する。
-- **現状節（第1節）はコード/資料の読解で確認できる挙動**と**実稼働で確認した事実**を区別して読む。コードや資料の存在は稼働の証拠ではない。
+既存プロジェクトの `docs/local-files.md` に記載された `.env.local` を読み、
+Geminiだけは既存 `gemini-writing` スキル専用の `~/.codex/gemini-writing/.env` も
+実行設定の `geminiEnvFile` で明示して参照する。値は読み込み元からメモリにのみ保持し、
+台帳・設定・ログ・別Mac・Gitへ複製しない。秘密値を外部モデルへ渡さない。
 
-## 1. 現状（既存運用の記録・読解ベース）
+## 1. 実装の所在と責務
 
-- `scripts/article-researcher-agent.js`: 季節＋観測から週次テーマを選定し `article-weekly-plan.json` を出力。公開日は水/金/日。
-- `scripts/fetch-unsplash-eyecatch.mjs`: アイキャッチ割当。**クリーンな商品画像がある記事は eyecatch を削除**、無い記事は**サイト全体で写真IDが重複しないよう**確保。楽天 `thumbnail.image.rakuten.co.jp` はクリーン判定から除外。eyecatch 変更時は `updatedAt` を更新。**本文の商品画像は eyecatch とは別レイヤーで必須**。
-- `scripts/article-publisher-agent.js`: 日次で公開条件を満たす記事を `published` に変更。`qualityScore >= 6.0`、`content >= 2000`、`faq >= 2` の機械ゲート、医師レビューゲート、Indexing/IndexNow、X連携（Sheets）。
-- 上記は**コード/資料の読解で確認できる挙動**。実際に日次で稼働しているかは別途実稼働ログで確認する。
-- `docs/automation-map.md` は**既存運用の記録**。ここに新設計の Slack/新cap/台帳の live 機能があると読ませない。
-- publisher 内の旧 Sheets/IFTTT 連携コードの存在は**稼働の証拠ではない**。
+以下はコード実読で確認した実装。実環境への接続成功・配備成功は第10節で別に扱う。
 
-## 2. 基準の層（混同しない）
-
-- 執筆・審査層: ルート `SKILL.md` の WISE + Supervisor、合格 **7.5/10**、形式別字数、内部リンク **2〜3**、FAQ **3〜5**。
-- 公開機械ゲート層: publisher の `qualityScore >= 6.0`、`2000` 字、FAQ `2`。
-- **異なる層**。下位の旧機械ゲートで最終審査を代用しない。**旧数値基準は変更しない**。
-- **校正（Gemini 3.8 Flash）は確定事実・数値・リンク・結論を変えず、合否も出さない。合否は上位モデルの最終審査**。
-
-## 3. 必要時参照の正本（重複説明はしない）
-
-| 参照先 | 役割 |
+| モジュール（`scripts/editorial/`） | 現在の実装 |
 |---|---|
-| `CLAUDE.md` | サイト全体の運用方針・執筆ガイドラインの起点 |
-| `SKILL.md`（ルート） | 執筆・審査基準（WISE + Supervisor、7.5、字数、リンク、FAQ） |
-| `docs/writing-style.md` | 文体・NGワード・構成テンプレ |
-| `docs/author-gear.md` | 所有/使用ギアの正本（実体験の根拠） |
-| `docs/author-profile.md` | 執筆者プロフィール・ペルソナ |
-| `docs/automation-map.md` | 既存運用の記録（新機能の稼働記録ではない） |
-| `docs/x-post-skill.md` | 既存SNS指示（既存制限の参照先） |
-| `src/lib/x-post-prompts.mjs` / `scripts/post-to-x.js` / `data/account-config.json` | 既存のSNS生成/投稿規則（既存制限の参照先） |
-| `scripts/article-researcher-agent.js` | ネタ選定 |
-| `scripts/fetch-unsplash-eyecatch.mjs` | 画像割当 |
-| `scripts/article-publisher-agent.js` | 公開機械ゲート・通知 |
+| `runtime.py` | 制作、校正、機械検証、render、上位審査、draft保存、Slack配信、承認spool処理、承認版公開、SNS引継ぎを統合。端末内flock、health・attention・usageを記録 |
+| `ledger.py` | private SQLite正本、JST週枠、未公開上限、版指紋、審査、記事/SNS別承認、変更時失効、未知副作用の再実行停止、Codexバックアップ承認 |
+| `models.py` | Claudeによる候補選定・執筆・上位審査・SNS原稿、Gemini 3.8 Flash校正、完全brief、厳格JSON・保護データ境界・usage記録 |
+| `catalog.py` | Supabase既存商品・記事・カテゴリ・クリックの読取、公式仕様の型番照合、画像取得とSHA-256、購入先のlive照合。public DNS固定・リダイレクト再検証 |
+| `quality.py` | 本文H1、商品ID/shortcode/「◯選」、内部リンク、FAQ、metaDescription、画像metadata・購入先URL・NA証跡、校正保護要素の順序/内容を機械検証 |
+| `render-preview.mjs` | 隔離Nextアプリで実コンポーネントをdesktop/mobile表示、privateスクリーンショット、画像・H1・overflow・shortcode・購入CTA計測と遷移先検査 |
+| `publish.mjs` | draft stage、exact版・既存商品照合、共通SEO公開ロック、CAS公開、DB/cache/public HTML readback、承認画像bytes再照合 |
+| `slack.py` / `slack-api.mjs` | 既存Bot/認証受信経路を利用した本文分割・FAQ・画像・記事/SNS承認カード配信、Bot identityと配信内容readback、送信間隔制御、認証受信側からの署名検証済spool受渡し |
+| `install.py` | LaunchAgent生成と任意load。`com.naohide.camp-slack-review`、300秒間隔、RunAtLoad、JST、privateログ。資格情報はコピーしない |
 
-※ プロフィールの文例は**実体験の証拠にしない**。実体験の根拠は `author-gear.md`。
+`runtime.py --config <host-local-config> status|preflight|tick|produce|deliver|retry|approve-from-codex` が入口。
+`preflight` はSlack auth.testとGemini接続検査であり、全経路の稼働保証ではない。
+`produce` は明示的な手動制作入口。水曜09時以降の開始条件は定期実行の `tick` が適用する。
+`install.py --config <host-local-config>` はplist準備、`--load` 付きはGUI domainへのbootstrapを伴う。
+本書更新では配備・load・外部送信・公開を実行しない。
 
-## 4. 役割（相互呼出し/引継ぎ）
+## 2. 実行主体・週枠・再開
 
-- camp-topics: ネタ選定（起案）。→ camp-writing を呼び出し執筆を引き継ぐ。
-- camp-writing: 執筆（本文制作）。既定の執筆モデルは勝手に変えない。→ camp-eyecatch / camp-review へ引き継ぐ。
-- camp-eyecatch: 画像。→ camp-review へ引き継ぐ（指紋に画像内容を含める）。
-- camp-review: 校正（Gemini 3.8 Flash）＋上位モデル最終審査（合否は上位のみ）。修正時は camp-writing を呼び出して本文修正を依頼し、再審査する。
-- camp-social: 公開後SNS告知。
-- 全体: 本書。
+- 新経路は**単一macpro**に統合する。Airへ公開を中継する旧計画は採用しない。
+  他Macで同じrunnerを稼働させない。端末内flockを端末間排他とは扱わない。
+- LaunchAgentは**300秒ごと**にtickし、ログイン後のRunAtLoadでも再開する。
+  **JST水曜09時以降、その週の日曜まで**制作が可能。毎水曜09時ちょうどの実行保証ではない。
+  tickの制作は1記事ずつ。週3枠は候補作成数の上限であり、週3記事の公開保証ではない。
+- 週境界は**JST月曜00時**。同週の候補は最大**3**。未公開でrejected以外のjobも最大**3**で、held/errorも枠を使う。
+  上限で新規制作を止め、拒否・保留・失敗を理由に無限補充しない。同一slugは既存jobを再利用する。
+- 週をまたいだcandidateは同じjobで再開可能。error/held/rejectedをtickが無条件に制作し直すとは扱わない。
+  修正・再開では審査/承認失効と台帳状態を確認する。明示retryは未公開・未承認・bundle未保存のerror/held/rejectedだけを同一枠candidateへ戻す。bundle保存済みなら版の照合を先に行う。
+- deliveryや公開の結果がunknown/in_flightなら、自動再送・再公開せず外部結果を照合する。
+  記事公開とSNS処理の成否を分離し、SNS失敗で記事の公開状態を巻き戻さない。
+- `generationEnabled` / `publicationEnabled` はhost-local設定。exampleでは両方false。
+  **Telegramは使わない**。configも `telegramEnabled: false`、代替通知として復活させない。
 
-## 5. 承認（新設計 / 未配備）
+## 3. 台帳と状態ファイル
 
-- live（2026-10-30〜、公開許可は false、記事版公開承認と同一視しない）: 既存の Slack 本文配信と本人確認結果の受付。
-- 未配備の新設計: Slack 記事版承認→公開接続、複数候補、画像プレビュー、SNS別承認、内部台帳/cap。
-- Slack だけで操作する設計: 本文全文、画像プレビュー、修正、保留、記事版指定の承認、公開結果。管理画面は不要とする設計。
-- **本人確定を要する承認は最終記事版承認とし、企画段階の承認を追加の必須関門にしない（今回の設計案。追加許可を無用に増やさない方針にすぎない、起案はSlackへの提示まで）**。既存liveの挙動として主張しない。
-- 記事承認と SNS 承認は**別**（SNS別承認は今回の設計案）。SNS は公開URLの本文・画像を含む readback 確認後に告知案を生成する。
-- 承認は**記事版・本文・画像内容・商品内容・リンク**まで指紋に含める。変更時は承認を無効化し、校正/審査/再承認を行う。SNS側は独立fingerprint（本文/画像/URL/予定日時/媒体）を持ち、変更時はSNSを再審査・再承認する。
-- 未実装の機能を稼働済みと書かない。具体コマンド/ボタンは実装済みと称さない。
-- **既存 publisher だけでは記事版指紋承認を検証できない**。publisher は文字数/FAQ/医師レビューの機械ゲートと通知を持つに留まる。
-- **Air は、既存の公開経路を保ちつつ、新承認照合（未配備の指紋・承認照合）に接続する計画**。照合が検証されるまで、**新経路での公開は行わない**。既存のAir公開処理・設定・ジョブを本作業で変更しない。公開許可 false は維持する。既存Air経路で版承認照合が既に live とは主張しない。
+- 設定 `stateRoot` 配下の **`ledger.sqlite3` が内部台帳の唯一の正本**。JSON/CSVを別正本にしない。
+  Git外のprivateディレクトリ0700、DB0600。ownerを固定し、eventsは更新/削除不可。
+- jobs / requests / decisions / effects / eventsで候補、bundle、版、審査、本人承認、送達、外部副作用を追跡する。
+- research、previews、deliveries、usage、health.json、attention、social-outboxは証跡・成果物・状態投影。
+  usageのresponse ID/model/tokenは取得値、`actualUSD` / `actualInvoiceUsd` のnullを実費確定値とは呼ばない。
+- 既存 `data/articles.json` 等とSupabaseの公開データは互換・公開境界として区別する。
+  新publisherは既存商品を書き換えず、既存記事の無断上書き・全体同期も行わない。
 
-## 6. 台帳（新設計 / 未配備）
+## 4. 制作・品質の接続
 
-- 記事/画像/承認/費用の**内部 JSON または SQLite 台帳を正本一つ**とする。JSON と SQLite を並立させない。CSV は**投影のみ**。
-- 追跡項目: 版、指紋、実費、generation id、外部送信 id/結果、段階、エラー、再開点。
-- 既存 `data/articles.json` 等は**公開データ投影 / 互換境界**として区別し、二重正本を作らない。
-- 永続台帳パスや実装済 schema を創作しない。
+1. カタログ・季節・既存記事・queuedテーマ・供給された観測から重複しない3候補を選ぶ。
+   現runtimeが選定へ渡す観測は商品/記事/季節/モールクリック。未接続のGSC値や検索量を創作しない。
+2. `Catalog.gather` が既存商品、公式の型番と仕様、画像、購入先を確認する。
+   価格・在庫・主観評価・descriptionを仕様照合だけで確認済みとは扱わない。
+   現自動候補抽出は型番/対応メーカーとimageUrl・楽天・Amazon URLを持つ商品に限定される。
+   品質moduleのNA対応が、そのまま全自動候補抽出へのNA対応を意味するわけではない。
+3. **執筆仕様→既存Claude執筆**。正本は `CLAUDE.md`、ルート `SKILL.md`、
+   `docs/writing-style.md`、`docs/author-gear.md`。briefは目的/読者/結論/見出し/確定事実/数値/リンク/
+   必須表現/禁止変更事項/文体/文字量/CTA/形式と、公開可能な入力である `externalSafe: true` を持つ。
+   未確認の所有・体験・購入者レビューを捏造しない。体験が未確認なら調査記事と本文で明示する。
+4. **Gemini 3.8 Flash**は本文校正候補だけを生成。元sourceを変更せず、見出し/URL/数値/
+   shortcode/商品ID/表/code/広告表記/相対リンク先の内容・順序を `inspect_polish` で比較する。
+   Geminiは新事実・医学的助言・商品条件・結論を作らず、合否を決めない。privateなresearch/artifacts配下へsource.json/candidate.jsonを分離保存し、上位審査へ元本文と編集ルールも渡す。
+5. `inspect_bundle` の構造検査後、実renderと**上位最終審査7.5/10以上**を通す。
+   facts/images/affiliate/medical/renderの独立証跡を必要とし、モデルの「確認済み」だけで合格にしない。
+   qualityが返す `mandatory_evidence` はpending。意味同一・事実完全性・実体験・医療・live/renderを自己認定しない。
+   現runtimeは医療/子どもの安全に関する助言を自動選定から避け、検出時は保留する。
+6. 審査済bundleを台帳に保存し、公開前のdraftだけをstageしてSlackへ配信する。
+   本人のexact版公開承認を待って公開へ進む。
 
-## 7. cap と再開（新設計 / 未配備）
+モデル既定は `models.py` のClaude執筆 `claude-opus-4-8`、404時のみ `claude-sonnet-4-6` fallback、
+候補/上位審査/SNSは `claude-sonnet-4-6`、校正は `gemini-3.8-flash`。
+既存の明示的なARTICLE_WRITER_MODEL / ARTICLE_WRITER_FALLBACK_MODEL / ARTICLE_REVIEW_MODEL設定は尊重する。
+接続未確認をモデル実行済みと主張しない。OpenRouterはこの実装経路に含まれない。
 
-- 週 **3 件 cap**、承認待ち上限 **3**。週境界は **JST**。実装前の**計画値**として定義。旧数値基準とは別レイヤー。
-- 上限到達なら新規制作を停止。保留/失敗で無限補充しない。
-- 失敗は**記事単位で再開**。再試行は同一記事の枠を使う。未知送信は照合し、重複送信しない。
-- **記事公開の成否とSNSの成否を分離**する。
+WISE + Supervisor 11項目、合格7.5、形式別字数（ranking/comparison 5000〜8000、guide/how-to 3000〜5000、
+review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
+新modelsのdraft検証はexcerpt20字以上、metaDescription50〜160字も要求する。
+旧publisherの6.0/2000字/FAQ2は既存経路の機械条件として残るが、新経路の上位審査の代わりにはならない。
 
-## 8. 公開 / SNS
+## 5. 画像とrender
 
-- SEO 観測は macpro、制作は**一実行主体へ統合**する設計。Air は既存の公開経路を保ち、新承認照合（未配備）に接続する計画。端末内ロックを端末間排他と混同しない。配備はまだしていない。
-- SNS は横に接続。公開後の告知は本文・画像を含む readback 後。既存投稿手段の認証/動作確認がある場合のみ予約/投稿し readback。無ければ案を保留し Slack に示す。
-- SNS は既存の指示・生成/投稿規則（`docs/x-post-skill.md`, `src/lib/x-post-prompts.mjs`, `scripts/post-to-x.js`, `data/account-config.json`）を参照し、既存制限を守る。既存のURL配置・投稿間隔・実行単位の投稿上限は参照先で確認し遵守する（数値や規則自体は複製しない）。既存SNS文書中の古いURL配置/自動承認/旧投稿再稼働手順は継承せず、**SNS別承認**（今回の設計案）・**旧X自動投稿廃止**（既存方針）と既存投稿規則を優先し、不一致は保留する。
-- **X 旧自動投稿は廃止**（既存方針）。復活しない。認証/課金を新規追加しない。旧レール復活も行わない。
-- `--force` でゲートを迂回する運用は不可。
+- クリーンな商品画像がある記事はeyecatchを持たせず、無い/低画質の記事だけ汎用写真を使う既存方針を維持。
+  `fetch-unsplash-eyecatch.mjs` の重複回避と楽天thumbnailの扱いを参照する。
+  この既存scriptが新runtimeから自動呼出しされるとは扱わない。本文の商品画像は別に必要。
+- Catalogは取得画像の構造・Content-Type・bytes・SHA-256と型番ページ上の画像URLを照合する。
+  qualityは商品ID/URL/`verified: true` の一致を検証する。画像内容の適切さは審査も必要。
+- rendererは秘密envを継承しない隔離アプリで実ページ/実コンポーネントを使い、desktop1280px・mobile390pxで確認。
+  H1が1つ、shortcode未解決なし、横はみ出しなし、画像表示、各商品/モールCTAのクリックpayload・event・遷移先を検査する。
+  外部購入ページへの実ナビゲーションはabortし、live到達確認はCatalogと分担する。
+- スクリーンショットはprivate出力。Slackへの配信は本文/FAQと商品画像URLのimage block。
+  rendererスクリーンショットをSlackへアップロードする実装とは区別する。
 
-## 9. 事実に関する規律
+## 6. exact版公開承認と公開
 
-- 外部送信は **repo 公開資料だけ**。機微 Context 原本・認証・個人情報を送らない。新しい事実・数値・未検証能力を足さない。
-- 所有/使用の根拠は `docs/author-gear.md`。プロフィール文例を実体験証拠としない。
-- 既存は実体験必須だったが、**今回の設計案**として、未確認体験は調査記事と本文で明示する扱いを導入する（旧実体験必須方針と区別）。捏造しない。
-- 楽天強化は**計測による候補優先**とし、Amazon 導線は維持する。
-- 本文 H1 は無し。既存テンプレ参照。旧資料の矛盾は既存方針と今回の設計案を区別し、未確定は確認/保留。
+- fingerprintはcanonical JSONのbundle全体（本文・FAQ・brief・根拠・商品・リンク・画像SHA等）を束縛する。
+  内容変更時は審査・記事/SNS承認・旧requestを失効させ、校正/検証/審査/本人承認をやり直す。
+- Slackは全文分割・FAQ・画像と「この版の記事公開を承認」「修正依頼」「保留」を提示する実装。
+  request ID、article ID、完全manifest hash、nonce、team/app/user/channel/thread、card ts、期限を照合する。
+  表示用短縮hashだけの承認ではない。既存認証受信側の署名検証済spoolを前提とする。
+  過去の本人確認受付や別user・旧版カードを公開権限へ流用しない。企画の追加本人承認は必須にしない。
+- `publish.mjs` は台帳側で本人認証済みの承認を受け取る境界で、任意stdinだけを本人認証とは扱わない。
+  共通SEO公開ロック内でexact draft/商品を再照合し、draftのCAS更新、DB readback、cache revalidate、
+  public HTMLの本文hash/H1/画像/購入リンク、公開前後の承認画像SHA/sizeを検証して初めてverifiedを返す。
+- **Codex backup**: 本人の実メッセージを確認した信頼できるoperatorだけが `approve-from-codex` を使う。
+  `記事 <id> 版 <完全revision> を公開してください` または `publish <id> <完全revision>` の明示指示と
+  source=codex / thread_id / message_id / text証跡が必要。曖昧な「OK」やモデルの自己承認は不可。
+  既存承認/公開/副作用claimとの競合を拒否し、承認記録だけを作る。公開はpublicationEnabledと通常gateを別に通す。
 
-## 10. 未配備の検証項目
+## 7. SNSはmanual post handoff
 
-- **未配備**: Slack記事版承認→公開接続（本文全文/画像/修正/保留/版指定のうち公開接続・画像プレビュー）。
-- **未配備**: 複数候補、SNS別承認、内部台帳/cap の新設計。
-- **live（2026-10-30〜、公開許可は false、記事版公開承認と同一視しない）**: 既存 Slack 本文配信、本人確認結果の受付。
-- 台帳の正本一本化と追跡項目。
-- 週3cap・承認待ち上限3・記事単位再開。
-- SNS readback と、投稿手段の認証/動作確認。
-- 公開ゲートと最終審査（7.5）の接続。
-- **Air 公開手前の指紋照合・承認照合の受渡ゲート（既存Air公開処理を新承認照合に接続する計画）**。
+- 記事公開のDB/cache/public readbackがverifiedになった後だけSNS原稿を作る。
+  公開本文・画像を根拠にClaude生成→Gemini 3.8校正→上位7.5審査→**記事と別のSNS承認**。
+- 現proposalはtext / replyText / url / images / platform=x。本文にURLを置かず、正確な公開URLを返信へ置く。
+  告知案全体の独立fingerprintを使い、変更時はSNS再審査・再承認。
+  SNS予定日時/予約を現schemaが実装しているとは書かない。
+- SNS承認後は `social-outbox/<revision>.json` に **`approved_manual_post_pending`** を記録しSlackへ通知する。
+  **自動投稿・自動予約は行わない**。本人が原稿を利用するか、Codexアプリへ投稿を別途依頼する。
+  手動投稿後の外部投稿ID/readback収集までをこのrunnerが実装済みとは扱わない。
+- X旧自動投稿は復活させず、新しいSNS認証・課金・旧レールを追加しない。
+  既存投稿制限は `docs/x-post-skill.md`、`src/lib/x-post-prompts.mjs`、`scripts/post-to-x.js`、
+  `data/account-config.json` を参照。不一致は保留し、古い自動承認/再稼働指示を流用しない。
 
-これら未配備項目は**計画**であり、稼働済みではない。live 部分（Slack本文配信・本人確認結果の受付）は稼働済みだが、**公開許可は false のまま**で、本修正は文書のみ。
+## 8. スキルと正本
+
+| 役割 | スキル/参照先 |
+|---|---|
+| ネタ選定→執筆 | camp-topics → camp-writing |
+| 画像→審査 | camp-eyecatch → camp-review |
+| 校正/最終審査・本文差戻し | camp-review → 必要ならcamp-writing |
+| 公開後の告知案/手動投稿引継ぎ | camp-social |
+| 文体・体験根拠・採点 | CLAUDE.md、SKILL.md、docs/writing-style.md、docs/author-gear.md、docs/sense-definition.md |
+
+各スキルは実装と運用上の役割を案内する。スキル文書そのものが常駐実行主体ではない。
+プロフィール文例は体験証拠にしない。購入先欠落は商品削除か商品/モール単位の明示NA証跡で扱い、URLを捏造しない。
+外部モデルへ渡すのは公開可能なrepo資料と検証済公開データだけ。機微Context/患者/認証情報は渡さない。
+
+## 9. 検証結果と限界
+
+| 検証 | 結果・根拠 |
+|---|---|
+| runtime/slack P2修正後の試験 | 106 tests通過（main担当報告） |
+| macproのpublish/render試験 | 実renderを含む23 tests全通過、skipなし（main担当報告） |
+| GUI Slack認証 | 成功（main担当報告）。新runtime preflight成功とは分ける |
+| 本文書更新時のPython試験 | 107件成功（この作業で再実行。並行修正後のローカル版） |
+| 本文書更新時のNode契約試験 | 22件成功・実render1件skip（この作業で実行）。上のmacpro結果と実行環境が異なる |
+
+実装・ローカル試験は完了している。Pythonのcatalog/ledger/models/quality/runtime/slack試験、
+Nodeのpublish/render契約試験とmacpro実render、GUI Slack単体認証は、新runtime preflight・常駐・本番公開とは別の検証。
+
+```sh
+python3 -B -m unittest discover -s scripts/editorial -p 'test_*.py'
+node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-preview.mjs
+```
+
+実render統合ケースは `RUN_RENDER_TESTS=1` で有効化する（Node20/24、Playwright/Chromiumが必要）。
+通常のNode契約試験でskipされた場合、それを実render成功件数に数えない。
+ローカル試験の完了は、新パイプラインのlive稼働や全ての実商品/外部サービスの検証完了を意味しない。
+
+## 10. 配備記録（2026-11-03 JST）
+
+- macpro専用checkoutへ配備。資格情報は既存の明示パスからのみ参照し、複製していない。
+- GUI実行で新runtimeのSlack Bot認証とGemini 3.8 Flash校正・保護検査が成功。
+- 接続確認メッセージを既存Campスレッドへ送り、Slack APIから読み戻した本文の一致を確認。本人の既読は未確認。
+- 13:44 JST、同じ `com.naohide.camp-slack-review` を新runnerへ切替。初回tickはexit0、300秒間隔。
+  この時点は制作・公開flagsともfalse。旧plistはprivate rollbackへ保管した。
+- 実装版 `bcba319`：macproでPython111件・公開/render31件すべて成功（実renderを含む、skipなし）。
+  SSH試験ではNodeのPATH不足を確認し、本番LaunchAgentと同じPATHで再実行して通過した。
+- 最終検証後、macproの新generation/publication flagsをtrueにし、旧SEO adapterのeditorial_enabledをfalseに変更。
+  SEOの計測・施策枠は維持。Telegramはfalseのまま。公開flagは本人のexact版承認を免除するものではない。
+- 初回の実候補選定と1本目の素材検証をGUIの単発実行で開始。通常は水曜09時JST以降に週3枠を処理する。
+- 承認済み実記事の公開はまだ実行していない。公開試験は隔離データの契約試験であり、実際の公開実績に数えない。
+- 実商品カタログでは仕様・画像の同一性・購入先が未確認の候補を観測。3枠の設定を3原稿完成と報告しない。
+- SNSは公開確認後の原稿生成・独立審査・別承認・手動投稿引継ぎまで。X投稿や予約を済ませたとは報告しない。
