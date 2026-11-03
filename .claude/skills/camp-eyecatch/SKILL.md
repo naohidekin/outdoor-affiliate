@@ -8,11 +8,12 @@ description: Camp Gear Lab の記事画像（アイキャッチ/本文画像）�
 ## 用途
 記事に紐づく画像の取得・選定・重複回避を行い、Slackの記事版承認に画像プレビューとして載せる。画像は camp-writing の本文と対で記事版に紐づける。
 
-> Slack統合のうち**未配備なのは記事版承認→公開接続・画像プレビュー・複数候補・SNS別承認・内部台帳/cap の新設計**。**既存Slack本文配信と本人確認結果の受付は 2026-10-30 から live**（ただし公開許可は false）。本人確認結果の受付を記事版公開承認と同一視しない。本書は設計と参照先を示すだけで、実行主体ではない。
+> 実装・配備・実通信の確認結果は `../../../docs/editorial-pipeline.md` を正本とする。スキルの存在だけで稼働・承認・公開済みとは判断しない。
 
 ## 必要時参照
 - `../../../docs/editorial-pipeline.md`（repo相対は `docs/editorial-pipeline.md`）
-- `scripts/fetch-unsplash-eyecatch.mjs`（既存の割当・重複排除・商品画像優先ロジック）
+- `scripts/editorial/catalog.py`, `quality.py`, `render-preview.mjs`, `slack.py`, `publish.mjs`（現検証・プレビュー・配信・公開前後の画像再照合）
+- `scripts/fetch-unsplash-eyecatch.mjs`（既存の割当・重複排除方針。新runtimeからの自動呼出しではない）
 - 既存資料: `docs/image-guidelines.md`, `data/products.json`, `data/articles.json`
 
 ## 入力
@@ -25,13 +26,13 @@ description: Camp Gear Lab の記事画像（アイキャッチ/本文画像）�
 3. **楽天 thumbnail（`thumbnail.image.rakuten.co.jp`）はバッジ・加工入りのためカード/ヒーローに不適**。クリーン判定から除外する（既存 `isCleanImage` と同じ扱い）。
 4. **本文中の商品画像は必須**。eyecatch の有無とは別レイヤーであり、本文の商品セクションには商品画像を入れる。
 5. eyecatch を変更した記事は `updatedAt` を更新する（同期の更新比較のため。既存スクリプト参照）。忘れると同期で反映されない。
-6. Slackの記事版承認に画像プレビューを載せる（本文承認と同一の記事版に紐づける。**画像プレビューは未配備**）。
-7. 反映が必要な場合は既存の同期手順に従う（本スキルでは同期を実行しない）。
+6. Catalogで商品ID/型番ページ・画像URL・実bytesを照合し、verified・SHA-256・sizeをbundleへ結び付ける。rendererがdesktop/mobileで画像表示とCTAを検証する。Slackは記事の同じexact版に商品画像URLのimage blockを配信する実装。privateスクリーンショットのSlackアップロードとは区別する。
+7. 画像変更は旧承認を失効させ、再校正/検証/上位審査/版承認へ戻す。公開前後はpublisherが承認画像のSHA/sizeを再取得照合する。新経路で既存全体同期を実行しない。
 
 ## 出力 / 引継ぎ
 - 記事ごとの画像URL、重複チェック結果、クリーン判定結果
 - 次工程: camp-review を呼び出し、記事版の指紋に画像内容を含めて審査を引き継ぐ。
-- 台帳更新: 画像確定を記事版に紐づける（新設計。未配備）
+- 台帳更新: 画像確定を記事版に紐づける（実装済みSQLite台帳。新経路の稼働確認は別）
 
 ## 停止条件
 - 適切な画像が確保できない（現状維持で保留）

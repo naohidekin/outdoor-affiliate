@@ -6,13 +6,14 @@ description: Camp Gear Lab の週次ネタ選定を担当する小スキル。�
 # camp-topics — ネタ選定
 
 ## 用途
-週3本の企画枠に対し、テーマ候補と公開予定日を起案する。選定は本スキル、執筆は camp-writing へ引き継ぐ。
+週3本の企画枠に対し、テーマ候補と選定根拠を起案する。選定は本スキル、執筆は camp-writing へ引き継ぐ。
 
-> Slack統合のうち**未配備なのは記事版承認→公開接続・画像プレビュー・複数候補・SNS別承認・内部台帳/cap の新設計**。**既存Slack本文配信と本人確認結果の受付は 2026-10-30 から live**（ただし公開許可は false）。本人確認結果の受付を記事版公開承認と同一視しない。本書は設計と参照先を示すだけで、実行主体ではない。
+> 実装・配備・実通信の確認結果は `../../../docs/editorial-pipeline.md` を正本とする。スキルの存在だけで稼働・承認・公開済みとは判断しない。
 
 ## 必要時参照
 - `../../../docs/editorial-pipeline.md`（全体像・cap・台帳。repo相対は `docs/editorial-pipeline.md`）
-- `scripts/article-researcher-agent.js`（既存の選定ロジック・季節マップ・重複チェック）
+- `scripts/editorial/runtime.py`, `models.py`, `catalog.py`, `ledger.py`（現runnerの選定・根拠・枠）
+- `scripts/article-researcher-agent.js`（旧フローの季節マップ・出力形式の参照）
 - 既存資料: `data/article-season-map.json`, `data/categories.json`
 
 ## 入力
@@ -23,20 +24,22 @@ description: Camp Gear Lab の週次ネタ選定を担当する小スキル。�
 ## 手順
 1. 対象週の残枠を確認する（週3件cap・承認待ち上限3。詳細は `../../../docs/editorial-pipeline.md`）。
 2. 季節カテゴリを優先しつつ、既存記事と切り口が重複しない候補を出す。
-3. 既存 `scripts/article-researcher-agent.js` の出力形式（themeId / slug / title / categoryId / targetKeywords / scheduledPublishDate 等）に合わせて起案する。
+3. 現modelsの形式 `slug / title / categoryId / productIds / query / selectionReason` で重複しない3候補を作る。現runtimeが渡す商品・既存記事・queuedテーマ・季節・モールクリックだけを根拠とし、未供給の検索量/GSC値を補わない。旧weekly planのscheduledPublishDateを現runnerの公開予約と同一視しない。
 4. 候補を台帳に「起案」段階で登録する（台帳の正本は1つ。詳細はパイプライン文書）。
-5. 起案をSlackに示す。**企画の本人承認を追加の必須関門にしない**（今回の設計案。追加許可を無用に増やさない方針にすぎない）。本人確定を要する承認は最終記事版承認（設計案。詳細はパイプライン文書）。既存liveとは主張しない。
+5. camp-writingへ引き継ぎ、制作・校正・上位審査後の本文をSlackへ提示する。現runtimeは候補だけを自動配信する段階を持たない。**企画の本人承認を追加の必須関門にしない**。本人確定を要するのは最終exact版の公開承認。
 
 ## 出力 / 引継ぎ
-- 週次プラン（themeId, slug, title, categoryId, targetKeywords, scheduledPublishDate）
+- 週3枠の候補（slug, title, categoryId, productIds, query, selectionReason）
 - 次工程: camp-writing を呼び出し、執筆（本文制作）を引き継ぐ。
 - 台帳更新: 起案
 
 ## 台帳境界（重要）
-- 新設計の台帳（内部 JSON または SQLite、正本一つ）は**未配備**。本スキルはそれを前提に**設計上の登録先**を示すだけで、稼働中の正本を断定しない。
-- 既存 `data/articles.json` は**公開データ投影 / 互換境界**として区別する。新設計の内部台帳と二重正本を作らない。現行パイプラインの実体は `data/articles.json` と Supabase 同期の既存経路であり、新台帳の導入でこれを置き換える設計は未配備。
+- `stateRoot/ledger.sqlite3` が実装済みの内部正本。Git外private領域で管理し、公開データやJSONを別正本にしない。
+- 単一macpro、300秒tick。JST水曜09時以降に1記事ずつ制作し、JST月曜区切りの候補3枠・未公開上限3を適用する。公開日の水/金/日固定や週3本公開を保証しない。
+- 保留/失敗も未公開枠を使う。週跨ぎcandidateは同一jobで再開し、errorを自動再試行するとは扱わない。
+- 現自動候補抽出は型番・対応メーカー・画像・楽天/Amazon URLが揃う既存商品に限定。品質検証のNA対応とは範囲が異なる。
 
 ## 停止条件
-- kill switch が有効
+- generationEnabledがfalse、または配備/接続検証が完了していない
 - 週3件cap または 承認待ち上限3 に到達（新規制作停止。保留/失敗で無限補充しない。再試行は同一記事の枠）
 - 全候補が既存記事と重複

@@ -387,6 +387,9 @@ class Runtime:
         if publication.get('verified') is not True or proof.get('verified') is not True or proof.get('fingerprint') != job['revision']:
             raise ValueError('social_publication_unverified')
         bundle = copy.deepcopy(job['bundle'])
+        account = json.loads((Path(self.config['repo']) / 'data/account-config.json').read_text())
+        bundle['socialRules'] = {k: account[k] for k in ('tone', 'ngWords', 'linkRules', 'formatting', 'personaGuards') if k in account}
+        bundle['socialRules']['approval'] = 'Separate exact-version human approval; manual X posting only. Examples are not factual evidence.'
         bundle['publicReadback'] = {'verified': True, 'url': job['publication']['url'],
                                    'content': bundle['article']['content'], 'images': bundle['images']}
         proposal = self.models.social(bundle, job['publication']['url'])
@@ -403,7 +406,12 @@ class Runtime:
         numbers_ok = set(re.findall(r'\d+(?:\.\d+)?', proposal['text'])) <= set(re.findall(r'\d+(?:\.\d+)?', source_text))
         url_ok = proposal.get('url') == publication['url'] and links == [publication['url']] and not re.search(r'https?://', proposal['text'])
         no_medical = not re.search(r'一酸化炭素|やけど|熱中症|低体温|誤飲|アナフィラキシー|医学|治療|予防効果', text)
-        format_ok = proposal.get('platform') == 'x' and bool(proposal['text'].strip()) and len(proposal['text'].encode('utf-16-le')) // 2 <= 280
+        weighted_length = sum(1 if ord(c) < 128 else 2 for c in proposal['text'])
+        format_ok = proposal.get('platform') == 'x' and bool(proposal['text'].strip()) and weighted_length <= 280
+        prohibited = [word for values in account.get('ngWords', {}).values() for word in values]
+        format_ok = format_ok and not any(word in proposal['text'] for word in prohibited)
+        if str(account.get('formatting', {}).get('hashtagCount', '')).startswith('0'):
+            format_ok = format_ok and '#' not in proposal['text']
         flags = dict(facts=numbers_ok and job['review']['evidence']['facts'], images=images_ok,
                      affiliate=url_ok, medical=no_medical and job['review']['evidence']['medical'], render=format_ok)
         if not all(flags.values()):

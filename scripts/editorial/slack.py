@@ -86,8 +86,12 @@ class Slack:
             body = ('【SNS告知案】\n' + proposal['text'] + '\n\nリンク用返信:\n' + proposal['replyText'])
         else:
             body = ('【記事全文】' + article['title'] + '\n記事ID: ' + job['id'] +
-                    '\n版: ' + job['revision'][:12] + '\n\n' + article['content'] + '\n\nFAQ\n' +
+                    '\n版: ' + job['revision'] + '\n\n' + article['content'] + '\n\nFAQ\n' +
                     '\n'.join(q['question'] + '\n' + q['answer'] for q in article.get('faqs', [])))
+            body += '\n\n掲載商品・購入先\n' + '\n'.join(
+                str(p.get('name', p.get('id'))) + '\n' + '\n'.join(
+                    name + ': ' + p[key] for name, key in (('楽天', 'affiliateUrl'), ('Amazon', 'amazonUrl'), ('Yahoo', 'yahooUrl')) if p.get(key))
+                for p in bundle.get('products', []))
         parts = []
         for i, part in enumerate(chunks(body)):
             text = '[{} / {}] {}'.format(job['id'], i + 1, part)
@@ -102,8 +106,13 @@ class Slack:
         labels = [('approve', 'この告知案の配信を承認' if social else 'この版の記事公開を承認'),
                   ('reject', '修正依頼'), ('hold', '保留')]
         text = ('【SNS承認】' if social else '【記事のGO待ち】') + article['title']
-        text += '\n記事ID: ' + job['id'] + '\n対象版: ' + request['manifest_hash'][:12]
-        text += '\n審査: 全文・商品・画像・購入導線・表示確認済み\n'
+        text += '\n記事ID: ' + job['id'] + '\n対象版: ' + request['manifest_hash']
+        review = (job.get('social', {}).get('review', {}) if social else job.get('review', {})) or {}
+        text += '\n審査: ' + str(review.get('model', '上位モデル')) + ' / ' + str(review.get('score', '確認済み')) + '点'
+        text += '\n全文・商品・画像・購入導線・表示確認済み\n'
+        if not social:
+            text += '選定理由: ' + str(job.get('theme', {}).get('selectionReason', '台帳の候補選定結果'))[:300] + '\n'
+            text += 'ご確認: 結論・実体験表現・掲載商品・画像が意図に合っているか。\n'
         text += ('記事公開の承認とは別です。承認後もXへの投稿は手動です。' if social else '承認した本文・画像・商品・リンクを公開します。')
         text += '\n修正内容はこのCodexアプリへ記事IDを添えて伝えられます。'
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
