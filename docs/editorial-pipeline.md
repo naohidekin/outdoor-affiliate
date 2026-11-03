@@ -2,7 +2,7 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**新パイプラインは実装済み。macproへの配備、GUIでのSlack認証・Gemini校正接続、Slack接続確認メッセージの送信とreadback、常駐tickを確認した。制作・公開の有効化状態は末尾の配備記録を参照する。**
+**新パイプラインはmacproへ配備済み（runtime `bce2d8c`）。初回3記事は実素材検証・校正・実render・独立審査・draft stageを経て、17:11:33／17:11:43／17:11:53 JSTにSlack配信完了。現在は本人のexact版公開承認待ちで、承認・本番公開はまだない。**
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
 本番の記事承認・公開の実績と、接続試験・合成データの試験を区別する。最新検証結果は末尾を参照する。
@@ -73,17 +73,26 @@ Geminiだけは既存 `gemini-writing` スキル専用の `~/.codex/gemini-writi
    価格・在庫・主観評価・descriptionを仕様照合だけで確認済みとは扱わない。
    現自動候補抽出は型番/対応メーカーとimageUrl・楽天・Amazon URLを持つ商品に限定される。
    品質moduleのNA対応が、そのまま全自動候補抽出へのNA対応を意味するわけではない。
+   `sourceNotices` の必須告知はメーカーの許可ドメイン内で毎回取得し、空白正規化後の正確な引用を照合する。
+   取得・引用照合に失敗した場合は停止。合格時は短い引用だけを `manufacturer-notice` 根拠として保持する。
 3. **執筆仕様→既存Claude執筆**。正本は `CLAUDE.md`、ルート `SKILL.md`、
    `docs/writing-style.md`、`docs/author-gear.md`。briefは目的/読者/結論/見出し/確定事実/数値/リンク/
    必須表現/禁止変更事項/文体/文字量/CTA/形式と、公開可能な入力である `externalSafe: true` を持つ。
    未確認の所有・体験・購入者レビューを捏造しない。体験が未確認なら調査記事と本文で明示する。
+   執筆応答はnative JSON schemaで `{article,brief}` に限定する。検証済みproducts/references/imagesは
+   モデルに再生成させずローカルで組み立てる。商品shortcodeの不足は既存商品IDだけで補い、組立後も字数・IDを検証する。
 4. **Gemini 3.8 Flash**は本文校正候補だけを生成。元sourceを変更せず、見出し/URL/数値/
    shortcode/商品ID/表/code/広告表記/相対リンク先の内容・順序を `inspect_polish` で比較する。
    Geminiは新事実・医学的助言・商品条件・結論を作らず、合否を決めない。privateなresearch/artifacts配下へsource.json/candidate.jsonを分離保存し、上位審査へ元本文と編集ルールも渡す。
+   現在の校正応答は編集可能な段落への `{edits:[{index,text}]}` のみ。保護要素・必須表現を含む段落は変更不可とし、
+   重複index・対象外段落・新しい保護要素を拒否する。編集なしも記録し、意味の同一性は別途上位審査する。
 5. `inspect_bundle` の構造検査後、実renderと**上位最終審査7.5/10以上**を通す。
    facts/images/affiliate/medical/renderの独立証跡を必要とし、モデルの「確認済み」だけで合格にしない。
    qualityが返す `mandatory_evidence` はpending。意味同一・事実完全性・実体験・医療・live/renderを自己認定しない。
    現runtimeは医療/子どもの安全に関する助言を自動選定から避け、検出時は保留する。
+   editorial最終審査もnative JSON schemaで11項目のnested `criteria` を要求する。
+   未丸め平均と総合scoreの低いほうが7.5以上、全必須証拠が合格、必要修正の `issues` が空の場合だけ通過する。
+   非阻害の観測は `observations` に分け、承認済テーマの制約と本文・抜粋・meta・FAQの主張も審査へ渡す。
 6. 審査済bundleを台帳に保存し、公開前のdraftだけをstageしてSlackへ配信する。
    本人のexact版公開承認を待って公開へ進む。
 
@@ -107,6 +116,7 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
 - rendererは秘密envを継承しない隔離アプリで実ページ/実コンポーネントを使い、desktop1280px・mobile390pxで確認。
   H1が1つ、shortcode未解決なし、横はみ出しなし、画像表示、各商品/モールCTAのクリックpayload・event・遷移先を検査する。
   外部購入ページへの実ナビゲーションはabortし、live到達確認はCatalogと分担する。
+  structured FAQの実表示も検証対象とし、本文側に空のFAQ見出しを作らない。実コンポーネントのFAQ表示ケースを確認する。
 - スクリーンショットはprivate出力。Slackへの配信は本文/FAQと商品画像URLのimage block。
   rendererスクリーンショットをSlackへアップロードする実装とは区別する。
 
@@ -158,10 +168,13 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
 
 | 検証 | 結果・根拠 |
 |---|---|
-| Python試験（bf0a5ec） | Air・macproとも116件成功 |
-| macproのpublish/render試験（bcba319） | 実renderを含む31件成功、skipなし |
+| 全Python試験（最新の全体実行） | Air・macproとも143件成功。その後の画像metadata対応を含む全体145件実行は未確認 |
+| Slack追加修正後の限定試験 | `test_slack.py` 12件成功。上記全体143件とは実行範囲・時点を分ける |
+| macproのpublish試験 | 22件成功。空201・readback必須・added_at暦日を含む |
+| 先行するmacpro実render検証 | 33件成功、skip 0。この結果は今回のSlack修正後の再実行結果ではない |
 | 新runtime GUI preflight | Slack認証・Gemini 3.8 Flash実呼出し成功 |
-| Slack実送信 | 接続案内と制作停止案内をAPI読み戻しで確認。本人の既読は未確認 |
+| 実商品素材 | 5商品・仕様41項目・購入先10件（楽天/Amazon）と公式掲載画像を実接続で確認。価格・在庫・全記事主張の包括認証ではない |
+| 初回3記事のSlack配信 | 17:11:33／43／53 JSTに完了。審査scoreはGS 8.090909／SOTO 8.090909／CB 8.0。本人承認・本番公開は未実施 |
 
 実装・ローカル試験は完了している。Pythonのcatalog/ledger/models/quality/runtime/slack試験、
 Nodeのpublish/render契約試験とmacpro実render、GUI Slack単体認証は、新runtime preflight・常駐・本番公開とは別の検証。
@@ -176,6 +189,8 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 ローカル試験の完了は、新パイプラインのlive稼働や全ての実商品/外部サービスの検証完了を意味しない。
 
 ## 10. 配備記録（2026-11-03 JST）
+
+以下は時系列の記録。途中の停止・候補段階の記述を現在状態として扱わず、末尾の完了記録と第0節を参照する。
 
 - macpro専用checkoutへ配備。資格情報は既存の明示パスからのみ参照し、複製していない。
 - GUI実行で新runtimeのSlack Bot認証とGemini 3.8 Flash校正・保護検査が成功。
@@ -207,3 +222,23 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - SOD-310は生産終了・在庫限りと後継型番を記事へ明示する。公表火力・使用時間は指定燃料と測定条件を保持し、実使用実績と混同しない。
 - 実装版 `09f3932`：Air・macproでPython128件成功。仕様照合のDOM範囲と長文応答の待機時間を独立レビュー済み。
   最初の長文生成要求は60秒後に応答取得失敗。利用量は未取得で費用ゼロとは扱わない。共通180秒期限内で待つよう修正し同一候補IDで再開。
+- 初回原稿の未確認体験談、収納寸法の逆転、公称火力から冬季性能への外挿、未確認の価格・在庫評価をAstraが修正。
+  GS-600KH／SOD-310対SOD-320／ST-310・US-1900の既存3テーマ・同一週枠を維持し、修正sourceから校正・検証・実render・独立審査へ進めた。
+  SOD-310の生産終了・在庫限り・後継SOD-311GS、ST-310の25℃～5℃というメーカー説明は必須引用照合で束縛する。
+  温度説明を安全な最低使用温度や当サイトの実測結果へ置き換えない。
+- native JSON執筆応答、段落単位のGemini校正、FAQの実renderを接続。最終審査のflat採点応答は通過させず、
+  nested schemaへ修正し、独立証拠と11項目の未丸め平均による判定を維持した。
+- GSのdraft stageでは、`return=minimal` の空201をJSON解析してunknownとなる境界を確認。
+  insertだけ空201を受け入れるよう修正し、DBの完全一致readbackは必須のまま維持。
+  unknownを未挿入と決めつけず、既存DB状態・revisionを照合して復旧した。GET/CASの空201は成功扱いにしない。
+- SOD-320の商品 `added_at` は既存TEXT列の `2026-04-22`。有効な暦日をこのフィールドだけ保持する修正を実施。
+  他のcreated/updated/published日時のタイムゾーン要件や、商品の完全一致readbackは緩めていない。
+- Slack本文の読戻しでは `&` → `&amp;`、`>` → `&gt;` の差異を確認。
+  読戻し側の `plain_text.text` のみ1回デコードし、ボタン値・nonce・URLは完全一致を維持した。
+  画像ブロックはURL・alt_textが一致し、サーバー追加のimage_bytes/image_height/fallback/is_animated/image_widthだけが差分だった。
+  読戻し側の `type=image` に限りこの5項目を比較から除外し、画像URL・alt_text・type・未知項目の変更は拒否する。
+  既送信分はprivate outbound receiptと実読戻しを照合して再利用し、同じ本文・画像の盲目的な再送はしていない。
+- runtime `bce2d8c`：初回3記事の本文・FAQ・商品・画像・購入導線・表示の確認と、Slack本文／画像／承認カードのreadbackが完了。
+  GSは17:11:33 JST（score 8.090909）、SOTOは17:11:43 JST（8.090909）、CBは17:11:53 JST（8.0）に配信完了。
+  3件とも本人のexact版公開承認待ち。本人承認・本番公開・公開後SNS処理は未実施。
+  定期運用は単一macpro・300秒tick・水曜09時JST以降の週3候補上限／未公開3件上限を維持し、承認待ちによる上限を無視して補充しない。
