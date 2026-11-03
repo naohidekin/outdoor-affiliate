@@ -53,9 +53,9 @@ class CatalogTests(unittest.TestCase):
 
     def test_structured_maker_specs_use_primary_identity_and_exact_scoped_values(self):
         soto = _Page('''<title>SOTO SOD-310</title><p>RELATED SOD-320 重量 500g</p>
-            <dl class="toggleTarget pd__specification"><li><h3>重量</h3><p>350g</p></li>
+            <dl class="toggleTarget pd__specification"><dt>製品仕様</dt><dd><div><li><h3>重量</h3><p>350g</p></li>
             <li><h3>使用燃料</h3><p>OD缶 SOD-750T</p></li>
-            <aside>※1 気温25℃、無風時</aside></dl>''')
+            <aside>※1 気温25℃、無風時</aside></div></dd></dl>''')
         weight = _spec_evidence(soto, 'SOD-310', '重量', '350g', primary_identity=True)
         self.assertEqual(weight['value'], '350g')
         self.assertIn('気温25℃', weight['conditions'][0])

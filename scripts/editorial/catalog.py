@@ -129,7 +129,7 @@ class _Page(HTMLParser):
         if tag in ('script', 'style', 'noscript'):
             self.skip += 1
         if not self.skip and tag in ('tr', 'dl', 'li', 'p', 'td', 'th', 'dt', 'dd', 'h3', 'aside'):
-            self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'class': attrs.get('class', '')})
+            self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'asides': [], 'class': attrs.get('class', '')})
         if tag == 'title':
             self.in_title = True
         if tag == 'img' and attrs.get('src'):
@@ -144,6 +144,11 @@ class _Page(HTMLParser):
                 unit = self.scopes[index]
                 del self.scopes[index:]
                 unit['text'] = ' '.join(' '.join(unit.pop('parts')).split())
+                if tag == 'aside':
+                    for parent in reversed(self.scopes):
+                        if parent['kind'] == 'dl':
+                            parent['asides'].append(unit['text'])
+                            break
                 if tag in ('tr', 'dl', 'p'):
                     self.units.append(unit)
                 if tag == 'dl':
@@ -233,7 +238,7 @@ def _spec_evidence(page, model, key, value, primary_identity=False):
             aside = [v for tag, v in unit['cells'] if tag == 'aside']
             if soto_spec:
                 aside += [v for block in page.structured if block['kind'] == 'dl' and 'pd__specification' in block['class']
-                          for tag, v in block['cells'] if tag == 'aside']
+                          for v in block['asides']]
             return {'unit': unit['kind'], 'model': model, 'field': key, 'value': value,
                     'excerpt': unit['text'][:500], 'conditions': aside[:3]}
         if key.casefold() in {s.casefold() for s in SPEC_LABELS['model']} and value.casefold() == model.casefold():
