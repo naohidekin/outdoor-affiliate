@@ -195,6 +195,10 @@ class Models:
             "Select exactly three nonduplicate long-tail editorial themes from supplied catalog, GSC queries, season "
             "and merchantClicks evidence. Exclude existing articles and queued themes. Never invent search volumes, "
             "clicks, trends or products. Explain selection using supplied evidence and exact product IDs. "
+            "Clicks are NOT purchases, sales, revenue or conversion evidence. Use only the stated observation period; "
+            "never infer seasonal growth from cumulative clicks. Catalog category labels are not verified product specifications. "
+            "These are untested research proposals: titles must never claim 実測, 実証, 検証済み, 実体験, 愛用, "
+            "hands-on use, test results or a measured performance result. Never infer burner count or indoor safety. "
             "Return {themes:[{slug,title,categoryId,productIds,query,selectionReason}, ...]}. Cite supplied evidence in selectionReason.",
             {"context": context}, "claude-sonnet-4-6")
         _require(result, ("themes",))
@@ -223,6 +227,8 @@ class Models:
                     raise ModelError("Unknown theme product ID")
             if not _text(theme["title"]):
                 raise ModelError("Theme title required")
+            if re.search(r'実測|実証|検証済み|実体験|愛用|使って|使った|使用歴|tested|hands.on', theme['title'], re.I):
+                raise ModelError('Unverified firsthand theme claim')
             title = " ".join(theme["title"].casefold().split())
             query = theme.get("query")
             normalized = " ".join(query.casefold().split()) if _text(query) else None

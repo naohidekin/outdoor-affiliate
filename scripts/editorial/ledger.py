@@ -157,6 +157,16 @@ class Ledger:
         with self._tx() as db:
             return [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs ORDER BY rowid')]
 
+    def revise_candidate(self, id, title, selection_reason):
+        require(isinstance(title, str) and title.strip() and isinstance(selection_reason, str) and selection_reason.strip(),
+                'candidate title and reason required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job['stage'] in ('candidate', 'error', 'held') and not job.get('bundle')
+                    and not job.get('approval') and not job.get('publication'), 'only unstaged candidate can be revised')
+            job['theme'] = dict(job['theme'], title=title, selectionReason=selection_reason)
+            return self._put(db, job, 'candidate_revised')
+
     def get_job(self, id):
         with self._tx() as db:
             return self._get(db, id)

@@ -149,11 +149,21 @@ class Runtime:
                     and p.get('imageUrl') and p.get('affiliateUrl') and p.get('amazonUrl')]
         products = [{k: p.get(k) for k in ('id', 'name', 'brand', 'categoryId', 'specs')} for p in eligible[:60]]
         counts = {}
+        observed_end = datetime.now(JST)
+        observed_start = observed_end - timedelta(days=28)
         for click in context.get('clicks', []):
+            try:
+                at = datetime.fromisoformat(str(click.get('clickedAt', '')).replace('Z', '+00:00'))
+                if at.tzinfo is None or not observed_start <= at <= observed_end:
+                    continue
+            except ValueError:
+                continue
             key = (click.get('pagePath', click.get('page_path', '')), click.get('store', 'unknown'))
             counts[key] = counts.get(key, 0) + 1
         return {'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
                 'merchantClicks': [{'article': k[0], 'store': k[1], 'clicks': n} for k, n in counts.items()],
+                'observation': {'start': observed_start.isoformat(), 'end': observed_end.isoformat(),
+                                'metric': 'affiliate link clicks only; not purchases, revenue or seasonal trend'},
                 'season': datetime.now(JST).strftime('%Y-%m'), 'instructions': context['instructions']}
 
     def produce(self, limit=3):

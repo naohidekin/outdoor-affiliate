@@ -77,6 +77,12 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_research_rejects_unmeasured_firsthand_title(self):
+        themes = copy.deepcopy(THEMES)
+        themes['themes'][0]['title'] = '冬のバーナー実測結果'
+        with self.assertRaisesRegex(ModelError, 'Unverified firsthand'):
+            Models(ENV, Fake(response(themes))).research(context())
+
     def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
         checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
         with self.assertRaises(ModelError):

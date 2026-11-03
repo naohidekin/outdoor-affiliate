@@ -285,6 +285,25 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual([], self.writes)
         self.assertEqual([], self.slack.deliveries)
 
+    def test_research_counts_only_recent_aware_clicks_and_labels_metric(self):
+        now = datetime.now(JST)
+        context = {'products': [], 'articles': [], 'queuedThemes': [], 'instructions': '', 'clicks': [
+            {'clickedAt': (now - timedelta(days=days)).isoformat(), 'pagePath': '/a', 'store': 'rakuten'}
+            for days in (1, 60, -1)] + [{'clickedAt': '2026-11-03T12:00:00', 'pagePath': '/a', 'store': 'rakuten'}]}
+        result = self.runtime._research_context(context)
+        self.assertEqual([{'article': '/a', 'store': 'rakuten', 'clicks': 1}], result['merchantClicks'])
+        self.assertIn('not purchases', result['observation']['metric'])
+
+    def test_candidate_correction_keeps_id_week_slot_and_event(self):
+        job = self.runtime.ledger.create_candidate({'slug': 'correction', 'title': '実測'})
+        fixed = self.runtime.ledger.revise_candidate(job['id'], '仕様の調査候補', '実測は未実施')
+        self.assertEqual(job['week'], fixed['week'])
+        self.assertEqual(job['id'], fixed['id'])
+        self.assertEqual(1, len(self.runtime.ledger.list_jobs()))
+        self.runtime.ledger.save_bundle(job['id'], bundle())
+        with self.assertRaises(ValueError):
+            self.runtime.ledger.revise_candidate(job['id'], '別内容', '勝手な変更')
+
 
 if __name__ == '__main__':
     unittest.main()
