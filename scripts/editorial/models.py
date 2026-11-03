@@ -42,6 +42,21 @@ WRITER_SCHEMA = {
                                  "externalSafe": {"type": "boolean"}}}}
 }
 CATEGORIES = ("facts", "images", "affiliate", "medical", "render")
+CRITERIA_FIELDS = ("wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sense",
+                   "affiliate_links", "comparison_table", "internal_links", "faq", "word_count")
+REVIEW_SCHEMA = {
+    "type": "object", "additionalProperties": False,
+    "required": ["passed", "score", *CATEGORIES, "evidence", "issues", "observations", "criteria"],
+    "properties": {"passed": {"type": "boolean"}, "score": {"type": "number"},
+                   **{field: {"type": "boolean"} for field in CATEGORIES},
+                   "evidence": {"type": "object", "additionalProperties": False,
+                                "required": ["summary"], "properties": {"summary": {"type": "string"}}},
+                   "issues": {"type": "array", "items": {"type": "string"}},
+                   "observations": {"type": "array", "items": {"type": "string"}},
+                   "criteria": {"type": "object", "additionalProperties": False,
+                                "required": list(CRITERIA_FIELDS),
+                                "properties": {field: {"type": "number"} for field in CRITERIA_FIELDS}}}
+}
 SECRET = re.compile(
     r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,}|"
     r"(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password)"
@@ -452,15 +467,18 @@ class Models:
             "not establish the surrounding claim. Mark facts false and passed false, with specific issues, whenever "
             "provenance or approved-theme compliance is missing. Check medical claims and protected brief. "
             "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
-            "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and also return criteria "
-            "with eleven numeric 0-10 scores: wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
+            "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and return a nested criteria "
+            "object, not flat top-level scores, with eleven numeric 0-10 scores: "
+            "wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
             "comparison_table,internal_links,faq,word_count. passed=true requires empty issues and the actual "
             "unrounded mean of all eleven criteria to be at least 7.5; never round 7.4545 up. Overall score "
-            "must not exceed their mean. "
+            "must not exceed their mean. Include observations as a list (empty if none) and evidence as exactly "
+            "{summary:string}. "
             "For social proposals every claim must be supported by checks.factualSource; numeric/URL checks alone "
             "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
             "Model assertions are opinions and cannot substitute for external evidence.",
-            {"bundle": bundle, "checks": checks}, self.env.get("ARTICLE_REVIEW_MODEL") or "claude-sonnet-4-6")
+            {"bundle": bundle, "checks": checks}, self.env.get("ARTICLE_REVIEW_MODEL") or "claude-sonnet-4-6",
+            schema=REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None)
         _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
         if type(result["passed"]) is not bool or any(type(result[k]) is not bool for k in CATEGORIES) or (
                 type(result["score"]) not in (int, float) or not math.isfinite(result["score"]) or
@@ -469,11 +487,15 @@ class Models:
             raise ModelError("Invalid review result")
         supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
         if isinstance(checks, dict) and checks.get('editorialRules'):
-            fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
-                      'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
+            fields = CRITERIA_FIELDS
             criteria = result.get('criteria', {})
-            if not isinstance(criteria, dict) or any(type(criteria.get(k)) not in (int, float) or
-                    not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields):
+            if (set(result['evidence']) != {'summary'} or not isinstance(result['evidence']['summary'], str)
+                    or not isinstance(result.get('observations'), list)
+                    or any(not isinstance(v, str) for v in result['observations'])
+                    or not isinstance(result['issues'], list) or any(not isinstance(v, str) for v in result['issues'])
+                    or not isinstance(criteria, dict) or set(criteria) != set(fields)
+                    or any(type(criteria.get(k)) not in (int, float) or
+                    not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields)):
                 raise ModelError('Complete WISE Supervisor scores required')
             result['score'] = min(result['score'], sum(criteria[k] for k in fields) / len(fields))
         supplied = supplied if isinstance(supplied, dict) else {}

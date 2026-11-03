@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from models import Models, ModelError, WRITER_SCHEMA
+from models import Models, ModelError, WRITER_SCHEMA, REVIEW_SCHEMA, CRITERIA_FIELDS
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -97,6 +97,8 @@ class ModelTests(unittest.TestCase):
         result = copy.deepcopy(REVIEW)
         result['criteria'] = dict.fromkeys(('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
             'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count'), 7)
+        result['evidence'] = {'summary': 'Reviewed all claims'}
+        result['observations'] = []
         reviewed = Models(ENV, Fake(response(result))).review(bundle(), checks)
         self.assertFalse(reviewed['passed'])
         self.assertEqual(7, reviewed['score'])
@@ -106,7 +108,8 @@ class ModelTests(unittest.TestCase):
         fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
                   'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
         low = dict(zip(fields, [8] * 5 + [7] * 6))
-        fake = Fake(response(dict(REVIEW, score=7.8, criteria=low, observations=['No medical claim'])))
+        fake = Fake(response(dict(REVIEW, score=7.8, criteria=low, evidence={'summary': 'Reviewed claims'},
+                                  observations=['No medical claim'])))
         result = Models(ENV, fake).review(bundle(), checks)
         self.assertEqual(result['score'], 82 / 11)
         self.assertFalse(result['passed'])
@@ -114,12 +117,25 @@ class ModelTests(unittest.TestCase):
         for phrase in ('issues must contain ONLY required corrections or blockers', 'observations',
                        'pending future human approval', 'unrounded mean', 'never round 7.4545 up'):
             self.assertIn(phrase, prompt)
+        wire = fake.calls[0][2]['output_config']['format']
+        self.assertEqual(wire, {'type': 'json_schema', 'schema': REVIEW_SCHEMA})
+        self.assertEqual(set(REVIEW_SCHEMA['required']), set(REVIEW_SCHEMA['properties']))
+        self.assertEqual(set(REVIEW_SCHEMA['properties']['criteria']['required']), set(CRITERIA_FIELDS))
+        for object_schema in (REVIEW_SCHEMA, REVIEW_SCHEMA['properties']['criteria'],
+                              REVIEW_SCHEMA['properties']['evidence']):
+            self.assertIs(object_schema['additionalProperties'], False)
+        self.assertEqual(REVIEW_SCHEMA['properties']['evidence']['required'], ['summary'])
+        flat = dict(REVIEW, score=7.8, evidence={'summary': 'Reviewed claims'}, observations=[], **low)
+        with self.assertRaisesRegex(ModelError, 'Complete WISE Supervisor scores required'):
+            Models(ENV, Fake(response(flat))).review(bundle(), checks)
         high = dict(zip(fields, [8] * 6 + [7] * 5))
         passing = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
+                                                  evidence={'summary': 'Reviewed claims'},
                                                   observations=['No medical claim'])))).review(bundle(), checks)
         self.assertTrue(passing['passed'])
         self.assertEqual(passing['issues'], [])
         blocked = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
+                                                 evidence={'summary': 'Reviewed claims'}, observations=[],
                                                  issues=['Unsupported claim'])))).review(bundle(), checks)
         self.assertFalse(blocked['passed'])
         self.assertEqual(blocked['issues'], ['Unsupported claim'])
