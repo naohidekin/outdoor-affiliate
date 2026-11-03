@@ -479,7 +479,8 @@ class Catalog:
                     host = urlsplit(res['url']).hostname or ''
                     allowed = (host == 'item.rakuten.co.jp' if channel == 'rakuten' else
                                host in ('amazon.co.jp', 'www.amazon.co.jp') if channel == 'amazon' else
-                               host in ('store.shopping.yahoo.co.jp', 'shopping.yahoo.co.jp'))
+                               host == 'store.shopping.yahoo.co.jp' and
+                               bool(re.fullmatch(r'/[^/]+/[^/]+\.html', urlsplit(res['url']).path)))
                     verified = bool(match and allowed and _affiliate_route(channel, product[field], self.env))
                     item['destinations'].append({'channel': channel, 'url': product[field], 'finalUrl': res['url'],
                                                  'verified': verified, 'checkedAt': checked_at,

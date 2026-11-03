@@ -33,6 +33,14 @@ def response(body, kind='text/html', status=200, headers=None):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_yahoo_search_title_match_is_not_a_verified_purchase_destination(self):
+        product = products()[0]
+        product['yahooUrl'] = 'https://shopping.yahoo.co.jp/search?p=SOTO+ST-300'
+        ctx = Catalog({}, lambda *a: response('<title>SOTO ST-300</title>')).gather(
+            {'productIds': ['p0']}, {'products': [product]})
+        destination = next(d for d in ctx['evidence']['products'][0]['destinations'] if d['channel'] == 'yahoo')
+        self.assertFalse(destination['verified'])
+
     def test_readonly_explicit_fields_and_no_click_personal_data(self):
         calls = []
         def fetch(url, headers, timeout):
