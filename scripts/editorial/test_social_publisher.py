@@ -163,6 +163,31 @@ class SocialPublisherTests(unittest.TestCase):
         wrong['urls'][0]['media_key'] = '3_first'
         self.assertFalse(exact_x_text(wrong, expected))
 
+    def test_raw_urls_reject_parser_normalized_whitespace_control_and_backslash(self):
+        expected, token = '本文', 'https://t.co/photo'
+        start = len(expected + ' ')
+        post = {'id': '111', 'text': expected + ' ' + token, 'mediaKeys': ['3_333'],
+                'urls': [{'start': start, 'end': start + len(token), 'url': token,
+                          'expanded_url': 'https://x.com/gear/status/111/photo/1',
+                          'media_key': '3_333'}]}
+        self.assertTrue(exact_x_text(post, expected))
+        for bad in (' https://x.com/gear/status/111/photo/1',
+                    '\nhttps://x.com/gear/status/111/photo/1',
+                    'https://x.com/gear/status/111/photo/1\r',
+                    'https://x.com/gear/status/111/photo/1\x00',
+                    'https://x.com\\evil.example/gear/status/111/photo/1'):
+            candidate = copy.deepcopy(post)
+            candidate['urls'][0]['expanded_url'] = bad
+            with self.subTest(expanded=repr(bad)):
+                self.assertFalse(exact_x_text(candidate, expected))
+        for bad in (' https://t.co/photo', 'https://t.co/photo\n',
+                    'https://t.co/photo\x00', 'https://t.co\\photo'):
+            candidate = copy.deepcopy(post)
+            candidate['text'] = expected + ' ' + bad
+            candidate['urls'][0].update(url=bad, end=start + len(bad))
+            with self.subTest(short=repr(bad)):
+                self.assertFalse(exact_x_text(candidate, expected))
+
     def test_preflight_is_read_only_and_account_failure_blocks_without_journal(self):
         self.assertEqual(self.publisher.preflight(), {'verified': True, 'userId': '123'})
         self.assertFalse((self.root / 'social-publications').exists())

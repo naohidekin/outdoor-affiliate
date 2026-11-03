@@ -30,6 +30,12 @@ def exact_x_text(post, expected):
             or isinstance(end, bool) or start < 0 or end <= start):
         return False
     token = link['url']
+    if re.fullmatch(r'https://t\.co/[A-Za-z0-9]+', token) is None:
+        return False
+    expanded_url = link['expanded_url']
+    if any(char.isspace() or ord(char) < 0x20 or ord(char) == 0x7f or char == '\\'
+           for char in expanded_url):
+        return False
     if actual == token:
         prefix = ''
     elif actual == expected + ' ' + token:
@@ -42,14 +48,6 @@ def exact_x_text(post, expected):
     except UnicodeEncodeError:
         return False
     if (start, end) not in (cp_span, utf16_span):
-        return False
-    try:
-        short = urlsplit(link['url'])
-        if (short.scheme != 'https' or short.hostname != 't.co' or short.username or short.password
-                or short.port is not None or short.query or short.fragment
-                or re.fullmatch(r'/[A-Za-z0-9]+', short.path) is None):
-            return False
-    except ValueError:
         return False
     if prefix == '' and link['expanded_url'] == expected and not media_keys:
         return True  # Exact public-URL reply shortened to t.co.
