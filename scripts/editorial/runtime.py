@@ -147,13 +147,23 @@ class Runtime:
     def produce(self, limit=3):
         if not self.config.get('generationEnabled'):
             return {'status': 'disabled'}
-        context = self._context()
         now = datetime.now(JST)
         week = (now.date() - timedelta(days=now.weekday())).isoformat()
         current = [j for j in self.ledger.list_jobs() if j['week'] == week]
         pending = [j for j in self.ledger.list_jobs() if not j['publication'] and j['stage'] != 'rejected']
+        if not any(j['stage'] == 'candidate' for j in pending) and (current or len(pending) >= 3):
+            return {'status': 'idle', 'articles': []}
+        context = self._context()
         if not current and len(pending) < 3:
-            themes = self.models.research(self._research_context(context))['themes']
+            research_attempt = self.root / 'production-attempts' / (week + '.json')
+            if research_attempt.exists():
+                raise ValueError('weekly_research_requires_reconciliation')
+            atomic(research_attempt, {'status': 'in_flight', 'at': stamp()})
+            try:
+                themes = self.models.research(self._research_context(context))['themes']
+                atomic(research_attempt, {'status': 'generated', 'themes': themes, 'at': stamp()})
+            finally:
+                self._save_usage()
             for theme in themes[:3 - len(pending)]:
                 self.ledger.create_candidate(theme)
             current = [j for j in self.ledger.list_jobs() if j['week'] == week]
@@ -206,7 +216,7 @@ class Runtime:
         click_results = preview.get('clicksVerified', {})
         clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
         flags.update(medical=not bool(from_health), render=preview.get('passed') is True and clicks_ok)
-        final = self.models.review(bundle, {'evidence': flags, 'structural': checks, 'source': evidence,
+        final = self.models.review(bundle, {'evidence': flags, 'structural': checks, 'source': gathered.get('evidence', {}),
                                           'preview': preview, 'polishPreservation': preservation,
                                           'editorialRules': context['editorialRules'],
                                           'sourceContent': source['article']['content']})
@@ -219,6 +229,36 @@ class Runtime:
         # Persist an invisible draft, never publish while waiting for a person.
         self.publisher('stage', self.ledger.get_job(job['id']))
         self.deliver(job['id'])
+
+    def retry(self, id):
+        job = self.ledger.get_job(id)
+        if job['stage'] not in ('error', 'held', 'rejected') or job.get('publication') or job.get('approval'):
+            raise ValueError('job_not_retryable')
+        if job.get('bundle'):
+            raise ValueError('existing_draft_requires_version_reconciliation_before_retry')
+        self.ledger.set_stage(id, 'draft')
+        self.ledger.set_stage(id, 'candidate')
+        return {'status': 'candidate', 'id': id, 'sameWeeklySlot': True}
+
+    def research_issues(self, id):
+        file = self.root / 'research' / (id + '.json')
+        if not file.exists():
+            return ''
+        products = json.loads(file.read_text()).get('evidence', {}).get('products', [])
+        details = []
+        for p in products:
+            missing = [str(c.get('field')) for c in p.get('claims', []) if c.get('verified') is not True]
+            stores = [str(d.get('channel')) for d in p.get('destinations', []) if d.get('verified') is not True]
+            parts = (['仕様: ' + '・'.join(missing)] if missing else [])
+            if p.get('images') is not True:
+                parts.append('商品画像の同一性未確認')
+            if stores:
+                parts.append('購入先未確認: ' + '・'.join(stores))
+            if p.get('issues'):
+                parts.append(' / '.join(p['issues']))
+            if parts:
+                details.append(str(p.get('productId')) + ': ' + '; '.join(parts))
+        return '\n'.join(details)[:4000]
 
     def _save_usage(self):
         records = getattr(self.models, 'usage', [])
@@ -285,14 +325,19 @@ class Runtime:
                         result = self.publisher('publish', job)
                         self.ledger.record_publication(job['id'], job['revision'], result)
                         self.ledger.finish_effect(job['id'], 'publish', {'status': 'success', **result})
-                        self.slack.notice('【公開確認済み】' + job['bundle']['article']['title'] + '\n' + result['url'])
                     except Exception:
                         self.ledger.finish_effect(job['id'], 'publish', {'status': 'unknown', 'reason': 'publication_requires_reconciliation'})
                         raise
+                    self.slack.notice('【公開確認済み】' + job['bundle']['article']['title'] + '\n' + result['url'])
                 elif job['stage'] == 'review':
                     self.deliver(job['id'])
                 elif job['stage'] == 'published' and not job.get('social'):
+                    marker = self.root / 'social-attempts' / (job['id'] + '.json')
+                    if marker.exists():
+                        raise ValueError('social_generation_requires_reconciliation')
+                    atomic(marker, {'status': 'in_flight', 'at': stamp()})
                     self.make_social(job)
+                    atomic(marker, {'status': 'completed', 'at': stamp()})
                 elif job['stage'] == 'social_review':
                     self.deliver(job['id'], 'social')
                 elif job['stage'] == 'social_approved':
@@ -304,7 +349,8 @@ class Runtime:
             try:
                 results.append({'production': self.produce(limit=1)})
             except Exception as error:
-                results.append({'production': {'status': 'blocked', 'reason': reason(error)}})
+                results.append({'status': 'attention', 'reason': reason(error),
+                                'production': {'status': 'blocked', 'reason': reason(error)}})
         jobs = self.ledger.list_jobs()
         result = {'status': 'attention' if any(r.get('status') == 'attention' for r in results) else 'completed',
                   'at': stamp(), 'decisions': decisions, 'results': results,
@@ -327,7 +373,8 @@ class Runtime:
             if not notified.exists():
                 atomic(notified, {'status': 'in_flight', 'at': stamp()})
                 self.slack.notice('【記事制作の確認事項】\n' + '\n'.join(
-                    a['title'] + '\n記事ID: ' + a['id'] + '\n理由: ' + str(a['error'].get('reason', '確認が必要'))
+                    a['title'] + '\n記事ID: ' + a['id'] + '\n理由: ' + str(a['error'].get('reason', '確認が必要')) +
+                    '\n' + self.research_issues(a['id'])
                     for a in attention) + '\n未確認を合格扱いせず保留しています。詳細確認・修正依頼はこのCodexアプリでも受け付けます。')
                 atomic(notified, {'status': 'delivered', 'at': stamp()})
             atomic(self.root / 'health.json', result)
@@ -405,7 +452,7 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'approve-from-codex'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex'))
     parser.add_argument('--id')
     parser.add_argument('--limit', type=int, default=3)
     parser.add_argument('--revision')
@@ -427,6 +474,8 @@ def main():
                      'keys': {k: bool(runtime.env.get(k)) for k in ('ANTHROPIC_API_KEY', 'GEMINI_API_KEY')}, 'telegramEnabled': False}
         elif args.command == 'produce':
             value = runtime.produce(args.limit)
+        elif args.command == 'retry':
+            value = runtime.retry(args.id)
         elif args.command == 'deliver':
             value = runtime.deliver(args.id)
         elif args.command == 'approve-from-codex':

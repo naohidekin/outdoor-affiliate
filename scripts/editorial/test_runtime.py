@@ -253,6 +253,29 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.preflight()
         self.assertFalse((self.runtime.root / 'preflight.json').exists())
 
+    def test_source_failure_retries_same_slot_without_more_candidates(self):
+        with patch.object(self.runtime.catalog, 'gather', return_value={'checks': {'facts': False}}):
+            self.runtime.produce(limit=1)
+        failed = next(j for j in self.runtime.ledger.list_jobs() if j['stage'] == 'error')
+        self.assertTrue(self.runtime.retry(failed['id'])['sameWeeklySlot'])
+        self.runtime.produce()
+        self.assertEqual(3, len(self.runtime.ledger.list_jobs()))
+        self.assertEqual('review', self.runtime.ledger.get_job(failed['id'])['stage'])
+
+    def test_failed_research_is_not_billed_again_on_each_tick(self):
+        with patch.object(self.models, 'research', side_effect=ValueError('provider_unavailable')) as call:
+            for _ in range(2):
+                with self.assertRaises(ValueError):
+                    self.runtime.produce()
+        self.assertEqual(1, call.call_count)
+
+    def test_final_review_receives_product_specific_evidence(self):
+        gathered = self.runtime.catalog.gather({}, {})
+        gathered['evidence'] = {'products': [{'productId': 'p1', 'claims': [{'field': 'weight', 'verified': True}]}]}
+        with patch.object(self.runtime.catalog, 'gather', return_value=gathered), patch.object(self.models, 'review', wraps=self.models.review) as review:
+            self.runtime.produce(limit=1)
+        self.assertEqual(gathered['evidence'], review.call_args.args[1]['source'])
+
 
 if __name__ == '__main__':
     unittest.main()
