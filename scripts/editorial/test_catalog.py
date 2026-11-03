@@ -91,6 +91,23 @@ class CatalogTests(unittest.TestCase):
             {'productIds': ['p0']}, {'products': [product]})
         self.assertFalse(bad['evidence']['products'][0]['facts'])
 
+    def test_gather_rejects_structured_model_contradiction_despite_matching_title(self):
+        from catalog import _primary_identity
+        html = ('<title>SOTO ST-310</title><dl><dt>型番</dt><dd>ST-340</dd></dl>'
+                '<dl><dt>重量</dt><dd>380g</dd></dl>')
+        page = _Page(html)
+        self.assertIsNone(_primary_identity(page, 'ST-310', 'SOTO'))
+        self.assertIsNone(_spec_evidence(page, 'ST-310', '重量', '380g', primary_identity=True))
+        product = products()[0]
+        product.update(name='SOTO ST-310', specs={'model': 'ST-310', '重量': '380g'})
+        hint = 'https://soto.shinfuji.co.jp/products/st-310/'
+        ctx = Catalog({}, lambda url, *_: response(html if url == hint else ''),
+                      {'p0': [hint]}).gather({'productIds': ['p0']}, {'products': [product]})
+        evidence = ctx['evidence']['products'][0]
+        self.assertFalse(evidence['facts'])
+        self.assertFalse(next(c for c in evidence['claims'] if c['field'] == '重量')['verified'])
+        self.assertFalse(any(r['kind'] == 'manufacturer-spec' for r in ctx['references']))
+
     def test_yahoo_search_title_match_is_not_a_verified_purchase_destination(self):
         product = products()[0]
         product['yahooUrl'] = 'https://shopping.yahoo.co.jp/search?p=SOTO+ST-300'

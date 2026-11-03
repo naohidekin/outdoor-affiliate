@@ -186,16 +186,23 @@ def _pairs(unit):
     return []
 
 
+def _structured_model_codes(page):
+    model_labels = {label.casefold() for label in SPEC_LABELS['model']}
+    return [(label.strip(), value.strip()) for unit in page.structured
+            for label, value in _pairs(unit) if label.strip().casefold() in model_labels]
+
+
 def _primary_identity(page, model, brand):
     brand_names = {'snow peak', 'スノーピーク'} if brand.casefold() in ('snow peak', 'スノーピーク') else {brand.casefold()}
     if not any(name in page.title.casefold() for name in brand_names if name):
         return None
-    maker_codes = [value for unit in page.structured if unit['kind'] == 'dl'
-                   for label, value in _pairs(unit) if label.strip() == 'メーカー品番']
-    if maker_codes:
-        matches = [value for value in maker_codes if re.fullmatch(
+    model_codes = _structured_model_codes(page)
+    if model_codes:
+        matches = [(label, value) for label, value in model_codes if re.fullmatch(
             re.escape(model) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', value.strip(), re.I)]
-        return 'メーカー品番' if len(maker_codes) == len(matches) == 1 else None
+        if len(model_codes) != len(matches) or len(model_codes) != 1:
+            return None
+        return model_codes[0][0]
     return 'title' if model_matches(model, page.title) else None
 
 
@@ -212,6 +219,10 @@ def _spec_evidence(page, model, key, value, primary_identity=False):
         return None
     label_set = {s.casefold() for s in labels}
     if primary_identity:
+        model_codes = _structured_model_codes(page)
+        if model_codes and (len(model_codes) != 1 or not re.fullmatch(
+                re.escape(model) + r'\s*(?:\([^()]*\)|（[^（）]*）)?', model_codes[0][1], re.I)):
+            return None
         matches = []
         soto_spec = any(unit['kind'] == 'dl' and 'pd__specification' in unit['class'] for unit in page.structured)
         for unit in page.structured:
