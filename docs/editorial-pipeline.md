@@ -2,7 +2,7 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。画像カード統合 `5fef0e4` は本番サイト/macproへ配備し、23:25 JSTに有効化済み。実画像の保存・読戻しと通常tick完了を確認。GS差替案の本人承認はまだ受けていない。
+**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。画像カード統合 `5fef0e4` は本番サイト/macproへ配備し、23:25 JSTに有効化済み。実画像の保存・読戻しと通常tick完了を確認。GS差替案は11月4日に本人が承認し、01:03 JSTに公開OG差替えと画像照合を完了。
 analyticsは実データから既存記事改善候補3件をSEO state rootの `editorial-insights/latest.json` へ出力済み。`reportsEnabled: true` のGUI試運転は21:40:50 JSTに完了。週次2026-11-02週と月次2026-10月のSlack送達・readbackがverified。旧Air Codexの`camp-gear-lab-seo` automationはPAUSEDを確認済み。通常の`com.naohide.camp-slack-review`は継続する。次のSEO施策枠は11月5日（木）で、新しい改善施策はまだ実行していない。今週の新規記事候補3枠は使用済みで、次の通常制作開始は11月11日（水）09時JST以降。
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
@@ -291,3 +291,9 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - macproの実GS生成→専用bucket保存→公開GET一致を確認。SHA `6f5282dd3f4e2fda8d653e16efbd403abd2af206eecdc9f294bd1ddeb056791c`、94952bytes。再生成も同一bytes、既存オブジェクトの照合成功。元のledger/公開記事/X投稿は不変。生成環境間のフォント差は許容し、承認後は保存済みbytesを固定する。
 - `socialCardsEnabled=true` を既存private configへ設定。health23:25:58 completed、GS social_posted・SOTO/CB social_reviewを維持。新カードを使う将来の記事の本人承認・実公開・X実投稿はまだ実施していない。今回GSは差し替え確認案であり、公開反映は未承認。
 - Airの元checkout `claude/camp-gear-lab-review-n1n3e9` は既存 `data/kill-switch.json` 未コミット差分によりpull停止。stash/破棄せず保持。今回の実装checkoutとmacpro、GitHubは同期済み。
+
+### GS公開画像の本人承認・差替え（2026-11-04 JST）
+- 本人がCodexで前掲画像を明示承認。専用operator `replace-gs-social-card.mjs` が承認SHAを固定し、共有公開lock内でgeneration_meta.socialCardとupdated_atだけをCAS更新。元の本文・商品・購入先・旧ledger/X投稿は不変。
+- 01:02:56更新、01:03:02にprivate repair receipt complete。通常UA/Twitterbot双方でOG/Twitter画像URL一致、公開PNGのSHA6f5282dd3f4e2fda8d653e16efbd403abd2af206eecdc9f294bd1ddeb056791c・94952bytes一致。旧版指紋は履歴として残し、今回の承認は別receiptへ記録。
+- 実装d038b6cを両機/mainへ同期、型検査/build・専用7テスト成功。本番dpl_5Xpb6cHfkH4A9H3HzwnyDaAsifgo READY。旧opengraph-image URLも307で保存画像へ転送し、最終bytes一致を確認。X上の既存投稿表示を実見した確認とは区別する。
+- 引継ぎ文書は原文/patchを非公開バックアップし、既存追記を全保持して7957bb47で両機/origin同期。対象2文書のSHA一致と未コミット差分なしを確認。
