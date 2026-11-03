@@ -72,7 +72,10 @@ class Runtime:
             gemini = env_file(config['geminiEnvFile'])
             if gemini.get('GEMINI_API_KEY'):
                 self.env['GEMINI_API_KEY'] = gemini['GEMINI_API_KEY']
-        self.models = models or Models(self.env)
+        def save_model_artifact(artifact):
+            name = hashlib.sha256(artifact['responseId'].encode('utf-8')).hexdigest() + '.json'
+            atomic(self.root / 'model-artifacts' / name, artifact)
+        self.models = models or Models(self.env, artifact_sink=save_model_artifact)
         if catalog is None:
             from catalog import Catalog
             catalog = Catalog(self.env, source_hints=config.get('sourceHints', {}))

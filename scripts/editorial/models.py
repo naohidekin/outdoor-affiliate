@@ -92,9 +92,10 @@ def _brief(value):
 
 
 class Models:
-    def __init__(self, env, request=None):
+    def __init__(self, env, request=None, artifact_sink=None):
         self.env = dict(env)
         self.request = request if request is not None else _request
+        self.artifact_sink = artifact_sink
         self.usage = []
 
     def _safe_public(self, value):
@@ -188,6 +189,15 @@ class Models:
                     not isinstance(b, dict) or b.get("type") != "text" or not isinstance(b.get("text"), str) for b in blocks):
                 raise ModelError("Invalid completion envelope")
             content = "".join(b["text"] for b in blocks)
+        self._safe_public(content)
+        if self.artifact_sink is not None:
+            artifact = {"responseId": raw["id"], "model": raw["model"],
+                        "content": content, "usage": copy.deepcopy(usage)}
+            self._safe_public(artifact)
+            try:
+                self.artifact_sink(artifact)
+            except Exception:
+                raise ModelError("Model artifact sink failed") from None
         return _strict_json(content), copy.deepcopy(record)
 
     def research(self, context):

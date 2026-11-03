@@ -2,6 +2,8 @@
 import copy
 import io
 import json
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -310,6 +312,51 @@ class ModelTests(unittest.TestCase):
             model.research(context())
         self.assertEqual(model.usage[0]["responseId"], "c-1")
         self.assertEqual(model.usage[0]["input"], 31)
+
+    def test_artifact_sink_captures_invalid_json_before_strict_parse_with_usage(self):
+        artifacts = []
+        model = Models(ENV, Fake(response(None, raw='not JSON')), artifact_sink=artifacts.append)
+        with self.assertRaisesRegex(ModelError, 'Invalid JSON response'):
+            model.research(context())
+        self.assertEqual(artifacts, [{'responseId': 'c-1', 'model': 'claude-sonnet-4-6',
+                                      'content': 'not JSON', 'usage': {'input_tokens': 31, 'output_tokens': 9}}])
+        self.assertEqual(model.usage[0]['responseId'], artifacts[0]['responseId'])
+        self.assertEqual(model.usage[0]['output'], 9)
+        artifacts.clear()
+        self.assertEqual(Models(ENV, Fake(response(THEMES)), artifact_sink=artifacts.append).research(context()), THEMES)
+        self.assertEqual(artifacts[0]['usage'], {'input_tokens': 31, 'output_tokens': 9})
+
+    def test_artifact_sink_blocks_secret_reflection_and_fails_closed(self):
+        artifacts = []
+        model = Models(ENV, Fake(response(None, raw='{"leak":"test-claude-key"}')),
+                       artifact_sink=artifacts.append)
+        with self.assertRaisesRegex(ModelError, 'Sensitive data blocked'):
+            model.research(context())
+        self.assertEqual(artifacts, [])
+        def broken(_):
+            raise RuntimeError('SECRET test-claude-key')
+        model = Models(ENV, Fake(response(None, raw='not JSON')), artifact_sink=broken)
+        with self.assertRaisesRegex(ModelError, '^Model artifact sink failed$') as caught:
+            model.research(context())
+        self.assertIsNone(caught.exception.__cause__)
+
+    def test_runtime_binds_private_atomic_model_artifact_sink(self):
+        from runtime import Runtime
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            env = root / 'env'
+            env.write_text('ANTHROPIC_API_KEY=test-claude-key\n')
+            runtime = Runtime({'stateRoot': str(root / 'state'), 'envFile': str(env),
+                               'slack': {'user_id': 'U'}}, catalog=object(), slack=object())
+            runtime.models.request = Fake(response(None, raw='not JSON'))
+            with self.assertRaisesRegex(ModelError, 'Invalid JSON response'):
+                runtime.models.research(context())
+            name = hashlib.sha256(b'c-1').hexdigest() + '.json'
+            artifact = root / 'state' / 'model-artifacts' / name
+            self.assertTrue(artifact.exists())
+            self.assertEqual(artifact.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(json.loads(artifact.read_text())['content'], 'not JSON')
 
     def test_malformed_bundle_rejected_with_safe_model_error(self):
         for patcher in (lambda b: b["article"].update(productIds=[{}]),
