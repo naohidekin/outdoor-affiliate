@@ -308,6 +308,80 @@ class SlackTests(unittest.TestCase):
         self.assertIn('Xへの投稿は手動', post.call_args_list[-1].args[0])
         self.assertEqual(json.loads(card[1]['elements'][0]['value'])['nonce'], 'nonce')
 
+    def test_auto_x_card_explicit_consent_preserves_full_text_images_and_hidden_binding(self):
+        s = Slack(self.config, call=self.call)
+        images = [{'url': 'https://example.com/a.png'}, {'url': 'https://example.com/b.png'}]
+        proposal = {'text': '広告 PR 公表仕様に基づく告知。', 'replyText': 'https://camp-gear-lab.com/articles/stove',
+                    'images': images, 'deliveryMode': 'auto_x', 'targetAccountId': '123456789'}
+        job = {'id': 'article-hidden', 'revision': 'article-revision-hidden',
+               'bundle': {'article': {'title': '記事'}, 'images': []},
+               'social': {'proposal': proposal, 'revision': 'social-revision-hidden'}}
+        req = {'kind': 'social', 'request_id': 'request-hidden', 'article_id': job['id'],
+               'manifest_hash': job['social']['revision'], 'nonce': 'nonce-hidden'}
+        with patch.object(s, 'post', return_value={'message_ts': '1793000000.123456'}) as post:
+            s.deliver(job, req)
+        calls = post.call_args_list
+        body = calls[0].args[1][0]['text']['text']
+        self.assertIn(proposal['text'], body)
+        self.assertIn(proposal['replyText'], body)
+        self.assertEqual([c.args[1][0]['image_url'] for c in calls if c.args[1][0]['type'] == 'image'],
+                         [image['url'] for image in images])
+        card = calls[-1].args[1]
+        self.assertEqual(card[1]['elements'][0]['text']['text'], 'Xに投稿する')
+        explanation = card[0]['text']['text']
+        self.assertIn('承認した本文・画像', explanation)
+        self.assertIn('記事リンク', explanation)
+        self.assertIn('自動投稿', explanation)
+        self.assertNotIn('手動', explanation)
+        expected = {key: req[key] for key in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
+        for button in card[1]['elements']:
+            self.assertEqual(json.loads(button['value']), expected)
+        visible = '\n'.join(c.args[0] + str(c.args[1][0]) for c in calls)
+        for private in ('article-hidden', 'revision-hidden', 'request-hidden', 'nonce-hidden', '123456789', 'auto_x'):
+            self.assertNotIn(private, visible)
+
+    def test_explicit_manual_mode_retains_legacy_manual_card(self):
+        job = {'id': 'article-test', 'bundle': {'article': {'title': '記事'}},
+               'social': {'proposal': {'text': '広告 告知', 'replyText': 'https://example.com/article',
+                                      'images': [], 'deliveryMode': 'manual'}}}
+        req = {'kind': 'social', 'request_id': 'req', 'article_id': job['id'],
+               'manifest_hash': 'hash', 'nonce': 'nonce'}
+        with patch.object(Slack, 'post', return_value={'message_ts': '1793000000.123456'}) as post:
+            Slack(self.config, call=self.call).deliver(job, req)
+        card = post.call_args_list[-1].args[1]
+        self.assertEqual(card[1]['elements'][0]['text']['text'], 'この告知案を承認')
+        self.assertIn('Xへの投稿は手動です。', card[0]['text']['text'])
+        self.assertNotIn('接続の復旧待ち', card[0]['text']['text'])
+
+    def test_auto_x_disabled_connection_saves_intent_without_immediate_post_promise(self):
+        job = {'id': 'article-test', 'bundle': {'article': {'title': '記事'}},
+               'social': {'proposal': {'text': '広告 告知', 'replyText': 'https://example.com/article',
+                    'images': [], 'deliveryMode': 'auto_x', 'targetAccountId': '1343879420470206464'}}}
+        req = {'kind': 'social', 'request_id': 'req', 'article_id': job['id'],
+               'manifest_hash': 'hash', 'nonce': 'nonce'}
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled), patch.object(Slack, 'post', return_value={'message_ts': '1793000000.123456'}) as post:
+                Slack(dict(self.config, socialPostingEnabled=enabled), call=self.call).deliver(job, req)
+            card = post.call_args_list[-1].args[1]
+            text = card[0]['text']['text']
+            self.assertEqual(card[1]['elements'][0]['text']['text'], 'Xに投稿する')
+            if not enabled:
+                self.assertIn('X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。', text)
+            else:
+                self.assertNotIn('復旧待ち', text)
+
+    def test_social_unknown_mode_or_unbound_auto_target_fails_before_any_slack_send(self):
+        for changes in ({'deliveryMode': 'auto_x'}, {'deliveryMode': 'auto_x', 'targetAccountId': ''},
+                        {'deliveryMode': 'auto_x', 'targetAccountId': None},
+                        {'deliveryMode': 'auto_x', 'targetAccountId': 123},
+                        {'deliveryMode': 'unexpected', 'targetAccountId': '123'}):
+            proposal = dict(text='広告 告知', replyText='https://example.com/article', images=[], **changes)
+            job = {'bundle': {'article': {'title': '記事'}}, 'social': {'proposal': proposal}}
+            with self.subTest(changes=changes), patch.object(Slack, 'post') as post:
+                with self.assertRaisesRegex(ValueError, 'social_delivery_mode_invalid'):
+                    Slack(self.config, call=self.call).deliver(job, {'kind': 'social'})
+                post.assert_not_called()
+
     def test_posts_are_spaced_even_after_unknown_send(self):
         s = Slack(self.config, call=self.call)
         clock = [10.0]

@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 
-from ledger import Ledger, canonical, fingerprint
+from ledger import Ledger, canonical, fingerprint, valid_review, valid_social_mode
 from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
@@ -63,7 +63,7 @@ def reason(error):
 
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
-                 analytics=None, reporter=None):
+                 analytics=None, reporter=None, social_publisher=None):
         self.config = config
         self.root = Path(config['stateRoot'])
         self.ledger = Ledger(self.root, config['slack']['user_id'])
@@ -85,6 +85,7 @@ class Runtime:
         self.slack = slack or Slack(config)
         self.renderer = renderer or self._render
         self.publisher = publisher or self._publish
+        self.social_publisher = social_publisher
         from analytics import Analytics
         from reporting import Reporter
         self.analytics = analytics or Analytics(config)
@@ -404,7 +405,16 @@ class Runtime:
                 elif job['stage'] == 'social_review':
                     self.deliver(job['id'], 'social')
                 elif job['stage'] == 'social_approved':
-                    self.prepare_social_handoff(job)
+                    if job['social']['proposal'].get('deliveryMode', 'manual') == 'auto_x':
+                        if self.config.get('socialPostingEnabled') is True:
+                            self.publish_social(job)
+                        else:
+                            results.append({'id': job['id'], 'status': 'waiting_auth',
+                                            'reason': 'social_posting_disabled'})
+                    else:
+                        raise ValueError('legacy_social_requires_mode_migration')
+                elif job['stage'] == 'social_posted':
+                    self.notify_social_posted(job)
             except Exception as error:
                 results.append({'id': job['id'], 'status': 'attention', 'reason': reason(error)})
         now = datetime.now(JST)
@@ -433,7 +443,9 @@ class Runtime:
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
                       approval={'action': 'approved' if j.get('approval') else None},
                       publication=j.get('publication'),
-                      social={'status': j['stage'] if j.get('social') else None}) for j in jobs],
+                      social={'status': j['stage'] if j.get('social') else None,
+                              'deliveryMode': ((j.get('social') or {}).get('proposal') or {}).get('deliveryMode', 'manual'),
+                              'publication': self._social_publication_summary(j)}) for j in jobs],
                   'reports': reports, 'reportAttention': report_attention,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
         atomic(self.root / 'health.json', result)
@@ -470,7 +482,8 @@ class Runtime:
         bundle = copy.deepcopy(job['bundle'])
         account = json.loads((Path(self.config['repo']) / 'data/account-config.json').read_text())
         bundle['socialRules'] = {k: account[k] for k in ('tone', 'ngWords', 'linkRules', 'formatting', 'personaGuards') if k in account}
-        bundle['socialRules']['approval'] = 'Separate exact-version human approval; manual X posting only. Examples are not factual evidence.'
+        bundle['socialRules']['approval'] = ('Separate exact-version human approval binds delivery mode and target account. '
+            'Only explicitly auto_x proposals may automatically post after approval. Examples are not factual evidence.')
         bundle['publicReadback'] = {'verified': True, 'url': job['publication']['url'],
                                    'content': bundle['article']['content'], 'images': bundle['images']}
         proposal = self.models.social(bundle, job['publication']['url'])
@@ -497,6 +510,15 @@ class Runtime:
                      affiliate=url_ok, medical=no_medical and job['review']['evidence']['medical'], render=format_ok)
         if not all(flags.values()):
             raise ValueError('social_source_image_url_or_format_failed')
+        target = self.config.get('targetAccountId')
+        if target is not None:
+            proposal.update(deliveryMode='auto_x', targetAccountId=target)
+        else:
+            if self.config.get('socialPostingEnabled') is True:
+                raise ValueError('social_target_unconfigured')
+            proposal['deliveryMode'] = 'manual'
+            proposal.pop('targetAccountId', None)
+        valid_social_mode(proposal)
         final = self.models.review({'article': {'content': proposal['text'] + '\n' + proposal['replyText']},
                                     'source': bundle, 'proposal': proposal},
                                    {'reviewKind': 'social', 'evidence': flags, 'publicationReadback': job['publication'],
@@ -511,6 +533,76 @@ class Runtime:
                       polish={'model': polished['model'], 'validated': True})
         self.ledger.record_social(job['id'], proposal, review)
         self.deliver(job['id'], 'social')
+
+    def enable_social_autopost(self, id, target_id):
+        if target_id != self.config.get('targetAccountId'):
+            raise ValueError('social_target_mismatch')
+        return self.ledger.enable_social_autopost(id, target_id)
+
+    @staticmethod
+    def _social_publication_summary(job):
+        publication = (job.get('social') or {}).get('publication')
+        if not publication:
+            return None
+        return {'verified': publication.get('verified') is True, 'at': publication.get('at'),
+                'mainUrl': publication.get('mainUrl'), 'replyUrl': publication.get('replyUrl')}
+
+    def publish_social(self, job):
+        """The publisher journal owns X retries; do not globally claim a social effect."""
+        if self.config.get('socialPostingEnabled') is not True:
+            raise ValueError('social_posting_disabled')
+        current = self.ledger.get_job(job['id'])
+        social = current.get('social') or {}
+        proposal = social.get('proposal') or {}
+        valid_social_mode(proposal)
+        if (current['stage'] != 'social_approved' or proposal.get('deliveryMode') != 'auto_x'
+                or proposal.get('targetAccountId') != self.config.get('targetAccountId')
+                or fingerprint(proposal) != social.get('revision')):
+            raise ValueError('approved_auto_x_target_required')
+        valid_review(social.get('review'), social['revision'])
+        approval = social.get('approval') or {}
+        if (approval.get('action') != 'approved' or approval.get('revision') != social['revision']
+                or approval.get('user_id') != self.config['slack']['user_id']):
+            raise ValueError('current_social_owner_approval_required')
+        if self.social_publisher is None:
+            from social_publisher import SocialPublisher
+            self.social_publisher = SocialPublisher(self.config, self.env, fetcher=self.catalog)
+        evidence = self.social_publisher.publish(current)
+        if not isinstance(evidence, dict) or evidence.get('verified') is not True:
+            raise ValueError('social_publication_requires_reconciliation')
+        posted = self.ledger.record_social_publication(current['id'], social['revision'], evidence)
+        self.notify_social_posted(posted)
+        return posted
+
+    def notify_social_posted(self, job):
+        publication = (job.get('social') or {}).get('publication') or {}
+        if job.get('stage') != 'social_posted' or publication.get('verified') is not True:
+            raise ValueError('social_posted_readback_required')
+        folder = self.root / 'social-posted-notices'
+        folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+        marker = folder / (job['social']['revision'] + '.json')
+        try:
+            fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
+            saved = json.loads(marker.read_text())
+            if saved.get('status') == 'verified':
+                return {'status': 'already_delivered'}
+            raise ValueError('social_posted_notice_requires_reconciliation')
+        with os.fdopen(fd, 'w') as out:
+            json.dump({'status': 'in_flight', 'at': stamp()}, out)
+            out.flush()
+            os.fsync(out.fileno())
+        directory = os.open(folder, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        receipt = self.slack.notice('【X投稿確認済み】' + job['bundle']['article']['title'] + '\n' +
+                                    publication['mainUrl'] + '\n記事リンクの返信: ' + publication['replyUrl'])
+        if not isinstance(receipt, dict) or receipt.get('verified') is not True:
+            raise ValueError('social_posted_notice_requires_reconciliation')
+        atomic(marker, {'status': 'verified', 'at': stamp(), 'receipt': receipt})
+        return {'status': 'delivered'}
 
     def preflight(self):
         self.slack._call('auth.test', {})
@@ -529,6 +621,8 @@ class Runtime:
 
     def prepare_social_handoff(self, job):
         """Respect the established Gearman manual-post route; never revive old X API jobs."""
+        if job['social']['proposal'].get('deliveryMode', 'manual') != 'manual':
+            raise ValueError('automatic_social_cannot_use_manual_handoff')
         marker = self.root / 'social-outbox' / (job['social']['revision'] + '.json')
         if marker.exists():
             return
@@ -545,7 +639,8 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report', 'enable-social-autopost'))
+    parser.add_argument('--target-account-id')
     parser.add_argument('--kind', choices=('weekly', 'monthly', 'editorial'))
     parser.add_argument('--id')
     parser.add_argument('--limit', type=int, default=3)
@@ -577,6 +672,11 @@ def main():
             if not args.kind:
                 raise ValueError('report_kind_required')
             value = runtime.reporter.send(args.kind, jobs=runtime.ledger.list_jobs(), manual=True)
+        elif args.command == 'enable-social-autopost':
+            if not args.id or not args.target_account_id:
+                raise ValueError('article_and_target_account_required')
+            job = runtime.enable_social_autopost(args.id, args.target_account_id)
+            value = {'status': job['stage'], 'articleId': job['id'], 'revision': job['social']['revision'], 'posted': False}
         elif args.command == 'approve-from-codex':
             if not args.id or not args.revision or not args.evidence_file:
                 raise ValueError('article_id_revision_and_user_message_evidence_required')

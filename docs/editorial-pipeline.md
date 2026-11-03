@@ -140,18 +140,21 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
   source=codex / thread_id / message_id / text証跡が必要。曖昧な「OK」やモデルの自己承認は不可。
   既存承認/公開/副作用claimとの競合を拒否し、承認記録だけを作る。公開はpublicationEnabledと通常gateを別に通す。
 
-## 7. SNSはmanual post handoff
+## 7. SNS承認とX投稿モード（自動投稿は接続復旧待ち）
 
 - 記事公開のDB/cache/public readbackがverifiedになった後だけSNS原稿を作る。
   公開本文・画像を根拠にClaude生成→Gemini 3.8校正→上位7.5審査→**記事と別のSNS承認**。
 - ClaudeのSNS生成応答はnative JSON schemaの `text` / `replyText` のみ。本文にURLを置かず、返信は正確な公開URLのみとし、加重280文字を上限とする。公開URL・verified画像・`platform=x` はローカルで組み立てる。
   告知案全体の独立fingerprintを使い、変更時はSNS再審査・再承認。
   SNS予定日時/予約を現schemaが実装しているとは書かない。
-- Slackの承認表示は内部ID・hash・点数・選定理由を本文に出さず、承認ボタンの内部値には正確なrequest・nonce・版を保持する。記事側は実ページに表示する商品説明・仕様・参考価格・画像・購入先を確認可能にし、本文にあるFAQを重複させない。SNS承認カードはXへの投稿が手動であることを示す。
-- SNS承認後は `social-outbox/<revision>.json` に **`approved_manual_post_pending`** を記録しSlackへ通知する。
+- Slackの承認表示は内部ID・hash・点数・選定理由を本文に出さず、承認ボタンの内部値には正確なrequest・nonce・版を保持する。記事側は実ページに表示する商品説明・仕様・参考価格・画像・購入先を確認可能にし、本文にあるFAQを重複させない。SNSはモードなし／`manual`の旧提案なら手動表記を維持する。`auto_x`の新提案は「Xに投稿する」を表示し、承認した本文・画像と記事リンク返信の自動投稿を承認対象とする。投稿先IDは表示しない。
+- モードなし／`manual`の提案は、SNS承認後に `social-outbox/<revision>.json` へ **`approved_manual_post_pending`** を記録しSlackへ通知する。
   **自動投稿・自動予約は行わない**。本人が原稿を利用するか、Codexアプリへ投稿を別途依頼する。
   手動投稿後の外部投稿ID/readback収集までをこのrunnerが実装済みとは扱わない。
-- X旧自動投稿は復活させず、新しいSNS認証・課金・旧レールを追加しない。
+- 新しい`auto_x`モードでは、投稿モード・投稿先アカウント・本文・返信・画像を同じ提案版に拘束し、記事公開とは別の承認を保存する。旧手動カードを自動投稿の承認には流用せず、移行時は旧カードを失効して新しいカードで再承認する。
+- **接続の現状（2026-11-03 JST、主担当のread-only確認結果）**：公開アカウント`@camp_gear_lab`の参照は確認済みだが、OAuth 1.0aは両ホストでHTTP401／code89となり、`socialPostingEnabled: false`を維持する。公開アカウントの参照成功は、投稿用資格情報の有効性や投稿権限の確認ではない。
+  無効中の新カードは「X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。」と表示する。承認は接続復旧後の自動投稿の意図として保存し、即時投稿の成功を約束しない。この変更に伴う実投稿・配備・カード移行が完了したとは扱わない。
+- X旧自動投稿は復活させない。新経路も承認版・投稿先・画像バイトの一致と、本文投稿・リンク返信のreadbackを確認して初めて成功と扱う。結果不明の書込は自動再送しない。
   既存投稿制限は `docs/x-post-skill.md`、`src/lib/x-post-prompts.mjs`、`scripts/post-to-x.js`、
   `data/account-config.json` を参照。不一致は保留し、古い自動承認/再稼働指示を流用しない。
 

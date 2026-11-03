@@ -8,6 +8,8 @@
   "node": "/absolute/path/to/node",
   "generationEnabled": false,
   "publicationEnabled": false,
+  "socialPostingEnabled": false,
+  "targetAccountId": "1343879420470206464",
   "telegramEnabled": false,
   "slack": {
     "team_id": "EXISTING_TEAM",

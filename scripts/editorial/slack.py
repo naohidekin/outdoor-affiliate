@@ -62,6 +62,7 @@ def mrkdwn_chunks(text, limit=2600):
 class Slack:
     def __init__(self, config, call=None):
         self.scope = config['slack']
+        self.social_posting_enabled = config.get('socialPostingEnabled') is True
         self.node = config.get('node', 'node')
         self._call = call or self._node_call
         self._next_post = 0
@@ -159,8 +160,15 @@ class Slack:
         bundle = job['bundle']
         article = bundle['article']
         social = request.get('kind') == 'social'
+        auto_x = False
         if social:
             proposal = job['social']['proposal']
+            mode = proposal.get('deliveryMode')
+            auto_x = mode == 'auto_x'
+            if mode not in (None, 'manual', 'auto_x') or (auto_x and (
+                    not isinstance(proposal.get('targetAccountId'), str)
+                    or not re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountId']))):
+                raise ValueError('social_delivery_mode_invalid')
             body = social_body(proposal)
         else:
             body = article_body(bundle)
@@ -178,9 +186,14 @@ class Slack:
             text = '画像：' + str(product_names.get(image.get('productId'), article['title']))
             parts.append(self.post(text, [{'type': 'image', 'image_url': url, 'alt_text': text}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
-        labels = [('approve', 'この告知案を承認' if social else '公開する'),
+        labels = [('approve', 'Xに投稿する' if auto_x else 'この告知案を承認' if social else '公開する'),
                   ('reject', '修正を依頼'), ('hold', '保留')]
-        text = article['title'] + ('\nXへの投稿は手動です。' if social else '\n本文・画像・購入先を確認してから公開を選んでください。')
+        explanation = ('承認した本文・画像をXへ投稿し、記事リンクを返信として自動投稿します。' if auto_x else
+                       'Xへの投稿は手動です。' if social else '本文・画像・購入先を確認してから公開を選んでください。')
+        if auto_x and not self.social_posting_enabled:
+            explanation = ('承認した本文・画像と記事リンク返信が自動投稿の対象です。\n'
+                           'X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。')
+        text = article['title'] + '\n' + explanation
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
                   {'type': 'actions', 'elements': [{'type': 'button', 'text': {'type': 'plain_text', 'text': label},
                    'action_id': 'camp_review_' + action, 'value': json.dumps(values, separators=(',', ':'))}

@@ -384,6 +384,173 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.runtime.ledger.revise_candidate(job['id'], '別内容', '勝手な変更')
 
+    def auto_social_job(self):
+        source = bundle()
+        source['images'][0].update(sha256='a' * 64, size=10)
+        with patch.object(self.models, 'draft', return_value=source):
+            job = self.published_job()
+        self.config.update(targetAccountId='123', socialPostingEnabled=False)
+        self.runtime.make_social(job)
+        job = self.runtime.ledger.get_job(job['id'])
+        self.approve(job)
+        self.runtime.consume()
+        return self.runtime.ledger.get_job(job['id'])
+
+    @staticmethod
+    def social_receipt(job):
+        proposal = job['social']['proposal']
+        return dict(verified=True, status='verified', fingerprint=job['social']['revision'], accountId='123',
+            mainId='111', replyId='222', readback={
+                'main': dict(verified=True, id='111', authorId='123', text=proposal['text'],
+                             mediaKeys=['3_333'], replyTo=None),
+                'reply': dict(verified=True, id='222', authorId='123', text=proposal['replyText'],
+                              mediaKeys=[], replyTo='111'),
+                'media': {'verified': True, 'items': [{'mediaId': '333', 'mediaKey': '3_333', 'sha256': 'a' * 64}]}})
+
+    def test_auto_mode_account_are_assigned_before_review_not_model_metadata(self):
+        job = self.published_job()
+        self.config['targetAccountId'] = '123'
+        with patch.object(self.models, 'review', wraps=self.models.review) as review:
+            self.runtime.make_social(job)
+        proposal = review.call_args.args[0]['proposal']
+        self.assertEqual(proposal['deliveryMode'], 'auto_x')
+        self.assertEqual(proposal['targetAccountId'], '123')
+        saved = self.runtime.ledger.get_job(job['id'])['social']
+        self.assertEqual(saved['revision'], __import__('ledger').fingerprint(proposal))
+        self.assertEqual(saved['review']['fingerprint'], saved['revision'])
+
+    def test_disabled_auto_approval_waits_auth_without_handoff_notice_or_publisher(self):
+        job = self.auto_social_job()
+        before = copy.deepcopy(job['social']['approval'])
+        with patch.object(self.runtime, 'publish_social') as publish:
+            notices = len(self.slack.notices)
+            for _ in range(2):
+                result = self.runtime.tick()
+                self.assertTrue(any(r.get('status') == 'waiting_auth' and r.get('reason') == 'social_posting_disabled'
+                                    for r in result['results']))
+            publish.assert_not_called()
+        self.assertEqual(len(self.slack.notices), notices)
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['social']['approval'], before)
+        self.assertFalse((self.runtime.root / 'social-outbox').exists())
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_approved')
+
+    def test_legacy_manual_approval_never_autoposts_or_makes_manual_handoff_from_tick(self):
+        job = self.published_job()
+        self.runtime.make_social(job)
+        job = self.runtime.ledger.get_job(job['id'])
+        self.approve(job)
+        self.runtime.consume()
+        self.config.update(targetAccountId='123', socialPostingEnabled=True)
+        with patch.object(self.runtime, 'publish_social') as publish:
+            result = self.runtime.tick()
+            publish.assert_not_called()
+        self.assertTrue(any(r.get('reason') == 'legacy_social_requires_mode_migration' for r in result['results']))
+        self.assertFalse((self.runtime.root / 'social-outbox').exists())
+
+    def test_runtime_migration_requires_fixed_target_no_model_call_or_send(self):
+        job = self.published_job()
+        self.runtime.make_social(job)
+        self.config['targetAccountId'] = '123'
+        before_deliveries = len(self.slack.deliveries)
+        with patch.object(self.models, 'review') as review:
+            with self.assertRaisesRegex(ValueError, 'social_target_mismatch'):
+                self.runtime.enable_social_autopost(job['id'], '999')
+            migrated = self.runtime.enable_social_autopost(job['id'], '123')
+            review.assert_not_called()
+        self.assertEqual(migrated['stage'], 'social_review')
+        self.assertEqual(len(self.slack.deliveries), before_deliveries)
+        self.assertIsNone(migrated['social']['approval'])
+
+    def test_x_success_is_recorded_once_and_health_contains_verified_urls(self):
+        job = self.auto_social_job()
+        self.config['socialPostingEnabled'] = True
+        class Publisher:
+            calls = 0
+            def publish(inner, current):
+                inner.calls += 1
+                return self.social_receipt(current)
+        publisher = Publisher()
+        self.runtime.social_publisher = publisher
+        with patch.object(self.slack, 'notice', return_value={'verified': True, 'message_ts': '1793700000.123456'}) as notify:
+            first = self.runtime.tick()
+            self.runtime.tick()
+        self.assertEqual(publisher.calls, 1)
+        self.assertEqual(notify.call_count, 1)
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_posted')
+        social = next(j for j in first['articles'] if j['id'] == job['id'])['social']
+        self.assertEqual(social['publication']['mainUrl'], 'https://x.com/i/web/status/111')
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM effects WHERE kind='social'").fetchone()[0], 0)
+
+    def test_crash_after_x_success_before_ledger_resumes_publisher_journal(self):
+        job = self.auto_social_job()
+        self.config['socialPostingEnabled'] = True
+        class JournalPublisher:
+            calls = 0
+            writes = 0
+            receipt = None
+            def publish(inner, current):
+                inner.calls += 1
+                if inner.receipt is None:
+                    inner.writes += 1
+                    inner.receipt = self.social_receipt(current)
+                return copy.deepcopy(inner.receipt)
+        publisher = JournalPublisher()
+        self.runtime.social_publisher = publisher
+        with patch.object(self.runtime.ledger, 'record_social_publication', side_effect=RuntimeError('local crash')):
+            self.runtime.tick()
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_approved')
+        with patch.object(self.slack, 'notice', return_value={'verified': True, 'message_ts': '1793700000.123456'}):
+            self.runtime.tick()
+        self.assertEqual(publisher.calls, 2)
+        self.assertEqual(publisher.writes, 1)
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_posted')
+
+    def test_posted_notification_unknown_does_not_repost_x_or_resend_notice(self):
+        job = self.auto_social_job()
+        self.config['socialPostingEnabled'] = True
+        class Publisher:
+            calls = 0
+            def publish(inner, current):
+                inner.calls += 1
+                return self.social_receipt(current)
+        publisher = Publisher()
+        self.runtime.social_publisher = publisher
+        sent = []
+        def notice(text):
+            if text.startswith('【X投稿確認済み】'):
+                sent.append(text)
+                raise TimeoutError('Slack result unknown')
+            return {'verified': True, 'message_ts': '1793700000.123456'}
+        with patch.object(self.slack, 'notice', side_effect=notice):
+            for _ in range(3):
+                self.runtime.tick()
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(publisher.calls, 1)
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_posted')
+        marker = self.runtime.root / 'social-posted-notices' / (job['social']['revision'] + '.json')
+        self.assertEqual(json.loads(marker.read_text())['status'], 'in_flight')
+
+    def test_auth_failure_and_changed_target_never_record_social_publication(self):
+        job = self.auto_social_job()
+        self.config['socialPostingEnabled'] = True
+        class Publisher:
+            calls = 0
+            def publish(inner, current):
+                inner.calls += 1
+                raise ValueError('x_account_mismatch')
+        publisher = Publisher()
+        self.runtime.social_publisher = publisher
+        self.config['targetAccountId'] = '999'
+        with self.assertRaises(ValueError):
+            self.runtime.publish_social(job)
+        self.assertEqual(publisher.calls, 0)
+        self.config['targetAccountId'] = '123'
+        with self.assertRaisesRegex(ValueError, 'x_account_mismatch'):
+            self.runtime.publish_social(job)
+        self.assertEqual(self.runtime.ledger.get_job(job['id'])['stage'], 'social_approved')
+        self.assertNotIn('publication', self.runtime.ledger.get_job(job['id'])['social'])
+
 
 if __name__ == '__main__':
     unittest.main()

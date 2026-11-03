@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import importlib.util
 import hashlib
+import json
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -431,6 +432,169 @@ class LedgerTests(unittest.TestCase):
         for stage in ('approved', 'published', 'social_approved', 'APPROVED'):
             with self.assertRaises(ValueError):
                 self.ledger.set_stage(job['id'], stage)
+
+    def social_pending(self):
+        image = dict(url='https://images.example/image.jpg', sha256='a' * 64, verified=True, size=10)
+        self.bundle['images'] = [image]
+        job = self.approved()
+        url = 'https://camp-gear-lab.com/articles/test'
+        self.ledger.record_publication(job['id'], job['revision'],
+            dict(verified=True, url=url, readback={'verified': True, 'fingerprint': job['revision']}))
+        proposal = dict(text='広告 公開仕様の調査です。', replyText=url, url=url, images=[image], platform='x')
+        review = self.review({'revision': mod.fingerprint(proposal)})
+        return self.ledger.record_social(job['id'], proposal, review)
+
+    def auto_social_approved(self):
+        job = self.social_pending()
+        job = self.ledger.enable_social_autopost(job['id'], '123')
+        req = self.request(job, 'social')
+        return self.ledger.decide(self.event(req), SCOPE, NOW)
+
+    def social_readback(self, job):
+        proposal = job['social']['proposal']
+        return dict(status='verified', verified=True, fingerprint=job['social']['revision'], accountId='123',
+            mainId='111', replyId='222', readback={
+                'main': dict(verified=True, id='111', authorId='123', text=proposal['text'],
+                             mediaKeys=['3_333'], replyTo=None, urls=[]),
+                'reply': dict(verified=True, id='222', authorId='123', text='https://t.co/short',
+                              urls=[{'url': 'https://t.co/short', 'expanded_url': proposal['replyText'],
+                                     'start': 0, 'end': len('https://t.co/short')}],
+                              mediaKeys=[], replyTo='111'),
+                'media': {'verified': True, 'items': [{'mediaId': '333', 'mediaKey': '3_333', 'sha256': 'a' * 64}]}})
+
+    def test_mode_migration_preserves_content_review_and_invalidates_old_approval(self):
+        job = self.social_pending()
+        old_request = self.request(job, 'social')
+        approved = self.ledger.decide(self.event(old_request), SCOPE, NOW)
+        old = copy.deepcopy(approved['social'])
+        migrated = self.ledger.enable_social_autopost(job['id'], '123')
+        social = migrated['social']
+        self.assertEqual(migrated['stage'], 'social_review')
+        self.assertIsNone(social['approval'])
+        self.assertNotEqual(social['revision'], old['revision'])
+        self.assertEqual({k: v for k, v in social['proposal'].items() if k not in ('deliveryMode', 'targetAccountId')}, old['proposal'])
+        self.assertEqual(social['modeTransition']['originalProposal'], old['proposal'])
+        self.assertEqual(social['modeTransition']['originalContentReview'], old['review'])
+        self.assertFalse(social['modeTransition']['modelRerun'])
+        self.assertEqual(social['review']['score'], old['review']['score'])
+        self.assertEqual(social['review']['fingerprint'], social['revision'])
+        self.assertEqual(migrated['publication'], approved['publication'])
+        with self.assertRaises(ValueError):
+            self.ledger.decide(self.event(old_request, event_id='new-after-migration'), SCOPE, NOW)
+        with self.assertRaises(ValueError):
+            self.ledger.enable_social_autopost(job['id'], '999')
+        with sqlite3.connect(self.ledger.db_path) as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM events WHERE kind='social_mode_migrated'").fetchone()[0], 1)
+            self.assertEqual(json.loads(db.execute('SELECT data FROM requests WHERE id=?',
+                (old_request['request_id'],)).fetchone()[0])['status'], 'invalidated')
+
+    def test_mode_migration_refuses_any_social_effect_or_handoff_or_publisher_journal(self):
+        job = self.social_pending()
+        for mode in ('effect_failed', 'effect_unknown', 'handoff', 'journal'):
+            with self.subTest(mode=mode):
+                if mode.startswith('effect'):
+                    with sqlite3.connect(self.ledger.db_path) as db:
+                        db.execute('INSERT INTO effects VALUES (?,?,?,?)',
+                            (job['id'], 'social', mode.split('_')[1], '{}'))
+                else:
+                    folder = self.root / ('social-outbox' if mode == 'handoff' else 'social-publications')
+                    folder.mkdir(exist_ok=True)
+                    (folder / (job['social']['revision'] + '.json')).write_text('{}')
+                before = self.ledger.get_job(job['id'])
+                with self.assertRaises(ValueError):
+                    self.ledger.enable_social_autopost(job['id'], '123')
+                self.assertEqual(self.ledger.get_job(job['id']), before)
+                with sqlite3.connect(self.ledger.db_path) as db:
+                    db.execute('DELETE FROM effects WHERE job_id=? AND kind=?', (job['id'], 'social'))
+                if not mode.startswith('effect'):
+                    (folder / (job['social']['revision'] + '.json')).unlink()
+
+    def test_mode_migration_requires_valid_target_and_original_review(self):
+        job = self.social_pending()
+        for target in ('', '0', '0123', 'abc', 123, '9' * 21):
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                self.ledger.enable_social_autopost(job['id'], target)
+        with sqlite3.connect(self.ledger.db_path) as db:
+            bad = copy.deepcopy(job)
+            bad['social']['review']['passed'] = False
+            db.execute('UPDATE jobs SET data=? WHERE id=?', (mod.canonical(bad), job['id']))
+        with self.assertRaises(ValueError):
+            self.ledger.enable_social_autopost(job['id'], '123')
+
+    def test_social_publication_requires_exact_account_text_reply_and_media_proof(self):
+        job = self.auto_social_approved()
+        evidence = self.social_readback(job)
+        mutations = [lambda e: e.update(verified=False), lambda e: e.update(fingerprint='old'),
+            lambda e: e.update(accountId='999'), lambda e: e.update(mainId='555'),
+            lambda e: e['readback']['main'].update(authorId='999'),
+            lambda e: e['readback']['main'].update(text='Changed'),
+            lambda e: e['readback']['main'].update(verified=False),
+            lambda e: e['readback']['reply'].update(replyTo='555'),
+            lambda e: e['readback']['reply']['urls'][0].update(expanded_url='https://evil.example'),
+            lambda e: e['readback']['media'].update(verified=False),
+            lambda e: e['readback']['media']['items'][0].update(sha256='b' * 64),
+            lambda e: e['readback']['main'].update(mediaKeys=['3_999']),
+            lambda e: e['readback']['reply'].update(mediaKeys=['3_333'])]
+        for mutation in mutations:
+            altered = copy.deepcopy(evidence)
+            mutation(altered)
+            with self.assertRaises(ValueError):
+                self.ledger.record_social_publication(job['id'], job['social']['revision'], altered)
+            self.assertEqual(self.ledger.get_job(job['id'])['stage'], 'social_approved')
+        posted = self.ledger.record_social_publication(job['id'], job['social']['revision'], evidence)
+        self.assertEqual(posted['stage'], 'social_posted')
+        self.assertEqual(posted['social']['publication']['mainUrl'], 'https://x.com/i/web/status/111')
+        self.assertEqual(posted['social']['publication']['replyUrl'], 'https://x.com/i/web/status/222')
+        self.assertEqual(Ledger(self.root, 'U').record_social_publication(job['id'], job['social']['revision'], evidence), posted)
+        for action in (lambda: self.ledger.enable_social_autopost(job['id'], '123'),
+                       lambda: self.ledger.record_social(job['id'], job['social']['proposal'], job['social']['review']),
+                       lambda: self.ledger.create_request(job['id'], 'social')):
+            with self.assertRaises(ValueError):
+                action()
+
+    def test_social_publication_rejects_unapproved_or_legacy_manual_authority(self):
+        job = self.social_pending()
+        req = self.request(job, 'social')
+        legacy = self.ledger.decide(self.event(req), SCOPE, NOW)
+        with self.assertRaises(ValueError):
+            self.ledger.record_social_publication(job['id'], legacy['social']['revision'], self.social_readback(legacy))
+        migrated = self.ledger.enable_social_autopost(job['id'], '123')
+        with self.assertRaises(ValueError):
+            self.ledger.record_social_publication(job['id'], migrated['social']['revision'], self.social_readback(migrated))
+
+    def test_exact_x_generated_media_suffix_requires_terminal_span_same_post_and_media_key(self):
+        expected = '広告 変更しない本文'
+        short = 'https://t.co/photo'
+        post = dict(id='111', text=expected + ' ' + short, mediaKeys=['3_333'], urls=[dict(
+            url=short, expanded_url='https://x.com/camp_gear_lab/status/111/photo/1',
+            start=len(expected) + 1, end=len(expected + ' ' + short), media_key='3_333')])
+        self.assertTrue(mod.exact_x_text(post, expected))
+        mutations = [lambda p: p.update(text='Changed ' + p['text']),
+            lambda p: p['urls'][0].update(start=0), lambda p: p['urls'][0].update(end=1),
+            lambda p: p['urls'][0].update(media_key='3_999'),
+            lambda p: p['urls'][0].update(expanded_url='https://x.com/camp_gear_lab/status/999/photo/1'),
+            lambda p: p['urls'][0].update(expanded_url='https://x.com/camp_gear_lab/status/111/photo/2'),
+            lambda p: p['urls'][0].update(expanded_url='https://evil.example/camp_gear_lab/status/111/photo/1'),
+            lambda p: p['urls'][0].update(expanded_url='https://x.com/camp_gear_lab/status/111/photo/1?x=1'),
+            lambda p: p.update(text=short + ' ' + expected), lambda p: p.update(mediaKeys=[])]
+        for mutation in mutations:
+            changed = copy.deepcopy(post)
+            mutation(changed)
+            with self.subTest(changed=changed):
+                self.assertFalse(mod.exact_x_text(changed, expected))
+
+    def test_verified_social_publication_accepts_proven_x_generated_image_suffix(self):
+        job = self.auto_social_approved()
+        evidence = self.social_readback(job)
+        main = evidence['readback']['main']
+        expected = main['text']
+        main['text'] += ' https://t.co/photo'
+        main['urls'] = [dict(url='https://t.co/photo',
+            expanded_url='https://x.com/camp_gear_lab/status/111/photo/1',
+            start=len(expected) + 1, end=len(main['text']), media_key='3_333')]
+        posted = self.ledger.record_social_publication(job['id'], job['social']['revision'], evidence)
+        self.assertEqual(posted['stage'], 'social_posted')
+        self.assertEqual(posted['social']['publication']['readback']['main']['text'], main['text'])
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 import secrets
 import sqlite3
+from x_readback import exact_x_text
 
 JST = timezone(timedelta(hours=9))
 SCOPE = ('team_id', 'app_id', 'user_id', 'channel_id', 'thread_ts')
@@ -58,6 +59,17 @@ def valid_review(review, revision):
     require(isinstance(polish, dict) and polish.get('model') == 'gemini-3.8-flash'
             and polish.get('validated') is True, 'validated Gemini polish required')
     require(review.get('fingerprint') == revision, 'review fingerprint mismatch')
+
+
+def valid_social_mode(proposal):
+    mode = proposal.get('deliveryMode', 'manual')
+    require(mode in ('manual', 'auto_x'), 'unknown social delivery mode')
+    if mode == 'auto_x':
+        require(isinstance(proposal.get('targetAccountId'), str) and
+                re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountId']) is not None,
+                'fixed X account ID required')
+    else:
+        require(not proposal.get('targetAccountId'), 'manual social target must be absent')
 
 
 class Ledger:
@@ -220,6 +232,7 @@ class Ledger:
                 valid_review(job['review'], revision)
             else:
                 require(job['publication'] and job['publication'].get('verified') is True and job['social'], 'verified publication and social required')
+                require(not job['social'].get('publication'), 'posted social is immutable')
                 revision = fingerprint(job['social']['proposal'])
                 require(revision == job['social']['revision'], 'social changed')
                 valid_review(job['social']['review'], revision)
@@ -365,14 +378,121 @@ class Ledger:
             return self._put(db, job, 'publication')
 
     def record_social(self, id, proposal, review):
+        require(isinstance(proposal, dict), 'social proposal required')
+        valid_social_mode(proposal)
         revision = fingerprint(proposal)
         valid_review(review, revision)
         with self._tx() as db:
             job = self._get(db, id)
             self._current(job)
             require(job['publication'] and job['publication'].get('verified') is True, 'verified publication required')
+            require(not (job.get('social') or {}).get('publication'), 'posted social is immutable')
             if job['social'] and job['social']['revision'] == revision:
                 return job
             self._invalidate(db, id, 'social')
-            job.update(social=dict(proposal=proposal, revision=revision, review=review, approval=None), stage='social_review')
+            job.update(social=dict(proposal=json.loads(canonical(proposal)), revision=revision,
+                                   review=json.loads(canonical(review)), approval=None), stage='social_review')
             return self._put(db, job, 'social')
+
+    def enable_social_autopost(self, id, target_id):
+        """Explicit mode-only migration; carries real content review, never a new LLM review."""
+        require(isinstance(target_id, str) and re.fullmatch(r'[1-9][0-9]{0,19}', target_id), 'fixed X account ID required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            social = job.get('social')
+            require(job.get('publication') and job['publication'].get('verified') is True and social,
+                    'verified article and reviewed social required')
+            require(job['stage'] in ('social_review', 'social_approved', 'social_held', 'social_rejected'),
+                    'social mode cannot change in this stage')
+            require(not social.get('publication'), 'posted social is immutable')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone(),
+                    'social effect requires reconciliation')
+            require(not (self.root / 'social-outbox' / (social['revision'] + '.json')).exists(),
+                    'legacy social handoff requires reconciliation')
+            require(not (self.root / 'social-publications' / (social['revision'] + '.json')).exists(),
+                    'social publisher journal requires reconciliation')
+            old = social['proposal']
+            require(old.get('deliveryMode', 'manual') == 'manual' and not old.get('targetAccountId'),
+                    'only manual social can be migrated')
+            require(fingerprint(old) == social['revision'], 'social changed')
+            valid_review(social['review'], social['revision'])
+            proposal = dict(old, deliveryMode='auto_x', targetAccountId=target_id)
+            valid_social_mode(proposal)
+            revision = fingerprint(proposal)
+            transition = dict(kind='delivery_mode_only', fromRevision=social['revision'], toRevision=revision,
+                              targetAccountId=target_id, at=timestamp().isoformat(),
+                              modelRerun=False, originalProposal=old, originalContentReview=social['review'])
+            review = dict(social['review'], fingerprint=revision,
+                          modeBinding=dict(fromRevision=social['revision'], transition='delivery_mode_only', modelRerun=False))
+            self._invalidate(db, id, 'social')
+            job.update(social=dict(proposal=proposal, revision=revision, review=review, approval=None,
+                                   modeTransition=transition), stage='social_review')
+            return self._put(db, job, 'social_mode_migrated')
+
+    def record_social_publication(self, id, revision, evidence):
+        """Accept only bound main/reply/media readbacks from the real publisher."""
+        require(isinstance(evidence, dict), 'social publication evidence required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            social = job.get('social')
+            require(social and social['revision'] == revision and fingerprint(social['proposal']) == revision,
+                    'social revision mismatch')
+            proposal = social['proposal']
+            valid_social_mode(proposal)
+            require(proposal.get('deliveryMode') == 'auto_x', 'manual approval cannot authorize X posting')
+            approval = social.get('approval') or {}
+            require(approval.get('revision') == revision and approval.get('user_id') == self.owner_id
+                    and approval.get('action') == 'approved', 'current social owner approval required')
+            valid_review(social['review'], revision)
+            require(job.get('publication') and job['publication'].get('verified') is True
+                    and (job['publication'].get('readback') or {}).get('fingerprint') == job['revision']
+                    and (job['publication'].get('readback') or {}).get('verified') is True,
+                    'verified article publication required')
+            require(proposal.get('platform') == 'x' and proposal.get('url') == job['publication'].get('url')
+                    and proposal.get('replyText') == proposal.get('url'), 'approved public reply URL required')
+            rb = evidence.get('readback') or {}
+            require(evidence.get('verified') is True and evidence.get('fingerprint') == revision
+                    and evidence.get('accountId') == proposal['targetAccountId']
+                    and isinstance(rb, dict),
+                    'bound verified X readback required')
+            main, reply, media = rb.get('main'), rb.get('reply'), rb.get('media')
+            require(isinstance(main, dict) and isinstance(reply, dict) and isinstance(media, dict)
+                    and media.get('verified') is True and isinstance(media.get('items'), list),
+                    'main reply media readback required')
+            for post, key in ((main, 'mainId'), (reply, 'replyId')):
+                require(isinstance(post.get('id'), str) and re.fullmatch(r'[1-9][0-9]{0,19}', post['id'])
+                        and post.get('verified') is True and post.get('authorId') == proposal['targetAccountId']
+                        and post['id'] == evidence.get(key), 'X post identity required')
+            require(main['id'] != reply['id'] and exact_x_text(main, proposal.get('text'))
+                    and exact_x_text(reply, proposal.get('replyText')) and reply.get('replyTo') == main['id']
+                    and main.get('replyTo') is None,
+                    'approved X text reply binding mismatch')
+            images = proposal.get('images')
+            require(isinstance(images, list) and 1 <= len(images) <= 4 and len(images) == len(media['items']),
+                    'approved X media count mismatch')
+            media_ids, media_keys = [], []
+            for image, actual in zip(images, media['items']):
+                require(isinstance(image, dict) and image.get('verified') is True and image in job['bundle']['images']
+                        and re.fullmatch(r'[a-f0-9]{64}', image.get('sha256', ''))
+                        and isinstance(actual, dict) and isinstance(actual.get('mediaKey'), str) and actual['mediaKey']
+                        and actual.get('sha256') == image['sha256']
+                        and isinstance(actual.get('mediaId'), str) and re.fullmatch(r'[1-9][0-9]{0,19}', actual['mediaId']),
+                        'approved X media identity mismatch')
+                media_ids.append(actual['mediaId'])
+                media_keys.append(actual['mediaKey'])
+            require(len(set(media_ids)) == len(media_ids) and len(set(media_keys)) == len(media_keys)
+                    and main.get('mediaKeys') == media_keys and reply.get('mediaKeys') == [],
+                    'X attachment order mismatch')
+            if social.get('publication'):
+                prior = {k: v for k, v in social['publication'].items() if k not in ('at', 'mainUrl', 'replyUrl')}
+                require(prior == evidence, 'social publication conflict')
+                return job
+            require(job['stage'] == 'social_approved', 'social not awaiting publication')
+            social['publication'] = dict(json.loads(canonical(evidence)), at=timestamp().isoformat(),
+                                         mainUrl='https://x.com/i/web/status/' + main['id'],
+                                         replyUrl='https://x.com/i/web/status/' + reply['id'])
+            job['stage'] = 'social_posted'
+            self._invalidate(db, id, 'social')
+            return self._put(db, job, 'social_publication')
