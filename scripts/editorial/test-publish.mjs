@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, parseArguments, loadEnv } from './publish.mjs';
+import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, parseArguments, loadEnv, productionDependencies } from './publish.mjs';
 import { withPublicationLock } from '../seo/article-guard.mjs';
 
 function bundle() {
@@ -34,6 +34,69 @@ function approval(revision) { return { revision, approverId: 'U-owner', evidence
 function html(b) {
   return `<main data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"><h1>${b.article.title}</h1><img src="/_next/image?url=${encodeURIComponent(b.products[0].imageUrl)}&amp;w=800"><a href="${b.products[0].affiliateUrl}">購入</a></main>`;
 }
+
+test('production minimal insert accepts empty 201 only with exact stage readback', async t => {
+  const h = harness();
+  let stored, inserts = 0, articleReads = 0, productReads = 0;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    const target = new URL(url);
+    if (options.method === 'POST') {
+      assert.equal(options.headers.Prefer, 'return=minimal,handling=strict');
+      stored = JSON.parse(options.body); inserts++;
+      return new Response(null, { status: 201 });
+    }
+    if (target.pathname.endsWith('/products')) {
+      productReads++;
+      return Response.json(h.state.products);
+    }
+    articleReads++;
+    return Response.json(stored ? [stored] : []);
+  });
+  const deps = productionDependencies({ SUPABASE_URL: 'https://db.example', SUPABASE_SERVICE_ROLE_KEY: 'test-only' });
+  deps.lock = async action => action();
+  const result = await execute({ ...h.input, action: 'stage' }, deps);
+  assert.equal(result.status, 'draft');
+  assert.equal(inserts, 1);
+  assert.equal(articleReads, 2);
+  assert.equal(productReads, 2);
+  assert.equal(stored.generation_meta.editorialRuntime.revision, h.input.revision);
+});
+
+test('production empty 201 insert never bypasses absent, changed or failed readback', async t => {
+  for (const mode of ['missing', 'changed', 'network']) {
+    await t.test(mode, async t => {
+      const h = harness();
+      let stored, inserts = 0;
+      t.mock.method(globalThis, 'fetch', async (url, options) => {
+        if (options.method === 'POST') {
+          stored = JSON.parse(options.body); inserts++;
+          return new Response(null, { status: 201 });
+        }
+        if (new URL(url).pathname.endsWith('/products')) return Response.json(h.state.products);
+        if (!stored) return Response.json([]);
+        if (mode === 'network') throw new Error('test readback unavailable');
+        return Response.json(mode === 'missing' ? [] : [{ ...stored, title: 'changed' }]);
+      });
+      const deps = productionDependencies({ SUPABASE_URL: 'https://db.example', SUPABASE_SERVICE_ROLE_KEY: 'test-only' });
+      deps.lock = async action => action();
+      await assert.rejects(execute({ ...h.input, action: 'stage' }, deps), /unknown: draft mutation requires reconciliation/);
+      assert.equal(inserts, 1);
+    });
+  }
+});
+
+test('production GET and CAS still reject empty 201 and inserts reject malformed or failed replies', async t => {
+  const deps = productionDependencies({ SUPABASE_URL: 'https://db.example', SUPABASE_SERVICE_ROLE_KEY: 'test-only' });
+  const row = articleRow(bundle().article, bundleHash(bundle()));
+  const stub = t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 201 }));
+  await assert.rejects(deps.db.findArticles(row.id, row.slug), /publisher response invalid/);
+  await assert.rejects(deps.db.getProducts(['p1']), /publisher response invalid/);
+  await assert.rejects(deps.db.publishCAS(row, { status: 'published' }), /publisher response invalid/);
+  stub.mock.mockImplementation(async () => new Response('not JSON', { status: 201 }));
+  await assert.rejects(deps.db.insertDraft(row), /publisher response invalid/);
+  stub.mock.mockImplementation(async () => new Response(null, { status: 500 }));
+  await assert.rejects(deps.db.insertDraft(row), /publisher HTTP failed/);
+});
 
 test('stage inserts only an absent identity, idempotent same revision, refuses stale/published', async () => {
   const h = harness();

@@ -273,12 +273,20 @@ export function loadEnv(file, inherited = process.env) {
     return { ...inherited, ...(file ? parseEnv(fs.readFileSync(file, 'utf8')) : {}) };
   } catch { throw new Error('publisher environment file unavailable'); }
 }
-async function requestJSON(url, options = {}) {
+async function requestJSON(url, options = {}, { allowEmptyCreated = false } = {}) {
   let response;
   try { response = await fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(25000) }); }
   catch { throw new Error('publisher request failed'); }
   requireValue(response.ok, 'publisher HTTP failed');
   if (response.status === 204) return null;
+  // PostgREST return=minimal inserts can acknowledge creation with an empty
+  // 201. Only that caller opts in; stage still requires full DB readback.
+  if (allowEmptyCreated && response.status === 201) {
+    try {
+      const body = await response.text();
+      return body === '' ? null : JSON.parse(body);
+    } catch { throw new Error('publisher response invalid'); }
+  }
   try { return await response.json(); } catch { throw new Error('publisher response invalid'); }
 }
 export function productionDependencies(env) {
@@ -298,7 +306,7 @@ export function productionDependencies(env) {
       return requestJSON(url('products', { select: Object.values(productFields).join(','), id: `in.(${values})` }), { headers });
     },
     async insertDraft(row) {
-      return requestJSON(base + 'articles', { method: 'POST', headers: { ...headers, Prefer: 'return=minimal,handling=strict' }, body: JSON.stringify(row) });
+      return requestJSON(base + 'articles', { method: 'POST', headers: { ...headers, Prefer: 'return=minimal,handling=strict' }, body: JSON.stringify(row) }, { allowEmptyCreated: true });
     },
     async publishCAS(row, patch) {
       return requestJSON(url('articles', { id: `eq.${row.id}`, slug: `eq.${row.slug}`, status: 'eq.draft', updated_at: `eq.${row.updated_at}`,
