@@ -1,0 +1,177 @@
+import test from 'node:test';
+import { createHash } from 'node:crypto';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, parseArguments, loadEnv } from './publish.mjs';
+import { withPublicationLock } from '../seo/article-guard.mjs';
+
+function bundle() {
+  return { article: { id: 'editorial-test', slug: 'test-slug', title: '新しいテント', categoryId: 'tent', content: '## 本文\n広告', excerpt: 'summary', author: 'ギア男', productIds: ['p1'], status: 'draft', createdAt: '2026-11-03T12:00:00+09:00', updatedAt: '2026-11-03T12:00:00+09:00', publishedAt: null },
+    products: [{ id: 'p1', name: 'Tent T-100', brand: 'Maker', categoryId: 'tent', specs: { model: 'T-100' }, imageUrl: 'https://img.example/tent.jpg', affiliateUrl: 'https://item.rakuten.co.jp/a/b/', amazonUrl: '' }], images: [{ productId: 'p1', url: 'https://img.example/tent.jpg', sha256: createHash('sha256').update('approved-image-bytes').digest('hex'), size: 20, verified: true }] };
+}
+function harness(b = bundle()) {
+  const state = { rows: [], products: b.products.map(productRow), writes: [], cleared: false, html: '' };
+  const db = {
+    async findArticles(id, slug) { return structuredClone(state.rows.filter(r => r.id === id || r.slug === slug)); },
+    async getProducts() { return structuredClone(state.products); },
+    async insertDraft(row) { state.writes.push('insert'); state.rows.push(structuredClone(row)); },
+    async publishCAS(row, patch) {
+      state.writes.push('patch');
+      const found = state.rows.find(r => r.id === row.id && r.status === 'draft' && r.updated_at === row.updated_at);
+      if (!found) return [];
+      Object.assign(found, patch); return [structuredClone(found)];
+    },
+  };
+  const deps = { db, imageDigest: async () => ({ sha256: createHash('sha256').update('approved-image-bytes').digest('hex'), size: 20, contentType: 'image/png' }), lock: async action => action(), now: () => '2026-11-03T12:01:00+09:00',
+    async revalidate() { state.cleared = true; },
+    async publicGet() { return state.html; } };
+  return { b, state, deps, input: { bundle: b, revision: bundleHash(b) } };
+}
+function approval(revision) { return { revision, approverId: 'U-owner', evidence: { event: 'trusted-ledger-event' } }; }
+function html(b) {
+  return `<main data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"><h1>${b.article.title}</h1><img src="/_next/image?url=${encodeURIComponent(b.products[0].imageUrl)}&amp;w=800"><a href="${b.products[0].affiliateUrl}">購入</a></main>`;
+}
+
+test('stage inserts only an absent identity, idempotent same revision, refuses stale/published', async () => {
+  const h = harness();
+  const result = await execute({ ...h.input, action: 'stage' }, h.deps);
+  assert.equal(result.status, 'draft');
+  assert.equal(h.state.rows[0].generation_meta.editorialRuntime.revision, h.input.revision);
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  assert.deepEqual(h.state.writes, ['insert']);
+  h.state.rows[0].title = 'remote changed';
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /draft mismatch/);
+  h.state.rows[0].status = 'published';
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps));
+});
+
+test('stage refuses slug conflict, changed catalog and arbitrary article fields', async () => {
+  const h = harness(); h.state.rows.push({ id: 'other', slug: h.b.article.slug, status: 'draft' });
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps));
+  h.state.rows = []; h.state.products[0].price = 1;
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /product mismatch/);
+  assert.equal(h.state.writes.length, 0);
+  const other = harness(); other.b.article.unsafe = true; other.input.revision = bundleHash(other.b);
+  await assert.rejects(execute({ ...other.input, action: 'stage' }, other.deps), /unsupported article/);
+});
+
+test('publish requires bound approval, full draft match and exact product equality', async () => {
+  const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps);
+  for (const a of [null, approval('0'.repeat(64)), { revision: h.input.revision, approverId: 'U' }])
+    await assert.rejects(execute({ ...h.input, action: 'publish', approval: a }, h.deps));
+  h.state.rows[0].excerpt = 'drift';
+  await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /draft mismatch/);
+  assert.deepEqual(h.state.writes, ['insert']);
+});
+
+test('publish CAS readback, revalidation and actual public fields precede verified result', async () => {
+  const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
+  const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
+  assert.equal(result.verified, true); assert.equal(h.state.cleared, true);
+  assert.equal(result.readback.fingerprint, h.input.revision);
+  assert.equal(result.remoteUpdatedAt, '2026-11-03T12:01:00+09:00');
+  assert.deepEqual(h.state.writes, ['insert', 'patch']);
+});
+
+test('ambiguous mutation keeps durable canonical guard marker and never reports verified', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'editorial-publish-test-'));
+  try {
+    const h = harness(); h.deps.lock = action => withPublicationLock(root, action);
+    h.deps.db.insertDraft = async () => { throw new Error('SERVICE-SECRET network reset'); };
+    await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /unknown/);
+    assert.equal(fs.existsSync(path.join(root, '.publication.in-flight.json')), true);
+    await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /in-flight/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('CAS misses, DB drift, failed cache clear and stale HTML fail closed', async () => {
+  for (const mode of ['cas', 'db', 'cache', 'html']) {
+    const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
+    if (mode === 'cas') h.deps.db.publishCAS = async () => [];
+    if (mode === 'db') { const publish = h.deps.db.publishCAS; h.deps.db.publishCAS = async (...args) => { const result = await publish(...args); h.state.rows[0].tags = ['unexpected']; return result; }; }
+    if (mode === 'cache') h.deps.revalidate = async () => { throw new Error('SECRET'); };
+    if (mode === 'html') h.state.html = '<h1>stale</h1>';
+    await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /unknown/);
+  }
+});
+
+test('HTML proof requires real attributes and title, never script strings', () => {
+  const b = bundle(); assert.equal(verifyPublicHTML(html(b), b), true);
+  for (const text of [html(b).replace('<a href=', '<a data-href='), html(b).replace(b.article.title, 'wrong'),
+    `<script>${html(b)}</script>`, html(b).replace('data-review-content-sha256', 'data-other')])
+    assert.equal(verifyPublicHTML(text, b), false);
+});
+
+test('Python canonical JSON-only UTF8 revision; raw preserves floats and never reads paths', () => {
+  const raw = '{"bundle":{"日本":"文","n":1.0,"small":1e-7,"nested":{"z":2,"a":1}}}';
+  const expected = spawnSync('python3', ['-c', 'import sys,json,hashlib; b=json.load(sys.stdin)["bundle"];print(hashlib.sha256(json.dumps(b,ensure_ascii=False,sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest())'], { input: raw, encoding: 'utf8' }).stdout.trim();
+  assert.equal(bundleHash(JSON.parse(raw).bundle, { rawRequest: raw }), expected);
+  assert.throws(() => bundleHash({ number: NaN }));
+  assert.match(bundleHash({ path: '/does/not/exist', file_path: '/etc/passwd' }), /^[a-f0-9]{64}$/);
+});
+
+test('explicit dotenv file only parsed in memory and argument errors disclose no values', () => {
+  assert.deepEqual(parseArguments(['stage', '--env-file', '/tmp/existing.env']), { action: 'stage', envFile: '/tmp/existing.env' });
+  assert.throws(() => parseArguments(['--unsafe-override']));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'editorial-env-test-'));
+  try {
+    const file = path.join(root, '.env'); fs.writeFileSync(file, 'SUPABASE_SERVICE_ROLE_KEY="test-only"\nBRAVE_API_KEY=abc # comment\n');
+    const env = loadEnv(file, {}); assert.equal(env.SUPABASE_SERVICE_ROLE_KEY, 'test-only'); assert.equal(env.BRAVE_API_KEY, 'abc');
+    assert.deepEqual(Object.keys(env).sort(), ['BRAVE_API_KEY', 'SUPABASE_SERVICE_ROLE_KEY']);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('ledger-generated article identity is accepted for a new marked draft', async () => {
+  const b = bundle(); b.article.id = 'article-' + 'a'.repeat(24);
+  const h = harness(b); await execute({ ...h.input, action: 'stage' }, h.deps);
+  assert.equal(h.state.rows[0].id, b.article.id);
+});
+
+
+test('Supabase UTC timestamp normalization is compared by instant across full article fields', async () => {
+  const h = harness();
+  const insert = h.deps.db.insertDraft;
+  h.deps.db.insertDraft = async row => { await insert(row); for (const key of ['created_at', 'updated_at']) h.state.rows[0][key] = new Date(row[key]).toISOString(); };
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  h.state.html = html(h.b);
+  const publish = h.deps.db.publishCAS;
+  h.deps.db.publishCAS = async (...args) => { const rows = await publish(...args); for (const row of h.state.rows) for (const key of ['updated_at', 'published_at']) row[key] = new Date(row[key]).toISOString(); return rows; };
+  const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
+  assert.equal(result.verified, true);
+  assert.equal(result.remoteUpdatedAt, '2026-11-03T03:01:00.000Z');
+});
+
+
+test('same image URL replaced bytes refuses publication before PATCH', async () => {
+  const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
+  h.deps.imageDigest = async () => ({ sha256: createHash('sha256').update('replaced-image-bytes').digest('hex'), size: 20, contentType: 'image/png' });
+  await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /image bytes mismatch/);
+  assert.deepEqual(h.state.writes, ['insert']); assert.equal(h.state.rows[0].status, 'draft');
+});
+
+test('all approved images must have verified hashes, size and product URL binding', async () => {
+  for (const mode of ['missing', 'hash', 'size', 'url', 'verified']) {
+    const b = bundle();
+    if (mode === 'missing') b.images = [];
+    if (mode === 'hash') b.images[0].sha256 = 'invalid';
+    if (mode === 'size') b.images[0].size = 8 * 1024 * 1024 + 1;
+    if (mode === 'url') b.images[0].url = 'https://img.example/other.jpg';
+    if (mode === 'verified') b.images[0].verified = false;
+    const h = harness(b); await execute({ ...h.input, action: 'stage' }, h.deps);
+    await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /image/);
+    assert.deepEqual(h.state.writes, ['insert']);
+  }
+});
+
+
+test('image change after PATCH never yields verified publication', async () => {
+  const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
+  let count = 0; const approved = h.deps.imageDigest;
+  h.deps.imageDigest = async url => ++count === 1 ? approved(url) : { sha256: '0'.repeat(64), size: 20, contentType: 'image/png' };
+  await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /unknown/);
+  assert.deepEqual(h.state.writes, ['insert', 'patch']);
+});

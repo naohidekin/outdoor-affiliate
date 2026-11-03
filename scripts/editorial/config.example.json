@@ -1,0 +1,20 @@
+{
+  "repo": "/absolute/path/to/editorial-checkout",
+  "stateRoot": "/absolute/private/path/outside/git/editorial",
+  "envFile": "/absolute/path/to/existing-project/.env.local",
+  "geminiEnvFile": "/absolute/path/to/existing/gemini-writing/.env",
+  "seoGuardConfig": "/absolute/path/to/existing/seo-guard.json",
+  "spoolDir": "/absolute/path/to/existing/authenticated/camp/spool",
+  "node": "/absolute/path/to/node",
+  "generationEnabled": false,
+  "publicationEnabled": false,
+  "telegramEnabled": false,
+  "slack": {
+    "team_id": "EXISTING_TEAM",
+    "app_id": "EXISTING_APP",
+    "user_id": "OWNER_USER",
+    "bot_user_id": "EXISTING_BOT_USER",
+    "channel_id": "EXISTING_CHANNEL",
+    "thread_ts": "EXISTING_THREAD_TIMESTAMP"
+  }
+}
