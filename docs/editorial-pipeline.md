@@ -275,7 +275,7 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 本文、承認画像bytes/SHAとアップロード後添付mediaKey、返信URL/親ID/対象アカウントが一致。journal verified・pendingなし、ledger social_posted。Slack完了通知1793714302.385899もreadback verified、health22:58:23 completed。
 - SOTO/CBの2件は未承認・未投稿。socialPostingEnabled=true、今後も本人のexact版承認後だけ投稿する。X認証復旧と初回の実投稿・照合まで確認済み。
 
-## 画像カード統合（2026-11-03 JST、配備受領待ち）
+## 画像カード統合（2026-11-03 JST、配備受領は以下末尾）
 
 - `socialCardsEnabled` は省略時も設定例もfalse。有効時だけ、本文polish後・品質検査/render/最終審査/Slack承認前に `SocialCards(config, env, catalog).build(bundle)` を実行。確認済み商品画像を再取得し、SHA-256一致を確認して1200×630 PNGへ合成する。画像生成モデルや架空の使用写真は使用しない。
 - `article.generationMeta.socialCard` にURL・SHA-256・size・contentType・寸法・templateVersion・元商品画像のSHA-256を保持し、`bundle.images` の `role: social-card` と一致させる。カードを含むbundle全体が審査・承認の版指紋に入る。生成・保存・readbackの失敗で止め、旧画像や空画像へ自動fallbackしない。
@@ -284,3 +284,10 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - publisherは承認画像bytesの再照合に加え、OG/Twitterタグが各一つだけでカードURLと完全一致することを確認し、readbackにmanifestを返す。SNS生成はその証跡を要求し、最終SNS審査前に画像をカード一枚へローカルで固定する。記事とSNSの別承認は維持する。
 - 公開済みGSのbundle/DB/X投稿、保留中SOTO/CBの承認は変更しない。GS改善画像は別の確認用プレビューとし、公開OG差替えには独立した画像承認と明示apply経路を別途定める。再投稿や既存承認への暗黙反映は行わない。
 - 当担当の確認: runtime35件、publish24件、metadata helper2件成功、型検査とNext production build成功。隔離したHEADでも暖房記事の既存medical2失敗とproducts正規化1失敗を再現した。mainがproductsを既存手順で正規化中。新統合の本番配備・実Slack/公開ページ確認はmainの最新受領記録で追記する。
+
+### 配備受領（2026-11-03 23:26 JST）
+- 実装 `5fef0e4` をGitHub main/作業branchとmacproへ同期。Vercel production `dpl_9FVD9hKeTX2yKGjXpsRPNkbbDA6g` READY、camp-gear-lab.comへalias済み。GS公開HTMLのOG/Twitter各1件と従来PNGの1200×630・HTTP200を確認。
+- macpro Python253件・画像/保存/公開Node37件成功。Airも型検査・build・metadata2件成功。products正規化は内容不変で修正、既存暖房記事のmedical2失敗は未解消。本変更による失敗ではない。
+- macproの実GS生成→専用bucket保存→公開GET一致を確認。SHA `6f5282dd3f4e2fda8d653e16efbd403abd2af206eecdc9f294bd1ddeb056791c`、94952bytes。再生成も同一bytes、既存オブジェクトの照合成功。元のledger/公開記事/X投稿は不変。生成環境間のフォント差は許容し、承認後は保存済みbytesを固定する。
+- `socialCardsEnabled=true` を既存private configへ設定。health23:25:58 completed、GS social_posted・SOTO/CB social_reviewを維持。新カードを使う将来の記事の本人承認・実公開・X実投稿はまだ実施していない。今回GSは差し替え確認案であり、公開反映は未承認。
+- Airの元checkout `claude/camp-gear-lab-review-n1n3e9` は既存 `data/kill-switch.json` 未コミット差分によりpull停止。stash/破棄せず保持。今回の実装checkoutとmacpro、GitHubは同期済み。
