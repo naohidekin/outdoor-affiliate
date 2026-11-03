@@ -133,26 +133,76 @@ class ReportTests(unittest.TestCase):
                 dict(week='2026-11-02', stage='published', theme={'title': '過去公開'},
                      publication={'verified': True, 'at': '2026-10-31T19:00:00+09:00'})]
         text = editorial_report(jobs, now=self.now)
-        self.assertIn('期間内の公開確認済み: 1件', text)
+        self.assertIn('新編集台帳で確認した期間内公開: 1件', text)
         self.assertIn('確認待ち（繰越含む）: 1件', text)
         self.assertIn('繰越記事', text)
         self.assertNotIn('過去公開', text)
         self.assertIn('新しい承認ボタンは発行していません', text)
 
-    def test_seo_status_uses_bounded_metadata_not_historical_prose(self):
-        root = Path(self.config['seoStateRoot'])
-        (root / 'reports').mkdir(parents=True)
-        (root / 'reports/latest.json').write_text(json.dumps(dict(generatedAt='2026-11-05T14:01:00+09:00',
-            executionStatus='healthy', modelExecuted=False, reason='raw internal reason', report='run-old.md')))
-        (root / 'reports/run-old.md').write_text('October historical work must not be copied')
-        (root / 'usage.json').write_text(json.dumps({'actualInvoiceUsd': None, 'secret': 'never expose'}))
-        text = seo_status(root)
-        self.assertIn('正常', text)
-        self.assertIn('Astraの新しい判断は行っていません', text)
-        self.assertIn('実費未確定', text)
-        self.assertNotIn('historical work', text)
-        self.assertNotIn('never expose', text)
-        self.assertNotIn('raw internal', text)
+    def test_slack_reports_include_period_work_and_usage_not_local_file_pointer(self):
+        for kind, day in [('weekly', '2026-11-02'), ('monthly', '2026-10-15')]:
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder) / 'seo'
+                (root / 'reports').mkdir(parents=True)
+                (root / 'reports' / f'agent-campgearlab-seo-{day}-astra.md').write_text(
+                    '## 実施内容\n見出しの重複を確認した\n## 判断理由\n確定指標だけを対象にした\n'
+                    '## 結果・欠測\n売上は未接続\n## 次の作業\n対象ページを再確認する')
+                (root / 'reports/run-old.md').write_text('MUST_NOT_COPY_HISTORY')
+                (root / 'usage.json').write_text(json.dumps({'runs': [{
+                    'id': 'do-not-show-id', 'kind': 'operations', 'finishedAt': day + 'T14:00:00+09:00',
+                    'models': [{'model': 'gpt-6-astra', 'inputTokens': 123, 'outputTokens': 45,
+                                'codexCreditsEstimate': 2.5, 'apiUsdEstimate': .03}], 'actualUsd': None,
+                    'sourcePaths': ['/never/read/raw.log']}]}))
+                config = dict(self.config, seoStateRoot=str(root), stateRoot=str(Path(folder) / 'private'))
+                metrics = snapshot('2026-10-01', '2026-10-31')
+                metrics['collectedAt'] = self.now.isoformat()
+                metrics['previous'].update(startDate='2026-09-01', endDate='2026-09-30')
+                slack = SlackFake()
+                reporter = Reporter(config, slack, collector=lambda *_: metrics)
+                self.assertEqual(reporter.send(kind, now=self.now, manual=True)['status'], 'verified')
+                text = slack.messages[0]
+                self.assertIn('見出しの重複を確認した', text)
+                self.assertIn('確定指標だけを対象にした', text)
+                self.assertIn('入力123', text)
+                self.assertIn('API比較推定', text)
+                self.assertIn('実請求USD: 未確認', text)
+                self.assertLessEqual(len(text), 12000)
+                for private in ('do-not-show-id', '/never/read', 'MUST_NOT_COPY_HISTORY', '判断本文はSEOレポートで確認'):
+                    self.assertNotIn(private, text)
+
+    def test_monthly_publication_list_uses_previous_month_and_pending_is_asof(self):
+        jobs = [dict(stage='published', theme={'title': '十月の公開'}, publication={
+                    'verified': True, 'at': '2026-10-31T14:59:59Z',
+                    'url': 'https://camp-gear-lab.com/articles/october'}),
+                dict(stage='social_review', theme={'title': '十一月公開のSNS待ち'}, publication={
+                    'verified': True, 'at': '2026-10-31T15:00:00Z',
+                    'url': 'https://camp-gear-lab.com/articles/november'}),
+                dict(stage='review', week='2026-09-28', theme={'title': '過去からの確認待ち'})]
+        text = editorial_report(jobs, now=self.now, kind='monthly')
+        published, pending = text.split('現在の確認待ち・保留', 1)
+        self.assertIn('2026/10/01〜2026/10/31', published)
+        self.assertIn('新編集台帳で確認した期間内公開: 1件', published)
+        self.assertIn('旧経路を含むサイト全体の公開件数ではありません', published)
+        self.assertIn('十月の公開', published)
+        self.assertIn('https://camp-gear-lab.com/articles/october', published)
+        self.assertNotIn('十一月公開', published)
+        self.assertNotIn('/november', published)
+        self.assertIn('十一月公開のSNS待ち：SNS原稿確認待ち', pending)
+        self.assertIn('過去からの確認待ち', pending)
+        self.assertIn('対象期間の実績とは別', pending)
+
+    def test_monthly_zero_is_new_ledger_only_and_encoded_urls_are_not_shown(self):
+        text = editorial_report([], now=self.now, kind='monthly')
+        self.assertIn('新編集台帳で確認した期間内公開: 0件', text)
+        self.assertIn('旧経路を含むサイト全体の公開件数ではありません', text)
+        for url in ('https://camp-gear-lab.com/articles/a%3Ftoken%3Dprivate',
+                    'https://camp-gear-lab.com/articles/a?token=private',
+                    'https://person@camp-gear-lab.com/articles/a'):
+            jobs = [dict(stage='published', theme={'title': '記事'}, publication={
+                'verified': True, 'at': '2026-10-15T12:00:00+09:00', 'url': url})]
+            result = editorial_report(jobs, now=self.now, kind='monthly')
+            self.assertIn('公開URL未確認', result)
+            self.assertNotIn(url, result)
 
     def test_monthly_subprocess_is_bounded_and_uses_only_supplied_env(self):
         cfg = dict(self.config, seoRepo='/configured/seo')
