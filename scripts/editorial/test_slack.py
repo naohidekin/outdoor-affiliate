@@ -1,3 +1,5 @@
+import copy
+import html
 import json
 import tempfile
 from pathlib import Path
@@ -32,6 +34,66 @@ class SlackTests(unittest.TestCase):
                 return self.call(method, data) if method == 'chat.postMessage' else {'messages': observed}
             with self.assertRaises(ValueError):
                 Slack(self.config, call=call).post('本文')
+
+    def test_plain_text_block_entities_decode_once_without_changing_expected(self):
+        text = 'HOME&CAMP\n> 引用 &lt;literal&gt;'
+        blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
+                  {'type': 'actions', 'elements': [{'type': 'button',
+                   'text': {'type': 'plain_text', 'text': '承認 & 確認'},
+                   'action_id': 'approve', 'value': '{"nonce":"a&b"}',
+                   'url': 'https://example.com/?a=1&b=2'}]}]
+        original = copy.deepcopy(blocks)
+        posts = []
+        def call(method, data):
+            result = self.call(method, data)
+            if method == 'chat.postMessage':
+                posts.append(data)
+            else:
+                message = result['messages'][0]
+                message['text'] = html.escape(text, quote=False)
+                message['blocks'] = copy.deepcopy(blocks)
+                message['blocks'][0]['block_id'] = 'server-generated'
+                message['blocks'][0]['text'].update(text=html.escape(text, quote=False), emoji=True)
+                message['blocks'][1]['elements'][0]['text']['text'] = '承認 &amp; 確認'
+            return result
+        self.assertTrue(Slack(self.config, call=call).post(text, blocks)['verified'])
+        self.assertEqual(blocks, original)
+        self.assertEqual(len(posts), 1)
+
+    def test_block_normalization_rejects_changed_text_values_urls_and_mrkdwn(self):
+        text = 'HOME&CAMP > 引用'
+        blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
+                  {'type': 'actions', 'elements': [{'type': 'button',
+                   'text': {'type': 'plain_text', 'text': '承認 & 確認'},
+                   'action_id': 'approve', 'value': '{"nonce":"a&b"}',
+                   'url': 'https://example.com/?a=1&b=2'}]}]
+        for mode in ('text', 'double', 'value', 'url', 'mrkdwn'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as root:
+                expected = copy.deepcopy(blocks)
+                if mode == 'mrkdwn':
+                    expected[0]['text']['type'] = 'mrkdwn'
+                posts = []
+                def call(method, data):
+                    result = self.call(method, data)
+                    if method == 'chat.postMessage':
+                        posts.append(data)
+                    else:
+                        message = result['messages'][0]
+                        message['blocks'] = copy.deepcopy(expected)
+                        if mode == 'text':
+                            message['blocks'][0]['text']['text'] = '変更された本文'
+                        elif mode in ('double', 'mrkdwn'):
+                            encoded = html.escape(text, quote=False)
+                            message['blocks'][0]['text']['text'] = html.escape(encoded, quote=False) if mode == 'double' else encoded
+                        else:
+                            button = message['blocks'][1]['elements'][0]
+                            button[mode] = html.escape(button[mode], quote=False)
+                    return result
+                with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+                    Slack(dict(self.config, stateRoot=root), call=call).post(text, expected)
+                self.assertEqual(len(posts), 1)
+                receipt = Path(root) / 'slack-outbound/1793000000.123456.json'
+                self.assertEqual(json.loads(receipt.read_text())['status'], 'sent_unverified')
 
     def test_unicode_chunks_respect_slack_units_without_splitting_characters(self):
         text = '🏕️あいう' * 1800

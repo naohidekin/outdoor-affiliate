@@ -62,6 +62,12 @@ function normalizeTimestamps(row) {
   for (const key of ['created_at', 'updated_at', 'published_at', 'added_at']) {
     const value = result[key];
     if (value == null) continue;
+    // Existing catalog products store added_at as a calendar date in a TEXT column.
+    if (key === 'added_at' && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      requireValue(!Number.isNaN(Date.parse(value + 'T00:00:00Z')) &&
+        new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value, 'invalid calendar date');
+      continue;
+    }
     const match = typeof value === 'string' && value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/);
     requireValue(match && Number.isFinite(Date.parse(match[1] + match[3])), 'invalid timezone-aware timestamp');
     const fraction = (match[2] || '').replace(/0+$/, '');

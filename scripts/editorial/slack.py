@@ -82,16 +82,18 @@ class Slack:
         message = next((m for m in observed.get('messages', []) if m.get('ts') == ts), None)
         if not message or message.get('thread_ts') != self.scope['thread_ts']:
             raise ValueError('slack_readback_missing')
-        # Slack normalizes fallback text newlines, but plain_text blocks are exact.
+        # Slack normalizes fallback newlines and entity-encodes visible text.
         normalize = lambda t: str(t).replace('\n', ' ')
         if normalize(html.unescape(str(message.get('text')))) != normalize(text):
             raise ValueError('slack_readback_mismatch')
         if blocks:
-            def stable(v):
+            def stable(v, observed=False):
                 if isinstance(v, dict):
-                    return {k: stable(x) for k, x in v.items() if k not in ('block_id', 'emoji')}
-                return [stable(x) for x in v] if isinstance(v, list) else v
-            if stable(message.get('blocks')) != stable(blocks):
+                    return {k: (html.unescape(x) if observed and v.get('type') == 'plain_text'
+                                and k == 'text' and isinstance(x, str) else stable(x, observed))
+                            for k, x in v.items() if k not in ('block_id', 'emoji')}
+                return [stable(x, observed) for x in v] if isinstance(v, list) else v
+            if stable(message.get('blocks'), observed=True) != stable(blocks):
                 raise ValueError('slack_blocks_mismatch')
         self._receipt(ts, 'verified', data)
         return {'message_ts': ts, 'hash': digest(data), 'verified': True}

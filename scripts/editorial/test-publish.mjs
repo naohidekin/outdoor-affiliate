@@ -208,6 +208,26 @@ test('Supabase UTC timestamp normalization is compared by instant across full ar
   assert.equal(result.remoteUpdatedAt, '2026-11-03T03:01:00.000Z');
 });
 
+test('existing catalog addedAt calendar date passes stage validation and still requires exact product readback', async () => {
+  const b = bundle(); b.products[0].addedAt = '2026-04-22';
+  const h = harness(b);
+  assert.equal(productRow(b.products[0]).added_at, '2026-04-22');
+  const result = await execute({ ...h.input, action: 'stage' }, h.deps);
+  assert.equal(result.status, 'draft');
+  assert.deepEqual(h.state.writes, ['insert']);
+  h.state.products[0].added_at = '2026-04-23';
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /product mismatch/);
+  assert.deepEqual(h.state.writes, ['insert']);
+});
+
+test('invalid catalog addedAt calendar date fails before stage mutation', async () => {
+  const h = harness();
+  h.b.products[0].addedAt = '2026-02-30';
+  h.input.revision = bundleHash(h.b);
+  await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), /invalid calendar date/);
+  assert.deepEqual(h.state.writes, []);
+});
+
 
 test('same image URL replaced bytes refuses publication before PATCH', async () => {
   const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
