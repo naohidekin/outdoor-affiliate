@@ -9,6 +9,7 @@
   "generationEnabled": false,
   "publicationEnabled": false,
   "socialPostingEnabled": false,
+  "socialCardsEnabled": false,
   "targetAccountId": "1343879420470206464",
   "telegramEnabled": false,
   "slack": {

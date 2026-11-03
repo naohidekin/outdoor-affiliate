@@ -1,9 +1,10 @@
+import { draftMode } from "next/headers";
 import { ImageResponse } from "next/og";
 import { getArticleBySlug, getCategoryById } from "@/lib/db";
 
-export const alt = "Camp Gear Lab";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+
+const size = { width: 1200, height: 630 };
+
 
 const CATEGORY_EMOJI: Record<string, string> = {
   tent: "⛺",
@@ -31,13 +32,12 @@ async function loadNotoSansJP(): Promise<ArrayBuffer> {
   return fetch(url).then((r) => r.arrayBuffer());
 }
 
-export default async function Image({
-  params,
-}: {
+export default async function Image({ params }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
+  if (!article || (article.status !== "published" && !(await draftMode()).isEnabled)) return new Response(null, { status: 404 });
   const category = article ? await getCategoryById(article.categoryId) : null;
 
   const title = article?.title ?? "Camp Gear Lab";

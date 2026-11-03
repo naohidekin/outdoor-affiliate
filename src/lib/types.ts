@@ -120,6 +120,7 @@ export interface Article {
   qualityScore?: number;
   scheduledPublishDate?: string;
   generationMeta?: {
+    socialCard?: { url: string; sha256: string; size: number; contentType: string; width: number; height: number; templateVersion: string; sources: { productId: string; sha256: string }[] };
     themeId: string;
     model: string;
     retryCount: number;

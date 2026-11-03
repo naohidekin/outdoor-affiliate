@@ -202,6 +202,58 @@ class RuntimeTests(unittest.TestCase):
         health = json.loads((self.runtime.root / 'health.json').read_text())
         self.assertEqual('attention', health['status'])
 
+    @staticmethod
+    def with_card(b):
+        b = copy.deepcopy(b)
+        manifest = dict(url='https://img.example/card.png', sha256='a' * 64, size=1200,
+                        contentType='image/png', width=1200, height=630,
+                        templateVersion='test-v1', sources=[])
+        b['article'].setdefault('generationMeta', {})['socialCard'] = manifest
+        b['images'].append(dict(manifest, role='social-card', verified=True))
+        return b
+
+    def test_card_build_is_opt_in_and_precedes_render_review_and_stage(self):
+        class Cards:
+            def build(inner, b):
+                self.assertIn('content', b['article'])
+                return self.with_card(b)
+        self.runtime.social_cards = Cards()
+        self.config['socialCardsEnabled'] = True
+        seen = []
+        self.runtime.renderer = lambda b, j: (seen.append(copy.deepcopy(b)) or {'passed': True, 'clicksVerified': True})
+        self.runtime.produce()
+        self.assertEqual(len(seen), 3)
+        for job in self.runtime.ledger.list_jobs():
+            self.assertEqual(job['bundle']['images'][-1]['role'], 'social-card')
+            self.assertIn('socialCard', job['bundle']['article']['generationMeta'])
+        self.assertEqual([x[0] for x in self.writes], ['stage'] * 3)
+
+    def test_enabled_card_build_failure_never_renders_or_stages(self):
+        self.config['socialCardsEnabled'] = True
+        class Cards:
+            def build(inner, b):
+                return b
+        self.runtime.social_cards = Cards()
+        with patch.object(self.runtime, 'renderer') as render:
+            self.runtime.produce()
+            render.assert_not_called()
+        self.assertEqual(self.writes, [])
+
+    def test_social_uses_only_bound_card_and_requires_public_meta_readback(self):
+        job = self.published_job()
+        job['bundle'] = self.with_card(job['bundle'])
+        with patch.object(self.models, 'social') as generate:
+            with self.assertRaisesRegex(ValueError, 'social_card_public_readback_missing'):
+                self.runtime.make_social(job)
+            generate.assert_not_called()
+        job['publication']['readback']['socialCard'] = job['bundle']['article']['generationMeta']['socialCard']
+        with patch.object(self.models, 'review', wraps=self.models.review) as review, patch.object(self.runtime.ledger, 'record_social'), patch.object(self.runtime, 'deliver'):
+            self.runtime.make_social(job)
+        self.assertEqual(review.call_args.args[0]['proposal']['images'], [job['bundle']['images'][-1]])
+        job['bundle']['images'].pop()
+        with self.assertRaisesRegex(ValueError, 'social_card_evidence_missing'):
+            self.runtime.make_social(job)
+
     def test_social_new_claim_image_and_url_never_become_review_evidence(self):
         job = self.published_job()
         for change in ({'text': 'この製品は900gです。'}, {'replyText': 'https://evil.example/other'},

@@ -1,6 +1,6 @@
 ---
 name: camp-eyecatch
-description: Camp Gear Lab の記事画像（アイキャッチ/本文画像）を扱う小スキル。既存の画像取得スクリプトを参照し、画像プレビューをSlackの記事版承認に載せる。画像生成モデルの選定は行わない。
+description: Camp Gear Lab の記事画像とOG・SNSカードを扱う小スキル。検証済みの商品写真から決定的なカードを作り、記事版の画像証拠として審査に渡す。
 ---
 
 # camp-eyecatch — 画像
@@ -13,6 +13,7 @@ description: Camp Gear Lab の記事画像（アイキャッチ/本文画像）�
 ## 必要時参照
 - `../../../docs/editorial-pipeline.md`（repo相対は `docs/editorial-pipeline.md`）
 - `scripts/editorial/catalog.py`, `quality.py`, `render-preview.mjs`, `slack.py`, `publish.mjs`（現検証・プレビュー・配信・公開前後の画像再照合）
+- `scripts/editorial/social_cards.py`, `render-social-card.mjs`, `social-card-storage.mjs`（商品写真から作るOG・SNSカード。renderer・runtimeの配線と稼働状況は実コードと検証記録で確認）
 - `scripts/fetch-unsplash-eyecatch.mjs`（既存の割当・重複排除方針。新runtimeからの自動呼出しではない）
 - 既存資料: `docs/image-guidelines.md`, `data/products.json`, `data/articles.json`
 
@@ -28,6 +29,10 @@ description: Camp Gear Lab の記事画像（アイキャッチ/本文画像）�
 5. eyecatch を変更した記事は `updatedAt` を更新する（同期の更新比較のため。既存スクリプト参照）。忘れると同期で反映されない。
 6. Catalogで商品ID/型番ページ・画像URL・実bytesを照合し、verified・SHA-256・sizeをbundleへ結び付ける。rendererがdesktop/mobileで画像表示とCTAを検証する。Slackは記事の同じexact版に商品画像URLのimage blockを配信する実装。privateスクリーンショットのSlackアップロードとは区別する。
 7. 画像変更は旧承認を失効させ、再校正/検証/上位審査/版承認へ戻す。公開前後はpublisherが承認画像のSHA/sizeを再取得照合する。新経路で既存全体同期を実行しない。
+8. 記事のOG・SNSカードは本文用 `eyecatch` と分ける。選択済み商品のverified画像から最大2枚を安全に再取得し、SHA/sizeを照合した実写真を決定的なテンプレートへ合成する。存在しない製品写真や未検証の性能・価格表現を描かない。
+9. 完成PNGは1200×630、2MB以下で検証し、`article.generationMeta.socialCard` と `bundle.images` の `role: social-card` に同一URL・SHA・size・元画像の証拠を記録する。公開bucket `editorial-social-cards` は別の明示的な `node scripts/editorial/social-card-storage.mjs --setup` 操作で作成し、通常のbuildは作成しない。内容ハッシュのパスへ上書きなしで保存し、公開GETの実バイトを照合する。同一パスの既存画像やPOST結果不明時は再POSTせず公開GETの完全一致だけを成功とする。
+10. カードを追加・変更したら記事版の指紋・審査・Slack承認を取り直す。将来のAI背景生成は実プロバイダ・出典・画像審査の実装が揃うまで未対応として扱う。
+11. カード見出しは記事タイトルに全角 `｜` がちょうど1つあり両側が非空のときだけ右側を逐語的に使う。それ以外はタイトル全文を使い、商品名は別欄に表示する。rendererの表示文言・レイアウト・元画像crop・エンジン/フォント・ハッシュを版に保存し、ローカル出力パスや一時プロファイルは保存しない。
 
 ## 出力 / 引継ぎ
 - 記事ごとの画像URL、重複チェック結果、クリーン判定結果

@@ -258,3 +258,26 @@ test('image change after PATCH never yields verified publication', async () => {
   await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), /unknown/);
   assert.deepEqual(h.state.writes, ['insert', 'patch']);
 });
+
+test('social card requires exact unique OG and Twitter meta, not hydration or legacy image', () => {
+  const b = bundle();
+  b.article.generationMeta = { socialCard: { url: 'https://img.example/card.png' } };
+  const tags = '<meta property="og:image" content="https://img.example/card.png"><meta name="twitter:image" content="https://img.example/card.png">';
+  assert.equal(verifyPublicHTML(tags + html(b), b), true);
+  for (const bad of ['', tags.replace('name="twitter:image"', 'name="other"'), tags.replace('card.png', 'wrong.png'), tags + '<meta property="og:image" content="https://img.example/legacy.png">', `<script>${tags}</script>`]) {
+    assert.equal(verifyPublicHTML(bad + html(b), b), false);
+  }
+});
+
+test('published card readback carries exact approved manifest only after metadata and bytes agree', async () => {
+  const b = bundle();
+  const manifest = { url: 'https://img.example/card.png', sha256: b.images[0].sha256, size: 20, contentType: 'image/png', width: 1200, height: 630, templateVersion: 'test-v1', sources: [{ productId: 'p1', sha256: b.images[0].sha256 }] };
+  b.article.generationMeta = { socialCard: manifest };
+  b.images.push({ ...manifest, role: 'social-card', verified: true });
+  const h = harness(b);
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  h.state.html = `<meta property="og:image" content="${manifest.url}"><meta name="twitter:image" content="${manifest.url}">` + html(b);
+  const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
+  assert.deepEqual(result.readback.socialCard, manifest);
+  assert.equal(result.readback.verified, true);
+});

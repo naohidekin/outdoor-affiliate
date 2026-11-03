@@ -156,6 +156,11 @@ export function verifyPublicHTML(html, bundle) {
   // Attribute/text evidence must be actual HTML, not embedded hydration JSON.
   html = html.replace(/<!--[\s\S]*?-->|<(script|style|template)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
   const tags = [...html.matchAll(/<[a-z][^>]*>/gi)].map(m => ({ name: m[0].match(/^<([a-z0-9]+)/i)[1].toLowerCase(), attrs: attributes(m[0]) }));
+  const card = bundle.article.generationMeta?.socialCard;
+  if (card && !['og:image', 'twitter:image'].every(key => {
+    const values = tags.filter(t => t.name === 'meta' && (t.attrs.property === key || t.attrs.name === key)).map(t => t.attrs.content);
+    return values.length === 1 && values[0] === card.url;
+  })) return false;
   const digest = sha(bundle.article.content);
   if (!tags.some(t => t.attrs['data-review-content-sha256'] === digest)) return false;
   const titles = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1\s*>/gi)].map(m => decodeHTML(m[1].replace(/<[^>]*>/g, '')).trim());
@@ -196,6 +201,12 @@ except Exception:
 export async function verifyApprovedImages(bundle, imageDigest = secureImageDigest) {
   const images = bundle.images;
   requireValue(Array.isArray(images) && images.length > 0 && images.every(record), 'approved image evidence required');
+  const card = bundle.article.generationMeta?.socialCard;
+  if (card) {
+    const proofs = images.filter(i => i.role === 'social-card');
+    requireValue(card.width === 1200 && card.height === 630 && proofs.length === 1 &&
+      ['url', 'sha256', 'size', 'contentType'].every(k => card[k] === proofs[0][k]), 'social card manifest binding missing');
+  }
   const expected = [...bundle.products.map(p => ({ productId: p.id, url: p.imageUrl })),
     ...(bundle.article.eyecatch ? [{ url: bundle.article.eyecatch }] : [])];
   for (const item of expected)
@@ -259,7 +270,7 @@ export async function execute(input, deps = {}) {
       await verifyApprovedImages(bundle, deps.imageDigest || secureImageDigest);
       // No true until DB, cache and public page all agree with the approved bytes.
       return { verified: true, url, contentHash: sha(expected.content), remoteUpdatedAt: readback[0].updated_at,
-        readback: { verified: true, fingerprint: revision } };
+        readback: { verified: true, fingerprint: revision, ...(bundle.article.generationMeta?.socialCard ? { socialCard: bundle.article.generationMeta.socialCard } : {}) } };
     } catch { throw new Error('unknown: publication requires reconciliation'); }
   });
 }

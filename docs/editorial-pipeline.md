@@ -2,7 +2,7 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified（3件の承認カードtsも記録済み）。GS 8.8、CB 8.6、SOTO 8.6で、現在は**記事公開とは別のSNS承認待ち**。Xへの投稿・予約は行っていない。実行版はmacpro runtime `e0c8fa4`。
+**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。新しい画像カード統合の本番配備はmainの受領確認待ち。以前の版 `e0c8fa4` を現在実行版の保証として扱わない。
 analyticsは実データから既存記事改善候補3件をSEO state rootの `editorial-insights/latest.json` へ出力済み。`reportsEnabled: true` のGUI試運転は21:40:50 JSTに完了。週次2026-11-02週と月次2026-10月のSlack送達・readbackがverified。旧Air Codexの`camp-gear-lab-seo` automationはPAUSEDを確認済み。通常の`com.naohide.camp-slack-review`は継続する。次のSEO施策枠は11月5日（木）で、新しい改善施策はまだ実行していない。今週の新規記事候補3枠は使用済みで、次の通常制作開始は11月11日（水）09時JST以降。
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
@@ -274,3 +274,13 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - GS-600のSNS新カードへの本人承認を22:58:15に受信。承認版9bb140c3ecd1dd57df987196d33d642e84fd6a1762c3270925cb5c3e151f28a1の本文と画像1枚を投稿し、記事URLを返信。main https://x.com/i/web/status/2117617369673830497 、reply https://x.com/i/web/status/2117617376552493429 。
 - 本文、承認画像bytes/SHAとアップロード後添付mediaKey、返信URL/親ID/対象アカウントが一致。journal verified・pendingなし、ledger social_posted。Slack完了通知1793714302.385899もreadback verified、health22:58:23 completed。
 - SOTO/CBの2件は未承認・未投稿。socialPostingEnabled=true、今後も本人のexact版承認後だけ投稿する。X認証復旧と初回の実投稿・照合まで確認済み。
+
+## 画像カード統合（2026-11-03 JST、配備受領待ち）
+
+- `socialCardsEnabled` は省略時も設定例もfalse。有効時だけ、本文polish後・品質検査/render/最終審査/Slack承認前に `SocialCards(config, env, catalog).build(bundle)` を実行。確認済み商品画像を再取得し、SHA-256一致を確認して1200×630 PNGへ合成する。画像生成モデルや架空の使用写真は使用しない。
+- `article.generationMeta.socialCard` にURL・SHA-256・size・contentType・寸法・templateVersion・元商品画像のSHA-256を保持し、`bundle.images` の `role: social-card` と一致させる。カードを含むbundle全体が審査・承認の版指紋に入る。生成・保存・readbackの失敗で止め、旧画像や空画像へ自動fallbackしない。
+- 保存先は専用公開bucket `editorial-social-cards`。既存Supabase設定をメモリ内だけで使用し、SHA-256から決まるpathへupsertなしで保存。bucket作成は明示setupのみで、制作中には作らない。保存後は公開画像bytesを照合する。main報告ではbucket setupとGS画像build/readbackが成功済み。本統合の配備・有効化完了は別途記録する。
+- Nextのファイル型画像は明示metadataより優先されるため、旧画像を同URLの通常 `opengraph-image/route.ts` へ移す。新カードのOG/Twitterタグは保存済みURLを指定し、カードのない既存記事は従来デザインへ向ける。未公開記事の画像ルートはDraft Mode以外404。本文Hero/eyecatchは変更しない。
+- publisherは承認画像bytesの再照合に加え、OG/Twitterタグが各一つだけでカードURLと完全一致することを確認し、readbackにmanifestを返す。SNS生成はその証跡を要求し、最終SNS審査前に画像をカード一枚へローカルで固定する。記事とSNSの別承認は維持する。
+- 公開済みGSのbundle/DB/X投稿、保留中SOTO/CBの承認は変更しない。GS改善画像は別の確認用プレビューとし、公開OG差替えには独立した画像承認と明示apply経路を別途定める。再投稿や既存承認への暗黙反映は行わない。
+- 当担当の確認: runtime35件、publish24件、metadata helper2件成功、型検査とNext production build成功。隔離したHEADでも暖房記事の既存medical2失敗とproducts正規化1失敗を再現した。mainがproductsを既存手順で正規化中。新統合の本番配備・実Slack/公開ページ確認はmainの最新受領記録で追記する。

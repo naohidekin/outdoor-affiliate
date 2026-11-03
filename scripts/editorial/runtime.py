@@ -63,7 +63,7 @@ def reason(error):
 
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
-                 analytics=None, reporter=None, social_publisher=None):
+                 analytics=None, reporter=None, social_publisher=None, social_cards=None):
         self.config = config
         self.root = Path(config['stateRoot'])
         self.ledger = Ledger(self.root, config['slack']['user_id'])
@@ -85,6 +85,7 @@ class Runtime:
         self.slack = slack or Slack(config)
         self.renderer = renderer or self._render
         self.publisher = publisher or self._publish
+        self.social_cards = social_cards
         self.social_publisher = social_publisher
         from analytics import Analytics
         from reporting import Reporter
@@ -268,6 +269,15 @@ class Runtime:
         if preservation.get('passed') is not True:
             raise ValueError('gemini_protected_content_changed')
         bundle['article']['content'] = polished['content']
+        if self.config.get('socialCardsEnabled') is True:
+            if self.social_cards is None:
+                from social_cards import SocialCards
+                self.social_cards = SocialCards(self.config, self.env, self.catalog)
+            bundle = self.social_cards.build(bundle)
+            manifest = bundle.get('article', {}).get('generationMeta', {}).get('socialCard') or {}
+            cards = [i for i in bundle.get('images', []) if i.get('role') == 'social-card']
+            if manifest.get('width') != 1200 or manifest.get('height') != 630 or len(cards) != 1 or cards[0].get('verified') is not True or any(not manifest.get(k) or cards[0].get(k) != manifest[k] for k in ('url', 'sha256', 'size', 'contentType')):
+                raise ValueError('social_card_evidence_missing')
         checks = inspect_bundle(bundle)
         if checks.get('passed') is not True:
             raise ValueError('article_structure_or_affiliate_failed')
@@ -486,7 +496,18 @@ class Runtime:
             'Only explicitly auto_x proposals may automatically post after approval. Examples are not factual evidence.')
         bundle['publicReadback'] = {'verified': True, 'url': job['publication']['url'],
                                    'content': bundle['article']['content'], 'images': bundle['images']}
+        manifest = bundle['article'].get('generationMeta', {}).get('socialCard')
+        if manifest and proof.get('socialCard') != manifest:
+            raise ValueError('social_card_public_readback_missing')
         proposal = self.models.social(bundle, job['publication']['url'])
+        cards = [i for i in bundle['images'] if i.get('role') == 'social-card']
+        if bundle['article'].get('generationMeta', {}).get('socialCard'):
+            manifest = bundle['article']['generationMeta']['socialCard']
+            if len(cards) != 1 or any(cards[0].get(k) != manifest.get(k) for k in ('url', 'sha256', 'size')) or cards[0].get('verified') is not True:
+                raise ValueError('social_card_evidence_missing')
+            proposal['images'] = copy.deepcopy(cards)
+        elif cards:
+            raise ValueError('social_card_manifest_missing')
         # The announcement receives its own prose polish and final review.
         source = proposal['text']
         polished = self.models.polish(source, bundle['brief'])

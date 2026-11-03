@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { articleImageMetadata } from "@/lib/articleImageMetadata";
 import { createHash } from "node:crypto";
 import { toJsonLd } from "@/lib/jsonld";
 import Link from "next/link";
@@ -68,9 +69,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
-  if (!article) return {};
+  if (!article || (article.status !== "published" && !(await draftMode()).isEnabled)) return {};
 
   const description = article.metaDescription || article.excerpt;
+  const imageMetadata = articleImageMetadata(article);
 
   return {
     title: article.title,
@@ -84,6 +86,7 @@ export async function generateMetadata({
       canonical: `/articles/${article.slug}`,
     },
     openGraph: {
+      images: imageMetadata.openGraph.images,
       title: article.title,
       description,
       type: "article",
@@ -96,6 +99,7 @@ export async function generateMetadata({
       tags: article.tags,
     },
     twitter: {
+      images: imageMetadata.twitter.images,
       card: "summary_large_image",
       title: article.title,
       description,
