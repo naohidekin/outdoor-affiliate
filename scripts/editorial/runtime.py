@@ -62,7 +62,8 @@ def reason(error):
 
 
 class Runtime:
-    def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None):
+    def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
+                 analytics=None, reporter=None):
         self.config = config
         self.root = Path(config['stateRoot'])
         self.ledger = Ledger(self.root, config['slack']['user_id'])
@@ -84,6 +85,36 @@ class Runtime:
         self.slack = slack or Slack(config)
         self.renderer = renderer or self._render
         self.publisher = publisher or self._publish
+        from analytics import Analytics
+        from reporting import Reporter
+        self.analytics = analytics or Analytics(config)
+        self.reporter = reporter or Reporter(config, self.slack, env=self.env)
+
+    def _analytics_context(self):
+        context = self.analytics.load_context()
+        if self.config.get('seoStateRoot'):
+            # Export a separate, bounded input for Astra. Never replace the SEO
+            # backlog, experiment queue or canonical metrics snapshot.
+            options = [p for p in context.get('opportunities', []) if p.get('action') == 'improve_existing'][:3] if context.get('status') == 'ok' else []
+            queue = {'schemaVersion': 1, 'status': context.get('status'), 'collectedAt': context.get('collectedAt'),
+                     'evidence': context.get('evidence'), 'provenance': context.get('provenance'),
+                     'opportunities': options, 'uncertainty': context.get('uncertainty', [])[:12],
+                     'instructions': 'Improve these existing pages; do not create duplicate articles. '
+                         'Seasonality and cannibalization need independent review; clicks are not purchases.'}
+            if len(canonical(queue).encode()) > 65536:
+                queue = {'schemaVersion': 1, 'status': 'unavailable', 'collectedAt': None,
+                         'opportunities': [], 'uncertainty': ['Bounded improvement input exceeded size limit']}
+            analytics_root = Path(self.config.get('analyticsRoot') or self.root / 'analytics')
+            paths = [analytics_root / 'improvements' / 'latest.json',
+                     Path(self.config['seoStateRoot']) / 'editorial-insights' / 'latest.json']
+            for path in paths:
+                try:
+                    same = json.loads(path.read_text()) == queue
+                except (OSError, ValueError):
+                    same = False
+                if not same:
+                    atomic(path, queue)
+        return context
 
     def _render(self, bundle, job):
         output = self.root / 'previews' / job['id'] / fingerprint(bundle)
@@ -164,11 +195,15 @@ class Runtime:
                 continue
             key = (click.get('pagePath', click.get('page_path', '')), click.get('store', 'unknown'))
             counts[key] = counts.get(key, 0) + 1
+        analytics = self._analytics_context()
         return {'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
                 'merchantClicks': [{'article': k[0], 'store': k[1], 'clicks': n} for k, n in counts.items()],
                 'observation': {'start': observed_start.isoformat(), 'end': observed_end.isoformat(),
                                 'metric': 'affiliate link clicks only; not purchases, revenue or seasonal trend'},
-                'season': datetime.now(JST).strftime('%Y-%m'), 'instructions': context['instructions']}
+                'analytics': analytics, 'season': datetime.now(JST).strftime('%Y-%m'),
+                'instructions': context['instructions'] + ' Calendar month alone is not seasonal-demand evidence. '
+                    'Analytics opportunities with action=improve_existing must improve the existing URL, '
+                    'not become a new duplicate article. Missing signals remain unverified.'}
 
     def produce(self, limit=3):
         if not self.config.get('generationEnabled'):
@@ -380,13 +415,26 @@ class Runtime:
                 results.append({'status': 'attention', 'reason': reason(error),
                                 'production': {'status': 'blocked', 'reason': reason(error)}})
         jobs = self.ledger.list_jobs()
-        result = {'status': 'attention' if any(r.get('status') == 'attention' for r in results) else 'completed',
+        if self.config.get('seoStateRoot'):
+            try:
+                self._analytics_context()
+            except Exception:
+                results.append({'analytics': {'status': 'unavailable'}})
+        reports = []
+        if self.config.get('reportsEnabled') is True:
+            try:
+                reports = self.reporter.tick(jobs=jobs, now=now)
+            except Exception:
+                reports = [{'kind': 'reports', 'status': 'requires_reconciliation'}]
+        report_attention = any(r.get('status') == 'requires_reconciliation' for r in reports)
+        result = {'status': 'attention' if report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
                   'at': stamp(), 'decisions': decisions, 'results': results,
                   'articles': [dict({k: j[k] for k in ('id', 'theme', 'stage', 'revision', 'error')},
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
                       approval={'action': 'approved' if j.get('approval') else None},
                       publication=j.get('publication'),
                       social={'status': j['stage'] if j.get('social') else None}) for j in jobs],
+                  'reports': reports, 'reportAttention': report_attention,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
@@ -451,7 +499,11 @@ class Runtime:
             raise ValueError('social_source_image_url_or_format_failed')
         final = self.models.review({'article': {'content': proposal['text'] + '\n' + proposal['replyText']},
                                     'source': bundle, 'proposal': proposal},
-                                   {'evidence': flags, 'publicationReadback': job['publication'],
+                                   {'reviewKind': 'social', 'evidence': flags, 'publicationReadback': job['publication'],
+                                    'independentSocialFormat': {'surface': 'X announcement and URL reply, not the source article browser',
+                                        'platform': proposal.get('platform'), 'weightedLength': weighted_length,
+                                        'maxWeightedLength': 280, 'formatVerified': format_ok,
+                                        'imagesVerified': images_ok, 'urlBindingVerified': url_ok},
                                     'sourceContent': source, 'factualSource': source_text})
         if final.get('passed') is not True:
             raise ValueError('social_review_failed')
@@ -493,7 +545,8 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report'))
+    parser.add_argument('--kind', choices=('weekly', 'monthly', 'editorial'))
     parser.add_argument('--id')
     parser.add_argument('--limit', type=int, default=3)
     parser.add_argument('--revision')
@@ -520,6 +573,10 @@ def main():
             value = runtime.retry(args.id)
         elif args.command == 'deliver':
             value = runtime.deliver(args.id)
+        elif args.command == 'report':
+            if not args.kind:
+                raise ValueError('report_kind_required')
+            value = runtime.reporter.send(args.kind, jobs=runtime.ledger.list_jobs(), manual=True)
         elif args.command == 'approve-from-codex':
             if not args.id or not args.revision or not args.evidence_file:
                 raise ValueError('article_id_revision_and_user_message_evidence_required')

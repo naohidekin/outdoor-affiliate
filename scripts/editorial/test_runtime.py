@@ -224,6 +224,20 @@ class RuntimeTests(unittest.TestCase):
                     self.runtime.make_social(changed)
                 generate.assert_not_called()
 
+    def test_social_review_receives_proposal_surface_and_independent_format_evidence(self):
+        job = self.published_job()
+        with patch.object(self.models, 'review', wraps=self.models.review) as review:
+            self.runtime.make_social(job)
+        checks = review.call_args.args[1]
+        self.assertEqual(checks['reviewKind'], 'social')
+        self.assertEqual(checks['publicationReadback'], job['publication'])
+        proof = checks['independentSocialFormat']
+        self.assertEqual(proof['platform'], 'x')
+        self.assertEqual(proof['weightedLength'], sum(1 if ord(c) < 128 else 2 for c in '新記事です。'))
+        self.assertEqual(proof['maxWeightedLength'], 280)
+        self.assertTrue(all(proof[k] for k in ('formatVerified', 'imagesVerified', 'urlBindingVerified')))
+        self.assertIn('not the source article browser', proof['surface'])
+
     def test_article_original_and_candidate_saved_and_original_sent_to_review(self):
         source = bundle()['article']['content']
         with patch.object(self.models, 'review', wraps=self.models.review) as review:
@@ -293,6 +307,72 @@ class RuntimeTests(unittest.TestCase):
         result = self.runtime._research_context(context)
         self.assertEqual([{'article': '/a', 'store': 'rakuten', 'clicks': 1}], result['merchantClicks'])
         self.assertIn('not purchases', result['observation']['metric'])
+
+    def test_analytics_context_exports_separate_period_bound_existing_improvements(self):
+        root = Path(self.tmp.name) / 'seo'
+        root.mkdir()
+        (root / 'backlog.json').write_text('legacy backlog')
+        (root / 'experiments.json').write_text('legacy experiments')
+        self.config['seoStateRoot'] = str(root)
+        analytics = {'schemaVersion': 1, 'status': 'ok', 'collectedAt': datetime.now(JST).isoformat(),
+            'evidence': {'current': {'startDate': '2026-10-01', 'endDate': '2026-10-28',
+                'dateBasis': 'America/Los_Angeles', 'siteUrl': 'https://camp-gear-lab.com/',
+                'country': 'jpn', 'searchType': 'web', 'summary': {'clicks': 3}},
+                'previous': None, 'ga4': None},
+            'opportunities': [{'action': 'improve_existing', 'url': 'https://camp-gear-lab.com/articles/a'}],
+            'uncertainty': ['Seasonality unverified'], 'provenance': {'source': 'sanitized metrics'}}
+        context = dict(products=[], articles=[], queuedThemes=[], instructions='', clicks=[])
+        with patch.object(self.runtime.analytics, 'load_context', return_value=analytics):
+            researched = self.runtime._research_context(context)
+        self.assertEqual(researched['analytics'], analytics)
+        self.assertIn('not become a new duplicate article', researched['instructions'])
+        self.assertIn('not seasonal-demand evidence', researched['instructions'])
+        private = self.runtime.root / 'analytics/improvements/latest.json'
+        exported = root / 'editorial-insights/latest.json'
+        self.assertEqual(json.loads(private.read_text()), json.loads(exported.read_text()))
+        queue = json.loads(exported.read_text())
+        self.assertEqual(queue['evidence'], analytics['evidence'])
+        self.assertEqual(queue['status'], 'ok')
+        self.assertEqual((root / 'backlog.json').read_text(), 'legacy backlog')
+        self.assertEqual((root / 'experiments.json').read_text(), 'legacy experiments')
+        with patch.object(self.runtime.analytics, 'load_context', return_value=dict(analytics,
+                status='unavailable', collectedAt=None, opportunities=[])):
+            self.runtime._analytics_context()
+        self.assertEqual(json.loads(exported.read_text())['status'], 'unavailable')
+        self.assertEqual(json.loads(exported.read_text())['opportunities'], [])
+
+    def test_report_failure_is_visible_without_changing_approval_or_publication(self):
+        self.config.update(generationEnabled=False, publicationEnabled=False, reportsEnabled=True)
+        before = self.runtime.ledger.list_jobs()
+        with patch.object(self.runtime.reporter, 'tick', return_value=[
+                {'kind': 'weekly', 'status': 'requires_reconciliation'}]) as report:
+            result = self.runtime.tick()
+        self.assertEqual(result['status'], 'attention')
+        self.assertTrue(result['reportAttention'])
+        report.assert_called_once()
+        self.assertEqual(self.runtime.ledger.list_jobs(), before)
+        self.assertEqual(self.writes, [])
+        self.assertEqual(self.slack.deliveries, [])
+
+    def test_reports_disabled_default_and_tick_due_receipts_prevent_repeat(self):
+        self.config.update(generationEnabled=False, publicationEnabled=False)
+        with patch.object(self.runtime.reporter, 'tick') as report:
+            self.runtime.tick()
+            report.assert_not_called()
+        self.config['reportsEnabled'] = True
+        self.runtime.reporter.config['reportsEnabled'] = True
+        # Thu 20 JST, also after this month's day-5 slot. Monthly collector is
+        # stubbed, never a provider call; unavailable data is a warning only.
+        now = datetime(2026, 11, 12, 20, tzinfo=JST)
+        with patch('runtime.datetime', wraps=datetime) as clock, patch.object(self.slack, 'notice',
+                return_value={'verified': True, 'message_ts': '1793700000.123456'}) as send:
+            clock.now.return_value = now
+            self.runtime.tick()
+            self.runtime.tick()
+        self.assertEqual(send.call_count, 3)
+        self.assertEqual(self.writes, [])
+        self.assertEqual(self.slack.deliveries, [])
+        self.assertFalse(list((self.runtime.root / 'deliveries').glob('*')))
 
     def test_candidate_correction_keeps_id_week_slot_and_event(self):
         job = self.runtime.ledger.create_candidate({'slug': 'correction', 'title': '実測'})
