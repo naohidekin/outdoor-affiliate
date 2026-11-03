@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { childEnvironment, validateInput, expectedMerchants, verifyClick, prepareApp, renderPreview, privateOutputDirectory, fetchPublicImage, createRequestHandler, IMAGE_HELPER } from './render-preview.mjs';
+import { childEnvironment, validateInput, expectedMerchants, verifyClick, verifyFaqVisibility, prepareApp, renderPreview, privateOutputDirectory, fetchPublicImage, createRequestHandler, IMAGE_HELPER } from './render-preview.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const merchant = { productId: 'preview-p1', productName: '検証用テント', store: 'amazon', href: 'https://www.amazon.co.jp/dp/B012345678/?tag=camp78-22' };
@@ -60,6 +60,38 @@ test('click verifier rejects wrong product, merchant, destination, missing event
   assert.ok(verifyClick(merchant, beacon, [], merchant.href, '/articles/test').length);
   assert.ok(verifyClick(merchant, beacon, events, 'https://evil.test/', '/articles/test').length);
 });
+
+test('FAQ visibility requires each expected question and answer together in rendered FAQ text', () => {
+  const faqs = [{ question: '収納は **簡単** ですか？', answer: '[説明書](https://maker.example/help)を確認します。' },
+    { question: '重さは？', answer: '2kgです。' }];
+  assert.deepEqual(verifyFaqVisibility(faqs, [], 'desktop'), [
+    'desktop: FAQ question/answer not visibly rendered: #1',
+    'desktop: FAQ question/answer not visibly rendered: #2']);
+  assert.equal(verifyFaqVisibility(faqs, ['収納は 簡単 ですか？ 別の回答です。', '重さは？ 2kgです。'], 'mobile').length, 1);
+  assert.deepEqual(verifyFaqVisibility(faqs, ['Q. 収納は 簡単 ですか？\n▼\n説明書を確認します。',
+    '### 重さは？\n\n2kgです。'], 'mobile'), []);
+});
+
+test('real FAQ render catches empty body heading and accepts structured or inline Q&A on both viewports',
+  { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {
+    const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-faq-'));
+    try {
+      const input = request(path.join(temp, 'privateoutput'));
+      if (process.env.RENDER_DEPS) input.dependenciesRoot = process.env.RENDER_DEPS;
+      const faq = { question: '収納は簡単ですか？', answer: '説明書を確認します。' };
+      input.bundle.article.faqs = [faq];
+      const structured = await renderPreview(input);
+      assert.equal(structured.passed, true, JSON.stringify(structured));
+      input.bundle.article.content += '\n## FAQ\n';
+      const empty = await renderPreview(input);
+      assert.equal(empty.passed, false);
+      for (const viewport of ['desktop', 'mobile'])
+        assert.ok(empty.failures.some(f => f.includes(`${viewport}: FAQ question/answer not visibly rendered`)), JSON.stringify(empty));
+      input.bundle.article.content += `\n### ${faq.question}\n${faq.answer}\n`;
+      const inline = await renderPreview(input);
+      assert.equal(inline.passed, true, JSON.stringify(inline));
+    } finally { await fs.rm(temp, { recursive: true, force: true }); }
+  });
 
 test('isolated app uses real sources and candidate data, never copies env or APIs', async () => {
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-unit-'));

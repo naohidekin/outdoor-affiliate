@@ -62,6 +62,25 @@ export function verifyClick(expected, beacon, events, navigation, articlePath) {
   return failures;
 }
 
+function plainFaqText(value) {
+  return String(value || '').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`]*)`/g, '$1').replace(/\*\*|__/g, '')
+    .replace(/^\s*#{1,6}\s*/gm, '').replace(/\s+/g, ' ').trim();
+}
+
+export function verifyFaqVisibility(faqs, visibleSegments, viewport) {
+  const segments = visibleSegments.map(plainFaqText);
+  return (faqs || []).flatMap((faq, index) => {
+    const question = plainFaqText(faq?.question), answer = plainFaqText(faq?.answer);
+    if (question && answer && segments.some(text => {
+      const at = text.indexOf(question);
+      return at >= 0 && text.indexOf(answer, at + question.length) >= 0;
+    })) return [];
+    return [`${viewport}: FAQ question/answer not visibly rendered: #${index + 1}`];
+  });
+}
+
 export async function privateOutputDirectory(repo, outputDir) {
   // Resolve the nearest existing ancestor before mkdir, including symlinked
   // parents. Reject public destinations without modifying the source tree.
@@ -291,10 +310,33 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       overflow: document.documentElement.scrollWidth > innerWidth + 1,
       brokenImages: [...document.images].filter(i => i.getClientRects().length && (!i.complete || i.naturalWidth <= 0)).map(i => i.currentSrc || i.src),
     }));
+    const visibleFaqSegments = await page.evaluate(() => {
+      const segments = [];
+      const body = document.querySelector('.article-body');
+      const faqHeading = [...(body?.querySelectorAll('h2') || [])].find(h =>
+        /^(?:よくある(?:ご)?質問|よくある疑問|FAQ|Q\s*&\s*A)(?:\s|$)/i.test(h.innerText.trim()));
+      if (faqHeading) {
+        const parts = [];
+        for (let next = faqHeading.nextElementSibling; next && next.tagName !== 'H2'; next = next.nextElementSibling)
+          if (next.getClientRects().length) parts.push(next.innerText);
+        segments.push(parts.join('\n'));
+      }
+      for (const section of document.querySelectorAll('main > section')) {
+        if (section.querySelector('h2')?.innerText.trim() !== 'よくある質問') continue;
+        for (const details of section.querySelectorAll('details')) {
+          const wasOpen = details.open;
+          details.open = true;
+          segments.push(details.innerText);
+          details.open = wasOpen;
+        }
+      }
+      return segments;
+    });
     if (observations.h1 !== 1) result.failures.push(`${name}: expected one H1, got ${observations.h1}`);
     if (observations.shortcode) result.failures.push(`${name}: unresolved shortcode`);
     if (observations.overflow) result.failures.push(`${name}: horizontal overflow`);
     for (const _src of observations.brokenImages) result.failures.push(`${name}: image failed`);
+    result.failures.push(...verifyFaqVisibility(input.bundle.article.faqs, visibleFaqSegments, name));
     await page.evaluate(() => window.scrollTo(0, 0));
     const screenshot = path.join(input.outputDir, `${name}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });
