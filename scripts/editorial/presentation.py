@@ -59,6 +59,60 @@ def _merchants(product):
     return ' ・ '.join(links)
 
 
+SPEC_LABELS = {'weight': '重量', 'capacity': '容量', 'size': 'サイズ', 'dimensions': 'サイズ',
+               'material': '素材', 'opening': '口径', 'runtime': '連続使用時間', 'brightness': '明るさ',
+               'waterproof': '防水性能', 'power': '電源'}
+SPEC_PRIORITY = {
+    'tent': ['定員', '重量', 'サイズ', '収納サイズ', '耐水圧'],
+    'cooler': ['容量', '重量', 'サイズ', '保冷力', '電源'],
+    'sleeping-bag': ['快適温度', '対応温度', '重量', '収納サイズ', '素材'],
+    'light': ['明るさ', '連続点灯時間', '電源', '防水性能', '重量'],
+    'fan': ['電源', '連続使用時間', '重量', 'サイズ'],
+    'insect-repellent': ['有効成分', '対象害虫', '対象年齢', '種別'],
+}
+
+
+def _specs(product, limit=None):
+    # Mirror getProductSpecs: Japanese keys take precedence over API aliases.
+    raw = product.get('specs') or {}
+    if not isinstance(raw, dict):
+        return []
+    values = {}
+    for name, item in sorted(raw.items(), key=lambda pair: bool(SPEC_LABELS.get(str(pair[0]).strip()))):
+        original = str(name).strip()
+        label = SPEC_LABELS.get(original, original)
+        value = str(item).strip() if item is not None else ''
+        if (not label or not value or re.fullmatch(r'(?:[-—–]+|null|undefined|n/?a)', value, re.I)
+                or re.fullmatch(r'[a-z_\s]+', label, re.I) and original not in SPEC_LABELS):
+            continue
+        values.setdefault(label, value)
+    priority = SPEC_PRIORITY.get(product.get('categoryId'), ['重量', 'サイズ', '素材', '容量'])
+    ordered = sorted(values.items(), key=lambda pair: priority.index(pair[0]) if pair[0] in priority else len(priority))
+    return ordered if limit is None else ordered[:limit]
+
+
+def _panel(product, kind, rank=None):
+    lines = []
+    if rank is not None:
+        lines.append(str(rank) + '位')
+    if product.get('brand'):
+        lines.append(escape(product['brand']))
+    lines.append('*掲載商品：' + escape(product['name']) + '*')
+    if kind in ('product', 'ranking') and product.get('description'):
+        lines.append(escape(product['description']))
+    specs = _specs(product, 3 if kind == 'product' else None) if kind in ('product', 'comparison') else []
+    lines.extend(escape(label) + '：' + escape(value) for label, value in specs)
+    price = product.get('price')
+    if isinstance(price, (int, float)) and not isinstance(price, bool) and price > 0:
+        lines.append('参考価格：¥' + format(price, ','))
+    elif kind == 'comparison':
+        lines.append('参考価格：販売店で確認')
+    links = _merchants(product)
+    if links:
+        lines.append(links)
+    return '\n'.join(lines)
+
+
 def article_body(bundle):
     article = bundle['article']
     products = {p['id']: p for p in bundle.get('products', [])}
@@ -83,11 +137,10 @@ def article_body(bundle):
             return (format(price, ',') + '円') if isinstance(price, (int, float)) and price > 0 else ''
         displayed.update(p['id'] for p in found)
         if kind == 'product':
-            p = found[0]
-            return '\n*掲載商品：' + escape(p['name']) + '*\n' + _merchants(p) + '\n'
+            return '\n' + _panel(found[0], 'product') + '\n'
         label = '比較商品' if kind == 'comparison' else '掲載商品'
-        return '\n*' + label + '：' + '・'.join(escape(p['name']) for p in found) + '*\n' + '\n'.join(
-            escape(p['name']) + '：' + _merchants(p) for p in found) + '\n'
+        return '\n*' + label + '*\n' + '\n\n'.join(
+            _panel(p, kind, i if kind == 'ranking' else None) for i, p in enumerate(found, 1)) + '\n'
 
     # Marker placeholders are expanded after Markdown conversion so generated
     # Slack link syntax is never escaped or mistaken for source Markdown.
@@ -140,7 +193,7 @@ def article_body(bundle):
         body += '\n\n*よくある質問*\n' + '\n'.join('*Q. ' + _inline(q['question']) + '*\nA. ' + _inline(q['answer']) for q in missing)
     for p in bundle.get('products', []):
         if p['id'] not in displayed:
-            body += '\n\n*掲載商品：' + escape(p['name']) + '*\n' + _merchants(p)
+            body += '\n\n' + _panel(p, 'ranking')
     return body
 
 

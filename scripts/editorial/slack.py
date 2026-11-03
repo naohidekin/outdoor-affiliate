@@ -118,24 +118,39 @@ class Slack:
         if normalize(html.unescape(str(message.get('text')))) != normalize(text):
             raise ValueError('slack_readback_mismatch')
         if blocks:
-            def stable(v, observed=False, mrkdwn_decodes=1):
-                if isinstance(v, dict):
+            def same_mrkdwn(expected, observed):
+                if not isinstance(observed, str):
+                    return False
+                # Normalize ampersand transport only. Decoding &lt; to < would
+                # turn escaped literal text into an active Slack token.
+                def amps(value):
+                    return value.replace('&amp;', '&').replace('&amp;', '&')
+                return amps(observed) == amps(expected)
+
+            def same(expected, observed):
+                if isinstance(expected, dict):
+                    if not isinstance(observed, dict):
+                        return False
                     ignored = {'block_id', 'emoji'}
-                    if observed and v.get('type') == 'image':
-                        ignored |= {'image_bytes', 'image_height', 'fallback', 'is_animated', 'image_width'}
-                    return {k: ((html.unescape(x) if observed else x) if v.get('type') == 'plain_text'
-                                and k == 'text' and isinstance(x, str) else
-                                _decode_mrkdwn(x, mrkdwn_decodes if observed else 1) if v.get('type') == 'mrkdwn'
-                                and k == 'text' and isinstance(x, str) else stable(x, observed, mrkdwn_decodes))
-                            for k, x in v.items() if k not in ignored}
-                return [stable(x, observed, mrkdwn_decodes) for x in v] if isinstance(v, list) else v
-            def _decode_mrkdwn(value, count):
-                for _ in range(count):
-                    value = html.unescape(value)
-                return value
-            expected = stable(blocks)
-            if stable(message.get('blocks'), observed=True) != expected and stable(
-                    message.get('blocks'), observed=True, mrkdwn_decodes=2) != expected:
+                    server_only = {'image_bytes', 'image_height', 'fallback', 'is_animated', 'image_width'} if observed.get('type') == 'image' else set()
+                    keys = set(expected) - ignored
+                    if keys != set(observed) - ignored - server_only:
+                        return False
+                    for key in keys:
+                        if key == 'text' and expected.get('type') == 'plain_text' and isinstance(expected[key], str):
+                            if not isinstance(observed[key], str) or html.unescape(observed[key]) != expected[key]:
+                                return False
+                        elif key == 'text' and expected.get('type') == 'mrkdwn' and isinstance(expected[key], str):
+                            if not same_mrkdwn(expected[key], observed[key]):
+                                return False
+                        elif not same(expected[key], observed[key]):
+                            return False
+                    return True
+                if isinstance(expected, list):
+                    return isinstance(observed, list) and len(expected) == len(observed) and all(
+                        same(a, b) for a, b in zip(expected, observed))
+                return expected == observed
+            if not same(blocks, message.get('blocks')):
                 raise ValueError('slack_blocks_mismatch')
         self._receipt(ts, 'verified', data)
         return {'message_ts': ts, 'hash': digest(data), 'verified': True}

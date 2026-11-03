@@ -135,24 +135,51 @@ class SlackTests(unittest.TestCase):
     def test_mrkdwn_readback_decodes_one_server_encoding_only(self):
         rendered = '*選び方*\n<https://example.com/?a=1&amp;b=2|公式 &amp; 詳細>'
         blocks = [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': rendered, 'verbatim': True}}]
-        for mode in ('retained', 'encoded', 'decoded', 'changed_url', 'changed_label', 'over_encoded'):
+        for mode in ('retained', 'amp_encoded', 'decoded_amp', 'encoded_angles', 'changed_url', 'changed_label'):
             with self.subTest(mode=mode):
                 def call(method, data):
                     result = self.call(method, data)
                     if method == 'conversations.replies':
                         result['messages'][0]['blocks'] = copy.deepcopy(blocks)
-                        observed = {'retained': rendered, 'encoded': html.escape(rendered, quote=False),
-                                    'decoded': html.unescape(rendered), 'changed_url': rendered.replace('b=2', 'b=3'),
+                        observed = {'retained': rendered, 'amp_encoded': rendered.replace('&amp;', '&amp;amp;'),
+                                    'decoded_amp': rendered.replace('&amp;', '&'),
+                                    'encoded_angles': html.escape(rendered, quote=False),
+                                    'changed_url': rendered.replace('b=2', 'b=3'),
                                     'changed_label': rendered.replace('公式', '改変'),
-                                    'over_encoded': html.escape(html.escape(rendered, quote=False), quote=False)}[mode]
+                                    }[mode]
                         result['messages'][0]['blocks'][0]['text']['text'] = observed
                     return result
                 slack = Slack(self.config, call=call)
-                if mode in ('changed_url', 'changed_label', 'over_encoded'):
+                if mode in ('encoded_angles', 'changed_url', 'changed_label'):
                     with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
                         slack.post('記事本文', blocks)
                 else:
                     self.assertTrue(slack.post('記事本文', blocks)['verified'])
+
+    def test_escaped_literal_cannot_become_active_slack_token(self):
+        text = '引用：&lt;!channel&gt; と &lt;https://example.com|リンク&gt;'
+        blocks = [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': text, 'verbatim': True}}]
+        for replacement in ('<!channel>', '<https://example.com|リンク>'):
+            with self.subTest(replacement=replacement):
+                def call(method, data):
+                    result = self.call(method, data)
+                    if method == 'conversations.replies':
+                        result['messages'][0]['blocks'] = copy.deepcopy(blocks)
+                        result['messages'][0]['blocks'][0]['text']['text'] = text.replace(
+                            '&lt;!channel&gt;' if replacement.startswith('<!') else '&lt;https://example.com|リンク&gt;', replacement)
+                    return result
+                with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+                    Slack(self.config, call=call).post('記事本文', blocks)
+        active = '<https://example.com/?a=1&amp;b=2|購入先>'
+        block = [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': active, 'verbatim': True}}]
+        def encoded_call(method, data):
+            result = self.call(method, data)
+            if method == 'conversations.replies':
+                result['messages'][0]['blocks'] = copy.deepcopy(block)
+                result['messages'][0]['blocks'][0]['text']['text'] = html.escape(active, quote=False)
+            return result
+        with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+            Slack(self.config, call=encoded_call).post('記事本文', block)
 
     def test_unicode_chunks_respect_slack_units_without_splitting_characters(self):
         text = '🏕️あいう' * 1800
@@ -225,6 +252,27 @@ class SlackTests(unittest.TestCase):
         actions = sent[-1][1][1]['elements']
         self.assertEqual([a['text']['text'] for a in actions], ['公開する', '修正を依頼', '保留'])
         self.assertEqual(json.loads(actions[0]['value']), req)
+
+    def test_product_comparison_and_ranking_preserve_page_visible_product_facts(self):
+        product = {'id': 'p1', 'name': '製品A', 'brand': 'メーカーA', 'categoryId': 'burner',
+                   'description': '公式寸法を確認した製品。', 'price': 2500,
+                   'specs': {'weight': '900g', '重量': '850g', 'サイズ': '20×10cm', '素材': '鉄',
+                             '発熱量': '3.3kW', 'unknown_api': 'hidden'},
+                   'affiliateUrl': 'https://example.com/item?a=1&b=2'}
+        for tag, expected, excluded in (
+                ('product', ('メーカーA', '公式寸法を確認した製品。', '重量：850g', 'サイズ：20×10cm', '素材：鉄', '参考価格：¥2,500'), ('発熱量：3.3kW',)),
+                ('comparison', ('メーカーA', '重量：850g', 'サイズ：20×10cm', '素材：鉄', '発熱量：3.3kW', '参考価格：¥2,500'), ('公式寸法を確認した製品。',)),
+                ('ranking', ('1位', 'メーカーA', '公式寸法を確認した製品。', '参考価格：¥2,500'), ('重量：850g',))):
+            with self.subTest(tag=tag):
+                bundle = {'article': {'content': '{{' + tag + ':p1}}', 'faqs': []}, 'products': [product]}
+                body = article_body(bundle)
+                for value in expected:
+                    self.assertIn(value, body)
+                for value in excluded:
+                    self.assertNotIn(value, body)
+                self.assertNotIn('unknown_api', body)
+                self.assertNotIn('900g', body)
+                self.assertIn('<https://example.com/item?a=1&amp;b=2|楽天>', body)
 
     def test_presentation_preserves_parenthesized_links_and_resolves_other_page_tags(self):
         article = {'title': '動画', 'content': '## 詳細\n[公式](https://example.com/a_(b))\n価格 {{price:p1}}\n{{youtube:AbCdEf12345|設営動画|2026-01-01}}', 'faqs': []}
