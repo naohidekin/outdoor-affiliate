@@ -77,6 +77,17 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
+        checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
+        with self.assertRaises(ModelError):
+            Models(ENV, Fake(response(REVIEW))).review(bundle(), checks)
+        result = copy.deepcopy(REVIEW)
+        result['criteria'] = dict.fromkeys(('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
+            'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count'), 7)
+        reviewed = Models(ENV, Fake(response(result))).review(bundle(), checks)
+        self.assertFalse(reviewed['passed'])
+        self.assertEqual(7, reviewed['score'])
+
     def test_research_complete_evidence_headers_usage(self):
         ctx = context()
         ctx["longEvidence"] = "z" * 12000 + "END-EVIDENCE"

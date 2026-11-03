@@ -343,6 +343,12 @@ class Models:
             "render:boolean,evidence:object,issues:list}. Score 0-10; pass threshold 7.5. "
             "Never certify live images, affiliate destinations or rendering from LLM opinion. Missing independent "
             "evidence must fail. Check factual provenance, no invented experiences, medical claims and protected brief. "
+            "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
+            "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and also return criteria "
+            "with eleven numeric 0-10 scores: wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
+            "comparison_table,internal_links,faq,word_count. Overall score must not exceed their mean. "
+            "For social proposals every claim must be supported by checks.factualSource; numeric/URL checks alone "
+            "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
             "Model assertions are opinions and cannot substitute for external evidence.",
             {"bundle": bundle, "checks": checks}, self.env.get("ARTICLE_REVIEW_MODEL") or "claude-sonnet-4-6")
         _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
@@ -352,6 +358,14 @@ class Models:
                 not isinstance(result["evidence"], dict)):
             raise ModelError("Invalid review result")
         supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
+        if isinstance(checks, dict) and checks.get('editorialRules'):
+            fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
+                      'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
+            criteria = result.get('criteria', {})
+            if not isinstance(criteria, dict) or any(type(criteria.get(k)) not in (int, float) or
+                    not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields):
+                raise ModelError('Complete WISE Supervisor scores required')
+            result['score'] = min(result['score'], sum(criteria[k] for k in fields) / len(fields))
         supplied = supplied if isinstance(supplied, dict) else {}
         missing = [k for k in CATEGORIES if supplied.get(k) is not True]
         for field in missing:

@@ -38,6 +38,7 @@ def install(config_path, load=False):
     backups = root / 'rollback'
     backups.mkdir(mode=0o700, exist_ok=True)
     backup = backups / target.name
+    previous = target.read_bytes() if target.exists() else None
     if target.exists() and not backup.exists():
         fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'wb') as out:
@@ -49,7 +50,15 @@ def install(config_path, load=False):
     temporary.chmod(0o600)
     os.replace(temporary, target)
     if load:
-        subprocess.run(['launchctl', 'bootstrap', 'gui/' + str(os.getuid()), str(target)], check=True, capture_output=True)
+        try:
+            subprocess.run(['launchctl', 'bootstrap', 'gui/' + str(os.getuid()), str(target)], check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            if previous is not None:
+                temporary.write_bytes(previous)
+                temporary.chmod(0o600)
+                os.replace(temporary, target)
+                subprocess.run(['launchctl', 'bootstrap', 'gui/' + str(os.getuid()), str(target)], check=True, capture_output=True)
+            raise
     return {'status': 'installed' if load else 'prepared', 'label': label, 'intervalSeconds': 300,
             'productionSlot': 'Wednesday 09:00 JST, login-resume recovery', 'telegramEnabled': False}
 
