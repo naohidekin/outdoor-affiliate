@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from models import Models, ModelError
+from models import Models, ModelError, WRITER_SCHEMA
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -50,6 +50,11 @@ def response(value, gemini=False, raw=None):
                 "choices": [{"message": {"content": content}, "finish_reason": "stop"}]}
     return {"id": "c-1", "model": "claude-sonnet-4-6", "usage": {"input_tokens": 31, "output_tokens": 9},
             "content": [{"type": "text", "text": content}], "stop_reason": "end_turn"}
+
+
+def writer_response(value):
+    return response({"article": {key: copy.deepcopy(value["article"][key]) for key in value["article"] if key != "id"},
+                     "brief": copy.deepcopy(value["brief"])})
 
 
 class Fake:
@@ -120,11 +125,49 @@ class ModelTests(unittest.TestCase):
                     Models(ENV, Fake(response(value))).research(ctx)
 
     def test_draft_404_only_fallback_preserves_full_bundle(self):
-        fake = Fake(http(404), response(bundle()))
+        fake = Fake(http(404), writer_response(bundle()))
         model = Models(ENV, fake)
-        self.assertEqual(model.draft(THEMES["themes"][0], context()), bundle())
+        expected = bundle()
+        expected['article'].pop('id')
+        self.assertEqual(model.draft(THEMES["themes"][0], context()), expected)
         self.assertEqual([c[2]["model"] for c in fake.calls], ["claude-opus-4-8", "claude-sonnet-4-6"])
         self.assertIn("Article template: no H1", fake.calls[-1][2]["messages"][0]["content"])
+        self.assertTrue(all(call[2]['output_config']['format']['schema'] == WRITER_SCHEMA for call in fake.calls))
+
+    def test_writer_schema_only_on_writer_and_context_records_copied_exactly(self):
+        fake = Fake(writer_response(bundle()))
+        ctx = context()
+        selected = {'productIds': ['tent-a']}
+        result = Models(ENV, fake).draft(selected, ctx)
+        self.assertEqual(set(result), {'article', 'brief', 'products', 'references', 'images'})
+        for field, source in (('products', 'catalog'), ('references', 'references'), ('images', 'images')):
+            self.assertEqual(result[field], ctx[source])
+            self.assertIsNot(result[field], ctx[source])
+        payload = fake.calls[0][2]
+        self.assertEqual(payload['output_config'], {'format': {'type': 'json_schema', 'schema': WRITER_SCHEMA}})
+        self.assertNotIn('response_format', payload)
+        def objects(schema):
+            if schema.get('type') == 'object':
+                self.assertIs(schema.get('additionalProperties'), False)
+            for child in schema.get('properties', {}).values():
+                objects(child)
+            if isinstance(schema.get('items'), dict):
+                objects(schema['items'])
+        objects(WRITER_SCHEMA)
+        research = Fake(response(THEMES))
+        Models(ENV, research).research(context())
+        self.assertNotIn('output_config', research.calls[0][2])
+        self.assertNotIn('response_format', research.calls[0][2])
+
+    def test_writer_requires_exact_selected_product_ids_and_no_reemitted_records(self):
+        payload = {'article': {k: v for k, v in bundle()['article'].items() if k != 'id'}, 'brief': brief()}
+        payload['article']['productIds'] = ['ghost']
+        with self.assertRaises(ModelError):
+            Models(ENV, Fake(response(payload))).draft({'productIds': ['tent-a']}, context())
+        payload['article']['productIds'] = ['tent-a']
+        payload['products'] = [{'id': 'tent-a', 'price': 0}]
+        with self.assertRaisesRegex(ModelError, 'Invalid writer response fields'):
+            Models(ENV, Fake(response(payload))).draft({'productIds': ['tent-a']}, context())
 
     def test_overrides_and_nonretry_auth_bad_request(self):
         for status in (400, 401, 500):
@@ -136,7 +179,7 @@ class ModelTests(unittest.TestCase):
             self.assertNotIn("test-claude-key", str(caught.exception))
             self.assertIsNone(caught.exception.__cause__)
         env = dict(ENV, ARTICLE_WRITER_MODEL="writer", ARTICLE_WRITER_FALLBACK_MODEL="fallback", ARTICLE_REVIEW_MODEL="reviewer")
-        fake = Fake(http(404), response(bundle()), response(REVIEW))
+        fake = Fake(http(404), writer_response(bundle()), response(REVIEW))
         model = Models(env, fake)
         model.draft({}, context())
         model.review(bundle(), FLAGS)
@@ -154,7 +197,7 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(len(fake.calls), 3)
 
     def test_total_deadline_includes_fallback(self):
-        fake = Fake(http(404), response(bundle()))
+        fake = Fake(http(404), writer_response(bundle()))
         with patch("models.time.monotonic", side_effect=[0, 0, 181]), self.assertRaises(ModelError):
             Models(ENV, fake).draft({}, context())
         self.assertEqual(len(fake.calls), 1)
@@ -167,30 +210,65 @@ class ModelTests(unittest.TestCase):
     def test_no_missing_bundle_fields_or_invented_products_references(self):
         mutations = [lambda b: b.pop("brief"), lambda b: b["brief"].pop("facts"),
                      lambda b: b["brief"].update(externalSafe="true"),
-                     lambda b: b["article"].update(productIds=["ghost"]),
-                     lambda b: b["products"][0].update(price=100),
-                     lambda b: b["references"].append({"url": "https://invented.example"}),
-                     lambda b: b["images"][0].update(url="https://invented.example/a.jpg")]
-        for mutate in mutations:
+                     lambda b: b["article"].update(productIds=["ghost"])]
+        for index, mutate in enumerate(mutations):
             b = bundle()
             mutate(b)
-            with self.subTest(b=b), self.assertRaises(ModelError):
-                Models(ENV, Fake(response(b))).draft({}, context())
+            payload = {"article": {k: v for k, v in b["article"].items() if k != 'id'}}
+            if 'brief' in b:
+                payload['brief'] = b['brief']
+            with self.subTest(index=index), self.assertRaises(ModelError):
+                Models(ENV, Fake(response(payload))).draft({}, context())
+        for field in ('products', 'references', 'images'):
+            payload = {'article': {k: v for k, v in bundle()['article'].items() if k != 'id'},
+                       'brief': brief(), field: [{'invented': True}]}
+            with self.subTest(field=field), self.assertRaisesRegex(ModelError, 'Invalid writer response fields'):
+                Models(ENV, Fake(response(payload))).draft({}, context())
 
     def test_polish_full_brief_source_unchanged_fixed_endpoint_and_usage(self):
         b = brief()
         b["protected"].append("TAIL" * 3000)
         before = copy.deepcopy(b)
-        fake = Fake(response({"content": "Polished"}, gemini=True))
+        fake = Fake(response({"edits": [{"index": 0, "text": "Polished"}]}, gemini=True))
         model = Models(ENV, fake)
         result = model.polish("Original", b)
         self.assertEqual(result["content"], "Polished")
         self.assertEqual(result["model"], "gemini-3.8-flash")
         self.assertEqual(result["usage"]["output"], 9)
+        self.assertEqual(result["usage"]["polishEditsApplied"], 1)
         self.assertEqual(b, before)
         self.assertEqual(fake.calls[0][0], "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions")
         self.assertEqual(fake.calls[0][1]["Authorization"], "Bearer test-gemini-key")
         self.assertIn("TAIL" * 3000, fake.calls[0][2]["messages"][0]["content"])
+        self.assertNotIn('output_config', fake.calls[0][2])
+
+    def test_polish_only_eligible_paragraphs_and_preserves_exact_separators(self):
+        source = '## 見出し\n\n直せる文章です。\n \n重量は2kgです。\n\n広告を含む文章。\n\n別の文章です。'
+        fake = Fake(response({'edits': [{'index': 1, 'text': '読みやすい文章です。'}]}, gemini=True))
+        result = Models(ENV, fake).polish(source, brief())
+        self.assertEqual(result['content'], source.replace('直せる文章です。', '読みやすい文章です。'))
+        sent = json.loads(fake.calls[0][2]['messages'][0]['content'].split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+        self.assertEqual(sent['source'], source)
+        self.assertEqual([item['index'] for item in sent['editable']], [1, 4])
+        self.assertEqual(result['usage']['polishOutcome'], 'edited')
+        empty = Models(ENV, Fake(response({'edits': []}, gemini=True))).polish(source, brief())
+        self.assertEqual(empty['content'], source)
+        self.assertEqual(empty['usage']['polishOutcome'], 'no_changes')
+
+    def test_polish_rejects_immutable_new_numbers_duplicate_and_malformed_edits(self):
+        source = '## 見出し\n\n直せる文章です。\n\n重量は2kgです。'
+        bad = [
+            {'edits': [{'index': 0, 'text': '見出し変更'}]},
+            {'edits': [{'index': 2, 'text': '重量は3kgです。'}]},
+            {'edits': [{'index': 1, 'text': '3kgです。'}]},
+            {'edits': [{'index': 1, 'text': '直した文。'}, {'index': 1, 'text': '別の文。'}]},
+            {'edits': [{'index': True, 'text': '直した文。'}]},
+            {'edits': [{'index': 1, 'text': '前半\n\n後半'}]},
+            {'content': '全文を書き直した'},
+        ]
+        for index, value in enumerate(bad):
+            with self.subTest(index=index), self.assertRaises(ModelError):
+                Models(ENV, Fake(response(value, gemini=True))).polish(source, brief())
 
     def test_polish_secret_and_external_safe_gate_before_network(self):
         for source, change in [("body", {"externalSafe": False}), ("body", {"externalSafe": 1}),
@@ -214,6 +292,19 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(result["evidence"]["checks"], FLAGS)
         for value in (dict(REVIEW, score=7.4), dict(REVIEW, facts=False), dict(REVIEW, issues=["unverified"])):
             self.assertFalse(Models(ENV, Fake(response(value))).review(bundle(), FLAGS)["passed"])
+
+    def test_review_prompt_audits_article_claims_separately_from_catalog_flags(self):
+        approved = {'title': 'Approved comparison', 'constraints': ['No indoor use claim']}
+        checks = {'evidence': FLAGS, 'approvedTheme': approved}
+        fake = Fake(response(REVIEW))
+        Models(ENV, fake).review(bundle(), checks)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        for phrase in ('catalog product specifications ONLY', 'title', 'metadata', 'FAQs',
+                       'checks.approvedTheme', 'Astra constraints', 'reversed', 'fictional anecdotes',
+                       'measurement conditions', 'price or availability'):
+            self.assertIn(phrase, prompt)
+        self.assertIn('No indoor use claim', prompt)
+        self.assertNotIn('output_config', fake.calls[0][2])
 
     def test_social_requires_public_content_and_images_readback(self):
         b = bundle()
@@ -263,14 +354,14 @@ class ModelTests(unittest.TestCase):
             b = bundle()
             b["article"].pop(field)
             with self.subTest(field=field), self.assertRaises(ModelError):
-                Models(ENV, Fake(response(b))).draft({}, context())
+                Models(ENV, Fake(writer_response(b))).draft({}, context())
         for changes in ({"excerpt": "short"}, {"metaDescription": "short"}, {"metaDescription": "x" * 161},
                         {"faqs": []}, {"faqs": [{"question": "q", "answer": ""}] * 3},
                         {"tags": "tent"}, {"author": "other"}, {"content": "x" * 2999}):
             b = bundle()
             b["article"].update(changes)
             with self.subTest(changes=list(changes)), self.assertRaises(ModelError):
-                Models(ENV, Fake(response(b))).draft({}, context())
+                Models(ENV, Fake(writer_response(b))).draft({}, context())
 
     def test_draft_format_length_links_and_comparison_requirements(self):
         for format_name, lower, upper in (("ranking", 5000, 8000), ("comparison", 5000, 8000),
@@ -281,7 +372,7 @@ class ModelTests(unittest.TestCase):
                 prefix = "## Choice\n[設営](/articles/setup) [撤収](/articles/pack)\n{{comparison:tent-a}}\n"
                 b["article"]["content"] = prefix + "文" * (size - len(prefix))
                 with self.subTest(format=format_name, size=size):
-                    model = Models(ENV, Fake(response(b)))
+                    model = Models(ENV, Fake(writer_response(b)))
                     if success:
                         self.assertEqual(model.draft({}, context())["article"]["content"], b["article"]["content"])
                     else:
@@ -292,18 +383,18 @@ class ModelTests(unittest.TestCase):
             b = bundle()
             b["article"]["content"] = content
             with self.assertRaises(ModelError):
-                Models(ENV, Fake(response(b))).draft({}, context())
+                Models(ENV, Fake(writer_response(b))).draft({}, context())
         b = bundle()
         b["brief"]["format"] = "ranking"
         b["article"]["content"] += "文" * 2000
         with self.assertRaises(ModelError):
-            Models(ENV, Fake(response(b))).draft({}, context())
+            Models(ENV, Fake(writer_response(b))).draft({}, context())
 
     def test_main_can_replace_images_with_verified_evidence(self):
         ctx = context()
         ctx["images"][0].update(verified=True, sha256="observed", checkedAt="2026-11-03T12:00:00+09:00")
-        b = Models(ENV, Fake(response(bundle()))).draft({}, ctx)
-        self.assertEqual(b["images"], [{"productId": "tent-a", "url": "https://images.example/a.jpg"}])
+        b = Models(ENV, Fake(writer_response(bundle()))).draft({}, ctx)
+        self.assertEqual(b["images"], ctx["images"])
 
     def test_usage_record_survives_rejected_completion(self):
         fake = Fake(response(None, raw="Not JSON"))
@@ -359,13 +450,16 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(json.loads(artifact.read_text())['content'], 'not JSON')
 
     def test_malformed_bundle_rejected_with_safe_model_error(self):
-        for patcher in (lambda b: b["article"].update(productIds=[{}]),
-                        lambda b: b.update(products=[None]),
-                        lambda b: b.update(images=[None])):
+        for patcher in (lambda b: b["article"].update(productIds=[{}]),):
             b = bundle()
             patcher(b)
-            with self.subTest(b=b), self.assertRaises(ModelError):
-                Models(ENV, Fake(response(b))).draft({}, context())
+            with self.assertRaises(ModelError):
+                Models(ENV, Fake(writer_response(b))).draft({}, context())
+        for change in ({'catalog': [None]}, {'images': [{'productId': 'tent-a', 'url': 'https://invented.example/a.jpg'}]}):
+            ctx = context()
+            ctx.update(change)
+            with self.subTest(fields=list(change)), self.assertRaises(ModelError):
+                Models(ENV, Fake(writer_response(bundle()))).draft({}, ctx)
 
     def test_offline_failure_cannot_be_overridden_by_model_or_flags(self):
         for checks in (dict(FLAGS, passed=False), dict(FLAGS, failures=["bad structure"]),
@@ -379,7 +473,7 @@ class ModelTests(unittest.TestCase):
             Models(ENV, Fake(response(b))).draft({}, context())
 
     def test_retry_budget_is_shared_across_fallback(self):
-        fake = Fake(http(429), http(404), http(503), http(429), response(bundle()))
+        fake = Fake(http(429), http(404), http(503), http(429), writer_response(bundle()))
         with patch("models.time.sleep"), self.assertRaises(ModelError):
             Models(ENV, fake).draft({}, context())
         self.assertEqual(len(fake.calls), 4)

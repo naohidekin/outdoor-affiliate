@@ -409,9 +409,10 @@ def _camel(row):
 
 
 class Catalog:
-    def __init__(self, env, fetcher=None, source_hints=None):
+    def __init__(self, env, fetcher=None, source_hints=None, source_notices=None):
         self.env, self.fetcher = dict(env), fetcher
         self.source_hints = dict(source_hints or {})
+        self.source_notices = dict(source_notices or {})
 
     def health(self):
         return {'envKeys': {key: bool(self.env.get(key)) for key in ENV_KEYS},
@@ -542,6 +543,35 @@ class Catalog:
             item = {'productId': pid, 'model': model, 'facts': False, 'images': False, 'affiliate': False,
                     'claims': [], 'destinations': [], 'issues': [], 'checkedAt': checked_at}
             maker_pages, mall_pages = [], []
+            # Required notices are independent of optional product discovery. A
+            # missing lifecycle source must never degrade into spec-only proof.
+            notice_references = []
+            try:
+                domains = MAKERS.get(product.get('brand', '').casefold(), ())
+                notices = self.source_notices.get(pid, [])
+                if not isinstance(notices, list):
+                    raise CatalogError('invalid required notices')
+                for notice in notices:
+                    if not isinstance(notice, dict) or not domains:
+                        raise CatalogError('invalid required notice')
+                    quotes = notice.get('quotes')
+                    if not isinstance(quotes, list) or not quotes or any(
+                            not isinstance(q, str) or not q.strip() for q in quotes):
+                        raise CatalogError('invalid required notice quotes')
+                    res = self.request(notice.get('url'), allowed_domains=domains)
+                    if not res['headers'].get('content-type', '').lower().startswith('text/html'):
+                        raise CatalogError('HTML required')
+                    parsed = _Page(_decode_html(res['body'], res['headers'].get('content-type', '')))
+                    text = ' '.join(parsed.text.split())
+                    normalized = [' '.join(q.split()) for q in quotes]
+                    if not all(q in text for q in normalized):
+                        raise CatalogError('required notice quote missing')
+                    notice_references.append({'productId': pid, 'kind': 'manufacturer-notice',
+                                              'url': res['url'], 'checkedAt': checked_at,
+                                              'text': ' '.join(normalized)})
+            except (CatalogError, TypeError, ValueError):
+                raise CatalogError('required notice unavailable') from None
+            references.extend(notice_references)
             def page(url, kind):
                 res = self.request(url, allowed_domains=domains if kind == 'manufacturer' else None)
                 if not res['headers'].get('content-type', '').lower().startswith('text/html'):

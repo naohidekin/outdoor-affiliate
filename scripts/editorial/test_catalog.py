@@ -33,6 +33,56 @@ def response(body, kind='text/html', status=200, headers=None):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_required_notice_fresh_quotes_and_manufacturer_redirect_scope(self):
+        product = products()[0]
+        notice = 'https://soto.shinfuji.co.jp/news/discontinued/'
+        final = 'https://soto.shinfuji.co.jp/news/final/'
+        quotes = ['2026.07.30', 'ST-300 生産終了 後継機種：ST-301']
+        calls = []
+        def fetch(url, *_):
+            calls.append(url)
+            if url == notice:
+                return response('', status=302, headers={'location': final})
+            if url == final:
+                return response('<p>2026.07.30</p><table><tr><td>ST-300</td>'
+                                '<td>生産終了</td><td>後継機種：ST-301</td></tr></table>'
+                                '<script>not public evidence</script>')
+            return response('')
+        catalog = Catalog({}, fetch, source_notices={'p0': [{'url': notice, 'quotes': quotes}]})
+        for _ in range(2):
+            result = catalog.gather({'productIds': ['p0']}, {'products': [product]})
+            refs = [r for r in result['references'] if r['kind'] == 'manufacturer-notice']
+            self.assertEqual(len(refs), 1)
+            self.assertEqual(refs[0]['text'], ' '.join(quotes))
+            self.assertEqual(refs[0]['url'], final)
+            self.assertEqual(refs[0]['productId'], 'p0')
+            self.assertTrue(refs[0]['checkedAt'])
+            self.assertNotIn('script', refs[0]['text'])
+        self.assertEqual(calls.count(notice), 2)
+        self.assertEqual(calls.count(final), 2)
+        calls.clear()
+        def external_redirect(url, *_):
+            calls.append(url)
+            return response('', status=302, headers={'location': 'https://evil.example/notice'})
+        with self.assertRaisesRegex(CatalogError, '^required notice unavailable$'):
+            Catalog({}, external_redirect, source_notices={'p0': [{'url': notice, 'quotes': quotes}]}).gather(
+                {'productIds': ['p0']}, {'products': [product]})
+        self.assertEqual(calls, [notice])
+
+    def test_required_notice_missing_quote_or_http_failure_never_returns_certification(self):
+        product = products()[0]
+        notice = 'https://soto.shinfuji.co.jp/news/discontinued/'
+        for reply, quotes in [
+                (response('<p>ST-300 生産終了</p>'), ['ST-300 生産終了', '後継機種：ST-301']),
+                (response('<script>ST-300 生産終了</script>'), ['ST-300 生産終了']),
+                (response('unavailable', status=503), ['ST-300 生産終了']),
+                (response('ST-300 生産終了', kind='application/json'), ['ST-300 生産終了']),
+                (response('<p>ST-300 生産終了</p>'), [])]:
+            with self.subTest(status=reply['status'], quotes=quotes):
+                with self.assertRaisesRegex(CatalogError, '^required notice unavailable$'):
+                    Catalog({}, lambda *a: reply, source_notices={'p0': [{'url': notice, 'quotes': quotes}]}).gather(
+                        {'productIds': ['p0']}, {'products': [product]})
+
     def test_legacy_japanese_html_charset(self):
         from catalog import _decode_html
         html = '<meta charset="EUC-JP"><title>スノーピーク GS600</title>'

@@ -78,7 +78,8 @@ class Runtime:
         self.models = models or Models(self.env, artifact_sink=save_model_artifact)
         if catalog is None:
             from catalog import Catalog
-            catalog = Catalog(self.env, source_hints=config.get('sourceHints', {}))
+            catalog = Catalog(self.env, source_hints=config.get('sourceHints', {}),
+                              source_notices=config.get('sourceNotices', {}))
         self.catalog = catalog
         self.slack = slack or Slack(config)
         self.renderer = renderer or self._render
@@ -242,6 +243,7 @@ class Runtime:
         clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
         flags.update(medical=medical['passed'], render=preview.get('passed') is True and clicks_ok)
         final = self.models.review(bundle, {'evidence': flags, 'structural': checks, 'source': gathered.get('evidence', {}),
+                                          'approvedTheme': job['theme'],
                                           'preview': preview, 'polishPreservation': preservation,
                                           'editorialRules': context['editorialRules'],
                                           'medical': medical,

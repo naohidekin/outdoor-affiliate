@@ -13,12 +13,34 @@ import time
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
+from quality import _protected, inspect_polish
 
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 BRIEF_FIELDS = ("purpose", "reader", "conclusion", "headings", "facts", "numbers", "links",
                 "requiredExpressions", "protected", "style", "length", "cta", "format", "externalSafe")
+ARTICLE_FIELDS = ("slug", "title", "categoryId", "content", "excerpt", "metaDescription",
+                  "faqs", "tags", "productIds", "author")
+LIST_BRIEF_FIELDS = ("headings", "facts", "numbers", "links", "requiredExpressions", "protected")
+WRITER_SCHEMA = {
+    "type": "object", "additionalProperties": False, "required": ["article", "brief"],
+    "properties": {
+        "article": {"type": "object", "additionalProperties": False, "required": list(ARTICLE_FIELDS),
+                    "properties": {**{field: {"type": "string"} for field in ARTICLE_FIELDS
+                                      if field not in ("faqs", "tags", "productIds")},
+                                   "faqs": {"type": "array", "items": {"type": "object",
+                                               "additionalProperties": False, "required": ["question", "answer"],
+                                               "properties": {"question": {"type": "string"}, "answer": {"type": "string"}}}},
+                                   "tags": {"type": "array", "items": {"type": "string"}},
+                                   "productIds": {"type": "array", "items": {"type": "string"}}}},
+        "brief": {"type": "object", "additionalProperties": False, "required": list(BRIEF_FIELDS),
+                  "properties": {**{field: {"type": "array", "items": {"type": "string"}}
+                                    for field in LIST_BRIEF_FIELDS},
+                                 **{field: {"type": "string"} for field in BRIEF_FIELDS
+                                    if field not in LIST_BRIEF_FIELDS + ("externalSafe",)},
+                                 "externalSafe": {"type": "boolean"}}}}
+}
 CATEGORIES = ("facts", "images", "affiliate", "medical", "render")
 SECRET = re.compile(
     r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,}|"
@@ -84,7 +106,7 @@ def _brief(value):
     if value["externalSafe"] is not True:
         raise ModelError("Public sanitized writing brief required")
     for field in ("headings", "facts", "numbers", "links", "requiredExpressions", "protected"):
-        if not isinstance(value[field], list):
+        if not isinstance(value[field], list) or any(not isinstance(item, str) for item in value[field]):
             raise ModelError("Invalid writing brief lists")
     for field in ("purpose", "reader", "conclusion", "style", "length", "cta", "format"):
         if not _text(value[field]):
@@ -113,7 +135,7 @@ class Models:
             raise ModelError("Sensitive data blocked before model request")
         return serialized
 
-    def _call(self, instruction, data, model, gemini=False, fallback=None):
+    def _call(self, instruction, data, model, gemini=False, fallback=None, schema=None):
         # One deadline and retry budget across primary and fallback attempts.
         deadline = time.monotonic() + 180
         key_name = "GEMINI_API_KEY" if gemini else "ANTHROPIC_API_KEY"
@@ -136,6 +158,8 @@ class Models:
                        "messages": [{"role": "user", "content": prompt}]}
             if gemini:
                 payload["response_format"] = {"type": "json_object"}
+            elif schema is not None:
+                payload["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
             status = None
             failed = False
             try:
@@ -258,28 +282,50 @@ class Models:
                 context.get(k) for k in ("SKILL", "skill", "template", "templates")):
             raise ModelError("Existing CLAUDE/SKILL article templates required in context")
         result, _ = self._call(
-            "As upper editor return bundle {article,products,brief,references,images}. article must contain slug,title,"
+            "As upper editor return ONLY {article,brief}. Do not repeat products, references, or images; "
+            "those verified records are assembled locally. article must contain slug,title,"
             "categoryId,content,excerpt (at least 20 characters),metaDescription (50-160 characters),faqs (3-5 "
             "objects with nonempty question and answer),tags (list),productIds,author (exactly ギア男). "
             "Content length by brief.format: ranking/comparison 5000-8000 characters; guide/how-to 3000-5000; "
             "review 2000-3500. Include 2-3 distinct internal Markdown links /articles/slug. "
-            "Ranking/comparison must include concrete {{comparison:exact-product-ids}} tags. Use ONLY supplied verified catalog/specifications/references and exact product IDs; copy selected "
-            "catalog product records unchanged. Use supplied CLAUDE/SKILL article template, no body H1. "
+            "Ranking/comparison must include concrete {{comparison:exact-product-ids}} tags. Use ONLY supplied verified catalog/specifications/references and exact product IDs. "
+            "Use supplied CLAUDE/SKILL article template, no body H1. "
             "Never invent ownership, experiences, prices, reviews, medical advice or claims. Without verified experiences "
             "explicitly label the article as research. No synthetic missing data. Resolve editorial purpose, reader, "
             "conclusion, structure and factual constraints yourself. Set approved writing brief with ALL fields: "
             + ", ".join(BRIEF_FIELDS) + ". facts/numbers/links/headings/requiredExpressions/protected are lists; "
             "externalSafe must be true ONLY for sanitized public data. The brief must fully specify all known facts, "
             "exact numbers, links, immutable claims, disclosure, style, length, CTA and output format. "
-            "references must be selected unchanged from supplied references; images must use supplied product URLs. "
+            "Cite only supplied references and use supplied product URLs. "
             "Do not claim images, affiliate destinations or rendering are live-verified.",
             {"theme": theme, "context": context},
             self.env.get("ARTICLE_WRITER_MODEL") or "claude-opus-4-8",
-            fallback=self.env.get("ARTICLE_WRITER_FALLBACK_MODEL") or "claude-sonnet-4-6")
-        _require(result, ("article", "products", "brief", "references", "images"))
-        _require(result["article"], ("slug", "title", "categoryId", "content", "excerpt", "metaDescription",
-                                     "faqs", "tags", "productIds", "author"))
+            fallback=self.env.get("ARTICLE_WRITER_FALLBACK_MODEL") or "claude-sonnet-4-6",
+            schema=WRITER_SCHEMA)
+        if set(result) != {"article", "brief"}:
+            raise ModelError("Invalid writer response fields")
+        _require(result["article"], ARTICLE_FIELDS)
+        _require(result["brief"], BRIEF_FIELDS)
+        if set(result["article"]) != set(ARTICLE_FIELDS) or set(result["brief"]) != set(BRIEF_FIELDS):
+            raise ModelError("Invalid writer response fields")
         _brief(result["brief"])
+        catalog = context["catalog"]
+        if any(not isinstance(p, dict) or not _text(p.get("id")) for p in catalog):
+            raise ModelError("Invalid catalog product IDs")
+        selected_ids = theme.get("productIds") if isinstance(theme, dict) else None
+        if selected_ids is None:
+            selected_ids = [p["id"] for p in catalog]
+        if (not isinstance(selected_ids, list) or not selected_ids or
+                any(not _text(pid) for pid in selected_ids) or len(selected_ids) != len(set(selected_ids))):
+            raise ModelError("Invalid selected product IDs")
+        selected = [copy.deepcopy(next((p for p in catalog if p["id"] == pid), None)) for pid in selected_ids]
+        if any(p is None for p in selected):
+            raise ModelError("Unknown theme product ID")
+        if not isinstance(context["references"], list) or not isinstance(context.get("images", []), list):
+            raise ModelError("Invalid supplied evidence lists")
+        result.update(products=selected, references=copy.deepcopy(context["references"]),
+                      images=copy.deepcopy([image for image in context.get("images", [])
+                                            if isinstance(image, dict) and image.get("productId") in selected_ids]))
         if (not _text(result["article"]["content"]) or not isinstance(result["article"]["productIds"], list)
                 or any(not _text(pid) for pid in result["article"]["productIds"])):
             raise ModelError("Invalid article")
@@ -292,7 +338,7 @@ class Models:
             raise ModelError("Invalid article metadata")
         for faq in article["faqs"]:
             _require(faq, ("question", "answer"))
-            if not _text(faq["question"]) or not _text(faq["answer"]):
+            if set(faq) != {"question", "answer"} or not _text(faq["question"]) or not _text(faq["answer"]):
                 raise ModelError("Incomplete FAQ")
         lengths = {"ranking": (5000, 8000), "comparison": (5000, 8000), "guide": (3000, 5000),
                    "how-to": (3000, 5000), "review": (2000, 3500)}
@@ -310,14 +356,11 @@ class Models:
         for field in ("products", "references", "images"):
             if not isinstance(result[field], list):
                 raise ModelError("Invalid bundle lists")
-        catalog = context["catalog"]
-        if any(not isinstance(p, dict) or not _text(p.get("id")) for p in catalog):
-            raise ModelError("Invalid catalog product IDs")
         selected = result["products"]
         if any(p not in catalog for p in selected):
             raise ModelError("Unverified or modified catalog product")
         ids = [p["id"] for p in selected]
-        if len(ids) != len(set(ids)) or set(result["article"]["productIds"]) != set(ids):
+        if len(ids) != len(set(ids)) or result["article"]["productIds"] != ids:
             raise ModelError("Article product IDs do not match supplied products")
         for match in re.finditer(r"\{\{(?:product|comparison|ranking):([^}]+)\}\}", result["article"]["content"]):
             if any(pid.strip() not in ids for pid in match.group(1).split(",")):
@@ -340,17 +383,40 @@ class Models:
         _brief(brief)
         if not _text(source):
             raise ModelError("Source content required")
-        # Only a candidate is returned. The caller keeps source readonly and runs
-        # independent protected-content checks before accepting this candidate.
+        parts = re.split(r'((?:\r?\n[ \t]*){2,})', source)
+        paragraphs = parts[::2]
+        fixed = tuple(token for field in ("protected", "requiredExpressions")
+                      for token in brief[field] if token)
+        eligible = [index for index, paragraph in enumerate(paragraphs)
+                    if paragraph.strip() and not _protected(paragraph)
+                    and not any(token in paragraph for token in fixed)]
         result, usage = self._call(
-            "Polish prose ONLY according to the complete approved brief. Return {content:string}. "
-            "Do not add/change facts, numbers, links, claims, conclusions, headings, product IDs, components, "
-            "disclosure or protected expressions. No new medical advice. Do not grade or approve publication.",
-            {"source": source, "brief": brief}, "gemini-3.8-flash", gemini=True)
-        _require(result, ("content",))
-        if not _text(result["content"]):
-            raise ModelError("Polished content required")
-        return {"content": result["content"], "model": usage["model"], "usage": usage}
+            "Return ONLY {edits:[{index:integer,text:string}]}. Edit prose in eligible paragraphs only. "
+            "Indices refer to the supplied eligible paragraph indices. Preserve all facts, meaning, numbers, "
+            "links, headings, shortcodes, disclosure and protected expressions. Do not add medical advice. "
+            "Use edits:[] if no correction is needed. Do not grade or approve publication.",
+            {"source": source, "brief": brief,
+             "editable": [{"index": i, "text": paragraphs[i]} for i in eligible]},
+            "gemini-3.8-flash", gemini=True)
+        if set(result) != {"edits"} or not isinstance(result["edits"], list):
+            raise ModelError("Invalid polish edits")
+        seen = set()
+        for edit in result["edits"]:
+            if (not isinstance(edit, dict) or set(edit) != {"index", "text"}
+                    or type(edit["index"]) is not int or edit["index"] not in eligible
+                    or edit["index"] in seen or not _text(edit["text"])
+                    or re.search(r'(?:\r?\n[ \t]*){2,}', edit["text"])
+                    or _protected(edit["text"])
+                    or any(token in edit["text"] for token in fixed)):
+                raise ModelError("Invalid polish edits")
+            seen.add(edit["index"])
+            parts[edit["index"] * 2] = edit["text"]
+        candidate = ''.join(parts)
+        if inspect_polish(source, candidate)["passed"] is not True:
+            raise ModelError("Polish protected content changed")
+        usage["polishEditsApplied"] = len(seen)
+        usage["polishOutcome"] = "edited" if seen else "no_changes"
+        return {"content": candidate, "model": usage["model"], "usage": usage}
 
     def review(self, bundle, checks):
         result, usage = self._call(
@@ -358,7 +424,14 @@ class Models:
             "Return {passed:boolean,score:number,facts:boolean,images:boolean,affiliate:boolean,medical:boolean,"
             "render:boolean,evidence:object,issues:list}. Score 0-10; pass threshold 7.5. "
             "Never certify live images, affiliate destinations or rendering from LLM opinion. Missing independent "
-            "evidence must fail. Check factual provenance, no invented experiences, medical claims and protected brief. "
+            "evidence must fail. checks.evidence.facts certifies catalog product specifications ONLY; it does not "
+            "certify every claim in the article. Independently audit every factual claim and inference in the title, "
+            "body, metadata, excerpt and FAQs against the exact catalog records, primary references and, when supplied, "
+            "checks.approvedTheme and its Astra constraints. Reject reversed or unsupported product comparisons, "
+            "fictional anecdotes or firsthand experience, extrapolation beyond stated measurement conditions, and "
+            "price or availability claims without current independent proof. A repeated number or cited URL alone does "
+            "not establish the surrounding claim. Mark facts false and passed false, with specific issues, whenever "
+            "provenance or approved-theme compliance is missing. Check medical claims and protected brief. "
             "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
             "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and also return criteria "
             "with eleven numeric 0-10 scores: wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
