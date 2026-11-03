@@ -158,11 +158,10 @@ review 2000〜3500）、内部記事リンク2〜3、FAQ3〜5は維持。
 
 | 検証 | 結果・根拠 |
 |---|---|
-| runtime/slack P2修正後の試験 | 106 tests通過（main担当報告） |
-| macproのpublish/render試験 | 実renderを含む23 tests全通過、skipなし（main担当報告） |
-| GUI Slack認証 | 成功（main担当報告）。新runtime preflight成功とは分ける |
-| 本文書更新時のPython試験 | 107件成功（この作業で再実行。並行修正後のローカル版） |
-| 本文書更新時のNode契約試験 | 22件成功・実render1件skip（この作業で実行）。上のmacpro結果と実行環境が異なる |
+| Python試験（bf0a5ec） | Air・macproとも116件成功 |
+| macproのpublish/render試験（bcba319） | 実renderを含む31件成功、skipなし |
+| 新runtime GUI preflight | Slack認証・Gemini 3.8 Flash実呼出し成功 |
+| Slack実送信 | 接続案内と制作停止案内をAPI読み戻しで確認。本人の既読は未確認 |
 
 実装・ローカル試験は完了している。Pythonのcatalog/ledger/models/quality/runtime/slack試験、
 Nodeのpublish/render契約試験とmacpro実render、GUI Slack単体認証は、新runtime preflight・常駐・本番公開とは別の検証。
@@ -191,3 +190,9 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 承認済み実記事の公開はまだ実行していない。公開試験は隔離データの契約試験であり、実際の公開実績に数えない。
 - 実商品カタログでは仕様・画像の同一性・購入先が未確認の候補を観測。3枠の設定を3原稿完成と報告しない。
 - SNSは公開確認後の原稿生成・独立審査・別承認・手動投稿引継ぎまで。X投稿や予約を済ませたとは報告しない。
+- 初回3候補のうち1件は素材・仕様・購入先の未検証で本文制作前に停止、2件は候補段階。
+  タイトルの未実施「実測」等と累計クリックからの購入・季節需要の推測を除去し、同じ候補IDで履歴を残して訂正。
+- 楽天APIは新旧エンドポイントともHTTP403、診断はIP許可エラー。現在設定はWeb用アプリ、別途既存のバッチ用アプリが登録済み。
+  バッチ用の既存資格情報・接続元許可の整合確認が残る。API復旧だけで商品仕様等を合格扱いしない。
+- Slackが `&` をHTMLエスケープする差異を修正。送信直後のmessage_tsをprivate受領情報へ保存し、
+  読み戻し失敗時に盲目的な再送をしない。14:11 JST、先の制作停止案内は既存メッセージと一致し受領情報を修復。
