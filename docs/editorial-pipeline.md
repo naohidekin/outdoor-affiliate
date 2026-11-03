@@ -2,7 +2,7 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified（3件の承認カードtsも記録済み）。GS 8.8、CB 8.6、SOTO 8.6で、現在は**記事公開とは別のSNS承認待ち**。Xへの投稿・予約は行っていない。実行版はmacpro runtime `05c4c3e`。
+**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified（3件の承認カードtsも記録済み）。GS 8.8、CB 8.6、SOTO 8.6で、現在は**記事公開とは別のSNS承認待ち**。Xへの投稿・予約は行っていない。実行版はmacpro runtime `e0c8fa4`。
 analyticsは実データから既存記事改善候補3件をSEO state rootの `editorial-insights/latest.json` へ出力済み。`reportsEnabled: true` のGUI試運転は21:40:50 JSTに完了。週次2026-11-02週と月次2026-10月のSlack送達・readbackがverified。旧Air Codexの`camp-gear-lab-seo` automationはPAUSEDを確認済み。通常の`com.naohide.camp-slack-review`は継続する。次のSEO施策枠は11月5日（木）で、新しい改善施策はまだ実行していない。今週の新規記事候補3枠は使用済みで、次の通常制作開始は11月11日（水）09時JST以降。
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
@@ -255,3 +255,11 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - runtime `a5490e8`：公開済み3記事を根拠にしたSNS原稿がClaude→Gemini 3.8→Claudeを通過。GS 8.8、CB 8.6、SOTO 8.6で、3件とも既存Slackスレッドへの配信とreadbackがverified。記事は再承認待ちに戻していない。SNSだけ本人の別承認待ちで、X投稿・予約なし。macproでPython196件・collector5件成功。
 - analyticsの実データで既存記事改善候補3件を `editorial-insights/latest.json` へ出力。これは新記事の候補追加やSEO改善の成果ではない。この時点では週次／月次report機能は設定falseで、本文の完成・実送達は未確認だった。今週の候補3枠は使用済み、次の通常制作は11月11日（水）09時JST以降。
 - runtime `05c4c3e` をmacproへ配備し、Python211件・collector5件成功。host-local `reportsEnabled` をtrueにしてGUI試運転を完了（21:40:50 JST）。週次2026-11-02週と月次2026-10月のSlack送達・readbackはそれぞれverified。旧Air Codex `camp-gear-lab-seo` automationはPAUSEDを確認し、通常の`com.naohide.camp-slack-review`は継続。月次2026-10月分は11月5日枠として送達済みなので、通常の次回月次は12月5日の2026-11月分。次のSEO施策枠は11月5日（木）で、新しい改善施策の実行実績はまだない。X投稿は引き続き本人承認後の手動引継ぎのみ。
+
+## 2026-11-03 22:12 JST — X rollout
+
+- Air/macpro runtime e0c8fa4: Python244件・Node4件成功。独立レビュー指摘を修正済み。
+- 3件は本文・画像・元の品質審査を保持してauto_xへ移行。旧承認カードは失効。新カードの配信/readback verified: GS 1793711508.457169、SOTO 1793711516.843559、CB 1793711526.132759。全件social_review・未承認・未投稿。
+- @camp_gear_lab / 1343879420470206464の公開情報を確認。OAuth1は両機401（v1 code89）、本人は管理場所不明。22:12の読取専用preflightも未成功。private social-connection.jsonに記録。
+- socialPostingEnabled=falseを維持。カードは接続復旧待ちと、承認内容を保存し接続確認後に投稿する旨を明示。認証復旧・対象アカウントpreflight成功・有効化後、別途承認された版の本文と画像、記事URL返信を投稿し、X照合後にSlackへ結果を通知する。
+- 実X投稿・実投稿readbackは未実施。契約同意・キー再発行なし。開発者アカウント確認と投稿認証の復旧が残る。旧投稿ジョブは無効のまま。通常runnerは22:12:07 completed、報告の重複送信なし。
