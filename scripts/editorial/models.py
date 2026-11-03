@@ -138,7 +138,7 @@ class Models:
             status = None
             failed = False
             try:
-                raw = self.request(url, headers, payload, min(60, remaining))
+                raw = self.request(url, headers, payload, remaining)
             except Exception as error:
                 # Capture only a numeric status. Never retain provider messages,
                 # body, credential-bearing request or chained exceptions.

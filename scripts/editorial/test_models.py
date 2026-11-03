@@ -106,7 +106,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(headers["x-api-key"], ENV["ANTHROPIC_API_KEY"])
         self.assertEqual(payload["model"], "claude-sonnet-4-6")
         self.assertIn("END-EVIDENCE", payload["messages"][0]["content"])
-        self.assertLessEqual(timeout, 60)
+        self.assertLessEqual(timeout, 180)
         self.assertEqual(model.usage, [{"responseId": "c-1", "model": "claude-sonnet-4-6", "input": 31,
                                       "output": 9, "usage": {"input_tokens": 31, "output_tokens": 9}, "actualUSD": None}])
 
@@ -352,7 +352,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(request.get_method(), "POST")
         self.assertEqual(request.get_header("X-api-key"), "test-claude-key")
         self.assertEqual(json.loads(request.data)["model"], "claude-sonnet-4-6")
-        self.assertLessEqual(opener.call_args.kwargs["timeout"], 60)
+        self.assertLessEqual(opener.call_args.kwargs["timeout"], 180)
 
     def test_keys_from_explicit_mapping_only(self):
         fake = Fake()
