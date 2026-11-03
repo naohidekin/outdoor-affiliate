@@ -2,7 +2,7 @@
 
 ## 0. 現在状態（2026-11-03 JST）
 
-**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。新しい画像カード統合の本番配備はmainの受領確認待ち。以前の版 `e0c8fa4` を現在実行版の保証として扱わない。
+**初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。画像カード統合 `5fef0e4` は本番サイト/macproへ配備し、23:25 JSTに有効化済み。実画像の保存・読戻しと通常tick完了を確認。GS差替案の本人承認はまだ受けていない。
 analyticsは実データから既存記事改善候補3件をSEO state rootの `editorial-insights/latest.json` へ出力済み。`reportsEnabled: true` のGUI試運転は21:40:50 JSTに完了。週次2026-11-02週と月次2026-10月のSlack送達・readbackがverified。旧Air Codexの`camp-gear-lab-seo` automationはPAUSEDを確認済み。通常の`com.naohide.camp-slack-review`は継続する。次のSEO施策枠は11月5日（木）で、新しい改善施策はまだ実行していない。今週の新規記事候補3枠は使用済みで、次の通常制作開始は11月11日（水）09時JST以降。
 「文書のみ」「台帳/cap/承認は未実装」という旧記述は現在のコードと一致しない。
 実装・ローカル試験の完了を、macpro常駐・実Slack承認・本番公開の稼働確認と同一視しない。
