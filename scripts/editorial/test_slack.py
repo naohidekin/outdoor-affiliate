@@ -35,6 +35,44 @@ class SlackTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Slack(self.config, call=call).post('本文')
 
+    def test_image_server_metadata_only_is_ignored(self):
+        blocks = [{'type': 'image', 'image_url': 'https://example.com/image.jpg', 'alt_text': '画像 & 説明'}]
+        metadata = {'image_bytes': 303678, 'image_height': 3088, 'fallback': 'server fallback',
+                    'is_animated': False, 'image_width': 2056, 'block_id': 'server-id'}
+        for mode in ('metadata', 'image_url', 'alt_text', 'type', 'unknown'):
+            with self.subTest(mode=mode):
+                def call(method, data):
+                    result = self.call(method, data)
+                    if method == 'conversations.replies':
+                        image = copy.deepcopy(blocks[0])
+                        image.update(metadata)
+                        if mode in ('image_url', 'alt_text', 'type'):
+                            image[mode] = {'image_url': 'https://example.com/changed.jpg',
+                                           'alt_text': '変更された説明', 'type': 'section'}[mode]
+                        if mode == 'unknown':
+                            image['unexpected'] = True
+                        result['messages'][0]['blocks'] = [image]
+                    return result
+                slack = Slack(self.config, call=call)
+                if mode == 'metadata':
+                    self.assertTrue(slack.post('画像', blocks)['verified'])
+                else:
+                    with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+                        slack.post('画像', blocks)
+
+    def test_image_metadata_names_are_not_ignored_on_other_objects(self):
+        blocks = [{'type': 'actions', 'elements': [{'type': 'button',
+                   'text': {'type': 'plain_text', 'text': '承認'}, 'action_id': 'approve',
+                   'value': '{"nonce":"exact"}'}]}]
+        def call(method, data):
+            result = self.call(method, data)
+            if method == 'conversations.replies':
+                result['messages'][0]['blocks'] = copy.deepcopy(blocks)
+                result['messages'][0]['blocks'][0]['elements'][0]['fallback'] = 'unexpected'
+            return result
+        with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+            Slack(self.config, call=call).post('承認', blocks)
+
     def test_plain_text_block_entities_decode_once_without_changing_expected(self):
         text = 'HOME&CAMP\n> 引用 &lt;literal&gt;'
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},

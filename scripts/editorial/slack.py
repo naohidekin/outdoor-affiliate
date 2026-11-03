@@ -89,9 +89,12 @@ class Slack:
         if blocks:
             def stable(v, observed=False):
                 if isinstance(v, dict):
+                    ignored = {'block_id', 'emoji'}
+                    if observed and v.get('type') == 'image':
+                        ignored |= {'image_bytes', 'image_height', 'fallback', 'is_animated', 'image_width'}
                     return {k: (html.unescape(x) if observed and v.get('type') == 'plain_text'
                                 and k == 'text' and isinstance(x, str) else stable(x, observed))
-                            for k, x in v.items() if k not in ('block_id', 'emoji')}
+                            for k, x in v.items() if k not in ignored}
                 return [stable(x, observed) for x in v] if isinstance(v, list) else v
             if stable(message.get('blocks'), observed=True) != stable(blocks):
                 raise ValueError('slack_blocks_mismatch')
