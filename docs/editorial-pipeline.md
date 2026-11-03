@@ -268,3 +268,9 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 
 - 本人がOAuth1アクセストークンとコンシューマーキーの各ペアを再生成し、既存envへ安全入力で保存。22:55:17と22:55:43にusers/meが成功、対象userId1343879420470206464と一致。socialPostingEnabled=trueへ変更。新規契約・権限追加なし。
 - 通常runnerは22:55:57 completed、SNS3件はsocial_review・承認nullで投稿ゼロ。実投稿確認はSlackのexact版承認待ち。接続復旧案内を既存Slackスレッドへ送信（1793714169.751269）。カードの復旧待ち文言はこの案内で解消を通知、承認版は変更していない。
+
+## 2026-11-03 22:58 JST — 初回X実投稿確認
+
+- GS-600のSNS新カードへの本人承認を22:58:15に受信。承認版9bb140c3ecd1dd57df987196d33d642e84fd6a1762c3270925cb5c3e151f28a1の本文と画像1枚を投稿し、記事URLを返信。main https://x.com/i/web/status/2117617369673830497 、reply https://x.com/i/web/status/2117617376552493429 。
+- 本文、承認画像bytes/SHAとアップロード後添付mediaKey、返信URL/親ID/対象アカウントが一致。journal verified・pendingなし、ledger social_posted。Slack完了通知1793714302.385899もreadback verified、health22:58:23 completed。
+- SOTO/CBの2件は未承認・未投稿。socialPostingEnabled=true、今後も本人のexact版承認後だけ投稿する。X認証復旧と初回の実投稿・照合まで確認済み。
