@@ -1,7 +1,10 @@
 """Slack-only article delivery through the existing authenticated receiver."""
 import hashlib
+import html
 import json
+import os
 import re
+import secrets
 import subprocess
 import time
 from pathlib import Path
@@ -32,6 +35,20 @@ class Slack:
         self.node = config.get('node', 'node')
         self._call = call or self._node_call
         self._next_post = 0
+        self.state_root = Path(config['stateRoot']) if config.get('stateRoot') else None
+
+    def _receipt(self, ts, status, data):
+        if self.state_root is None:
+            return
+        folder = self.state_root / 'slack-outbound'
+        folder.mkdir(mode=0o700, exist_ok=True)
+        temporary = folder / (ts + '.' + secrets.token_hex(8))
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'w') as out:
+            json.dump({'status': status, 'message_ts': ts, 'expected': data}, out, ensure_ascii=False)
+            out.flush()
+            os.fsync(out.fileno())
+        os.replace(temporary, folder / (ts + '.json'))
 
     def _node_call(self, method, data):
         try:
@@ -59,6 +76,7 @@ class Slack:
         ts = sent.get('ts', '')
         if not re.fullmatch(r'\d{10}\.\d{1,6}', ts) or sent.get('channel') != self.scope['channel_id']:
             raise ValueError('slack_send_result_unknown')
+        self._receipt(ts, 'sent_unverified', data)
         observed = self._call('conversations.replies', {'channel': self.scope['channel_id'],
             'ts': self.scope['thread_ts'], 'oldest': ts, 'latest': ts, 'inclusive': True, 'limit': 100})
         message = next((m for m in observed.get('messages', []) if m.get('ts') == ts), None)
@@ -66,7 +84,7 @@ class Slack:
             raise ValueError('slack_readback_missing')
         # Slack normalizes fallback text newlines, but plain_text blocks are exact.
         normalize = lambda t: str(t).replace('\n', ' ')
-        if normalize(message.get('text')) != normalize(text):
+        if normalize(html.unescape(str(message.get('text')))) != normalize(text):
             raise ValueError('slack_readback_mismatch')
         if blocks:
             def stable(v):
@@ -75,6 +93,7 @@ class Slack:
                 return [stable(x) for x in v] if isinstance(v, list) else v
             if stable(message.get('blocks')) != stable(blocks):
                 raise ValueError('slack_blocks_mismatch')
+        self._receipt(ts, 'verified', data)
         return {'message_ts': ts, 'hash': digest(data), 'verified': True}
 
     def deliver(self, job, request):

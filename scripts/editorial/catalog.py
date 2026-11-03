@@ -425,11 +425,12 @@ class Catalog:
                             except CatalogError:
                                 item['issues'].append('manufacturer page unavailable')
                 if self.env.get('RAKUTEN_APP_ID') and self.env.get('RAKUTEN_ACCESS_KEY'):
-                    data = self._json('https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?' + urlencode({
+                    data = self._json('https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701?' + urlencode({
                         'applicationId': self.env['RAKUTEN_APP_ID'], 'accessKey': self.env['RAKUTEN_ACCESS_KEY'],
-                        'keyword': product['name'], 'hits': 5, 'formatVersion': 2}), {'Accept': 'application/json'})
-                    for raw in data.get('Items', [])[:5]:
-                        raw = raw.get('Item', raw)
+                        'keyword': product['name'], 'hits': 5, 'formatVersion': 2}),
+                        {'Accept': 'application/json', 'Origin': 'https://camp-gear-lab.com', 'Referer': 'https://camp-gear-lab.com/'})
+                    for raw in data.get('items', data.get('Items', []))[:5]:
+                        raw = raw.get('item', raw.get('Item', raw))
                         if model_matches(model, raw.get('itemName', '')) and product['brand'].casefold() in raw.get('itemName', '').casefold():
                             url = raw.get('itemUrl', '')
                             if urlsplit(url).hostname == 'item.rakuten.co.jp':

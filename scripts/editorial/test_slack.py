@@ -1,4 +1,6 @@
 import json
+import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 from slack import Slack, chunks
@@ -41,6 +43,26 @@ class SlackTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Slack(self.config, call=self.call).post('token xoxb-do-not-send')
         self.assertIsNone(self.sent)
+
+    def test_slack_html_entity_encoding_is_decoded_once(self):
+        def call(method, data):
+            result = self.call(method, data)
+            if method == 'conversations.replies':
+                result['messages'][0]['text'] = 'HOME&amp;CAMP &amp;lt;literal&amp;gt;'
+            return result
+        self.assertTrue(Slack(self.config, call=call).post('HOME&CAMP &lt;literal&gt;')['verified'])
+
+    def test_unknown_readback_preserves_sent_receipt_without_resending(self):
+        with tempfile.TemporaryDirectory() as root:
+            def call(method, data):
+                if method == 'chat.postMessage':
+                    return self.call(method, data)
+                raise TimeoutError('readback unavailable')
+            with self.assertRaises(TimeoutError):
+                Slack(dict(self.config, stateRoot=root), call=call).post('HOME&CAMP')
+            receipt = Path(root) / 'slack-outbound/1793000000.123456.json'
+            self.assertEqual('sent_unverified', json.loads(receipt.read_text())['status'])
+            self.assertEqual(0o600, receipt.stat().st_mode & 0o777)
 
     def test_social_delivery_shows_only_proposed_images_in_order(self):
         s = Slack(self.config, call=self.call)

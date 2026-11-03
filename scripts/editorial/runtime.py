@@ -391,15 +391,20 @@ class Runtime:
                       for r in results if r.get('status') == 'attention']
         if attention:
             result['status'] = 'attention'
+            atomic(self.root / 'health.json', result)
             key = hashlib.sha256(canonical(attention).encode()).hexdigest()
             notified = self.root / 'attention' / (key + '.json')
             if not notified.exists():
                 atomic(notified, {'status': 'in_flight', 'at': stamp()})
-                self.slack.notice('【記事制作の確認事項】\n' + '\n'.join(
-                    a['title'] + '\n記事ID: ' + a['id'] + '\n理由: ' + str(a['error'].get('reason', '確認が必要')) +
-                    '\n' + self.research_issues(a['id'])
-                    for a in attention) + '\n未確認を合格扱いせず保留しています。詳細確認・修正依頼はこのCodexアプリでも受け付けます。')
-                atomic(notified, {'status': 'delivered', 'at': stamp()})
+                try:
+                    receipt = self.slack.notice('【記事制作の確認事項】\n' + '\n'.join(
+                        a['title'] + '\n記事ID: ' + a['id'] + '\n理由: ' + str(a['error'].get('reason', '確認が必要')) +
+                        '\n' + self.research_issues(a['id'])
+                        for a in attention) + '\n未確認を合格扱いせず保留しています。詳細確認・修正依頼はこのCodexアプリでも受け付けます。')
+                    atomic(notified, {'status': 'delivered', 'at': stamp(), 'receipt': receipt})
+                except Exception as error:
+                    atomic(notified, {'status': 'unknown', 'at': stamp(), 'reason': reason(error)})
+            result['attentionDelivery'] = json.loads(notified.read_text())
             atomic(self.root / 'health.json', result)
         self._save_usage()
         return result
