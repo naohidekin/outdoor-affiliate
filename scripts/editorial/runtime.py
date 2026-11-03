@@ -1,5 +1,6 @@
 """Single-host, Slack-first production runner. No Telegram fallback."""
 import argparse
+import atexit
 import copy
 from datetime import datetime, timedelta, timezone
 import fcntl
@@ -93,6 +94,17 @@ class Runtime:
         if result.returncode or value.get('passed') is not True:
             raise ValueError('render_preview_failed')
         return value
+
+    def _medical(self, article):
+        module = (Path(self.config['repo']) / 'src/lib/medical-review-gate.mjs').as_uri()
+        script = 'import {readFileSync} from "node:fs"; const m=await import(process.argv[1]); console.log(JSON.stringify(m.detectMedicalRisks(readFileSync(0,"utf8"))));'
+        checked = subprocess.run([self.config.get('node', 'node'), '--input-type=module', '-e', script, module],
+            input=article.get('title', '') + '\n' + article['content'] + '\n' + json.dumps(article.get('faqs', []), ensure_ascii=False),
+            capture_output=True, text=True, timeout=20)
+        if checked.returncode:
+            raise ValueError('medical_gate_unavailable')
+        risks = json.loads(checked.stdout)
+        return {'passed': not risks, 'risks': risks}
 
     def _publish(self, action, job):
         child_env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'TZ', 'TMPDIR')}
@@ -212,13 +224,14 @@ class Runtime:
         evidence = gathered.get('checks', {})
         preview = self.renderer(bundle, job)
         flags = {k: evidence.get(k) is True for k in ('facts', 'images', 'affiliate')}
-        from_health = re.search(r'一酸化炭素|やけど|熱中症|低体温|誤飲|アナフィラキシー|マダニ|ディート|DEET|イカリジン|乳幼児|赤ちゃん', bundle['article']['content'])
+        medical = self._medical(bundle['article'])
         click_results = preview.get('clicksVerified', {})
         clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
-        flags.update(medical=not bool(from_health), render=preview.get('passed') is True and clicks_ok)
+        flags.update(medical=medical['passed'], render=preview.get('passed') is True and clicks_ok)
         final = self.models.review(bundle, {'evidence': flags, 'structural': checks, 'source': gathered.get('evidence', {}),
                                           'preview': preview, 'polishPreservation': preservation,
                                           'editorialRules': context['editorialRules'],
+                                          'medical': medical,
                                           'sourceContent': source['article']['content']})
         if final.get('passed') is not True:
             raise ValueError('final_review_failed')
@@ -405,7 +418,7 @@ class Runtime:
         links = re.findall(r'https?://[^\s<>]+', text)
         numbers_ok = set(re.findall(r'\d+(?:\.\d+)?', proposal['text'])) <= set(re.findall(r'\d+(?:\.\d+)?', source_text))
         url_ok = proposal.get('url') == publication['url'] and links == [publication['url']] and not re.search(r'https?://', proposal['text'])
-        no_medical = not re.search(r'一酸化炭素|やけど|熱中症|低体温|誤飲|アナフィラキシー|医学|治療|予防効果', text)
+        no_medical = self._medical({'content': text})['passed']
         weighted_length = sum(1 if ord(c) < 128 else 2 for c in proposal['text'])
         format_ok = proposal.get('platform') == 'x' and bool(proposal['text'].strip()) and weighted_length <= 280
         prohibited = [word for values in account.get('ngWords', {}).values() for word in values]
@@ -468,6 +481,7 @@ def main():
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text())
     runtime = Runtime(config)
+    atexit.register(runtime._save_usage)
     with (runtime.root / 'runtime.flock').open('a') as lease:
         os.chmod(lease.name, 0o600)
         try:

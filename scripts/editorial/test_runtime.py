@@ -276,6 +276,15 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.produce(limit=1)
         self.assertEqual(gathered['evidence'], review.call_args.args[1]['source'])
 
+    def test_existing_medical_gate_blocks_faq_risk_before_slack_or_db(self):
+        unsafe = bundle()
+        unsafe['faqs'] = unsafe['article']['faqs']
+        unsafe['article']['faqs'][0]['answer'] = '低温やけどと凍傷について。'
+        with patch.object(self.models, 'draft', return_value=unsafe):
+            self.runtime.produce(limit=1)
+        self.assertEqual([], self.writes)
+        self.assertEqual([], self.slack.deliveries)
+
 
 if __name__ == '__main__':
     unittest.main()

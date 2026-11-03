@@ -12,6 +12,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
 import { withPublicationLock, seoRoot } from '../seo/article-guard.mjs';
+import { detectMedicalRisks } from '../../src/lib/medical-review-gate.mjs';
 
 const SITE = 'https://camp-gear-lab.com';
 const articleFields = {
@@ -88,6 +89,8 @@ const selectedRow = (row, fields) => normalizeTimestamps(Object.fromEntries(Obje
 function validateBundle(bundle) {
   requireValue(record(bundle) && record(bundle.article) && Array.isArray(bundle.products), 'bundle required');
   const a = bundle.article;
+  requireValue(detectMedicalRisks([a.title, a.content, JSON.stringify(a.faqs || [])].join('\n')).length === 0,
+    'medical-risk article requires separate physician review workflow');
   for (const k of ['id', 'title', 'slug', 'categoryId', 'content', 'excerpt', 'createdAt', 'updatedAt'])
     requireValue(nonempty(a[k]), 'article required fields missing');
   requireValue(/^(?:editorial-[a-zA-Z0-9_-]+|article-[a-f0-9]{24})$/.test(a.id) && /^[a-z0-9][a-z0-9-]*$/.test(a.slug), 'new editorial identity required');

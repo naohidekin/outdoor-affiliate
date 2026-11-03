@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import net from 'node:net';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -138,22 +139,130 @@ async function availablePort() {
   return port;
 }
 
-async function inspectViewport(browser, origin, input, name, width, result) {
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const imageHash = body => createHash('sha256').update(body).digest('hex');
+
+// Fixed, credential-free child. Catalog pins a validated public DNS address for
+// each HTTPS connection and revalidates EVERY redirect. No browser HTTP is used.
+export const IMAGE_HELPER = `import hashlib,json,sys
+sys.path.insert(0,sys.argv[1])
+from catalog import Catalog,_image_type
+try:
+ r=Catalog({}).request(json.load(sys.stdin)['url'],{'Accept':'image/*','Cache-Control':'no-cache'})
+ body=r['body']; kind=r['headers'].get('content-type','').split(';')[0].lower()
+ if not kind.startswith('image/') or _image_type(body)!=kind: raise ValueError()
+ header={'contentType':kind,'size':len(body),'sha256':hashlib.sha256(body).hexdigest()}
+ sys.stdout.buffer.write(json.dumps(header).encode()+b'\\n'+body)
+except Exception:
+ sys.exit(1)
+`;
+export async function fetchPublicImage(url) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('python3', ['-I', '-B', '-c', IMAGE_HELPER, path.dirname(fileURLToPath(import.meta.url))], {
+      env: { PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin', TZ: 'Asia/Tokyo', PYTHONDONTWRITEBYTECODE: '1' },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const chunks = []; let length = 0, finished = false;
+    const fail = () => {
+      if (finished) return;
+      finished = true; clearTimeout(timer); child.kill('SIGKILL'); reject(new Error('secure image fetch failed'));
+    };
+    const timer = setTimeout(fail, 25000);
+    child.stderr.resume(); // Do not expose raw URL, provider text or exceptions.
+    child.stdin.on('error', fail); child.on('error', fail);
+    child.stdout.on('data', chunk => {
+      length += chunk.length;
+      if (length > MAX_IMAGE_BYTES + 4096) return fail();
+      chunks.push(chunk);
+    });
+    child.on('close', code => {
+      if (finished) return;
+      if (code !== 0) return fail();
+      try {
+        const output = Buffer.concat(chunks), split = output.indexOf(10);
+        if (split < 0 || split > 4096) return fail();
+        const metadata = JSON.parse(output.subarray(0, split).toString('utf8')), body = output.subarray(split + 1);
+        if (!body.length || body.length > MAX_IMAGE_BYTES || body.length !== metadata.size || imageHash(body) !== metadata.sha256 ||
+            !['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(metadata.contentType)) return fail();
+        finished = true; clearTimeout(timer); resolve({ body, contentType: metadata.contentType });
+      } catch { fail(); }
+    });
+    child.stdin.end(JSON.stringify({ url }));
+  });
+}
+
+function imageRequestMap(bundle) {
+  const map = new Map();
+  const sources = [...bundle.products.map(p => p.imageUrl), bundle.article.eyecatch, ...(bundle.images || []).map(i => i.url)];
+  for (const source of sources.filter(u => typeof u === 'string' && u.startsWith('https://'))) {
+    map.set(new URL(source).href, source);
+    // Mirror the existing imageSize utility, but serve original approved bytes
+    // for each CDN size. Different transforms cannot silently change the hash.
+    for (const px of [48, 96, 160, 192, 200, 300, 400, 600, 640, 800, 1200]) {
+      const u = new URL(source); let variant = source;
+      if (u.hostname === 'thumbnail.image.rakuten.co.jp') { u.search = `?_ex=${px}x${px}`; variant = u.href; }
+      else if (u.hostname === 'm.media-amazon.com') variant = source.replace(/(?:\._[^/.]+_)?\.(jpg|jpeg|png|webp)(\?.*)?$/i, `._AC_SL${px}_.$1`);
+      else if (u.hostname === 'images.unsplash.com') {
+        const w = Number(u.searchParams.get('w')), h = Number(u.searchParams.get('h'));
+        if (w && w > px) { if (h) u.searchParams.set('h', String(Math.round(h * px / w))); u.searchParams.set('w', String(px)); }
+        else if (!w) u.searchParams.set('w', String(px));
+        if (!u.searchParams.has('q')) u.searchParams.set('q', '75');
+        variant = u.href;
+      }
+      const href = new URL(variant).href;
+      if (map.has(href) && map.get(href) !== source) throw new Error('ambiguous image URL binding');
+      map.set(href, source);
+    }
+  }
+  return map;
+}
+
+export function createRequestHandler(origin, bundle, { imageFetcher = fetchPublicImage, cache = new Map(),
+    failures = [], navigations = [], receipts = [] } = {}) {
+  const allowed = imageRequestMap(bundle);
+  return async route => {
+    const request = route.request(); let u;
+    try { u = new URL(request.url()); } catch { return route.abort(); }
+    // Exact ephemeral origin only. Never let Next's image optimizer fetch a
+    // remote URL behind the browser's routing layer.
+    if (u.origin === origin && u.pathname !== '/_next/image') return route.continue();
+    if (request.isNavigationRequest()) { navigations.push(request.url()); return route.abort(); }
+    if (request.resourceType() !== 'image') return route.abort();
+    try {
+      const wanted = u.origin === origin && u.pathname === '/_next/image' ? new URL(u.searchParams.get('url')).href : u.href;
+      const source = allowed.get(wanted);
+      if (!source) throw new Error('unbound image');
+      const proofs = (bundle.images || []).filter(i => i.url === source);
+      if (!proofs.length || proofs.some(i => i.verified !== true || !/^[a-f0-9]{64}$/.test(i.sha256 || '') ||
+          !Number.isSafeInteger(i.size) || i.size <= 0 || i.size > MAX_IMAGE_BYTES)) throw new Error('missing image proof');
+      for (const product of bundle.products.filter(p => p.imageUrl === source))
+        if (!proofs.some(i => i.productId === product.id)) throw new Error('product image binding missing');
+      if (!cache.has(source)) cache.set(source, Promise.resolve().then(() => imageFetcher(source)));
+      const fetched = await cache.get(source);
+      if (!Buffer.isBuffer(fetched.body) || !fetched.body.length || fetched.body.length > MAX_IMAGE_BYTES ||
+          !['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(fetched.contentType)) throw new Error('invalid image bytes');
+      const hash = imageHash(fetched.body);
+      if (proofs.some(i => hash !== i.sha256 || fetched.body.length !== i.size)) throw new Error('image hash mismatch');
+      if (!receipts.some(i => i.url === source)) receipts.push({ url: source, sha256: hash, size: fetched.body.length, verified: true });
+      return route.fulfill({ status: 200, contentType: fetched.contentType, body: fetched.body,
+        headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+    } catch {
+      if (!failures.includes('secure image fetch/binding/hash verification failed')) failures.push('secure image fetch/binding/hash verification failed');
+      return route.abort();
+    }
+  };
+}
+
+async function inspectViewport(browser, origin, input, name, width, result, imageOptions) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage();
   page.setDefaultTimeout(12000);
   const beacons = [], navigations = [], errors = [];
   const articlePath = `/articles/${input.bundle.article.slug}`;
-  // Context routing covers new-tab requests before a popup can contact a merchant.
-  // Only remote images may leave the browser; no tracking, scripts or navigation.
-  await context.route('**/*', async route => {
-    const request = route.request();
-    const u = new URL(request.url());
-    if (u.origin === origin) return route.continue();
-    if (request.isNavigationRequest()) navigations.push(request.url());
-    if (request.resourceType() === 'image' && u.protocol === 'https:') return route.continue();
-    return route.abort();
-  });
+  // Browser never directly fetches an external image or follows its redirects.
+  await context.route('**/*', createRequestHandler(origin, input.bundle, {
+    ...imageOptions, navigations, failures: result.failures, receipts: result.imageReadback,
+  }));
   await page.route('**/api/track-click', async route => {
     if (new URL(route.request().url()).origin !== origin) return route.abort();
     try { beacons.push(route.request().postDataJSON()); } catch { beacons.push(null); }
@@ -185,7 +294,7 @@ async function inspectViewport(browser, origin, input, name, width, result) {
     if (observations.h1 !== 1) result.failures.push(`${name}: expected one H1, got ${observations.h1}`);
     if (observations.shortcode) result.failures.push(`${name}: unresolved shortcode`);
     if (observations.overflow) result.failures.push(`${name}: horizontal overflow`);
-    for (const src of observations.brokenImages) result.failures.push(`${name}: image failed: ${src}`);
+    for (const _src of observations.brokenImages) result.failures.push(`${name}: image failed`);
     await page.evaluate(() => window.scrollTo(0, 0));
     const screenshot = path.join(input.outputDir, `${name}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });
@@ -204,7 +313,7 @@ async function inspectViewport(browser, origin, input, name, width, result) {
       const href = await link.getAttribute('href');
       const label = await link.getAttribute('aria-label');
       const matches = expected.filter(e => e.href === href && label.includes(e.productName));
-      if (matches.length !== 1) { result.failures.push(`${name}: unexpected/ambiguous merchant CTA: ${href}`); continue; }
+      if (matches.length !== 1) { result.failures.push(`${name}: unexpected/ambiguous merchant CTA`); continue; }
       const merchant = matches[0];
       const n = beacons.length, nav = navigations.length;
       await page.evaluate(() => { window.__previewEvents = []; });
@@ -225,8 +334,8 @@ async function inspectViewport(browser, origin, input, name, width, result) {
   } finally { await context.close(); }
 }
 
-export async function renderPreview(raw) {
-  const result = { passed: false, desktop: null, mobile: null, failures: [], clicksVerified: { desktop: [], mobile: [] }, status: 'failed' };
+export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {}) {
+  const result = { passed: false, desktop: null, mobile: null, failures: [], clicksVerified: { desktop: [], mobile: [] }, status: 'failed', imageReadback: [] };
   let temp, server, browser;
   try {
     const input = validateInput(raw);
@@ -263,8 +372,9 @@ export async function renderPreview(raw) {
     }
     try { browser = await chromium.launch({ headless: true, env: childEnvironment(temp) }); }
     catch (e) { result.status = 'blocked'; throw new Error(`Chromium launch blocked: ${e.message}`); }
+    const imageOptions = { imageFetcher, cache: new Map() };
     for (const [name, width] of [['desktop', 1280], ['mobile', 390]]) {
-      try { await inspectViewport(browser, origin, input, name, width, result); }
+      try { await inspectViewport(browser, origin, input, name, width, result, imageOptions); }
       catch (e) { result.failures.push(`${name}: ${e.message}`); }
     }
     result.passed = result.failures.length === 0 && !!result.desktop && !!result.mobile;
