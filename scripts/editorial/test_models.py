@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from models import Models, ModelError, WRITER_SCHEMA, REVIEW_SCHEMA, CRITERIA_FIELDS
+from models import Models, ModelError, WRITER_SCHEMA, REVIEW_SCHEMA, CRITERIA_FIELDS, SOCIAL_SCHEMA
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -383,13 +383,101 @@ class ModelTests(unittest.TestCase):
         with self.assertRaises(ModelError):
             Models(ENV, fake).social(b, url)
         self.assertEqual(fake.calls, [])
+        b['images'][0]['verified'] = True
         b["publicReadback"] = dict(verified=True, url=url, content=b["article"]["content"], images=b["images"])
-        post = dict(text="広告 Gear selection", replyText=url, url=url, images=b["images"], platform="x")
-        self.assertEqual(Models(ENV, Fake(response(post))).social(b, url), post)
+        post = dict(text="広告 Gear selection", replyText=url)
+        fake = Fake(response(post))
+        result = Models(ENV, fake).social(b, url)
+        self.assertEqual(result, dict(post, url=url, images=b['images'], platform='x'))
+        self.assertIsNot(result['images'], b['images'])
+        self.assertIsNot(result['images'][0], b['images'][0])
+        self.assertEqual(fake.calls[0][2]['output_config']['format'],
+                         {'type': 'json_schema', 'schema': SOCIAL_SCHEMA})
+        self.assertEqual(set(SOCIAL_SCHEMA['required']), {'text', 'replyText'})
+        self.assertIs(SOCIAL_SCHEMA['additionalProperties'], False)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        sent = json.loads(prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+        self.assertEqual(sent['bundle']['article']['content'], b['article']['content'])
+        self.assertEqual(sent['bundle']['brief'], b['brief'])
+        for constraint in ('220 weighted', 'hard limit 280', 'each non-ASCII', 'friend questions',
+                           'unsupported winter performance', 'unknown measurement conditions differ',
+                           'warming/insulating gas-can advice'):
+            self.assertIn(constraint, prompt)
         for change in ({"text": "広告 " + url}, {"replyText": "no link"}, {"text": "Gear selection"},
                        {"url": "https://other.example"}, {"platform": "threads"}):
             with self.subTest(change=change), self.assertRaises(ModelError):
                 Models(ENV, Fake(response(dict(post, **change)))).social(b, url)
+
+    def test_social_weighted_limit_is_enforced_before_polish_without_truncation(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        for text, accepted in [('広告' + 'a' * 276, True), ('広告' + 'a' * 277, False),
+                               ('広告' + 'あ' * 138, True), ('広告' + 'あ' * 139, False),
+                               ('広告' + '🏕' * 138, True), ('広告' + '🏕' * 139, False),
+                               ('広告' + 'a' * 217, True), ('', False), ('   ', False)]:
+            fake = Fake(response({'text': text, 'replyText': url}))
+            with self.subTest(weight=sum(1 if ord(c) < 128 else 2 for c in text)):
+                if accepted:
+                    self.assertEqual(Models(ENV, fake).social(b, url)['text'], text)
+                else:
+                    with self.assertRaises(ModelError):
+                        Models(ENV, fake).social(b, url)
+                self.assertEqual(len(fake.calls), 1)
+
+    def test_social_reply_is_exact_url_and_legacy_three_artifact_shapes_are_rejected(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        for reply in ['記事はこちら ' + url, url + ' ', '\n' + url, '[' + url + '](' + url + ')',
+                      url + '?changed=1', url + '\nhttps://other.example', url + '\\n', None]:
+            with self.subTest(reply=reply), self.assertRaises(ModelError):
+                Models(ENV, Fake(response({'text': '広告 本文', 'replyText': reply}))).social(b, url)
+        for count in (1, 2, 2):  # Original GS, CB and SOTO URL-array response contract.
+            old = dict(text='広告 本文', replyText=url, url=url, platform='x',
+                       images=[b['images'][0]['url']] * count)
+            with self.subTest(count=count), self.assertRaisesRegex(ModelError, 'Invalid social response fields'):
+                Models(ENV, Fake(response(old))).social(b, url)
+        for value in ({'text': '広告 本文'}, {'text': 1, 'replyText': url},
+                      {'text': '広告 本文', 'replyText': url, 'approved': True}):
+            with self.subTest(value=value), self.assertRaises(ModelError):
+                Models(ENV, Fake(response(value))).social(b, url)
+
+    def test_social_unverified_source_brief_or_images_never_calls_provider(self):
+        url = 'https://camp-gear-lab.com/articles/tent'
+        for mode in ('content', 'url', 'verified', 'image', 'image_type', 'brief'):
+            b = bundle()
+            b['images'][0]['verified'] = True
+            b['publicReadback'] = copy.deepcopy(dict(verified=True, url=url,
+                content=b['article']['content'], images=b['images']))
+            if mode == 'content': b['publicReadback']['content'] = 'different'
+            if mode == 'url': b['publicReadback']['url'] += '?different'
+            if mode == 'verified': b['publicReadback']['verified'] = 1
+            if mode == 'image':
+                b['images'][0]['verified'] = False
+                b['publicReadback']['images'] = copy.deepcopy(b['images'])
+            if mode == 'image_type':
+                b['images'] = [b['images'][0]['url']]
+                b['publicReadback']['images'] = copy.deepcopy(b['images'])
+            if mode == 'brief': b['brief']['externalSafe'] = False
+            fake = Fake()
+            with self.subTest(mode=mode), self.assertRaises(ModelError):
+                Models(ENV, fake).social(b, url)
+            self.assertEqual(fake.calls, [])
+
+    def test_social_preserves_each_source_disclosure_in_main_text(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['article']['content'] = '広告 アフィリエイト PR #ad affiliate sponsored'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        text = b['article']['content'] + ' 公表仕様の調査です。'
+        self.assertEqual(Models(ENV, Fake(response({'text': text, 'replyText': url}))).social(b, url)['text'], text)
+        for marker in ('広告', 'アフィリエイト', 'PR', '#ad', 'affiliate', 'sponsored'):
+            with self.subTest(marker=marker), self.assertRaisesRegex(ModelError, 'disclosure removed'):
+                Models(ENV, Fake(response({'text': text.replace(marker, ''), 'replyText': url}))).social(b, url)
 
     def test_truncation_missing_usage_transport_errors_are_sanitized(self):
         truncated = response(THEMES)

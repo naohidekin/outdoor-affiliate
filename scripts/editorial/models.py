@@ -42,6 +42,10 @@ WRITER_SCHEMA = {
                                  "externalSafe": {"type": "boolean"}}}}
 }
 CATEGORIES = ("facts", "images", "affiliate", "medical", "render")
+SOCIAL_SCHEMA = {
+    "type": "object", "additionalProperties": False, "required": ["text", "replyText"],
+    "properties": {"text": {"type": "string"}, "replyText": {"type": "string"}}
+}
 CRITERIA_FIELDS = ("wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sense",
                    "affiliate_links", "comparison_table", "internal_links", "faq", "word_count")
 REVIEW_SCHEMA = {
@@ -516,27 +520,39 @@ class Models:
         parsed = urlsplit(url) if isinstance(url, str) else None
         if not parsed or parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
             raise ModelError("Public HTTPS article URL required")
-        _require(bundle, ("article", "images", "publicReadback"))
+        _require(bundle, ("article", "images", "publicReadback", "brief"))
+        _brief(bundle["brief"])
         _require(bundle["article"], ("content",))
         rb = bundle["publicReadback"]
         _require(rb, ("verified", "url", "content", "images"))
         if rb["verified"] is not True or rb["url"] != url or rb["content"] != bundle["article"]["content"] or rb["images"] != bundle["images"]:
             raise ModelError("Matching public article and images readback required")
+        if not isinstance(rb['images'], list) or any(
+                not isinstance(image, dict) or image.get('verified') is not True
+                or not _text(image.get('url')) for image in rb['images']):
+            raise ModelError('Verified public image records required')
         result, _ = self._call(
             "Generate an X announcement ONLY after the supplied matching public readback. "
-            "Return {text,replyText,url,images,platform:'x'}. Main text must contain NO URLs, "
-            "the exact public article URL goes in replyText. Keep every advertising/affiliate disclosure "
-            "from the source. Preserve product/fact constraints and use only readback images. "
-            "Follow supplied social rules. Do not post or claim approval.",
-            {"bundle": bundle, "url": url}, "claude-sonnet-4-6")
-        _require(result, ("text", "replyText", "url", "images", "platform"))
-        if not _text(result["text"]) or not _text(result["replyText"]) or result["platform"] != "x" or (
-                result["url"] != url or url not in result["replyText"] or
-                re.search(r"https?://|www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/|\b)", result["text"], re.I) or
-                not isinstance(result["images"], list) or any(i not in rb["images"] for i in result["images"])):
+            "Return ONLY {text,replyText}; URL, platform and verified image records are assembled locally. "
+            "Main text must contain NO URLs. replyText must be exactly the supplied public article URL, "
+            "with no label, Markdown, extra URL or surrounding whitespace. Target at most 220 weighted "
+            "characters in text; hard limit 280. Count each ASCII character as 1 and each non-ASCII "
+            "character as 2, including Japanese characters and punctuation. Never truncate facts to fit: "
+            "select fewer supported points instead. Keep every advertising/affiliate disclosure from the source. "
+            "Use the full published article and approved brief as the factual source, including their limits "
+            "and measurement conditions. Never invent personal experience, ownership, friend questions, "
+            "user testimonials or unsupported winter performance. Do not claim unknown measurement "
+            "conditions differ, infer safety temperatures, or add warming/insulating gas-can advice. "
+            "Follow supplied social rules and approved factual constraints. Do not post or claim approval.",
+            {"bundle": bundle, "url": url}, "claude-sonnet-4-6", schema=SOCIAL_SCHEMA)
+        if set(result) != {'text', 'replyText'}:
+            raise ModelError('Invalid social response fields')
+        if not _text(result["text"]) or result["replyText"] != url or (
+                re.search(r"https?://|www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/|\b)", result["text"], re.I)
+                or sum(1 if ord(c) < 128 else 2 for c in result['text']) > 280):
             raise ModelError("Invalid social announcement")
         disclosure = re.compile(r"広告|アフィリエイト|(?<![a-z])PR(?![a-z])|#ad\b|affiliate|sponsored", re.I)
         for marker in disclosure.findall(bundle["article"]["content"]):
             if marker.casefold() not in result["text"].casefold():
                 raise ModelError("Social advertising disclosure removed")
-        return result
+        return {**result, 'url': url, 'platform': 'x', 'images': copy.deepcopy(rb['images'])}

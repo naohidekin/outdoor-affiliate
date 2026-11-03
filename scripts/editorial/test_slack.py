@@ -5,7 +5,8 @@ import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-from slack import Slack, chunks
+from slack import Slack, chunks, mrkdwn_chunks
+from presentation import article_body
 
 
 class SlackTests(unittest.TestCase):
@@ -105,11 +106,9 @@ class SlackTests(unittest.TestCase):
                    'text': {'type': 'plain_text', 'text': '承認 & 確認'},
                    'action_id': 'approve', 'value': '{"nonce":"a&b"}',
                    'url': 'https://example.com/?a=1&b=2'}]}]
-        for mode in ('text', 'double', 'value', 'url', 'mrkdwn'):
+        for mode in ('text', 'double', 'value', 'url'):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as root:
                 expected = copy.deepcopy(blocks)
-                if mode == 'mrkdwn':
-                    expected[0]['text']['type'] = 'mrkdwn'
                 posts = []
                 def call(method, data):
                     result = self.call(method, data)
@@ -120,9 +119,9 @@ class SlackTests(unittest.TestCase):
                         message['blocks'] = copy.deepcopy(expected)
                         if mode == 'text':
                             message['blocks'][0]['text']['text'] = '変更された本文'
-                        elif mode in ('double', 'mrkdwn'):
+                        elif mode == 'double':
                             encoded = html.escape(text, quote=False)
-                            message['blocks'][0]['text']['text'] = html.escape(encoded, quote=False) if mode == 'double' else encoded
+                            message['blocks'][0]['text']['text'] = html.escape(encoded, quote=False)
                         else:
                             button = message['blocks'][1]['elements'][0]
                             button[mode] = html.escape(button[mode], quote=False)
@@ -133,15 +132,48 @@ class SlackTests(unittest.TestCase):
                 receipt = Path(root) / 'slack-outbound/1793000000.123456.json'
                 self.assertEqual(json.loads(receipt.read_text())['status'], 'sent_unverified')
 
+    def test_mrkdwn_readback_decodes_one_server_encoding_only(self):
+        rendered = '*選び方*\n<https://example.com/?a=1&amp;b=2|公式 &amp; 詳細>'
+        blocks = [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': rendered, 'verbatim': True}}]
+        for mode in ('retained', 'encoded', 'decoded', 'changed_url', 'changed_label', 'over_encoded'):
+            with self.subTest(mode=mode):
+                def call(method, data):
+                    result = self.call(method, data)
+                    if method == 'conversations.replies':
+                        result['messages'][0]['blocks'] = copy.deepcopy(blocks)
+                        observed = {'retained': rendered, 'encoded': html.escape(rendered, quote=False),
+                                    'decoded': html.unescape(rendered), 'changed_url': rendered.replace('b=2', 'b=3'),
+                                    'changed_label': rendered.replace('公式', '改変'),
+                                    'over_encoded': html.escape(html.escape(rendered, quote=False), quote=False)}[mode]
+                        result['messages'][0]['blocks'][0]['text']['text'] = observed
+                    return result
+                slack = Slack(self.config, call=call)
+                if mode in ('changed_url', 'changed_label', 'over_encoded'):
+                    with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+                        slack.post('記事本文', blocks)
+                else:
+                    self.assertTrue(slack.post('記事本文', blocks)['verified'])
+
     def test_unicode_chunks_respect_slack_units_without_splitting_characters(self):
         text = '🏕️あいう' * 1800
         values = chunks(text)
         self.assertEqual(text, ''.join(values))
         self.assertTrue(all(len(x.encode('utf-16-le')) // 2 <= 2600 for x in values))
 
+    def test_mrkdwn_chunks_keep_links_whole_and_bound_utf16(self):
+        link = '<https://example.com/item?a=1&amp;b=2|購入先>'
+        value = 'あ' * 2590 + '\n' + link + '\n' + '🏕️' * 1400
+        parts = mrkdwn_chunks(value)
+        self.assertEqual(value, ''.join(parts))
+        self.assertTrue(any(link in part for part in parts))
+        self.assertTrue(all(len(part.encode('utf-16-le')) // 2 <= 2600 for part in parts))
+
     def test_secrets_are_rejected_before_transport(self):
         with self.assertRaises(ValueError):
             Slack(self.config, call=self.call).post('token xoxb-do-not-send')
+        with self.assertRaises(ValueError):
+            Slack(self.config, call=self.call).post('記事本文', [{'type': 'section', 'text': {'type': 'mrkdwn',
+                'text': 'token xoxb-do-not-send'}}])
         self.assertIsNone(self.sent)
 
     def test_slack_html_entity_encoding_is_decoded_once(self):
@@ -164,6 +196,55 @@ class SlackTests(unittest.TestCase):
             self.assertEqual('sent_unverified', json.loads(receipt.read_text())['status'])
             self.assertEqual(0o600, receipt.stat().st_mode & 0o777)
 
+    def test_article_presentation_shows_content_links_cards_and_faq_once(self):
+        article = {'title': 'バーナー比較', 'content': '## 選び方\n- 火力と[公式](https://example.com/?a=1&b=2)\n{{comparison:p1,p2}}\n{{product:p1}}\n## FAQ\nQ. 燃料は？\nA. CB缶です。',
+                   'faqs': [{'question': '燃料は？', 'answer': 'CB缶です。'}, {'question': '重量は？', 'answer': '350gです。'}]}
+        products = [{'id': 'p1', 'name': '製品A', 'affiliateUrl': 'https://example.com/a'},
+                    {'id': 'p2', 'name': '製品B', 'amazonUrl': 'https://example.com/b'}]
+        bundle = {'article': article, 'products': products, 'images': [{'productId': 'p1', 'url': 'https://example.com/a.jpg'}]}
+        body = article_body(bundle)
+        self.assertIn('*選び方*', body)
+        self.assertIn('<https://example.com/?a=1&amp;b=2|公式>', body)
+        self.assertIn('<https://example.com/a|楽天>', body)
+        self.assertIn('<https://example.com/b|Amazon>', body)
+        self.assertNotIn('{{', body)
+        self.assertEqual(body.count('燃料は？'), 1)
+        self.assertEqual(body.count('350gです。'), 1)
+        job = {'id': 'article-hidden', 'revision': 'revision-hidden', 'bundle': bundle,
+               'review': {'score': 9.2}, 'theme': {'selectionReason': '内部理由'}}
+        req = {'request_id': 'req', 'article_id': job['id'], 'manifest_hash': 'hash-hidden', 'nonce': 'nonce-hidden'}
+        sent = []
+        s = Slack(self.config, call=self.call)
+        with patch.object(s, 'post', side_effect=lambda text, blocks=None: sent.append((text, blocks)) or {'message_ts': '1793000000.123456'}):
+            s.deliver(job, req)
+        visible = '\n'.join(text + '\n' + str(blocks[0].get('text', {}).get('text', '')) for text, blocks in sent)
+        for hidden in ('article-hidden', 'revision-hidden', 'hash-hidden', '内部理由', '9.2', '{{'):
+            self.assertNotIn(hidden, visible)
+        self.assertEqual(sent[0][1][0]['text']['type'], 'mrkdwn')
+        self.assertEqual(sent[1][1][0]['alt_text'], '画像：製品A')
+        actions = sent[-1][1][1]['elements']
+        self.assertEqual([a['text']['text'] for a in actions], ['公開する', '修正を依頼', '保留'])
+        self.assertEqual(json.loads(actions[0]['value']), req)
+
+    def test_presentation_preserves_parenthesized_links_and_resolves_other_page_tags(self):
+        article = {'title': '動画', 'content': '## 詳細\n[公式](https://example.com/a_(b))\n価格 {{price:p1}}\n{{youtube:AbCdEf12345|設営動画|2026-01-01}}', 'faqs': []}
+        bundle = {'article': article, 'products': [{'id': 'p1', 'name': '製品A', 'price': 1234}]}
+        body = article_body(bundle)
+        self.assertIn('<https://example.com/a_(b)|公式>', body)
+        self.assertIn('価格 1,234円', body)
+        self.assertIn('<https://www.youtube.com/watch?v=AbCdEf12345|設営動画>', body)
+        self.assertNotIn('{{', body)
+        article['content'] += '\n{{unknown:p1}}'
+        with self.assertRaisesRegex(ValueError, 'presentation_shortcode_unhandled'):
+            article_body(bundle)
+
+    def test_presentation_table_keeps_every_header_and_cell(self):
+        bundle = {'article': {'content': '## 比較\n| 項目 | A | B |\n| --- | --- | --- |\n| 重量 | 100g | 200g |\n| 燃料 | CB | OD |', 'faqs': []}, 'products': []}
+        body = article_body(bundle)
+        self.assertIn('• *項目*: 重量 ・ *A*: 100g ・ *B*: 200g', body)
+        self.assertIn('• *項目*: 燃料 ・ *A*: CB ・ *B*: OD', body)
+        self.assertNotIn('| --- |', body)
+
     def test_social_delivery_shows_only_proposed_images_in_order(self):
         s = Slack(self.config, call=self.call)
         images = [{'url': 'https://example.com/a.png'}, {'url': 'https://example.com/b.png'}]
@@ -174,6 +255,10 @@ class SlackTests(unittest.TestCase):
             s.deliver(job, req)
         urls = [call.args[1][0]['image_url'] for call in post.call_args_list if call.args[1][0]['type'] == 'image']
         self.assertEqual(['https://example.com/b.png'], urls)
+        card = post.call_args_list[-1].args[1]
+        self.assertEqual(card[1]['elements'][0]['text']['text'], 'この告知案を承認')
+        self.assertIn('Xへの投稿は手動', post.call_args_list[-1].args[0])
+        self.assertEqual(json.loads(card[1]['elements'][0]['value'])['nonce'], 'nonce')
 
     def test_posts_are_spaced_even_after_unknown_send(self):
         s = Slack(self.config, call=self.call)

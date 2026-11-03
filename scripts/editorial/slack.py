@@ -8,6 +8,7 @@ import secrets
 import subprocess
 import time
 from pathlib import Path
+from presentation import article_body, social_body
 
 
 def digest(value):
@@ -24,6 +25,35 @@ def chunks(text, limit=2600):
             part, count = '', 0
         part += char
         count += units
+    if part:
+        result.append(part)
+    return result
+
+
+def mrkdwn_chunks(text, limit=2600):
+    """Prefer line boundaries and never split a rendered Slack link."""
+    units = lambda value: len(value.encode('utf-16-le')) // 2
+    result, part = [], ''
+    for line in text.splitlines(keepends=True):
+        if units(part + line) <= limit:
+            part += line
+            continue
+        if part:
+            result.append(part)
+            part = ''
+        # A long prose line can be split, but link markup is atomic.
+        for segment in re.split(r'(<https://[^>\n]+>)', line):
+            if not segment:
+                continue
+            pieces = [segment] if units(segment) <= limit else (
+                [segment] if segment.startswith('<https://') else chunks(segment, limit))
+            for piece in pieces:
+                if units(piece) > limit:
+                    raise ValueError('presentation_link_too_long')
+                if units(part + piece) > limit:
+                    result.append(part)
+                    part = ''
+                part += piece
     if part:
         result.append(part)
     return result
@@ -63,7 +93,8 @@ class Slack:
             raise ValueError('slack_delivery_unverified') from None
 
     def post(self, text, blocks=None):
-        if re.search(r'xox[baprs]-[A-Za-z0-9-]+|xapp-[A-Za-z0-9-]+', text):
+        secret = r'xox[baprs]-[A-Za-z0-9-]+|xapp-[A-Za-z0-9-]+'
+        if re.search(secret, text) or (blocks and re.search(secret, json.dumps(blocks, ensure_ascii=False))):
             raise ValueError('secret_in_slack_text')
         data = {'channel': self.scope['channel_id'], 'thread_ts': self.scope['thread_ts'],
                 'text': text, 'parse': 'none', 'unfurl_links': False, 'unfurl_media': False,
@@ -87,16 +118,24 @@ class Slack:
         if normalize(html.unescape(str(message.get('text')))) != normalize(text):
             raise ValueError('slack_readback_mismatch')
         if blocks:
-            def stable(v, observed=False):
+            def stable(v, observed=False, mrkdwn_decodes=1):
                 if isinstance(v, dict):
                     ignored = {'block_id', 'emoji'}
                     if observed and v.get('type') == 'image':
                         ignored |= {'image_bytes', 'image_height', 'fallback', 'is_animated', 'image_width'}
-                    return {k: (html.unescape(x) if observed and v.get('type') == 'plain_text'
-                                and k == 'text' and isinstance(x, str) else stable(x, observed))
+                    return {k: ((html.unescape(x) if observed else x) if v.get('type') == 'plain_text'
+                                and k == 'text' and isinstance(x, str) else
+                                _decode_mrkdwn(x, mrkdwn_decodes if observed else 1) if v.get('type') == 'mrkdwn'
+                                and k == 'text' and isinstance(x, str) else stable(x, observed, mrkdwn_decodes))
                             for k, x in v.items() if k not in ignored}
-                return [stable(x, observed) for x in v] if isinstance(v, list) else v
-            if stable(message.get('blocks'), observed=True) != stable(blocks):
+                return [stable(x, observed, mrkdwn_decodes) for x in v] if isinstance(v, list) else v
+            def _decode_mrkdwn(value, count):
+                for _ in range(count):
+                    value = html.unescape(value)
+                return value
+            expected = stable(blocks)
+            if stable(message.get('blocks'), observed=True) != expected and stable(
+                    message.get('blocks'), observed=True, mrkdwn_decodes=2) != expected:
                 raise ValueError('slack_blocks_mismatch')
         self._receipt(ts, 'verified', data)
         return {'message_ts': ts, 'hash': digest(data), 'verified': True}
@@ -107,38 +146,26 @@ class Slack:
         social = request.get('kind') == 'social'
         if social:
             proposal = job['social']['proposal']
-            body = ('【SNS告知案】\n' + proposal['text'] + '\n\nリンク用返信:\n' + proposal['replyText'])
+            body = social_body(proposal)
         else:
-            body = ('【記事全文】' + article['title'] + '\n記事ID: ' + job['id'] +
-                    '\n版: ' + job['revision'] + '\n\n' + article['content'] + '\n\nFAQ\n' +
-                    '\n'.join(q['question'] + '\n' + q['answer'] for q in article.get('faqs', [])))
-            body += '\n\n掲載商品・購入先\n' + '\n'.join(
-                str(p.get('name', p.get('id'))) + '\n' + '\n'.join(
-                    name + ': ' + p[key] for name, key in (('楽天', 'affiliateUrl'), ('Amazon', 'amazonUrl'), ('Yahoo', 'yahooUrl')) if p.get(key))
-                for p in bundle.get('products', []))
+            body = article_body(bundle)
         parts = []
-        for i, part in enumerate(chunks(body)):
-            text = '[{} / {}] {}'.format(job['id'], i + 1, part)
-            parts.append(self.post(text, [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}}]))
+        pieces = mrkdwn_chunks(body)
+        for i, part in enumerate(pieces):
+            title = ('告知案' if social else '記事本文') + '：' + article['title']
+            text = title if len(pieces) == 1 else title + '（{} / {}）'.format(i + 1, len(pieces))
+            parts.append(self.post(text, [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': part, 'verbatim': True}}]))
+        product_names = {p['id']: p['name'] for p in bundle.get('products', [])}
         for image in (proposal.get('images', []) if social else bundle.get('images', [])):
             url = image.get('url')
             if not isinstance(url, str) or not url.startswith('https://'):
                 continue
-            text = '記事画像 / ' + str(image.get('productId', article['title']))
+            text = '画像：' + str(product_names.get(image.get('productId'), article['title']))
             parts.append(self.post(text, [{'type': 'image', 'image_url': url, 'alt_text': text}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
-        labels = [('approve', 'この告知案の配信を承認' if social else 'この版の記事公開を承認'),
-                  ('reject', '修正依頼'), ('hold', '保留')]
-        text = ('【SNS承認】' if social else '【記事のGO待ち】') + article['title']
-        text += '\n記事ID: ' + job['id'] + '\n対象版: ' + request['manifest_hash']
-        review = (job.get('social', {}).get('review', {}) if social else job.get('review', {})) or {}
-        text += '\n審査: ' + str(review.get('model', '上位モデル')) + ' / ' + str(review.get('score', '確認済み')) + '点'
-        text += '\n全文・商品・画像・購入導線・表示確認済み\n'
-        if not social:
-            text += '選定理由: ' + str(job.get('theme', {}).get('selectionReason', '台帳の候補選定結果'))[:300] + '\n'
-            text += 'ご確認: 結論・実体験表現・掲載商品・画像が意図に合っているか。\n'
-        text += ('記事公開の承認とは別です。承認後もXへの投稿は手動です。' if social else '承認した本文・画像・商品・リンクを公開します。')
-        text += '\n修正内容はこのCodexアプリへ記事IDを添えて伝えられます。'
+        labels = [('approve', 'この告知案を承認' if social else '公開する'),
+                  ('reject', '修正を依頼'), ('hold', '保留')]
+        text = article['title'] + ('\nXへの投稿は手動です。' if social else '\n本文・画像・購入先を確認してから公開を選んでください。')
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
                   {'type': 'actions', 'elements': [{'type': 'button', 'text': {'type': 'plain_text', 'text': label},
                    'action_id': 'camp_review_' + action, 'value': json.dumps(values, separators=(',', ':'))}
