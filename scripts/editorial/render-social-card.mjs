@@ -13,7 +13,7 @@ import { pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 
-export const VERSION = 'lake-sky-social-card-v1';
+export const VERSION = 'lake-sky-social-card-v2';
 const WIDTH = 1200, HEIGHT = 630, MAX_IMAGE = 8 * 1024 * 1024, MAX_REQUEST = 24 * 1024 * 1024;
 const FONT = '"Hiragino Sans", "Noto Sans CJK JP", "Noto Sans JP", sans-serif';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -93,7 +93,7 @@ function html(input, photos) {
     const centerX = count === 1 ? 888 : 728 + index * 300;
     return `<img class="photo" src="${photo.dataUrl}" alt="${escape(photo.name)}" style="left:${centerX - width / 2}px;top:${(HEIGHT - height) / 2}px;width:${width}px;height:${height}px">`;
   }).join('');
-  const heading = input.heading.split(/(?<=・)/).map(part => `<span class="phrase">${escape(part)}</span>`).join('');
+  const heading = input.heading.split(/(?<=[・と])/).map(part => `<span class="phrase">${escape(part)}</span>`).join('');
   return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'none'; font-src 'none'; connect-src 'none'"><style>
   *{box-sizing:border-box}html,body{margin:0;width:1200px;height:630px;background:#fff;font-family:${FONT};font-synthesis:none;-webkit-font-smoothing:antialiased}
   #card{position:relative;width:1200px;height:630px;background:#fff;overflow:hidden}
@@ -102,7 +102,7 @@ function html(input, photos) {
   .brand{position:absolute;left:56px;top:43px;font-size:25px;font-weight:600;color:#fff;letter-spacing:.3px}
   #names{position:absolute;left:56px;top:132px;width:450px;height:104px;color:#DBEAFE;font-size:${count === 1 ? 26 : 23}px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
   .product-name{display:block}.model-token{display:inline-block;white-space:nowrap}#heading{position:absolute;left:56px;top:244px;width:450px;height:266px;color:#fff;font-size:58px;line-height:1.24;font-weight:700;letter-spacing:0;overflow-wrap:anywhere;line-break:strict}
-  .phrase{display:inline-block;max-width:100%}#footer{position:absolute;left:56px;top:557px;width:450px;height:38px;color:#BFDBFE;font-size:21px;font-weight:500;line-height:1.4}
+  .phrase{display:inline-block;white-space:nowrap}#footer{position:absolute;left:56px;top:557px;width:450px;height:38px;color:#BFDBFE;font-size:21px;font-weight:500;line-height:1.4}
   .photo{position:absolute;display:block;object-fit:contain;object-position:center;image-rendering:auto}
   .edge{position:absolute;left:576px;top:0;width:4px;height:630px;background:#DBEAFE}
   </style></head><body><main id="card"><div class="lake"></div><div class="brand">Camp Gear Lab</div><div class="accent"></div>
@@ -146,7 +146,8 @@ export async function renderSocialCard(raw) {
       await document.fonts.ready;
       await Promise.all([...document.images].map(img => img.decode()));
       const heading = document.querySelector('#heading'), names = document.querySelector('#names');
-      const fits = el => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth;
+      const fits = el => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth &&
+        [...el.children].every(child => child.getBoundingClientRect().right <= el.getBoundingClientRect().right);
       let size = 58;
       while (!fits(heading) && size > 40) heading.style.fontSize = --size + 'px';
       if (!fits(heading)) throw Error('heading_overflow_requires_short_approved_input');
@@ -160,6 +161,7 @@ export async function renderSocialCard(raw) {
       const photos = [...document.images].map(rect);
       if (photos.some(r => r.x < 580 || r.y < 0 || r.right > 1200 || r.bottom > 630)) throw Error('product_layout_overflow');
       return { headingFontSize: size, productNameFontSize: nameSize, heading: rect(heading), photos,
+        headingPhrases: [...heading.children].map(el => ({ text: el.textContent, ...rect(el) })),
         modelTokens: [...names.querySelectorAll('.model-token')].map(el => ({ text: el.textContent, ...rect(el) })),
         renderedHeading: heading.textContent, renderedNames: [...names.children].map(el => el.textContent) };
     });

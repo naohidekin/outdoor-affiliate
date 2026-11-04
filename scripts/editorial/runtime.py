@@ -15,7 +15,8 @@ import subprocess
 import sys
 import time
 
-from ledger import Ledger, canonical, fingerprint, valid_review, valid_social_mode
+from ledger import (Ledger, canonical, fingerprint, valid_review, valid_social_mode,
+                    valid_social_images, valid_image_refresh, REFRESH_NOTICE)
 from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
@@ -555,6 +556,85 @@ class Runtime:
         self.ledger.record_social(job['id'], proposal, review)
         self.deliver(job['id'], 'social')
 
+    def hold_social_refresh(self, id, *, expected_social_revision):
+        if self.config.get('socialPostingEnabled') is not False:
+            raise ValueError('social_refresh_requires_posting_hold')
+        return self.ledger.hold_social_refresh(id, expected_social_revision=expected_social_revision)
+
+    def refresh_social_images(self, id, rendered_bundle, *, expected_social_revision,
+                              prior_main_readback=None, deliver=False):
+        """Operator-only image refresh; no article mutation or X action. Caller holds runtime.flock."""
+        job = self.ledger.get_job(id)
+        old = job.get('social') or {}
+        if old.get('revision') != expected_social_revision or old.get('publication'):
+            raise ValueError('social_revision_conflict_or_posted')
+        valid_review(old.get('review'), old['revision'])
+        manifest = copy.deepcopy(rendered_bundle.get('article', {}).get('generationMeta', {}).get('socialCard'))
+        if not manifest:
+            raise ValueError('supplemental_manifest_required')
+        expected = copy.deepcopy(job['bundle'])
+        if (expected['article'].get('generationMeta') or {}).get('socialCard'):
+            raise ValueError('existing_article_card_requires_separate_workflow')
+        expected['article'].setdefault('generationMeta', {})['socialCard'] = manifest
+        card = dict(manifest, role='social-card', verified=True)
+        expected['images'].append(card)
+        if expected != rendered_bundle:
+            raise ValueError('supplemental_bundle_changed_article_or_sources')
+        proposal = copy.deepcopy(old['proposal'])
+        proposal.update(images=[card], supplementalCard=dict(articleId=id, articleRevision=job['revision'], manifest=manifest))
+        if prior_main_readback is not None:
+            if self.config.get('socialPostingEnabled') is not False or job['stage'] != 'social_held':
+                raise ValueError('partial_social_refresh_requires_posting_hold')
+            main_id = prior_main_readback.get('id', '')
+            if not re.fullmatch(r'[1-9][0-9]{0,19}', main_id):
+                raise ValueError('prior_main_id_invalid')
+            proposal.update(approvalNotice=REFRESH_NOTICE, priorPostUrl='https://x.com/i/web/status/' + main_id)
+        valid_social_mode(proposal)
+        valid_social_images(job, proposal)
+        # Byte readback is storage/image evidence only, never an article OG claim.
+        from social_publisher import SocialPublisher
+        reader = SocialPublisher(self.config, self.env, fetcher=self.catalog)
+        reader._image_bytes(card)
+        for source in manifest['sources']:
+            image = next(i for i in job['bundle']['images'] if i.get('productId') == source['productId']
+                         and i.get('sha256') == source['sha256'] and i.get('verified') is True)
+            reader._image_bytes(image)
+        account = json.loads((Path(self.config['repo']) / 'data/account-config.json').read_text())
+        text = proposal['text'] + '\n' + proposal['replyText']
+        source_text = job['bundle']['article']['content']
+        weighted_length = sum(1 if ord(c) < 128 else 2 for c in proposal['text'])
+        links = re.findall(r'https?://[^\s<>]+', text)
+        url_ok = proposal.get('url') == job['publication']['url'] == proposal['replyText'] and links == [proposal['replyText']]
+        numbers_ok = set(re.findall(r'\d+(?:\.\d+)?', proposal['text'])) <= set(re.findall(r'\d+(?:\.\d+)?', source_text))
+        prohibited = [word for values in account.get('ngWords', {}).values() for word in values]
+        format_ok = (proposal.get('platform') == 'x' and bool(proposal['text'].strip()) and weighted_length <= 280
+                     and not any(word in proposal['text'] for word in prohibited))
+        if str(account.get('formatting', {}).get('hashtagCount', '')).startswith('0'):
+            format_ok = format_ok and '#' not in proposal['text']
+        flags = dict(facts=numbers_ok and job['review']['evidence']['facts'], images=True, affiliate=url_ok,
+                     medical=self._medical({'content': text})['passed'] and job['review']['evidence']['medical'], render=format_ok)
+        if not all(flags.values()):
+            raise ValueError('social_source_image_url_or_format_failed')
+        checks = dict(reviewKind='social', evidence=flags, factualSource=source_text, sourceContent=proposal['text'],
+                      publicationReadback={'verified': True, 'url': job['publication']['url'], 'fingerprint': job['revision']},
+                      supplementalImageReadback={'verified': True, 'manifest': manifest, 'articleRevision': job['revision']},
+                      independentSocialFormat={'surface': 'SNS-only supplemental card, not public article OG',
+                          'weightedLength': weighted_length, 'maxWeightedLength': 280, 'formatVerified': format_ok,
+                          'imagesVerified': True, 'urlBindingVerified': url_ok})
+        # Never send the job, approval, request capabilities, private journal or history to a model.
+        final = self.models.review({'article': {'content': text}, 'source': job['bundle'], 'proposal': proposal}, checks)
+        review = dict(final, fingerprint=fingerprint(proposal), evidence=flags, polish=copy.deepcopy(old['review']['polish']),
+                      imageRefresh=dict(kind='image_only', fromRevision=old['revision'], toRevision=fingerprint(proposal), modelRerun=True),
+                      polishReuse=dict(kind='unchanged_text', fromRevision=old['revision'],
+                                       textHash=fingerprint(old['proposal']['text']), originalPolish=copy.deepcopy(old['review']['polish'])))
+        valid_review(review, fingerprint(proposal))
+        valid_image_refresh(old, proposal, review)
+        result = self.ledger.refresh_social_images(id, proposal, review, expected_social_revision=expected_social_revision,
+                                                   prior_main_readback=prior_main_readback)
+        if deliver:
+            self.deliver(id, 'social')
+        return result
+
     def enable_social_autopost(self, id, target_id):
         if target_id != self.config.get('targetAccountId'):
             raise ValueError('social_target_mismatch')
@@ -660,9 +740,12 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report', 'enable-social-autopost'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report', 'enable-social-autopost', 'refresh-social-images', 'hold-social-refresh'))
+    parser.add_argument('--card-bundle')
+    parser.add_argument('--prior-main-readback')
+    parser.add_argument('--deliver', action='store_true')
     parser.add_argument('--target-account-id')
-    parser.add_argument('--kind', choices=('weekly', 'monthly', 'editorial'))
+    parser.add_argument('--kind', choices=('weekly', 'monthly', 'editorial', 'article', 'social'))
     parser.add_argument('--id')
     parser.add_argument('--limit', type=int, default=3)
     parser.add_argument('--revision')
@@ -688,11 +771,25 @@ def main():
         elif args.command == 'retry':
             value = runtime.retry(args.id)
         elif args.command == 'deliver':
-            value = runtime.deliver(args.id)
+            if args.kind not in (None, 'article', 'social'):
+                raise ValueError('delivery_kind_required')
+            value = runtime.deliver(args.id, args.kind or 'article')
         elif args.command == 'report':
-            if not args.kind:
+            if args.kind not in ('weekly', 'monthly', 'editorial'):
                 raise ValueError('report_kind_required')
             value = runtime.reporter.send(args.kind, jobs=runtime.ledger.list_jobs(), manual=True)
+        elif args.command == 'hold-social-refresh':
+            if not args.id or not args.revision:
+                raise ValueError('article_and_social_revision_required')
+            job = runtime.hold_social_refresh(args.id, expected_social_revision=args.revision)
+            value = {'status': job['stage'], 'articleId': job['id'], 'revision': job['social']['revision'], 'posted': False}
+        elif args.command == 'refresh-social-images':
+            if not args.id or not args.revision or not args.card_bundle:
+                raise ValueError('article_social_revision_and_card_bundle_required')
+            prior = json.loads(Path(args.prior_main_readback).read_text()) if args.prior_main_readback else None
+            job = runtime.refresh_social_images(args.id, json.loads(Path(args.card_bundle).read_text()),
+                expected_social_revision=args.revision, prior_main_readback=prior, deliver=args.deliver)
+            value = {'status': job['stage'], 'articleId': job['id'], 'revision': job['social']['revision'], 'posted': False}
         elif args.command == 'enable-social-autopost':
             if not args.id or not args.target_account_id:
                 raise ValueError('article_and_target_account_required')

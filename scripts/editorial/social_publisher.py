@@ -12,7 +12,7 @@ import subprocess
 import time
 
 from catalog import Catalog, _image_type
-from ledger import fingerprint, valid_review
+from ledger import fingerprint, valid_review, valid_social_images
 from x_readback import exact_x_text
 
 JST = timezone(timedelta(hours=9))
@@ -100,11 +100,7 @@ class SocialPublisher:
         _require(not re.search(r'https?://', proposal['text']), 'main_text_contains_url')
         images = proposal.get('images')
         _require(isinstance(images, list) and 1 <= len(images) <= 4, 'social_images_required')
-        approved = job['bundle'].get('images') or []
-        _require(all(isinstance(i, dict) and i.get('verified') is True and i in approved
-                     and isinstance(i.get('url'), str) and re.fullmatch(r'[0-9a-f]{64}', i.get('sha256', ''))
-                     and isinstance(i.get('size'), int) and i['size'] > 0 for i in images), 'social_image_binding_invalid')
-        _require(len({i['url'] for i in images}) == len(images), 'social_image_duplicate')
+        valid_social_images(job, proposal)
         return proposal, revision
 
     def _image_bytes(self, image):

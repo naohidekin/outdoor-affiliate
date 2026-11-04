@@ -14,7 +14,7 @@ from catalog import Catalog, _image_type, safe_url
 
 
 BUCKET = 'editorial-social-cards'
-TEMPLATE_VERSION = 'lake-sky-social-card-v1'
+TEMPLATE_VERSION = 'lake-sky-social-card-v2'
 MAX_CARD_BYTES = 2 * 1024 * 1024
 
 

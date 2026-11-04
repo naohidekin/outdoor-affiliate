@@ -193,6 +193,8 @@ class Slack:
         if auto_x and not self.social_posting_enabled:
             explanation = ('承認した本文・画像と記事リンク返信が自動投稿の対象です。\n'
                            'X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。')
+        if social and proposal.get('approvalNotice'):
+            explanation += '\n' + proposal['approvalNotice'] + '\n' + proposal['priorPostUrl']
         text = article['title'] + '\n' + explanation
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
                   {'type': 'actions', 'elements': [{'type': 'button', 'text': {'type': 'plain_text', 'text': label},

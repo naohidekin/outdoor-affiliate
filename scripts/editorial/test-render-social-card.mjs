@@ -128,3 +128,27 @@ test('CLI rejects unknown request keys/oversize without reflecting input or exec
   assert.doesNotMatch(result.stdout + result.stderr, /UNTRUSTED_SECRET/);
   assert.equal(JSON.parse(result.stdout).passed, false);
 });
+
+
+test('SOTO and CB headings preserve exact text and fit complete phrases without splitting compounds', async t => {
+  const root = await setup(t);
+  const cases = [
+    ['旧型ウインドマスターとアミカスの選び方', ['旧型ウインドマスターと', 'アミカスの選び方'],
+      ['SOTO ウインドマスター SOD-310', 'SOTO アミカス SOD-320 シングルバーナー']],
+    ['ST-310・US-1900の仕様確認', ['ST-310・', 'US-1900の仕様確認'],
+      ['SOTO レギュレーターストーブ ST-310', 'ユニフレーム ツインバーナー US-1900']],
+  ];
+  for (const [index, [heading, phrases, names]] of cases.entries()) {
+    const result = await renderSocialCard({ title: '比較｜' + heading,
+      products: await Promise.all(names.map(name => fixture(name))), outputPath: path.join(root, index + '.png') });
+    assert.equal(result.layout.renderedHeading, heading);
+    assert.deepEqual(result.layout.renderedNames, names);
+    assert.deepEqual(result.layout.headingPhrases.map(p => p.text), phrases);
+    assert.ok(result.layout.headingFontSize >= 40);
+    for (const phrase of result.layout.headingPhrases) {
+      assert.ok(phrase.height <= result.layout.headingFontSize * 1.24 + 1);
+      assert.ok(phrase.x >= result.layout.heading.x && phrase.right <= result.layout.heading.right);
+      assert.ok(phrase.bottom <= result.layout.heading.bottom);
+    }
+  }
+});

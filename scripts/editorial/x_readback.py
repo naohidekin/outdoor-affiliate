@@ -18,7 +18,7 @@ def exact_x_text(post, expected):
     urls = post.get('urls')
     media_keys = post.get('mediaKeys')
     post_id = post.get('id')
-    if (not isinstance(actual, str) or not isinstance(urls, list) or len(urls) != 1
+    if (not isinstance(actual, str) or not isinstance(urls, list) or not urls
             or not isinstance(media_keys, list) or not isinstance(post_id, str)
             or re.fullmatch(r'[1-9][0-9]{0,19}', post_id) is None):
         return False
@@ -49,11 +49,26 @@ def exact_x_text(post, expected):
         return False
     if (start, end) not in (cp_span, utf16_span):
         return False
-    if prefix == '' and link['expanded_url'] == expected and not media_keys:
+    if len(urls) == 1 and prefix == '' and link['expanded_url'] == expected and not media_keys:
         return True  # Exact public-URL reply shortened to t.co.
     if not (media_keys and all(isinstance(k, str) and k for k in media_keys)
             and prefix == expected + ' '):
         return False
+    if len(urls) > 1:
+        # X can repeat one terminal photo URL for each attached image.
+        # Only accept a complete, one-to-one binding of that identical span.
+        keys = []
+        for entity in urls:
+            if (not isinstance(entity, dict)
+                    or any(type(entity.get(field)) is not type(link[field])
+                           or entity.get(field) != link[field]
+                           for field in ('url', 'expanded_url', 'start', 'end'))
+                    or not isinstance(entity.get('media_key'), str)):
+                return False
+            keys.append(entity['media_key'])
+        if (len(keys) != len(media_keys) or len(set(keys)) != len(keys)
+                or set(keys) != set(media_keys)):
+            return False
     try:
         photo = urlsplit(link['expanded_url'])
         match = re.fullmatch(r'/(?:[A-Za-z0-9_]{1,15}|i/web)/status/' + re.escape(post_id)
@@ -62,6 +77,6 @@ def exact_x_text(post, expected):
                 and not photo.username and not photo.password and photo.port is None
                 and not photo.query and not photo.fragment and match is not None
                 and int(match[1]) <= len(media_keys)
-                and link.get('media_key') == media_keys[int(match[1]) - 1])
+                and (len(urls) > 1 or link.get('media_key') == media_keys[int(match[1]) - 1]))
     except ValueError:
         return False

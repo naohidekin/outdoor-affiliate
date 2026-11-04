@@ -21,6 +21,7 @@ from x_readback import exact_x_text
 JST = timezone(timedelta(hours=9))
 SCOPE = ('team_id', 'app_id', 'user_id', 'channel_id', 'thread_ts')
 FLAGS = ('facts', 'images', 'affiliate', 'medical', 'render')
+REFRESH_NOTICE = '旧画像版は投稿済み。今回の承認で新画像版を新規投稿します。'
 
 
 def canonical(value):
@@ -70,6 +71,78 @@ def valid_social_mode(proposal):
                 'fixed X account ID required')
     else:
         require(not proposal.get('targetAccountId'), 'manual social target must be absent')
+
+
+def valid_social_images(job, proposal):
+    """SNS-only derivatives bind to the immutable published revision, never OG readback."""
+    approved = job['bundle'].get('images') or []
+    supplement = proposal.get('supplementalCard')
+    if supplement is not None:
+        publication = job.get('publication') or {}
+        require(isinstance(supplement, dict) and supplement.get('articleId') == job.get('id')
+                and supplement.get('articleRevision') == job.get('revision') == fingerprint(job['bundle'])
+                and publication.get('revision') == job['revision'] and publication.get('verified') is True
+                and (publication.get('readback') or {}).get('verified') is True
+                and publication['readback'].get('fingerprint') == job['revision'], 'supplemental article binding invalid')
+        manifest = supplement.get('manifest') or {}
+        sources = manifest.get('sources')
+        product_ids = job['bundle']['article'].get('productIds', [])[:2]
+        products = {p.get('id'): p for p in job['bundle'].get('products', [])}
+        require(isinstance(sources, list) and 1 <= len(sources) <= 2
+                and [s.get('productId') for s in sources] == product_ids, 'supplemental source order invalid')
+        for source in sources:
+            matches = [i for i in approved if i.get('verified') is True
+                       and i.get('productId') == source.get('productId')
+                       and i.get('url') == products.get(source.get('productId'), {}).get('imageUrl')
+                       and i.get('sha256') == source.get('sha256')]
+            require(len(matches) == 1 and re.fullmatch(r'[a-f0-9]{64}', str(source.get('sha256', ''))),
+                    'supplemental source hash invalid')
+        require(manifest.get('contentType') == 'image/png' and manifest.get('width') == 1200
+                and manifest.get('height') == 630 and manifest.get('templateVersion') in
+                ('lake-sky-social-card-v1', 'lake-sky-social-card-v2')
+                and isinstance(manifest.get('rendererEvidence'), dict) and manifest['rendererEvidence']
+                and manifest.get('url') == manifest.get('finalUrl')
+                and str(manifest.get('url', '')).startswith('https://')
+                and type(manifest.get('size')) is int and 0 < manifest['size'] <= 2 * 1024 * 1024,
+                'supplemental manifest invalid')
+        renderer = manifest['rendererEvidence']
+        shown = renderer.get('displayText') or {}
+        title = job['bundle']['article']['title']
+        parts = title.split('｜')
+        heading = parts[1] if len(parts) == 2 and all(p.strip() for p in parts) else title
+        crops = renderer.get('sourceCrops')
+        require(shown.get('title') == title and shown.get('heading') == heading
+                and shown.get('productNames') == [products[p].get('name') for p in product_ids]
+                and isinstance(crops, list) and len(crops) == len(sources)
+                and all(isinstance(c, dict) and c.get('productId') == s['productId']
+                        and c.get('sha256') == s['sha256'] for c, s in zip(crops, sources))
+                and re.fullmatch(r'[a-f0-9]{64}', str(renderer.get('contentHash', '')))
+                and isinstance(renderer.get('layout'), dict) and renderer.get('renderEngine') and renderer.get('fontFamily'),
+                'supplemental renderer binding invalid')
+        card = dict(manifest, role='social-card', verified=True)
+        require(proposal.get('images') == [card], 'supplemental card mismatch')
+        approved = [card]
+    images = proposal.get('images')
+    require(isinstance(images, list) and 1 <= len(images) <= 4 and all(
+        isinstance(i, dict) and i.get('verified') is True and i in approved
+        and isinstance(i.get('url'), str) and re.fullmatch(r'[a-f0-9]{64}', str(i.get('sha256', '')))
+        and type(i.get('size')) is int and i['size'] > 0 for i in images), 'social_image_binding_invalid')
+    require(len({i['url'] for i in images}) == len(images), 'social_image_duplicate')
+
+
+def valid_image_refresh(old, proposal, review):
+    valid_review(old.get('review'), old['revision'])
+    require(fingerprint(old['proposal']) == old['revision'], 'old social changed')
+    excluded = {'images', 'supplementalCard', 'approvalNotice', 'priorPostUrl'}
+    require({k: v for k, v in old['proposal'].items() if k not in excluded} ==
+            {k: v for k, v in proposal.items() if k not in excluded}, 'image-only refresh changed text or delivery')
+    binding = dict(kind='image_only', fromRevision=old['revision'], toRevision=fingerprint(proposal), modelRerun=True)
+    require(review.get('imageRefresh') == binding and str(review.get('model', '')).startswith('claude-'),
+            'independent current Claude image review required')
+    reuse = review.get('polishReuse') or {}
+    require(reuse == dict(kind='unchanged_text', fromRevision=old['revision'],
+                         textHash=fingerprint(old['proposal']['text']), originalPolish=old['review']['polish'])
+            and review.get('polish') == old['review']['polish'], 'unchanged Gemini provenance required')
 
 
 class Ledger:
@@ -389,10 +462,84 @@ class Ledger:
             require(not (job.get('social') or {}).get('publication'), 'posted social is immutable')
             if job['social'] and job['social']['revision'] == revision:
                 return job
+            if job.get('social'):
+                require('supplementalCard' not in job['social']['proposal'],
+                        'supplemental card requires explicit image refresh')
+                old_revision = job['social']['revision']
+                require(not (self.root / 'social-publications' / (old_revision + '.json')).exists()
+                        and not (self.root / 'social-outbox' / (old_revision + '.json')).exists()
+                        and not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone(),
+                        'social effect requires explicit reconciliation')
+            require('supplementalCard' not in proposal, 'supplemental card requires explicit image refresh')
             self._invalidate(db, id, 'social')
             job.update(social=dict(proposal=json.loads(canonical(proposal)), revision=revision,
                                    review=json.loads(canonical(review)), approval=None), stage='social_review')
             return self._put(db, job, 'social')
+
+    def hold_social_refresh(self, id, *, expected_social_revision):
+        """Invalidate old buttons without discarding the original approval/effect evidence."""
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            social = job.get('social') or {}
+            require(social.get('revision') == expected_social_revision
+                    and fingerprint(social.get('proposal')) == expected_social_revision, 'social revision conflict')
+            require(job.get('publication') and job['publication'].get('verified') is True
+                    and not social.get('publication') and job['stage'] in
+                    ('social_review', 'social_approved', 'social_held', 'social_rejected'), 'social refresh hold unavailable')
+            self._invalidate(db, id, 'social')
+            job['stage'] = 'social_held'
+            return self._put(db, job, 'social_refresh_hold')
+
+    def refresh_social_images(self, id, proposal, review, *, expected_social_revision, prior_main_readback=None):
+        """Explicit operator transition. Retain original journals and partial effects verbatim."""
+        revision = fingerprint(proposal)
+        valid_review(review, revision)
+        valid_social_mode(proposal)
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            old = job.get('social')
+            require(old and old['revision'] == expected_social_revision, 'social revision conflict')
+            require(not old.get('publication'), 'posted social is immutable')
+            require(revision != old['revision'] and proposal.get('supplementalCard'), 'new supplemental card required')
+            valid_social_images(job, proposal)
+            valid_image_refresh(old, proposal, review)
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone()
+                    and not (self.root / 'social-outbox' / (old['revision'] + '.json')).exists(),
+                    'legacy social effect requires reconciliation')
+            marker = self.root / 'social-publications' / (old['revision'] + '.json')
+            journal = None
+            if marker.exists():
+                require(job['stage'] == 'social_held', 'partial social must be held before refresh')
+                require(not marker.is_symlink() and marker.stat().st_mode & 0o777 == 0o600,
+                        'social journal invalid')
+                journal = json.loads(marker.read_text())
+                main = prior_main_readback or {}
+                uploads = journal.get('uploads') or []
+                require(journal.get('revision') == journal.get('proposalFingerprint') == old['revision']
+                        and journal.get('account') == old['proposal'].get('targetAccountId')
+                        and journal.get('phase') == 'mainread' and journal.get('pending') is None
+                        and not journal.get('replyId') and journal.get('mainId')
+                        and main.get('id') == journal['mainId'] and main.get('authorId') == journal['account']
+                        and exact_x_text(main, old['proposal']['text']) and main.get('replyTo') is None
+                        and len(uploads) == len(old['proposal']['images'])
+                        and all(u.get('sha256') == i.get('sha256') for u, i in zip(uploads, old['proposal']['images']))
+                        and main.get('mediaKeys') == [u.get('mediaKey') for u in uploads],
+                        'verified existing main readback required')
+                require(proposal.get('approvalNotice') == REFRESH_NOTICE
+                        and proposal.get('priorPostUrl') == 'https://x.com/i/web/status/' + journal['mainId'],
+                        'new publication notice required')
+            else:
+                require(prior_main_readback is None and not proposal.get('approvalNotice')
+                        and not proposal.get('priorPostUrl'), 'unexpected prior post evidence')
+            history = dict(social=old, journal=journal, mainReadback=prior_main_readback,
+                           kind='superseded_image_proposal', at=timestamp().isoformat())
+            job.setdefault('socialHistory', []).append(history)
+            self._invalidate(db, id, 'social')
+            job.update(social=dict(proposal=json.loads(canonical(proposal)), revision=revision,
+                                   review=json.loads(canonical(review)), approval=None), stage='social_review')
+            return self._put(db, job, 'social_image_refresh')
 
     def enable_social_autopost(self, id, target_id):
         """Explicit mode-only migration; carries real content review, never a new LLM review."""
@@ -441,6 +588,7 @@ class Ledger:
                     'social revision mismatch')
             proposal = social['proposal']
             valid_social_mode(proposal)
+            valid_social_images(job, proposal)
             require(proposal.get('deliveryMode') == 'auto_x', 'manual approval cannot authorize X posting')
             approval = social.get('approval') or {}
             require(approval.get('revision') == revision and approval.get('user_id') == self.owner_id
@@ -474,7 +622,7 @@ class Ledger:
                     'approved X media count mismatch')
             media_ids, media_keys = [], []
             for image, actual in zip(images, media['items']):
-                require(isinstance(image, dict) and image.get('verified') is True and image in job['bundle']['images']
+                require(isinstance(image, dict) and image.get('verified') is True
                         and re.fullmatch(r'[a-f0-9]{64}', image.get('sha256', ''))
                         and isinstance(actual, dict) and isinstance(actual.get('mediaKey'), str) and actual['mediaKey']
                         and actual.get('sha256') == image['sha256']
