@@ -310,3 +310,5 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 本人依頼により、今後の公開記事で承認本文・画像表示/元画像SHA・PC/スマホ表示・楽天/Amazon購入ボタンと接続先の商品同一性を自動確認する。購入や記事/SNSの承認は行わない。
 - 確認結果は記事版ごとに非公開receiptへ保存。問題または確認不能があれば既存Slackへ通知し、同じ結果で繰り返し通知しない。送達不明は盲目的に再送しない。
 - 承認済み公開記事とSNSは別管理のまま。SOTO新画像版のX投稿は本人指示によるsocial_heldを維持する。
+- 配備: `34e3eb2` をAir/macpro/originへ同期。設定 `postPublicationAuditEnabled=true`、開始点2026-11-04 22:59:58 JST以後の公開記事が対象。今週3件だけ明示的に遡及確認。既存300秒runnerで1回につき最大1記事、失敗/確認不能は30分間隔・最大3回。送達不明は要照合として自動再送しない。Python316件が両機で成功、ブラウザ6件成功、Astraの最終レビューPASS。
+- 実行確認: 通常GUI runnerでGS 23:01:05（42項目）、CB 23:02:19（54項目）にsuccess。SOTOも23:03:19までに64項目success、health completed。3件すべて通知不要（not_needed）。Slackの正常通知は送らず、記事/SNS承認権限・SOTO social_heldは変更していない。
