@@ -297,3 +297,11 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 01:02:56更新、01:03:02にprivate repair receipt complete。通常UA/Twitterbot双方でOG/Twitter画像URL一致、公開PNGのSHA6f5282dd3f4e2fda8d653e16efbd403abd2af206eecdc9f294bd1ddeb056791c・94952bytes一致。旧版指紋は履歴として残し、今回の承認は別receiptへ記録。
 - 実装d038b6cを両機/mainへ同期、型検査/build・専用7テスト成功。本番dpl_5Xpb6cHfkH4A9H3HzwnyDaAsifgo READY。旧opengraph-image URLも307で保存画像へ転送し、最終bytes一致を確認。X上の既存投稿表示を実見した確認とは区別する。
 - 引継ぎ文書は原文/patchを非公開バックアップし、既存追記を全保持して7957bb47で両機/origin同期。対象2文書のSHA一致と未コミット差分なしを確認。
+
+### SOTO/CBのSNS専用画像更新（2026-11-04 20:40 JST）
+- 商品写真カードv2で日本語見出しの語途中改行を修正。SOTO SHA `82806852ad1a04ed8d2dea031ffefbae9613afa38a25de5de83f4508689651b6`、CB SHA `3f5d2de1f16638c691cd965b6f87ed0f0e47332d364344a004458422ef8b7a0b`。1200×630 PNGの保存GET・元画像SHA・目視確認済み。
+- `hold-social-refresh` → `refresh-social-images` は公開済み記事bundle/publicationを変えず、元記事版・商品画像SHAに結び付けたSNS専用manifestを保存する。本文・返信が完全不変の場合だけ既存Gemini校正を明示的に引継ぎ、Claudeによる新版審査は再実行。今回Sonnet4.6の審査はSOTO8.8/CB8.7で合格。記事OGは今回変更していない。
+- SOTO旧版は11/4 13:37の本人Slack承認後、main `2117838625681641686` が投稿済みだった。Xが同一末尾URLを2画像分返す場合の厳密照合を修正。旧approval/journal/main readbackをsocialHistoryへ保持し、旧journalは変更せず、旧返信も作らない。新カードに「旧画像版は投稿済み。今回の承認で新画像版を新規投稿します。」と旧投稿URLを表示する。
+- 旧承認ボタンを無効化。新版revisionはSOTO `732c338b9c0cab5b9b5eaa6e591e26555f67b1b1846f6fd3918c5f21ef5fb24c`、CB `4f123a6126e5393634619295ff2750e32109e66e57036e07b4c9191ca061a631`。両件social_review・新承認なし・新画像未投稿。
+- Slackの本文/画像/ボタンを各3通readback verified。SOTOカード `1793792407.861649`、CBカード `1793792414.620029`（channel C0C7LG1TQUC）。SSHはKeychain exit36でAPI送信前に失敗したため原記録を保持し、通常GUI launchd経路で配送成功。今後もSlack送信は通常runner経路を使う。socialPostingEnabled=true復帰、health20:40:16 completed。
+- 実装 `e63123e` をAir/macpro/origin作業branch同期。Python278件が両機で成功、Node画像9件成功、独立レビュー完了。新画像の実X投稿は今後の本人承認後に別確認する。
