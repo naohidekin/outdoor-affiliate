@@ -418,13 +418,17 @@ class Catalog:
         return {'envKeys': {key: bool(self.env.get(key)) for key in ENV_KEYS},
                 'readonly': True, 'networkChecked': False}
 
-    def request(self, url, headers=None, allowed_domains=None):
-        """Bounded GET; pinned DNS, no proxies, redirects rechecked before use."""
+    def request(self, url, headers=None, allowed_domains=None, exact_domains=False):
+        """Bounded GET; pinned DNS, redirects rechecked before each connection.
+
+        Domain scopes retain their historical subdomain matching by default.
+        exact_domains=True restricts an allowlist to the literal hostnames.
+        """
         headers = dict(headers or {})
         try:
             for hop in range(6):
                 p, addresses = safe_url(url, resolve=self.fetcher is None)
-                if allowed_domains and not any(p.hostname == d or p.hostname.endswith('.' + d) for d in allowed_domains):
+                if allowed_domains and not any(p.hostname == d or (not exact_domains and p.hostname.endswith('.' + d)) for d in allowed_domains):
                     raise CatalogError('manufacturer host rejected')
                 if self.fetcher:
                     result = self.fetcher(url, dict(headers), 20)

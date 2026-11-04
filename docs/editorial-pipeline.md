@@ -305,3 +305,8 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 旧承認ボタンを無効化。新版revisionはSOTO `732c338b9c0cab5b9b5eaa6e591e26555f67b1b1846f6fd3918c5f21ef5fb24c`、CB `4f123a6126e5393634619295ff2750e32109e66e57036e07b4c9191ca061a631`。両件social_review・新承認なし・新画像未投稿。
 - Slackの本文/画像/ボタンを各3通readback verified。SOTOカード `1793792407.861649`、CBカード `1793792414.620029`（channel C0C7LG1TQUC）。SSHはKeychain exit36でAPI送信前に失敗したため原記録を保持し、通常GUI launchd経路で配送成功。今後もSlack送信は通常runner経路を使う。socialPostingEnabled=true復帰、health20:40:16 completed。
 - 実装 `e63123e` をAir/macpro/origin作業branch同期。Python278件が両機で成功、Node画像9件成功、独立レビュー完了。新画像の実X投稿は今後の本人承認後に別確認する。
+
+### 公開後の自動最終確認（2026-11-04、配備受領は後記）
+- 本人依頼により、今後の公開記事で承認本文・画像表示/元画像SHA・PC/スマホ表示・楽天/Amazon購入ボタンと接続先の商品同一性を自動確認する。購入や記事/SNSの承認は行わない。
+- 確認結果は記事版ごとに非公開receiptへ保存。問題または確認不能があれば既存Slackへ通知し、同じ結果で繰り返し通知しない。送達不明は盲目的に再送しない。
+- 承認済み公開記事とSNSは別管理のまま。SOTO新画像版のX投稿は本人指示によるsocial_heldを維持する。

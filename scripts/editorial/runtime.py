@@ -64,7 +64,7 @@ def reason(error):
 
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
-                 analytics=None, reporter=None, social_publisher=None, social_cards=None):
+                 analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
         self.config = config
         self.root = Path(config['stateRoot'])
         self.ledger = Ledger(self.root, config['slack']['user_id'])
@@ -88,6 +88,7 @@ class Runtime:
         self.publisher = publisher or self._publish
         self.social_cards = social_cards
         self.social_publisher = social_publisher
+        self.post_auditor = post_auditor
         from analytics import Analytics
         from reporting import Reporter
         self.analytics = analytics or Analytics(config)
@@ -388,8 +389,238 @@ class Runtime:
                 path.rename(target)
         return count
 
+    @staticmethod
+    def _post_audit_message(job, audit):
+        labels = {'success': '解消', 'failed': '不一致', 'unverified': '確認不能',
+                  'requires_reconciliation': '確認不能'}
+        # Only fixed, human-readable explanations cross the Slack boundary.
+        reasons = {
+            'missing_image': '公開ページの商品画像を確認できませんでした',
+            'post_audit_check_unavailable': '公開後の確認処理を完了できませんでした',
+            'public_content_mismatch': '公開本文が承認した内容と一致しません',
+            'public_title_mismatch': '公開タイトルが承認した内容と一致しません',
+            'image_mismatch': '公開画像が確認済みの画像と一致しません',
+            'merchant_identity_mismatch': '購入先の商品が記事の商品と一致しません',
+            'external_403_captcha': '購入先のアクセス制限により確認できませんでした',
+            'browser_unavailable': '画面表示の確認を完了できませんでした',
+            'render_unverified': 'パソコン・スマートフォンの表示を確認できませんでした',
+            'invalid_publication_binding': '公開URLと承認記事の対応を確認できませんでした',
+            'publication_body_hash_mismatch': '公開記録の本文が承認本文と一致しません',
+            'public_response_binding_mismatch': '公開ページの応答またはURLが想定と一致しません',
+            'public_html_unavailable': '公開ページのHTMLを確認できませんでした',
+            'public_get_unavailable': '公開ページに接続できませんでした',
+            'approved_body_hash_mismatch': '公開本文が承認した内容と一致しません',
+            'approved_prose_mismatch': '本文が承認内容と一致しません',
+            'visible_product_image_not_rendered': '公開画面に商品画像が表示されていません',
+            'approved_product_image_not_rendered': '承認した商品画像が公開画面に表示されていません',
+            'social_manifest_mismatch': 'SNS用画像の承認記録が一致しません',
+            'social_metadata_mismatch': '公開ページのSNS見出し画像が承認画像と一致しません',
+            'product_image_proof_missing': '商品の確認済み画像の記録が不足しています',
+            'approved_image_proof_invalid': '承認画像の確認記録が不完全です',
+            'approved_image_bytes_mismatch': '公開画像が承認画像と一致しません',
+            'public_image_get_unavailable': '公開画像を取得できませんでした',
+            'viewport_evidence_missing': '画面表示の確認記録が不足しています',
+            'browser_timeout_or_unavailable': '画面表示の確認が時間切れ、または実行不能でした',
+            'approved_merchant_url_missing': '承認した購入先URLがありません',
+            'affiliate_account_binding_missing': '購入リンクの紹介先設定を確認できませんでした',
+            'affiliate_account_or_route_mismatch': '購入リンクの紹介先または経路が一致しません',
+            'approved_product_model_or_brand_missing': '商品の型番またはブランドの確認情報が不足しています',
+            'merchant_html_unavailable': '購入先の商品ページを確認できませんでした（アクセス制限など）',
+            'merchant_challenge_unverified': '購入先のアクセス制限により確認できませんでした',
+            'merchant_destination_or_product_identity_mismatch': '購入先の商品または型番が一致しません',
+            'merchant_get_unavailable': '購入先に接続できませんでした',
+            'audit_unavailable': '公開後の確認処理を完了できませんでした',
+            'audit_timeout_or_unavailable': '公開後の確認が時間切れ、または実行不能でした',
+            'audit_input_or_transport_unavailable': '確認データの受け渡しを完了できませんでした',
+        }
+        status = audit['status']
+        lines = ['【公開後監査】' + job['bundle']['article']['title'], job['publication']['url'],
+                 '結果: ' + labels.get(status, '確認不能')]
+        if status != 'success':
+            checked = audit.get('result', {})
+            checks = checked.get('checks')
+            issues = ([c for c in checks if isinstance(c, dict) and c.get('status') != 'passed']
+                      if isinstance(checks, list) and checks else checked.get('issues') or [])
+            if not isinstance(issues, list):
+                issues = []
+            explanations = []
+            for issue in issues:
+                code = issue.get('code', issue.get('reason')) if isinstance(issue, dict) else issue
+                name = issue.get('name', '') if isinstance(issue, dict) else ''
+                if isinstance(code, str) and ': ' in code:
+                    name, code = code.split(': ', 1)
+                message = reasons.get(code, '確認項目の詳細はCodexで確認してください') if isinstance(code, str) else '確認項目の詳細はCodexで確認してください'
+                destination = re.fullmatch(r'destination\.(\d{1,3})\.(amazon|rakuten)', str(name))
+                image = re.fullmatch(r'(image|product_image_binding)\.(\d{1,3})', str(name))
+                products = job['bundle'].get('products', [])
+                product = None
+                prefix = ''
+                if destination:
+                    index = int(destination[1])
+                    product = products[index] if index < len(products) else None
+                    prefix = 'Amazon' if destination[2] == 'amazon' else '楽天'
+                elif image:
+                    index = int(image[2])
+                    if image[1] == 'product_image_binding':
+                        product = products[index] if index < len(products) else None
+                    else:
+                        images = job['bundle'].get('images', [])
+                        proof = images[index] if index < len(images) else {}
+                        product = next((p for p in products if p.get('id') == proof.get('productId')), None)
+                    prefix = '画像'
+                elif name in ('desktop', 'mobile'):
+                    prefix = 'パソコン表示' if name == 'desktop' else 'スマートフォン表示'
+                if product:
+                    title = re.sub(r'\s+', ' ', str(product.get('name', '商品')))[:80]
+                    title = title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                    prefix = title + '／' + prefix
+                if prefix:
+                    message = prefix + ': ' + message
+                if message not in explanations:
+                    explanations.append(message)
+            lines.extend('・' + message for message in explanations[:5])
+            if audit.get('nextAttemptAt'):
+                lines.append('30分後に再確認します。')
+            else:
+                lines.append('Codexで確認・対応が必要です。')
+        return '\n'.join(lines)
+
+    def _post_audit_notice(self, job, key, audit):
+        """Separate delivery journal: an unknown Slack effect never auto-resends."""
+        path = self.root / 'post-audit-notifications' / (key + '.json')
+        saved = json.loads(path.read_text()) if path.exists() else {}
+        if saved and saved.get('status') != 'verified':
+            if saved.get('status') != 'requires_reconciliation':
+                saved.update(status='requires_reconciliation', action='Verify Slack delivery before clearing this marker')
+                atomic(path, saved)
+            return saved['status']
+        outcome = audit['status']
+        if saved.get('outcome') == outcome or (not saved and outcome == 'success'):
+            return saved.get('status', 'not_needed')
+        marker = {'status': 'in_flight', 'at': stamp(), 'outcome': outcome, 'auditKey': key}
+        atomic(path, marker)
+        try:
+            receipt = self.slack.notice(self._post_audit_message(job, audit))
+            if not isinstance(receipt, dict) or receipt.get('verified') is not True:
+                raise ValueError('post_audit_notice_delivery_unknown')
+            marker.update(status='verified', receipt=receipt, at=stamp())
+        except Exception as error:
+            marker.update(status='requires_reconciliation', reason=reason(error),
+                          action='Verify Slack delivery before clearing this marker')
+        atomic(path, marker)
+        return marker['status']
+
+    def _post_audit_fault(self, error, job_id=None):
+        """One global fault notice until operator reconciliation; never expose raw errors."""
+        notification = 'requires_reconciliation'
+        path = self.root / 'post-audit-notifications' / 'engine-fault.json'
+        try:
+            if path.exists():
+                saved = json.loads(path.read_text())
+                notification = 'verified' if saved.get('status') == 'verified' else 'requires_reconciliation'
+            else:
+                atomic(path, {'status': 'in_flight', 'at': stamp()})
+                try:
+                    receipt = self.slack.notice('【公開後監査】確認不能\n監査の記録または処理に問題があり、一部の記事を確認できませんでした。\nCodexで監査記録と通知状況を確認してください。')
+                    if not isinstance(receipt, dict) or receipt.get('verified') is not True:
+                        raise ValueError('post_audit_fault_delivery_unknown')
+                    atomic(path, {'status': 'verified', 'at': stamp(), 'receipt': receipt})
+                    notification = 'verified'
+                except Exception:
+                    atomic(path, {'status': 'unknown', 'at': stamp()})
+        except Exception:
+            pass  # Broken notification storage also needs manual reconciliation, never a blind send.
+        return {'id': job_id, 'status': 'requires_reconciliation', 'reason': reason(error),
+                'action': 'Inspect private post-publication audit receipts and notification markers',
+                'notificationStatus': notification}
+
+    def _post_publication_audits(self):
+        """Caller holds runtime.flock. Read-only checks never mutate ledger authority."""
+        if self.config.get('postPublicationAuditEnabled') is not True:
+            return []
+        def scope_date(value):
+            if not isinstance(value, str):
+                raise ValueError('post_audit_scope_date_required')
+            parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if parsed.tzinfo is None or parsed.utcoffset() is None:
+                raise ValueError('post_audit_scope_date_requires_timezone')
+            return parsed.astimezone(JST)
+        cutoff = scope_date(self.config.get('postPublicationAuditSince'))
+        backfill = self.config.get('postPublicationAuditBackfillIds', [])
+        if not isinstance(backfill, list) or any(not isinstance(id, str) or not id.strip() for id in backfill):
+            raise ValueError('post_audit_backfill_ids_invalid')
+        summaries = []
+        attempted = False
+        now = datetime.now(JST)
+        for job in self.ledger.list_jobs():
+            try:
+                publication = job.get('publication') or {}
+                readback = publication.get('readback') or {}
+                if (publication.get('verified') is not True or readback.get('verified') is not True
+                        or readback.get('fingerprint') != job.get('revision')
+                        or publication.get('revision') != job.get('revision')):
+                    continue
+                # Explicit IDs authorize historical backfill without widening rollout scope.
+                if job['id'] not in backfill and scope_date(publication.get('at')) < cutoff:
+                    continue
+                # Actual publication metadata is separate from the immutable source bundle.
+                key = fingerprint({'id': job['id'], 'revision': job['revision'], 'publication': publication})
+                path = self.root / 'post-publication-audits' / (key + '.json')
+                audit = json.loads(path.read_text()) if path.exists() else {
+                    'schemaVersion': 1, 'id': job['id'], 'revision': job['revision'],
+                    'publication': publication, 'auditKey': key, 'status': 'pending', 'attempts': []}
+                if audit['status'] == 'in_flight':
+                    audit.update(status='requires_reconciliation',
+                                 action='Inspect interrupted audit evidence; explicitly reconcile before another check')
+                    atomic(path, audit)
+                due = audit['status'] == 'pending' or (
+                    audit['status'] in ('failed', 'unverified') and len(audit['attempts']) < 3
+                    and datetime.fromisoformat(audit['nextAttemptAt']) <= now)
+                if due and not attempted:
+                    attempted = True
+                    audit.update(status='in_flight', startedAt=stamp())
+                    atomic(path, audit)
+                    try:
+                        if self.post_auditor is None:
+                            from post_publication_audit import PostPublicationAudit
+                            # A catalog injection bypasses the killable production deadline.
+                            self.post_auditor = PostPublicationAudit(self.config, self.env)
+                        checked = self.post_auditor.check(copy.deepcopy(job))
+                        if not isinstance(checked, dict) or type(checked.get('passed')) is not bool:
+                            raise ValueError('post_audit_result_invalid')
+                        # Validate serializability before writing the completed receipt.
+                        checked = json.loads(json.dumps(checked, allow_nan=False))
+                        reported = checked.get('status')
+                        unverified = (reported not in (None, 'passed', 'success', 'failed')
+                                      or checked.get('verified') is False
+                                      or reported == 'failed' and checked['passed'])
+                        status = 'unverified' if unverified else ('success' if checked['passed'] else 'failed')
+                    except Exception as error:
+                        checked = {'passed': False, 'status': 'unverified',
+                                   'issues': [{'code': 'post_audit_check_unavailable', 'reason': reason(error)}]}
+                        status = 'unverified'
+                    audit['attempts'].append({'at': stamp(), 'status': status, 'result': checked})
+                    audit.update(status=status, result=checked, completedAt=stamp(),
+                                 nextAttemptAt=(now + timedelta(minutes=30)).isoformat() if status != 'success' and len(audit['attempts']) < 3 else None,
+                                 action='' if status == 'success' else
+                                     ('Inspect audit evidence; automatic recheck in 30 minutes' if len(audit['attempts']) < 3
+                                      else 'Inspect audit evidence and correct or reconcile manually; retry limit reached'))
+                    atomic(path, audit)
+                notification = self._post_audit_notice(job, key, audit) if audit['status'] != 'pending' else 'not_needed'
+                summaries.append({k: audit.get(k) for k in
+                                  ('id', 'auditKey', 'revision', 'status', 'result', 'nextAttemptAt', 'action')})
+                summaries[-1].update(attempts=len(audit['attempts']), receipt=str(path), notificationStatus=notification)
+            except Exception as error:
+                summaries.append(self._post_audit_fault(error, job.get('id')))
+        return summaries
+
     def tick(self):
         decisions = self.consume()
+        # Separate errors from generic attention notices, and never skip existing gates.
+        try:
+            audits = self._post_publication_audits()
+        except Exception as error:
+            audits = [self._post_audit_fault(error)]
         results = []
         for job in self.ledger.list_jobs():
             try:
@@ -448,7 +679,9 @@ class Runtime:
             except Exception:
                 reports = [{'kind': 'reports', 'status': 'requires_reconciliation'}]
         report_attention = any(r.get('status') == 'requires_reconciliation' for r in reports)
-        result = {'status': 'attention' if report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
+        audit_attention = any(a.get('status') in ('failed', 'unverified', 'requires_reconciliation')
+                              or a.get('notificationStatus') == 'requires_reconciliation' for a in audits)
+        result = {'status': 'attention' if audit_attention or report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
                   'at': stamp(), 'decisions': decisions, 'results': results,
                   'articles': [dict({k: j[k] for k in ('id', 'theme', 'stage', 'revision', 'error')},
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
@@ -458,6 +691,7 @@ class Runtime:
                               'deliveryMode': ((j.get('social') or {}).get('proposal') or {}).get('deliveryMode', 'manual'),
                               'publication': self._social_publication_summary(j)}) for j in jobs],
                   'reports': reports, 'reportAttention': report_attention,
+                  'postPublicationAudits': audits, 'postPublicationAuditEnabled': self.config.get('postPublicationAuditEnabled') is True,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}

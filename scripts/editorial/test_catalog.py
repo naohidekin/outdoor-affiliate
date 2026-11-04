@@ -33,6 +33,26 @@ def response(body, kind='text/html', status=200, headers=None):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_exact_domains_blocks_subdomain_before_redirect_fetch_default_compatible(self):
+        source = 'https://images.example/product.png'
+        redirected = 'https://unapproved.images.example/product.png'
+        calls = []
+        def fetch(url, *_):
+            calls.append(url)
+            if url == source:
+                return response('', status=302, headers={'location': redirected})
+            return response(PNG, kind='image/png')
+        catalog = Catalog({}, fetcher=fetch)
+        with self.assertRaises(CatalogError):
+            catalog.request(source, allowed_domains=('images.example',), exact_domains=True)
+        self.assertEqual(calls, [source])
+        calls.clear()
+        self.assertEqual(catalog.request(source, allowed_domains=('images.example',))['url'], redirected)
+        self.assertEqual(calls, [source, redirected])
+        calls.clear()
+        self.assertEqual(catalog.request(source, allowed_domains=('images.example',), exact_domains=False)['url'], redirected)
+        self.assertEqual(calls, [source, redirected])
+
     def test_required_notice_fresh_quotes_and_manufacturer_redirect_scope(self):
         product = products()[0]
         notice = 'https://soto.shinfuji.co.jp/news/discontinued/'
