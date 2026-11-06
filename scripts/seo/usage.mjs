@@ -3,14 +3,16 @@ import { seoRoot } from './article-guard.mjs';
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const RATE_DATE = "2026-09-11";
+const RATE_DATE = "2026-11-06";
 const SOURCES = [
   "https://learn.chatgpt.com/docs/pricing",
   "https://developers.openai.com/api/docs/models/gpt-6-astra",
+  "https://developers.openai.com/api/docs/models/gpt-6.1-terra",
 ];
 
 const RATES = {
   "gpt-6-astra": { credits: [250, 25, 1250], api: [10, 1, 50] },
+  "gpt-6.1-terra": { credits: [25, 1.25, 125], api: [1, 0.05, 5] },
   "gpt-5.6-terra": { credits: [50, 5, 300], api: [2, 0.2, 12] },
   "gpt-5.6-luna": { credits: [5, 0.5, 30], api: [0.2, 0.02, 1.2] },
   "gpt-5.6-sol": { credits: [100, 10, 500], api: [4, 0.4, 20] },
