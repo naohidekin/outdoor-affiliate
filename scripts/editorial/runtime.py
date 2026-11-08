@@ -128,8 +128,13 @@ class Runtime:
             capture_output=True, text=True, timeout=300)
         try:
             value = json.loads(result.stdout.strip().splitlines()[-1])
+            if not isinstance(value, dict):
+                raise ValueError('render_result_object_required')
         except (ValueError, IndexError):
+            atomic(output / 'result.json', {'passed': False, 'reason': 'render_preview_unavailable',
+                                            'returncode': result.returncode})
             raise ValueError('render_preview_unavailable') from None
+        atomic(output / 'result.json', value)
         if result.returncode or value.get('passed') is not True:
             raise ValueError('render_preview_failed')
         return value

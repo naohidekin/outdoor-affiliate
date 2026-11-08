@@ -82,6 +82,33 @@ class RuntimeTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_render_receipt_keeps_parsed_failure_and_sanitizes_unavailable_output(self):
+        from ledger import fingerprint
+        b = bundle()
+        job = {'id': 'preview-receipt-test'}
+        receipt = self.runtime.root / 'previews' / job['id'] / fingerprint(b) / 'result.json'
+        for stdout, error, expected in (
+                (json.dumps({'passed': False, 'issues': ['missing FAQ']}), 'render_preview_failed',
+                 {'passed': False, 'issues': ['missing FAQ']}),
+                ('', 'render_preview_unavailable', None),
+                ('PRIVATE RAW OUTPUT', 'render_preview_unavailable', None),
+                ('[]', 'render_preview_unavailable', None),
+                (json.dumps({'passed': True}), None, {'passed': True})):
+            with self.subTest(stdout=stdout), patch('runtime.subprocess.run') as run:
+                run.return_value.stdout = stdout
+                run.return_value.stderr = 'PRIVATE STDERR'
+                run.return_value.returncode = 0
+                if error:
+                    with self.assertRaisesRegex(ValueError, '^' + error + '$'):
+                        Runtime._render(self.runtime, b, job)
+                else:
+                    self.assertEqual(expected, Runtime._render(self.runtime, b, job))
+                observed = json.loads(receipt.read_text())
+                self.assertEqual(expected or {'passed': False, 'reason': 'render_preview_unavailable',
+                                             'returncode': 0}, observed)
+                self.assertNotIn('PRIVATE', receipt.read_text())
+                self.assertEqual(0o600, receipt.stat().st_mode & 0o777)
+
     def approve(self, job, user='U'):
         req = self.slack.deliveries[-1][1]
         if req['article_id'] != job['id']:
