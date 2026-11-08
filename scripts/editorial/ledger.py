@@ -62,6 +62,13 @@ def valid_review(review, revision):
     require(review.get('fingerprint') == revision, 'review fingerprint mismatch')
 
 
+def valid_astra_review(review, revision):
+    require(isinstance(review, dict) and review.get('passed') is True
+            and review.get('issues') == [] and review.get('reviewedBy') == 'Astra'
+            and isinstance(review.get('evidence'), dict) and bool(review['evidence'])
+            and review.get('fingerprint') == revision, 'matching Astra quality review required')
+
+
 def valid_social_mode(proposal):
     mode = proposal.get('deliveryMode', 'manual')
     require(mode in ('manual', 'auto_x'), 'unknown social delivery mode')
@@ -296,6 +303,8 @@ class Ledger:
             if revision != job['revision']:
                 job.update(bundle=json.loads(canonical(bundle)), revision=revision, review=None, approval=None,
                            publication=None, social=None, error=None, stage='draft')
+                if job.get('kind') == 'article_revision':
+                    job['astraReview'] = None
                 self._invalidate(db, id)
                 return self._put(db, job, 'bundle')
             return job
@@ -323,6 +332,20 @@ class Ledger:
             self._invalidate(db, id, 'article')
             return self._put(db, job, 'review')
 
+    def record_astra_review(self, id, revision, review):
+        """Explicit operator-recorded Astra QA, separate from owner publication approval."""
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') == 'article_revision' and job['stage'] == 'review'
+                    and not job.get('approval') and not job.get('publication'),
+                    'only unapproved revision in review can receive Astra QA')
+            self._current(job)
+            require(revision == job['revision'], 'revision mismatch')
+            valid_review(job['review'], revision)
+            valid_astra_review(review, revision)
+            job['astraReview'] = dict(json.loads(canonical(review)), recordedAt=timestamp().isoformat())
+            return self._put(db, job, 'astra_review')
+
     def create_request(self, id, kind='article', now=None):
         now = timestamp(now)
         require(kind in ('article', 'social'), 'unknown request kind')
@@ -332,6 +355,8 @@ class Ledger:
             if kind == 'article':
                 revision = job['revision']
                 valid_review(job['review'], revision)
+                if job.get('kind') == 'article_revision':
+                    valid_astra_review(job.get('astraReview'), revision)
             else:
                 require(job['publication'] and job['publication'].get('verified') is True and job['social'], 'verified publication and social required')
                 require(not job['social'].get('publication'), 'posted social is immutable')

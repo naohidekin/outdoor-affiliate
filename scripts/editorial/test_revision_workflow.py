@@ -3,6 +3,7 @@ import copy
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
+import sqlite3
 import unittest
 from unittest.mock import Mock, patch
 
@@ -43,7 +44,14 @@ class RevisionWorkflowTests(unittest.TestCase):
             return result
         self.runtime.renderer = render
     tearDown = test_runtime.RuntimeTests.tearDown
-    approve = test_runtime.RuntimeTests.approve
+    def astra_review(self, job):
+        return dict(passed=True, issues=[], fingerprint=job['revision'], reviewedBy='Astra',
+                    evidence={'summary': 'Offline fixture: full revised bundle independently checked'})
+
+    def approve(self, job, user='U'):
+        self.runtime.ledger.record_astra_review(job['id'], job['revision'], self.astra_review(job))
+        self.runtime.deliver(job['id'])
+        test_runtime.RuntimeTests.approve(self, job, user)
 
     def request(self, base=None, **changes):
         value = spec(base or baseline())
@@ -116,8 +124,94 @@ class RevisionWorkflowTests(unittest.TestCase):
             self.assertEqual(base[field], saved['bundle']['article'][field])
         self.assertEqual([], self.writes)
         self.assertIsNone(saved['approval'])
-        self.assertEqual(1,len(self.slack.deliveries))
+        self.assertEqual([], self.slack.deliveries)
         self.assertEqual(j['revisionContext'], saved['bundle']['revisionContext'])
+
+    def test_revision_waits_for_astra_without_request_slack_or_owner_approval(self):
+        base = baseline(); j = self.request(base); self.fake_evidence()
+        self.runtime._context = Mock(return_value=self.context(base))
+        result = self.runtime._produce_requested_revision()
+        self.assertEqual('awaiting_astra_review', result['status'])
+        job = self.runtime.ledger.get_job(j['id'])
+        self.assertEqual('review', job['stage'])
+        for _ in range(2):
+            self.assertEqual('awaiting_astra_review', self.runtime.deliver(j['id'])['status'])
+        self.config['generationEnabled'] = False
+        self.runtime.tick(); self.runtime.tick()
+        with self.assertRaises(ValueError): self.runtime.ledger.create_request(j['id'])
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            self.assertEqual(0, db.execute('SELECT count(*) FROM requests').fetchone()[0])
+            self.assertEqual(0, db.execute('SELECT count(*) FROM effects').fetchone()[0])
+        self.assertEqual([], self.slack.deliveries)
+        self.assertEqual([], self.slack.notices)
+        self.assertEqual([], self.writes)
+        self.assertIsNone(job['approval']); self.assertIsNone(job['publication']); self.assertIsNone(job['social'])
+
+    def test_exact_astra_review_allows_delivery_but_never_approves_or_publishes(self):
+        base = baseline(); j = self.request(base); self.fake_evidence()
+        self.runtime._make_article(j, self.context(base))
+        job = self.runtime.ledger.get_job(j['id'])
+        approved_qa = self.runtime.ledger.record_astra_review(j['id'], job['revision'], self.astra_review(job))
+        self.assertEqual('review', approved_qa['stage'])
+        self.assertIsNone(approved_qa['approval']); self.assertIsNone(approved_qa['publication'])
+        self.assertEqual([], self.slack.deliveries)
+        self.config['generationEnabled'] = False
+        self.runtime.tick()
+        self.assertEqual('already_delivered', self.runtime.deliver(j['id'])['status'])
+        self.assertEqual(1, len(self.slack.deliveries))
+        self.assertEqual(job['revision'], self.slack.deliveries[0][1]['manifest_hash'])
+        self.assertEqual([], self.writes)
+
+    def test_astra_review_rejects_stale_failed_unattributed_or_unreviewed_bundle(self):
+        base = baseline(); j = self.request(base); self.fake_evidence()
+        self.runtime._make_article(j, self.context(base)); job = self.runtime.ledger.get_job(j['id'])
+        for change in ({'passed': False}, {'issues': ['fix unsupported claim']}, {'evidence': {}},
+                       {'reviewedBy': 'Claude'}, {'fingerprint': '0' * 64}):
+            review = dict(self.astra_review(job), **change)
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                self.runtime.ledger.record_astra_review(j['id'], job['revision'], review)
+        with self.assertRaises(ValueError):
+            self.runtime.ledger.record_astra_review(j['id'], '0' * 64, self.astra_review(job))
+        self.runtime.ledger.set_stage(j['id'], 'error', {'reason': 'known_failure'})
+        with self.assertRaises(ValueError):
+            self.runtime.ledger.record_astra_review(j['id'], job['revision'], self.astra_review(job))
+        self.assertEqual([], self.slack.deliveries)
+
+    def test_stale_stored_astra_or_missing_model_review_cannot_unlock_request(self):
+        base = baseline(); j = self.request(base); self.fake_evidence()
+        self.runtime._make_article(j, self.context(base)); job = self.runtime.ledger.get_job(j['id'])
+        with self.runtime.ledger._tx() as db:
+            current = self.runtime.ledger._get(db, j['id'])
+            current['review'] = None
+            self.runtime.ledger._put(db, current, 'test_missing_model_review')
+        with self.assertRaises(ValueError):
+            self.runtime.ledger.record_astra_review(j['id'], job['revision'], self.astra_review(job))
+        self.runtime.ledger.record_review(j['id'], job['revision'], job['review'])
+        with self.runtime.ledger._tx() as db:
+            current = self.runtime.ledger._get(db, j['id'])
+            current['astraReview'] = dict(self.astra_review(job), fingerprint='0' * 64)
+            self.runtime.ledger._put(db, current, 'test_stale_astra_review')
+        with self.assertRaises(ValueError): self.runtime.ledger.create_request(j['id'])
+        self.assertEqual('awaiting_astra_review', self.runtime.deliver(j['id'])['status'])
+        self.assertEqual([], self.slack.deliveries)
+        self.assertEqual([], self.writes)
+
+    def test_new_bundle_invalidates_astra_and_old_request(self):
+        base = baseline(); j = self.request(base); self.fake_evidence()
+        self.runtime._make_article(j, self.context(base)); job = self.runtime.ledger.get_job(j['id'])
+        self.runtime.ledger.record_astra_review(j['id'], job['revision'], self.astra_review(job))
+        old_request = self.runtime.ledger.create_request(j['id'])
+        changed = copy.deepcopy(job['bundle']); changed['article']['content'] += '\n修正後の本文です。'
+        current = self.runtime.ledger.save_bundle(j['id'], changed)
+        self.assertIsNone(current.get('astraReview'))
+        review = dict(job['review'], fingerprint=current['revision'])
+        self.runtime.ledger.record_review(j['id'], current['revision'], review)
+        self.assertEqual('awaiting_astra_review', self.runtime.deliver(j['id'])['status'])
+        with self.assertRaises(ValueError): self.runtime.ledger.create_request(j['id'])
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            request = json.loads(db.execute('SELECT data FROM requests WHERE id=?', (old_request['request_id'],)).fetchone()[0])
+        self.assertEqual('invalidated', request['status'])
+        self.assertEqual([], self.slack.deliveries)
 
     def test_changed_live_baseline_blocks_before_writer_and_slack(self):
         base = baseline(); j = self.request(base)
@@ -367,6 +461,8 @@ class RevisionWorkflowTests(unittest.TestCase):
     def test_stale_candidate_slack_button_cannot_approve_replacement(self):
         base=baseline();j=self.request(base);self.fake_evidence()
         self.runtime._make_article(j,self.context(base));old=self.runtime.ledger.get_job(j['id'])
+        self.runtime.ledger.record_astra_review(j['id'], old['revision'], self.astra_review(old))
+        self.runtime.deliver(j['id'])
         request=self.slack.deliveries[-1][1]
         new=copy.deepcopy(old['bundle']);new['article']['content']+='\n追記'
         self.runtime.ledger.save_bundle(j['id'],new,old['revision'])

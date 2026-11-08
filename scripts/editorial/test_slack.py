@@ -36,6 +36,57 @@ class SlackTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Slack(self.config, call=call).post('本文')
 
+    def test_inherited_plain_text_disables_emoji_conversion_and_rejects_readback_changes(self):
+        from inherited_advice import advice_evidence, TEMPLATE_FILES
+        markup = '<aside aria-label="医師からのアドバイス"><p>🩺 継承表示テスト</p></aside>'
+        evidence = advice_evidence(markup)
+        inherited = {'schemaVersion': 1, 'kind': 'unchanged_medical_advice', 'slug': 'test-article',
+                     'html': markup, 'domSha256': evidence['domSha256'], 'renderedText': evidence['text'],
+                     'templateFiles': {name: 'a' * 64 for name in TEMPLATE_FILES},
+                     'clinicalReverified': False, 'unchanged': True}
+        job = {'id': 'test-revision', 'kind': 'article_revision',
+               'bundle': {'article': {'title': '表示テスト', 'slug': 'test-article', 'content': '本文'},
+                          'products': [], 'images': [], 'inheritedPresentationContext': inherited},
+               'revisionContext': {'changeSummary': '表示確認'}}
+        request = {'request_id': 'test-request', 'article_id': job['id'],
+                   'manifest_hash': 'test-hash', 'nonce': 'test-value'}
+        label = '既存の「医師から一言」（変更なし・今回の再検証対象外）'
+        expected_text = label + '\n🩺 継承表示テスト'
+        for mode in ('unchanged', 'colon', 'changed', 'missing'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as root:
+                posts = []
+                def call(method, data):
+                    result = self.call(method, data)
+                    if method == 'chat.postMessage':
+                        posts.append(copy.deepcopy(data))
+                    elif self.sent['text'] == label:
+                        blocks = copy.deepcopy(self.sent['blocks'])
+                        text = blocks[0]['text']
+                        # Model the server's colon conversion when not disabled;
+                        # injected corruptions must still fail even with emoji=False.
+                        if text.get('emoji', True) or mode == 'colon':
+                            text['text'] = text['text'].replace('🩺', ':stethoscope:')
+                        if mode == 'changed':
+                            text['text'] += '改変'
+                        elif mode == 'missing':
+                            del text['text']
+                        result['messages'][0]['blocks'] = blocks
+                    return result
+                client = Slack(dict(self.config, stateRoot=root), call=call)
+                with patch('slack.time.sleep'):
+                    if mode == 'unchanged':
+                        parts, _ = client.deliver(job, request)
+                        self.assertTrue(all(part['verified'] for part in parts))
+                    else:
+                        with self.assertRaisesRegex(ValueError, '^slack_blocks_mismatch$'):
+                            client.deliver(job, request)
+                        receipt = Path(root) / 'slack-outbound/1793000000.123456.json'
+                        self.assertEqual(json.loads(receipt.read_text())['status'], 'sent_unverified')
+                        self.assertFalse(any(b['type'] == 'actions' for p in posts for b in p.get('blocks', [])))
+                sent = next(p for p in posts if p['text'] == label)['blocks'][0]['text']
+                self.assertIs(sent.get('emoji'), False)
+                self.assertEqual(sent['text'], expected_text)
+
     def test_image_server_metadata_only_is_ignored(self):
         blocks = [{'type': 'image', 'image_url': 'https://example.com/image.jpg', 'alt_text': '画像 & 説明'}]
         metadata = {'image_bytes': 303678, 'image_height': 3088, 'fallback': 'server fallback',

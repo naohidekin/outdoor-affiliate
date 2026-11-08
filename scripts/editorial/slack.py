@@ -229,7 +229,7 @@ class Slack:
             inherited = validate_presentation(bundle.get('inheritedPresentationContext'), article['slug'])
             label = '既存の「医師から一言」（変更なし・今回の再検証対象外）'
             for part in chunks(label + '\n' + inherited['renderedText']):
-                parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part}}]))
+                parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part, 'emoji': False}}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
         revision = job.get('kind') == 'article_revision'
         labels = [('approve', '更新を公開する' if revision else 'Xに投稿する' if auto_x else 'この告知案を承認' if social else '公開する'),

@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 
-from ledger import (Ledger, canonical, fingerprint, valid_review, valid_social_mode,
+from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
                     valid_social_images, valid_image_refresh, REFRESH_NOTICE)
 from models import Models
 from quality import inspect_bundle, inspect_polish
@@ -353,7 +353,7 @@ class Runtime:
         # Persist an invisible draft, never publish while waiting for a person.
         if not revision:
             self.publisher('stage', self.ledger.get_job(job['id']))
-        self.deliver(job['id'])
+        return self.deliver(job['id'])
 
     def request_revisions(self, specifications):
         from revisions import validated_context
@@ -388,9 +388,10 @@ class Runtime:
             return {'id': job['id'], 'status': 'attention', 'reason': 'revision_production_requires_reconciliation'}
         atomic(marker, {'status': 'in_flight', 'at': stamp()})
         try:
-            self._make_article(job, self._context())
+            delivery = self._make_article(job, self._context())
             atomic(marker, {'status': 'completed', 'at': stamp()})
-            return {'id': job['id'], 'status': 'awaiting_approval'}
+            status = 'awaiting_astra_review' if isinstance(delivery, dict) and delivery.get('status') == 'awaiting_astra_review' else 'awaiting_approval'
+            return {'id': job['id'], 'status': status}
         except Exception as error:
             self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
             atomic(marker, {'status': 'blocked', 'at': stamp(), 'reason': reason(error)})
@@ -436,6 +437,13 @@ class Runtime:
 
     def deliver(self, id, kind='article'):
         job = self.ledger.get_job(id)
+        if kind == 'article' and job.get('kind') == 'article_revision':
+            try:
+                self.ledger._current(job)
+                valid_review(job.get('review'), job['revision'])
+                valid_astra_review(job.get('astraReview'), job['revision'])
+            except ValueError:
+                return {'status': 'awaiting_astra_review', 'deferred': True}
         with sqlite3.connect(self.ledger.db_path) as db:
             rows = db.execute('SELECT data FROM requests WHERE job_id=? AND kind=? ORDER BY rowid DESC', (id, kind)).fetchall()
         active = next((json.loads(row[0]) for row in rows if json.loads(row[0])['status'] in ('created', 'delivered')), None)

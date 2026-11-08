@@ -354,7 +354,7 @@ python3 scripts/editorial/runtime.py --config /absolute/private/config.json prod
 通常GUI LaunchAgentの300秒 `tick` も最大1件の要求済み改訂を処理する。制作に使ったtickだけ新記事制作を次回へ回す。
 候補はClaude執筆→Gemini 3.8 Flash校正→構造/事実/画像/購入先/medical/render/上位最終審査を通す。
 旧本文35k字等は現行format字数規定を上書きしない。photo-cardは同じ生成・検査を使い、他のgenerationMetaを保持する。
-公開DBにdraftを作らず、候補・source・render・reviewをprivate保存して既存Slack本文/画像/承認カードへ配信する。
+公開DBにdraftを作らず、候補・source・render・reviewをprivate保存する。改訂はさらにAstraが実際の本文・FAQ・画像・購入先の根拠を確認し、対象版のfingerprintと証拠を束縛した品質審査を記録してから、既存Slack本文/画像/承認カードへ配信する。品質審査は本人の公開承認と別で、未実施・旧版の審査では配信しない。候補を変更した場合は品質審査も再実施する。
 商品修正があれば変更した項目名と提案後の値を表示する。仕様はカードの先頭3項目だけに省略せず、提案後の全項目を確認できるようにする。旧値や生の購入先URLは列挙せず、購入先は本文のクリック可能な候補リンクで確認する。旧新URLや全仕様の差分はprivate保存し、承認カードに一度だけ「商品カードの修正は、この商品を掲載する他の記事にも反映されます」を表示する。
 「更新を公開する」ボタンの本人承認が記事と商品候補全体のexact fingerprintを拘束する。
 
