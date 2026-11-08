@@ -20,6 +20,8 @@ CLAUDE_URL = "https://api.anthropic.com/v1/messages"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 BRIEF_FIELDS = ("purpose", "reader", "conclusion", "headings", "facts", "numbers", "links",
                 "requiredExpressions", "protected", "style", "length", "cta", "format", "externalSafe")
+ARTICLE_LENGTHS = {"ranking": (5000, 8000), "comparison": (5000, 8000), "guide": (3000, 5000),
+                   "how-to": (3000, 5000), "review": (2000, 3500)}
 ARTICLE_FIELDS = ("slug", "title", "categoryId", "content", "excerpt", "metaDescription",
                   "faqs", "tags", "productIds", "author")
 LIST_BRIEF_FIELDS = ("headings", "facts", "numbers", "links", "requiredExpressions", "protected")
@@ -327,7 +329,7 @@ class Models:
         if not any(context.get(k) for k in ("CLAUDE", "claude", "template", "templates")) or not any(
                 context.get(k) for k in ("SKILL", "skill", "template", "templates")):
             raise ModelError("Existing CLAUDE/SKILL article templates required in context")
-        result, _ = self._call(
+        instruction = (
             json.dumps(context.get("verifiedAuthorFacts", []), ensure_ascii=False) + "\n"
             "The JSON list above is verifiedAuthorFacts. Copy EACH item into article.content as a complete verbatim sentence, "
             "including its final punctuation. Do not paraphrase; do not shorten or embed it in a longer sentence "
@@ -349,7 +351,7 @@ class Models:
             "and let the structured article.faqs render. Keep the required body length unchanged. "
             "Content length by brief.format: ranking/comparison 5000-8000 characters; guide/how-to 3000-5000; "
             "review 2000-3500. Include 2-3 distinct internal Markdown links /articles/slug. "
-            "Aim inside those ranges: guide/how-to body 3500-4200 characters, ranking/comparison 6000-7000, review 2500-3000. "
+            "Aim inside those ranges: guide/how-to body 4000-4700 characters, ranking/comparison 6000-7000, review 2500-3000. "
             "Count ONLY article.content, excluding excerpt, metaDescription and structured FAQs; do not pad with repeated specifications. "
             "Selection reasons and data-correction history are editorial instructions, not publishable factual sources. "
             "Never turn obsolete internal catalog values into claims about online shops or other websites. "
@@ -365,11 +367,45 @@ class Models:
             "externalSafe must be true ONLY for sanitized public data. The brief must fully specify all known facts, "
             "exact numbers, links, immutable claims, disclosure, style, length, CTA and output format. "
             "Cite only supplied references and use supplied product URLs. "
-            "Do not claim images, affiliate destinations or rendering are live-verified.",
+            "Do not claim images, affiliate destinations or rendering are live-verified.")
+        theme, context = copy.deepcopy((theme, context))
+        result, record = self._call(instruction,
             {"theme": theme, "context": context},
             self.env.get("ARTICLE_WRITER_MODEL") or "claude-opus-4-8",
             fallback=self.env.get("ARTICLE_WRITER_FALLBACK_MODEL") or "claude-sonnet-4-6",
             schema=WRITER_SCHEMA)
+        # Run EVERY non-length check first: source/schema/format errors are never
+        # disguised as repairable length failures. _call already preserved the raw
+        # first artifact and usage before this local validation.
+        result = self._validate_draft(result, theme, context, check_length=False)
+        lower, upper = ARTICLE_LENGTHS[result['brief']['format']]
+        count = len(result['article']['content'])
+        if lower <= count <= upper:
+            return result
+        previous = {key: copy.deepcopy(result[key]) for key in ('article', 'brief')}
+        feedback = dict(format=result['brief']['format'], actualCharacters=count, minimum=lower, maximum=upper)
+        repaired, repaired_record = self._call(
+            instruction + "\nOne length-only repair: article.content has " + str(count) +
+            " characters; the unchanged brief.format requires " + str(lower) + "-" + str(upper) +
+            " characters. Return the same article and brief, changing ONLY article.content. "
+            "Do not change brief.format or any other brief field, article identity or metadata. "
+            "Do not add new facts, numbers, links, headings, claims or experiences. "
+            "Keep verified author sentences and protected facts verbatim. Explain the existing verified facts "
+            "more clearly within the existing structure, or remove redundant prose if too long. "
+            "Do not pad with repeated text or specifications. Do not reclassify the format. "
+            "This is the only repair attempt; count ONLY article.content and satisfy the original hard range.",
+            dict(theme=theme, context=context, previousCandidate=previous, validation=feedback),
+            record['model'], schema=WRITER_SCHEMA)  # Same resolved Claude; no fallback or third generation.
+        repaired = self._validate_draft(repaired, theme, context)
+        literals = context.get('verifiedAuthorFacts', []) + previous['brief']['facts'] + previous['brief']['protected']
+        if (repaired_record['model'] != record['model'] or repaired['brief'] != previous['brief']
+                or any(repaired['article'][key] != previous['article'][key] for key in ARTICLE_FIELDS if key != 'content')
+                or any(f in previous['article']['content'] and f not in repaired['article']['content'] for f in literals)
+                or inspect_polish(previous['article']['content'], repaired['article']['content'])['passed'] is not True):
+            raise ModelError('Length repair changed protected identity, brief or facts')
+        return repaired
+
+    def _validate_draft(self, result, theme, context, check_length=True):
         if set(result) != {"article", "brief"}:
             raise ModelError("Invalid writer response fields")
         _require(result["article"], ARTICLE_FIELDS)
@@ -425,14 +461,10 @@ class Models:
         if missing_ids:
             separator = '' if article["content"].endswith('\n\n') else '\n\n'
             article["content"] += separator + '\n\n'.join('{{product:' + pid + '}}' for pid in missing_ids)
-        lengths = {"ranking": (5000, 8000), "comparison": (5000, 8000), "guide": (3000, 5000),
-                   "how-to": (3000, 5000), "review": (2000, 3500)}
         format_name = result["brief"]["format"]
-        if format_name not in lengths:
+        if format_name not in ARTICLE_LENGTHS:
             raise ModelError("Unknown article format")
-        lower, upper = lengths[format_name]
-        if not lower <= len(article["content"]) <= upper:
-            raise ModelError("Article length outside existing SKILL limits")
+        lower, upper = ARTICLE_LENGTHS[format_name]
         internal = re.findall(r"(?<!!)\[[^\]\n]+\]\((/articles/[^)\s]+)\)", article["content"])
         if not 2 <= len(set(internal)) <= 3:
             raise ModelError("Two to three distinct internal article links required")
@@ -462,6 +494,8 @@ class Models:
             if not any(p["id"] == image["productId"] and p.get("imageUrl") == image["url"] for p in selected):
                 raise ModelError("Unverified product image")
         self._safe_public(result)
+        if check_length and not lower <= len(article["content"]) <= upper:
+            raise ModelError("Article length outside existing SKILL limits")
         return result
 
     def polish(self, source, brief):

@@ -84,6 +84,107 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
+        good = bundle()
+        short = copy.deepcopy(good)
+        short['article']['content'] = good['article']['content'][:2106]
+        first, second = writer_response(short), writer_response(good)
+        first['id'], second['id'] = 'draft-short', 'draft-repaired'
+        fake, artifacts = Fake(first, second), []
+        model = Models(ENV, fake, artifact_sink=artifacts.append)
+        theme, ctx = {'productIds': ['tent-a'], 'slug': 'tent-guide'}, context()
+        original_theme, original_context = copy.deepcopy(theme), copy.deepcopy(ctx)
+        result = model.draft(theme, ctx)
+        self.assertEqual(result['article']['content'], good['article']['content'])
+        self.assertEqual(len(fake.calls), 2)
+        self.assertEqual(fake.calls[1][2]['model'], first['model'])
+        self.assertEqual([a['responseId'] for a in artifacts], ['draft-short', 'draft-repaired'])
+        self.assertEqual([u['responseId'] for u in model.usage], ['draft-short', 'draft-repaired'])
+        self.assertEqual(json.loads(artifacts[0]['content'])['article']['content'], short['article']['content'])
+        payload = json.loads(fake.calls[1][2]['messages'][0]['content'].split(
+            'Return ONLY a complete JSON object, no fences or commentary.\n')[1])
+        self.assertEqual(payload['theme'], original_theme)
+        self.assertEqual(payload['context'], original_context)
+        self.assertEqual(payload['previousCandidate']['brief'], short['brief'])
+        self.assertEqual(payload['validation'], dict(format='guide', actualCharacters=2106, minimum=3000, maximum=5000))
+        self.assertEqual((theme, ctx), (original_theme, original_context))
+        for phrase in ('guide/how-to body 4000-4700 characters', 'Do not add new facts', 'Do not change brief.format', 'Do not pad', '2106', '3000', '5000'):
+            self.assertIn(phrase, fake.calls[1][2]['messages'][0]['content'])
+        self.assertNotIn('guide/how-to body 3500-4200', fake.calls[0][2]['messages'][0]['content'])
+        self.assertTrue(all(c[0] == 'https://api.anthropic.com/v1/messages' for c in fake.calls))
+
+    def test_draft_length_repair_is_bounded_even_if_second_still_short_or_too_long(self):
+        for size in (2106, 5100):
+            b = bundle()
+            b['article']['content'] = b['article']['content'][:2106]
+            final = copy.deepcopy(b)
+            final['article']['content'] += '文' * max(0, size - len(final['article']['content']))
+            fake = Fake(writer_response(b), writer_response(final), writer_response(bundle()))
+            model = Models(ENV, fake)
+            with self.subTest(size=size), self.assertRaisesRegex(ModelError, 'Article length outside'):
+                model.draft({}, context())
+            self.assertEqual(len(fake.calls), 2)
+            self.assertEqual(len(model.usage), 2)
+
+    def test_draft_nonlength_errors_never_trigger_length_repair(self):
+        for mode in ('format', 'links', 'image', 'schema', 'product', 'authorfact'):
+            b, ctx = bundle(), context()
+            b['article']['content'] = b['article']['content'][:2106]
+            if mode == 'format': b['brief']['format'] = 'unknown'
+            if mode == 'links': b['article']['content'] = b['article']['content'].replace('[撤収](/articles/pack)', '')
+            if mode == 'image': ctx['images'][0]['url'] = 'https://invented.example/image.jpg'
+            if mode == 'schema': b['article']['tags'] = 'not a list'
+            if mode == 'product': b['article']['content'] += '{{product:ghost}}'
+            if mode == 'authorfact': ctx.update(existingArticle={'slug': 'tent-guide'}, verifiedAuthorFacts=['Verified ownership sentence.'])
+            fake = Fake(writer_response(b), writer_response(bundle()))
+            with self.subTest(mode=mode), self.assertRaises(ModelError):
+                Models(ENV, fake).draft({}, ctx)
+            self.assertEqual(len(fake.calls), 1)
+
+    def test_draft_repair_cannot_change_identity_brief_or_protected_facts(self):
+        for mode in ('slug', 'title', 'categoryId', 'format', 'facts', 'numbers', 'bodyfact', 'literal', 'links'):
+            first, final = bundle(), bundle()
+            first['article']['content'] = first['article']['content'][:2106]
+            if mode in ('slug', 'title', 'categoryId'): final['article'][mode] = 'different'
+            if mode == 'format': final['brief']['format'] = 'review'
+            if mode in ('facts', 'numbers'): final['brief'][mode] = ['invented']
+            if mode == 'literal': final['article']['content'] = final['article']['content'].replace('Weight 2kg', 'Mass 2kg')
+            if mode == 'bodyfact': final['article']['content'] = final['article']['content'].replace('2kg', '3kg')
+            if mode == 'links': final['article']['content'] = final['article']['content'].replace('/articles/pack', '/articles/other')
+            fake = Fake(writer_response(first), writer_response(final), writer_response(bundle()))
+            with self.subTest(mode=mode), self.assertRaises(ModelError):
+                Models(ENV, fake).draft({}, context())
+            self.assertEqual(len(fake.calls), 2)
+
+    def test_draft_long_body_repair_and_repair_provider_failure_never_generate_third_candidate(self):
+        good = bundle()
+        long = copy.deepcopy(good)
+        long['article']['content'] += '説明' * 1000
+        fake = Fake(writer_response(long), writer_response(good))
+        self.assertEqual(Models(ENV, fake).draft({}, context())['article']['content'], good['article']['content'])
+        self.assertEqual(len(fake.calls), 2)
+        for failure in (http(404), http(500), response(None, raw='not JSON')):
+            short = copy.deepcopy(good)
+            short['article']['content'] = short['article']['content'][:2106]
+            fake = Fake(writer_response(short), failure, writer_response(good))
+            with self.subTest(failure=type(failure)), self.assertRaises(ModelError):
+                Models(ENV, fake).draft({}, context())
+            self.assertEqual(len(fake.calls), 2)
+            self.assertEqual(fake.calls[1][2]['model'], 'claude-sonnet-4-6')
+
+    def test_failed_length_repair_preserves_both_real_completion_artifacts_and_usage(self):
+        b = bundle()
+        b['article']['content'] = b['article']['content'][:2106]
+        first, final = writer_response(b), writer_response(b)
+        first['id'], final['id'] = 'short-original', 'short-final'
+        artifacts, fake = [], Fake(first, final)
+        model = Models(ENV, fake, artifact_sink=artifacts.append)
+        with self.assertRaisesRegex(ModelError, 'Article length outside'):
+            model.draft({}, context())
+        self.assertEqual([a['responseId'] for a in artifacts], ['short-original', 'short-final'])
+        self.assertEqual([u['responseId'] for u in model.usage], ['short-original', 'short-final'])
+        self.assertEqual(len(fake.calls), 2)
+
     def test_revision_author_literals_lead_writer_prompt_and_paraphrases_still_fail(self):
         facts = ['2020年からスノーピークの焚火台Lを使っています。',
                  '最初の焚き火台はキャプテンスタッグでした。']
@@ -263,7 +364,7 @@ class ModelTests(unittest.TestCase):
         prefix = '## Choice\n[設営](/articles/setup) [撤収](/articles/pack)\n'
         b['article']['content'] = prefix + '文' * (5000 - len(prefix))
         with self.assertRaisesRegex(ModelError, 'Article length outside'):
-            Models(ENV, Fake(writer_response(b))).draft({}, context())
+            Models(ENV, Fake(writer_response(b), writer_response(b))).draft({}, context())
 
     def test_overrides_and_nonretry_auth_bad_request(self):
         for status in (400, 401, 500):
@@ -662,7 +763,7 @@ class ModelTests(unittest.TestCase):
                 prefix = "## Choice\n[設営](/articles/setup) [撤収](/articles/pack)\n{{comparison:tent-a}}\n"
                 b["article"]["content"] = prefix + "文" * (size - len(prefix))
                 with self.subTest(format=format_name, size=size):
-                    model = Models(ENV, Fake(writer_response(b)))
+                    model = Models(ENV, Fake(writer_response(b), writer_response(b)))
                     if success:
                         self.assertEqual(model.draft({}, context())["article"]["content"], b["article"]["content"])
                     else:
