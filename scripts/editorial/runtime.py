@@ -262,8 +262,11 @@ class Runtime:
             if any(live_products.get(p['id']) != p for p in binding['baseProducts']):
                 raise ValueError('revision_live_product_baseline_changed')
             gathered = self.catalog.gather_revision(job['theme'], context, binding)
-            # Only public editorial inputs cross the fixed model boundary.
-            public_source = {k: copy.deepcopy(base.get(k)) for k in ('title', 'slug', 'categoryId', 'content', 'excerpt', 'faqs', 'productIds')}
+            # Legacy prose stays private in the immutable CAS baseline; models receive identity only.
+            public_source = {k: copy.deepcopy(base.get(k)) for k in ('title', 'slug', 'categoryId', 'productIds')}
+            gathered['existingArticles'] = [
+                {k: copy.deepcopy(a.get(k)) for k in ('id', 'title', 'slug', 'categoryId')}
+                for a in gathered.get('existingArticles', [])]
             gathered.update(existingArticle=public_source,
                             editorialCorrectionInstructions=binding['editorialCorrectionInstructions'],
                             verifiedAuthorFacts=copy.deepcopy(binding['verifiedAuthorFacts']))

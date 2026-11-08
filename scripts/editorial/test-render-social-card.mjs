@@ -112,6 +112,13 @@ test('overflow fails closed rather than clipping or rewriting a long title/name'
   assert.equal(await fs.stat(path.join(root, 'card.png')).catch(() => null), null);
 });
 
+test('in-range heading that cannot fit at 40px still fails closed without writing a clipped card', async t => {
+  const root = await setup(t), p = await fixture();
+  await assert.rejects(renderSocialCard({ ...request(root, p), heading: '確認事項'.repeat(18) }),
+    /heading_overflow_requires_short_approved_input/);
+  assert.equal(await fs.stat(path.join(root, 'card.png')).catch(() => null), null);
+});
+
 test('text escaping cannot execute HTML or initiate an external resource', async t => {
   const root = await setup(t), p = await fixture('A <img src=x>');
   const result = await renderSocialCard({ ...request(root, p), heading: '<img src=x> & 確認' });
@@ -151,4 +158,45 @@ test('SOTO and CB headings preserve exact text and fit complete phrases without 
       assert.ok(phrase.bottom <= result.layout.heading.bottom);
     }
   }
+});
+
+test('revision firepit title wraps long phrases with synthetic photos and full text', async t => {
+  const root = await setup(t);
+  const title = '焚き火台の選び方完全ガイド【初心者向け】サイズ・素材・用途で失敗しない';
+  // Generated geometry at the original source dimensions; no manufacturer
+  // photographs are needed to reproduce the fixed-width heading failure.
+  const sources = [
+    ['ユニフレーム ファイアグリル', 725, 400],
+    ['スノーピーク 焚火台L', 1500, 1800],
+  ];
+  const products = await Promise.all(sources.map(async ([name, width, height]) => {
+    const generated = await fixture(name);
+    const bytes = await sharp(Buffer.from(generated.dataUrl.split(',')[1], 'base64'))
+      .resize(width, height, { fit: 'fill' }).jpeg().toBuffer();
+    return { name, sha256: hash(bytes), verified: true, dataUrl: 'data:image/jpeg;base64,' + bytes.toString('base64') };
+  }));
+  const result = await renderSocialCard({ title, products, outputPath: path.join(root, 'firepit.png') });
+  assert.equal(result.passed, true);
+  assert.equal(result.displayText.title, title);
+  assert.equal(result.displayText.heading, title);
+  assert.equal(result.layout.renderedHeading, title);
+  assert.deepEqual(result.displayText.productNames, ['ユニフレーム ファイアグリル', 'スノーピーク 焚火台L']);
+  assert.deepEqual(result.sources.map(source => source.sha256), products.map(product => product.sha256));
+  assert.deepEqual(result.sources.map(source => [source.originalWidth, source.originalHeight]), [[725, 400], [1500, 1800]]);
+  assert.equal(result.networkRequests, 0);
+  assert.ok(result.layout.headingFontSize >= 40);
+  assert.ok(result.layout.productNameFontSize >= 20);
+  assert.equal(result.layout.headingPhrases.map(phrase => phrase.text).join(''), title);
+  assert.ok(result.layout.headingPhrases[0].height > result.layout.headingFontSize * 1.24);
+  for (const phrase of result.layout.headingPhrases) {
+    assert.ok(phrase.x >= result.layout.heading.x && phrase.right <= result.layout.heading.right);
+    assert.ok(phrase.y >= result.layout.heading.y && phrase.bottom <= result.layout.heading.bottom);
+  }
+  for (const photo of result.layout.photos) {
+    assert.ok(photo.x >= 580 && photo.y >= 0 && photo.right <= 1200 && photo.bottom <= 630);
+  }
+  const bytes = await fs.readFile(result.outputPath);
+  assert.equal(result.pngSha256, hash(bytes));
+  const metadata = await sharp(bytes).metadata();
+  assert.deepEqual([metadata.width, metadata.height, metadata.format], [1200, 630, 'png']);
 });

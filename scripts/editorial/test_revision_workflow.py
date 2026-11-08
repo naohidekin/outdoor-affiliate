@@ -127,6 +127,42 @@ class RevisionWorkflowTests(unittest.TestCase):
         self.assertEqual([], self.writes)
         self.assertEqual([], self.slack.deliveries)
 
+    def test_legacy_prose_never_enters_models_but_full_baseline_remains_bound(self):
+        from ledger import fingerprint
+        base = baseline()
+        markers = ['LEGACY_BODY_撤収時は水をかけ', 'LEGACY_EXCERPT_薪30〜40cm',
+                   'LEGACY_FAQ_一番多い後悔', 'NEIGHBOR_LEGACY_根拠のない使用条件']
+        base.update(content=markers[0], excerpt=markers[1],
+                    faqs=[{'question': '旧FAQ', 'answer': markers[2]}])
+        j = self.request(base)
+        self.fake_evidence()
+        navigation = {'id': 'neighbor', 'title': '関連記事', 'slug': 'neighbor-guide', 'categoryId': base['categoryId']}
+        self.runtime.catalog.gather_revision.return_value['existingArticles'] = [
+            dict(navigation, excerpt=markers[3], content=markers[3], faqs=[{'answer': markers[3]}])]
+        self.models.polish = Mock(wraps=self.models.polish)
+        self.models.review = Mock(wraps=self.models.review)
+        self.runtime._make_article(j, self.context(base))
+        writer_context = self.models.draft.call_args.args[1]
+        identity = {k: base[k] for k in ('title', 'slug', 'categoryId', 'productIds')}
+        self.assertEqual(identity, writer_context['existingArticle'])
+        self.assertEqual([navigation], writer_context['existingArticles'])
+        for boundary in (self.models.draft, self.models.polish, self.models.review):
+            serialized = json.dumps(boundary.call_args.args, ensure_ascii=False)
+            for marker in markers:
+                self.assertNotIn(marker, serialized)
+        self.assertEqual(identity, self.models.review.call_args.args[1]['existingArticle'])
+        saved = self.runtime.ledger.get_job(j['id'])
+        self.assertEqual(base, saved['revisionContext']['baseArticle'])
+        self.assertEqual(base, saved['bundle']['revisionContext']['baseArticle'])
+        self.assertEqual(fingerprint(base), saved['revisionContext']['baseHash'])
+        self.assertEqual([], self.writes)
+        changed = copy.deepcopy(base)
+        changed['content'] += 'concurrent change'
+        self.models.draft.reset_mock()
+        with self.assertRaisesRegex(ValueError, 'revision_live_baseline_changed'):
+            self.runtime._make_article(j, self.context(changed))
+        self.models.draft.assert_not_called()
+
     def test_bound_fields_and_context_cannot_change_on_save(self):
         j = self.request(); b = bundle(); b['products']=j['revisionContext']['candidateProducts']; b['article'] = baseline(); b['revisionContext'] = copy.deepcopy(j['revisionContext'])
         for mutate in (lambda x:x['revisionContext'].update(baseHash='0'*64),

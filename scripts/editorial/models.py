@@ -333,6 +333,8 @@ class Models:
             "including its final punctuation. Do not paraphrase; do not shorten or embed it in a longer sentence "
             "by replacing its ending with が or another connective. Include every exact sentence in brief.protected too. "
             "When existingArticle is supplied, rewrite that exact existing URL using editorialCorrectionInstructions. "
+            "existingArticle and existingArticles supply identity/navigation only, not factual evidence; "
+            "never infer product, experience or usage claims from their titles. "
             "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "
             "Only sourced manufacturer usage warnings may remain; never add clinical advice. "
             "Preserve every supplied verifiedAuthorFacts statement exactly; never infer ownership or experience from legacy prose. "

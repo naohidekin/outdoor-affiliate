@@ -124,6 +124,22 @@ def extract_primary(product, url, html):
             if len(galleries) > 1:
                 return None
             images = [n.attrs.get('src', '') for n in _nodes(galleries[0], lambda n: n.tag == 'img')] if galleries else []
+            # Main product photo and its declared responsive variants belong to
+            # this already-validated No.683040 article, never to adjacent cards.
+            wrappers = _nodes(scope, lambda n: n.attrs.get('id') == 'itemWrap')
+            if len(wrappers) > 1:
+                return None
+            if wrappers:
+                main_gallery = _nodes(wrappers[0], lambda n: n.has('item-image'))
+                if len(main_gallery) > 1:
+                    return None
+                if main_gallery:
+                    for image in _nodes(main_gallery[0], lambda n: n.tag == 'img'):
+                        images.append(image.attrs.get('src', ''))
+                        for candidate in image.attrs.get('srcset', '').split(','):
+                            parts = candidate.split()
+                            if len(parts) == 2 and re.fullmatch(r'[1-9][0-9]*w', parts[1]):
+                                images.append(parts[0])
             selector = 'article#product #item; article#product ul.item-spec dl'
         elif pid == 'fp-001' and product.get('brand', '').casefold() in ('picogrill', 'ピコグリル'):
             if p.hostname != 'www.picogrill.ch' or p.path != '/grill/PICOGRILL-398.html' or p.query != 'language=jp' or model != '0398.SP':

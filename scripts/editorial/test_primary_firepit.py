@@ -63,6 +63,26 @@ class PrimaryFirepitTests(unittest.TestCase):
         self.assertIsNone(extract_primary(product, url, html.replace('https://www.uniflame.co.jp/\">', 'https://evil.example/\">')))
         self.assertIsNone(extract_primary(product, url, html.replace('</ul>', '<li><dl><dt>重量</dt><dd>3kg</dd></dl></li></ul>')))
 
+    def test_uniflame_validated_main_gallery_src_and_srcset_only(self):
+        product = {'id': 'fp-002', 'brand': 'ユニフレーム', 'specs': {'型番': '683040'}}
+        url = 'https://www.uniflame.co.jp/product/683040'
+        full = 'https://www.uniflame.co.jp/wordpress/wp-content/uploads/2014/02/040615_005_SQ.jpg'
+        small = full.replace('.jpg', '-400x400.jpg')
+        gallery = '<div id="itemWrap"><div class="item-image"><img src="' + small + '" srcset="' + small + ' 400w, ' + full + ' 1941w"></div></div>'
+        identity = '<div id="item"><p class="item-code">No.683040</p><h1 class="item-name">ファイアグリル</h1></div>'
+        spec = '<ul class="item-spec"><li><dl><dt>重量</dt><dd>約2.7kg</dd></dl></li></ul>'
+        page = lambda image_scope: '<article id="product">' + identity + image_scope + spec + '</article>'
+        self.assertEqual(extract_primary(product, url, page(gallery))['imageUrls'], [small, full])
+        for adjacent in ('<nav>' + gallery + '</nav>', '<aside>' + gallery + '</aside>',
+                         '<div class="related-products">' + gallery + '</div>',
+                         gallery.replace('id="itemWrap"', 'id="neighbor"'),
+                         '<div id="itemWrap"><aside>' + gallery + '</aside></div>'):
+            self.assertEqual(extract_primary(product, url, page(adjacent))['imageUrls'], [])
+        self.assertIsNone(extract_primary(product, url, page(gallery).replace('No.683040', 'No.683095')))
+        self.assertIsNone(extract_primary(product, url, page(gallery + gallery)))
+        external = gallery.replace(full + ' 1941w', 'https://evil.example/image.jpg 1941w')
+        self.assertEqual(extract_primary(product, url, page(external))['imageUrls'], [small])
+
 
 class FixedAmazonIdentityTests(unittest.TestCase):
     def test_fixed_tent_primary_overview_brand_not_pagewide(self):

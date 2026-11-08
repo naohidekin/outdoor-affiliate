@@ -102,7 +102,7 @@ function html(input, photos) {
   .brand{position:absolute;left:56px;top:43px;font-size:25px;font-weight:600;color:#fff;letter-spacing:.3px}
   #names{position:absolute;left:56px;top:132px;width:450px;height:104px;color:#DBEAFE;font-size:${count === 1 ? 26 : 23}px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
   .product-name{display:block}.model-token{display:inline-block;white-space:nowrap}#heading{position:absolute;left:56px;top:244px;width:450px;height:266px;color:#fff;font-size:58px;line-height:1.24;font-weight:700;letter-spacing:0;overflow-wrap:anywhere;line-break:strict}
-  .phrase{display:inline-block;white-space:nowrap}#footer{position:absolute;left:56px;top:557px;width:450px;height:38px;color:#BFDBFE;font-size:21px;font-weight:500;line-height:1.4}
+  .phrase{display:inline-block;white-space:nowrap}#heading.wrap-long-phrases .phrase{max-width:100%;white-space:normal}#footer{position:absolute;left:56px;top:557px;width:450px;height:38px;color:#BFDBFE;font-size:21px;font-weight:500;line-height:1.4}
   .photo{position:absolute;display:block;object-fit:contain;object-position:center;image-rendering:auto}
   .edge{position:absolute;left:576px;top:0;width:4px;height:630px;background:#DBEAFE}
   </style></head><body><main id="card"><div class="lake"></div><div class="brand">Camp Gear Lab</div><div class="accent"></div>
@@ -150,6 +150,7 @@ export async function renderSocialCard(raw) {
         [...el.children].every(child => child.getBoundingClientRect().right <= el.getBoundingClientRect().right);
       let size = 58;
       while (!fits(heading) && size > 40) heading.style.fontSize = --size + 'px';
+      if (!fits(heading)) heading.classList.add('wrap-long-phrases');
       if (!fits(heading)) throw Error('heading_overflow_requires_short_approved_input');
       let nameSize = parseInt(getComputedStyle(names).fontSize, 10);
       while (!fits(names) && nameSize > 20) names.style.fontSize = --nameSize + 'px';
