@@ -153,9 +153,19 @@ def valid_image_refresh(old, proposal, review):
             and review.get('polish') == old['review']['polish'], 'unchanged Gemini provenance required')
 
 
+def valid_codex_social_instruction(id, revision, text):
+    """Exact directives only; the one owner instruction is pinned to its reviewed proposal."""
+    explicit = text == f'post {id} {revision}'
+    soto = (id == 'article-42db462e1ce17ce82afb36ed'
+            and revision == '732c338b9c0cab5b9b5eaa6e591e26555f67b1b1846f6fd3918c5f21ef5fb24c'
+            and text == 'SOTOのX投稿はもう行ってください。これはもう気にせずに。')
+    require(explicit or soto, 'explicit social article/version instruction required')
+
+
 class Ledger:
-    def __init__(self, root, owner_id, production_schedule=None):
+    def __init__(self, root, owner_id, production_schedule=None, *, target_account_id=None):
         self.production_schedule = ProductionSchedule(production_schedule)
+        self.target_account_id = target_account_id
         raw = Path(root)
         require(raw.is_absolute(), 'root must be absolute')
         root = raw.resolve()
@@ -466,6 +476,89 @@ class Ledger:
                                      at=timestamp().isoformat(), source='codex', evidence=evidence), stage='approved')
             self._invalidate(db, id, 'article')
             return self._put(db, job, 'codex_approval')
+
+    def approve_social_from_codex(self, id, revision, actor, evidence):
+        """Trusted local operator API, explicit CLI only; never authenticate or post here.
+
+        The operator verifies the real owner's message and posting scope externally.
+        No Slack decision or message ID is invented. The retained source is limited
+        to the actual text, Codex thread and operator-observed timestamp.
+        """
+        require(actor == self.owner_id, 'owner mismatch')
+        require(isinstance(id, str) and isinstance(revision, str)
+                and re.fullmatch(r'[a-f0-9]{64}', revision), 'article and social revision required')
+        require(isinstance(evidence, dict) and set(evidence) ==
+                {'source', 'thread_id', 'observed_at', 'text', 'directive'}
+                and evidence.get('source') == 'codex', 'Codex social evidence required')
+        require(all(isinstance(evidence.get(k), str) and evidence[k].strip()
+                    for k in ('thread_id', 'observed_at', 'text')), 'message evidence required')
+        timestamp(evidence['observed_at'])
+        valid_codex_social_instruction(id, revision, evidence['text'])
+        evidence = json.loads(canonical(evidence))
+        request_id = 'codex-social-' + fingerprint(dict(article_id=id, revision=revision, actor=actor, evidence=evidence))
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            publication = job.get('publication') or {}
+            readback = publication.get('readback') or {}
+            require(publication.get('verified') is True and publication.get('revision') == job['revision']
+                    and isinstance(publication.get('url'), str) and publication['url'].startswith('https://')
+                    and readback.get('verified') is True and readback.get('fingerprint') == job['revision'],
+                    'current verified article publication required')
+            social = job.get('social') or {}
+            proposal = social.get('proposal') or {}
+            require(social.get('revision') == revision and fingerprint(proposal) == revision, 'social revision mismatch')
+            valid_review(social.get('review'), revision)
+            valid_social_mode(proposal)
+            valid_social_images(job, proposal)
+            require(proposal.get('platform') == 'x' and proposal.get('deliveryMode') == 'auto_x'
+                    and self.target_account_id and proposal.get('targetAccountId') == self.target_account_id,
+                    'configured X account required')
+            require(proposal.get('url') == publication['url'] and proposal.get('replyText') == publication['url'],
+                    'published article social URL required')
+            binding = dict(article_id=id, revision=revision, targetAccountId=proposal['targetAccountId'],
+                           textHash=fingerprint(proposal['text']),
+                           imageSha256s=[image['sha256'] for image in proposal['images']],
+                           replyText=proposal['replyText'])
+            require(evidence['directive'] == binding, 'social directive binding mismatch')
+            require(not social.get('publication'), 'social already published')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone(),
+                    'social effect requires reconciliation')
+            for folder in ('social-publications', 'social-outbox'):
+                marker = self.root / folder / (revision + '.json')
+                require(not marker.exists() and not marker.is_symlink(), 'social journal/outbox requires reconciliation')
+            approval = social.get('approval')
+            if approval:
+                require(job['stage'] == 'social_approved' and approval.get('request_id') == request_id
+                        and approval.get('evidence') == evidence and approval.get('source') == 'codex'
+                        and approval.get('action') == 'approved' and approval.get('user_id') == actor
+                        and approval.get('revision') == revision, 'social already approved or replay conflict')
+                return job
+            require(job['stage'] in ('social_held', 'social_review'), 'social approval stage unavailable')
+            requests = [json.loads(row[0]) for row in db.execute(
+                'SELECT data FROM requests WHERE job_id=? AND kind=?', (id, 'social'))]
+            deliveries = [json.loads(row[0]) for row in db.execute(
+                'SELECT data FROM events WHERE job_id=? AND kind=?', (id, 'delivered'))]
+            delivered = False
+            for req in requests:
+                scope, parts = req.get('scope') or {}, req.get('parts') or {}
+                if (req.get('manifest_hash') != revision or not isinstance(req.get('card_ts'), str)
+                        or not req['card_ts'] or not isinstance(parts, dict)
+                        or not all(scope.get(k) for k in SCOPE) or scope.get('user_id') != actor
+                        or parts.get('scope', parts) != scope):
+                    continue
+                if any(all(event.get(k) == req.get(k) for k in
+                           ('request_id', 'manifest_hash', 'article_id', 'scope', 'parts', 'card_ts'))
+                       and event.get('status') == 'delivered' for event in deliveries):
+                    delivered = True
+                    break
+            require(delivered, 'exact social revision delivery evidence required')
+            social['approval'] = dict(action='approved', user_id=actor, request_id=request_id, revision=revision,
+                source='codex', evidence=evidence, at=timestamp().isoformat(),
+                evidenceLimitations='Operator-observed Codex thread, actual text and timestamp; no message ID or Slack decision.')
+            job['stage'] = 'social_approved'
+            self._invalidate(db, id, 'social')
+            return self._put(db, job, 'codex_social_approval')
 
     def claim_effect(self, id, kind):
         require(kind in ('publish', 'publication', 'social'), 'unknown effect')

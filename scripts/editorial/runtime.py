@@ -70,7 +70,8 @@ class Runtime:
         if 'productionSchedule' in config and config['productionSchedule'] is None:
             raise ValueError('invalid productionSchedule')
         self.ledger = Ledger(self.root, config['slack']['user_id'],
-                             production_schedule=config.get('productionSchedule'))
+                             production_schedule=config.get('productionSchedule'),
+                             target_account_id=config.get('targetAccountId'))
         self.env = env_file(config['envFile'])
         # Explicit dedicated Gemini settings; keys remain in memory, never copied.
         if config.get('geminiEnvFile'):
@@ -1090,7 +1091,7 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'report', 'enable-social-autopost', 'refresh-social-images', 'hold-social-refresh', 'request-revisions', 'produce-revisions'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'approve-social-from-codex', 'report', 'enable-social-autopost', 'refresh-social-images', 'hold-social-refresh', 'request-revisions', 'produce-revisions'))
     parser.add_argument('--card-bundle')
     parser.add_argument('--prior-main-readback')
     parser.add_argument('--deliver', action='store_true')
@@ -1151,6 +1152,12 @@ def main():
                 raise ValueError('article_and_target_account_required')
             job = runtime.enable_social_autopost(args.id, args.target_account_id)
             value = {'status': job['stage'], 'articleId': job['id'], 'revision': job['social']['revision'], 'posted': False}
+        elif args.command == 'approve-social-from-codex':
+            if not args.id or not args.revision or not args.evidence_file:
+                raise ValueError('article_id_social_revision_and_user_message_evidence_required')
+            evidence = json.loads(Path(args.evidence_file).read_text())
+            job = runtime.ledger.approve_social_from_codex(args.id, args.revision, config['slack']['user_id'], evidence)
+            value = {'status': job['stage'], 'article_id': job['id'], 'revision': job['social']['revision'], 'posted': False}
         elif args.command == 'approve-from-codex':
             if not args.id or not args.revision or not args.evidence_file:
                 raise ValueError('article_id_revision_and_user_message_evidence_required')
