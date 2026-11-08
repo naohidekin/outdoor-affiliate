@@ -334,6 +334,10 @@ class Models:
             "The JSON list above is verifiedAuthorFacts. Copy EACH item into article.content as a complete verbatim sentence, "
             "including its final punctuation. Do not paraphrase; do not shorten or embed it in a longer sentence "
             "by replacing its ending with が or another connective. Include every exact sentence in brief.protected too. "
+            "Source provenance takes priority over style templates, including CLAUDE/SKILL storytelling examples. "
+            "When verifiedAuthorFacts is empty, write NO first-person past narrative, including generic camping mishaps "
+            "or past buying feelings; use third-person research instead. "
+            "Do not turn these prohibitions into long reader-facing disclaimers. "
             "When existingArticle is supplied, rewrite that exact existing URL using editorialCorrectionInstructions. "
             "existingArticle and existingArticles supply identity/navigation only, not factual evidence; "
             "never infer product, experience or usage claims from their titles. "
@@ -513,8 +517,11 @@ class Models:
             "Return ONLY {edits:[{index:integer,text:string}]}. Edit prose in eligible paragraphs only. "
             "Indices refer to the supplied eligible paragraph indices. Preserve all facts, meaning, numbers, "
             "links, headings, shortcodes, disclosure and protected expressions. Do not add medical advice. "
+            "Do not introduce ANY exact literal from brief.protected or brief.requiredExpressions into an eligible "
+            "paragraph, even if natural. These forbiddenExpressions must remain ONLY in their original locked paragraphs. "
+            "Do not move, copy or repeat them in edits. "
             "Use edits:[] if no correction is needed. Do not grade or approve publication.",
-            {"source": source, "brief": brief,
+            {"source": source, "brief": brief, "forbiddenExpressions": list(dict.fromkeys(fixed)),
              "editable": [{"index": i, "text": paragraphs[i]} for i in eligible]},
             "gemini-3.8-flash", gemini=True)
         if set(result) != {"edits"} or not isinstance(result["edits"], list):

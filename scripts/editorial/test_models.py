@@ -84,6 +84,21 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_draft_instruction_prioritizes_provenance_over_template_memoirs(self):
+        ctx = context()
+        ctx.update(verifiedAuthorFacts=[], CLAUDE='Style template: open with a personal camping mishap.',
+                   SKILL='Style template: describe past buying feelings.')
+        fake = Fake(writer_response(bundle()))
+        Models(ENV, fake).draft({}, ctx)
+        self.assertEqual(len(fake.calls), 1)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        instruction, data = prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)
+        for phrase in ('Source provenance takes priority over style templates', 'verifiedAuthorFacts is empty',
+                       'NO first-person past narrative', 'generic camping mishaps', 'past buying feelings',
+                       'third-person research', 'Do not turn these prohibitions into long reader-facing disclaimers'):
+            self.assertIn(phrase, instruction)
+        self.assertEqual(json.loads(data)['context'], ctx)
+
     def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
         good = bundle()
         short = copy.deepcopy(good)
@@ -466,6 +481,28 @@ class ModelTests(unittest.TestCase):
         for index, value in enumerate(bad):
             with self.subTest(index=index), self.assertRaises(ModelError):
                 Models(ENV, Fake(response(value, gemini=True))).polish(source, brief())
+
+    def test_polish_prompt_forbids_fixed_literals_in_eligible_edits_and_collision_still_rejects(self):
+        b = brief()
+        b['requiredExpressions'].append('使用時と収納時を分けて確認')
+        b['protected'].append('用途に合わせて選ぶ')
+        source = '## 寸法\n\n使用時と収納時を分けて確認してください。\n\n用途に合わせて選ぶ記事です。\n\n重量は2kgです。\n\n広告\n\n寸法を確かめる文章です。'
+        original = copy.deepcopy(b)
+        for literal in ('使用時と収納時を分けて確認', '用途に合わせて選ぶ'):
+            fake = Fake(response({'edits': [{'index': 5, 'text': 'ツーバーナーの寸法は、必ず' + literal + 'してください。'}]}, gemini=True))
+            with self.subTest(literal=literal), self.assertRaisesRegex(ModelError, '^Invalid polish edits$'):
+                Models(ENV, fake).polish(source, b)
+            self.assertEqual(len(fake.calls), 1)
+            prompt = fake.calls[0][2]['messages'][0]['content']
+            self.assertIn('Do not introduce ANY exact literal from brief.protected or brief.requiredExpressions', prompt)
+            self.assertIn('even if natural', prompt)
+            self.assertIn('original locked paragraphs', prompt)
+            payload = json.loads(prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+            self.assertEqual(payload['source'], source)
+            self.assertEqual(payload['brief'], original)
+            self.assertIn(literal, payload['forbiddenExpressions'])
+            self.assertEqual(payload['editable'], [{'index': 5, 'text': '寸法を確かめる文章です。'}])
+        self.assertEqual(b, original)
 
     def test_polish_secret_and_external_safe_gate_before_network(self):
         for source, change in [("body", {"externalSafe": False}), ("body", {"externalSafe": 1}),
