@@ -1,4 +1,6 @@
 import copy
+import base64
+import hashlib
 import html
 import json
 import tempfile
@@ -10,6 +12,147 @@ from presentation import article_body
 
 
 class SlackTests(unittest.TestCase):
+    def alias_fixture(self, root, mime='image/png', bucket='editorial-social-cards'):
+        from test_catalog_legacy_primary import JPEG
+        raw = (base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jzVQAAAAASUVORK5CYII=')
+               if mime == 'image/png' else JPEG)
+        extension = 'png' if mime == 'image/png' else 'jpg'
+        sha = hashlib.sha256(raw).hexdigest()
+        origin = 'https://project.supabase.co'
+        source = 'https://maker.example/product.' + extension
+        url = origin + '/storage/v1/object/public/' + bucket + '/' + sha[:2] + '/' + sha + '.' + extension
+        image = dict(productId='p1', url=source, sha256=sha, size=len(raw), contentType=mime, verified=True)
+        bundle = dict(article=dict(title='記事', content='本文', faqs=[], generationMeta={'socialCard': {
+                          'url': origin + '/storage/v1/object/public/editorial-social-cards/cc/' + 'c' * 64 + '.png'}}),
+                      products=[dict(id='p1', name='商品', imageUrl=source)], images=[image])
+        entry = dict(url=url, sha256=sha, size=len(raw), contentType=mime)
+        path = Path(root) / 'delivery-image-aliases.json'
+        path.write_text(json.dumps({source: entry}))
+        response = dict(url=url, status=200, headers={'content-type': mime}, body=raw)
+        return bundle, entry, path, response
+
+    def test_registered_delivery_alias_is_fresh_verified_and_never_changes_approved_bundle(self):
+        with tempfile.TemporaryDirectory() as root:
+            bundle, entry, _, response = self.alias_fixture(root)
+            before = copy.deepcopy(bundle)
+            posts = []
+            def call(method, data):
+                if method == 'chat.postMessage': posts.append(copy.deepcopy(data))
+                return self.call(method, data)
+            client = Slack(dict(self.config, stateRoot=root), call=call)
+            request = dict(request_id='r', article_id='a', manifest_hash='h', nonce='private')
+            with patch('catalog.Catalog') as catalog, patch('slack.time.sleep'):
+                catalog.return_value.request.return_value = response
+                for _ in range(2):
+                    client.deliver({'bundle': bundle}, request)
+                self.assertEqual(2, catalog.return_value.request.call_count)
+                catalog.assert_called_with({})
+                catalog.return_value.request.assert_called_with(entry['url'], {'Accept': 'image/png'},
+                    allowed_domains=['project.supabase.co'], exact_domains=True)
+            images = [p['blocks'][0] for p in posts if p.get('blocks', [{}])[0].get('type') == 'image']
+            self.assertEqual([entry['url']] * 2, [p['image_url'] for p in images])
+            self.assertEqual(before, bundle)
+
+    def test_missing_or_unregistered_alias_keeps_original_without_network(self):
+        with tempfile.TemporaryDirectory() as root:
+            bundle, _, path, _ = self.alias_fixture(root)
+            client = Slack(dict(self.config, stateRoot=root), call=self.call)
+            with patch('catalog.Catalog') as catalog:
+                for value in (None, {}):
+                    if value is None: path.unlink()
+                    else: path.write_text(json.dumps(value))
+                    self.assertEqual(bundle['images'][0]['url'], client.image_delivery_url(bundle['images'][0], bundle))
+                catalog.assert_not_called()
+
+    def test_stale_or_untrusted_alias_stops_before_any_slack_post(self):
+        for change in ({'sha256': 'a' * 64}, {'size': 999}, {'contentType': 'image/jpeg'},
+                       {'url': 'https://other.example/image.png'},
+                       {'url': 'https://project.supabase.co/storage/v1/object/public/other/image.png'}):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as root:
+                bundle, entry, path, _ = self.alias_fixture(root)
+                path.write_text(json.dumps({bundle['images'][0]['url']: dict(entry, **change)}))
+                client = Slack(dict(self.config, stateRoot=root), call=self.call)
+                with patch.object(client, 'post') as post, patch('catalog.Catalog') as catalog:
+                    with self.assertRaisesRegex(ValueError, 'slack_image_alias_'):
+                        client.deliver({'bundle': bundle}, {})
+                    post.assert_not_called(); catalog.assert_not_called()
+
+    def test_alias_fetch_bytes_mime_size_redirect_and_failure_are_fail_closed(self):
+        for change in ({'body': b'different'}, {'headers': {'content-type': 'image/jpeg'}},
+                       {'url': 'https://other.example/mirror.png'}, {'status': 403}, None):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as root:
+                bundle, _, _, response = self.alias_fixture(root)
+                client = Slack(dict(self.config, stateRoot=root), call=self.call)
+                with patch.object(client, 'post') as post, patch('catalog.Catalog') as catalog:
+                    if change is None: catalog.return_value.request.side_effect = RuntimeError('PRIVATE exception')
+                    else: catalog.return_value.request.return_value = dict(response, **change)
+                    with self.assertRaisesRegex(ValueError, '^slack_image_alias_verification_failed$'):
+                        client.deliver({'bundle': bundle}, {})
+                    post.assert_not_called()
+
+    def test_alias_bucket_size_limit_is_checked_before_public_fetch(self):
+        for size in (2 * 1024 * 1024, 2 * 1024 * 1024 + 1):
+            with self.subTest(size=size), tempfile.TemporaryDirectory() as root:
+                bundle, entry, path, _ = self.alias_fixture(root)
+                bundle['images'][0]['size'] = entry['size'] = size
+                path.write_text(json.dumps({bundle['images'][0]['url']: entry}))
+                client = Slack(dict(self.config, stateRoot=root), call=self.call)
+                with patch('catalog.Catalog') as catalog:
+                    catalog.return_value.request.side_effect = RuntimeError('offline boundary check')
+                    with self.assertRaisesRegex(ValueError, 'slack_image_alias_'):
+                        client.image_delivery_url(bundle['images'][0], bundle)
+                    if size == 2 * 1024 * 1024:
+                        catalog.return_value.request.assert_called_once()
+                    else:
+                        catalog.assert_not_called()
+
+    def test_delivery_bucket_png_and_jpeg_preserve_exact_bytes_and_approved_urls(self):
+        for mime in ('image/png', 'image/jpeg'):
+            with self.subTest(mime=mime), tempfile.TemporaryDirectory() as root:
+                bundle, entry, _, response = self.alias_fixture(root, mime, 'editorial-delivery-images')
+                before = copy.deepcopy(bundle)
+                posts = []
+                def call(method, data):
+                    if method == 'chat.postMessage': posts.append(copy.deepcopy(data))
+                    return self.call(method, data)
+                client = Slack(dict(self.config, stateRoot=root), call=call)
+                request = dict(request_id='r', article_id='a', manifest_hash='h', nonce='private')
+                with patch('catalog.Catalog') as catalog, patch('slack.time.sleep'):
+                    catalog.return_value.request.return_value = response
+                    client.deliver({'bundle': bundle}, request)
+                    catalog.return_value.request.assert_called_once_with(entry['url'], {'Accept': mime},
+                        allowed_domains=['project.supabase.co'], exact_domains=True)
+                image = next(p['blocks'][0] for p in posts if p['blocks'][0]['type'] == 'image')
+                self.assertEqual(entry['url'], image['image_url'])
+                self.assertEqual(before, bundle)
+
+    def test_jpeg_never_enters_card_bucket_and_extensions_and_mime_are_strict(self):
+        for mime, bucket, suffix in (('image/jpeg', 'editorial-social-cards', '.jpg'),
+                                     ('image/jpeg', 'editorial-social-cards', '.png'),
+                                     ('image/jpeg', 'editorial-delivery-images', '.png'),
+                                     ('image/png', 'editorial-delivery-images', '.jpg'),
+                                     ('image/jpeg', 'unapproved-bucket', '.jpg')):
+            with self.subTest(mime=mime, bucket=bucket, suffix=suffix), tempfile.TemporaryDirectory() as root:
+                bundle, entry, path, _ = self.alias_fixture(root, mime, bucket)
+                entry['url'] = entry['url'].rsplit('.', 1)[0] + suffix
+                path.write_text(json.dumps({bundle['images'][0]['url']: entry}))
+                client = Slack(dict(self.config, stateRoot=root), call=self.call)
+                with patch.object(client, 'post') as post, patch('catalog.Catalog') as catalog:
+                    with self.assertRaisesRegex(ValueError, 'slack_image_alias_'):
+                        client.deliver({'bundle': bundle}, {})
+                    post.assert_not_called(); catalog.assert_not_called()
+
+    def test_jpeg_alias_rejects_wrong_public_mime_or_changed_bytes_before_post(self):
+        for change in ({'headers': {'content-type': 'image/png'}}, {'body': b'changed JPEG'}):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as root:
+                bundle, _, _, response = self.alias_fixture(root, 'image/jpeg', 'editorial-delivery-images')
+                client = Slack(dict(self.config, stateRoot=root), call=self.call)
+                with patch.object(client, 'post') as post, patch('catalog.Catalog') as catalog:
+                    catalog.return_value.request.return_value = dict(response, **change)
+                    with self.assertRaisesRegex(ValueError, '^slack_image_alias_verification_failed$'):
+                        client.deliver({'bundle': bundle}, {})
+                    post.assert_not_called()
+
     def setUp(self):
         self.config = {'slack': {'team_id': 'T', 'bot_user_id': 'B', 'channel_id': 'C', 'thread_ts': '1793000000.000001'}}
         self.sent = None

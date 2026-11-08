@@ -8,6 +8,7 @@ import secrets
 import subprocess
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 from presentation import article_body, social_body
 
 
@@ -156,6 +157,65 @@ class Slack:
         self._receipt(ts, 'verified', data)
         return {'message_ts': ts, 'hash': digest(data), 'verified': True}
 
+    def image_delivery_url(self, image, bundle):
+        """Verify an exact-byte delivery alias; card storage remains PNG-only."""
+        source = image.get('url')
+        if self.state_root is None:
+            return source
+        registry = self.state_root / 'delivery-image-aliases.json'
+        if registry.is_symlink():
+            raise ValueError('slack_image_alias_registry_invalid')
+        if not registry.exists():
+            return source
+        try:
+            aliases = json.loads(registry.read_text())
+            if not isinstance(aliases, dict):
+                raise ValueError()
+        except (OSError, ValueError):
+            raise ValueError('slack_image_alias_registry_invalid') from None
+        if source not in aliases:
+            return source
+        alias = aliases[source]
+        formats = {'image/png': ('png', b'\x89PNG\r\n\x1a\n'), 'image/jpeg': ('jpg', b'\xff\xd8\xff')}
+        if (not isinstance(alias, dict) or set(alias) != {'url', 'sha256', 'size', 'contentType'}
+                or image.get('verified') is not True or not isinstance(alias.get('contentType'), str)
+                or alias['contentType'] not in formats
+                or image.get('contentType') != alias['contentType'] or type(alias.get('size')) is not int
+                or not 0 < alias['size'] <= 2 * 1024 * 1024 or alias['size'] != image.get('size')
+                or not isinstance(alias.get('sha256'), str) or not re.fullmatch('[a-f0-9]{64}', alias['sha256'])
+                or alias['sha256'] != image.get('sha256')):
+            raise ValueError('slack_image_alias_mismatch')
+        mime = alias['contentType']
+        extension, signature = formats[mime]
+        prefix = '/storage/v1/object/public/editorial-social-cards/'
+        try:
+            card = (bundle['article'].get('generationMeta') or {})['socialCard']
+            origin = urlsplit(card['url'])
+            if (origin.scheme != 'https' or not origin.hostname or origin.username or origin.password
+                    or origin.port is not None or origin.query or origin.fragment or not origin.path.startswith(prefix)):
+                raise ValueError()
+            buckets = ['editorial-delivery-images'] + (['editorial-social-cards'] if mime == 'image/png' else [])
+            allowed = {'https://' + origin.netloc + '/storage/v1/object/public/' + bucket + '/'
+                       + alias['sha256'][:2] + '/' + alias['sha256'] + '.' + extension for bucket in buckets}
+            expected = alias['url']
+            if expected not in allowed:
+                raise ValueError()
+        except (KeyError, TypeError, ValueError):
+            raise ValueError('slack_image_alias_destination_invalid') from None
+        try:
+            from catalog import Catalog
+            response = Catalog({}).request(expected, {'Accept': mime},
+                                           allowed_domains=[origin.hostname], exact_domains=True)
+            body = response['body']
+            if (response.get('status') != 200 or response.get('url') != expected
+                    or response['headers'].get('content-type', '').split(';')[0].strip().lower() != mime
+                    or not isinstance(body, bytes) or not body.startswith(signature)
+                    or len(body) != alias['size'] or hashlib.sha256(body).hexdigest() != alias['sha256']):
+                raise ValueError()
+        except Exception:
+            raise ValueError('slack_image_alias_verification_failed') from None
+        return expected
+
     def deliver(self, job, request):
         bundle = job['bundle']
         article = bundle['article']
@@ -172,6 +232,10 @@ class Slack:
             body = social_body(proposal)
         else:
             body = article_body(bundle)
+        # Verify registered mirrors before sending even the first body part.
+        images = proposal.get('images', []) if social else bundle.get('images', [])
+        delivery_images = [(image, self.image_delivery_url(image, bundle)) for image in images
+                           if isinstance(image.get('url'), str) and image['url'].startswith('https://')]
         parts = []
         pieces = mrkdwn_chunks(body)
         for i, part in enumerate(pieces):
@@ -218,10 +282,7 @@ class Slack:
             for part in chunks('\n'.join(lines)):
                 parts.append(self.post('商品カードの変更概要', [{'type': 'section', 'text': {'type': 'plain_text', 'text': part}}]))
         product_names = {p['id']: p['name'] for p in bundle.get('products', [])}
-        for image in (proposal.get('images', []) if social else bundle.get('images', [])):
-            url = image.get('url')
-            if not isinstance(url, str) or not url.startswith('https://'):
-                continue
+        for image, url in delivery_images:
             text = '画像：' + str(product_names.get(image.get('productId'), article['title']))
             parts.append(self.post(text, [{'type': 'image', 'image_url': url, 'alt_text': text}]))
         if job.get('kind') == 'article_revision':

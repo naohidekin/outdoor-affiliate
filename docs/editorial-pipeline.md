@@ -394,3 +394,11 @@ medical gateは不変で、最終reviewは候補と既存adviceの矛盾も審�
 公開時は、最初の公開mutationより前にローカルの固定template bytesと現在の公開HTMLから抽出した同asideのDOMを照合する。
 商品CAS後・記事CAS直前にも再照合し、公開readback後も同じDOMを要求する。既存adviceやtemplateが変わった場合は要照合で停止し、
 既存の安全情報を削除したり新しいclinical合格を作ったりしない。途中の書込み後に差分を発見した場合は通常のpartial/unknown journalを維持する。
+
+### Slackの商品写真の配信コピー
+
+`stateRoot/delivery-image-aliases.json` は元画像URLをキーに、`url/sha256/size/contentType` の4項目だけを登録する私的台帳。記事・商品・bundleの元URLと画像SHAは変えず、同一バイトの配信用コピーだけをSlack表示に使う。出典や画像同一性の審査を省略しない。
+
+コピーは記事のsocial-card manifestと同じ保存先originの、SHAを含む固定pathに限定。PNGは`editorial-social-cards`または`editorial-delivery-images`の`.png`、JPEGは`editorial-delivery-images`の`.jpg`だけを許可する。元画像のMIME・SHA・サイズが一致し、2MiB以下で、fresh GETの同一バイト照合を全て満たす場合だけ本文の配信を始める。古い対応表や内容不一致は停止する。
+
+アイキャッチ用bucket/uploaderは従来どおりPNG・1200×630を維持。商品写真用の独立bucketは公開・2MiB・PNG/JPEGに限定し、登録前に元データの完全デコードと保存後GETを確認する。変換・上書きはしない。送信途中の再開は既送信receiptと未送信の根拠を照合し、未知結果は盲目的に再送しない。本人の公開承認とSNS別承認は変更しない。
