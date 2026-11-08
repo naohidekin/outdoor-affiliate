@@ -328,6 +328,10 @@ class Models:
                 context.get(k) for k in ("SKILL", "skill", "template", "templates")):
             raise ModelError("Existing CLAUDE/SKILL article templates required in context")
         result, _ = self._call(
+            json.dumps(context.get("verifiedAuthorFacts", []), ensure_ascii=False) + "\n"
+            "The JSON list above is verifiedAuthorFacts. Copy EACH item into article.content as a complete verbatim sentence, "
+            "including its final punctuation. Do not paraphrase; do not shorten or embed it in a longer sentence "
+            "by replacing its ending with が or another connective. Include every exact sentence in brief.protected too. "
             "When existingArticle is supplied, rewrite that exact existing URL using editorialCorrectionInstructions. "
             "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "
             "Only sourced manufacturer usage warnings may remain; never add clinical advice. "

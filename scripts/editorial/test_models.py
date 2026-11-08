@@ -84,6 +84,32 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_revision_author_literals_lead_writer_prompt_and_paraphrases_still_fail(self):
+        facts = ['2020年からスノーピークの焚火台Lを使っています。',
+                 '最初の焚き火台はキャプテンスタッグでした。']
+        ctx = context()
+        ctx.update(verifiedAuthorFacts=facts,
+                   existingArticle={'slug': 'tent-guide', 'content': 'LEGACY_CONTEXT' * 4000})
+        candidate = bundle()
+        candidate['article']['content'] += '\n' + '\n'.join(facts)
+        candidate['brief']['protected'].extend(facts)
+        fake = Fake(writer_response(candidate))
+        result = Models(ENV, fake).draft({}, ctx)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        self.assertTrue(prompt.startswith(json.dumps(facts, ensure_ascii=False) + '\n'))
+        instruction = prompt[:prompt.index('LEGACY_CONTEXT')]
+        for requirement in ('complete verbatim sentence', 'Do not paraphrase',
+                            'do not shorten', 'が', 'brief.protected'):
+            self.assertIn(requirement, instruction)
+        self.assertEqual(result['article']['content'], candidate['article']['content'])
+        self.assertEqual(result['brief']['protected'], candidate['brief']['protected'])
+        for fact in facts:
+            paraphrased = copy.deepcopy(candidate)
+            paraphrased['article']['content'] = paraphrased['article']['content'].replace(
+                fact, fact[:-1] + 'が、選び方は用途によります。')
+            with self.subTest(fact=fact), self.assertRaisesRegex(ModelError, 'Verified author fact removed'):
+                Models(ENV, Fake(writer_response(paraphrased))).draft({}, ctx)
+
     def test_research_rejects_unmeasured_firsthand_title(self):
         themes = copy.deepcopy(THEMES)
         themes['themes'][0]['title'] = '冬のバーナー実測結果'
