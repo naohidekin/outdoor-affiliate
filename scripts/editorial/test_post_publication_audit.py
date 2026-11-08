@@ -118,6 +118,40 @@ class AuditTests(unittest.TestCase):
         self.assertFalse(_merchant_identity(p, 'ST-032RS', 'スノーピーク ST-032R 焚火台'))
         self.assertFalse(_merchant_identity(p, 'ST-032RS', 'スノーピーク ST-032RS 専用収納ケース'))
 
+    def test_firepit_accessory_only_titles_fail_the_full_audit(self):
+        job, html = fixture()
+        job['bundle']['products'][0].update(name='ユニフレーム ファイアグリル 683040',
+            brand='ユニフレーム', categoryId='firepit', specs={'型番': '683040'})
+        for title in ('ユニフレーム 683040 焚火台用 焼き網',
+                      'ユニフレーム 683040 焚火台用 ロストル',
+                      'ユニフレーム 683040 焚き火台 用 焼き網'):
+            with self.subTest(title=title):
+                catalog = FakeCatalog(html)
+                catalog.merchant = '<title>' + title + '</title>'
+                result = self.run_audit(job, catalog=catalog)
+                self.assertFalse(result['passed'], result)
+                self.assertEqual('failed', result['status'], result)
+                destinations = [c for c in result['checks'] if c['name'].startswith('destination.')]
+                self.assertEqual(2, len(destinations))
+                self.assertTrue(all(c['status'] == 'failed' and c['reason'] ==
+                    'merchant_destination_or_product_identity_mismatch' for c in destinations), result)
+                self.assertTrue(all(c['status'] == 'passed' for c in result['checks']
+                                    if not c['name'].startswith('destination.')), result)
+
+    def test_genuine_firepit_and_body_with_accessory_bundles_pass_full_audit(self):
+        job, html = fixture()
+        job['bundle']['products'][0].update(name='ユニフレーム ファイアグリル 683040',
+            brand='ユニフレーム', categoryId='firepit', specs={'型番': '683040'})
+        for title in ('ユニフレーム(UNIFLAME) ファイアグリル 683040 キャンプ用グリル・焚火台',
+                      'ユニフレーム 683040 焚火台本体 焼き網・ロストル付き',
+                      'ユニフレーム 683040 焚火台本体＋焚火台用 焼き網・ロストルセット'):
+            with self.subTest(title=title):
+                catalog = FakeCatalog(html)
+                catalog.merchant = '<title>' + title + '</title>'
+                result = self.run_audit(job, catalog=catalog)
+                self.assertTrue(result['passed'], result)
+                self.assertEqual('passed', result['status'])
+
     def test_explicit_alphabetic_model_is_not_discarded(self):
         p = {'name': 'TokyoCamp 焚火台 HAKOSUKA', 'brand': 'TokyoCamp', 'categoryId': 'firepit', 'specs': {'型番': 'HAKOSUKA'}}
         self.assertEqual(_audit_model(p), 'HAKOSUKA')

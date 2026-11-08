@@ -61,10 +61,12 @@ def _merchant_identity(product, model, title):
     if re.search(accessory, title, re.I) and not re.search(accessory, name, re.I):
         return False
     # Positive product-type evidence, independent of brand/model substrings.
+    # A compatibility qualifier (焚火台用) describes accessories, not a firepit
+    # body. Keep independent body mentions valid in real body+accessory bundles.
     types = {'burner': r'バーナー|ストーブ|コンロ|burner|stove', 'tent': r'テント|tent',
              'tarp': r'タープ|tarp', 'chair': r'チェア|椅子|chair', 'table': r'テーブル|table',
              'lantern': r'ランタン|lantern', 'sleeping-bag': r'寝袋|シュラフ|sleeping\s*bag',
-             'cooler': r'クーラー|cooler', 'firepit': r'焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill'}
+             'cooler': r'クーラー|cooler', 'firepit': r'(?:焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill)(?!\s*用)'}
     pattern = types.get(product.get('categoryId'))
     if pattern is None:
         pattern = next((p for p in types.values() if re.search(p, name, re.I)), None)
