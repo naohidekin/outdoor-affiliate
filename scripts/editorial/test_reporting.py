@@ -2,6 +2,8 @@
 import copy
 from datetime import datetime, timezone
 import json
+import sqlite3
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -261,6 +263,40 @@ class ReportTests(unittest.TestCase):
                 self.assertEqual(len(slack.messages), 2)
                 self.assertEqual(reporter.send('monthly', now=self.now, manual=True)['status'], 'already_verified')
                 self.assertEqual(len(calls), 3)
+
+    def test_all_three_slack_digests_include_manager_row_in_matching_period(self):
+        for kind, expected in (('weekly', '入力123'), ('editorial', '入力123'), ('monthly', '入力80')):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                dbpath = root / 'ledger.sqlite3'
+                with sqlite3.connect(dbpath) as db:
+                    db.execute('CREATE TABLE meta(key TEXT PRIMARY KEY,value TEXT)')
+                    db.execute('CREATE TABLE events(id INTEGER PRIMARY KEY,at TEXT,kind TEXT,data TEXT)')
+                    for fp, at, value in (('a' * 64, '2026-10-15T20:00:00+09:00', 80),
+                                           ('b' * 64, '2026-11-03T20:00:00+09:00', 123)):
+                        row = dict(stateFingerprint=fp, status='evaluating', requestedModel='gpt-6-astra',
+                                   actualModel=None, actualInvoiceUsd=None, usage=None)
+                        db.execute('INSERT INTO events(at,kind,data) VALUES (?,?,?)',
+                                   (at, 'manager_receipt', json.dumps(row)))
+                        row.update(status='completed', usage=dict(input_tokens=value, output_tokens=10))
+                        db.execute('INSERT INTO events(at,kind,data) VALUES (?,?,?)',
+                                   (at, 'manager_receipt', json.dumps(row)))
+                        db.execute('INSERT INTO meta VALUES (?,?)', ('editorial_manager:' + fp, json.dumps(row)))
+                before = hashlib.sha256(dbpath.read_bytes()).hexdigest()
+                metrics = snapshot('2026-10-01', '2026-10-31')
+                metrics['collectedAt'] = self.now.isoformat()
+                metrics['previous'].update(startDate='2026-09-01', endDate='2026-09-30')
+                slack = SlackFake()
+                reporter = Reporter(dict(self.config, stateRoot=str(root)), slack, collector=lambda *_: metrics)
+                self.assertEqual('verified', reporter.send(kind, now=self.now, manual=True)['status'])
+                text = slack.messages[0]
+                self.assertEqual(1, text.count('管理CLI（運用のみ'))
+                self.assertIn(expected, text)
+                self.assertIn('実モデル未確認', text)
+                self.assertIn('実請求USD未確認', text)
+                self.assertNotIn('a' * 64, text)
+                self.assertLessEqual(len(text), 12000)
+                self.assertEqual(before, hashlib.sha256(dbpath.read_bytes()).hexdigest())
 
 
 if __name__ == '__main__':

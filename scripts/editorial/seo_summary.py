@@ -2,7 +2,8 @@
 
 Weekly is seven inclusive JST dates through today, distinct from the analytics
 report's rolling 28-day measurement window. Monthly is the previous JST calendar
-month. Only dated agent reports, usage.json and editorial usage/*.json are read;
+month. Read dated reports, usage.json, editorial usage/*.json and bounded
+operating-ledger manager receipts only;
 sourcePaths, provider bodies and raw logs are never followed or rendered.
 """
 from datetime import date, datetime, timedelta, timezone
@@ -11,6 +12,7 @@ import itertools
 import json
 import math
 import re
+import sqlite3
 
 JST = timezone(timedelta(hours=9))
 MAX_BYTES = 128 * 1024
@@ -317,6 +319,182 @@ def _usage(seo_root, editorial_root, start, end, now, reader):
     return '\n'.join(lines)
 
 
+
+_MANAGER_FIELDS = ('input_tokens', 'output_tokens', 'cached_input_tokens',
+                   'cache_write_input_tokens', 'reasoning_tokens')
+_MANAGER_RESPONSES = ('executing', 'completed', 'blocked', 'stale', 'invalid_decision')
+_MANAGER_STATES = ('evaluating', 'executing', 'completed', 'blocked', 'stale',
+                   'invalid_decision', 'provider_failed', 'requires_reconciliation',
+                   'budget_exhausted', 'input_limit', 'unconfigured')
+_MANAGER_NO_ROUTE = ('budget_exhausted', 'input_limit', 'unconfigured', 'requires_reconciliation')
+
+
+def manager_usage(editorial_root, kind='weekly', now=None):
+    """Read operating SQLite only; allocate each unique FP at its reservation JST.
+
+    Immutable events supply time and measured evidence. Matching meta is a current
+    projection, never another charge. State counts are latest-per-FP as of now,
+    including carried unresolved work; usage/denials are allocated to their own
+    period timestamps. Token availability is independent of operational health.
+    No operator files, session logs or models.
+    Missing/corrupt/oversized ledgers fail closed rather than imply zero spending.
+    """
+    now = _now(now)
+    start, end = ((now.date() - timedelta(days=now.weekday()), now.date())
+                  if kind == 'editorial' else _period(kind, now))
+    result = dict(status='unavailable', readStatus='unavailable', measurementStatus='missing',
+        stateCounts={s: None for s in _MANAGER_STATES}, latestStatus=None, pendingCalls=None,
+        reconciliationRequiredCount=None, budgetDeniedCount=None, startDate=start.isoformat(), endDate=end.isoformat(),
+        requestedModel='gpt-6-astra', actualModel=None, actualModelMissingCalls=None,
+        reservedCalls=None, responseCalls=None, usageCalls=None, missingUsageCalls=None,
+        tokens={k: None for k in _MANAGER_FIELDS}, missingByField={k: None for k in _MANAGER_FIELDS},
+        actualInvoiceUsd=None, measuredInvoiceUsd=None, invoiceMissingCalls=None,
+        estimatedCredits=None, incomplete=True)
+    if editorial_root is None:
+        return result
+    ledger = Path(editorial_root).absolute() / 'ledger.sqlite3'
+    if ledger.is_symlink() or ledger.parent.is_symlink() or not ledger.is_file():
+        return result
+    groups, projections = {}, {}
+    byte_count, incomplete = 0, False
+
+    def decode(raw):
+        nonlocal byte_count
+        byte_count += len(raw.encode('utf-8'))
+        if byte_count > MAX_BYTES * MAX_FILES or len(raw.encode('utf-8')) > MAX_BYTES:
+            raise ValueError('manager_summary_limit')
+        value = json.loads(raw)
+        return value if isinstance(value, dict) else {}
+
+    def consume(group, row):
+        usage = row.get('usage')
+        valid = {k: v for k in _MANAGER_FIELDS if isinstance(usage, dict)
+                 for v in [usage.get(k)] if type(v) is int and _num(v) is not None}
+        # Overwrite the same measurement across executing/completed, never sum it.
+        group['tokens'].update(valid)
+        group['response'] |= row.get('status') in _MANAGER_RESPONSES or bool(valid)
+        actual = row.get('actualModel')
+        group['actualModel'] = (actual if isinstance(actual, str) and len(actual) <= 65
+            and re.fullmatch(r'(?:gpt-|claude-|gemini-|o[1-9])[A-Za-z0-9_.-]*', actual) else None)
+        invoice = _num(row.get('actualInvoiceUsd'))
+        if invoice is not None:
+            group['invoice'] = invoice
+
+    db = None
+    try:
+        db = sqlite3.connect(ledger.as_uri() + '?mode=ro', uri=True, timeout=.2)
+        db.execute('PRAGMA query_only=ON')
+        # Bound SQL work as well as result bytes/rows; no database setup or writes.
+        ticks = [0]
+        def progress():
+            ticks[0] += 1
+            return int(ticks[0] > 2000)
+        db.set_progress_handler(progress, 1000)
+        db.execute('BEGIN')
+        for index, (key, raw) in enumerate(db.execute(
+                'SELECT key,value FROM meta WHERE substr(key,1,?)=? LIMIT ?',
+                (len('editorial_manager:'), 'editorial_manager:', MAX_ROWS + 1))):
+            if index >= MAX_ROWS:
+                raise ValueError('manager_summary_limit')
+            fp = key[len('editorial_manager:'):]
+            if re.fullmatch(r'[a-f0-9]{64}', fp):
+                projections[fp] = decode(raw)
+        for index, (at, raw) in enumerate(db.execute(
+                'SELECT at,data FROM events WHERE kind=? ORDER BY id LIMIT ?',
+                ('manager_receipt', MAX_ROWS * 8 + 1))):
+            if index >= MAX_ROWS * 8:
+                raise ValueError('manager_summary_limit')
+            row = decode(raw)
+            fp = row.get('stateFingerprint')
+            if not isinstance(fp, str) or not re.fullmatch(r'[a-f0-9]{64}', fp):
+                incomplete = True
+                continue
+            instant = _instant(at)
+            if instant is None:
+                incomplete = True
+                continue
+            if instant > now:
+                continue
+            status = row.get('status')
+            if status not in _MANAGER_STATES:
+                incomplete = True
+                continue
+            # Pre-call denials contain only status/FP in the actual manager.
+            # They are operational evidence, not model responses/reservations.
+            if row.get('requestedModel') != 'gpt-6-astra' and not (
+                    'requestedModel' not in row and status in _MANAGER_NO_ROUTE):
+                incomplete = True
+                continue
+            group = groups.setdefault(fp, dict(reservedAt=None, deniedAt=None, tokens={}, response=False,
+                                               actualModel=None, invoice=None, latest=None, lastOrder=0))
+            if status == 'budget_exhausted':
+                group['deniedAt'] = min(group['deniedAt'], instant) if group['deniedAt'] else instant
+            if row.get('status') == 'evaluating':
+                group['reservedAt'] = min(group['reservedAt'], instant) if group['reservedAt'] else instant
+            consume(group, row)
+            group['latest'] = row
+            group['lastOrder'] = index
+        # Join only a projection backed by that exact as-of event, not future or
+        # unlogged meta edits. This cannot add a reservation/response/token twice.
+        for fp, group in groups.items():
+            if projections.get(fp) == group['latest']:
+                consume(group, projections[fp])
+    except (OSError, sqlite3.Error, ValueError, TypeError, UnicodeError, OverflowError, RecursionError):
+        return result
+    finally:
+        if db is not None:
+            db.close()
+    selected = [g for g in groups.values() if g['reservedAt'] and start <= g['reservedAt'].date() <= end]
+    count = len(selected)
+    tokens = {k: _num(sum(g['tokens'][k] for g in selected if k in g['tokens']))
+              if any(k in g['tokens'] for g in selected) else None for k in _MANAGER_FIELDS}
+    invoices = [g['invoice'] for g in selected if g['invoice'] is not None]
+    models = [g['actualModel'] for g in selected if g['actualModel'] is not None]
+    states = {status: sum(g['latest']['status'] == status for g in groups.values()) for status in _MANAGER_STATES}
+    pending = states['evaluating'] + states['executing']
+    reconciling = states['requires_reconciliation']
+    latest = max(groups.values(), key=lambda g: g['lastOrder'])['latest']['status'] if groups else None
+    operational = ('requires_reconciliation' if reconciling else 'pending' if pending
+                   else 'unknown' if incomplete else 'ok' if latest in (None, 'completed') else latest)
+    measurement = ('available' if count and all(k in g['tokens'] for g in selected for k in _MANAGER_FIELDS)
+                   else 'partial' if any(g['tokens'] for g in selected) else 'missing')
+    denied = sum(bool(g['deniedAt'] and start <= g['deniedAt'].date() <= end) for g in groups.values())
+    result.update(status=operational, readStatus='ok', measurementStatus=measurement, stateCounts=states,
+        latestStatus=latest, pendingCalls=pending, reconciliationRequiredCount=reconciling, budgetDeniedCount=denied,
+        reservedCalls=count, responseCalls=sum(g['response'] for g in selected),
+        usageCalls=sum(bool(g['tokens']) for g in selected),
+        missingUsageCalls=sum(not g['tokens'] for g in selected), tokens=tokens,
+        missingByField={k: sum(k not in g['tokens'] for g in selected) for k in _MANAGER_FIELDS},
+        actualModel=models[0] if count and len(models) == count and len(set(models)) == 1 else None,
+        actualModelMissingCalls=count - len(models),
+        actualInvoiceUsd=_num(sum(invoices)) if count and len(invoices) == count else None,
+        measuredInvoiceUsd=_num(sum(invoices)) if invoices else None,
+        invoiceMissingCalls=count - len(invoices), incomplete=incomplete)
+    return result
+
+
+def manager_usage_summary(editorial_root, kind='weekly', now=None):
+    """A separate CLI row; API estimates/SEO credits remain in their old formats."""
+    data = manager_usage(editorial_root, kind, now)
+    prefix = f"管理CLI（運用のみ・{data['startDate']}〜{data['endDate']} JST）要求gpt-6-astra"
+    if data['readStatus'] != 'ok':
+        return prefix + ' / 状態:未確認・計測:未取得 / 実モデル未確認 / 予約・応答・usage未取得 / tokens未確認 / 実請求USD未確認・credits推定未取得'
+    labels = dict(ok='完了', pending='処理中', requires_reconciliation='要照合',
+        budget_exhausted='予算上限', provider_failed='呼出失敗', invalid_decision='判断形式未確認',
+        blocked='ゲート保留', stale='状態更新待ち', input_limit='入力上限', unconfigured='未設定', unknown='未確認')
+    state = labels.get(data['status'], '未確認')
+    measurement = dict(available='取得済み', partial='一部取得', missing='未取得')[data['measurementStatus']]
+    model = '実モデル' + data['actualModel'] if data['actualModel'] else '実モデル未確認'
+    stats = '・'.join(label + _format(data['tokens'][key]) for label, key in
+        (('入力', 'input_tokens'), ('出力', 'output_tokens'), ('cache読', 'cached_input_tokens'),
+         ('cache書', 'cache_write_input_tokens'), ('reasoning', 'reasoning_tokens')))
+    missing = '/'.join(str(data['missingByField'][k]) for k in _MANAGER_FIELDS)
+    return (prefix + f" / 状態:{state}・計測:{measurement}（現在評価中{data['stateCounts']['evaluating']}件・実行中{data['stateCounts']['executing']}件・要照合{data['reconciliationRequiredCount']}件） / {model}（実モデル欠測{data['actualModelMissingCalls']}件） / "
+        f"予算拒否{data['budgetDeniedCount']}件（予約外）・予約{data['reservedCalls']}件・応答{data['responseCalls']}件・usage取得{data['usageCalls']}件・usage未取得{data['missingUsageCalls']}件 / "
+        f"{stats} tokens（既知分のみ、項目別欠測{missing}件・同順） / "
+        f"実請求USD{_format(data['actualInvoiceUsd'])}・credits推定未取得" +
+        (' / 時刻・形式未確認の除外あり' if data['incomplete'] else ''))
+
 def build_seo_summary(seo_root, editorial_root, kind='weekly', now=None):
     """Return weekly <=4500 / monthly <=6000 chars; missing roots allowed. No writes."""
     now = _now(now)
@@ -326,9 +504,11 @@ def build_seo_summary(seo_root, editorial_root, kind='weekly', now=None):
     reader = _Reader()
     reports = _reports(seo_root, start, end, reader, kind)
     usage = _usage(seo_root, editorial_root, start, end, now, reader)
+    manager = manager_usage_summary(editorial_root, kind, now)
     lines = [f'SEO作業・使用量の記録 {start.isoformat()}〜{end.isoformat()}（JST）',
              '既存記録の抜粋です。新しいSEO判断や因果・成果の判定は追加していません。',
-             _clip(reports, 3400 if kind == 'monthly' else 2250), _clip(usage, 1550)]
+             _clip(reports, max(0, (3400 if kind == 'monthly' else 2250) - len(manager))),
+             _clip(usage, 1550), manager]
     if reader.notes:
         lines.append('確認範囲: ' + ' / '.join(sorted(reader.notes)))
     lines.append('予定（JST）: SEOは月・木14時、記事は水曜9時。週次報告は月曜20時、編集状況は木曜20時、月次報告は毎月5日20時。')

@@ -217,7 +217,8 @@ class Reporter:
             jobs = jobs or []
             unavailable = False
             if kind == 'editorial':
-                text = editorial_report(jobs, now=now)
+                from seo_summary import manager_usage_summary
+                text = editorial_report(jobs, now=now) + '\n\n' + manager_usage_summary(self.root, kind='editorial', now=now)
             else:
                 from analytics import build_report
                 if kind == 'monthly':
