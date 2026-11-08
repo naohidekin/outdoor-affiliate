@@ -62,6 +62,28 @@ def reason(error):
     return text if re.fullmatch(r'[A-Za-z0-9_ .:/-]{1,180}', text) else type(error).__name__
 
 
+def safe_publication_diagnostic(value):
+    if not isinstance(value, dict):
+        return {}
+    result = {}
+    phases = {'input_environment', 'dependency_setup', 'execution', 'product_updates', 'article_update',
+              'article_readback', 'cache_revalidation', 'public_readback', 'image_readback', 'subprocess'}
+    operations = {'db_read_articles', 'db_read_products', 'db_patch_articles', 'db_patch_products'}
+    if isinstance(value.get('phase'), str) and value.get('phase') in phases:
+        result['phase'] = value['phase']
+    if isinstance(value.get('operation'), str) and value.get('operation') in operations:
+        result['operation'] = value['operation']
+    if type(value.get('httpStatus')) is int and 100 <= value['httpStatus'] <= 599:
+        result['httpStatus'] = value['httpStatus']
+    if isinstance(value.get('dbCode'), str) and re.fullmatch(r'[A-Z0-9]{5}', value['dbCode']):
+        result['dbCode'] = value['dbCode']
+    if type(value.get('exitCode')) is int and -128 <= value['exitCode'] <= 255:
+        result['exitCode'] = value['exitCode']
+    if value.get('timedOut') is True:
+        result['timedOut'] = True
+    return result
+
+
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
                  analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
@@ -168,14 +190,24 @@ class Runtime:
             'evidence': {'requestId': approval['request_id'], 'approvedAt': approval['at'],
                          'source': approval.get('source', 'authenticated-slack-receiver')}}
         request = {'action': action, 'bundle': job['bundle'], 'revision': job['revision'], 'approval': bound_approval}
-        result = subprocess.run(command, input=json.dumps(request), env=child_env,
-                                capture_output=True, text=True, timeout=180, cwd=self.config['repo'])
+        def failure(diagnostic):
+            error = ValueError('publication_result_unknown')
+            error.diagnostic = safe_publication_diagnostic(diagnostic)
+            return error
+        try:
+            result = subprocess.run(command, input=json.dumps(request), env=child_env,
+                                    capture_output=True, text=True, timeout=180, cwd=self.config['repo'])
+        except subprocess.TimeoutExpired:
+            raise failure({'phase': 'subprocess', 'timedOut': True}) from None
         try:
             value = json.loads(result.stdout.strip().splitlines()[-1])
+            if not isinstance(value, dict):
+                raise ValueError('invalid publisher result')
         except (ValueError, IndexError):
-            raise ValueError('publication_result_unknown') from None
+            raise failure({'phase': 'subprocess', 'exitCode': result.returncode}) from None
         if result.returncode or value.get('error'):
-            raise ValueError('publication_result_unknown')
+            raise failure({**safe_publication_diagnostic(value.get('diagnostic')),
+                           'exitCode': result.returncode})
         return value
 
     def _context(self):
@@ -858,8 +890,10 @@ class Runtime:
                                                 'publish-revision' if job.get('kind') == 'article_revision' else 'publish', job)
                         self.ledger.record_publication(job['id'], job['revision'], result)
                         self.ledger.finish_effect(job['id'], 'publish', {'status': 'success', **result})
-                    except Exception:
-                        self.ledger.finish_effect(job['id'], 'publish', {'status': 'unknown', 'reason': 'publication_requires_reconciliation'})
+                    except Exception as error:
+                        diagnostic = safe_publication_diagnostic(getattr(error, 'diagnostic', None))
+                        self.ledger.finish_effect(job['id'], 'publish', {'status': 'unknown', 'reason': 'publication_requires_reconciliation',
+                            **({'diagnostic': diagnostic} if diagnostic else {})})
                         raise
                     self.slack.notice('【公開確認済み】' + job['bundle']['article']['title'] + '\n' + result['url'])
                 elif job['stage'] == 'review':

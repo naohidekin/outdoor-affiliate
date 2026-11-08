@@ -14,6 +14,8 @@ import { parseEnv } from 'node:util';
 import { withPublicationLock, seoRoot } from '../seo/article-guard.mjs';
 import { detectMedicalRisks } from '../../src/lib/medical-review-gate.mjs';
 
+import { safeDiagnostic } from './publisher-diagnostics.mjs';
+
 const SITE = 'https://camp-gear-lab.com';
 const articleFields = {
   id: 'id', title: 'title', slug: 'slug', categoryId: 'category_id', content: 'content', excerpt: 'excerpt', productIds: 'product_ids',
@@ -376,6 +378,7 @@ export function productionDependencies(env) {
 }
 async function main() {
   let mutationPossible = false;
+  let phase = 'input_environment';
   try {
     const args = parseArguments(process.argv.slice(2));
     const env = loadEnv(args.envFile);
@@ -388,20 +391,23 @@ async function main() {
     const input = JSON.parse(raw);
     if (args.action) { requireValue(!input.action || input.action === args.action, 'conflicting action'); input.action = args.action; }
     if (['publish', 'publish-revision', 'publish-corrected'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
+    phase = 'dependency_setup';
     const deps = input.action === 'publish-corrected'
       ? (await import('./corrected-publisher.mjs')).correctedDependencies(env)
       : ['stage-revision', 'publish-revision'].includes(input.action)
       ? (await import('./revision-publisher.mjs')).revisionDependencies(env) : productionDependencies(env);
     deps.rawRequest = raw;
     mutationPossible = true;
+    phase = 'execution';
     const result = await execute(input, deps);
     process.stdout.write(JSON.stringify(result) + '\n');
-  } catch {
+  } catch (error) {
     // Never print raw exception, HTTP body, URL query, env values or stack.
-    process.stdout.write(JSON.stringify({ error: mutationPossible ? 'publication_result_unknown' : 'publisher_input_or_environment_invalid', verified: false }) + '\n');
+    process.stdout.write(JSON.stringify({ error: mutationPossible ? 'publication_result_unknown' : 'publisher_input_or_environment_invalid', verified: false, diagnostic: safeDiagnostic({phase,...error?.diagnostic}) }) + '\n');
     process.exitCode = 1;
   }
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+// Do not top-level await: revision/correction modules import shared exports from this module.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) void main();
 
 export { articleFields, productFields, normalizeTimestamps, selectedRow, equal, requireValue, sha, timestamp };

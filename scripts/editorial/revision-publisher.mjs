@@ -117,6 +117,7 @@ export async function executeRevision(input,deps) {
     candidate.generation_meta={...(input.bundle.article.generationMeta||{}),editorialRuntime:{revision:input.revision,author:input.bundle.article.author}};
     candidate.updated_at=(deps.now||timestamp)();
     const patch=Object.fromEntries(['title','content','excerpt','meta_description','faqs','tags','product_ids','generation_meta','updated_at'].map(k=>[k,candidate[k]]));
+    let phase='product_updates';
     try {
       for(const change of c.productPatches.filter(p=>pending.includes(p.id))) {
         const base=c.baseProducts.find(p=>p.id===change.id),desired=c.candidateProducts.find(p=>p.id===change.id);
@@ -132,23 +133,46 @@ export async function executeRevision(input,deps) {
       const current=await deps.db.findArticles(c.baseArticle.id,c.baseArticle.slug);
       check(current.length===1 && equal(selectedRow(current[0],articleFields),row(c.baseArticle)),'article changed during product updates');
       await verifyInheritedPresentation(input,deps);
+      phase='article_update';
       const changed=await deps.db.patchPublishedCAS(current[0],patch);
       check(Array.isArray(changed) && changed.length===1,'published article CAS conflict');
+      phase='article_readback';
       const readback=await deps.db.findArticles(c.baseArticle.id,c.baseArticle.slug);
       check(readback.length===1 && equal(selectedRow(readback[0],articleFields),normalizeTimestamps(candidate)),'revision DB readback mismatch');
       await productsEqual(deps.db,c.candidateProducts);
       const pages=new Map(affected.filter(p=>p.status==='published').map(p=>[p.slug,p.category_id]));
       pages.set(c.baseArticle.slug,c.baseArticle.categoryId);
+      phase='cache_revalidation';
       for(const [slug,category] of pages)await deps.revalidate(slug,category);
       const url='https://camp-gear-lab.com/articles/'+c.baseArticle.slug;
-      const publicHTML=await deps.publicGet(url);
-      check(verifyPublicHTML(publicHTML,input.bundle),'revision public HTML mismatch');
-      await verifyInheritedPresentation(input,deps,publicHTML);
+      phase='public_readback';
+      await verifyRevisionPublicReadback(input,deps,url);
+      phase='image_readback';
       await verifyApprovedImages(input.bundle,deps.imageDigest);
       return {verified:true,url,contentHash:sha(input.bundle.article.content),remoteUpdatedAt:readback[0].updated_at,
         readback:{verified:true,fingerprint:input.revision,inheritedAdviceDomSha256:input.bundle.inheritedPresentationContext.domSha256,...(input.bundle.article.generationMeta?.socialCard?{socialCard:input.bundle.article.generationMeta.socialCard}:{})}};
-    } catch {throw Error('unknown: revision product/article publication requires reconciliation');}
+    } catch (error) {
+      const failure=Error('unknown: revision product/article publication requires reconciliation');
+      failure.diagnostic={phase,...error?.diagnostic};throw failure;
+    }
   },{readOnly:!publishing});
+}
+
+// Retry only reads after cache invalidation, never a product/article mutation.
+export async function verifyRevisionPublicReadback(input,deps,url) {
+  const delays=deps.publicReadbackDelays ?? [0];
+  check(Array.isArray(delays)&&delays.length>0&&delays.length<=4&&delays.every(n=>Number.isInteger(n)&&n>=0&&n<=5000),'invalid public readback delays');
+  let last;
+  for(const delay of delays) {
+    if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+    try {
+      const html=await deps.publicGet(url);
+      check(verifyPublicHTML(html,input.bundle),'revision public HTML mismatch');
+      await verifyInheritedPresentation(input,deps,html);
+      return html;
+    } catch(error){last=error;}
+  }
+  throw last;
 }
 
 export function revisionDependencies(env) {
@@ -156,11 +180,20 @@ export function revisionDependencies(env) {
   const headers={apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
   async function request(table,query,patch) {
     let response;
+    const operation='db_'+(patch?'patch_':'read_')+table;
     try {response=await fetch(origin+'/rest/v1/'+table+'?'+new URLSearchParams(query),{
       headers:{...headers,...(patch?{Prefer:'return=representation,handling=strict'}:{})},
       ...(patch?{method:'PATCH',body:JSON.stringify(patch)}:{}),redirect:'error',signal:AbortSignal.timeout(25000)});
-      check(response.ok,'revision database request failed');return await response.json();
-    } catch {throw Error('revision database result unknown');}
+      if(!response.ok) {
+        let dbCode;try{const body=await response.json();if(/^[A-Z0-9]{5}$/.test(body?.code||''))dbCode=body.code;}catch{}
+        const error=Error('revision database request failed');
+        error.diagnostic={operation,httpStatus:response.status,...(dbCode?{dbCode}:{})};throw error;
+      }
+      return await response.json();
+    } catch(error) {
+      if(error?.diagnostic)throw error;
+      const failure=Error('revision database result unknown');failure.diagnostic={operation};throw failure;
+    }
   }
   // xmin is fetched with these exact rows and used only for this short read/CAS window.
   // Semantic baselines remain the approved full field snapshots; version tokens are not proposal identity.
@@ -188,7 +221,8 @@ export function revisionDependencies(env) {
     updated_at:'eq.'+before.updated_at,created_at:'eq.'+before.created_at,published_at:'eq.'+before.published_at,
     select:Object.values(articleFields).join(',')},patch);
   base.db.findProductArticles=ids=>request('articles',{select:'id,slug,status,category_id',
-    product_ids:'ov.{'+ids.map(id=>'"'+id.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"').join(',')+'}',limit:501});
+    or:'('+ids.map(id=>'product_ids.cs.'+JSON.stringify([id])).join(',')+')',limit:501});
+  base.publicReadbackDelays=[0,1000,3000];
   base.lock=(action,options)=>withPublicationLock(seoRoot(),action,options);
   return base;
 }

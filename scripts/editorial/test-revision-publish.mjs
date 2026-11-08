@@ -223,3 +223,21 @@ test('revision mixed rows patch only baseline; fresh third state blocks before p
   }else{await assert.rejects(execute(h.input,h.deps),/reconcil/);assert.deepEqual(h.state.writes,[]);}
  }
 });
+
+test('bounded public reconciliation retries only reads and requires exact content',async()=>{
+ const {verifyRevisionPublicReadback}=await import('./revision-publisher.mjs');
+ const h=harness();const good=await h.deps.publicGet();let reads=0;
+ h.deps.publicReadbackDelays=[0,0,0];h.deps.publicGet=async()=>++reads===1?'stale':good;
+ await verifyRevisionPublicReadback(h.input,h.deps,'https://camp-gear-lab.com/articles/firepit-beginner-guide');
+ assert.equal(reads,2);assert.deepEqual(h.state.writes,[]);
+ reads=0;h.deps.publicGet=async()=>{reads++;return 'stale'};
+ await assert.rejects(verifyRevisionPublicReadback(h.input,h.deps,'https://camp-gear-lab.com/articles/firepit-beginner-guide'),/HTML mismatch/);
+ assert.equal(reads,3);assert.deepEqual(h.state.writes,[]);
+});
+test('publication unknown retains failing phase without exposing raw errors',async()=>{
+ const h=harness();h.deps.revalidate=async()=>{throw Error('secret transport body')};
+ await assert.rejects(execute(h.input,h.deps),error=>{
+  assert.deepEqual(error.diagnostic,{phase:'cache_revalidation'});
+  assert.ok(!error.message.includes('secret'));return true;
+ });
+});
