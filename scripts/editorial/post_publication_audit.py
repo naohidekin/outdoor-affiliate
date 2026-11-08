@@ -41,8 +41,20 @@ def _child_env():
             'TZ': 'Asia/Tokyo', 'PYTHONDONTWRITEBYTECODE': '1'}
 
 
+def _audit_model(product):
+    model = _model(product)
+    if model:
+        return model
+    # Explicit alphabetic identifiers are valid only when bound to the approved name.
+    for key in ('model', 'modelNumber', '型番', '品番', 'モデル番号'):
+        value = (product.get('specs') or {}).get(key)
+        if isinstance(value, str) and re.fullmatch(r'[A-Z][A-Z_-]{2,39}', value) and model_matches(value, product.get('name', '')):
+            return value
+    return ''
+
+
 def _merchant_identity(product, model, title):
-    if not model_matches(model, title) or product['brand'].casefold() not in title.casefold():
+    if not model_matches(model, title) or re.sub(r'\s+', '', product['brand']).casefold() not in re.sub(r'\s+', '', title).casefold():
         return False
     name = product.get('name', '')
     accessory = r'本体(?:は|を)?(?:含ま(?:れ)?ません|付属しません|別売|なし)|専用(?:収納|保護)?(?:ケース|バッグ|カバー|アダプタ)|(?:carrying|storage|protective)\s+(?:case|bag)|(?:case|bag|cover|adapter|replacement)\s+only'
@@ -52,7 +64,7 @@ def _merchant_identity(product, model, title):
     types = {'burner': r'バーナー|ストーブ|コンロ|burner|stove', 'tent': r'テント|tent',
              'tarp': r'タープ|tarp', 'chair': r'チェア|椅子|chair', 'table': r'テーブル|table',
              'lantern': r'ランタン|lantern', 'sleeping-bag': r'寝袋|シュラフ|sleeping\s*bag',
-             'cooler': r'クーラー|cooler'}
+             'cooler': r'クーラー|cooler', 'firepit': r'焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill'}
     pattern = types.get(product.get('categoryId'))
     if pattern is None:
         pattern = next((p for p in types.values() if re.search(p, name, re.I)), None)
@@ -261,7 +273,7 @@ class PostPublicationAudit:
                 if not _affiliate_route(channel, href, self.env):
                     checks.append(_check(name, 'failed', 'affiliate_account_or_route_mismatch'))
                     continue
-                model = _model(product)
+                model = _audit_model(product)
                 if not model or not product.get('brand'):
                     checks.append(_check(name, 'unverified', 'approved_product_model_or_brand_missing'))
                     continue
@@ -289,6 +301,15 @@ class PostPublicationAudit:
                     page = _Page(_decode_html(response['body'], kind))
                     if re.search(r'captcha|robot check|access denied|just a moment|ロボット', page.title, re.I):
                         checks.append(_check(name, 'unverified', 'merchant_challenge_unverified'))
+                        continue
+                    # Missing evidence is not proof of a different product.
+                    if model.isalpha() and not model_matches(model, page.title):
+                        checks.append(_check(name, 'unverified', 'merchant_model_evidence_missing'))
+                        continue
+                    if (product.get('categoryId') == 'firepit'
+                            and re.search(r'焚き?火台\s*L(?:$|\W)', product.get('name', ''))
+                            and re.search(r'(?:S|M)サイズ', page.title, re.I)):
+                        checks.append(_check(name, 'unverified', 'merchant_variant_evidence_conflicting'))
                         continue
                     identity = _merchant_identity(product, model, page.title)
                     add(name, same and identity, 'merchant_destination_and_title_model_verified', 'merchant_destination_or_product_identity_mismatch')

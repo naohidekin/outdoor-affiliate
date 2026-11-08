@@ -8,7 +8,7 @@ import zlib
 from unittest.mock import patch
 
 from catalog import Catalog
-from post_publication_audit import PostPublicationAudit, _merchant_identity
+from post_publication_audit import PostPublicationAudit, _merchant_identity, _audit_model
 
 
 SITE = 'https://camp-gear-lab.com/articles/stove'
@@ -109,6 +109,41 @@ class AuditTests(unittest.TestCase):
         title = '【楽天市場】ソト アミカス (SOD-320) キャンプ シングルコンロ SOTO：アルペン楽天市場店'
         self.assertTrue(_merchant_identity(product, 'SOD-320', title))
         self.assertFalse(_merchant_identity(product, 'SOD-320', title + ' 専用収納ケース（本体は含まれません）'))
+
+    def test_firepit_titles_allow_brand_parentheses_and_intervening_words(self):
+        p = {'name': 'ユニフレーム ファイアグリル', 'brand': 'ユニフレーム', 'categoryId': 'firepit'}
+        self.assertTrue(_merchant_identity(p, '683040', 'Amazon | ユニフレーム(UNIFLAME) ファイアグリル 683040 | キャンプ用グリル・焚火台'))
+        p = {'name': 'スノーピーク 焚火台L', 'brand': 'スノーピーク', 'categoryId': 'firepit'}
+        self.assertTrue(_merchant_identity(p, 'ST-032RS', 'スノーピーク 焚き火台 焚火台 L 3-4人用 ST-032RS snow peak'))
+        self.assertFalse(_merchant_identity(p, 'ST-032RS', 'スノーピーク ST-032R 焚火台'))
+        self.assertFalse(_merchant_identity(p, 'ST-032RS', 'スノーピーク ST-032RS 専用収納ケース'))
+
+    def test_explicit_alphabetic_model_is_not_discarded(self):
+        p = {'name': 'TokyoCamp 焚火台 HAKOSUKA', 'brand': 'TokyoCamp', 'categoryId': 'firepit', 'specs': {'型番': 'HAKOSUKA'}}
+        self.assertEqual(_audit_model(p), 'HAKOSUKA')
+        self.assertTrue(_merchant_identity(p, _audit_model(p), 'Tokyo Camp 焚き火台 HAKOSUKA コンパクト'))
+        self.assertFalse(_merchant_identity(p, _audit_model(p), 'Tokyo Camp 焚き火台 マクライト'))
+        self.assertEqual(_audit_model(dict(p, specs={'型番': 'OTHER'})), '')
+
+    def test_named_model_absent_from_merchant_is_unverified(self):
+        job, html = fixture()
+        p = job['bundle']['products'][0]
+        p.update(name='TokyoCamp 焚火台 HAKOSUKA', brand='TokyoCamp', categoryId='firepit', specs={'型番': 'HAKOSUKA'})
+        cat = FakeCatalog(html)
+        cat.merchant = '<title>Tokyo Camp 焚き火台 コンパクト</title>'
+        result = self.run_audit(job, catalog=cat)
+        self.assertEqual(result['status'], 'unverified')
+        self.assertTrue(any(c['reason'] == 'merchant_model_evidence_missing' for c in result['checks']))
+
+    def test_conflicting_firepit_size_is_unverified(self):
+        job, html = fixture()
+        p = job['bundle']['products'][0]
+        p.update(name='スノーピーク 焚火台L', brand='スノーピーク', categoryId='firepit', specs={'型番': 'ST-032RS'})
+        cat = FakeCatalog(html)
+        cat.merchant = '<title>スノーピーク 焚火台 L ST-032RS 焚き火台 Sサイズ</title>'
+        result = self.run_audit(job, catalog=cat)
+        self.assertEqual(result['status'], 'unverified')
+        self.assertTrue(any(c['reason'] == 'merchant_variant_evidence_conflicting' for c in result['checks']))
 
     def test_missing_merchant_or_model_is_unverified(self):
         for field in ('amazonUrl', 'affiliateUrl', 'specs'):
