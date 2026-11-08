@@ -493,6 +493,46 @@ class Ledger:
             db.execute('INSERT INTO decisions VALUES (?,?)', (event['event_id'], canonical(dict(event=event, result=result))))
             return result
 
+    def _validate_codex_batch(self, db, id, revision, actor, evidence):
+        """Operator-resolved finite Slack batch, with actual owner text preserved.
+
+        External operator must verify the authenticated message and its referent.
+        This is NOT a Slack button event and never invents a button nonce/event.
+        """
+        require(re.fullmatch(r'(?:<@[A-Z0-9]+>\s*)?全て公開[。.]?', evidence['text'].strip()),
+                'explicit batch publication instruction required')
+        scope = evidence.get('slack_scope') or {}
+        require(set(scope) == set(SCOPE) and all(isinstance(scope[k], str) and scope[k] for k in SCOPE)
+                and scope['user_id'] == actor and scope['thread_ts'] == evidence['thread_id'], 'batch scope required')
+        message_ts, context_ts = evidence['message_id'], evidence.get('context_message_id', '')
+        require(all(isinstance(t, str) and re.fullmatch(r'[0-9]+\.[0-9]+', t)
+                    for t in (message_ts, context_ts)), 'Slack timestamps required')
+        require(float(context_ts) < float(message_ts), 'batch context must precede approval')
+        items = evidence.get('batch')
+        require(isinstance(items, list) and 1 <= len(items) <= 20, 'finite batch required')
+        require(all(isinstance(i, dict) and set(i) == {'article_id', 'revision', 'card_ts'}
+                    and all(isinstance(v, str) and v for v in i.values()) for i in items), 'batch binding required')
+        require(len({i['article_id'] for i in items}) == len(items), 'duplicate batch article')
+        require(any(i['article_id'] == id and i['revision'] == revision for i in items), 'article outside approved batch')
+        for item in items:
+            job = self._get(db, item['article_id'])
+            require(job['revision'] == item['revision'], 'batch revision changed')
+            require(re.fullmatch(r'[0-9]+\.[0-9]+', item['card_ts'])
+                    and float(item['card_ts']) <= float(context_ts), 'card must precede context')
+            requests = [json.loads(row[0]) for row in db.execute(
+                "SELECT data FROM requests WHERE job_id=? AND kind='article'", (item['article_id'],))]
+            matched = [r for r in requests if r.get('manifest_hash') == item['revision']
+                       and r.get('card_ts') == item['card_ts'] and r.get('scope') == scope]
+            require(bool(matched), 'exact batch card delivery required')
+            events = [json.loads(row[0]) for row in db.execute(
+                "SELECT data FROM events WHERE job_id=? AND kind='delivered'", (item['article_id'],))]
+            require(any(all(e.get(k) == r.get(k) for k in
+                            ('request_id', 'manifest_hash', 'article_id', 'scope', 'parts', 'card_ts'))
+                        and e.get('status') == 'delivered' for r in matched for e in events),
+                    'verified batch delivery event required')
+            require(any(timestamp(r['expires_at']).timestamp() >= float(message_ts) for r in matched),
+                    'batch approval after card expiry')
+
     def approve_from_codex(self, id, revision, actor, evidence):
         """Trusted local operator API; explicit Runtime CLI command only, never tick.
 
@@ -501,7 +541,9 @@ class Ledger:
         Codex models cannot self-approve or fabricate evidence. This records article
         authority only; publication and social retain their separate gates.
         Text must be exactly '記事 <id> 版 <revision> を公開してください' or
-        'publish <id> <revision>' (optional final punctuation).
+        'publish <id> <revision>' (optional final punctuation). A finite Slack
+        batch may instead retain the actual '全て公開' text and bind each delivered
+        card/revision in evidence; _validate_codex_batch checks these bindings.
         """
         require(actor == self.owner_id, 'owner mismatch')
         require(isinstance(evidence, dict) and evidence.get('source') == 'codex', 'Codex evidence required')
@@ -510,10 +552,14 @@ class Ledger:
         require(isinstance(id, str) and isinstance(revision, str), 'article and revision required')
         directive = (rf'(?:記事\s+{re.escape(id)}\s+版\s+{re.escape(revision)}\s+を公開してください[。.]?'
                      rf'|publish\s+{re.escape(id)}\s+{re.escape(revision)}[.]?)')
-        require(re.fullmatch(directive, evidence['text'].strip()) is not None, 'explicit article/version publication instruction required')
+        is_batch = 'batch' in evidence
+        if not is_batch:
+            require(re.fullmatch(directive, evidence['text'].strip()) is not None, 'explicit article/version publication instruction required')
         # Snapshot caller-owned JSON before the transactional approval record.
         evidence = json.loads(canonical(evidence))
         with self._tx() as db:
+            if is_batch:
+                self._validate_codex_batch(db, id, revision, actor, evidence)
             job = self._get(db, id)
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')

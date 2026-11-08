@@ -344,6 +344,41 @@ class LedgerTests(unittest.TestCase):
             Ledger(child.root, 'U')
         self.assertEqual(0o644, child.db_path.stat().st_mode & 0o777)
 
+    def batch_evidence(self, job):
+        return dict(source='codex', thread_id='1.0', message_id=str(NOW.timestamp()),
+                    text='<@U123> 全て公開', slack_scope=SCOPE.copy(), context_message_id='3.0',
+                    batch=[dict(article_id=job['id'], revision=job['revision'], card_ts='2.0')])
+
+    def test_codex_batch_preserves_real_text_and_scope(self):
+        job = self.draft()
+        self.request(job)
+        evidence = self.batch_evidence(job)
+        result = self.ledger.approve_from_codex(job['id'], job['revision'], 'U', evidence)
+        self.assertEqual(evidence, result['approval']['evidence'])
+        self.assertEqual('approved', result['stage'])
+        with self.assertRaises(ValueError):
+            self.ledger.approve_from_codex(job['id'], job['revision'], 'U', evidence)
+
+    def test_codex_batch_rejects_invalid_binding(self):
+        job = self.draft()
+        self.request(job)
+        base = self.batch_evidence(job)
+        mutations = [dict(text='公開しない'), dict(batch=[]), dict(context_message_id='1.5'),
+                     dict(slack_scope=dict(SCOPE, channel_id='OTHER')),
+                     dict(batch=[dict(base['batch'][0], revision='0'*64)]),
+                     dict(batch=[dict(base['batch'][0], card_ts='2.5')]),
+                     dict(batch=base['batch'] * 2)]
+        for changes in mutations:
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.ledger.approve_from_codex(job['id'], job['revision'], 'U', dict(base, **changes))
+        self.assertIsNone(self.ledger.get_job(job['id'])['approval'])
+
+    def test_codex_batch_requires_delivered_card(self):
+        job = self.draft()
+        self.ledger.record_review(job['id'], job['revision'], self.review(job))
+        with self.assertRaises(ValueError):
+            self.ledger.approve_from_codex(job['id'], job['revision'], 'U', self.batch_evidence(job))
+
     def codex_evidence(self, job):
         return dict(source='codex', thread_id='chat-1', message_id='message-1',
                     text=f"記事 {job['id']} 版 {job['revision']} を公開してください")
