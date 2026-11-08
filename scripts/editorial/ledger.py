@@ -241,6 +241,28 @@ class Ledger:
         if job.get('kind') == 'article_revision':
             from revisions import validate_revision_bundle
             validate_revision_bundle(job, job['bundle'])
+        if 'catalogCorrectionContext' in job or 'catalogCorrectionContext' in job['bundle']:
+            from catalog_corrections import validate_bundle
+            validate_bundle(job, job['bundle'])
+
+    def attach_catalog_correction(self, id, raw):
+        """Trusted local operator only; attachment grants no publication authority."""
+        from catalog_corrections import validated_context
+        context = validated_context(raw)
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') != 'article_revision' and job['stage'] in ('candidate', 'error')
+                    and job.get('bundle') is None and job.get('revision') is None
+                    and not job.get('approval') and not job.get('publication'),
+                    'only unstaged new article can receive catalog correction')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone(),
+                    'catalog correction effects require reconciliation')
+            ids = job['theme'].get('productIds') if isinstance(job['theme'], dict) else None
+            require(ids == [p['id'] for p in context['candidateProducts']],
+                    'catalog correction theme product IDs mismatch')
+            job.update(catalogCorrectionContext=json.loads(canonical(context)), stage='candidate', error=None)
+            self._invalidate(db, id)
+            return self._put(db, job, 'catalog_correction_attached')
 
     def create_candidate(self, theme, now=None):
         now = timestamp(now)
@@ -286,6 +308,31 @@ class Ledger:
         with self._tx() as db:
             return [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs ORDER BY rowid')]
 
+    def correct_candidate_theme(self, id, theme):
+        """Trusted operator supplies the complete theme; no owner approval is granted."""
+        require(isinstance(theme, dict), 'complete corrected theme required')
+        theme = json.loads(canonical(theme))
+        editable = {'title', 'query', 'selectionReason'}
+        require(all(isinstance(theme.get(k), str) and theme[k].strip() for k in editable),
+                'corrected title query and selection reason required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') != 'article_revision' and job['stage'] in ('candidate', 'error')
+                    and job.get('bundle') is None and job.get('revision') is None
+                    and not job.get('approval') and not job.get('publication'),
+                    'only unstaged new article theme can be corrected')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone(),
+                    'candidate effects require reconciliation')
+            old = job['theme']
+            require(isinstance(old, dict) and all(k in old and k in theme
+                    for k in ('slug', 'categoryId', 'productIds')), 'complete theme identity required')
+            require(canonical({k: v for k, v in old.items() if k not in editable}) ==
+                    canonical({k: v for k, v in theme.items() if k not in editable}),
+                    'only title query and selection reason may change')
+            job.update(theme=theme, stage='candidate', error=None)
+            self._invalidate(db, id)
+            return self._put(db, job, 'candidate_theme_corrected')
+
     def revise_candidate(self, id, title, selection_reason):
         require(isinstance(title, str) and title.strip() and isinstance(selection_reason, str) and selection_reason.strip(),
                 'candidate title and reason required')
@@ -312,11 +359,16 @@ class Ledger:
                 validate_revision_bundle(job, bundle)
                 require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status!='failed'", (id,)).fetchone(),
                         'revision effect requires reconciliation')
+            if 'catalogCorrectionContext' in job or 'catalogCorrectionContext' in bundle:
+                from catalog_corrections import validate_bundle
+                validate_bundle(job, bundle)
+                require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status!='failed'", (id,)).fetchone(),
+                        'catalog correction effect requires reconciliation')
             require(expected_revision is None or job['revision'] == expected_revision, 'revision conflict')
             if revision != job['revision']:
                 job.update(bundle=json.loads(canonical(bundle)), revision=revision, review=None, approval=None,
                            publication=None, social=None, error=None, stage='draft')
-                if job.get('kind') == 'article_revision':
+                if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
                     job['astraReview'] = None
                 self._invalidate(db, id)
                 return self._put(db, job, 'bundle')
@@ -349,9 +401,9 @@ class Ledger:
         """Explicit operator-recorded Astra QA, separate from owner publication approval."""
         with self._tx() as db:
             job = self._get(db, id)
-            require(job.get('kind') == 'article_revision' and job['stage'] == 'review'
+            require((job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job) and job['stage'] == 'review'
                     and not job.get('approval') and not job.get('publication'),
-                    'only unapproved revision in review can receive Astra QA')
+                    'only unapproved revision or catalog correction in review can receive Astra QA')
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')
             valid_review(job['review'], revision)
@@ -368,7 +420,7 @@ class Ledger:
             if kind == 'article':
                 revision = job['revision']
                 valid_review(job['review'], revision)
-                if job.get('kind') == 'article_revision':
+                if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
                     valid_astra_review(job.get('astraReview'), revision)
             else:
                 require(job['publication'] and job['publication'].get('verified') is True and job['social'], 'verified publication and social required')

@@ -194,6 +194,34 @@ def article_body(bundle):
     for p in bundle.get('products', []):
         if p['id'] not in displayed:
             body += '\n\n' + _panel(p, 'ranking')
+    if 'catalogCorrectionContext' in bundle:
+        from catalog_corrections import validate_context
+        ctx = validate_context(bundle['catalogCorrectionContext'])
+        body += '\n\n*商品情報の訂正*\nこの記事の承認で、下記の商品情報も更新します。同じ商品を掲載する既存記事にも反映されます。\n' + escape(ctx['changeSummary'])
+        originals = {p['id']: p for p in ctx['baseProducts']}
+        labels = {'name': '商品名', 'brand': 'ブランド', 'specs': '仕様', 'imageUrl': '商品写真',
+                  'affiliateUrl': '楽天の購入リンク', 'amazonUrl': 'Amazonの購入リンク', 'yahooUrl': 'Yahoo!の購入リンク',
+                  'price': '参考価格', 'description': '商品説明', 'rating': '評価', 'availability': '販売状況'}
+        def value_text(key, value):
+            if key in ('price', 'rating'):
+                if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:
+                    return '参考価格/評価の数値を表示せず販売店で確認'
+                return ('¥' + format(value, ',')) if key == 'price' else escape(value)
+            if key in ('imageUrl', 'affiliateUrl', 'amazonUrl', 'yahooUrl'):
+                return _link(value, value) if value else '表示しない'
+            return escape(value) if value is not None and value != '' else '記載なし'
+        for patch in ctx['productPatches']:
+            old = originals[patch['id']]
+            body += '\n\n*' + escape(old.get('name', '商品')) + '*'
+            for key, value in patch['fields'].items():
+                if key == 'updatedAt':
+                    continue
+                if key == 'specs' and isinstance(old[key], dict) and isinstance(value, dict):
+                    for spec in dict.fromkeys([*old[key], *value]):
+                        if old[key].get(spec) != value.get(spec):
+                            body += '\n仕様・' + escape(SPEC_LABELS.get(spec, spec)) + '：' + value_text(spec, old[key].get(spec)) + ' → ' + value_text(spec, value.get(spec))
+                else:
+                    body += '\n' + labels.get(key, '商品情報') + '：' + value_text(key, old[key]) + ' → ' + value_text(key, value)
     return body
 
 

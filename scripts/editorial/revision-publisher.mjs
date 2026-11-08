@@ -71,6 +71,25 @@ async function productsEqual(db, expected) {
   return rows;
 }
 
+// Compare the complete normalized catalog row, never only the patch fields.
+// Candidate-first also makes unchanged baseline==candidate rows a strict no-op.
+export async function productsBaseOrCandidate(db, before, candidates) {
+  const rows=await db.getProducts(before.map(p=>p.id));
+  check(Array.isArray(rows) && rows.length===before.length && new Set(rows.map(p=>p.id)).size===rows.length,'product baseline missing');
+  const pending=[];
+  for(const base of before) {
+    const current=rows.find(p=>p.id===base.id),desired=candidates.find(p=>p.id===base.id);
+    check(current && desired,'product snapshot missing');
+    const token=String(current.xmin??'');
+    check(/^[0-9]{1,10}$/.test(token) && BigInt(token)<=4294967295n,'fresh product xmin required');
+    const actual=selectedRow(current,productFields);
+    if(equal(actual,productRow(desired)))continue;
+    check(equal(actual,productRow(base)),'full product baseline or candidate changed');
+    pending.push(base.id);
+  }
+  return {rows,pending};
+}
+
 async function verifyInheritedPresentation(input,deps,html) {
   const context=validatePresentation(input.bundle.inheritedPresentationContext,input.bundle.article.slug);
   const files=await (deps.currentTemplateHashes ? deps.currentTemplateHashes() : templateHashes(REPO));
@@ -88,7 +107,7 @@ export async function executeRevision(input,deps) {
     binding(input,deps);
     const found=await deps.db.findArticles(c.baseArticle.id,c.baseArticle.slug);
     check(found.length===1 && equal(selectedRow(found[0],articleFields),row(c.baseArticle)),'published article baseline changed');
-    const originals=await productsEqual(deps.db,c.baseProducts); // ALL checked before first public write.
+    const {pending}=await productsBaseOrCandidate(deps.db,c.baseProducts,c.candidateProducts); // ALL checked before first public write.
     if(!publishing)return {status:'private_revision',articleId:c.baseArticle.id,revision:input.revision};
     await verifyInheritedPresentation(input,deps); // Template and current public DOM before ANY mutation.
     await verifyApprovedImages(input.bundle,deps.imageDigest);
@@ -99,11 +118,15 @@ export async function executeRevision(input,deps) {
     candidate.updated_at=(deps.now||timestamp)();
     const patch=Object.fromEntries(['title','content','excerpt','meta_description','faqs','tags','product_ids','generation_meta','updated_at'].map(k=>[k,candidate[k]]));
     try {
-      for(const change of c.productPatches) {
-        const before=originals.find(p=>p.id===change.id);
+      for(const change of c.productPatches.filter(p=>pending.includes(p.id))) {
+        const base=c.baseProducts.find(p=>p.id===change.id),desired=c.candidateProducts.find(p=>p.id===change.id);
+        const fresh=await productsBaseOrCandidate(deps.db,[base],[desired]);
+        if(!fresh.pending.length)continue; // Another approved job installed exactly this row.
+        const before=fresh.rows[0];
         const fields=Object.fromEntries(Object.entries(change.fields).map(([k,v])=>[productFields[k],v]));
         const changed=await deps.db.patchProductCAS(before,fields);
         check(Array.isArray(changed) && changed.length===1,'product CAS conflict');
+        await productsEqual(deps.db,[desired]);
       }
       await productsEqual(deps.db,c.candidateProducts); // Confirm every patched row before article CAS.
       const current=await deps.db.findArticles(c.baseArticle.id,c.baseArticle.slug);

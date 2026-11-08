@@ -10,6 +10,12 @@ SNSのCodex本人承認は明示的な `approve-social-from-codex` 操作で記�
 
 本人はギア男のXをBufferでも管理している。Bufferへの自動接続・予約同期は未確認。今回のSOTO記事はBufferに予約していないと本人が確認した。Buffer管理という事実だけで、別システムの予約変更や削除を行わない。
 
+### 新記事の商品訂正を含む承認
+
+`attach-catalog-correction` は同じ未制作jobへ公開商品の元行と訂正候補行をprivate保存する。訂正候補で実根拠・画像・購入先を再検証し、Claude執筆→Gemini校正→実表示→Claude審査→Astra品質確認の後にSlackへ送る。事前の公開draftや商品更新は行わない。Slack本文に訂正前後と、同商品の既存掲載記事にも反映される範囲を表示し、記事と訂正候補全体を同じ版へ束縛する。
+
+`catalogCorrectionsPublicationEnabled` は既定false。本人承認とこの配備スイッチの両方が有効な場合だけ `publish-corrected` へ渡す。private台帳の実承認とin-flight効果を別の読取専用helperでも照合し、公開ロック・全商品baseline・fresh xmin・画像・cache・実ページ読戻しを通す。途中停止はprivate journalを残して自動再実行を止める。同一商品の訂正が別の承認記事で全字段・timestampまで完全一致する行として既に反映された場合だけno-opとし、第三の状態は拒否する。Astra品質確認待ちを本人承認待ちとして報告しない。
+
 ## 0. 現在状態（2026-11-03 JST）
 
 **初回3記事は本人のexact版承認を経て、2026-11-03 19:52 JSTまでにDB・cache・公開HTMLのreadbackがverifiedとなり、公開済み。記事の公開承認待ちはない。** 公開後SNS原稿も3件ともClaude生成→Gemini 3.8検証→Claude最終審査を通過し、既存Slackスレッドへの配信とreadbackがverified。GS 8.8、CB 8.6、SOTO 8.6。GSは22:58 JSTにX投稿・readback verified。SOTO/CBの2件は**記事公開とは別のSNS承認待ち**。画像カード統合 `5fef0e4` は本番サイト/macproへ配備し、23:25 JSTに有効化済み。実画像の保存・読戻しと通常tick完了を確認。GS差替案は11月4日に本人が承認し、01:03 JSTに公開OG差替えと画像照合を完了。

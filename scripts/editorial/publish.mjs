@@ -94,7 +94,7 @@ export function articleRow(article, revision) {
   return normalizeTimestamps(row);
 }
 const selectedRow = (row, fields) => normalizeTimestamps(Object.fromEntries(Object.values(fields).map(k => [k, row[k] ?? null])));
-function validateBundle(bundle) {
+export function validateBundle(bundle) {
   requireValue(record(bundle) && record(bundle.article) && Array.isArray(bundle.products), 'bundle required');
   const a = bundle.article;
   requireValue(detectMedicalRisks([a.title, a.content, JSON.stringify(a.faqs || [])].join('\n')).length === 0,
@@ -225,17 +225,33 @@ export async function verifyApprovedImages(bundle, imageDigest = secureImageDige
 
 /** Dependencies are injected in tests. The production lock always uses seoRoot(). */
 export async function execute(input, deps = {}) {
+  if (record(input) && input.action === 'publish-corrected') {
+    const { executeCorrected } = await import('./corrected-publisher.mjs');
+    return executeCorrected(input, deps);
+  }
+  requireValue(!record(input?.bundle) || !('catalogCorrectionContext' in input.bundle),
+    'catalog correction context requires publish-corrected; staging is private');
   if (record(input) && ['stage-revision', 'publish-revision'].includes(input.action)) {
     const { executeRevision } = await import('./revision-publisher.mjs');
     return executeRevision(input, deps);
   }
-  requireValue(record(input) && ['stage', 'publish'].includes(input.action), 'stage or publish required');
+  return executeNewArticle(input, deps);
+}
+
+// Trusted lower-level engine: corrected-publisher owns the outer lease and has
+// checked approval, journal and corrected products before entering this path.
+export async function executeNewArticle(input, deps = {}) {
+  const corrected = input?.action === 'publish-corrected';
+  requireValue(!corrected || (deps.correctionLease === input.revision && typeof deps.lock === 'function'),
+    'corrected publication lease required');
+  requireValue(corrected || (record(input) && ['stage', 'publish'].includes(input.action)), 'stage or publish required');
+  requireValue(!input?.bundle?.catalogCorrectionContext || corrected, 'catalog correction context requires publish-corrected');
   const { bundle, revision, approval, expectedDraft } = input;
   validateBundle(bundle);
   requireValue(/^[a-f0-9]{64}$/.test(revision || '') && revision === bundleHash(bundle, { rawRequest: deps.rawRequest }), 'bundle revision mismatch');
   const expected = articleRow(bundle.article, revision);
   if (expectedDraft !== undefined) requireValue(equal(expectedDraft, expected) || equal(expectedDraft, bundle.article), 'expected draft mismatch');
-  if (input.action === 'publish') requireValue(record(approval) && approval.revision === revision && nonempty(approval.approverId) &&
+  if (input.action !== 'stage') requireValue(record(approval) && approval.revision === revision && nonempty(approval.approverId) &&
     record(approval.evidence) && Object.keys(approval.evidence).length > 0, 'revision-bound trusted approval required');
   const lock = deps.lock || (action => withPublicationLock(seoRoot(), action));
   const db = deps.db;
@@ -284,7 +300,7 @@ export async function execute(input, deps = {}) {
 export function parseArguments(argv) {
   const result = {};
   for (let i = 0; i < argv.length; i++) {
-    if (['stage', 'publish', 'stage-revision', 'publish-revision'].includes(argv[i]) && !result.action) result.action = argv[i];
+    if (['stage', 'publish', 'stage-revision', 'publish-revision', 'publish-corrected'].includes(argv[i]) && !result.action) result.action = argv[i];
     else if (argv[i] === '--env-file' && !result.envFile && nonempty(argv[i + 1])) result.envFile = path.resolve(argv[++i]);
     else throw new Error('invalid publisher arguments');
   }
@@ -321,7 +337,7 @@ export function productionDependencies(env) {
   const url = (table, query) => base + table + '?' + new URLSearchParams(query);
   const db = {
     async findArticles(id, slug) {
-      return requestJSON(url('articles', { select: Object.values(articleFields).join(','), or: `(id.eq.${id},slug.eq.${slug})` }), { headers });
+      return requestJSON(url('articles', { select: [...Object.values(articleFields), 'xmin'].join(','), or: `(id.eq.${id},slug.eq.${slug})` }), { headers });
     },
     async getProducts(ids) {
       // IDs are quoted as PostgREST literals; punctuation cannot escape filters.
@@ -332,7 +348,11 @@ export function productionDependencies(env) {
       return requestJSON(base + 'articles', { method: 'POST', headers: { ...headers, Prefer: 'return=minimal,handling=strict' }, body: JSON.stringify(row) }, { allowEmptyCreated: true });
     },
     async publishCAS(row, patch) {
-      return requestJSON(url('articles', { id: `eq.${row.id}`, slug: `eq.${row.slug}`, status: 'eq.draft', updated_at: `eq.${row.updated_at}`,
+      // updated_at can be preserved by another writer. Bind publication to the
+      // exact transaction version read with this approved draft, never retry it.
+      const version = String(row?.xmin ?? '');
+      requireValue(/^[0-9]{1,10}$/.test(version) && BigInt(version) <= 4294967295n, 'fresh database row version required');
+      return requestJSON(url('articles', { id: `eq.${row.id}`, slug: `eq.${row.slug}`, status: 'eq.draft', updated_at: `eq.${row.updated_at}`, xmin: `eq.${version}`,
         'generation_meta->editorialRuntime->>revision': `eq.${row.generation_meta.editorialRuntime.revision}`, select: Object.values(articleFields).join(',') }),
       { method: 'PATCH', headers: { ...headers, Prefer: 'return=representation,handling=strict' }, body: JSON.stringify(patch) });
     },
@@ -367,8 +387,10 @@ async function main() {
     for await (const chunk of process.stdin) { raw += chunk; requireValue(Buffer.byteLength(raw) <= 16 * 1024 * 1024, 'request too large'); }
     const input = JSON.parse(raw);
     if (args.action) { requireValue(!input.action || input.action === args.action, 'conflicting action'); input.action = args.action; }
-    if (['publish', 'publish-revision'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
-    const deps = ['stage-revision', 'publish-revision'].includes(input.action)
+    if (['publish', 'publish-revision', 'publish-corrected'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
+    const deps = input.action === 'publish-corrected'
+      ? (await import('./corrected-publisher.mjs')).correctedDependencies(env)
+      : ['stage-revision', 'publish-revision'].includes(input.action)
       ? (await import('./revision-publisher.mjs')).revisionDependencies(env) : productionDependencies(env);
     deps.rawRequest = raw;
     mutationPossible = true;

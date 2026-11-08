@@ -91,7 +91,7 @@ test('production GET and CAS still reject empty 201 and inserts reject malformed
   const stub = t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 201 }));
   await assert.rejects(deps.db.findArticles(row.id, row.slug), /publisher response invalid/);
   await assert.rejects(deps.db.getProducts(['p1']), /publisher response invalid/);
-  await assert.rejects(deps.db.publishCAS(row, { status: 'published' }), /publisher response invalid/);
+  await assert.rejects(deps.db.publishCAS({ ...row, xmin: '100' }, { status: 'published' }), /publisher response invalid/);
   stub.mock.mockImplementation(async () => new Response('not JSON', { status: 201 }));
   await assert.rejects(deps.db.insertDraft(row), /publisher response invalid/);
   stub.mock.mockImplementation(async () => new Response(null, { status: 500 }));
@@ -280,4 +280,50 @@ test('published card readback carries exact approved manifest only after metadat
   const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
   assert.deepEqual(result.readback.socialCard, manifest);
   assert.equal(result.readback.verified, true);
+});
+
+test('production draft publication xmin CAS blocks same-timestamp concurrent body edits and never retries',async t=>{
+ const {correctedDependencies}=await import('./corrected-publisher.mjs');
+ for(const [name,constructor] of [['normal',productionDependencies],['corrected-inherited',correctedDependencies]]){
+  await t.test(name,async t=>{
+   const h=harness(),root=fs.mkdtempSync(path.join(os.tmpdir(),'draft-xmin-'));
+   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+   const original={...articleRow(h.b.article,h.input.revision),xmin:'100'};
+   let stored=structuredClone(original),attempts=0,writes=0,publicReads=0,caches=0;const reads=[];
+   t.mock.method(globalThis,'fetch',async(url,options)=>{
+    const target=new URL(url);
+    if(target.pathname.endsWith('/products'))return Response.json(h.state.products.map(p=>({...p,xmin:'42'})));
+    assert.ok(target.pathname.endsWith('/articles'));
+    if(options.method!=='PATCH'){reads.push(target);return Response.json([structuredClone(stored)]);}
+    attempts++;
+    // A different writer changes the body after the GET, keeping updated_at and
+    // editorial marker identical. PostgreSQL advances xmin for that transaction.
+    stored.content='Unapproved concurrent body';stored.xmin='101';
+    const expected=target.searchParams.get('xmin');
+    if(expected && expected!=='eq.'+stored.xmin)return Response.json([]);
+    writes++;Object.assign(stored,JSON.parse(options.body));return Response.json([structuredClone(stored)]);
+   });
+   const deps=constructor({SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'test-only'});
+   deps.lock=fn=>withPublicationLock(root,fn);
+   deps.imageDigest=h.deps.imageDigest;
+   deps.revalidate=async()=>{caches++;};deps.publicGet=async()=>{publicReads++;return html(h.b);};
+   const request={...h.input,action:'publish',approval:approval(h.input.revision)};
+   await assert.rejects(execute(request,deps),/reconciliation/);
+   assert.equal(attempts,1);assert.equal(writes,0);
+   assert.equal(stored.status,'draft');assert.equal(stored.published_at,null);
+   assert.equal(stored.content,'Unapproved concurrent body');assert.equal(stored.updated_at,original.updated_at);
+   assert.equal(publicReads,0);assert.equal(caches,0);
+   assert.ok(reads.every(u=>u.searchParams.get('select').split(',').includes('xmin')));
+   await assert.rejects(execute(request,deps),/in-flight/);assert.equal(attempts,1);
+  });
+ }
+});
+
+test('production publish CAS requires a fresh valid uint32 xmin before any REST mutation',async t=>{
+ let calls=0;t.mock.method(globalThis,'fetch',async()=>{calls++;return Response.json([]);});
+ const deps=productionDependencies({SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'test-only'});
+ const before=articleRow(bundle().article,bundleHash(bundle()));
+ for(const xmin of [undefined,null,'','-1','4294967296','1.2','1e3','not-a-version'])
+  await assert.rejects(deps.db.publishCAS({...before,xmin},{status:'published'}),/version/);
+ assert.equal(calls,0);
 });

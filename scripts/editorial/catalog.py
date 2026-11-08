@@ -165,7 +165,7 @@ class _Page(HTMLParser):
                 item = self._identity_scopes[i]
                 del self._identity_scopes[i:]
                 text = ' '.join(' '.join(item.pop('parts')).split())
-                if len(text) < 180 and (tag in ('h1', 'h2') or re.match(r'^(?:品番|型番|商品コード|No\.|M-\d)', text)):
+                if len(text) < 180 and (tag in ('h1', 'h2') or re.match(r'^(?:品番|型番|商品コード|No\.|(?:M|UK)-\d)', text)):
                     self.identity_nodes.append({**item, 'text': text})
         if not self.skip:
             index = next((i for i in range(len(self.scopes) - 1, -1, -1) if self.scopes[i]['kind'] == tag), None)
@@ -272,9 +272,22 @@ def _primary_units(page, brand):
                                and _has_ancestor(node, 'p', 'class', 'product_id')
                                and not any(t in ('aside', 'nav', 'footer', 'template') for t, _ in node['ancestors']))
                 if not scoped(node) and not header_code: continue
-                pattern = r'^品番\s*(\d+)(?:\s+カテゴリー\s+[^\d]+)?$' if family == 'msr' else r'^(M-\d+)$'
+                pattern = r'^品番\s*(\d+)(?:\s+カテゴリー\s+[^\d]+)?$' if family == 'msr' else r'^((?:M|UK)-\d+)$'
                 m = re.fullmatch(pattern, node['text'])
-                if m: codes.append(m[1])
+                if m:
+                    # UK authority comes only from the maker's primary header,
+                    # never a SKU in a related item or arbitrary item_main text.
+                    if family == 'captain' and m[1].startswith('UK-') and (
+                            not header_code or node['kind'] != 'p'
+                            or any(tag == 'section' for tag, _ in node['ancestors'])):
+                        continue
+                    codes.append(m[1])
+        if family == 'captain' and any(code.startswith('UK-') for code in codes):
+            # Do not collapse duplicate or conflicting UK primary identities.
+            if len(codes) != 1:
+                return []
+            selected = [u for u in selected if _has_ancestor(u, 'main', 'id', 'main')
+                        and not _has_ancestor(u, 'section', 'class', 'sec_other_item')]
         codes = list(dict.fromkeys(codes))
         if not selected or len(codes) != 1:
             return []

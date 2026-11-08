@@ -73,6 +73,18 @@ def _published_between(job, start, end):
         return False
 
 
+def _awaiting_astra(job):
+    if job.get('stage') != 'review' or not (job.get('kind') == 'article_revision'
+                                           or 'catalogCorrectionContext' in job):
+        return False
+    from ledger import valid_astra_review
+    try:
+        valid_astra_review(job.get('astraReview'), job.get('revision'))
+        return False
+    except ValueError:
+        return True
+
+
 def editorial_report(jobs, now=None, rolling=False, kind='editorial'):
     now = _now(now)
     jobs = jobs[:1000]
@@ -84,7 +96,8 @@ def editorial_report(jobs, now=None, rolling=False, kind='editorial'):
         start = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         label = '前月の編集作業'
     published = [j for j in jobs if _published_between(j, start, end)]
-    waiting = sum(j.get('stage') == 'review' for j in jobs)
+    astra_waiting = sum(_awaiting_astra(j) for j in jobs)
+    waiting = sum(j.get('stage') == 'review' and not _awaiting_astra(j) for j in jobs)
     social_waiting = sum(j.get('stage') == 'social_review' for j in jobs)
     paused = sum(j.get('stage') in ('held', 'error') for j in jobs)
     lines = [label + f'（{start:%Y/%m/%d}〜{end:%Y/%m/%d} JST）',
@@ -106,6 +119,7 @@ def editorial_report(jobs, now=None, rolling=False, kind='editorial'):
     if len(jobs) == 1000:
         lines.append('台帳の確認は最大1000件。件数は確認範囲内です。')
     lines += [f'現在の確認待ち・保留（{now:%Y/%m/%d %H:%M} JST時点、対象期間の実績とは別）',
+             f'Astra品質確認待ち（承認カード未送信）: {astra_waiting}件',
              f'記事の確認待ち（繰越含む）: {waiting}件',
              f'SNS原稿の確認待ち: {social_waiting}件', f'保留・確認が必要: {paused}件']
     visible = [j for j in jobs if j.get('stage') in ('review', 'social_review', 'held', 'error')]
@@ -113,6 +127,8 @@ def editorial_report(jobs, now=None, rolling=False, kind='editorial'):
         title = str((job.get('theme') or {}).get('title') or '記事')[:120].replace('\n', ' ')
         state = {'review': '内容確認待ち', 'social_review': 'SNS原稿確認待ち', 'held': '保留',
                  'error': '確認が必要'}.get(job.get('stage'), '処理中')
+        if _awaiting_astra(job):
+            state = 'Astra品質確認待ち（承認カード未送信）'
         lines.append(f'・{title}：{state}')
     lines.append('状況共有のみです。承認の再依頼や新しい承認ボタンは発行していません。')
     return '\n'.join(lines)

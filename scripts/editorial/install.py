@@ -7,11 +7,13 @@ from pathlib import Path
 import plistlib
 import subprocess
 import sys
+from production_schedule import ProductionSchedule
 
 
 def install(config_path, load=False):
     config_path = Path(config_path).resolve()
     config = json.loads(config_path.read_text())
+    schedule = ProductionSchedule(config.get('productionSchedule'))
     if config.get('telegramEnabled', False):
         raise ValueError('telegram_must_be_disabled')
     repo = Path(config['repo']).resolve()
@@ -60,7 +62,10 @@ def install(config_path, load=False):
                 subprocess.run(['launchctl', 'bootstrap', 'gui/' + str(os.getuid()), str(target)], check=True, capture_output=True)
             raise
     return {'status': 'installed' if load else 'prepared', 'label': label, 'intervalSeconds': 300,
-            'productionSlot': 'Wednesday 09:00 JST, login-resume recovery', 'telegramEnabled': False}
+            'productionSlot': ('Wednesday 09:00 JST, login-resume recovery' if schedule.initial is None else
+                '{} {:02d}:00 JST; initial {}'.format(
+                    ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')[schedule.weekday],
+                    schedule.hour, schedule.initial.isoformat())), 'telegramEnabled': False}
 
 
 if __name__ == '__main__':

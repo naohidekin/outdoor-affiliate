@@ -26,8 +26,8 @@ function harness({ patched = true, count = 1 } = {}) {
     images:candidateProducts.map(p=>({productId:p.id,url:p.imageUrl,verified:true,sha256:createHash('sha256').update('image').digest('hex'),size:5})),revisionContext:binding,inheritedPresentationContext:{schemaVersion:1,kind:'unchanged_medical_advice',slug:baseArticle.slug,html:adviceHtml,
       domSha256:observed.domSha256,renderedText:observed.text,templateFiles:files,clinicalReverified:false,unchanged:true}};
   const fieldMap={id:'id',slug:'slug',title:'title',content:'content',categoryId:'category_id',productIds:'product_ids',status:'status',createdAt:'created_at',publishedAt:'published_at',updatedAt:'updated_at',excerpt:'excerpt',faqs:'faqs',tags:'tags',generationMeta:'generation_meta'};
-  const state={adviceHtml,files,article:Object.fromEntries(Object.entries(fieldMap).map(([l,r])=>[r,structuredClone(baseArticle[l])])),products:baseProducts.map(productRow),writes:[],readbacks:0};
-  const db={findProductArticles:async()=>[],findArticles:async()=>[structuredClone(state.article)],getProducts:async()=>structuredClone(state.products),
+  const state={adviceHtml,files,article:Object.fromEntries(Object.entries(fieldMap).map(([l,r])=>[r,structuredClone(baseArticle[l])])),products:baseProducts.map(p=>({...productRow(p),xmin:'10'})),writes:[],readbacks:0};
+  const db={findProductArticles:async()=>[],findArticles:async()=>[structuredClone(state.article)],getProducts:async ids=>structuredClone(state.products.filter(p=>ids.includes(p.id))),
     insertDraft:async()=>{throw Error('no draft write');},
     patchProductCAS:async(before,patch)=>{state.writes.push('product:'+before.id);Object.assign(state.products.find(p=>p.id===before.id),patch);return [structuredClone(state.products.find(p=>p.id===before.id))];},
     patchPublishedCAS:async(before,patch)=>{state.writes.push('article');Object.assign(state.article,patch);return [structuredClone(state.article)];}};
@@ -102,6 +102,7 @@ test('partial product write leaves durable guard marker and cannot auto-replay',
  let attempts=0;h.deps.db.patchProductCAS=async()=>{attempts++;throw Error('unknown');};
  await assert.rejects(execute(h.input,h.deps),/reconciliation/);
  assert.equal(fs.existsSync(path.join(root,'.publication.in-flight.json')),true);
+ h.state.products=h.input.bundle.products.map(p=>({...productRow(p),xmin:'20'})); // Desired data never clears an unknown prior attempt.
  await assert.rejects(execute(h.input,h.deps),/in-flight/);assert.equal(attempts,1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
@@ -167,7 +168,7 @@ function yahooHarness(next) {
  c.changeSummary+='。商品同一性未確認のYahoo検索リンクを非表示';
  const old=c.baseProducts[0],candidate=c.candidateProducts[0];
  c.productPatches=[{id:old.id,baseHash:bundleHash(old),candidateHash:bundleHash(candidate),fields:{yahooUrl:next,updatedAt:candidate.updatedAt}}];
- h.state.products=c.baseProducts.map(productRow);h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
+ h.state.products=c.baseProducts.map(p=>({...productRow(p),xmin:'10'}));h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
  return h;
 }
 test('approved Yahoo route removal only clears that optional field via bound product CAS',async()=>{
@@ -193,4 +194,32 @@ test('inherited context drift during product writes blocks article CAS and requi
  const h=harness();const patch=h.deps.db.patchProductCAS;
  h.deps.db.patchProductCAS=async(...args)=>{const result=await patch(...args);h.state.adviceHtml=h.state.adviceHtml.replace('既存の安全情報','changed public advice');return result;};
  await assert.rejects(execute(h.input,h.deps),/reconciliation/);assert.deepEqual(h.state.writes,['product:p0']);
+});
+
+test('revision accepts exact desired rows without patch, refuses any third field or timestamp before writes',async()=>{
+ for(const mode of ['desired','field','timestamp']){
+  const h=harness({count:2});h.state.products=h.input.bundle.products.map(p=>({...productRow(p),xmin:'20'}));
+  if(mode==='field')h.state.products[1].description='third state';
+  if(mode==='timestamp')h.state.products[1].updated_at='2026-11-08T12:00:01+09:00';
+  if(mode==='desired'){
+   assert.equal((await execute(h.input,h.deps)).verified,true);assert.deepEqual(h.state.writes,['article']);
+  }else{await assert.rejects(execute(h.input,h.deps));assert.deepEqual(h.state.writes,[]);}
+ }
+});
+
+test('revision fresh pre-CAS read skips candidate installed since initial baseline check',async()=>{
+ const h=harness(),get=h.deps.db.getProducts;let reads=0;
+ h.deps.db.getProducts=async ids=>{if(++reads===2)h.state.products=h.input.bundle.products.map(p=>({...productRow(p),xmin:'20'}));return get(ids);};
+ assert.equal((await execute(h.input,h.deps)).verified,true);assert.deepEqual(h.state.writes,['article']);
+});
+
+test('revision mixed rows patch only baseline; fresh third state blocks before product or article mutation',async()=>{
+ for(const mode of ['mixed','third']){
+  const h=harness({count:2});
+  if(mode==='mixed')h.state.products[1]={...productRow(h.input.bundle.products[1]),xmin:'20'};
+  else{const get=h.deps.db.getProducts;let reads=0;h.deps.db.getProducts=async ids=>{if(++reads===2)h.state.products[0].updated_at='2026-11-08T12:00:01+09:00';return get(ids);};}
+  if(mode==='mixed'){
+   assert.equal((await execute(h.input,h.deps)).verified,true);assert.deepEqual(h.state.writes,['product:p0','article']);
+  }else{await assert.rejects(execute(h.input,h.deps),/reconcil/);assert.deepEqual(h.state.writes,[]);}
+ }
 });
