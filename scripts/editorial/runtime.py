@@ -744,6 +744,97 @@ class Runtime:
                 summaries.append(self._post_audit_fault(error, job.get('id')))
         return summaries
 
+    def _manager_enabled(self):
+        options = self.config.get('editorialManager')
+        return options is not None and (not isinstance(options, dict)
+                                       or options.get('enabled', False) is not False)
+
+    def _queue_manager_work(self, plan, snapshot):
+        """Queue a bounded human work order; never change a job or execute a retry."""
+        from manager import semantic_key, expectations
+        if (plan.action not in ('improve_existing', 'investigate_sources', 'reconcile_unknown')
+                or plan.state_fingerprint != semantic_key(snapshot)):
+            return {'status': 'blocked'}
+        target = next((j for j in snapshot['jobs'] if j['id'] == plan.job_id), None)
+        if plan.expectations != expectations(target):
+            return {'status': 'blocked'}
+        opportunity = None
+        if plan.target_url is not None:
+            opportunity = next((o for o in snapshot['metrics']['opportunities'] if o['url'] == plan.target_url), None)
+            if plan.action != 'improve_existing' or target is not None or opportunity is None:
+                return {'status': 'blocked'}
+        elif target is None:
+            return {'status': 'blocked'}
+        order = dict(action=plan.action, jobId=plan.job_id, targetUrl=plan.target_url,
+                     revision=plan.revision, stateFingerprint=plan.state_fingerprint,
+                     status='human_needed', expectations=copy.deepcopy(plan.expectations))
+        if opportunity is not None:
+            order['opportunity'] = copy.deepcopy(opportunity)
+        if target is not None:
+            order['observedStatus'] = {k: target.get(k) for k in
+                ('stage', 'errorCode', 'bundleCurrent', 'reviewPassed', 'published', 'socialPosted')}
+            order['effects'] = [dict(e) for e in snapshot['effects'] if e['jobId'] == plan.job_id][:10]
+        if len(canonical(order).encode()) > 16000:
+            return {'status': 'blocked'}
+        key = 'editorial_manager_work:' + fingerprint([plan.state_fingerprint, plan.action,
+                                                       plan.job_id, plan.target_url, plan.revision])
+        with self.ledger._tx() as db:
+            if db.execute('SELECT 1 FROM meta WHERE key=?', (key,)).fetchone():
+                return {'status': 'completed'}
+            if db.execute("SELECT count(*) FROM meta WHERE key LIKE 'editorial_manager_work:%'").fetchone()[0] >= 100:
+                return {'status': 'blocked'}
+            if target is not None:
+                current = self.ledger._get(db, plan.job_id)
+                if current.get('revision') != plan.revision or current['stage'] != target['stage']:
+                    return {'status': 'blocked'}
+            db.execute('INSERT INTO meta VALUES (?,?)', (key, canonical(order)))
+            self.ledger._event(db, plan.job_id, 'manager_work_order', order)
+        return {'status': 'completed'}
+
+    def _evaluate_manager(self, now):
+        """Called inside the CLI runtime.flock; no nested runtime lock or fallback."""
+        from dataclasses import asdict
+        from manager import Manager, Budget
+        from manager_cli import call
+        options = self.config.get('editorialManager')
+        if not isinstance(options, dict):
+            return {'enabled': True, 'status': 'unconfigured', 'budget': None,
+                    'callsUsed': 0, 'pendingActionCount': 0, 'pendingActions': []}
+        budget = None
+        provider = None
+        try:
+            if not isinstance(options, dict) or options.get('enabled') is not True:
+                raise ValueError('invalid_manager_configuration')
+            budget = Budget(**options['budget'])
+            command = options['command']
+            if not isinstance(command, list) or not command or not all(isinstance(v, str) and v for v in command):
+                raise ValueError('invalid_manager_command')
+            provider = lambda request: call(command, request['snapshot'], request['prompt'],
+                request['decisionSchema'], timeout=request['budget']['timeout_seconds'])
+        except (KeyError, TypeError, ValueError):
+            pass
+        try:
+            receipt = Manager(self.root, budget=budget).evaluate_locked(self, provider, now=now,
+                handlers={action: self._queue_manager_work for action in
+                          ('improve_existing', 'investigate_sources', 'reconcile_unknown')})
+        except Exception:
+            receipt = {'status': 'requires_reconciliation'}
+        # No summary, raw model body, command, attachment or transport output in health.
+        projection = {k: receipt[k] for k in ('status', 'receiptStatus', 'stateFingerprint', 'reason',
+            'errorCode', 'requestedModel', 'actualModel', 'usage', 'actualInvoiceUsd', 'costMissing',
+            'usdCapEnforced', 'routeAssurance') if k in receipt}
+        projection.update(enabled=True, budget=asdict(budget) if budget else None)
+        with sqlite3.connect(self.ledger.db_path) as db:
+            period = self.ledger.production_schedule.period_key(now) or 'inactive'
+            row = db.execute('SELECT value FROM meta WHERE key=?', ('editorial_manager_calls:' + period,)).fetchone()
+            projection['callsUsed'] = int(row[0]) if row else 0
+            rows = db.execute("SELECT value FROM meta WHERE key LIKE 'editorial_manager_work:%' ORDER BY key LIMIT 100").fetchall()
+        pending = [json.loads(row[0]) for row in rows if json.loads(row[0]).get('status') == 'human_needed']
+        projection['pendingActionCount'] = len(pending)
+        projection['pendingActions'] = [{k: item.get(k) for k in
+            ('action', 'jobId', 'targetUrl', 'revision', 'stateFingerprint', 'status')} for item in pending[:20]]
+        return projection
+
     def tick(self):
         decisions = self.consume()
         # Separate errors from generic attention notices, and never skip existing gates.
@@ -802,7 +893,18 @@ class Runtime:
         if revision_result:
             results.append(revision_result)
         now = datetime.now(JST)
-        if not revision_result and self.config.get('generationEnabled') and self.ledger.production_schedule.is_due(now):
+        manager_projection = None
+        if self._manager_enabled():
+            try:
+                manager_projection = self._evaluate_manager(now)
+            except Exception:
+                manager_projection = {'enabled': True, 'status': 'requires_reconciliation',
+                                      'budget': None, 'pendingActions': []}
+            effective = manager_projection.get('receiptStatus', manager_projection['status'])
+            if effective not in ('completed', 'busy') or manager_projection.get('pendingActionCount', 0):
+                results.append({'id': 'editorial-manager', 'status': 'attention',
+                                'reason': 'editorial_manager_requires_attention'})
+        elif not revision_result and self.config.get('generationEnabled') and self.ledger.production_schedule.is_due(now):
             try:
                 results.append({'production': self.produce(limit=1)})
             except Exception as error:
@@ -835,6 +937,8 @@ class Runtime:
                   'reports': reports, 'reportAttention': report_attention,
                   'postPublicationAudits': audits, 'postPublicationAuditEnabled': self.config.get('postPublicationAuditEnabled') is True,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
+        if manager_projection is not None:
+            result['manager'] = manager_projection
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
                      for j in jobs if j.get('error')]
