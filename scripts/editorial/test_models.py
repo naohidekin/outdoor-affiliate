@@ -232,6 +232,20 @@ class ModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ModelError, 'Unverified firsthand'):
             Models(ENV, Fake(response(themes))).research(context())
 
+    def test_review_medical_flag_means_candidate_check_passed_not_applicability(self):
+        false_review = dict(REVIEW, medical=False)
+        fake = Fake(response(false_review))
+        reviewed = Models(ENV, fake).review(bundle(), FLAGS)
+        self.assertFalse(reviewed['medical'])
+        self.assertFalse(reviewed['passed'])
+        self.assertEqual(len(fake.calls), 1)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        for phrase in ('medical=true means you checked the candidate title/body/FAQs',
+                       'absence of such claims means medical=true after that actual check',
+                       'medical=false means a risk or failed check, never N/A',
+                       'apply ONLY to candidate article content', 'never certify inherited clinical accuracy'):
+            self.assertIn(phrase, prompt)
+
     def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
         checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
         with self.assertRaises(ModelError):
