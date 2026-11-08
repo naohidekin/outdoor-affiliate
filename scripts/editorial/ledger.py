@@ -542,10 +542,11 @@ class Ledger:
             delivered = False
             for req in requests:
                 scope, parts = req.get('scope') or {}, req.get('parts') or {}
+                part_scope = parts.get('scope', parts) if isinstance(parts, dict) else None
                 if (req.get('manifest_hash') != revision or not isinstance(req.get('card_ts'), str)
-                        or not req['card_ts'] or not isinstance(parts, dict)
+                        or not req['card_ts'] or not isinstance(scope, dict) or not isinstance(part_scope, dict)
                         or not all(scope.get(k) for k in SCOPE) or scope.get('user_id') != actor
-                        or parts.get('scope', parts) != scope):
+                        or any(part_scope.get(k) != scope[k] for k in SCOPE)):
                     continue
                 if any(all(event.get(k) == req.get(k) for k in
                            ('request_id', 'manifest_hash', 'article_id', 'scope', 'parts', 'card_ts'))

@@ -30,7 +30,7 @@ class CodexSocialApprovalTests(unittest.TestCase):
         self.save(self.job)
         req = self.ledger.create_request(self.job['id'], 'social')
         self.delivered = self.ledger.mark_delivered(req['request_id'],
-            {'scope': SCOPE, 'parts': [{'verified': True, 'message_ts': '2.0'}]}, '2.0')
+            {'scope': dict(SCOPE, bot_user_id='BOT'), 'parts': [{'verified': True, 'message_ts': '2.0'}]}, '2.0')
         self.job = self.ledger.hold_social_refresh(self.job['id'],
             expected_social_revision=self.job['social']['revision'])
         self.evidence = dict(source='codex', thread_id='offline-owner-thread',
@@ -171,6 +171,57 @@ class CodexSocialApprovalTests(unittest.TestCase):
             db.execute('DELETE FROM requests')
         with self.assertRaises(ValueError):
             self.approve()
+
+    def test_full_runtime_scope_accepts_extra_bot_field_without_changing_delivery(self):
+        self.assertEqual(SCOPE, self.delivered['scope'])
+        self.assertEqual(dict(SCOPE, bot_user_id='BOT'), self.delivered['parts']['scope'])
+        before = copy.deepcopy(self.delivered)
+        self.assertEqual('social_approved', self.approve()['stage'])
+        with self.ledger._tx() as db:
+            saved = json.loads(db.execute('SELECT data FROM requests WHERE id=?',
+                (before['request_id'],)).fetchone()[0])
+            event = json.loads(db.execute("SELECT data FROM events WHERE job_id=? AND kind='delivered'",
+                (self.job['id'],)).fetchone()[0])
+        self.assertEqual(before, event)
+        self.assertEqual(before['parts'], saved['parts'])
+        self.assertEqual(before['card_ts'], saved['card_ts'])
+        self.assertEqual(before['manifest_hash'], saved['manifest_hash'])
+
+    def test_legacy_delivery_without_optional_bot_scope_still_approves(self):
+        request = self.ledger.create_request(self.job['id'], 'social')
+        self.ledger.mark_delivered(request['request_id'], SCOPE, '3.0')
+        self.ledger.hold_social_refresh(self.job['id'],
+            expected_social_revision=self.job['social']['revision'])
+        self.assertEqual('social_approved', self.approve()['stage'])
+
+    def test_each_mandatory_scope_key_must_match_even_when_full_parts_match_event(self):
+        # Matching full parts/event alone must not authorize the wrong mandatory scope.
+        for key in SCOPE:
+            for missing in (False, True):
+                changed = copy.deepcopy(self.delivered)
+                if missing:
+                    changed['parts']['scope'].pop(key)
+                else:
+                    changed['parts']['scope'][key] = 'mismatch'
+                with self.ledger._tx() as db:
+                    db.execute('UPDATE requests SET data=? WHERE id=?',
+                        (json.dumps(changed), changed['request_id']))
+                    self.ledger._event(db, self.job['id'], 'delivered', changed)
+                before = self.state()
+                with self.subTest(key=key, missing=missing), self.assertRaises(ValueError):
+                    self.approve()
+                self.assertEqual(before, self.state())
+
+    def test_optional_scope_field_still_must_match_the_actual_delivery_event(self):
+        changed = copy.deepcopy(self.delivered)
+        changed['parts']['scope']['bot_user_id'] = 'another-bot'
+        with self.ledger._tx() as db:
+            db.execute('UPDATE requests SET data=? WHERE id=?',
+                (json.dumps(changed), changed['request_id']))
+        before = self.state()
+        with self.assertRaises(ValueError):
+            self.approve()
+        self.assertEqual(before, self.state())
 
     def test_corrupted_delivery_or_only_created_request_is_not_evidence(self):
         original = copy.deepcopy(self.delivered)
