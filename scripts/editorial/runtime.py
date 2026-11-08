@@ -587,6 +587,8 @@ class Runtime:
             'affiliate_account_binding_missing': '購入リンクの紹介先設定を確認できませんでした',
             'affiliate_account_or_route_mismatch': '購入リンクの紹介先または経路が一致しません',
             'approved_product_model_or_brand_missing': '商品の型番またはブランドの確認情報が不足しています',
+            'merchant_variant_evidence_conflicting': '販売ページのサイズ表記が混在し、商品を確定できません',
+            'merchant_model_evidence_missing': '販売ページに型番の確認情報がなく、同一性を確定できません',
             'merchant_html_unavailable': '購入先の商品ページを確認できませんでした（アクセス制限など）',
             'merchant_challenge_unverified': '購入先のアクセス制限により確認できませんでした',
             'merchant_destination_or_product_identity_mismatch': '購入先の商品または型番が一致しません',
