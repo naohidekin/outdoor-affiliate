@@ -32,6 +32,18 @@ MAKERS = {'soto': ('soto.shinfuji.co.jp',), 'snow peak': ('snowpeak.co.jp',),
           'ロゴス': ('logos.ne.jp',), 'nanga': ('nanga.jp',), 'mont-bell': ('montbell.jp', 'montbell.com')}
 MAX_BYTES = 8 * 1024 * 1024
 
+MAKERS.update({'primus': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-i-collect.com'),
+               'プリムス': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-i-collect.com'),
+               'msr': ('e-mot.co.jp', 'cascadedesigns.com', 'msrgear.com'),
+               'jetboil': ('montbell.jp', 'jetboil.jp'),
+               'ジェットボイル': ('montbell.jp', 'jetboil.jp'),
+               'captain stag': ('captainstag.net',), 'キャプテンスタッグ': ('captainstag.net',),
+               'iwatani': ('iwatani.co.jp',), 'イワタニ': ('iwatani.co.jp',),
+               'picogrill': ('picogrill.ch',), 'ピコグリル': ('picogrill.ch',),
+               'tokyocamp': ('tokyocamp.ooo',),
+               'solo stove': ('store.upioutdoor.com', 'solostove.com'),
+               'ソロストーブ': ('store.upioutdoor.com', 'solostove.com')})
+
 
 class CatalogError(ValueError):
     pass
@@ -89,6 +101,9 @@ def _model(product):
     specs = product.get('specs') or {}
     for key in ('model', 'modelNumber', '型番', '品番', 'モデル番号'):
         value = specs.get(key)
+        if (product.get('id') == 'burner-s-009' and product.get('brand', '').casefold() in ('iwatani', 'イワタニ')
+                and value == 'CB-JCB'):
+            return value
         if isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{2,}', value) and re.search(r'\d', value):
             return value
     codes = re.findall(r'(?<![\w-])(?=[A-Za-z\d-]*[A-Za-z])(?=[A-Za-z\d-]*\d)[A-Za-z\d]+(?:-[A-Za-z\d]+)+(?![\w-])', product.get('name', ''))
@@ -122,6 +137,7 @@ class _Page(HTMLParser):
         self.title, self.text, self.images = '', '', []
         self.in_title, self.skip = False, 0
         self.units, self.scopes, self.structured, self.dom = [], [], [], []
+        self.identity_nodes, self._identity_scopes = [], []
         self.feed(source)
 
     def handle_starttag(self, tag, attrs):
@@ -130,6 +146,8 @@ class _Page(HTMLParser):
             self.dom.append((tag, attrs))
         if tag in ('script', 'style', 'noscript'):
             self.skip += 1
+        if not self.skip and tag in ('div', 'span', 'p', 'h1', 'h2'):
+            self._identity_scopes.append({'kind': tag, 'parts': [], 'ancestors': tuple(self.dom)})
         if not self.skip and tag in ('tr', 'dl', 'li', 'p', 'td', 'th', 'dt', 'dd', 'h3', 'aside'):
             self.scopes.append({'kind': tag, 'parts': [], 'cells': [], 'asides': [],
                                 'class': attrs.get('class', ''), 'ancestors': tuple(self.dom)})
@@ -141,6 +159,14 @@ class _Page(HTMLParser):
             self.images.append(attrs.get('content', ''))
 
     def handle_endtag(self, tag):
+        if not self.skip:
+            i = next((i for i in range(len(self._identity_scopes) - 1, -1, -1) if self._identity_scopes[i]['kind'] == tag), None)
+            if i is not None:
+                item = self._identity_scopes[i]
+                del self._identity_scopes[i:]
+                text = ' '.join(' '.join(item.pop('parts')).split())
+                if len(text) < 180 and (tag in ('h1', 'h2') or re.match(r'^(?:品番|型番|商品コード|No\.|M-\d)', text)):
+                    self.identity_nodes.append({**item, 'text': text})
         if not self.skip:
             index = next((i for i in range(len(self.scopes) - 1, -1, -1) if self.scopes[i]['kind'] == tag), None)
             if index is not None:
@@ -173,6 +199,8 @@ class _Page(HTMLParser):
             self.text += ' ' + data
             for scope in self.scopes:
                 scope['parts'].append(data)
+            for scope in self._identity_scopes:
+                scope['parts'].append(data)
         if self.in_title:
             self.title += data
 
@@ -182,6 +210,11 @@ SPEC_LABELS = {'model': ('model', 'modelNumber', '型番', '品番', 'モデル�
                'size': ('size', 'サイズ', '寸法', '製品サイズ'), 'capacity': ('capacity', '容量')}
 def _pairs(unit):
     cells = unit['cells']
+    if unit.get('primary_pairs') is not None:
+        return unit['primary_pairs']
+    if unit['kind'] == 'tr':
+        return [(cells[n][1], cells[n + 1][1]) for n in range(len(cells) - 1)
+                if cells[n][0] in ('th', 'td') and cells[n + 1][0] == 'td']
     if unit['kind'] == 'dl':
         return [(cells[n][1], cells[n + 1][1]) for n in range(len(cells) - 1)
                 if cells[n][0] == 'dt' and cells[n + 1][0] == 'dd']
@@ -199,6 +232,54 @@ def _has_ancestor(unit, tag, attr, value):
 
 def _primary_units(page, brand):
     brand = brand.casefold()
+    family = next((key for key, aliases in (
+        ('primus', ('primus', 'プリムス')), ('msr', ('msr',)),
+        ('jetboil', ('jetboil', 'ジェットボイル')), ('captain', ('captain stag', 'キャプテンスタッグ')),
+        ('iwatani', ('iwatani', 'イワタニ')))
+        if brand in aliases), None)
+    if family:
+        def scoped(u):
+            if any(t in ('aside', 'nav', 'footer', 'template') for t, _ in u['ancestors']):
+                return False
+            return {'primus': lambda: _has_ancestor(u, 'div', 'class', 'block-goods-detail'),
+                    'msr': lambda: _has_ancestor(u, 'div', 'class', 'elementor-28641'),
+                    'jetboil': lambda: _has_ancestor(u, 'div', 'id', 'contents'),
+                    'captain': lambda: _has_ancestor(u, 'section', 'class', 'item_main'),
+                    'iwatani': lambda: _has_ancestor(u, 'main', 'id', 'main')}[family]()
+        selected, codes = [], []
+        for u in page.units:
+            if not scoped(u): continue
+            pairs = _pairs(u)
+            if family == 'primus' and u['kind'] == 'dl' and 'block-goods-code' in u['class'].split():
+                codes.extend(v for k, v in pairs if k == '商品コード')
+            elif family == 'jetboil' and _has_ancestor(u, 'div', 'id', 'maindataCont'):
+                codes.extend(v.lstrip('#') for k, v in pairs if k == '品番')
+            elif family == 'iwatani' and u['kind'] == 'dl' and 'products_detail' in u['class'].split():
+                codes.extend(v for k, v in pairs if k.rstrip(' ：:') == '商品コード')
+            is_spec = ((family == 'primus' and 'block-goods-comment2' in u['class'].split()) or
+                       (family == 'msr' and _has_ancestor(u, 'table', 'class', 'woocommerce-spec-table') and u['kind'] == 'tr') or
+                       (family == 'jetboil' and _has_ancestor(u, 'div', 'class', 'column1') and u['kind'] == 'p' and '【重量】' in u['text']) or
+                       (family == 'captain' and _has_ancestor(u, 'div', 'class', 'txt_product_spec') and u['kind'] == 'tr') or
+                       (family == 'iwatani' and _has_ancestor(u, 'table', 'class', 'table_style01') and _has_ancestor(u, 'section', 'class', 'sec_box_wrap') and u['kind'] == 'tr'))
+            if is_spec:
+                if family in ('primus', 'jetboil'):
+                    pairs = [(m[1], m[2].strip()) for m in re.finditer(r'【([^】]+)】([^【]+)', u['text'])]
+                selected.append({**u, 'primary_pairs': pairs})
+        if family in ('msr', 'captain'):
+            for node in page.identity_nodes:
+                header_code = (family == 'captain' and _has_ancestor(node, 'main', 'id', 'main')
+                               and _has_ancestor(node, 'header', 'class', 'item_area_head')
+                               and _has_ancestor(node, 'p', 'class', 'product_id')
+                               and not any(t in ('aside', 'nav', 'footer', 'template') for t, _ in node['ancestors']))
+                if not scoped(node) and not header_code: continue
+                pattern = r'^品番\s*(\d+)(?:\s+カテゴリー\s+[^\d]+)?$' if family == 'msr' else r'^(M-\d+)$'
+                m = re.fullmatch(pattern, node['text'])
+                if m: codes.append(m[1])
+        codes = list(dict.fromkeys(codes))
+        if not selected or len(codes) != 1:
+            return []
+        return [{'kind': 'dl', 'cells': [], 'text': 'model ' + codes[0],
+                 'primary_pairs': [('model', codes[0])], 'ancestors': (), 'class': ''}] + selected
     if brand == 'soto':
         spec_dls = [unit for unit in page.structured if unit['kind'] == 'dl'
                     and 'pd__specification' in unit['class'].split()
@@ -214,9 +295,18 @@ def _primary_units(page, brand):
         return [unit for unit in page.structured if unit['kind'] == 'dl'
                 and _has_ancestor(unit, 'div', 'id', 'tab-size')]
     if brand in ('uniflame', 'ユニフレーム'):
-        return [unit for unit in page.structured if unit['kind'] == 'dl'
+        units = [unit for unit in page.structured if unit['kind'] == 'dl'
                 and _has_ancestor(unit, 'article', 'id', 'product')
                 and _has_ancestor(unit, 'ul', 'class', 'item-spec')]
+        codes = list(dict.fromkeys(m[1] for node in page.identity_nodes
+                     if _has_ancestor(node, 'article', 'id', 'product') and _has_ancestor(node, 'div', 'id', 'item')
+                     and not any(t in ('aside', 'nav', 'footer', 'template') for t, _ in node['ancestors'])
+                     for m in [re.fullmatch(r'No\.\s*(\d{6})', node['text'])] if m))
+        if len(codes) > 1: return []
+        if codes and units:
+            units = [{'kind': 'dl', 'cells': [], 'text': 'model ' + codes[0],
+                      'primary_pairs': [('model', codes[0])], 'ancestors': (), 'class': ''}] + units
+        return units
     return []
 
 
@@ -227,11 +317,13 @@ def _structured_model_codes(units):
 
 
 def _primary_identity(page, model, brand):
-    brand_names = {'snow peak', 'スノーピーク'} if brand.casefold() in ('snow peak', 'スノーピーク') else {brand.casefold()}
+    aliases = ({'snow peak', 'スノーピーク'}, {'primus', 'プリムス'}, {'jetboil', 'ジェットボイル'},
+               {'captain stag', 'キャプテンスタッグ'}, {'iwatani', 'イワタニ', '岩谷産業'})
+    brand_names = next((names for names in aliases if brand.casefold() in names), {brand.casefold()})
     if not any(name in page.title.casefold() for name in brand_names if name):
         return None
     units = _primary_units(page, brand)
-    if brand.casefold() in ('soto', 'snow peak', 'スノーピーク', 'uniflame', 'ユニフレーム') and not units:
+    if brand.casefold() in ('soto', 'snow peak', 'スノーピーク', 'uniflame', 'ユニフレーム', 'primus', 'プリムス', 'msr', 'jetboil', 'ジェットボイル', 'captain stag', 'キャプテンスタッグ', 'iwatani', 'イワタニ') and not units:
         return None
     model_codes = _structured_model_codes(units)
     if model_codes:
@@ -385,6 +477,48 @@ def _image_type(body):
     return None
 
 
+def _fully_decoded_image_type(body):
+    """Bounded full raster decode for the one malformed official MIME header.
+
+    Marker inspection is only a cheap prefilter. Sharp must decode ALL pixels;
+    absent dependencies, warnings, invalid data and timeout all fail closed.
+    """
+    import os
+    from pathlib import Path
+    import shutil
+    import subprocess
+    try:
+        marker_type = _image_type(body)
+        if marker_type not in ('image/jpeg', 'image/png') or not 0 < len(body) <= MAX_BYTES:
+            return None
+        node = shutil.which('node')
+        if not node:
+            return None
+        script = r'''const fs=require('node:fs');
+(async()=>{try{
+ const sharp=require(process.argv[1]); const body=fs.readFileSync(0);
+ if(!body.length||body.length>8*1024*1024)throw Error();
+ const image=sharp(body,{failOn:'warning',limitInputPixels:16000000});
+ const meta=await image.metadata();
+ if(!['jpeg','png'].includes(meta.format)||!meta.width||!meta.height||meta.width*meta.height>16000000)throw Error();
+ const decoded=await image.raw().toBuffer({resolveWithObject:true});
+ if(!decoded.data.length||decoded.info.width!==meta.width||decoded.info.height!==meta.height)throw Error();
+ process.stdout.write(JSON.stringify({format:meta.format,width:meta.width,height:meta.height}));
+}catch{process.exitCode=1;}})();'''
+        sharp = str(Path(__file__).resolve().parents[2] / 'node_modules' / 'sharp')
+        value = subprocess.run([node, '-e', script, sharp], input=body, capture_output=True,
+                               timeout=10, env={'PATH':os.path.dirname(node)+':/usr/bin:/bin', 'TZ':'Asia/Tokyo'})
+        if value.returncode or not 0 < len(value.stdout) <= 512:
+            return None
+        proof = json.loads(value.stdout)
+        decoded_type = {'jpeg':'image/jpeg', 'png':'image/png'}.get(proof.get('format'))
+        if decoded_type != marker_type or not all(type(proof.get(k)) is int and proof[k] > 0 for k in ('width','height')):
+            return None
+        return decoded_type if proof['width'] * proof['height'] <= 16000000 else None
+    except Exception:
+        return None
+
+
 def _affiliate_route(channel, url, env):
     try:
         p, _ = safe_url(url, resolve=False)
@@ -428,6 +562,11 @@ class Catalog:
         try:
             for hop in range(6):
                 p, addresses = safe_url(url, resolve=self.fetcher is None)
+                # This public maker rejects the default stdlib client. Keep the
+                # ordinary compatibility UA scoped to its exact official host;
+                # redirects still discard headers and revalidate destinations.
+                if p.hostname == 'www.iwatani.co.jp':
+                    headers.setdefault('User-Agent', 'Mozilla/5.0')
                 if allowed_domains and not any(p.hostname == d or (not exact_domains and p.hostname.endswith('.' + d)) for d in allowed_domains):
                     raise CatalogError('manufacturer host rejected')
                 if self.fetcher:
@@ -457,6 +596,15 @@ class Catalog:
                 body = result.get('body', b'')
                 if not isinstance(body, bytes) or len(body) > MAX_BYTES or status != 200:
                     raise CatalogError('HTTP response rejected')
+                if p.hostname == 'img.snowpeak.co.jp' and rh.get('content-type') == 'image':
+                    # The maker CDN advertises only "image" for valid rasters.
+                    # Require full pixel decode, not marker/metadata inspection.
+                    # Preserve provenance; never infer MIME from suffix/URL.
+                    detected = _fully_decoded_image_type(body)
+                    if detected not in ('image/jpeg', 'image/png'):
+                        raise CatalogError('official raster decode failed')
+                    rh['x-catalog-original-content-type'] = rh['content-type']
+                    rh['content-type'] = detected
                 return {'url': url, 'status': status, 'headers': rh, 'body': body}
             raise CatalogError('redirect limit exceeded')
         except Exception:
@@ -478,7 +626,10 @@ class Catalog:
         content_type = res['headers'].get('content-type', '').split(';')[0].lower()
         if _image_type(res['body']) != content_type or not content_type.startswith('image/'):
             raise CatalogError('image response invalid')
-        return {'sha256': hashlib.sha256(res['body']).hexdigest(), 'size': len(res['body']), 'contentType': content_type}
+        proof = {'sha256': hashlib.sha256(res['body']).hexdigest(), 'size': len(res['body']), 'contentType': content_type}
+        if res['headers'].get('x-catalog-original-content-type') == 'image':
+            proof['declaredContentType'] = 'image'
+        return proof
 
     def catalog(self):
         if not all(self.env.get(k) for k in ('SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY')):
@@ -519,6 +670,26 @@ class Catalog:
                 raise CatalogError('credential reflection refused')
         return value
 
+    def gather_revision(self, theme, catalog, binding):
+        from revisions import validate_context
+        validate_context(binding)
+        ids = binding['targetProductIds']
+        if theme.get('slug') != binding['baseArticle']['slug'] or theme.get('productIds') != ids:
+            raise CatalogError('revision product selection not bound')
+        # The exact same per-product verification runs, including unknown models and brands.
+        public = dict(catalog, products=binding['candidateProducts'])
+        parts = [self.gather(dict(theme, productIds=[pid]), public) for pid in ids]
+        result = dict(theme=theme, productIds=list(ids),
+                      checks={k: all(p['checks'][k] is True for p in parts) for k in ('facts', 'images', 'affiliate')},
+                      evidence={'products': [item for p in parts for item in p['evidence']['products']]})
+        for key in ('catalog', 'products', 'references', 'images'):
+            result[key] = [item for p in parts for item in p[key]]
+        result['existingArticles'] = [a for a in parts[0].get('existingArticles', []) if a.get('slug') != theme['slug']]
+        result['categories'] = parts[0].get('categories', [])
+        result['merchantClicks'] = [item for p in parts for item in p.get('merchantClicks', [])]
+        result['blocked'] = not all(result['checks'].values())
+        return self._public(result)
+
     def gather(self, theme, catalog):
         """Return immutable catalogue claims plus observed evidence; never infer specs.
 
@@ -547,6 +718,29 @@ class Catalog:
             item = {'productId': pid, 'model': model, 'facts': False, 'images': False, 'affiliate': False,
                     'claims': [], 'destinations': [], 'issues': [], 'checkedAt': checked_at}
             maker_pages, mall_pages = [], []
+            fixed_firepit_ids = ('fp-001', 'fp-002', 'fp-004', 'fp-005')
+            firepit_sources = {}
+
+            def source_binding(res, parsed, key, value):
+                primary = firepit_sources.get(parsed)
+                if primary is not None:
+                    expected = (primary['model'] if key in ('model', 'modelNumber', '型番', '品番', 'モデル番号')
+                                else primary['specs'].get(key))
+                    if isinstance(value, str) and value.strip() == expected:
+                        return {'unit': 'fixed-official-firepit', 'model': primary['model'],
+                                'field': key, 'value': value, 'excerpt': key + ': ' + value[:500],
+                                'conditions': [primary['scope']]}
+                    return None
+                if pid in fixed_firepit_ids:
+                    return None
+                return _spec_evidence(parsed, model, key, value, primary_identity=True,
+                                      brand=product.get('brand', ''))
+
+            def source_images(res, parsed):
+                primary = firepit_sources.get(parsed)
+                if primary is not None:
+                    return primary['imageUrls']
+                return [urljoin(res['url'], src) for src in parsed.images]
             # Required notices are independent of optional product discovery. A
             # missing lifecycle source must never degrade into spec-only proof.
             notice_references = []
@@ -577,12 +771,93 @@ class Catalog:
                 raise CatalogError('required notice unavailable') from None
             references.extend(notice_references)
             def page(url, kind):
-                res = self.request(url, allowed_domains=domains if kind == 'manufacturer' else None)
+                nonlocal model
+                # These fixed public product pages return 429 JSON to an empty
+                # UA but ordinary HTML to a normal browser UA. Send explicit
+                # read-only headers once; no retry or verification bypass.
+                headers = ({'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0'}
+                           if kind == 'manufacturer' and pid in fixed_firepit_ids else None)
+                res = self.request(url, headers, allowed_domains=domains if kind == 'manufacturer' else None)
                 if not res['headers'].get('content-type', '').lower().startswith('text/html'):
                     raise CatalogError('HTML required')
-                parsed = _Page(_decode_html(res['body'], res['headers'].get('content-type', '')))
-                identity = _primary_identity(parsed, model, product.get('brand', '')) if kind == 'manufacturer' else None
+                html = _decode_html(res['body'], res['headers'].get('content-type', ''))
+                parsed = _Page(html)
+                identity = None
+                if kind == 'manufacturer':
+                    if pid in fixed_firepit_ids:
+                        from primary_firepit import extract_primary
+                        primary = extract_primary(product, res['url'], html)
+                        if primary and (primary['model'] == model or
+                                pid == 'fp-004' and not model and primary['model'] == 'HAKOSUKA'):
+                            # Named model authority is granted only by the helper's
+                            # exact fp-004 URL, visible title, full-body and material scope.
+                            model = primary['model']
+                            item['model'] = model
+                            firepit_sources[parsed] = primary
+                            identity = primary['scope']
+                    else:
+                        identity = _primary_identity(parsed, model, product.get('brand', ''))
                 match = bool(identity) if kind == 'manufacturer' else (model_matches(model, parsed.title) and product.get('brand', '').casefold() in parsed.title.casefold())
+                fixed_purchase_identity = None
+                if kind == 'purchase' and pid in ('fp-004', 'tent-f03', 'tent-f06', 'tent-f-landlock-x'):
+                    from primary_firepit import fixed_amazon_identity
+                    fixed_purchase_identity = fixed_amazon_identity(pid, model, res['url'], html, parsed.title)
+                    if fixed_purchase_identity and pid != 'fp-004':
+                        match = True
+                        identity = fixed_purchase_identity['scope']
+                if kind == 'purchase' and pid in fixed_firepit_ids:
+                    # Merchant aliases are authority derived from this exact
+                    # observed maker SKU, never from a search snippet or title alone.
+                    from primary_firepit import merchant_primary
+                    merchant_body = merchant_primary(html)
+                    title = parsed.title
+                    compact = lambda text: re.sub(r'\s+', '', text).casefold()
+                    brand_aliases = {'fp-001': ('picogrill', 'ピコグリル'),
+                                     'fp-002': ('uniflame', 'ユニフレーム'),
+                                     'fp-004': ('tokyocamp',),
+                                     'fp-005': ('solostove', 'ソロストーブ')}
+                    brand_ok = any(compact(brand) in compact(title) for brand in brand_aliases[pid])
+                    if pid == 'fp-004' and fixed_purchase_identity:
+                        brand_ok = True
+                    accessory = re.search(r'交換|互換|ケースのみ|本体なし|本体別売|専用(?:ケース|バッグ|火床)|'
+                                          r'ゴトクのみ|ロストルのみ|網のみ|スピットのみ|ピコグリル風|'
+                                          r'replacement|compatible|case\s+only|carrying\s+case', title, re.I)
+                    alias = False
+                    if firepit_sources and brand_ok and not accessory:
+                        alias = model_matches(model, title)
+                        if pid == 'fp-001' and model == '0398.SP':
+                            alias = alias or model_matches('398', title)
+                        elif pid == 'fp-004' and model == 'HAKOSUKA':
+                            alias = bool(alias or fixed_purchase_identity) and not re.search(r'titanium|チタン', title, re.I)
+                        elif pid == 'fp-005' and model == 'SSRAN-SD-2':
+                            kit_title = re.search(r'(?:rangerkit|レンジャーキット)2\.0(?![a-z0-9.])', compact(title))
+                            alias = bool(kit_title and model_matches(model, merchant_body)
+                                         and re.search(r'専用(?:の)?スタンド', merchant_body)
+                                         and not re.search(r'本体のみ|スタンド別売|SSRANJP', merchant_body, re.I))
+                    match = bool(firepit_sources and brand_ok and not accessory and alias)
+                    if match:
+                        bundle_verified = True
+                        if pid == 'fp-001':
+                            # A complete maker set contains two skewers. A seller's
+                            # body title cannot certify that bundle, nor can a nearby
+                            # replacement-parts or review paragraph supply it.
+                            body_title = (re.search(r'焚き?火台|firepit|fire\s+pit', title, re.I)
+                                          and not re.search(r'(?:用|専用).*?(?:串|スピット|skewer)|(?:串|スピット|skewer).*?(?:セット|set)', title, re.I))
+                            counts = re.findall(r'(?:串|スピット|skewers?)\s*[×x:：]?\s*([0-9０-９]+)\s*(?:本|pcs)?', merchant_body, re.I)
+                            normalized_counts = [int(value.translate(str.maketrans('０１２３４５６７８９', '0123456789'))) for value in counts]
+                            bundle_verified = bool(body_title and normalized_counts
+                                and all(count == 2 for count in normalized_counts)
+                                and model_matches('398', merchant_body)
+                                and not re.search(r'(?:picogrill|ピコグリル)\s*(?!398(?![0-9]))[0-9]{3,4}', merchant_body, re.I)
+                                and not re.search(r'本体のみ|本体なし|本体別売|別売|交換|オプション|replacement|optional', merchant_body, re.I))
+                        parsed.firepit_purchase_binding = {
+                            'manufacturerModel': model,
+                            'manufacturerSources': [primary['sourceUrl'] for primary in firepit_sources.values()],
+                            'merchantModelAlias': '398' if pid == 'fp-001' else model,
+                            'bundleVerified': bundle_verified,
+                            'conditions': (['Manufacturer0398.SP includes two skewers; this merchant bundle count is unconfirmed.']
+                                           if not bundle_verified else [])}
+                        match = match and bundle_verified
                 # Store evidence of exact comparisons, never user review text.
                 if match:
                     references.append({'productId': pid, 'kind': kind, 'url': res['url'], 'checkedAt': checked_at,
@@ -605,9 +880,9 @@ class Catalog:
                 image_url = product.get('imageUrl', '')
                 hints_complete = bool(model and maker_pages and specs and image_url
                     and all(isinstance(value, str) and value and any(
-                        _spec_evidence(parsed, model, key, value, primary_identity=True, brand=product.get('brand', ''))
-                        for _, parsed in maker_pages) for key, value in specs.items())
-                    and any(image_url in [urljoin(res['url'], src) for src in parsed.images]
+                        source_binding(res, parsed, key, value)
+                        for res, parsed in maker_pages) for key, value in specs.items())
+                    and any(image_url in source_images(res, parsed)
                             for res, parsed in maker_pages))
                 if not hints_complete and self.env.get('BRAVE_API_KEY'):
                     data = self._json('https://api.search.brave.com/res/v1/web/search?' + urlencode({'q': product['brand'] + ' ' + product['name'] + ' 公式 仕様', 'count': 5}),
@@ -647,8 +922,7 @@ class Catalog:
                     item['claims'].append({'field': key, 'verified': False})
                     continue
                 proof = next(((res['url'], binding) for res, parsed in maker_pages
-                              for binding in [_spec_evidence(parsed, model, key, value, primary_identity=True,
-                                                            brand=product.get('brand', ''))] if binding), None)
+                              for binding in [source_binding(res, parsed, key, value)] if binding), None)
                 source, binding = proof if proof else (None, None)
                 item['claims'].append({'field': key, 'text': value, 'url': source, 'binding': binding,
                                        'verified': proof is not None, 'checkedAt': checked_at})
@@ -661,7 +935,7 @@ class Catalog:
             item['unverifiedFields'] = ['description', 'rating', 'price', 'availability']
             image_url = product.get('imageUrl', '')
             identity_source = next((res['url'] for res, parsed in maker_pages + mall_pages
-                                    if image_url in [urljoin(res['url'], u) for u in parsed.images]), None)
+                                    if image_url in source_images(res, parsed)), None)
             try:
                 res = self.request(image_url)
                 actual_type = _image_type(res['body'])
@@ -671,6 +945,8 @@ class Catalog:
                          'sha256': hashlib.sha256(res['body']).hexdigest(), 'size': len(res['body']),
                          'contentType': declared_type, 'identitySource': identity_source,
                          'checkedAt': checked_at, 'verified': verified}
+                if res['headers'].get('x-catalog-original-content-type') == 'image':
+                    image['declaredContentType'] = 'image'
                 images.append(image)
                 item['images'] = verified
             except CatalogError:
@@ -689,6 +965,8 @@ class Catalog:
                     item['destinations'].append({'channel': channel, 'url': product[field], 'finalUrl': res['url'],
                                                  'verified': verified, 'checkedAt': checked_at,
                                                  'text': 'catalog brand and exact model title check'})
+                    if getattr(parsed, 'firepit_purchase_binding', None):
+                        item['destinations'][-1]['identityBinding'] = parsed.firepit_purchase_binding
                 except CatalogError:
                     item['destinations'].append({'channel': channel, 'verified': False, 'checkedAt': checked_at})
             item['affiliate'] = bool(item['destinations'] and all(d['verified'] for d in item['destinations']))

@@ -176,7 +176,12 @@ class PostPublicationAudit:
                 raise ValueError()
             if not isinstance(content, str) or not content.strip() or not isinstance(title, str) or not title.strip():
                 raise ValueError()
-            if len(content.encode()) > LIMIT or not isinstance(products, list) or not isinstance(images, list) or len(products) > 12 or len(images) > 24:
+            product_limit, image_limit = 12, 24
+            if job.get('kind') == 'article_revision':
+                from revisions import validate_revision_bundle
+                validate_revision_bundle(job, bundle)
+                product_limit, image_limit = 20, 41
+            if len(content.encode()) > LIMIT or not isinstance(products, list) or not isinstance(images, list) or len(products) > product_limit or len(images) > image_limit:
                 raise ValueError()
             ids = article['productIds']
             if not isinstance(ids, list) or len(set(ids)) != len(ids) or set(ids) != {p['id'] for p in products} or len(products) != len(ids):

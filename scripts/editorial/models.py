@@ -328,6 +328,12 @@ class Models:
                 context.get(k) for k in ("SKILL", "skill", "template", "templates")):
             raise ModelError("Existing CLAUDE/SKILL article templates required in context")
         result, _ = self._call(
+            "When existingArticle is supplied, rewrite that exact existing URL using editorialCorrectionInstructions. "
+            "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "
+            "Only sourced manufacturer usage warnings may remain; never add clinical advice. "
+            "Preserve every supplied verifiedAuthorFacts statement exactly; never infer ownership or experience from legacy prose. "
+            "Use the existing length rules even if the legacy source is much longer. Keep ALL selected products and "
+            "documented decision topics; accessories are not extra ranked main models. Do not invent a selection count. "
             "As upper editor return ONLY {article,brief}. Do not repeat products, references, or images; "
             "those verified records are assembled locally. article must contain slug,title,"
             "categoryId,content,excerpt (at least 20 characters),metaDescription (50-160 characters),faqs (3-5 "
@@ -380,6 +386,11 @@ class Models:
                 or any(not _text(pid) for pid in result["article"]["productIds"])):
             raise ModelError("Invalid article")
         article = result["article"]
+        if context.get("existingArticle"):
+            if article.get("slug") != context["existingArticle"]["slug"]:
+                raise ModelError("Revision source URL changed")
+            if any(f not in article["content"] for f in context.get("verifiedAuthorFacts", [])):
+                raise ModelError("Verified author fact removed")
         if (any(not _text(article[k]) for k in ("slug", "title", "categoryId", "excerpt", "metaDescription"))
                 or len(article["excerpt"]) < 20 or not 50 <= len(article["metaDescription"]) <= 160
                 or article["author"] != "ギア男" or not isinstance(article["tags"], list)
@@ -483,6 +494,11 @@ class Models:
     def review(self, bundle, checks):
         result, usage = self._call(
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
+            "When bundle.inheritedPresentationContext exists, its clinicalReverified=false means unchanged template "
+            "context, not newly verified medical guidance. Review the revised title/body/FAQs and their consistency "
+            "with that inherited advice. Any contradiction is a blocker. The medical flag and evidence for this "
+            "revision apply ONLY to candidate article content; never certify inherited clinical accuracy or the "
+            "whole visible page as newly clinically verified. Do not remove inherited safety context to pass. "
             "Return {passed:boolean,score:number,facts:boolean,images:boolean,affiliate:boolean,medical:boolean,"
             "render:boolean,evidence:object,issues:list,observations?:list}. Score 0-10; pass threshold 7.5. "
             "issues must contain ONLY required corrections or blockers. Put nonblocking observations in optional "

@@ -178,6 +178,45 @@ class Slack:
             title = ('告知案' if social else '記事本文') + '：' + article['title']
             text = title if len(pieces) == 1 else title + '（{} / {}）'.format(i + 1, len(pieces))
             parts.append(self.post(text, [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': part, 'verbatim': True}}]))
+        if job.get('kind') == 'article_revision' and job['revisionContext'].get('productPatches'):
+            binding = job['revisionContext']
+            names = {p['id']: p['name'] for p in binding['candidateProducts']}
+            labels = {'name': '商品名', 'brand': 'ブランド', 'specs': '仕様', 'imageUrl': '商品画像',
+                      'affiliateUrl': '楽天の購入先', 'amazonUrl': 'Amazonの購入先', 'price': '参考価格',
+                      'description': '商品説明', 'rating': '評価表示', 'availability': '取扱状況', 'yahooUrl': 'Yahooの導線'}
+            lines = []
+            for change in binding['productPatches']:
+                changed = [labels[field] for field in change['fields'] if field in labels]
+                if changed:
+                    lines.append(names[change['id']] + '：' + '・'.join(changed) + 'を更新')
+                    # Show proposed values only. The body supplies clickable purchase links and images;
+                    # all specs must remain reviewable even when ProductCard displays only three.
+                    def proposed(value):
+                        if value is None or value == '':
+                            return '記載なし'
+                        if isinstance(value, dict):
+                            return '／'.join(str(k) + '：' + proposed(v) for k, v in value.items()) or '記載なし'
+                        if isinstance(value, list):
+                            return '／'.join(proposed(v) for v in value) or '記載なし'
+                        return str(value)
+                    for field, value in change['fields'].items():
+                        if field in ('imageUrl', 'affiliateUrl', 'amazonUrl', 'updatedAt', 'name'):
+                            continue
+                        if field == 'yahooUrl':
+                            lines.append('  Yahooの導線：非表示（商品同一性未確認の検索リンクを外す）')
+                        elif field == 'price' and value == 0:
+                            lines.append('  参考価格：非表示（確認済みの価格なし）')
+                        elif field == 'rating' and value == 0:
+                            lines.append('  評価表示：非表示（確認済みの評価なし）')
+                        elif field == 'specs' and isinstance(value, dict):
+                            lines.extend('  ' + str(key) + '：' + proposed(item) for key, item in value.items())
+                            if not value:
+                                lines.append('  仕様：記載なし')
+                        elif field in labels:
+                            lines.append('  ' + labels[field] + '：' + proposed(value))
+
+            for part in chunks('\n'.join(lines)):
+                parts.append(self.post('商品カードの変更概要', [{'type': 'section', 'text': {'type': 'plain_text', 'text': part}}]))
         product_names = {p['id']: p['name'] for p in bundle.get('products', [])}
         for image in (proposal.get('images', []) if social else bundle.get('images', [])):
             url = image.get('url')
@@ -185,8 +224,15 @@ class Slack:
                 continue
             text = '画像：' + str(product_names.get(image.get('productId'), article['title']))
             parts.append(self.post(text, [{'type': 'image', 'image_url': url, 'alt_text': text}]))
+        if job.get('kind') == 'article_revision':
+            from inherited_advice import validate_presentation
+            inherited = validate_presentation(bundle.get('inheritedPresentationContext'), article['slug'])
+            label = '既存の「医師から一言」（変更なし・今回の再検証対象外）'
+            for part in chunks(label + '\n' + inherited['renderedText']):
+                parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part}}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
-        labels = [('approve', 'Xに投稿する' if auto_x else 'この告知案を承認' if social else '公開する'),
+        revision = job.get('kind') == 'article_revision'
+        labels = [('approve', '更新を公開する' if revision else 'Xに投稿する' if auto_x else 'この告知案を承認' if social else '公開する'),
                   ('reject', '修正を依頼'), ('hold', '保留')]
         explanation = ('承認した本文・画像をXへ投稿し、記事リンクを返信として自動投稿します。' if auto_x else
                        'Xへの投稿は手動です。' if social else '本文・画像・購入先を確認してから公開を選んでください。')
@@ -195,6 +241,12 @@ class Slack:
                            'X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。')
         if social and proposal.get('approvalNotice'):
             explanation += '\n' + proposal['approvalNotice'] + '\n' + proposal['priorPostUrl']
+        if revision:
+            binding = job['revisionContext']
+            explanation = ('既存記事の更新案です。承認した本文・画像・購入先を反映します。\n'
+                           + 'https://camp-gear-lab.com/articles/' + article['slug'] + '\n変更内容: ' + binding['changeSummary'])
+        if revision and job['revisionContext'].get('productPatches'):
+            explanation += '\n商品カードの修正は、この商品を掲載する他の記事にも反映されます'
         text = article['title'] + '\n' + explanation
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},
                   {'type': 'actions', 'elements': [{'type': 'button', 'text': {'type': 'plain_text', 'text': label},

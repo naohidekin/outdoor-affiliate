@@ -201,9 +201,9 @@ class Ledger:
                    (timestamp(now).isoformat(), id, kind, canonical(data)))
 
     def _put(self, db, job, kind):
-        if not job['publication'] and job['stage'] != 'rejected':
+        if job.get('kind') != 'article_revision' and not job['publication'] and job['stage'] != 'rejected':
             others = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs WHERE id!=?', (job['id'],))]
-            require(sum(not other['publication'] and other['stage'] != 'rejected' for other in others) < 3, 'pending cap reached')
+            require(sum(other.get('kind') != 'article_revision' and not other['publication'] and other['stage'] != 'rejected' for other in others) < 3, 'pending cap reached')
         job['updated_at'] = timestamp().isoformat()
         db.execute('INSERT OR REPLACE INTO jobs VALUES (?,?)', (job['id'], canonical(job)))
         self._event(db, job['id'], kind, job)
@@ -219,6 +219,9 @@ class Ledger:
 
     def _current(self, job):
         require(job['bundle'] is not None and fingerprint(job['bundle']) == job['revision'], 'bundle fingerprint changed')
+        if job.get('kind') == 'article_revision':
+            from revisions import validate_revision_bundle
+            validate_revision_bundle(job, job['bundle'])
 
     def create_candidate(self, theme, now=None):
         now = timestamp(now)
@@ -227,6 +230,7 @@ class Ledger:
         week = (now.date() - timedelta(days=now.weekday())).isoformat()
         with self._tx() as db:
             jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
+            jobs = [job for job in jobs if job.get('kind') != 'article_revision']
             for job in jobs:
                 old_slug = job['theme'].get('slug') if isinstance(job['theme'], dict) else job['theme']
                 if old_slug == slug:
@@ -237,6 +241,26 @@ class Ledger:
                        bundle=None, revision=None, review=None, approval=None, publication=None, social=None, error=None,
                        created_at=now.isoformat())
             return self._put(db, job, 'candidate')
+
+    def request_revision(self, specification, now=None):
+        from revisions import validated_context, TARGETS
+        context = validated_context(specification)
+        base = context['baseArticle']
+        now = timestamp(now)
+        with self._tx() as db:
+            for row in db.execute('SELECT data FROM jobs'):
+                old = json.loads(row[0])
+                if old.get('kind') == 'article_revision' and old['revisionContext']['baseArticle']['id'] == base['id']:
+                    require(old['revisionContext'] == context, 'revision already requested; reconcile existing job')
+                    return old
+            job = dict(id='revision-' + secrets.token_hex(12), kind='article_revision',
+                       revisionContext=context, priority=list(TARGETS).index(base['id']),
+                       theme=dict(slug=base['slug'], title=base['title'], categoryId=base['categoryId'],
+                                  productIds=context['targetProductIds']),
+                       week=(now.date() - timedelta(days=now.weekday())).isoformat(), stage='candidate',
+                       bundle=None, revision=None, review=None, approval=None, publication=None, social=None,
+                       error=None, created_at=now.isoformat())
+            return self._put(db, job, 'revision_requested')
 
     def list_jobs(self):
         with self._tx() as db:
@@ -263,6 +287,11 @@ class Ledger:
             job = self._get(db, id)
             require(not (job['publication'] and job['publication'].get('verified') is True),
                     'published bundle is immutable; use a separate revision workflow')
+            if job.get('kind') == 'article_revision':
+                from revisions import validate_revision_bundle
+                validate_revision_bundle(job, bundle)
+                require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status!='failed'", (id,)).fetchone(),
+                        'revision effect requires reconciliation')
             require(expected_revision is None or job['revision'] == expected_revision, 'revision conflict')
             if revision != job['revision']:
                 job.update(bundle=json.loads(canonical(bundle)), revision=revision, review=None, approval=None,
@@ -458,6 +487,7 @@ class Ledger:
         with self._tx() as db:
             job = self._get(db, id)
             self._current(job)
+            require(job.get('kind') != 'article_revision', 'revision has no automatic social workflow')
             require(job['publication'] and job['publication'].get('verified') is True, 'verified publication required')
             require(not (job.get('social') or {}).get('publication'), 'posted social is immutable')
             if job['social'] and job['social']['revision'] == revision:

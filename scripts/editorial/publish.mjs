@@ -44,12 +44,14 @@ const equal = (a, b) => JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
 // but path-like strings are ordinary data: NEVER read arbitrary local files.
 const HASH_HELPER = `import hashlib,json,sys
 request=json.load(sys.stdin,parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
-print(hashlib.sha256(json.dumps(request['bundle'],ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode('utf-8')).hexdigest())
+value=request
+for key in json.loads(sys.argv[1]): value=value[key]
+print(hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode('utf-8')).hexdigest())
 `;
-export function bundleHash(bundle, { rawRequest, contentOnly = false } = {}) {
+export function bundleHash(bundle, { rawRequest, contentOnly = false, fieldPath = ['bundle'] } = {}) {
   if (contentOnly) return sha(bundle);
   sorted(bundle); // Reject JS NaN/Infinity before JSON.stringify could null them.
-  const result = spawnSync('python3', ['-c', HASH_HELPER], {
+  const result = spawnSync('python3', ['-c', HASH_HELPER, JSON.stringify(fieldPath)], {
     input: rawRequest ?? JSON.stringify({ bundle }), encoding: 'utf8', timeout: 10000, maxBuffer: 4096,
     env: { PATH: process.env.PATH || '/usr/bin:/bin', TZ: 'Asia/Tokyo' },
   });
@@ -223,6 +225,10 @@ export async function verifyApprovedImages(bundle, imageDigest = secureImageDige
 
 /** Dependencies are injected in tests. The production lock always uses seoRoot(). */
 export async function execute(input, deps = {}) {
+  if (record(input) && ['stage-revision', 'publish-revision'].includes(input.action)) {
+    const { executeRevision } = await import('./revision-publisher.mjs');
+    return executeRevision(input, deps);
+  }
   requireValue(record(input) && ['stage', 'publish'].includes(input.action), 'stage or publish required');
   const { bundle, revision, approval, expectedDraft } = input;
   validateBundle(bundle);
@@ -278,7 +284,7 @@ export async function execute(input, deps = {}) {
 export function parseArguments(argv) {
   const result = {};
   for (let i = 0; i < argv.length; i++) {
-    if (['stage', 'publish'].includes(argv[i]) && !result.action) result.action = argv[i];
+    if (['stage', 'publish', 'stage-revision', 'publish-revision'].includes(argv[i]) && !result.action) result.action = argv[i];
     else if (argv[i] === '--env-file' && !result.envFile && nonempty(argv[i + 1])) result.envFile = path.resolve(argv[++i]);
     else throw new Error('invalid publisher arguments');
   }
@@ -361,8 +367,9 @@ async function main() {
     for await (const chunk of process.stdin) { raw += chunk; requireValue(Buffer.byteLength(raw) <= 16 * 1024 * 1024, 'request too large'); }
     const input = JSON.parse(raw);
     if (args.action) { requireValue(!input.action || input.action === args.action, 'conflicting action'); input.action = args.action; }
-    if (input.action === 'publish') requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
-    const deps = productionDependencies(env);
+    if (['publish', 'publish-revision'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
+    const deps = ['stage-revision', 'publish-revision'].includes(input.action)
+      ? (await import('./revision-publisher.mjs')).revisionDependencies(env) : productionDependencies(env);
     deps.rawRequest = raw;
     mutationPossible = true;
     const result = await execute(input, deps);
@@ -374,3 +381,5 @@ async function main() {
   }
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+
+export { articleFields, productFields, normalizeTimestamps, selectedRow, equal, requireValue, sha, timestamp };

@@ -312,3 +312,78 @@ node --test scripts/editorial/test-publish.mjs scripts/editorial/test-render-pre
 - 承認済み公開記事とSNSは別管理のまま。SOTO新画像版のX投稿は本人指示によるsocial_heldを維持する。
 - 配備: `34e3eb2` をAir/macpro/originへ同期。設定 `postPublicationAuditEnabled=true`、開始点2026-11-04 22:59:58 JST以後の公開記事が対象。今週3件だけ明示的に遡及確認。既存300秒runnerで1回につき最大1記事、失敗/確認不能は30分間隔・最大3回。送達不明は要照合として自動再送しない。Python316件が両機で成功、ブラウザ6件成功、Astraの最終レビューPASS。
 - 実行確認: 通常GUI runnerでGS 23:01:05（42項目）、CB 23:02:19（54項目）にsuccess。SOTOも23:03:19までに64項目success、health completed。3件すべて通知不要（not_needed）。Slackの正常通知は送らず、記事/SNS承認権限・SOTO social_heldは変更していない。
+
+## 既存3記事のprivate改訂ワークフロー（コード追加・未配備）
+
+2026-11-08時点ではコード・offline試験の確認段階。3記事の改訂本文完成、job投入、実制作、Slack配信・本人承認・公開完了を示すものではない。
+Main/Astraの実配備先読取確認によると、共有receiverアプリは `~/Library/Application Support/codex-slack-receiver/app`。
+`notification_review_bridge.mjs:52` のarticle_id検査は `/^[A-Za-z0-9_-]{1,100}$/` で、`revision-<24桁hex>` を受理する。
+既存のCAMPスレッド・署名検証・32桁nonce・`camp-<24桁hex>` request ID・64桁manifestの拘束を維持し、transport変更は不要。
+これはreceiverの静的な互換確認であり、実改訂の承認試験ではない。テスト承認や追加Slack投稿は送っていない。
+
+対象は `article-024/firepit-beginner-guide` → `article-005/single-burner-ranking` →
+`article-002/landlock-vs-landnest-shelter` の固定順。記事・商品DBへの反映はexact版の本人承認後だけ。
+新記事の週3枠・未公開3件上限には改訂jobを算入しない。改訂承認待ちで翌週の新記事制作を停止しない。
+SOTOの既存job・SNS保留を変更せず、改訂公開後もSNS生成へ自動遷移しない。
+
+private JSON入力（`--evidence-file`）は `{"revisions": [spec, ...]}`、1〜3件。
+各specの必須項目：
+
+- `baseArticle`: `Catalog.catalog()` の完全なcamelCase記事snapshot。既存ID/slug/status/日時を保持。
+- `changeSummary`: Slackへ表示する短い変更概要。
+- `editorialCorrectionInstructions`: 確定した編集仕様。旧本文は事実根拠ではない。未確認の医療・子どもの安全・体験談は削除し、出典確認済みメーカー使用注意だけを扱う。現行medical gateを維持する。
+- `verifiedAuthorFacts`: 公開可能な確認済み著者体験の原文文字列。空配列なら旧本文から体験を推定しない。
+- `targetProductIds`: 改訂で扱う既存商品IDの正確な順序。1〜20件、元記事のIDの部分集合。
+- `productRemovalReasons`: 省いた全IDと各理由。アクセサリーや無関係な電源を黙って省かない。掲載数・タイトル数は現行品質検査で一致させる。
+- `baseProducts`: 選択IDの順序で並べた `Catalog.catalog()` の完全な商品snapshot。
+- `candidateProducts`: 同じ順序・同じキー構成の完全な訂正候補。変更可能なのは `name, brand, specs, imageUrl, affiliateUrl, amazonUrl, price, description, rating, availability, updatedAt`。変更時は新しいtimezone-aware `updatedAt` を含める。ID/category等は不変。 `yahooUrl` は任意導線の除去として空文字へ変更する場合だけ許容し、追加・非空URLへの変更・null化は拒否する。Yahoo除去はchangeSummaryにも短く追記し、Slackに「Yahooの導線：非表示（商品同一性未確認の検索リンクを外す）」を表示する。候補の楽天/Amazon購入先は通常どおり検証し、品質gateは緩和しない。
+
+基準記事hash、商品ごとの基準hash/候補hashと差分 `productPatches` は内部で計算する。手入力しない。
+別名 `productOverrides` やsnapshot外のパッチは受け付けない。`sourceHints` / メーカーadapterによる通常の
+型番・全仕様・画像bytes・購入先の照合を各候補商品へ実行し、未確認なら停止する。入力された訂正候補自体を根拠として合格扱いしない。
+
+実行入口（以下は手順の記載のみ。この追記では実行していない）：
+
+```sh
+python3 scripts/editorial/runtime.py --config /absolute/private/config.json request-revisions --evidence-file /absolute/private/input.json
+python3 scripts/editorial/runtime.py --config /absolute/private/config.json produce-revisions
+```
+
+`request-revisions` は現在の基準記事・商品をGETで照合し、private台帳に `revision-…` jobを作る。
+`produce-revisions` は固定順の未処理jobを最大1件だけ制作し、通常の新記事 `produce` は呼ばない。
+通常GUI LaunchAgentの300秒 `tick` も最大1件の要求済み改訂を処理する。制作に使ったtickだけ新記事制作を次回へ回す。
+候補はClaude執筆→Gemini 3.8 Flash校正→構造/事実/画像/購入先/medical/render/上位最終審査を通す。
+旧本文35k字等は現行format字数規定を上書きしない。photo-cardは同じ生成・検査を使い、他のgenerationMetaを保持する。
+公開DBにdraftを作らず、候補・source・render・reviewをprivate保存して既存Slack本文/画像/承認カードへ配信する。
+商品修正があれば変更した項目名と提案後の値を表示する。仕様はカードの先頭3項目だけに省略せず、提案後の全項目を確認できるようにする。旧値や生の購入先URLは列挙せず、購入先は本文のクリック可能な候補リンクで確認する。旧新URLや全仕様の差分はprivate保存し、承認カードに一度だけ「商品カードの修正は、この商品を掲載する他の記事にも反映されます」を表示する。
+「更新を公開する」ボタンの本人承認が記事と商品候補全体のexact fingerprintを拘束する。
+
+`publish-revision` は新記事publisherと分岐した `revision-publisher.mjs` を使う。共有publication lock内で
+記事と全基準商品を再読し、全件不変を確認してから、承認済み商品差分を、全商品を基準照合したGETで同時に取得した短命の `xmin` row-versionと `id/updated_at/category_id` のCASで順に反映する。
+全商品を候補と完全照合してから記事を再GETし、全基準フィールドの一致と新たな `xmin` を確認して `xmin/id/slug/published/updated_at/created_at/published_at` CASで反映する。
+記事のidentity/status/初回公開日時/作成日時は不変。影響する公開記事のcacheも再検証し、DB・公開HTML・画像のreadback成功後だけ完了とする。
+`xmin` は同じupdated_atを保つ他writerの更新でも変化するため、timestamp更新の協調は前提にしない。提案の長期IDには使わず、公開直前のGET/CAS間だけに使用し、semantic readbackでは除外する。DB schema/RPC追加はない。
+
+商品更新と記事更新は複数リクエストであり、DB transactionではない。途中失敗・結果不明では自動再送/rollbackしない。
+private effect journalと共有publication markerを残し、すでに反映された商品・未反映記事・cacheをAstra/人が照合する。
+制作中断も自動再発注せず要照合。既存改訂要求を別specで上書きせず、古いボタン・不明effectを無効化した明示的な復旧を要する。
+公開後監査は改訂jobと公開記事の別IDを保持し、完全に束縛された改訂だけ商品20件まで許容する（通常記事の上限は維持）。
+
+### 改訂候補と既存の「医師から一言」の表示文脈
+
+3対象の既存テンプレートは、まとめ・関連記事・FAQの最初の該当見出し直前、該当なしなら本文末尾に
+`MedicalAdvice` を表示する。この安全情報やサイトテンプレートは改訂処理で変更しない。
+private previewのdesktop/mobileの実DOMから、`main article #article-reading-content` 内の一意で可視の
+advice aside（免責文を含む）を取得する。両viewportの内容一致、可視テキストとDOM内の全テキストの一致を要求する。
+`inheritedPresentationContext` としてDOM、canonical DOM SHA-256、表示文字列、固定3ファイル
+（article page / MedicalAdvice component / medicalAdviceData）の実bytes SHA-256をcandidateに保存し、
+最終review・台帳保存・exact owner approvalのfingerprintへ含める。テンプレートのcopyと実repoがrender中に変われば停止する。
+
+Slackはこの同じ表示文字列を一度だけ「既存の『医師から一言』（変更なし・今回の再検証対象外）」として表示する。
+生成・校正する記事本文へ既存clinical文をコピーしてmedical gateを迂回しない。既存のcandidate title/body/FAQの
+medical gateは不変で、最終reviewは候補と既存adviceの矛盾も審査する。一方、既存clinical内容の再検証は実施したと扱わず、
+`medicalScope=candidate_article_only` / `inheritedClinicalReverified=false` をreview receiptに記録する。
+
+公開時は、最初の公開mutationより前にローカルの固定template bytesと現在の公開HTMLから抽出した同asideのDOMを照合する。
+商品CAS後・記事CAS直前にも再照合し、公開readback後も同じDOMを要求する。既存adviceやtemplateが変わった場合は要照合で停止し、
+既存の安全情報を削除したり新しいclinical合格を作ったりしない。途中の書込み後に差分を発見した場合は通常のpartial/unknown journalを維持する。

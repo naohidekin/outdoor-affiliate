@@ -12,6 +12,7 @@ import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { templateHashes, captureInheritedAdvice, assertTemplateFiles } from './template-context.mjs';
 
 export function childEnvironment(home, inherited = process.env) {
   // An allowlist, not a blacklist: no Supabase, NEXT_PUBLIC_*, NODE_OPTIONS,
@@ -272,7 +273,7 @@ export function createRequestHandler(origin, bundle, { imageFetcher = fetchPubli
   };
 }
 
-async function inspectViewport(browser, origin, input, name, width, result, imageOptions) {
+async function inspectViewport(browser, origin, input, name, width, result, imageOptions, inheritedFiles) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage();
   page.setDefaultTimeout(12000);
@@ -297,6 +298,13 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
     const response = await page.goto(origin + articlePath, { waitUntil: 'networkidle', timeout: 120000 });
     if (response.status() !== 200) throw new Error(`article HTTP ${response.status()}`);
     await page.locator('.article-body').first().waitFor();
+    if (inheritedFiles) {
+      const observed = await captureInheritedAdvice(page, input.bundle.article.slug, inheritedFiles);
+      if (result.inheritedPresentationContext && (result.inheritedPresentationContext.domSha256 !== observed.domSha256
+          || result.inheritedPresentationContext.renderedText !== observed.renderedText))
+        throw new Error('inherited_advice_viewport_mismatch');
+      result.inheritedPresentationContext = observed;
+    }
     // Trigger every lazy image before checking naturalWidth and full-page capture.
     for (const img of await page.locator('img').all()) {
       if (await img.isVisible()) await img.scrollIntoViewIfNeeded();
@@ -397,6 +405,7 @@ export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {
     await fs.chmod(temp, 0o700);
     const modules = path.dirname(path.dirname(require.resolve('next/package.json')));
     await prepareApp(input, temp, modules);
+    const inheritedFiles = input.bundle.revisionContext?.kind === 'article_revision' ? await templateHashes(temp) : null;
     const port = await availablePort();
     const origin = `http://127.0.0.1:${port}`;
     let logs = '';
@@ -416,8 +425,12 @@ export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {
     catch (e) { result.status = 'blocked'; throw new Error(`Chromium launch blocked: ${e.message}`); }
     const imageOptions = { imageFetcher, cache: new Map() };
     for (const [name, width] of [['desktop', 1280], ['mobile', 390]]) {
-      try { await inspectViewport(browser, origin, input, name, width, result, imageOptions); }
+      try { await inspectViewport(browser, origin, input, name, width, result, imageOptions, inheritedFiles); }
       catch (e) { result.failures.push(`${name}: ${e.message}`); }
+    }
+    if (inheritedFiles) {
+      if (!result.inheritedPresentationContext) throw new Error('inherited_advice_preview_missing');
+      assertTemplateFiles(result.inheritedPresentationContext, await templateHashes(input.repo));
     }
     result.passed = result.failures.length === 0 && !!result.desktop && !!result.mobile;
     result.status = result.passed ? 'passed' : 'failed';
