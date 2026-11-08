@@ -82,6 +82,121 @@ class RuntimeTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def configure_production_schedule(self):
+        self.config['productionSchedule'] = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+            initialProductionAt='2026-11-08T00:00:00+09:00')
+        # Recreate the runner through its real constructor to verify config wiring.
+        old = self.runtime
+        self.runtime = Runtime(self.config, models=self.models, catalog=old.catalog, slack=self.slack,
+            renderer=old.renderer, publisher=old.publisher)
+
+    def test_configured_manual_produce_uses_period_and_cannot_bypass_caps(self):
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock:
+            clock.now.return_value = datetime(2026, 11, 7, 22, tzinfo=JST)
+            self.assertEqual('idle', self.runtime.produce()['status'])
+            self.assertEqual([], self.runtime.ledger.list_jobs())
+            for day, key in ((8, '2026-11-06'), (9, '2026-11-06'),
+                             (11, '2026-11-06'), (12, '2026-11-06'),
+                             (13, '2026-11-13'), (20, '2026-11-20')):
+                clock.now.return_value = datetime(2026, 11, day, 9, tzinfo=JST)
+                result = self.runtime.produce(limit=99)
+                self.assertEqual(0 if day in (9, 11, 12) else 3, len(result['articles']))
+                self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
+                for job in self.runtime.ledger.list_jobs():
+                    if job['week'] == key:
+                        self.runtime.ledger.set_stage(job['id'], 'rejected')
+                # Released pending slots still cannot bypass the period cap.
+                self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
+                if day not in (9, 11, 12):
+                    self.models.research = lambda context, day=day: {'themes': [
+                        {'slug': f'after-{day}-{i}', 'title': '新記事'} for i in range(3)]}
+        self.assertEqual(['2026-11-06.json', '2026-11-13.json', '2026-11-20.json'],
+            sorted(p.name for p in (self.runtime.root / 'production-attempts').glob('*.json')))
+        self.assertEqual(9, len(self.runtime.ledger.list_jobs()))
+
+    def test_configured_manual_produce_cannot_bypass_friday_hour(self):
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock:
+            for day in (13, 20):
+                clock.now.return_value = datetime(2026, 11, day, 8, 59, 59, tzinfo=JST)
+                self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
+        self.assertEqual([], self.runtime.ledger.list_jobs())
+        self.assertFalse((self.runtime.root / 'production-attempts').exists())
+
+    def test_configured_tick_due_and_catchup(self):
+        self.configure_production_schedule()
+        for day, hour, due in ((7, 23, False), (8, 0, True), (9, 8, True), (9, 9, True),
+                               (11, 9, True), (13, 8, False), (13, 9, True),
+                               (16, 9, True), (20, 9, True)):
+            with self.subTest(day=day, hour=hour), patch('runtime.datetime') as clock, \
+                    patch.object(self.runtime, 'produce', return_value={'status': 'idle'}) as produce:
+                clock.now.return_value = datetime(2026, 11, day, hour, tzinfo=JST)
+                self.runtime.tick()
+                self.assertEqual(int(due), produce.call_count)
+
+    def test_pending_candidates_resume_without_rewriting_legacy_slots(self):
+        candidate = self.runtime.ledger.create_candidate({'slug': 'pending'},
+            datetime(2026, 11, 4, 9, tzinfo=JST))
+        self.configure_production_schedule()
+        # Three pending slots stop fresh research but must not stop old candidates.
+        for i in range(2):
+            self.runtime.ledger.create_candidate({'slug': f'other-{i}'}, '2026-11-09T09:00:00+09:00')
+        with patch('runtime.datetime') as clock:
+            clock.now.return_value = datetime(2026, 11, 13, 9, tzinfo=JST)
+            result = self.runtime.produce(limit=1)
+        self.assertEqual(candidate['id'], result['articles'][0]['id'])
+        self.assertEqual('2026-11-02', self.runtime.ledger.get_job(candidate['id'])['week'])
+        self.assertIsNone(self.runtime.ledger.get_job(candidate['id'])['approval'])
+        self.assertFalse((self.runtime.root / 'production-attempts').exists())
+
+    def test_configured_unpublished_cap_blocks_manual_next_period(self):
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock:
+            clock.now.return_value = datetime(2026, 11, 9, 9, tzinfo=JST)
+            self.assertEqual(3, len(self.runtime.produce(limit=99)['articles']))
+            before = self.runtime.ledger.list_jobs()
+            clock.now.return_value = datetime(2026, 11, 13, 9, tzinfo=JST)
+            self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
+        self.assertEqual(before, self.runtime.ledger.list_jobs())
+        self.assertFalse((self.runtime.root / 'production-attempts' / '2026-11-13.json').exists())
+
+    def test_configured_production_excludes_and_preserves_held_revisions(self):
+        from test_revision_workflow import baseline, spec
+        self.configure_production_schedule()
+        held = []
+        for id, slug in (('article-024', 'firepit-beginner-guide'),
+                         ('article-005', 'single-burner-ranking'),
+                         ('article-002', 'landlock-vs-landnest-shelter')):
+            job = self.runtime.ledger.request_revision(spec(baseline(id, slug)),
+                now='2026-11-09T09:00:00+09:00')
+            self.runtime.ledger.set_stage(job['id'], 'held')
+            held.append(self.runtime.ledger.get_job(job['id']))
+        with patch('runtime.datetime') as clock:
+            clock.now.return_value = datetime(2026, 11, 9, 9, tzinfo=JST)
+            self.assertEqual(3, len(self.runtime.produce(limit=99)['articles']))
+        self.assertEqual(6, len(self.runtime.ledger.list_jobs()))
+        self.assertEqual(held, [self.runtime.ledger.get_job(j['id']) for j in held])
+        with self.assertRaisesRegex(ValueError, 'weekly candidate cap'):
+            self.runtime.ledger.create_candidate({'slug': 'fourth'}, '2026-11-11T09:00:00+09:00')
+
+    def test_configured_attempt_marker_is_reconciled_in_same_period(self):
+        self.configure_production_schedule()
+        marker = self.runtime.root / 'production-attempts' / '2026-11-13.json'
+        atomic(marker, {'status': 'in_flight', 'original': True})
+        before = marker.read_bytes()
+        with patch('runtime.datetime') as clock:
+            clock.now.return_value = datetime(2026, 11, 16, 9, tzinfo=JST)
+            with self.assertRaisesRegex(ValueError, 'weekly_research_requires_reconciliation'):
+                self.runtime.produce()
+        self.assertEqual(before, marker.read_bytes())
+
+    def test_invalid_production_schedule_fails_closed(self):
+        for schedule in (None, {}, {'weekday': 7}):
+            with self.subTest(schedule=schedule), self.assertRaises(ValueError):
+                Runtime(dict(self.config, productionSchedule=schedule), models=self.models,
+                    catalog=CatalogFake(), slack=self.slack)
+
     def test_render_receipt_keeps_parsed_failure_and_sanitizes_unavailable_output(self):
         from ledger import fingerprint
         b = bundle()

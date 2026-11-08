@@ -67,7 +67,10 @@ class Runtime:
                  analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
         self.config = config
         self.root = Path(config['stateRoot'])
-        self.ledger = Ledger(self.root, config['slack']['user_id'])
+        if 'productionSchedule' in config and config['productionSchedule'] is None:
+            raise ValueError('invalid productionSchedule')
+        self.ledger = Ledger(self.root, config['slack']['user_id'],
+                             production_schedule=config.get('productionSchedule'))
         self.env = env_file(config['envFile'])
         # Explicit dedicated Gemini settings; keys remain in memory, never copied.
         if config.get('geminiEnvFile'):
@@ -220,7 +223,9 @@ class Runtime:
         if not self.config.get('generationEnabled'):
             return {'status': 'disabled'}
         now = datetime.now(JST)
-        week = (now.date() - timedelta(days=now.weekday())).isoformat()
+        week = self.ledger.production_schedule.period_key(now)
+        if week is None:
+            return {'status': 'idle', 'articles': []}
         current = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and j['week'] == week]
         pending = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and not j['publication'] and j['stage'] != 'rejected']
         if not any(j['stage'] == 'candidate' for j in pending) and (current or len(pending) >= 3):
@@ -237,7 +242,7 @@ class Runtime:
             finally:
                 self._save_usage()
             for theme in themes[:3 - len(pending)]:
-                self.ledger.create_candidate(theme)
+                self.ledger.create_candidate(theme, now=now)
             current = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and j['week'] == week]
         results = []
         # Pending candidates retain their slot and may resume after a week boundary.
@@ -771,7 +776,7 @@ class Runtime:
         if revision_result:
             results.append(revision_result)
         now = datetime.now(JST)
-        if not revision_result and self.config.get('generationEnabled') and (now.weekday() > 2 or now.weekday() == 2 and now.hour >= 9):
+        if not revision_result and self.config.get('generationEnabled') and self.ledger.production_schedule.is_due(now):
             try:
                 results.append({'production': self.produce(limit=1)})
             except Exception as error:

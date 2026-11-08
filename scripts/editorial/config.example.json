@@ -7,6 +7,12 @@
   "spoolDir": "/absolute/path/to/existing/authenticated/camp/spool",
   "node": "/absolute/path/to/node",
   "generationEnabled": false,
+  "productionSchedule": {
+    "weekday": 4,
+    "hour": 9,
+    "effectiveFrom": "2026-11-13",
+    "initialProductionAt": "2026-11-08T00:00:00+09:00"
+  },
   "publicationEnabled": false,
   "postPublicationAuditEnabled": false,
   "postPublicationAuditSince": null,

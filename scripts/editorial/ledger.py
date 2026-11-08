@@ -17,6 +17,7 @@ from pathlib import Path
 import secrets
 import sqlite3
 from x_readback import exact_x_text
+from production_schedule import ProductionSchedule
 
 JST = timezone(timedelta(hours=9))
 SCOPE = ('team_id', 'app_id', 'user_id', 'channel_id', 'thread_ts')
@@ -153,7 +154,8 @@ def valid_image_refresh(old, proposal, review):
 
 
 class Ledger:
-    def __init__(self, root, owner_id):
+    def __init__(self, root, owner_id, production_schedule=None):
+        self.production_schedule = ProductionSchedule(production_schedule)
         raw = Path(root)
         require(raw.is_absolute(), 'root must be absolute')
         root = raw.resolve()
@@ -234,7 +236,7 @@ class Ledger:
         now = timestamp(now)
         slug = theme.get('slug') if isinstance(theme, dict) else theme
         require(isinstance(slug, str) and bool(slug.strip()), 'theme slug required')
-        week = (now.date() - timedelta(days=now.weekday())).isoformat()
+        week = self.production_schedule.period_key(now)
         with self._tx() as db:
             jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
             jobs = [job for job in jobs if job.get('kind') != 'article_revision']
@@ -242,6 +244,7 @@ class Ledger:
                 old_slug = job['theme'].get('slug') if isinstance(job['theme'], dict) else job['theme']
                 if old_slug == slug:
                     return job
+            require(week is not None, 'production not due')
             require(sum(job['week'] == week for job in jobs) < 3, 'weekly candidate cap reached')
             require(sum(not job['publication'] and job['stage'] != 'rejected' for job in jobs) < 3, 'pending cap reached')
             job = dict(id='article-' + secrets.token_hex(12), theme=theme, week=week, stage='candidate',

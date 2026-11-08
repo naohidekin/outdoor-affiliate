@@ -82,6 +82,45 @@ class LedgerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.ledger.create_candidate({'slug': 'naive'}, datetime(2026, 11, 2))
 
+    def test_configured_production_caps_and_history_are_preserved(self):
+        schedule = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+                        initialProductionAt='2026-11-08T00:00:00+09:00')
+        old = self.ledger.create_candidate({'slug': 'old'}, NOW)
+        self.ledger.set_stage(old['id'], 'rejected')
+        old = self.ledger.get_job(old['id'])
+        ledger = Ledger(self.root, 'U', production_schedule=schedule)
+        with self.assertRaisesRegex(ValueError, 'production not due'):
+            ledger.create_candidate({'slug': 'too-early'}, '2026-11-07T23:00:00+09:00')
+        for day, key in ((8, '2026-11-06'), (13, '2026-11-13'), (20, '2026-11-20')):
+            for index in range(3):
+                job = ledger.create_candidate({'slug': f'{day}-{index}'},
+                    f'2026-11-{day:02}T00:00:00Z')
+                self.assertEqual(key, job['week'])
+                ledger.set_stage(job['id'], 'rejected')
+            check_day = 11 if day == 8 else day + 2
+            with self.assertRaisesRegex(ValueError, 'weekly candidate cap'):
+                ledger.create_candidate({'slug': f'extra-{day}'},
+                    f'2026-11-{check_day:02}T09:00:00+09:00')
+        self.assertEqual(old, ledger.get_job(old['id']))
+
+    def test_configured_direct_candidate_cannot_bypass_friday_hour(self):
+        ledger = Ledger(self.root, 'U', production_schedule=dict(weekday=4, hour=9,
+            effectiveFrom='2026-11-13', initialProductionAt='2026-11-08T00:00:00+09:00'))
+        for day in (13, 20):
+            with self.subTest(day=day), self.assertRaisesRegex(ValueError, 'production not due'):
+                ledger.create_candidate({'slug': f'early-{day}'}, f'2026-11-{day}T08:59:59+09:00')
+        self.assertEqual([], ledger.list_jobs())
+
+    def test_configured_pending_cap_survives_friday_boundary(self):
+        schedule = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+                        initialProductionAt='2026-11-08T00:00:00+09:00')
+        ledger = Ledger(self.root, 'U', production_schedule=schedule)
+        for index in range(3):
+            ledger.create_candidate({'slug': f'pending-{index}'}, '2026-11-09T09:00:00+09:00')
+        with self.assertRaisesRegex(ValueError, 'pending cap'):
+            Ledger(self.root, 'U', production_schedule=schedule).create_candidate(
+                {'slug': 'fourth'}, '2026-11-13T09:00:00+09:00')
+
     def test_bundle_changes_invalidate_all_approvals(self):
         for index, field in enumerate(('images', 'products', 'references', 'article')):
             with self.subTest(field=field):
