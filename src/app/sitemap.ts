@@ -1,18 +1,20 @@
 import type { MetadataRoute } from "next";
-import { getArticlesList, getCategories } from "@/lib/db";
+import { unstable_cache } from "next/cache";
+import { connection } from "next/server";
+import { getPublishedArticlesList, getCategories } from "@/lib/db";
 import { enSitemapEntries } from "@/lib/experiments/snow-peak-igt/seo";
 
-// クローラー（Google/Bing/GPTBot等）が高頻度で叩くため1時間キャッシュ。
-// これが無いとアクセスの度にSupabaseから全記事メタを取得しEgressを消費する。
-export const revalidate = 21600; // 6時間（Egress削減・2026-07-24）
+// Keep the database snapshot cached, but render XML at request time.
+const getSitemapData = unstable_cache(
+  () => Promise.all([getPublishedArticlesList(), getCategories()]),
+  ["published-sitemap-v1"],
+  { revalidate: 21600, tags: ["published-sitemap"] },
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection();
   const baseUrl = "https://camp-gear-lab.com";
-  const [allArticles, categories] = await Promise.all([
-    getArticlesList(),
-    getCategories(),
-  ]);
-  const articles = allArticles.filter((a) => a.status === "published");
+  const [articles, categories] = await getSitemapData();
 
   // ホームページ: 最新記事の更新日を使用（毎回現在時刻は誤シグナル）
   const latestArticleDate = articles.reduce(

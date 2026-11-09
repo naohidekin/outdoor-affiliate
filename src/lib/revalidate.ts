@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCategoryById } from "./db";
 
 // 記事の作成・更新・削除後にISRキャッシュを即時無効化する。
@@ -10,6 +10,7 @@ export async function revalidateArticlePages(
 ): Promise<void> {
   revalidatePath(`/articles/${slug}`);
   revalidatePath("/"); // トップの新着・記事一覧
+  revalidateTag("published-sitemap", { expire: 0 });
   revalidatePath("/sitemap.xml");
   revalidatePath("/feed"); // RSS
   if (categoryId) {
