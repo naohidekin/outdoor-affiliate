@@ -959,6 +959,11 @@ class Runtime:
             except Exception:
                 reports = [{'kind': 'reports', 'status': 'requires_reconciliation'}]
         report_attention = any(r.get('status') == 'requires_reconciliation' for r in reports)
+        try:
+            from index_tracking import track_publications
+            index_tracking = track_publications(jobs, self.root, self.env, self.config, now, atomic)
+        except Exception:
+            index_tracking = [{'error': 'index_tracking_unavailable'}]
         audit_attention = any(a.get('status') in ('failed', 'unverified', 'requires_reconciliation')
                               or a.get('notificationStatus') == 'requires_reconciliation' for a in audits)
         result = {'status': 'attention' if audit_attention or report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
@@ -971,7 +976,7 @@ class Runtime:
                               'deliveryMode': ((j.get('social') or {}).get('proposal') or {}).get('deliveryMode', 'manual'),
                               'publication': self._social_publication_summary(j)}) for j in jobs],
                   'reports': reports, 'reportAttention': report_attention,
-                  'postPublicationAudits': audits, 'postPublicationAuditEnabled': self.config.get('postPublicationAuditEnabled') is True,
+                  'indexTracking': index_tracking, 'postPublicationAudits': audits, 'postPublicationAuditEnabled': self.config.get('postPublicationAuditEnabled') is True,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
         if manager_projection is not None:
             result['manager'] = manager_projection
