@@ -21,6 +21,8 @@ from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
 from attention_presentation import attention_text
+from dispatcher import DeterministicDispatcher, execution_policy
+from stage_journal import StageBlocked, StageJournal, StageUnknown
 
 JST = timezone(timedelta(hours=9))
 
@@ -88,6 +90,7 @@ def safe_publication_diagnostic(value):
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
                  analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
+        self.execution_policy = execution_policy(config)
         self.config = config
         self.root = Path(config['stateRoot'])
         if 'productionSchedule' in config and config['productionSchedule'] is None:
@@ -95,6 +98,9 @@ class Runtime:
         self.ledger = Ledger(self.root, config['slack']['user_id'],
                              production_schedule=config.get('productionSchedule'),
                              target_account_id=config.get('targetAccountId'))
+        self.stage_journal = StageJournal(self.ledger)
+        self._usage_response_ids = set()
+        self._saved_usage_response_ids = set()
         self.env = env_file(config['envFile'])
         # Explicit dedicated Gemini settings; keys remain in memory, never copied.
         if config.get('geminiEnvFile'):
@@ -121,7 +127,13 @@ class Runtime:
         self.analytics = analytics or Analytics(config)
         self.reporter = reporter or Reporter(config, self.slack, env=self.env)
 
+    def _require_running(self):
+        self.execution_policy = execution_policy(self.config)
+        if self.execution_policy is not None and self.execution_policy.suspended:
+            raise ValueError('execution_suspended')
+
     def _analytics_context(self):
+        self._require_running()
         context = self.analytics.load_context()
         if self.config.get('seoStateRoot'):
             # Export a separate, bounded input for Astra. Never replace the SEO
@@ -148,6 +160,7 @@ class Runtime:
         return context
 
     def _render(self, bundle, job):
+        self._require_running()
         output = self.root / 'previews' / job['id'] / fingerprint(bundle)
         output.mkdir(mode=0o700, parents=True, exist_ok=True)
         result = subprocess.run([self.config.get('node', 'node'), str(Path(__file__).with_name('render-preview.mjs'))],
@@ -167,6 +180,7 @@ class Runtime:
         return value
 
     def _medical(self, article):
+        self._require_running()
         module = (Path(self.config['repo']) / 'src/lib/medical-review-gate.mjs').as_uri()
         script = 'import {readFileSync} from "node:fs"; const m=await import(process.argv[1]); console.log(JSON.stringify(m.detectMedicalRisks(readFileSync(0,"utf8"))));'
         checked = subprocess.run([self.config.get('node', 'node'), '--input-type=module', '-e', script, module],
@@ -178,6 +192,7 @@ class Runtime:
         return {'passed': not risks, 'risks': risks}
 
     def _publish(self, action, job):
+        self._require_running()
         child_env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'TZ', 'TMPDIR')}
         child_env.update(self.env)
         child_env['SEO_GUARD_CONFIG'] = self.config['seoGuardConfig']
@@ -212,6 +227,7 @@ class Runtime:
         return value
 
     def _context(self):
+        self._require_running()
         data = self.catalog.catalog()
         repo = Path(self.config['repo'])
         from revisions import TARGETS
@@ -257,6 +273,7 @@ class Runtime:
                     'not become a new duplicate article. Missing signals remain unverified.'}
 
     def produce(self, limit=3):
+        self._require_running()
         if not self.config.get('generationEnabled'):
             return {'status': 'disabled'}
         now = datetime.now(JST)
@@ -274,7 +291,9 @@ class Runtime:
                 raise ValueError('weekly_research_requires_reconciliation')
             atomic(research_attempt, {'status': 'in_flight', 'at': stamp()})
             try:
-                themes = self.models.research(self._research_context(context))['themes']
+                themes = self._measured_model_call(
+                    'research:' + week, 'research', 'claude-sonnet-4-6',
+                    lambda: self.models.research(self._research_context(context)))['themes']
                 atomic(research_attempt, {'status': 'generated', 'themes': themes, 'at': stamp()})
             finally:
                 self._save_usage()
@@ -282,8 +301,17 @@ class Runtime:
                 self.ledger.create_candidate(theme, now=now)
             current = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and j['week'] == week]
         results = []
+        with self.ledger._tx() as db:
+            row = db.execute('SELECT value FROM meta WHERE key=?',
+                             ('runtime_retry_candidate',)).fetchone()
+            preferred = row[0] if row else None
+            if row:
+                db.execute('DELETE FROM meta WHERE key=?', ('runtime_retry_candidate',))
+        ordered_jobs = self.ledger.list_jobs()
+        if preferred:
+            ordered_jobs.sort(key=lambda item: item['id'] != preferred)
         # Pending candidates retain their slot and may resume after a week boundary.
-        for job in self.ledger.list_jobs():
+        for job in ordered_jobs:
             if job.get('kind') == 'article_revision' or job['stage'] not in ('candidate',) or len(results) >= limit:
                 continue
             try:
@@ -300,6 +328,7 @@ class Runtime:
         return {'status': 'completed', 'articles': results}
 
     def _make_article(self, job, context):
+        self._require_running()
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
         if corrected:
@@ -343,7 +372,20 @@ class Runtime:
                     atomic(path, plan)
                 raise ValueError('prewrite_display_correction_required')
         gathered.update({'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
-        bundle = self.models.draft(job['theme'], gathered)
+        source_dependencies = self._source_dependencies(gathered)
+        draft_inputs = {
+            'theme': copy.deepcopy(job['theme']),
+            'dependencies': {
+                'source': source_dependencies,
+                'routes': self._model_routes(),
+                'revisionContext': copy.deepcopy(job.get('revisionContext')),
+                'catalogCorrectionContext': copy.deepcopy(job.get('catalogCorrectionContext')),
+            },
+            'schemaVersion': {'stage': 1, 'input': 'theme+verified-source', 'output': 'article+brief'},
+        }
+        bundle = self._run_model_stage(job, 'draft', draft_inputs,
+            lambda: self.models.draft(job['theme'], gathered),
+            self._model_routes()['draft']['requested'])
         if revision:
             from revisions import EDIT_FIELDS, validate_revision_bundle
             draft = bundle['article']
@@ -356,8 +398,8 @@ class Runtime:
         else:
             bundle['article'].update(id=job['id'], slug=job['theme']['slug'], status='draft',
                 publishedAt=None, scheduledPublishDate=None, autoGenerated=True)
-            bundle['article'].setdefault('createdAt', stamp())
-            bundle['article']['updatedAt'] = stamp()
+            bundle['article'].setdefault('createdAt', job['created_at'])
+            bundle['article']['updatedAt'] = bundle['article']['createdAt']
         if corrected:
             bundle['catalogCorrectionContext'] = copy.deepcopy(correction)
             from catalog_corrections import validate_bundle
@@ -369,11 +411,23 @@ class Runtime:
         source = copy.deepcopy(bundle)
         artifacts = self.root / 'research' / 'artifacts' / job['id'] / fingerprint(source)
         atomic(artifacts / 'source.json', {'kind': 'source', 'bundle': source})
-        polished = self.models.polish(source['article']['content'], source['brief'])
+        polish_inputs = {
+            'content': source['article']['content'], 'brief': copy.deepcopy(source['brief']),
+            'dependencies': {'sourceBundle': self._source_dependencies(source),
+                             'verifiedSource': source_dependencies,
+                             'routes': self._model_routes()},
+            'schemaVersion': {'stage': 1, 'input': 'exact-source+brief', 'output': 'polish+preservation'},
+        }
+        def polish_operation():
+            candidate = self.models.polish(source['article']['content'], source['brief'])
+            checked = inspect_polish(source['article']['content'], candidate['content'])
+            if checked.get('passed') is not True:
+                raise ValueError('gemini_protected_content_changed')
+            return {'polished': candidate, 'preservation': checked}
+        polished_stage = self._run_model_stage(job, 'polish', polish_inputs, polish_operation,
+                                               self._model_routes()['polish']['requested'])
+        polished, preservation = polished_stage['polished'], polished_stage['preservation']
         atomic(artifacts / 'candidate.json', {'kind': 'candidate', 'candidate': polished})
-        preservation = inspect_polish(source['article']['content'], polished['content'])
-        if preservation.get('passed') is not True:
-            raise ValueError('gemini_protected_content_changed')
         bundle['article']['content'] = polished['content']
         if self.config.get('socialCardsEnabled') is True:
             if self.social_cards is None:
@@ -404,16 +458,36 @@ class Runtime:
         click_results = preview.get('clicksVerified', {})
         clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
         flags.update(medical=medical['passed'], render=preview.get('passed') is True and clicks_ok)
-        final = self.models.review({k: v for k, v in bundle.items() if k not in ('revisionContext', 'catalogCorrectionContext')}, {'evidence': flags, 'structural': checks, 'source': gathered.get('evidence', {}),
-                                          'approvedTheme': job['theme'],
-                                          'preview': preview, 'polishPreservation': preservation,
-                                          'editorialRules': context['editorialRules'],
-                                          'medical': medical,
-                                          'sourceContent': source['article']['content'],
-                                          **({'existingArticle': public_source, 'editorialCorrectionInstructions': binding['editorialCorrectionInstructions'],
-                                              'verifiedAuthorFacts': binding['verifiedAuthorFacts']} if revision else {})})
-        if final.get('passed') is not True:
-            raise ValueError('final_review_failed')
+        review_bundle = {k: v for k, v in bundle.items()
+                         if k not in ('revisionContext', 'catalogCorrectionContext')}
+        review_checks = {'evidence': flags, 'structural': checks,
+                         'source': gathered.get('evidence', {}),
+                         'approvedTheme': job['theme'],
+                         'preview': preview, 'polishPreservation': preservation,
+                         'editorialRules': context['editorialRules'],
+                         'medical': medical,
+                         'sourceContent': source['article']['content'],
+                         **({'existingArticle': public_source,
+                             'editorialCorrectionInstructions': binding['editorialCorrectionInstructions'],
+                             'verifiedAuthorFacts': binding['verifiedAuthorFacts']} if revision else {})}
+        review_inputs = {
+            'bundle': self._source_dependencies(review_bundle),
+            'checks': self._review_dependencies(review_checks),
+            'dependencies': {'verifiedSource': source_dependencies,
+                             'routes': self._model_routes(),
+                             'qualityFlags': flags,
+                             'structural': checks,
+                             'renderer': self._review_dependencies(preview),
+                             'editorialRules': context['editorialRules']},
+            'schemaVersion': {'stage': 1, 'input': 'bundle+live-checks', 'output': 'final-review'},
+        }
+        def review_operation():
+            candidate = self.models.review(review_bundle, review_checks)
+            if candidate.get('passed') is not True:
+                raise ValueError('final_review_failed')
+            return candidate
+        final = self._run_model_stage(job, 'final_review', review_inputs, review_operation,
+                                      self._model_routes()['final_review']['requested'])
         job = self.ledger.save_bundle(job['id'], bundle)
         review = dict(final, fingerprint=job['revision'], evidence=flags,
                       polish={'model': polished['model'], 'validated': True})
@@ -427,6 +501,7 @@ class Runtime:
         return self.deliver(job['id'])
 
     def request_revisions(self, specifications):
+        self._require_running()
         from revisions import validated_context
         if not isinstance(specifications, list) or not 1 <= len(specifications) <= 3:
             raise ValueError('one_to_three_revision_specifications_required')
@@ -448,6 +523,7 @@ class Runtime:
                                              'stage': j['stage']} for j in sorted(jobs, key=lambda j:j['priority'])]}
 
     def _produce_requested_revision(self):
+        self._require_running()
         pending = [j for j in self.ledger.list_jobs() if j.get('kind') == 'article_revision'
                    and j['stage'] == 'candidate']
         if not pending or not self.config.get('generationEnabled'):
@@ -463,6 +539,10 @@ class Runtime:
             atomic(marker, {'status': 'completed', 'at': stamp()})
             status = 'awaiting_astra_review' if isinstance(delivery, dict) and delivery.get('status') == 'awaiting_astra_review' else 'awaiting_approval'
             return {'id': job['id'], 'status': status}
+        except StageUnknown as error:
+            self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+            atomic(marker, {'status': 'unknown', 'at': stamp(), 'reason': reason(error)})
+            return {'id': job['id'], 'status': 'attention', 'reason': reason(error)}
         except Exception as error:
             self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
             atomic(marker, {'status': 'blocked', 'at': stamp(), 'reason': reason(error)})
@@ -471,14 +551,105 @@ class Runtime:
             self._save_usage()
 
     def retry(self, id):
+        self._require_running()
         job = self.ledger.get_job(id)
         if job['stage'] not in ('error', 'held', 'rejected') or job.get('publication') or job.get('approval'):
             raise ValueError('job_not_retryable')
         if job.get('bundle'):
-            raise ValueError('existing_draft_requires_version_reconciliation_before_retry')
+            with sqlite3.connect(self.ledger.db_path) as db:
+                unresolved = db.execute(
+                    "SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
+                    (id,)).fetchone()
+                requests = [json.loads(row[0]) for row in db.execute(
+                    'SELECT data FROM requests WHERE job_id=?', (id,)).fetchall()]
+            if unresolved:
+                raise ValueError('effect_requires_reconciliation')
+            if any(request.get('status') == 'created' and
+                   (self.root / 'deliveries' / (request['request_id'] + '.json')).exists()
+                   for request in requests):
+                raise ValueError('delivery_requires_reconciliation')
+            self.ledger._current(job)
+            valid_review(job.get('review'), job['revision'])
+            restored = self.ledger.set_stage(id, 'review')
+            return {'status': restored['stage'], 'id': id, 'sameWeeklySlot': True,
+                    'checkpoint': 'review'}
         self.ledger.set_stage(id, 'draft')
         self.ledger.set_stage(id, 'candidate')
+        with self.ledger._tx() as db:
+            db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)',
+                       ('runtime_retry_candidate', id))
         return {'status': 'candidate', 'id': id, 'sameWeeklySlot': True}
+
+    def retry_stage(self, id, stage, input_key):
+        """Explicitly execute the one remaining attempt for an exact failed input."""
+        self._require_running()
+        if stage not in ('draft', 'polish', 'final_review'):
+            raise ValueError('stage_not_retryable')
+        job = self.ledger.get_job(id)
+        if (job['stage'] != 'error' or job.get('bundle') or job.get('publication')
+                or job.get('approval')):
+            raise ValueError('job_not_stage_retryable')
+        records = self.stage_journal.status(job_id=id, stage=stage)['records']
+        record = next((item for item in records if item.get('stageKey') == input_key), None)
+        if (record is None or record.get('status') != 'failed'
+                or record.get('attempts', 0) >= record.get('maxAttempts', 0)):
+            raise StageBlocked('exact failed stage retry unavailable', stage_key=input_key)
+        if job.get('kind') == 'article_revision':
+            return self._retry_revision_stage(job, stage, input_key)
+        self._explicit_stage_retry = {'jobId': id, 'stage': stage, 'inputKey': input_key}
+        self.ledger.set_stage(id, 'draft')
+        self.ledger.set_stage(id, 'candidate')
+        with self.ledger._tx() as db:
+            db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)',
+                       ('runtime_retry_candidate', id))
+        try:
+            return self.produce(limit=1)
+        finally:
+            self._explicit_stage_retry = None
+
+    def _retry_revision_stage(self, job, stage, input_key):
+        marker = self.root / 'revision-production-attempts' / (job['id'] + '.json')
+        try:
+            if marker.is_symlink() or marker.stat().st_mode & 0o777 != 0o600:
+                raise ValueError()
+            receipt = json.loads(marker.read_text())
+            if not isinstance(receipt, dict) or receipt.get('status') != 'blocked':
+                raise ValueError()
+        except (OSError, ValueError, TypeError):
+            raise ValueError('revision_production_requires_reconciliation') from None
+        retry_marker = (self.root / 'revision-stage-retries' / job['id'] /
+                        (hashlib.sha256(input_key.encode()).hexdigest() + '.json'))
+        if retry_marker.exists():
+            raise ValueError('revision_stage_retry_requires_reconciliation')
+        atomic(retry_marker, {'status': 'in_flight', 'at': stamp(),
+                              'stage': stage, 'inputKey': input_key})
+        self._explicit_stage_retry = {'jobId': job['id'], 'stage': stage,
+                                      'inputKey': input_key}
+        self.ledger.set_stage(job['id'], 'draft')
+        self.ledger.set_stage(job['id'], 'candidate')
+        try:
+            current = self.ledger.get_job(job['id'])
+            delivery = self._make_article(current, self._context())
+            atomic(retry_marker, {'status': 'completed', 'at': stamp(),
+                                  'stage': stage, 'inputKey': input_key})
+            status = ('awaiting_astra_review' if isinstance(delivery, dict)
+                      and delivery.get('status') == 'awaiting_astra_review'
+                      else 'awaiting_approval')
+            return {'status': 'completed', 'articles': [{'id': job['id'], 'status': status}]}
+        except StageUnknown as error:
+            self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+            atomic(retry_marker, {'status': 'unknown', 'at': stamp(),
+                                  'stage': stage, 'inputKey': input_key})
+            return {'status': 'attention', 'reason': reason(error)}
+        except Exception as error:
+            self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+            atomic(retry_marker, {'status': 'blocked', 'at': stamp(),
+                                  'stage': stage, 'inputKey': input_key,
+                                  'reason': reason(error)})
+            return {'status': 'attention', 'reason': reason(error)}
+        finally:
+            self._explicit_stage_retry = None
+            self._save_usage()
 
     def research_issues(self, id):
         file = self.root / 'research' / (id + '.json')
@@ -502,13 +673,151 @@ class Runtime:
                 details.append(str(names.get(p.get('productId')) or '掲載商品') + ': ' + '; '.join(parts))
         return '\n'.join(details)[:4000]
 
+    def _model_routes(self):
+        routes = {
+            'draft': {
+                'requested': self.env.get('ARTICLE_WRITER_MODEL') or 'claude-opus-4-8',
+                'fallback': self.env.get('ARTICLE_WRITER_FALLBACK_MODEL') or 'claude-sonnet-4-6',
+            },
+            'polish': {'requested': 'gemini-3.8-flash', 'fallback': None},
+            'final_review': {
+                'requested': self.env.get('ARTICLE_REVIEW_MODEL') or 'claude-sonnet-4-6',
+                'fallback': None,
+            },
+            'research': {'requested': 'claude-sonnet-4-6', 'fallback': None},
+            'social': {'requested': 'claude-sonnet-4-6', 'fallback': None},
+        }
+        routes['implementationHashes'] = {
+            name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+            for name in ('models.py', 'quality.py')
+        }
+        return routes
+
+    @staticmethod
+    def _source_dependencies(value):
+        """Remove only known observation clocks after the source was re-gathered."""
+        result = copy.deepcopy(value)
+        for item in result.get('references', []) if isinstance(result, dict) else []:
+            if isinstance(item, dict):
+                item.pop('checkedAt', None)
+        for item in result.get('images', []) if isinstance(result, dict) else []:
+            if isinstance(item, dict):
+                item.pop('checkedAt', None)
+        evidence = result.get('evidence', {}) if isinstance(result, dict) else {}
+        for product in evidence.get('products', []) if isinstance(evidence, dict) else []:
+            if not isinstance(product, dict):
+                continue
+            product.pop('checkedAt', None)
+            for field in ('claims', 'destinations'):
+                for item in product.get(field, []):
+                    if isinstance(item, dict):
+                        item.pop('checkedAt', None)
+        return result
+
+    @staticmethod
+    def _review_dependencies(value):
+        """Exclude only renderer-local files and renderer observation clocks."""
+        result = copy.deepcopy(value)
+        preview = result.get('preview') if isinstance(result, dict) and 'preview' in result else result
+        if isinstance(preview, dict):
+            for key in ('desktop', 'mobile', 'path', 'outputDir'):
+                if isinstance(preview.get(key), str):
+                    preview.pop(key, None)
+            for key in ('checkedAt', 'generatedAt', 'observedAt'):
+                preview.pop(key, None)
+        if isinstance(result, dict) and isinstance(result.get('source'), dict):
+            wrapped = Runtime._source_dependencies({'evidence': result['source']})
+            result['source'] = wrapped['evidence']
+        return result
+
+    def _usage_slice(self, start, *, article_id, stage, reason, requested_model):
+        measured = []
+        for record in getattr(self.models, 'usage', [])[start:]:
+            response_id = record.get('responseId') if isinstance(record, dict) else None
+            if response_id and response_id in self._usage_response_ids:
+                continue
+            if response_id:
+                self._usage_response_ids.add(response_id)
+            if isinstance(record, dict):
+                record.update(articleId=article_id, stage=stage, reason=reason,
+                              requestedModel=requested_model,
+                              actualModel=record.get('model'))
+                measured.append(copy.deepcopy(record))
+        return measured
+
+    def _measured_model_call(self, article_id, stage, requested_model, operation,
+                             *, reason='initial'):
+        self._require_running()
+        start = len(getattr(self.models, 'usage', []))
+        try:
+            return operation()
+        finally:
+            self._usage_slice(start, article_id=article_id, stage=stage, reason=reason,
+                              requested_model=requested_model)
+
+    def _run_model_stage(self, job, stage, inputs, operation, requested_model,
+                         *, explicit_retry=False):
+        self._require_running()
+        key = self.stage_journal.key(job['id'], stage, inputs)
+        retry = getattr(self, '_explicit_stage_retry', None)
+        if retry and retry['jobId'] == job['id']:
+            order = ('draft', 'polish', 'final_review')
+            target = retry['stage']
+            if order.index(stage) < order.index(target):
+                exact = next((item for item in self.stage_journal.status(
+                    job_id=job['id'], stage=stage)['records']
+                    if item.get('stageKey') == key and item.get('status') == 'succeeded'), None)
+                if exact is None:
+                    raise StageBlocked('prior stage inputs changed before explicit retry',
+                                       stage_key=key, status='changed')
+            elif stage == target:
+                if key != retry['inputKey']:
+                    raise StageBlocked('exact failed stage inputs changed', stage_key=key,
+                                       status='changed')
+                explicit_retry = True
+        start = len(getattr(self.models, 'usage', []))
+        called = False
+        reason_name = 'explicit_retry' if explicit_retry else 'initial'
+        def measured():
+            nonlocal called
+            called = True
+            return operation()
+        try:
+            if explicit_retry:
+                return self.stage_journal.retry_failed(job['id'], stage, inputs, measured)
+            return self.stage_journal.run(job['id'], stage, inputs, measured, max_attempts=2)
+        finally:
+            if called:
+                records = self._usage_slice(start, article_id=job['id'], stage=stage,
+                                            reason=reason_name,
+                                            requested_model=requested_model)
+                receipt_fields = {'responseId', 'model', 'requestedModel', 'actualModel',
+                                  'input', 'output', 'usage', 'actualUSD', 'actualInvoiceUsd'}
+                receipts = [{name: value for name, value in record.items()
+                             if name in receipt_fields} for record in records]
+                self.stage_journal.record_usage(job['id'], stage, key, receipts,
+                                                reason=reason_name)
+                if explicit_retry and getattr(self, '_explicit_stage_retry', None):
+                    self._explicit_stage_retry = None
+
     def _save_usage(self):
         records = getattr(self.models, 'usage', [])
         if records:
-            atomic(self.root / 'usage' / (secrets.token_hex(12) + '.json'), {'at': stamp(), 'calls': records, 'actualInvoiceUsd': None})
+            unique = []
+            for record in records:
+                response_id = record.get('responseId') if isinstance(record, dict) else None
+                if response_id and response_id in self._saved_usage_response_ids:
+                    continue
+                if response_id:
+                    self._saved_usage_response_ids.add(response_id)
+                unique.append(record)
+            if unique:
+                atomic(self.root / 'usage' / (secrets.token_hex(12) + '.json'),
+                       {'at': stamp(), 'calls': unique, 'actualInvoiceUsd': None})
             records.clear()
 
     def deliver(self, id, kind='article'):
+        self._require_running()
         job = self.ledger.get_job(id)
         if kind == 'article' and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
             try:
@@ -535,6 +844,7 @@ class Runtime:
         return {'status': 'delivered', 'card_ts': card}
 
     def consume(self):
+        self._require_running()
         spool = Path(self.config['spoolDir'])
         processed = spool / 'editorial-processed'
         processed.mkdir(mode=0o700, exist_ok=True)
@@ -711,6 +1021,7 @@ class Runtime:
 
     def _post_publication_audits(self):
         """Caller holds runtime.flock. Read-only checks never mutate ledger authority."""
+        self._require_running()
         if self.config.get('postPublicationAuditEnabled') is not True:
             return []
         def scope_date(value):
@@ -838,6 +1149,7 @@ class Runtime:
 
     def _evaluate_manager(self, now):
         """Called inside the CLI runtime.flock; no nested runtime lock or fallback."""
+        self._require_running()
         from dataclasses import asdict
         from manager import Manager, Budget
         from manager_cli import call
@@ -881,16 +1193,30 @@ class Runtime:
         return projection
 
     def tick(self):
+        self.execution_policy = execution_policy(self.config)
+        if self.execution_policy is not None and self.execution_policy.suspended:
+            return {'status': 'suspended', 'mode': 'deterministic'}
         decisions = self.consume()
+        now = datetime.now(JST)
+        dispatch = (DeterministicDispatcher(self).plan(now)
+                    if self.execution_policy is not None else None)
+        actions = {(action['kind'], action.get('jobId'), action.get('deliveryKind'))
+                   for action in (dispatch or {}).get('actions', [])}
         # Separate errors from generic attention notices, and never skip existing gates.
         try:
             audits = self._post_publication_audits()
         except Exception as error:
             audits = [self._post_audit_fault(error)]
         results = []
+        if dispatch is not None:
+            results.extend({'id': item.get('jobId') or 'deterministic-dispatch',
+                            'status': 'attention', 'reason': item['reason']}
+                           for item in dispatch.get('blocked', []))
         for job in self.ledger.list_jobs():
             try:
                 if job['stage'] == 'approved' and self.config.get('publicationEnabled'):
+                    if dispatch is not None and ('publish', job['id'], None) not in actions:
+                        continue
                     if ('catalogCorrectionContext' in job
                             and self.config.get('catalogCorrectionsPublicationEnabled') is not True):
                         results.append({'id': job['id'], 'status': 'waiting_auth',
@@ -910,8 +1236,12 @@ class Runtime:
                         raise
                     self.slack.notice('【公開確認済み】' + job['bundle']['article']['title'] + '\n' + result['url'])
                 elif job['stage'] == 'review':
+                    if dispatch is not None and ('deliver', job['id'], 'article') not in actions:
+                        continue
                     self.deliver(job['id'])
                 elif job.get('kind') != 'article_revision' and job['stage'] == 'published' and not job.get('social'):
+                    if dispatch is not None and ('make_social', job['id'], None) not in actions:
+                        continue
                     marker = self.root / 'social-attempts' / (job['id'] + '.json')
                     if marker.exists():
                         raise ValueError('social_generation_requires_reconciliation')
@@ -919,8 +1249,12 @@ class Runtime:
                     self.make_social(job)
                     atomic(marker, {'status': 'completed', 'at': stamp()})
                 elif job['stage'] == 'social_review':
+                    if dispatch is not None and ('deliver', job['id'], 'social') not in actions:
+                        continue
                     self.deliver(job['id'], 'social')
                 elif job['stage'] == 'social_approved':
+                    if dispatch is not None and ('publish_social', job['id'], None) not in actions:
+                        continue
                     if job['social']['proposal'].get('deliveryMode', 'manual') == 'auto_x':
                         if self.config.get('socialPostingEnabled') is True:
                             self.publish_social(job)
@@ -930,18 +1264,30 @@ class Runtime:
                     else:
                         raise ValueError('legacy_social_requires_mode_migration')
                 elif job['stage'] == 'social_posted':
+                    if dispatch is not None and ('notify_social', job['id'], None) not in actions:
+                        continue
                     self.notify_social_posted(job)
             except Exception as error:
                 results.append({'id': job['id'], 'status': 'attention', 'reason': reason(error)})
         try:
-            revision_result = self._produce_requested_revision()
+            revision_result = (self._produce_requested_revision()
+                               if dispatch is None or any(action[0] == 'produce_revision' for action in actions)
+                               else None)
         except Exception as error:
             revision_result = {'status': 'attention', 'reason': reason(error)}
         if revision_result:
             results.append(revision_result)
-        now = datetime.now(JST)
         manager_projection = None
-        if self._manager_enabled():
+        if dispatch is not None:
+            production_action = next((action for action in dispatch['actions']
+                                      if action['kind'] == 'produce'), None)
+            if production_action is not None:
+                try:
+                    results.append({'production': self.produce(limit=1)})
+                except Exception as error:
+                    results.append({'status': 'attention', 'reason': reason(error),
+                                    'production': {'status': 'blocked', 'reason': reason(error)}})
+        elif self._manager_enabled():
             try:
                 manager_projection = self._evaluate_manager(now)
             except Exception:
@@ -991,6 +1337,8 @@ class Runtime:
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
         if manager_projection is not None:
             result['manager'] = manager_projection
+        if dispatch is not None:
+            result['dispatch'] = dispatch
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
                      for j in jobs if j.get('error')]
@@ -1017,6 +1365,7 @@ class Runtime:
         return result
 
     def make_social(self, job):
+        self._require_running()
         publication = job.get('publication') or {}
         proof = publication.get('readback') or {}
         if publication.get('verified') is not True or proof.get('verified') is not True or proof.get('fingerprint') != job['revision']:
@@ -1033,7 +1382,9 @@ class Runtime:
         manifest = bundle['article'].get('generationMeta', {}).get('socialCard')
         if manifest and proof.get('socialCard') != manifest:
             raise ValueError('social_card_public_readback_missing')
-        proposal = self.models.social(bundle, job['publication']['url'])
+        proposal = self._measured_model_call(
+            job['id'], 'social', self._model_routes()['social']['requested'],
+            lambda: self.models.social(bundle, job['publication']['url']))
         cards = [i for i in bundle['images'] if i.get('role') == 'social-card']
         if bundle['article'].get('generationMeta', {}).get('socialCard'):
             manifest = bundle['article']['generationMeta']['socialCard']
@@ -1044,7 +1395,9 @@ class Runtime:
             raise ValueError('social_card_manifest_missing')
         # The announcement receives its own prose polish and final review.
         source = proposal['text']
-        polished = self.models.polish(source, bundle['brief'])
+        polished = self._measured_model_call(
+            job['id'], 'social', self._model_routes()['polish']['requested'],
+            lambda: self.models.polish(source, bundle['brief']))
         if not inspect_polish(source, polished['content'])['passed']:
             raise ValueError('social_polish_changed_protected_content')
         proposal['text'] = polished['content']
@@ -1074,14 +1427,19 @@ class Runtime:
             proposal['deliveryMode'] = 'manual'
             proposal.pop('targetAccountId', None)
         valid_social_mode(proposal)
-        final = self.models.review({'article': {'content': proposal['text'] + '\n' + proposal['replyText']},
-                                    'source': bundle, 'proposal': proposal},
-                                   {'reviewKind': 'social', 'evidence': flags, 'publicationReadback': job['publication'],
-                                    'independentSocialFormat': {'surface': 'X announcement and URL reply, not the source article browser',
-                                        'platform': proposal.get('platform'), 'weightedLength': weighted_length,
-                                        'maxWeightedLength': 280, 'formatVerified': format_ok,
-                                        'imagesVerified': images_ok, 'urlBindingVerified': url_ok},
-                                    'sourceContent': source, 'factualSource': source_text})
+        final = self._measured_model_call(
+            job['id'], 'social', self._model_routes()['final_review']['requested'],
+            lambda: self.models.review(
+                {'article': {'content': proposal['text'] + '\n' + proposal['replyText']},
+                 'source': bundle, 'proposal': proposal},
+                {'reviewKind': 'social', 'evidence': flags,
+                 'publicationReadback': job['publication'],
+                 'independentSocialFormat': {
+                     'surface': 'X announcement and URL reply, not the source article browser',
+                     'platform': proposal.get('platform'), 'weightedLength': weighted_length,
+                     'maxWeightedLength': 280, 'formatVerified': format_ok,
+                     'imagesVerified': images_ok, 'urlBindingVerified': url_ok},
+                 'sourceContent': source, 'factualSource': source_text}))
         if final.get('passed') is not True:
             raise ValueError('social_review_failed')
         review = dict(final, fingerprint=fingerprint(proposal), evidence=flags,
@@ -1090,6 +1448,7 @@ class Runtime:
         self.deliver(job['id'], 'social')
 
     def hold_social_refresh(self, id, *, expected_social_revision):
+        self._require_running()
         if self.config.get('socialPostingEnabled') is not False:
             raise ValueError('social_refresh_requires_posting_hold')
         return self.ledger.hold_social_refresh(id, expected_social_revision=expected_social_revision)
@@ -1097,6 +1456,7 @@ class Runtime:
     def refresh_social_images(self, id, rendered_bundle, *, expected_social_revision,
                               prior_main_readback=None, deliver=False):
         """Operator-only image refresh; no article mutation or X action. Caller holds runtime.flock."""
+        self._require_running()
         job = self.ledger.get_job(id)
         old = job.get('social') or {}
         if old.get('revision') != expected_social_revision or old.get('publication'):
@@ -1171,6 +1531,7 @@ class Runtime:
         return result
 
     def enable_social_autopost(self, id, target_id):
+        self._require_running()
         if target_id != self.config.get('targetAccountId'):
             raise ValueError('social_target_mismatch')
         return self.ledger.enable_social_autopost(id, target_id)
@@ -1185,6 +1546,7 @@ class Runtime:
 
     def publish_social(self, job):
         """The publisher journal owns X retries; do not globally claim a social effect."""
+        self._require_running()
         if self.config.get('socialPostingEnabled') is not True:
             raise ValueError('social_posting_disabled')
         current = self.ledger.get_job(job['id'])
@@ -1211,6 +1573,7 @@ class Runtime:
         return posted
 
     def notify_social_posted(self, job):
+        self._require_running()
         publication = (job.get('social') or {}).get('publication') or {}
         if job.get('stage') != 'social_posted' or publication.get('verified') is not True:
             raise ValueError('social_posted_readback_required')
@@ -1241,6 +1604,7 @@ class Runtime:
         return {'status': 'delivered'}
 
     def preflight(self):
+        self._require_running()
         self.slack._call('auth.test', {})
         probe = '設営前に部品を確認します。'
         brief = dict(purpose='校正接続検査', reader='キャンプ初心者', conclusion='部品を確認する',
@@ -1257,6 +1621,7 @@ class Runtime:
 
     def prepare_social_handoff(self, job):
         """Respect the established Gearman manual-post route; never revive old X API jobs."""
+        self._require_running()
         if job['social']['proposal'].get('deliveryMode', 'manual') != 'manual':
             raise ValueError('automatic_social_cannot_use_manual_handoff')
         marker = self.root / 'social-outbox' / (job['social']['revision'] + '.json')
@@ -1287,6 +1652,10 @@ def main():
     parser.add_argument('--evidence-file')
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text())
+    policy = execution_policy(config)
+    if policy is not None and policy.suspended and args.command != 'status':
+        print(json.dumps({'status': 'suspended', 'mode': 'deterministic'}))
+        return
     runtime = Runtime(config)
     atexit.register(runtime._save_usage)
     with (runtime.root / 'runtime.flock').open('a') as lease:
