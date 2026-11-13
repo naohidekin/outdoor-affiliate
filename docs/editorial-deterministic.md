@@ -103,3 +103,24 @@ python3 -m unittest discover -s scripts/editorial -p 'test_*.py'
 5. 最初の実制作は従来の全品質ゲートを通し、記事公開・SNS投稿はそれぞれ本人承認を待つ。
 
 オフラインテスト成功は、実認証・実モデル・実送達・実公開の成功証明ではない。
+
+## 2026-11-14 停止配備
+
+実行ブランチは `codex/camp-editorial-slack-20261103`。両Macの既存変更を保存コミットし、
+その両方と deterministic 実装を統合する。Webサイト main の配備とは別。
+
+停止時は executionPolicy.suspended=true、exceptions.autoAI=false、editorialManager.enabled=false。
+generation/publication/socialPosting/reports/postPublicationAudit/indexTracking/
+catalogCorrectionsPublication の各Enabledはfalse。launchdとCodex確認automationも再開しない。
+
+再開時は本人が指定した範囲の認証と未解決記録を確認する。公開を許可する前に
+postPublicationAuditEnabled と indexTrackingEnabled を必ず復元し、制作・公開・SNS・報告の
+各フラグは許可範囲だけ戻す。旧AI managerは無効を保ち、単一runnerの停止を最後に解除する。
+公開後検査の停止中を「品質確認の成功」とは扱わない。通常進行のAI削減量は実稼働前には未測定。
+
+記録棚卸しは `operations.py --state-root <absolute-root> records`。SQLiteは読取専用、
+既知の構造化受領情報だけを使い、モデル・環境ファイル・外部APIを呼ばない。
+出力で成功判定できないものは照合待ちとし、履歴や予算を初期化しない。
+
+停止後も、停止前に発動済みのモデル応答と利用量の受領証跡は保存する。
+結果保全は新規実行の許可ではなく、次のモデル呼出し・公開・送信は停止判定で拒否する。

@@ -8,6 +8,7 @@ const CANONICAL='https://camp-gear-lab.com/articles/insect-repellent-gear-roundu
 const SCOPE={channel:'chatgpt',roomId:'23c691108d088198a11cf37ab7eab55a',ownerId:'user-0tmIgoZEss24lHzstHN0apfu'};
 const OWNER_MESSAGE='Sentinel_727fb8374a3c81919c6b320c21a16c0f';
 const PROPOSALS=['Sentinel_bf658317985c8191af5db9638bc6e96f','Sentinel_1bfb3ae268948191bf5c0e79b7fac2ae'];
+function requireRunning(deps){check(deps.requireRunning()===true,'execution suspended');}
 function validate(input){
  const {prepared:p,baseArticle:b,owner,review}=input;
  validatePreparedRetraction(p,b);
@@ -18,6 +19,7 @@ function validate(input){
  check(review?.status==='passed' && review.candidateHash===p.candidateHash && review.baseHash===p.baseHash && review.manifestHash===retractionHash(p.manifest),'independent review binding required');
  check(typeof review.artifactReference==='string' && review.artifactReference.length>0 && review.reviewerId && review.preparerId && review.reviewerId!==review.preparerId,'independent review provenance required');
  check(review.deletionOnly===true && review.safetyWarningsPreserved===true && review.remainingRecommendationChecked===true,'semantic safety review required');
+ check(typeof input.deps.requireRunning==='function','execution policy guard required');
  for(const k of ['verifyOwnerBinding','verifyIndependentReview','verifyPresentation','verifyRenderedCandidate','readRedirect','publicGet','revalidate','lock','now'])check(typeof input.deps[k]==='function','missing dependency '+k);
  check(input.deps.db && ['findArticles','patchPublishedCAS'].every(k=>typeof input.deps.db[k]==='function'),'CAS dependencies required');
 }
@@ -36,6 +38,7 @@ export function verifyRetractionDOM(html,p){
 }
 export async function executeSafetyRetraction(input){
  validate(input);const {prepared:p,baseArticle:b,deps}=input;
+ requireRunning(deps);
  // Callbacks must validate real saved evidence; supplied records alone grant no authority.
  check(await deps.verifyOwnerBinding(input.owner,p)===true,'untrusted owner evidence');
  check(await deps.verifyIndependentReview(input.review,p)===true,'untrusted review evidence');
@@ -47,6 +50,7 @@ export async function executeSafetyRetraction(input){
   check(await deps.verifyPresentation(b,p)===true,'inherited presentation changed');
   const now=deps.now();check(typeof now==='string'&&Number.isFinite(Date.parse(now))&&Date.parse(now)>Date.parse(b.updated_at),'fresh timestamp required');
   const patch={content:p.candidate.content,faqs:structuredClone(p.candidate.faqs),product_ids:[...p.candidate.product_ids],updated_at:now};
+  requireRunning(deps);
   let phase='article_update';
   try{
    const changed=await deps.db.patchPublishedCAS(before[0],patch);

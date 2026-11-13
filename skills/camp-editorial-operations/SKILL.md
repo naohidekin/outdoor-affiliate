@@ -11,9 +11,13 @@ description: Camp Gear Lab編集台帳の状態確認、次工程の確認、停
 
 ## 状態・次工程を確認する
 
-運用CLIの読取専用 status/plan を使う。Runtimeのtickやproduceを確認目的で実行しない。
+運用CLIの読取専用 status/plan/records を使う。Runtimeのtickやproduceを確認目的で実行しない。
 認証情報、本文全文、Slackのnonce、生ログを表示しない。正常な承認待ち・開始日前・
 対象なしを異常扱いせず、同じ状態ではAIを呼ばない。
+
+未解決記録の棚卸しは `python3 scripts/editorial/operations.py --state-root <絶対パス> records` を使う。
+現在版と旧版、台帳の送達済みとファイルの未完了、managerの作業依頼と外部実行の結果不明を区別する。
+この出力から再送・再実行を自動判断しない。
 
 ## 工程を復旧する
 

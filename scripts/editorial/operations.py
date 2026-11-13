@@ -9,6 +9,7 @@ import sqlite3
 
 from dispatcher import DeterministicDispatcher, execution_policy
 from production_schedule import ProductionSchedule
+from record_inspection import inspect_records
 from stage_journal import read_status
 
 
@@ -94,11 +95,13 @@ def main(argv=None):
     parser.add_argument('--stage', choices=('draft', 'polish', 'final_review'))
     parser.add_argument('--input-key')
     parser.add_argument('--execute', action='store_true')
-    parser.add_argument('command', choices=('status', 'plan', 'retry-stage'))
+    parser.add_argument('command', choices=('status', 'records', 'plan', 'retry-stage'))
     args = parser.parse_args(argv)
     root = _root(args.state_root)
     if args.command == 'status':
         value = status(root)
+    elif args.command == 'records':
+        value = inspect_records(root)
     else:
         if not args.config:
             raise ValueError('config required')

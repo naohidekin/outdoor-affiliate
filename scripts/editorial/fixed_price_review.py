@@ -12,6 +12,12 @@ from catalog_corrections import validate_context, validate_bundle, validate_live
 from quality import inspect_bundle, inspect_polish
 
 
+def _require_running(runtime):
+    guard = getattr(runtime, '_require_running', None)
+    require(callable(guard), 'execution policy guard required')
+    guard()
+
+
 def validate_fixed_candidate(job, candidate):
     require(candidate.get('articleId') == job['id'] and candidate.get('expectedRevision') == job['revision']
             and fingerprint(job['bundle']) == job['revision'], 'fixed candidate revision mismatch')
@@ -79,6 +85,7 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     are saved privately. polish_evidence is retained for caller compatibility but
     is never accepted as production proof. Caller must hold runtime.flock.
     """
+    _require_running(runtime)
     candidate = json.loads(Path(candidate_path).read_text())
     job = runtime.ledger.get_job(id)
     bound = validate_fixed_candidate(job, candidate)
@@ -88,11 +95,13 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     by_id = {p['id']: p for p in bundle['products']}
     context['products'] = [copy.deepcopy(by_id.get(p['id'], p)) for p in context['products']]
     context['catalog'] = copy.deepcopy(context['products'])
+    _require_running(runtime)
     gathered = runtime.catalog.gather(job['theme'], context)
     require(all(gathered.get('checks', {}).get(k) is True for k in ('facts', 'images', 'affiliate')),
             'fresh source verification failed')
     for image in bundle['images']:
         if image.get('role') == 'social-card':
+            _require_running(runtime)
             proof = runtime.catalog.image_digest(image['url'])
             require(all(proof.get(k) == image.get(k) for k in ('sha256', 'size', 'contentType')),
                     'social image changed')
@@ -106,10 +115,13 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     source_content = bundle['article']['content']
     artifact_dir = Path(runtime.root) / 'fixed-display-reviews' / id / fingerprint(bundle)
     require(not (artifact_dir / 'polish-intent.json').exists(), 'fresh polish already attempted; reconcile without retry')
+    _require_running(runtime)
     atomic(artifact_dir / 'polish-intent.json', {'status':'started', 'expectedRevision':job['revision'],
         'candidateRevision':fingerprint(bundle),'contentSha256':hashlib.sha256(source_content.encode()).hexdigest()})
+    _require_running(runtime)
     atomic(artifact_dir / 'polish-source.json', {'content':source_content,'brief':bundle['brief']})
     try:
+        _require_running(runtime)
         polished = runtime.models.polish(source_content, bundle['brief'])
         atomic(artifact_dir / 'polish-output.json', polished)
     finally:
@@ -122,14 +134,17 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
         'contentSha256':hashlib.sha256(source_content.encode()).hexdigest(),
         'usage':copy.deepcopy(polished.get('usage', {})),
         'artifacts':[str(artifact_dir / 'polish-source.json'),str(artifact_dir / 'polish-output.json')]}
+    _require_running(runtime)
     atomic(artifact_dir / 'polish-proof.json', polish)
     public = {k:v for k,v in bundle.items() if k not in ('catalogCorrectionContext','revisionContext')}
     structural = inspect_bundle(public)
     require(structural.get('passed') is True, 'fixed structure failed')
+    _require_running(runtime)
     preview = runtime.renderer(bundle, bound)
     clicks = preview.get('clicksVerified', {})
     require(preview.get('passed') is True and isinstance(clicks, dict)
             and bool(clicks.get('desktop')) and bool(clicks.get('mobile')), 'fresh render failed')
+    _require_running(runtime)
     medical = runtime._medical(bundle['article'])
     require(medical.get('passed') is True, 'fresh medical failed')
     flags = {k: True for k in ('facts','images','affiliate','render','medical')}
@@ -137,6 +152,7 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     if isinstance(approved_theme.get('selectionReason'), str):
         approved_theme['selectionReason'] = approved_theme['selectionReason'].split(' EDITORIAL RECOVERY REQUIREMENTS')[0]
     try:
+        _require_running(runtime)
         review = runtime.models.review(public, {'evidence':flags,'structural':structural,
             'source':gathered.get('evidence', {}),'approvedTheme':approved_theme,'preview':preview,
             'polishPreservation':dict(preservation, freshExactBody=True, contentSha256=polish['contentSha256']),

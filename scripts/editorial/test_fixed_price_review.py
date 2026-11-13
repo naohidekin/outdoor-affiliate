@@ -43,7 +43,7 @@ class FixedPriceTests(unittest.TestCase):
   with self.assertRaises(ValueError):verify_polish_reuse(self.root,self.job,self.root,new)
 
  def runtime(self):
-  rt=Mock();rt.root=self.root;rt.ledger.get_job.return_value=copy.deepcopy(self.job)
+  rt=Mock();rt.root=self.root;rt._require_running=Mock();rt.ledger.get_job.return_value=copy.deepcopy(self.job)
   rt.catalog.gather.return_value={'checks':dict(facts=True,images=True,affiliate=True),'images':[dict(x,verified=True) for x in self.new['images']],'evidence':{}}
   rt.renderer.return_value={'passed':True,'clicksVerified':{'desktop':['https://example.test/verified'],'mobile':['https://example.test/verified']}}
   rt._medical.return_value={'passed':True};rt.models.polish.return_value={'content':self.new['article']['content'],'model':'gemini-3.8-flash','usage':{'model':'gemini-3.8-flash','synthetic':True}};rt.models.review.return_value={'passed':True,'score':8.5}
@@ -59,6 +59,19 @@ class FixedPriceTests(unittest.TestCase):
   rt.models.review.assert_called_once();self.assertEqual('public reason',rt.models.review.call_args[0][1]['approvedTheme']['selectionReason']);rt.models.draft.assert_not_called();rt.models.polish.assert_called_once()
   rt.ledger.save_bundle.assert_not_called();rt.ledger.record_review.assert_not_called();rt.deliver.assert_not_called()
   self.assertEqual(2,rt._save_usage.call_count)
+ def test_operator_requires_execution_guard_before_any_effect(self):
+  rt=self.runtime();rt._require_running=None
+  with self.assertRaisesRegex(ValueError,'execution policy guard required'):self.run_operator(rt)
+  rt.catalog.gather.assert_not_called();rt.models.polish.assert_not_called();rt.models.review.assert_not_called()
+  self.assertFalse((self.root/'fixed-display-reviews').exists())
+ def test_operator_rechecks_suspension_immediately_before_model_call(self):
+  rt=self.runtime()
+  def require_running():
+   root=self.root/'fixed-display-reviews'
+   if list(root.glob('**/polish-intent.json')) and list(root.glob('**/polish-source.json')):raise ValueError('execution_suspended')
+  rt._require_running.side_effect=require_running
+  with self.assertRaisesRegex(ValueError,'execution_suspended'):self.run_operator(rt)
+  rt.models.polish.assert_not_called();rt.models.review.assert_not_called()
  def test_source_fail_prevents_model_call(self):
   rt=self.runtime();rt.catalog.gather.return_value['checks']['images']=False
   with self.assertRaises(ValueError):self.run_operator(rt)
