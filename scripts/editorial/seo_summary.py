@@ -319,6 +319,98 @@ def _usage(seo_root, editorial_root, start, end, now, reader):
     return '\n'.join(lines)
 
 
+_STAGE_USAGE_STAGES = ('research', 'draft', 'polish', 'final_review', 'social')
+
+
+def stage_usage_summary(editorial_root, kind='weekly', now=None):
+    """Return bounded measured usage grouped by editorial stage and actual model.
+
+    This is a breakdown of the existing usage files, not another spend source.
+    Missing measurements remain unknown; estimates are never converted to billing.
+    """
+    now = _now(now)
+    start, end = _period(kind, now)
+    prefix = (f'既存使用量の工程別内訳（{start.isoformat()}〜{end.isoformat()} JST・'
+              '追加費用ではありません）')
+    if editorial_root is None:
+        return prefix + ' / 記録なし（未実行とは断定しません）'
+    reader = _Reader()
+    folder = Path(editorial_root) / 'usage'
+    files = sorted((path for path in reader.files(folder) if path.suffix == '.json'),
+                   key=lambda path: path.name)
+    groups, seen = {}, set()
+    missing_actual_model = 0
+    for path in files:
+        if reader.count >= MAX_FILES:
+            reader.notes.add('編集使用量ファイル上限により省略あり')
+            break
+        data = reader.read(path, True)
+        if not isinstance(data, dict) or not isinstance(data.get('calls'), list):
+            reader.notes.add('編集使用量の未取得・形式未確認あり')
+            continue
+        at = _instant(data.get('at'))
+        if at is None or not (start <= at.date() <= end) or at > now:
+            continue
+        calls = data['calls']
+        if len(calls) > MAX_ROWS:
+            reader.notes.add('編集使用量件数上限により省略あり')
+        for call in calls[:MAX_ROWS]:
+            if not isinstance(call, dict) or call.get('stage') not in _STAGE_USAGE_STAGES:
+                continue
+            response_id = call.get('responseId')
+            if isinstance(response_id, str) and response_id in seen:
+                continue
+            if isinstance(response_id, str):
+                seen.add(response_id)
+            actual = call.get('actualModel')
+            model = _model(actual) if actual is not None else 'モデル未確認'
+            if model == 'モデル未確認':
+                missing_actual_model += 1
+                model = '実モデル未確認'
+            key = (call['stage'], model)
+            if key not in groups and len(groups) >= 64:
+                reader.notes.add('工程・実モデル区分数上限により省略あり')
+                continue
+            group = groups.setdefault(key, dict(calls=0,
+                values={name: [] for name in ('input', 'cache', 'output', 'usd')}))
+            usage = call.get('usage') if isinstance(call.get('usage'), dict) else {}
+            group['calls'] += 1
+            group['values']['input'].append(call.get('input') if type(call.get('input')) is int
+                                             and call.get('input') >= 0 else None)
+            cache = usage.get('cache_read_input_tokens')
+            group['values']['cache'].append(cache if type(cache) is int and cache >= 0 else None)
+            group['values']['output'].append(call.get('output') if type(call.get('output')) is int
+                                              and call.get('output') >= 0 else None)
+            group['values']['usd'].append(_num(call.get('actualUSD')))
+
+    if not groups:
+        text = prefix + ' / 記録なし（未実行とは断定しません）'
+    else:
+        parts = [prefix]
+        if len(groups) > 8:
+            reader.notes.add('工程・実モデルは8区分まで表示（他は省略）')
+        order = {stage: index for index, stage in enumerate(_STAGE_USAGE_STAGES)}
+        for (stage, model), group in sorted(
+                groups.items(), key=lambda item: (order[item[0][0]], item[0][1]))[:8]:
+            values = group['values']
+            token_text = []
+            for label, field in (('入力', 'input'), ('キャッシュ入力', 'cache'), ('出力', 'output')):
+                known = [value for value in values[field] if value is not None]
+                missing = len(values[field]) - len(known)
+                value = _format(sum(known)) if known else '未確認'
+                token_text.append(label + value + (f'（欠測{missing}件）' if missing else ''))
+            usd = (_format(sum(values['usd']))
+                   if values['usd'] and all(value is not None for value in values['usd'])
+                   else '未確認')
+            parts.append(f"{stage} / {model}: 呼出{group['calls']}件・" +
+                         '・'.join(token_text) + f' tokens・実請求USD{usd}')
+        parts.append(f'実モデル欠測{missing_actual_model}件')
+        text = ' / '.join(parts)
+    if reader.notes:
+        text += ' / 確認範囲: ' + '・'.join(sorted(reader.notes))
+    return _clip(text, 1600)
+
+
 
 _MANAGER_FIELDS = ('input_tokens', 'output_tokens', 'cached_input_tokens',
                    'cache_write_input_tokens', 'reasoning_tokens')
@@ -504,11 +596,13 @@ def build_seo_summary(seo_root, editorial_root, kind='weekly', now=None):
     reader = _Reader()
     reports = _reports(seo_root, start, end, reader, kind)
     usage = _usage(seo_root, editorial_root, start, end, now, reader)
+    stage_usage = stage_usage_summary(editorial_root, kind, now)
     manager = manager_usage_summary(editorial_root, kind, now)
     lines = [f'SEO作業・使用量の記録 {start.isoformat()}〜{end.isoformat()}（JST）',
              '既存記録の抜粋です。新しいSEO判断や因果・成果の判定は追加していません。',
-             _clip(reports, max(0, (3400 if kind == 'monthly' else 2250) - len(manager))),
-             _clip(usage, 1550), manager]
+             _clip(reports, max(0, (3400 if kind == 'monthly' else 2250)
+                                - len(manager) - len(stage_usage))),
+             _clip(usage, 1550), stage_usage, manager]
     if reader.notes:
         lines.append('確認範囲: ' + ' / '.join(sorted(reader.notes)))
     lines.append('予定（JST）: SEOは月・木14時、記事は水曜9時。週次報告は月曜20時、編集状況は木曜20時、月次報告は毎月5日20時。')

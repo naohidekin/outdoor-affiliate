@@ -8,7 +8,8 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from models import Models, ModelError, WRITER_SCHEMA, REVIEW_SCHEMA, CRITERIA_FIELDS, SOCIAL_SCHEMA
+from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
+                    CRITERIA_FIELDS, SOCIAL_SCHEMA)
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -84,6 +85,18 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_transport_without_response_is_outcome_unknown(self):
+        model = Models(ENV, Fake(TimeoutError('private transport detail')))
+        with self.assertRaisesRegex(ModelOutcomeUnknown, 'Provider outcome unknown'):
+            model.research(context())
+
+    def test_response_after_deadline_is_outcome_unknown(self):
+        fake = Fake(response(THEMES))
+        with patch('models.time.monotonic', side_effect=[0, 0, 181]), \
+                self.assertRaises(ModelOutcomeUnknown):
+            Models(ENV, fake).research(context())
+        self.assertEqual(1, len(fake.calls))
+
     def test_draft_instruction_prioritizes_provenance_over_template_memoirs(self):
         ctx = context()
         ctx.update(verifiedAuthorFacts=[], CLAUDE='Style template: open with a personal camping mishap.',

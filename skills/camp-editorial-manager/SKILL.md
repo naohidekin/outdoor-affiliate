@@ -1,9 +1,16 @@
 ---
 name: camp-editorial-manager
-description: Camp Gear Labの既存編集Runtimeで制作期・根拠・品質審査・本人承認待ち・改善提案を管理し、状態変化時だけAstraへ次の議題を依頼する。公開やSNS投稿の承認には使わない。
+description: Camp Gear Lab編集の制作期・品質・本人承認境界を管理する。通常の進行は既存プログラムで扱い、企画や例外の判断だけをAstraへ依頼する。記事・SNSの本人承認は行わない。
 ---
 
 # Camp editorial manager
+
+`executionPolicy` による通常進行・停止制御を使用する構成では、
+[通常運用スキル](../camp-editorial-operations/SKILL.md) と
+[通常進行・工程復旧](../../docs/editorial-deterministic.md) を入口とする。
+状態が変わったことだけを理由にAstraを呼ばず、待機・件数判定・制作開始・
+審査済み配信はプログラムが担当する。停止中の再開・設定切替は本人の明示指示が必要。
+以下の議題選択APIは旧構成との互換用として残るが、通常進行の代替ループには使わない。
 
 このファイルの実体から `parents[2]` をリポジトリのルートとして解決する。
 インストールは正本のこのフォルダへのsymlinkとし、リンク先の実体から解決する。

@@ -80,6 +80,12 @@ class ModelError(RuntimeError):
         self.status = status
 
 
+class ModelOutcomeUnknown(ModelError):
+    """A request may have reached the provider but no safe outcome was observed."""
+
+    outcome_unknown = True
+
+
 def _strict_json(text):
     def pairs(items):
         result = {}
@@ -212,6 +218,9 @@ class Models:
             failed = False
             try:
                 raw = self.request(url, headers, payload, remaining)
+            except ModelError:
+                # A parsed provider response failed a known validation contract.
+                raise
             except Exception as error:
                 # Capture only a numeric status. Never retain provider messages,
                 # body, credential-bearing request or chained exceptions.
@@ -230,9 +239,11 @@ class Models:
                         raise ModelError("Model request deadline exceeded")
                     time.sleep(delay)
                     continue
+                if status is None:
+                    raise ModelOutcomeUnknown("Provider outcome unknown")
                 raise ModelError("Provider request failed" + (" (HTTP %d)" % status if status else ""), status)
             if time.monotonic() > deadline:
-                raise ModelError("Model request deadline exceeded")
+                raise ModelOutcomeUnknown("Provider outcome unknown")
             break
         _require(raw, ("id", "model", "usage"))
         usage = raw["usage"]

@@ -449,6 +449,42 @@ class RevisionWorkflowTests(unittest.TestCase):
         self.runtime._make_article.assert_not_called()
         self.runtime.produce.assert_called_once_with(limit=1)
 
+    def test_revision_failed_stage_explicit_retry_uses_bound_route_and_preserves_marker(self):
+        base = baseline(); job = self.request(base); self.fake_evidence()
+        self.runtime._context = Mock(return_value=self.context(base))
+        self.models.fail_polish = True
+        first = self.runtime._produce_requested_revision()
+        self.assertEqual('attention', first['status'])
+        failed = self.runtime.stage_journal.status(job_id=job['id'], stage='polish')['records'][0]
+        marker = self.runtime.root / 'revision-production-attempts' / (job['id'] + '.json')
+        original = marker.read_bytes()
+        self.assertEqual('blocked', json.loads(original)['status'])
+        self.models.fail_polish = False
+        result = self.runtime.retry_stage(job['id'], 'polish', failed['stageKey'])
+        self.assertEqual('completed', result['status'])
+        saved = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('review', saved['stage'])
+        self.assertIsNone(saved.get('astraReview'))
+        self.assertIsNone(saved.get('approval'))
+        self.assertEqual(original, marker.read_bytes())
+        record = self.runtime.stage_journal.status(job_id=job['id'], stage='polish')['records'][0]
+        self.assertEqual(2, record['attempts'])
+
+    def test_revision_stage_retry_refuses_unknown_or_corrupt_production_marker(self):
+        base = baseline(); job = self.request(base); self.fake_evidence()
+        self.runtime._context = Mock(return_value=self.context(base))
+        self.models.fail_polish = True
+        self.runtime._produce_requested_revision()
+        failed = self.runtime.stage_journal.status(job_id=job['id'], stage='polish')['records'][0]
+        marker = self.runtime.root / 'revision-production-attempts' / (job['id'] + '.json')
+        for raw in ('{"status":"in_flight"}', '{bad'):
+            marker.write_text(raw)
+            with self.subTest(raw=raw), self.assertRaisesRegex(
+                    ValueError, 'revision_production_requires_reconciliation'):
+                self.runtime.retry_stage(job['id'], 'polish', failed['stageKey'])
+        self.assertEqual(1, self.runtime.stage_journal.status(
+            job_id=job['id'], stage='polish')['records'][0]['attempts'])
+
     def test_existing_soto_held_job_is_unchanged_by_revision_queue_and_tick(self):
         held=self.runtime.ledger.create_candidate({'slug':'soto-windmaster-held','title':'SOTO'})
         held.update(stage='social_held',publication={'verified':True},social={'revision':'unchanged','approval':None})
