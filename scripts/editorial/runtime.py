@@ -20,6 +20,7 @@ from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_re
 from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
+from attention_presentation import attention_text
 
 JST = timezone(timedelta(hours=9))
 
@@ -475,7 +476,9 @@ class Runtime:
         file = self.root / 'research' / (id + '.json')
         if not file.exists():
             return ''
-        products = json.loads(file.read_text()).get('evidence', {}).get('products', [])
+        research = json.loads(file.read_text())
+        products = research.get('evidence', {}).get('products', [])
+        names = {p.get('id'): p.get('name') for p in research.get('products', []) if isinstance(p, dict)}
         details = []
         for p in products:
             missing = [str(c.get('field')) for c in p.get('claims', []) if c.get('verified') is not True]
@@ -488,7 +491,7 @@ class Runtime:
             if p.get('issues'):
                 parts.append(' / '.join(p['issues']))
             if parts:
-                details.append(str(p.get('productId')) + ': ' + '; '.join(parts))
+                details.append(str(names.get(p.get('productId')) or '掲載商品') + ': ' + '; '.join(parts))
         return '\n'.join(details)[:4000]
 
     def _save_usage(self):
@@ -983,7 +986,8 @@ class Runtime:
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
                      for j in jobs if j.get('error')]
-        attention += [{'id': r.get('id', 'runtime'), 'title': r.get('id', '制作処理'),
+        titles = {j['id']: j['theme'].get('title', '記事制作の処理') for j in jobs}
+        attention += [{'id': r.get('id', 'runtime'), 'title': titles.get(r.get('id'), '記事制作の管理処理'),
                        'error': {'reason': r.get('reason', '確認が必要')}}
                       for r in results if r.get('status') == 'attention']
         if attention:
@@ -994,10 +998,8 @@ class Runtime:
             if not notified.exists():
                 atomic(notified, {'status': 'in_flight', 'at': stamp()})
                 try:
-                    receipt = self.slack.notice('【記事制作の確認事項】\n' + '\n'.join(
-                        a['title'] + '\n記事ID: ' + a['id'] + '\n理由: ' + str(a['error'].get('reason', '確認が必要')) +
-                        '\n' + self.research_issues(a['id'])
-                        for a in attention) + '\n未確認を合格扱いせず保留しています。詳細確認・修正依頼はこのCodexアプリでも受け付けます。')
+                    receipt = self.slack.notice(attention_text(attention, self.config.get('slack', {}),
+                        {a['id']: self.research_issues(a['id']) for a in attention}))
                     atomic(notified, {'status': 'delivered', 'at': stamp(), 'receipt': receipt})
                 except Exception as error:
                     atomic(notified, {'status': 'unknown', 'at': stamp(), 'reason': reason(error)})
