@@ -27,6 +27,11 @@ class AttentionPresentationTests(unittest.TestCase):
         self.assertIn('メーカー公式ページの取得', text)
         self.assertNotIn('manufacturer page unavailable', text)
 
+    def test_two_blank_lines_between_numbered_items(self):
+        text = attention_text([{'title': '一つ目', 'error': {}}, {'title': '二つ目', 'error': {}}], {})
+        self.assertIn('\n\n\n2. 二つ目', text)
+        self.assertNotIn('\n\n\n\n2.', text)
+
     def test_no_active_title_markup(self):
         text=attention_text([{'title':'<!channel>\nhello','error':{}}],{})
         self.assertNotIn('<!channel>',text)

@@ -33,7 +33,7 @@ def attention_text(items, scope, details=None):
         reason, action = REASONS.get((item.get('error') or {}).get('reason'), (
             '処理を続けられませんでした。具体的な原因はまだ確認できていません。',
             '「原因を調べて」と返信してください。確認できた原因と次の対応をお伝えします。'))
-        lines += ['', str(index) + '. ' + title, '理由：' + reason]
+        lines += (['', ''] if index > 1 else ['']) + [str(index) + '. ' + title, '理由：' + reason]
         summary = research_summary(details.get(item.get('id'), ''))
         if summary:
             lines.append('未確認の内容：' + summary)
