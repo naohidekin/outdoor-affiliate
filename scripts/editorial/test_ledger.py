@@ -359,6 +359,28 @@ class LedgerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.ledger.approve_from_codex(job['id'], job['revision'], 'U', evidence)
 
+    def test_codex_batch_article_prefix_preserves_exact_text(self):
+        job = self.draft()
+        self.request(job)
+        evidence = dict(self.batch_evidence(job), text='<@U123> 記事は全て公開。')
+        result = self.ledger.approve_from_codex(job['id'], job['revision'], 'U', evidence)
+        self.assertEqual(evidence, result['approval']['evidence'])
+        self.assertEqual('approved', result['stage'])
+
+    def test_codex_batch_article_prefix_does_not_expand_scope(self):
+        job = self.draft()
+        self.request(job)
+        base = dict(self.batch_evidence(job), text='記事は全て公開')
+        for text in ('記事は全て公開しない', '記事は全て公開予定', '投稿は全て公開',
+                     'SNSは全て公開', '全ての記事は全て公開', '記事は全て公開してもよい？'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                self.ledger.approve_from_codex(job['id'], job['revision'], 'U', dict(base, text=text))
+        for changes in (dict(batch=[]), dict(slack_scope=dict(SCOPE, channel_id='OTHER')),
+                        dict(batch=[dict(base['batch'][0], revision='0'*64)])):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.ledger.approve_from_codex(job['id'], job['revision'], 'U', dict(base, **changes))
+        self.assertIsNone(self.ledger.get_job(job['id'])['approval'])
+
     def test_codex_batch_rejects_invalid_binding(self):
         job = self.draft()
         self.request(job)

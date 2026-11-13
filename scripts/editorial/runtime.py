@@ -334,6 +334,14 @@ class Runtime:
         atomic(self.root / 'research' / (job['id'] + '.json'), gathered)
         if not all(gathered.get('checks', {}).get(k) is True for k in ('facts', 'images', 'affiliate')):
             raise ValueError('source_product_image_or_affiliate_verification_incomplete')
+        if self.config.get('prewriteDisplayGateEnabled') is True:
+            from publication_display_gate import build_prewrite_plan
+            plan = build_prewrite_plan(job, gathered)
+            if plan['status'] == 'correction_required':
+                path = self.root / 'display-correction-proposals' / job['id'] / (plan['sourceFingerprint'] + '.json')
+                if not path.exists():
+                    atomic(path, plan)
+                raise ValueError('prewrite_display_correction_required')
         gathered.update({'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
         bundle = self.models.draft(job['theme'], gathered)
         if revision:
@@ -1267,7 +1275,7 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
-    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'approve-social-from-codex', 'report', 'enable-social-autopost', 'refresh-social-images', 'hold-social-refresh', 'request-revisions', 'produce-revisions', 'attach-catalog-correction', 'correct-candidate-theme'))
+    parser.add_argument('command', choices=('status', 'preflight', 'tick', 'produce', 'deliver', 'retry', 'approve-from-codex', 'approve-social-from-codex', 'approve-social-from-slack-message', 'report', 'enable-social-autopost', 'refresh-social-images', 'hold-social-refresh', 'request-revisions', 'produce-revisions', 'attach-catalog-correction', 'correct-candidate-theme'))
     parser.add_argument('--card-bundle')
     parser.add_argument('--prior-main-readback')
     parser.add_argument('--deliver', action='store_true')
@@ -1338,6 +1346,13 @@ def main():
                 raise ValueError('article_and_target_account_required')
             job = runtime.enable_social_autopost(args.id, args.target_account_id)
             value = {'status': job['stage'], 'articleId': job['id'], 'revision': job['social']['revision'], 'posted': False}
+        elif args.command == 'approve-social-from-slack-message':
+            if not args.evidence_file:
+                raise ValueError('original_slack_owner_evidence_required')
+            from slack_social_approval import approve_social_from_slack_message
+            evidence = json.loads(Path(args.evidence_file).read_text())
+            jobs = approve_social_from_slack_message(runtime.ledger, evidence, config['slack'])
+            value = {'status': 'social_approved', 'article_ids': [j['id'] for j in jobs], 'posted': False}
         elif args.command == 'approve-social-from-codex':
             if not args.id or not args.revision or not args.evidence_file:
                 raise ValueError('article_id_social_revision_and_user_message_evidence_required')

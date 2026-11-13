@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {prepareRetraction,deletionUnits,retractionHash,textHash,RETRACTION_TARGETS} from './safety-retraction.mjs';
+import {executeSafetyRetraction,verifyRetractionDOM} from './safety-retraction-publisher.mjs';
+function fixture(id='article-037'){
+ const t=RETRACTION_TARGETS[id],b={id,slug:t.slug,status:'published',xmin:'10',category_id:'safety',title:'不変',content:`注意は残す。\n\n## 推奨\n\n赤ちゃんへおすすめ。\n\n{{product:${t.product}}}\n\n## 注意\n\n使わないでください。`,faqs:[],product_ids:[t.product,'other'],updated_at:'2026-11-13T00:00:00Z',generation_meta:{old:'preserve'}};
+ const manifest={contentDeletions:[deletionUnits(b.content).find(x=>x.type==='section'&&b.content.slice(x.start,x.end).includes('赤ちゃん'))],faqDeletions:[],removeProductIds:[t.product]};
+ const p=prepareRetraction({baseArticle:b,baseHash:retractionHash(b),manifest});
+ const owner={scope:{channel:'chatgpt',roomId:'23c691108d088198a11cf37ab7eab55a',ownerId:'user-0tmIgoZEss24lHzstHN0apfu'},text:'訂正案が出たら訂正して。',messageId:'Sentinel_727fb8374a3c81919c6b320c21a16c0f',proposalReferences:['Sentinel_bf658317985c8191af5db9638bc6e96f','Sentinel_1bfb3ae268948191bf5c0e79b7fac2ae'],candidateHash:p.candidateHash,baseHash:p.baseHash};
+ const review={status:'passed',candidateHash:p.candidateHash,baseHash:p.baseHash,manifestHash:retractionHash(manifest),artifactReference:'MOCK review',reviewerId:'reviewer',preparerId:'writer',deletionOnly:true,safetyWarningsPreserved:true,remainingRecommendationChecked:true};
+ let current=structuredClone(b);const calls=[];
+ const html=`<main data-review-content-sha256="${textHash(p.candidate.content)}"><h1>不変</h1><p>使わないでください。</p></main>`;
+ const deps={verifyOwnerBinding:async()=>true,verifyIndependentReview:async()=>true,verifyPresentation:async()=>true,verifyRenderedCandidate:async()=>true,readRedirect:async u=>({url:u,status:308,location:'https://camp-gear-lab.com/articles/insect-repellent-gear-roundup'}),now:()=> '2026-11-13T01:00:00Z',lock:async(f,opts)=>{calls.push(['lock',opts]);return f();},publicGet:async()=>html,revalidate:async()=>{calls.push(['cache']);},db:{findArticles:async()=>[structuredClone(current)],patchPublishedCAS:async(before,patch)=>{calls.push(['patch',patch]);assert.deepEqual(before,current);current={...current,...patch,xmin:'11'};return [structuredClone(current)];}}};
+ return {input:{baseArticle:b,prepared:p,owner,review,deps},calls,getCurrent:()=>current,setCurrent:x=>{current=x;},html};
+}
+test('only two reviewed targets execute; exact four fields, no product mutation, full readback',async()=>{
+ for(const id of ['article-037','728d8163-ebda-427a-ace8-ec1494bf1261']){const f=fixture(id),r=await executeSafetyRetraction(f.input);assert.equal(r.status,'verified');assert.deepEqual(Object.keys(f.calls.find(x=>x[0]==='patch')[1]).sort(),['content','faqs','product_ids','updated_at']);assert.deepEqual(f.getCurrent().generation_meta,{old:'preserve'});assert.equal(f.calls.filter(x=>x[0]==='patch').length,1);}
+});
+test('bracelet and aroma remain disabled even with mock approval/review',async()=>{for(const id of ['028b70f2-30ee-4451-b4c2-ba3510f3f78d','1dfcabdc-d52f-4fb5-aca0-6b260dc9ecd0']){const f=fixture(id);await assert.rejects(executeSafetyRetraction(f.input),/not enabled/);assert.equal(f.calls.length,0);}});
+test('tampered candidate/owner/review/independence rejected before lock',async()=>{
+ for(const mutate of [i=>i.prepared.candidate.title='改変',i=>i.owner.text='OK',i=>i.owner.scope.ownerId='other',i=>i.owner.candidateHash='bad',i=>i.owner.proposalReferences=[],i=>i.owner.messageId='fake',i=>i.owner.messageTs='1794530000.000001',i=>i.review.candidateHash='bad',i=>i.review.reviewerId='writer',i=>i.review.safetyWarningsPreserved=false,i=>i.deps.verifyOwnerBinding=async()=>false,i=>i.deps.verifyIndependentReview=async()=>false]){const f=fixture();mutate(f.input);await assert.rejects(executeSafetyRetraction(f.input));assert.equal(f.calls.length,0);}
+});
+test('baseline xmin or unrelated field drift refuses mutation',async()=>{for(const key of ['xmin','title']){const f=fixture();f.setCurrent({...f.getCurrent(),[key]:'changed'});await assert.rejects(executeSafetyRetraction(f.input),/baseline/);assert.equal(f.calls.filter(x=>x[0]==='patch').length,0);}});
+test('redirect change refused before first mutation',async()=>{const f=fixture();f.input.deps.readRedirect=async u=>({url:u,status:302,location:'https://evil.example'});await assert.rejects(executeSafetyRetraction(f.input),/redirect/);assert.equal(f.calls.filter(x=>x[0]==='patch').length,0);});
+test('CAS ambiguity/cache/public failure is unknown and mutation never retried',async()=>{
+ for(const stage of ['cas','cache','dom','render']){const f=fixture();if(stage==='cas')f.input.deps.db.patchPublishedCAS=async()=>{f.calls.push(['patch']);throw Error('timeout');};if(stage==='cache')f.input.deps.revalidate=async()=>{throw Error('timeout');};if(stage==='dom')f.input.deps.publicGet=async()=>'<html>stale</html>';if(stage==='render')f.input.deps.verifyRenderedCandidate=async()=>false;await assert.rejects(executeSafetyRetraction(f.input),/unknown/);assert.equal(f.calls.filter(x=>x[0]==='patch').length,1);}
+});
+test('complete DB readback protects metadata as well as content',async()=>{const f=fixture(),old=f.input.deps.db.patchPublishedCAS;f.input.deps.db.patchPublishedCAS=async(...a)=>{const r=await old(...a);f.setCurrent({...f.getCurrent(),generation_meta:{changed:true}});return r;};await assert.rejects(executeSafetyRetraction(f.input),/unknown/);assert.equal(f.calls.some(x=>x[0]==='cache'),false);});
+test('public proof must be actual DOM; removed card/link identity forbidden',()=>{const f=fixture(),p=f.input.prepared;assert.throws(()=>verifyRetractionDOM('<script>'+f.html+'</script>',p));assert.throws(()=>verifyRetractionDOM(f.html+'<a data-product-id="insect-repellent-011">x</a>',p));assert.ok(verifyRetractionDOM(f.html,p).domHash);});

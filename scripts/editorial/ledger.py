@@ -162,6 +162,39 @@ def valid_codex_social_instruction(id, revision, text):
     require(explicit or soto, 'explicit social article/version instruction required')
 
 
+def validate_display_suppression(previous, candidate):
+    """Pure exact-diff check shared by offline preparation and atomic ledger save."""
+    from catalog_corrections import validate_context
+    from revisions import _aware
+    require(isinstance(previous, dict) and isinstance(candidate, dict)
+            and set(previous) == set(candidate), 'bundle fields changed')
+    for key in previous:
+        if key not in ('products', 'catalogCorrectionContext'):
+            require(canonical(previous[key]) == canonical(candidate[key]), 'fixed bundle field changed: ' + key)
+    old = validate_context(previous.get('catalogCorrectionContext'))
+    new = validate_context(candidate.get('catalogCorrectionContext'))
+    require(canonical(old['baseProducts']) == canonical(new['baseProducts']), 'original product baseline changed')
+    require(canonical(previous['products']) == canonical(old['candidateProducts'])
+            and canonical(candidate['products']) == canonical(new['candidateProducts']), 'candidate context mismatch')
+    before, after = previous['products'], candidate['products']
+    require(len(before) == len(after) and [p['id'] for p in before] == [p['id'] for p in after],
+            'product identities changed')
+    changed = False
+    for a, b in zip(before, after):
+        require(set(a) == set(b), 'product fields changed')
+        delta = {k for k in a if canonical(a[k]) != canonical(b[k])}
+        require(delta <= {'price', 'rating', 'updatedAt'}, 'only price/rating suppression allowed')
+        if delta:
+            require(bool(delta & {'price', 'rating'}) and 'updatedAt' in delta
+                    and _aware(b['updatedAt']) > _aware(a['updatedAt']), 'suppression needs newer timestamp')
+            for key in delta & {'price', 'rating'}:
+                require(type(b[key]) in (int, float) and b[key] == 0,
+                        'unverified display may only become numeric zero')
+            changed = True
+    require(changed, 'no display suppression requested')
+    return json.loads(canonical(new))
+
+
 class Ledger:
     def __init__(self, root, owner_id, production_schedule=None, *, target_account_id=None):
         self.production_schedule = ProductionSchedule(production_schedule)
@@ -263,6 +296,41 @@ class Ledger:
             job.update(catalogCorrectionContext=json.loads(canonical(context)), stage='candidate', error=None)
             self._invalidate(db, id)
             return self._put(db, job, 'catalog_correction_attached')
+
+    def suppress_unverified_product_display(self, id, bundle, *, expected_revision):
+        """Operator-only price/rating hiding; no model, publication or approval.
+
+        Existing prose, imagery and links are immutable. A new exact review and
+        independent Astra review plus new owner approval are required afterwards.
+        """
+        require(isinstance(expected_revision, str) and re.fullmatch(r'[a-f0-9]{64}', expected_revision),
+                'expected exact revision required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') != 'article_revision' and job.get('stage') in
+                    ('draft', 'review', 'held', 'rejected', 'error') and not job.get('publication')
+                    and not job.get('approval') and not job.get('social'),
+                    'unapproved unpublished article required')
+            self._current(job)
+            require(job['revision'] == expected_revision, 'revision conflict')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone(),
+                    'existing effect requires reconciliation')
+            for folder, name in (('catalog-corrections', expected_revision),
+                                 ('social-publications', expected_revision),
+                                 ('social-outbox', expected_revision), ('production-attempts', id)):
+                marker = self.root / folder / (name + '.json')
+                require(not marker.exists() and not marker.is_symlink(), 'inflight journal requires reconciliation')
+            context = validate_display_suppression(job['bundle'], bundle)
+            from catalog_corrections import validate_bundle
+            candidate = dict(job, catalogCorrectionContext=context)
+            validate_bundle(candidate, bundle)
+            self._event(db, id, 'display_suppression_previous',
+                        {'reason': 'hide_unverified_price_rating', 'job': job})
+            candidate.update(bundle=json.loads(canonical(bundle)), revision=fingerprint(bundle),
+                             review=None, astraReview=None, approval=None, publication=None,
+                             social=None, error=None, stage='draft')
+            self._invalidate(db, id)
+            return self._put(db, candidate, 'unverified_display_suppressed')
 
     def create_candidate(self, theme, now=None):
         now = timestamp(now)
@@ -545,7 +613,7 @@ class Ledger:
         External operator must verify the authenticated message and its referent.
         This is NOT a Slack button event and never invents a button nonce/event.
         """
-        require(re.fullmatch(r'(?:<@[A-Z0-9]+>\s*)?全て公開[。.]?', evidence['text'].strip()),
+        require(re.fullmatch(r'(?:<@[A-Z0-9]+>\s*)?(?:記事は)?全て公開[。.]?', evidence['text'].strip()),
                 'explicit batch publication instruction required')
         scope = evidence.get('slack_scope') or {}
         require(set(scope) == set(SCOPE) and all(isinstance(scope[k], str) and scope[k] for k in SCOPE)
