@@ -308,6 +308,52 @@ class Ledger:
         with self._tx() as db:
             return [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs ORDER BY rowid')]
 
+    def narrow_candidate_products(self, id, theme, raw):
+        """Local operator only: atomically narrow an untouched job and bind corrections.
+
+        No generation, source-check exemption, owner approval or publication follows.
+        Existing gather and bundle/source/image validation remain mandatory.
+        """
+        from catalog_corrections import validated_context, validate_context
+        context = validated_context(raw)
+        require(isinstance(theme, dict), 'complete narrowed theme required')
+        theme = json.loads(canonical(theme))
+        editable = {'title', 'query', 'selectionReason', 'productIds'}
+        require(all(isinstance(theme.get(k), str) and theme[k].strip()
+                    for k in ('title', 'query', 'selectionReason')), 'narrowing reason and theme required')
+        ids = theme.get('productIds')
+        require(isinstance(ids, list) and ids and all(isinstance(x, str) and x for x in ids)
+                and len(ids) == len(set(ids)), 'nonempty distinct subset required')
+        require(ids == [p['id'] for p in context['candidateProducts']], 'narrowing context IDs mismatch')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') != 'article_revision' and job['stage'] in ('candidate', 'error')
+                    and all(job.get(k) is None for k in
+                            ('bundle', 'revision', 'review', 'astraReview', 'approval', 'publication', 'social')),
+                    'only untouched new candidate can be narrowed')
+            require(not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone()
+                    and not db.execute('SELECT 1 FROM requests WHERE job_id=?', (id,)).fetchone(),
+                    'candidate side effects require reconciliation')
+            old = job['theme']
+            old_ids = old.get('productIds') if isinstance(old, dict) else None
+            require(isinstance(old_ids, list) and all(isinstance(x, str) and x for x in old_ids)
+                    and len(set(old_ids)) == len(old_ids) and len(ids) < len(old_ids)
+                    and ids == [x for x in old_ids if x in ids], 'ordered strict subset required')
+            require(all(k in old and k in theme for k in ('slug', 'categoryId'))
+                    and canonical({k:v for k,v in old.items() if k not in editable}) ==
+                    canonical({k:v for k,v in theme.items() if k not in editable}),
+                    'narrowing cannot change theme identity')
+            require(all(p['categoryId'] == theme['categoryId'] for p in
+                        context['baseProducts'] + context['candidateProducts']), 'narrowing category mismatch')
+            if 'catalogCorrectionContext' in job:
+                previous = validate_context(job['catalogCorrectionContext'])
+                require(canonical(context['baseProducts']) == canonical(
+                    [p for p in previous['baseProducts'] if p['id'] in ids]),
+                    'narrowing baseline changed')
+            job.update(theme=theme, catalogCorrectionContext=json.loads(canonical(context)),
+                       stage='candidate', error=None)
+            return self._put(db, job, 'candidate_products_narrowed')
+
     def correct_candidate_theme(self, id, theme):
         """Trusted operator supplies the complete theme; no owner approval is granted."""
         require(isinstance(theme, dict), 'complete corrected theme required')

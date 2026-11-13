@@ -580,6 +580,11 @@ class Catalog:
                 # redirects still discard headers and revalidate destinations.
                 if p.hostname == 'www.iwatani.co.jp':
                     headers.setdefault('User-Agent', 'Mozilla/5.0')
+                if (p.hostname, p.path) in {
+                        ('soto.shinfuji.co.jp', '/products/st-233/'),
+                        ('www.iwatani-primus.co.jp', '/products/primus/support/')}:
+                    headers.setdefault('User-Agent', 'Mozilla/5.0')
+                    headers.setdefault('Accept', 'text/html')
                 if allowed_domains and not any(p.hostname == d or (not exact_domains and p.hostname.endswith('.' + d)) for d in allowed_domains):
                     raise CatalogError('manufacturer host rejected')
                 if self.fetcher:
