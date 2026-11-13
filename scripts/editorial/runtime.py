@@ -334,6 +334,14 @@ class Runtime:
         atomic(self.root / 'research' / (job['id'] + '.json'), gathered)
         if not all(gathered.get('checks', {}).get(k) is True for k in ('facts', 'images', 'affiliate')):
             raise ValueError('source_product_image_or_affiliate_verification_incomplete')
+        if self.config.get('prewriteDisplayGateEnabled') is True:
+            from publication_display_gate import build_prewrite_plan
+            plan = build_prewrite_plan(job, gathered)
+            if plan['status'] == 'correction_required':
+                path = self.root / 'display-correction-proposals' / job['id'] / (plan['sourceFingerprint'] + '.json')
+                if not path.exists():
+                    atomic(path, plan)
+                raise ValueError('prewrite_display_correction_required')
         gathered.update({'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
         bundle = self.models.draft(job['theme'], gathered)
         if revision:

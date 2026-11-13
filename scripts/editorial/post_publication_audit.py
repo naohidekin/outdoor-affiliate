@@ -67,6 +67,11 @@ def _merchant_identity(product, model, title):
              'tarp': r'タープ|tarp', 'chair': r'チェア|椅子|chair', 'table': r'テーブル|table',
              'lantern': r'ランタン|lantern', 'sleeping-bag': r'寝袋|シュラフ|sleeping\s*bag',
              'cooler': r'クーラー|cooler', 'firepit': r'(?:焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill)(?!\s*用)'}
+    # Explicit string-light names have their own type; do not broaden all light products.
+    # Compatibility-only mentions do not establish the body product.
+    string_light = r'(?:ストリングライト|string\s*lights?(?![A-Za-z]))(?!\s*用)'
+    if re.search(string_light, name, re.I):
+        return bool(re.search(string_light, title, re.I))
     pattern = types.get(product.get('categoryId'))
     if pattern is None:
         pattern = next((p for p in types.values() if re.search(p, name, re.I)), None)
@@ -77,6 +82,36 @@ def _merchant_identity(product, model, title):
     rest = re.sub(re.escape(product['brand']), '', rest, flags=re.I).strip()
     compact = lambda s: re.sub(r'\s+', '', s).casefold()
     return bool(rest) and compact(name) in compact(title)
+
+
+def _merchant_observation(name, product, model, title, final_url, route_matched):
+    """Bounded diagnostic only; query/userinfo never retained, not approval evidence."""
+    parts = urlsplit(final_url)
+    compact = lambda value: re.sub(r'\s+', '', value).casefold()
+    return {'name': name, 'productId': product.get('id'),
+            'title': re.sub(r'\s+', ' ', title).strip()[:512],
+            'finalPage': (parts.scheme + '://' + (parts.hostname or '') + parts.path)[:2048],
+            'routeMatched': route_matched is True,
+            'modelFound': model_matches(model, title),
+            'brandFound': bool(product.get('brand')) and compact(product['brand']) in compact(title),
+            'identityMatched': _merchant_identity(product, model, title)}
+
+
+def _with_merchant_observations(result, observations):
+    # The child reader caps stdout at 65536 bytes. Preserve the legacy verdict
+    # even when diagnostics would exceed its budget (JSON defaults to ASCII).
+    base_size = len(json.dumps(result).encode('utf-8'))
+    budget = min(8192, 60000 - base_size - 128)
+    if budget < 2:
+        return result
+    kept = []
+    for observation in observations:
+        candidate = kept + [observation]
+        if len(json.dumps(candidate).encode('utf-8')) > budget:
+            break
+        kept = candidate
+    return dict(result, merchantObservations=kept,
+                merchantObservationsTruncated=len(kept) < len(observations))
 
 
 class _Source(HTMLParser):
@@ -261,6 +296,7 @@ class PostPublicationAudit:
                         checks.append(_check(name, 'unverified', 'viewport_evidence_missing'))
             except Exception:
                 checks.append(_check('browser', 'unverified', 'browser_timeout_or_unavailable'))
+        observations = []
         for n, product in enumerate(products):
             for channel, field in (('rakuten', 'affiliateUrl'), ('amazon', 'amazonUrl')):
                 budget()
@@ -301,6 +337,7 @@ class PostPublicationAudit:
                         checks.append(_check(name, 'unverified', 'merchant_html_unavailable'))
                         continue
                     page = _Page(_decode_html(response['body'], kind))
+                    observations.append(_merchant_observation(name, product, model, page.title, response['url'], same))
                     if re.search(r'captcha|robot check|access denied|just a moment|ロボット', page.title, re.I):
                         checks.append(_check(name, 'unverified', 'merchant_challenge_unverified'))
                         continue
@@ -317,7 +354,7 @@ class PostPublicationAudit:
                     add(name, same and identity, 'merchant_destination_and_title_model_verified', 'merchant_destination_or_product_identity_mismatch')
                 except Exception:
                     checks.append(_check(name, 'unverified', 'merchant_get_unavailable'))
-        return _result(checks)
+        return _with_merchant_observations(_result(checks), observations)
 
 
 if __name__ == '__main__':
