@@ -154,6 +154,12 @@ SNS変更には別の本人承認を必要とする。実行設定の停止は�
 操作側はruntime.flockを保持し、既存_make_articleのsource・画像・Gemini・最終審査を通す。
 改訂の配信は独立Astra審査後、本人の対象版承認を待つ。承認記録の作成には使わない。
 
+購入先のNA証跡引き渡しだけで構造検査が停止した対象改訂は、complete_reviewで
+成功済みwriter/Geminiの入力キー・出力hash・保存artifactを照合して最終QAへ渡せる。
+現在のlive baseline/product CAS、6時間以内のsource/NA証拠、本文保全を再確認し、
+通常と同じ画像・表示・医療表現・Claude最終審査を通す。旧モデル記録を書き換えず、
+未知の実行結果や旧承認を再利用しない。呼出側はruntime.flockを保持する。
+
 過去の改訂が本人承認済み・公開readback確認済み・未知effectなしの場合だけ、
 現在のlive baseを照合して次の改訂jobを別IDで作成できる。版順は公開更新日時で一意に決める。
 古いjob・審査・承認・配信・失敗履歴を消去せず、新jobの本人承認は空から始める。

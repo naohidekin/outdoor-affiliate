@@ -53,6 +53,7 @@ class DeterministicRuntimeTests(unittest.TestCase):
                     lambda: self.runtime.retry_stage('any', 'draft', 'stage_journal:v1:any'),
                     lambda: self.runtime.publish_social({'id': 'any'}),
                     lambda: self.runtime._make_article({'id': 'any'}, {}),
+                    lambda: self.runtime._finish_article_review(None, None, None, None, None, None, None, None),
                     lambda: self.runtime._run_model_stage(
                         {'id': 'any'}, 'draft', {'dependencies': {}, 'schemaVersion': 1},
                         lambda: model(), 'requested'),

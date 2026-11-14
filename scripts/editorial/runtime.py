@@ -429,6 +429,18 @@ class Runtime:
         polished, preservation = polished_stage['polished'], polished_stage['preservation']
         atomic(artifacts / 'candidate.json', {'kind': 'candidate', 'candidate': polished})
         bundle['article']['content'] = polished['content']
+        return self._finish_article_review(job, context, gathered, bundle, source,
+                                           preservation, polished, source_dependencies)
+
+    def _finish_article_review(self, job, context, gathered, bundle, source,
+                               preservation, polished, source_dependencies):
+        self._require_running()
+        revision = job.get('kind') == 'article_revision'
+        corrected = 'catalogCorrectionContext' in job
+        binding = job.get('revisionContext') or {}
+        public_source = ({k: copy.deepcopy(binding['baseArticle'].get(k))
+                          for k in ('title', 'slug', 'categoryId', 'productIds')}
+                         if revision else None)
         if self.config.get('socialCardsEnabled') is True:
             if self.social_cards is None:
                 from social_cards import SocialCards

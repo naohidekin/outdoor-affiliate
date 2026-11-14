@@ -1,5 +1,7 @@
 """Synthetic contracts for the owner-only review path; no external calls."""
 import copy
+from contextlib import nullcontext
+from datetime import datetime, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -8,8 +10,13 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from manual_review import ManualReview, _ScopedRuntime
-from runtime import Runtime
+from manual_review import ManualReview, REVIEW_SUPPLEMENT_CLAIMS, _ScopedRuntime
+from ledger import JST, fingerprint
+from revisions import EDIT_FIELDS, validated_context
+from runtime import Runtime, atomic
+from stage_journal import StageJournal
+from test_quality import bundle
+from test_revision_workflow import baseline, spec
 
 
 ALLOWED_SOCIAL = (
@@ -47,6 +54,61 @@ class RuntimeDouble:
         return {'status': 'delivered'}
 
 
+class CompleteReviewJournal:
+    def __init__(self, records, outputs):
+        self.records = records
+        self.outputs = outputs
+
+    key = staticmethod(StageJournal.key)
+
+    def status(self, *, job_id=None, stage=None):
+        return {'records': [copy.deepcopy(self.records[stage])]}
+
+    def _load(self, _db, key):
+        return key
+
+    def _existing(self, record, key):
+        if record != key or key not in self.outputs:
+            raise AssertionError('unexpected stage output lookup')
+        return copy.deepcopy(self.outputs[key])
+
+
+class CompleteReviewRuntime:
+    def __init__(self, root, repo, job, context, routes):
+        self.root = root
+        self.config = {'repo': str(repo)}
+        self.env = {'AMAZON_PARTNER_TAG': 'camp78-22'}
+        self.job = copy.deepcopy(job)
+        self.context = copy.deepcopy(context)
+        self.routes = copy.deepcopy(routes)
+        self.finished = []
+        self.usage_saves = 0
+        self.ledger = SimpleNamespace(
+            get_job=lambda id: copy.deepcopy(self.job),
+            _tx=lambda: nullcontext(None))
+
+    def _require_running(self):
+        return None
+
+    def request_revisions(self, _specs):
+        return {'jobs': [{'id': self.job['id']}]}
+
+    def _context(self):
+        return copy.deepcopy(self.context)
+
+    def _model_routes(self):
+        return copy.deepcopy(self.routes)
+
+    _source_dependencies = staticmethod(Runtime._source_dependencies)
+
+    def _finish_article_review(self, *args):
+        self.finished.append(copy.deepcopy(args))
+        return {'status': 'awaiting_astra_review'}
+
+    def _save_usage(self):
+        self.usage_saves += 1
+
+
 class ManualReviewTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -71,6 +133,7 @@ class ManualReviewTests(unittest.TestCase):
             'reportsEnabled': False,
             'editorialManager': {'enabled': False},
         }
+        self.complete_fixture_count = 0
         self.write_config()
 
     def tearDown(self):
@@ -83,6 +146,116 @@ class ManualReviewTests(unittest.TestCase):
         review = ManualReview.__new__(ManualReview)
         review._runtime = runtime
         return review
+
+    def complete_review_fixture(self, target='article-024'):
+        self.complete_fixture_count += 1
+        slug = 'firepit-beginner-guide' if target == 'article-024' else 'single-burner-ranking'
+        base = baseline(target, slug)
+        if target == 'article-024':
+            base['productIds'] = ['fp-003']
+        request = spec(base)
+        request['baseProducts'][0]['amazonUrl'] = ''
+        request['candidateProducts'][0]['amazonUrl'] = ''
+        revision_context = validated_context(request)
+        job = {
+            'id': f'revision-complete-{self.complete_fixture_count}',
+            'kind': 'article_revision', 'stage': 'error',
+            'error': {'reason': 'article_structure_or_affiliate_failed'},
+            'theme': {'slug': base['slug'], 'title': base['title'],
+                      'categoryId': base['categoryId'],
+                      'productIds': list(revision_context['targetProductIds'])},
+            'revisionContext': revision_context,
+            'bundle': None, 'review': None, 'approval': None, 'publication': None,
+        }
+        draft = bundle()
+        draft['article']['tags'] = []
+        draft['products'] = copy.deepcopy(revision_context['candidateProducts'])
+        source_bundle = copy.deepcopy(draft)
+        article = copy.deepcopy(base)
+        article.update({key: draft['article'][key] for key in EDIT_FIELDS})
+        article.update(author=draft['article']['author'],
+                       productIds=list(revision_context['targetProductIds']))
+        source_bundle.update(article=article, revisionContext=copy.deepcopy(revision_context))
+        source_bundle['brief']['protected'] = list(dict.fromkeys(
+            source_bundle['brief'].get('protected', []) + revision_context['verifiedAuthorFacts']))
+        source_bundle['affiliateConfig'] = {'amazonPartnerTag': 'camp78-22'}
+        checked = datetime.now(JST).isoformat()
+        products = copy.deepcopy(revision_context['candidateProducts'])
+        gathered = {
+            'checks': {'facts': True, 'images': True, 'affiliate': True},
+            'productIds': list(revision_context['targetProductIds']),
+            'products': copy.deepcopy(products), 'catalog': copy.deepcopy(products),
+            'evidence': {'products': [
+                {'productId': product['id'], 'checkedAt': checked} for product in products
+            ]},
+        }
+        polished = {'model': 'gemini-3.8-flash',
+                    'content': source_bundle['article']['content']}
+        polish_output = {'polished': copy.deepcopy(polished),
+                         'preservation': {'passed': True, 'failures': []}}
+        source = {'kind': 'source', 'bundle': copy.deepcopy(source_bundle)}
+        candidate = {'kind': 'candidate', 'candidate': copy.deepcopy(polished)}
+        artifact_dir = self.base / 'state' / 'research' / 'artifacts' / job['id'] / fingerprint(source_bundle)
+        atomic(artifact_dir / 'source.json', source)
+        atomic(artifact_dir / 'candidate.json', candidate)
+        atomic(self.base / 'state' / 'research' / (job['id'] + '.json'), gathered)
+        editorial_rules = {'rule': 'synthetic-review'}
+        routes = {'draft': {'requested': 'writer'}, 'polish': {'requested': 'polisher'},
+                  'final_review': {'requested': 'reviewer'}}
+        runtime = CompleteReviewRuntime(
+            self.base / 'state', Path(__file__).resolve().parents[2], job,
+            {'editorialRules': editorial_rules}, routes)
+        gathered_inputs = copy.deepcopy(gathered)
+        gathered_inputs.update({
+            'CLAUDE': editorial_rules,
+            'SKILL': (Path(runtime.config['repo']) / 'SKILL.md').read_text(),
+        })
+        source_dependencies = runtime._source_dependencies(gathered_inputs)
+        draft_inputs = {
+            'theme': copy.deepcopy(job['theme']),
+            'dependencies': {
+                'source': source_dependencies, 'routes': routes,
+                'revisionContext': copy.deepcopy(revision_context),
+                'catalogCorrectionContext': None,
+            },
+            'schemaVersion': {'stage': 1, 'input': 'theme+verified-source',
+                              'output': 'article+brief'},
+        }
+        polish_inputs = {
+            'content': source_bundle['article']['content'],
+            'brief': copy.deepcopy(source_bundle['brief']),
+            'dependencies': {
+                'sourceBundle': runtime._source_dependencies(source_bundle),
+                'verifiedSource': source_dependencies, 'routes': routes,
+            },
+            'schemaVersion': {'stage': 1, 'input': 'exact-source+brief',
+                              'output': 'polish+preservation'},
+        }
+        draft_key = StageJournal.key(job['id'], 'draft', draft_inputs)
+        polish_key = StageJournal.key(job['id'], 'polish', polish_inputs)
+        runtime.stage_journal = CompleteReviewJournal(
+            {'draft': {'status': 'succeeded', 'stageKey': draft_key},
+             'polish': {'status': 'succeeded', 'stageKey': polish_key}},
+            {draft_key: draft, polish_key: polish_output})
+        purchase_evidence = [{
+            'productId': products[0]['id'], 'channel': 'amazon', 'status': 'NA',
+            'reason': '対象型番の取扱いを確認できない', 'checkedAt': checked,
+            'reviewedBy': 'owner',
+        }]
+        return runtime, purchase_evidence
+
+    @staticmethod
+    def review_supplement(checked_at=None):
+        return {
+            'url': 'https://snowpeak-ec.s3.amazonaws.com/sys-master/AmazonS3Images/hd3/h39/'
+                   '8879616065566/ST-032RS_manual.pdf',
+            'model': 'ST-032RS', 'productId': 'fp-003',
+            'sha256': '27b1c4c6f9bda381548f5bc269417748c005827816913bc8564dd55dfda4c5cb',
+            'size': 191121, 'contentType': 'application/pdf',
+            'checkedAt': checked_at or datetime.now(JST).isoformat(),
+            'reviewedBy': 'Astra',
+            'claims': list(REVIEW_SUPPLEMENT_CLAIMS),
+        }
 
     def revision_job(self, id='revision-one', target='article-024', stage='candidate', **extra):
         job = {'id': id, 'kind': 'article_revision', 'stage': stage,
@@ -239,6 +412,66 @@ class ManualReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'delivery_requires_reconciliation'):
             self.review_with(runtime).deliver_review(job['id'])
         self.assertEqual([('deliver_attempt',)], runtime.calls)
+
+    def test_complete_review_reuses_only_exact_successful_draft_and_polish_inputs(self):
+        runtime, purchase_evidence = self.complete_review_fixture()
+        result = self.review_with(runtime).complete_review(runtime.job['id'], purchase_evidence)
+        self.assertEqual({'status': 'awaiting_astra_review'}, result)
+        self.assertEqual(1, len(runtime.finished))
+        self.assertEqual(1, runtime.usage_saves)
+        source_dependencies = runtime.finished[0][-1]
+        self.assertEqual(runtime.context['editorialRules'], source_dependencies['CLAUDE'])
+        self.assertEqual((Path(runtime.config['repo']) / 'SKILL.md').read_text(),
+                         source_dependencies['SKILL'])
+
+    def test_complete_review_denies_succeeded_record_with_mismatched_stage_key(self):
+        for stage in ('draft', 'polish'):
+            runtime, purchase_evidence = self.complete_review_fixture()
+            runtime.stage_journal.records[stage]['stageKey'] = '0' * 64
+            with self.subTest(stage=stage), self.assertRaisesRegex(
+                    ValueError, 'manual_review_stage_key_mismatch'):
+                self.review_with(runtime).complete_review(runtime.job['id'], purchase_evidence)
+            self.assertEqual([], runtime.finished)
+            self.assertEqual(0, runtime.usage_saves)
+
+    def test_complete_review_binds_verified_024_supplement_only_to_final_review(self):
+        runtime, purchase_evidence = self.complete_review_fixture()
+        supplement = self.review_supplement()
+        original_outputs = copy.deepcopy(runtime.stage_journal.outputs)
+        result = self.review_with(runtime).complete_review(
+            runtime.job['id'], purchase_evidence, supplement)
+        self.assertEqual({'status': 'awaiting_astra_review'}, result)
+        gathered = runtime.finished[0][2]
+        source_dependencies = runtime.finished[0][-1]
+        self.assertEqual([supplement], gathered['evidence']['reviewSupplements'])
+        self.assertEqual([supplement], source_dependencies['evidence']['reviewSupplements'])
+        self.assertEqual(original_outputs, runtime.stage_journal.outputs)
+        self.assertNotIn('reviewSupplements', runtime.finished[0][4])
+        persisted = json.loads((runtime.root / 'research' / (runtime.job['id'] + '.json')).read_text())
+        self.assertNotIn('reviewSupplements', persisted['evidence'])
+
+    def test_complete_review_rejects_wrong_target_hash_or_stale_supplement(self):
+        cases = []
+        runtime, evidence = self.complete_review_fixture(target='article-005')
+        cases.append(('target', runtime, evidence, self.review_supplement()))
+        runtime, evidence = self.complete_review_fixture()
+        wrong_hash = self.review_supplement()
+        wrong_hash['sha256'] = '0' * 64
+        cases.append(('hash', runtime, evidence, wrong_hash))
+        runtime, evidence = self.complete_review_fixture()
+        stale = self.review_supplement((datetime.now(JST) - timedelta(hours=6, seconds=1)).isoformat())
+        cases.append(('stale', runtime, evidence, stale))
+        for name, checked_at in (('none', None), ('naive', '2026-11-15T04:57:00')):
+            runtime, evidence = self.complete_review_fixture()
+            invalid_time = self.review_supplement()
+            invalid_time['checkedAt'] = checked_at
+            cases.append((name, runtime, evidence, invalid_time))
+        for name, runtime, purchase_evidence, supplement in cases:
+            with self.subTest(case=name), self.assertRaisesRegex(
+                    ValueError, 'manual_review_supplement_invalid'):
+                self.review_with(runtime).complete_review(
+                    runtime.job['id'], purchase_evidence, supplement)
+            self.assertEqual([], runtime.finished)
 
 
 if __name__ == '__main__':
