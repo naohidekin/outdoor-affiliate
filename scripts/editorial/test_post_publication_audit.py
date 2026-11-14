@@ -3,6 +3,11 @@ import copy
 import hashlib
 import json
 import struct
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
 import unittest
 import zlib
 from unittest.mock import patch
@@ -53,6 +58,91 @@ class FakeCatalog:
 
 
 class AuditTests(unittest.TestCase):
+    def test_existing_primary_binding_can_resolve_missing_title_evidence_only(self):
+        job, html = fixture()
+        product = job['bundle']['products'][0]
+        product.update(name='TokyoCamp 焚火台 HAKOSUKA', brand='TokyoCamp',
+                       categoryId='firepit', specs={'型番': 'HAKOSUKA'})
+        cat = FakeCatalog(html)
+        cat.merchant = '<title>Tokyo Camp 焚き火台 コンパクト</title>'
+        with patch('primary_firepit.fixed_amazon_identity', return_value={'scope': 'primary_test'}) as primary:
+            result = self.run_audit(job, catalog=cat)
+        self.assertEqual(primary.call_count, 1)
+        amazon = next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')
+        rakuten = next(c for c in result['checks'] if c['name'] == 'destination.0.rakuten')
+        self.assertEqual(amazon['status'], 'passed')
+        self.assertEqual(rakuten['status'], 'unverified')
+        self.assertFalse(result['passed'])
+        cat.merchant = '<title>Tokyo Camp HAKOSUKA 専用収納ケース（本体なし）</title>'
+        with patch('primary_firepit.fixed_amazon_identity') as primary:
+            result = self.run_audit(job, catalog=cat)
+        primary.assert_not_called()
+        self.assertEqual(result['status'], 'failed')
+
+    def test_child_flushes_result_before_outstanding_thread_exits(self):
+        code = ('import sys,threading,time;sys.path.insert(0,sys.argv[1]);'
+                'from post_publication_audit import _emit_result;'
+                'threading.Thread(target=lambda:time.sleep(3)).start();'
+                '_emit_result({"status":"unverified","checks":[]})')
+        with tempfile.TemporaryFile() as output:
+            child = subprocess.Popen([sys.executable, '-I', '-c', code,
+                                      str(Path(__file__).resolve().parent)], stdout=output)
+            try:
+                deadline = time.monotonic() + 2
+                raw = b''
+                while not raw and time.monotonic() < deadline:
+                    output.seek(0)
+                    raw = output.read()
+                    if not raw:
+                        time.sleep(.02)
+                self.assertEqual(json.loads(raw)['status'], 'unverified')
+                self.assertIsNone(child.poll())
+            finally:
+                child.terminate()
+                child.wait(timeout=5)
+
+    def test_parent_timeout_preserves_partial_and_cannot_report_success(self):
+        for prior, expected in (('passed', 'unverified'), ('failed', 'failed')):
+            with self.subTest(prior=prior):
+                class Child:
+                    pid = 123
+                    def __init__(self, *args, **kwargs):
+                        self.output = kwargs['stdout']
+                    def communicate(self, *args, **kwargs):
+                        value = {'status': prior, 'checks': [
+                            {'name': 'approved_body', 'status': prior, 'reason': 'body_checked'}]}
+                        self.output.write(json.dumps(value).encode())
+                        self.output.flush()
+                        raise subprocess.TimeoutExpired('audit', 180)
+                    def wait(self):
+                        return 0
+                with patch('post_publication_audit.subprocess.Popen', Child), \
+                        patch('post_publication_audit.os.killpg') as kill:
+                    value = PostPublicationAudit({}, ENV).check(fixture()[0])
+                self.assertEqual(value['status'], expected)
+                self.assertFalse(value['passed'])
+                self.assertEqual(value['checks'][0]['name'], 'approved_body')
+                self.assertIn('transport: audit_process_timeout_or_incomplete', value['issues'])
+                kill.assert_called_once()
+
+    def test_budget_exhaustion_retains_prior_checks_and_never_passes(self):
+        job, html = fixture()
+        clock = [0]
+        job['bundle']['images'][0]['sha256'] = 'a' * 64
+        audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=FakeCatalog(html))
+        def browser(payload):
+            clock[0] = 151
+            return {'checks': [{'name': n, 'status': 'passed', 'reason': 'render_verified'}
+                               for n in ('desktop', 'mobile')]}
+        with patch('post_publication_audit.time.monotonic', side_effect=lambda: clock[0]), \
+                patch.object(audit, '_browser', side_effect=browser):
+            result = audit.check(job)
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('image.0: approved_image_bytes_mismatch', result['issues'])
+        self.assertIn('destinations_remaining: audit_budget_exhausted', result['issues'])
+        self.assertTrue(any(c['name'] == 'approved_body' for c in result['checks']))
+        self.assertNotIn('audit: audit_unavailable', result['issues'])
+
     def run_audit(self, job=None, html=None, catalog=None, browser=None):
         original, source = fixture()
         audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=catalog or FakeCatalog(html or source))
@@ -102,7 +192,8 @@ class AuditTests(unittest.TestCase):
             catalog = FakeCatalog(html)
             catalog.merchant = '<title>' + title + '</title>'
             result = self.run_audit(catalog=catalog)
-            self.assertEqual(result['status'], 'failed', title)
+            self.assertEqual(result['status'], 'unverified' if title.endswith('sale') else 'failed', title)
+            self.assertFalse(result['passed'])
 
     def test_actual_amicus_single_konro_title_is_positive_type_identity(self):
         product = {'name': 'SOTO アミカス SOD-320 シングルバーナー', 'brand': 'SOTO', 'categoryId': 'burner'}
@@ -134,7 +225,7 @@ class AuditTests(unittest.TestCase):
                 destinations = [c for c in result['checks'] if c['name'].startswith('destination.')]
                 self.assertEqual(2, len(destinations))
                 self.assertTrue(all(c['status'] == 'failed' and c['reason'] ==
-                    'merchant_destination_or_product_identity_mismatch' for c in destinations), result)
+                    'merchant_accessory_only' for c in destinations), result)
                 self.assertTrue(all(c['status'] == 'passed' for c in result['checks']
                                     if not c['name'].startswith('destination.')), result)
 

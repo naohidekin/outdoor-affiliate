@@ -876,6 +876,11 @@ class Catalog:
                             'conditions': (['Manufacturer0398.SP includes two skewers; this merchant bundle count is unconfirmed.']
                                            if not bundle_verified else [])}
                         match = match and bundle_verified
+                if kind == 'purchase' and pid not in fixed_firepit_ids:
+                    from merchant_identity import inspect_merchant_identity
+                    decision = inspect_merchant_identity(product, model, parsed.title)
+                    match = decision['status'] == 'passed' or bool(
+                        fixed_purchase_identity and decision['status'] != 'failed')
                 # Store evidence of exact comparisons, never user review text.
                 if match:
                     references.append({'productId': pid, 'kind': kind, 'url': res['url'], 'checkedAt': checked_at,

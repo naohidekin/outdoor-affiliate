@@ -17,9 +17,14 @@ import tempfile
 import time
 from urllib.parse import parse_qs, urlsplit
 
+def _emit_result(value):
+    print(json.dumps(value), flush=True)
+
+
 if __name__ == '__main__':
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 from catalog import Catalog, _affiliate_route, _decode_html, _image_type, _model, _Page, model_matches, safe_url
+from audit_requests import AuditRequests
 
 SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
@@ -54,34 +59,8 @@ def _audit_model(product):
 
 
 def _merchant_identity(product, model, title):
-    if not model_matches(model, title) or re.sub(r'\s+', '', product['brand']).casefold() not in re.sub(r'\s+', '', title).casefold():
-        return False
-    name = product.get('name', '')
-    accessory = r'本体(?:は|を)?(?:含ま(?:れ)?ません|付属しません|別売|なし)|専用(?:収納|保護)?(?:ケース|バッグ|カバー|アダプタ)|(?:carrying|storage|protective)\s+(?:case|bag)|(?:case|bag|cover|adapter|replacement)\s+only'
-    if re.search(accessory, title, re.I) and not re.search(accessory, name, re.I):
-        return False
-    # Positive product-type evidence, independent of brand/model substrings.
-    # A compatibility qualifier (焚火台用) describes accessories, not a firepit
-    # body. Keep independent body mentions valid in real body+accessory bundles.
-    types = {'burner': r'バーナー|ストーブ|コンロ|burner|stove', 'tent': r'テント|tent',
-             'tarp': r'タープ|tarp', 'chair': r'チェア|椅子|chair', 'table': r'テーブル|table',
-             'lantern': r'ランタン|lantern', 'sleeping-bag': r'寝袋|シュラフ|sleeping\s*bag',
-             'cooler': r'クーラー|cooler', 'firepit': r'(?:焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill)(?!\s*用)'}
-    # Explicit string-light names have their own type; do not broaden all light products.
-    # Compatibility-only mentions do not establish the body product.
-    string_light = r'(?:ストリングライト|string\s*lights?(?![A-Za-z]))(?!\s*用)'
-    if re.search(string_light, name, re.I):
-        return bool(re.search(string_light, title, re.I))
-    pattern = types.get(product.get('categoryId'))
-    if pattern is None:
-        pattern = next((p for p in types.values() if re.search(p, name, re.I)), None)
-    if pattern:
-        return bool(re.search(pattern, title, re.I))
-    # Unknown types require the full approved name, never just brand and SKU.
-    rest = re.sub(re.escape(model), '', name, flags=re.I)
-    rest = re.sub(re.escape(product['brand']), '', rest, flags=re.I).strip()
-    compact = lambda s: re.sub(r'\s+', '', s).casefold()
-    return bool(rest) and compact(name) in compact(title)
+    from merchant_identity import inspect_merchant_identity
+    return inspect_merchant_identity(product, model, title)['status'] == 'passed'
 
 
 def _merchant_observation(name, product, model, title, final_url, route_matched):
@@ -162,6 +141,10 @@ class PostPublicationAudit:
                 return self._audit(job)
             except Exception:
                 return _result([_check('audit', 'unverified', 'audit_unavailable')])
+            finally:
+                if getattr(self, '_request_pool', None) is not None:
+                    self._request_pool.close()
+                    self._request_pool = None
         payload = {'job': job, 'env': self.env,
                    'config': {k: self.config[k] for k in ('repo', 'node') if k in self.config}}
         # Temporary output caps the data read into memory; no raw stderr escapes.
@@ -183,7 +166,24 @@ class PostPublicationAudit:
                     raise ValueError()
                 return value
             except Exception:
-                return _result([_check('audit', 'unverified', 'audit_timeout_or_unavailable')])
+                # A bounded worker can finish its verdict while outstanding GETs
+                # still prevent child exit. Keep its evidence, but never call a
+                # terminated/incomplete process successful.
+                try:
+                    output.seek(0)
+                    raw = output.read(65537)
+                    value = json.loads(raw) if len(raw) <= 65536 else {}
+                    checks = value.get('checks')
+                    if not isinstance(checks, list) or not checks or any(
+                            not isinstance(c, dict) or c.get('status') not in ('passed', 'failed', 'unverified')
+                            or not re.fullmatch(r'[a-z0-9_.-]{1,80}', c.get('name', ''))
+                            or not re.fullmatch(r'[a-z0-9_]{1,100}', c.get('reason', '')) for c in checks):
+                        raise ValueError()
+                    return _with_merchant_observations(_result(checks + [
+                        _check('transport', 'unverified', 'audit_process_timeout_or_incomplete')]),
+                        value.get('merchantObservations', []))
+                except Exception:
+                    return _result([_check('audit', 'unverified', 'audit_timeout_or_unavailable')])
             finally:
                 if child is not None:
                     # Includes pending browser/image-helper grandchildren.
@@ -212,8 +212,7 @@ class PostPublicationAudit:
         def add(name, ok, good, bad, status='failed'):
             checks.append(_check(name, 'passed' if ok else status, good if ok else bad))
         def budget():
-            if time.monotonic() - started > 150:
-                raise TimeoutError()
+            return time.monotonic() - started <= 150
         catalog = self.catalog or Catalog({})
         try:
             bundle = job['bundle']
@@ -264,8 +263,26 @@ class PostPublicationAudit:
         for n, product in enumerate(products):
             proof = [i for i in images if i.get('productId') == product['id'] and i.get('url') == product.get('imageUrl')]
             add('product_image_binding.' + str(n), len(proof) == 1, 'product_image_bound', 'product_image_proof_missing')
+        # One bounded pool per live audit. Catalog still validates DNS, redirects,
+        # host allowlists and byte limits; reuse here never crosses an audit run.
+        catalog = self._request_pool = AuditRequests(catalog, started + 150)
+        for image in images:
+            try:
+                parsed, _ = safe_url(image['url'], resolve=False)
+                catalog.prefetch(image['url'], {'Accept': 'image/*', 'Cache-Control': 'no-cache'},
+                                 allowed_domains=(parsed.hostname,), exact_domains=True)
+            except Exception:
+                pass  # Normal image check below records the failure.
+        for product in products:
+            for channel, field in (('rakuten', 'affiliateUrl'), ('amazon', 'amazonUrl')):
+                href = product.get(field)
+                if href and _affiliate_route(channel, href, self.env):
+                    domains = ('amazon.co.jp',) if channel == 'amazon' else ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
+                    catalog.prefetch(href, {'Accept': 'text/html'}, allowed_domains=domains)
         for n, image in enumerate(images):
-            budget()
+            if not budget():
+                checks.append(_check('images_remaining', 'unverified', 'audit_budget_exhausted'))
+                break
             name = 'image.' + str(n)
             if image.get('verified') is not True or not re.fullmatch(r'[a-f0-9]{64}', str(image.get('sha256', ''))) or type(image.get('size')) is not int or not 0 < image['size'] <= LIMIT:
                 checks.append(_check(name, 'failed', 'approved_image_proof_invalid'))
@@ -287,7 +304,8 @@ class PostPublicationAudit:
         # Never let a browser bypass a rejected/mismatched public source.
         if source.hashes == [digest] and source.titles == [title]:
             try:
-                budget()
+                if not budget():
+                    raise TimeoutError()
                 observed = self._browser({'url': url, 'html': html, 'bundle': {'article': article,
                     'products': products, 'images': images}, 'repo': self.config.get('repo', str(Path(__file__).resolve().parents[2]))})
                 checks.extend(observed['checks'])
@@ -299,7 +317,9 @@ class PostPublicationAudit:
         observations = []
         for n, product in enumerate(products):
             for channel, field in (('rakuten', 'affiliateUrl'), ('amazon', 'amazonUrl')):
-                budget()
+                if not budget():
+                    checks.append(_check('destinations_remaining', 'unverified', 'audit_budget_exhausted'))
+                    return _with_merchant_observations(_result(checks), observations)
                 name = 'destination.' + str(n) + '.' + channel
                 href = product.get(field)
                 if not href:
@@ -341,17 +361,24 @@ class PostPublicationAudit:
                     if re.search(r'captcha|robot check|access denied|just a moment|ロボット', page.title, re.I):
                         checks.append(_check(name, 'unverified', 'merchant_challenge_unverified'))
                         continue
-                    # Missing evidence is not proof of a different product.
-                    if model.isalpha() and not model_matches(model, page.title):
-                        checks.append(_check(name, 'unverified', 'merchant_model_evidence_missing'))
-                        continue
-                    if (product.get('categoryId') == 'firepit'
-                            and re.search(r'焚き?火台\s*L(?:$|\W)', product.get('name', ''))
-                            and re.search(r'(?:S|M)サイズ', page.title, re.I)):
-                        checks.append(_check(name, 'unverified', 'merchant_variant_evidence_conflicting'))
-                        continue
-                    identity = _merchant_identity(product, model, page.title)
-                    add(name, same and identity, 'merchant_destination_and_title_model_verified', 'merchant_destination_or_product_identity_mismatch')
+                    from merchant_identity import inspect_merchant_identity
+                    decision = inspect_merchant_identity(product, model, page.title)
+                    primary = None
+                    if channel == 'amazon' and same and decision['status'] == 'unverified':
+                        # The same narrow primary-node binding already used by
+                        # pre-publication research; never infer from reviews or ads.
+                        from primary_firepit import fixed_amazon_identity
+                        primary = fixed_amazon_identity(product['id'], model, response['url'],
+                                                        _decode_html(response['body'], kind), page.title)
+                    identity = decision['status'] == 'passed' or bool(primary)
+                    observations[-1]['primaryBindingVerified'] = bool(primary)
+                    observations[-1]['identityMatched'] = identity
+                    if not same:
+                        checks.append(_check(name, 'failed', 'merchant_destination_or_product_identity_mismatch'))
+                    elif identity:
+                        checks.append(_check(name, 'passed', 'merchant_destination_and_title_model_verified'))
+                    else:
+                        checks.append(_check(name, decision['status'], decision['reason']))
                 except Exception:
                     checks.append(_check(name, 'unverified', 'merchant_get_unavailable'))
         return _with_merchant_observations(_result(checks), observations)
@@ -365,4 +392,4 @@ if __name__ == '__main__':
         value = audit.check(payload['job'])
     except Exception:
         value = _result([_check('audit', 'unverified', 'audit_input_or_transport_unavailable')])
-    print(json.dumps(value))
+    _emit_result(value)
