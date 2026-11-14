@@ -353,16 +353,45 @@ class Ledger:
             return self._put(db, job, 'candidate')
 
     def request_revision(self, specification, now=None):
-        from revisions import validated_context, TARGETS
+        from revisions import validated_context, TARGETS, _aware
         context = validated_context(specification)
         base = context['baseArticle']
         now = timestamp(now)
         with self._tx() as db:
+            previous = []
             for row in db.execute('SELECT data FROM jobs'):
                 old = json.loads(row[0])
                 if old.get('kind') == 'article_revision' and old['revisionContext']['baseArticle']['id'] == base['id']:
-                    require(old['revisionContext'] == context, 'revision already requested; reconcile existing job')
-                    return old
+                    if old['revisionContext'] == context:
+                        return old
+                    approval, publication = old.get('approval') or {}, old.get('publication') or {}
+                    readback = publication.get('readback') or {}
+                    evidence = approval.get('evidence')
+                    codex_approved = (approval.get('source') == 'codex' and approval.get('action') in (None, 'approved')
+                        and isinstance(evidence, dict) and evidence.get('source') == 'codex'
+                        and all(isinstance(evidence.get(k), str) and evidence[k].strip()
+                                for k in ('thread_id', 'message_id', 'text'))
+                        and approval.get('request_id') == 'codex-' + fingerprint(dict(
+                            article_id=old['id'], revision=old.get('revision'), actor=self.owner_id, evidence=evidence)))
+                    require(old['stage'] == 'published' and old.get('revision')
+                            and (codex_approved if approval.get('source') == 'codex'
+                                 else approval.get('action') == 'approved')
+                            and approval.get('user_id') == self.owner_id
+                            and approval.get('revision') == old['revision'] == publication.get('revision')
+                            and publication.get('verified') is True and readback.get('verified') is True
+                            and readback.get('fingerprint') == old['revision'],
+                            'revision already requested; reconcile existing job')
+                    require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
+                                           (old['id'],)).fetchone(), 'revision publication requires reconciliation')
+                    previous.append(old)
+            if previous:
+                stamps = [_aware(j['publication'].get('remoteUpdatedAt')) for j in previous]
+                latest_at = max(stamps)
+                require(stamps.count(latest_at) == 1, 'revision publication order ambiguous')
+                latest = previous[stamps.index(latest_at)]
+                require(latest_at == _aware(base.get('updatedAt'))
+                        and latest['publication'].get('url') == 'https://camp-gear-lab.com/articles/' + base['slug'],
+                        'revision next baseline must match verified publication')
             job = dict(id='revision-' + secrets.token_hex(12), kind='article_revision',
                        revisionContext=context, priority=list(TARGETS).index(base['id']),
                        theme=dict(slug=base['slug'], title=base['title'], categoryId=base['categoryId'],

@@ -564,6 +564,20 @@ class SlackTests(unittest.TestCase):
             else:
                 self.assertNotIn('復旧待ち', text)
 
+    def test_paused_review_does_not_misreport_x_auth_failure_or_promise_posting(self):
+        job = {'id': 'article-test', 'bundle': {'article': {'title': '記事'}},
+               'social': {'proposal': {'text': '広告 告知', 'replyText': 'https://example.com/article',
+                    'images': [], 'deliveryMode': 'auto_x', 'targetAccountId': '1343879420470206464'}}}
+        req = {'kind': 'social', 'request_id': 'req', 'article_id': job['id'],
+               'manifest_hash': 'hash', 'nonce': 'nonce'}
+        with patch.object(Slack, 'post', return_value={'message_ts': '1793000000.123456'}) as post:
+            Slack(dict(self.config, socialPostingEnabled=False,
+                       executionPolicy={'suspended': True}), call=self.call).deliver(job, req)
+        text = post.call_args_list[-1].args[1][0]['text']['text']
+        self.assertIn('再開の指示までは投稿しません', text)
+        self.assertNotIn('X接続の復旧待ち', text)
+        self.assertEqual(post.call_args_list[-1].args[1][1]['elements'][0]['text']['text'], '再開後のX投稿を承認')
+
     def test_social_unknown_mode_or_unbound_auto_target_fails_before_any_slack_send(self):
         for changes in ({'deliveryMode': 'auto_x'}, {'deliveryMode': 'auto_x', 'targetAccountId': ''},
                         {'deliveryMode': 'auto_x', 'targetAccountId': None},

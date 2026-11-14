@@ -144,3 +144,16 @@ failed、情報不足・型式やサイズの競合はunverifiedとして停止�
 SNS変更には別の本人承認を必要とする。実行設定の停止は維持する。
 楽天の中継は観測済みtransition.afl.rakuten.co.jpだけをexact-hostで追加する。
 紹介先ID、HTTPS、DNS固定、最終itemのhost/path/pc一致は維持し、サブドメインへ広げない。
+
+## 本人指定の限定手動修正（2026-11-15）
+
+本人が対象記事の修正・Slack配信を明示した場合に限り、manual_review.ManualReviewを使う。
+通常Runtimeの停止は維持し、設定・スケジュール・常駐runnerを変更しない。
+対象はarticle-005/article-024の再改訂と、既存M-8249/UK-4004のSNS確認だけ。
+元configのdigestをguardごとに確認し、publisher・tick・consume・SNS投稿は拒否する。
+操作側はruntime.flockを保持し、既存_make_articleのsource・画像・Gemini・最終審査を通す。
+改訂の配信は独立Astra審査後、本人の対象版承認を待つ。承認記録の作成には使わない。
+
+過去の改訂が本人承認済み・公開readback確認済み・未知effectなしの場合だけ、
+現在のlive baseを照合して次の改訂jobを別IDで作成できる。版順は公開更新日時で一意に決める。
+古いjob・審査・承認・配信・失敗履歴を消去せず、新jobの本人承認は空から始める。

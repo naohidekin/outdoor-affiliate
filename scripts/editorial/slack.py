@@ -64,6 +64,7 @@ class Slack:
     def __init__(self, config, call=None):
         self.scope = config['slack']
         self.social_posting_enabled = config.get('socialPostingEnabled') is True
+        self.execution_suspended = (config.get('executionPolicy') or {}).get('suspended') is True
         self.node = config.get('node', 'node')
         self._call = call or self._node_call
         self._next_post = 0
@@ -293,11 +294,18 @@ class Slack:
                 parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part, 'emoji': False}}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
         revision = job.get('kind') == 'article_revision'
-        labels = [('approve', '更新を公開する' if revision else 'Xに投稿する' if auto_x else 'この告知案を承認' if social else '公開する'),
+        approve_label = ('再開後の公開を承認' if revision and self.execution_suspended else
+                         '再開後のX投稿を承認' if auto_x and self.execution_suspended else
+                         '更新を公開する' if revision else 'Xに投稿する' if auto_x else
+                         'この告知案を承認' if social else '公開する')
+        labels = [('approve', approve_label),
                   ('reject', '修正を依頼'), ('hold', '保留')]
         explanation = ('承認した本文・画像をXへ投稿し、記事リンクを返信として自動投稿します。' if auto_x else
                        'Xへの投稿は手動です。' if social else '本文・画像・購入先を確認してから公開を選んでください。')
-        if auto_x and not self.social_posting_enabled:
+        if auto_x and self.execution_suspended:
+            explanation = ('承認した本文・画像と記事リンク返信が投稿の対象です。\n'
+                           '自動処理は停止中です。承認内容は保存されますが、再開の指示までは投稿しません。')
+        elif auto_x and not self.social_posting_enabled:
             explanation = ('承認した本文・画像と記事リンク返信が自動投稿の対象です。\n'
                            'X接続の復旧待ちです。承認した内容は保存し、接続確認後に投稿します。')
         if social and proposal.get('approvalNotice'):
@@ -306,6 +314,8 @@ class Slack:
             binding = job['revisionContext']
             explanation = ('既存記事の更新案です。承認した本文・画像・購入先を反映します。\n'
                            + 'https://camp-gear-lab.com/articles/' + article['slug'] + '\n変更内容: ' + binding['changeSummary'])
+            if self.execution_suspended:
+                explanation += '\n自動処理は停止中です。公開は、この版の承認と再開の指示後に進めます。'
         if revision and job['revisionContext'].get('productPatches'):
             explanation += '\n商品カードの修正は、この商品を掲載する他の記事にも反映されます'
         text = article['title'] + '\n' + explanation
