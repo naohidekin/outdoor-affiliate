@@ -181,6 +181,11 @@ def _is_accessory_only(product_name, title, type_pattern, brand_names, model):
     explicit_body = bool(re.search(r'本体(?:付き|セット|\+|＋|$|\s)', title or '', re.I))
     if _ACCESSORY_ONLY.search(description) and not explicit_body:
         return True
+    # An included case on an explicitly named body is different from a case
+    # for/compatible with that body. Do not generalize this to "set/bundle".
+    body_type = re.search(r'(?:' + type_pattern + r')(?!\s*(?:用|対応|に対応))', description, re.I)
+    if body_type:
+        description = re.sub(r'(?:収納)?ケース(?:付き|付属)(?![A-Za-zぁ-んァ-ヶ一-龯])', ' ', description)
     accessory = bool(_ACCESSORY_NOUN.search(description))
     # A category word plus "bundle" can still describe accessories only.
     # Generic set wording never substitutes for explicit body evidence.

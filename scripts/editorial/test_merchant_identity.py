@@ -5,6 +5,19 @@ from merchant_identity import inspect_merchant_identity
 
 
 class MerchantIdentityTests(unittest.TestCase):
+    def test_named_body_with_included_case_is_not_a_case_only_listing(self):
+        product = {'name': 'イワタニ ジュニアコンパクトバーナー CB-JCB',
+                   'brand': 'イワタニ', 'categoryId': 'burner'}
+        self.assertEqual(inspect_merchant_identity(product, 'CB-JCB',
+            'Iwatani イワタニ ジュニアコンパクトバーナー 日本製 ケース付き CB-JCB')['status'], 'passed')
+        for title in ('Iwatani CB-JCB バーナー用ケース付き',
+                      'Iwatani CB-JCB バーナー専用収納ケース付き',
+                      'Iwatani CB-JCB 専用収納ケース付き バーナー',
+                      'Iwatani CB-JCB バーナー ケース付属品',
+                      'Iwatani CB-JCB バーナー対応インナーマット ケース付き',
+                      'Iwatani CB-JCB バーナー ケース付き 本体なし'):
+            self.assertNotEqual(inspect_merchant_identity(product, 'CB-JCB', title)['status'], 'passed')
+
     def test_accessory_bundle_requires_explicit_body_evidence(self):
         product = {'name': 'Snow Peak ランドロック', 'brand': 'Snow Peak', 'categoryId': 'tent'}
         for title in ('Snow Peak TP-671R tent footprint bundle',
