@@ -58,6 +58,30 @@ class FakeCatalog:
 
 
 class AuditTests(unittest.TestCase):
+    def test_rakuten_transition_is_allowed_but_final_product_remains_bound(self):
+        _, html = fixture()
+        transition = 'https://transition.afl.rakuten.co.jp/redirect'
+        for final, expected in (('https://item.rakuten.co.jp/shop/st310/', 'passed'),
+                                ('https://item.rakuten.co.jp/shop/st330/', 'failed'),
+                                ('https://evil.transition.afl.rakuten.co.jp/shop/st310/', 'unverified'),
+                                ('https://evil.example/shop/st310/', 'unverified')):
+            calls = []
+            def fetch(url, headers, timeout):
+                calls.append(url)
+                if url == RAKUTEN:
+                    return {'status': 302, 'headers': {'location': transition}, 'body': b''}
+                if url == transition:
+                    return {'status': 302, 'headers': {'location': final}, 'body': b''}
+                if url == 'https://images.example/stove.png':
+                    return {'status': 200, 'headers': {'content-type': 'image/png'}, 'body': PNG}
+                return {'status': 200, 'headers': {'content-type': 'text/html; charset=utf-8'},
+                        'body': (html if url == SITE else '<title>SOTO ST-310 stove</title>').encode()}
+            result = self.run_audit(catalog=Catalog(ENV, fetcher=fetch))
+            self.assertEqual(result['status'], expected, result)
+            self.assertIn(transition, calls)
+            if 'evil.' in final:
+                self.assertNotIn(final, calls)
+
     def test_existing_primary_binding_can_resolve_missing_title_evidence_only(self):
         job, html = fixture()
         product = job['bundle']['products'][0]

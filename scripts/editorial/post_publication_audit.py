@@ -28,6 +28,8 @@ from audit_requests import AuditRequests
 
 SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
+RAKUTEN_DOMAINS = ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp',
+                   'transition.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
 
 
 def _result(checks):
@@ -277,8 +279,9 @@ class PostPublicationAudit:
             for channel, field in (('rakuten', 'affiliateUrl'), ('amazon', 'amazonUrl')):
                 href = product.get(field)
                 if href and _affiliate_route(channel, href, self.env):
-                    domains = ('amazon.co.jp',) if channel == 'amazon' else ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
-                    catalog.prefetch(href, {'Accept': 'text/html'}, allowed_domains=domains)
+                    domains = ('amazon.co.jp',) if channel == 'amazon' else RAKUTEN_DOMAINS
+                    catalog.prefetch(href, {'Accept': 'text/html'}, allowed_domains=domains,
+                                     exact_domains=channel == 'rakuten')
         for n, image in enumerate(images):
             if not budget():
                 checks.append(_check('images_remaining', 'unverified', 'audit_budget_exhausted'))
@@ -336,8 +339,9 @@ class PostPublicationAudit:
                     checks.append(_check(name, 'unverified', 'approved_product_model_or_brand_missing'))
                     continue
                 try:
-                    domains = ('amazon.co.jp',) if channel == 'amazon' else ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
-                    response = catalog.request(href, {'Accept': 'text/html'}, allowed_domains=domains)
+                    domains = ('amazon.co.jp',) if channel == 'amazon' else RAKUTEN_DOMAINS
+                    response = catalog.request(href, {'Accept': 'text/html'}, allowed_domains=domains,
+                                               exact_domains=channel == 'rakuten')
                     final, approved = urlsplit(response['url']), urlsplit(href)
                     same = False
                     if channel == 'amazon':
