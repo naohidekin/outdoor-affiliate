@@ -188,6 +188,31 @@ class DispatcherTests(unittest.TestCase):
         self.assertTrue(buffer_social_eligible(
             job, self.config, datetime(2026, 11, 20, 0, 0, tzinfo=JST)))
 
+    def test_owner_waiting_does_not_block_next_supplemental_slot_after_regular_three(self):
+        self.config['supplementalApparelEnabled'] = True
+        test_runtime.RuntimeTests.configure_production_schedule(self)
+        due = datetime(2026,11,16,9,tzinfo=JST)
+        for index in range(2):
+            job = self.runtime.ledger.create_candidate({'slug':f'closed-{index}'},
+                                                        now='2026-11-13T09:00:00+09:00')
+            self.runtime.ledger.set_stage(job['id'],'rejected')
+        reviewed = self.runtime.ledger.create_candidate(
+            {'slug':'waiting-owner','title':'Waiting'},now='2026-11-13T09:00:00+09:00')
+        from wise_contract import load_policy
+        policy = load_policy()
+        current_bundle = __import__('test_quality').bundle(); current_bundle['wisePolicy']=policy['id']
+        self.runtime.ledger.save_bundle(reviewed['id'],current_bundle)
+        reviewed = self.runtime.ledger.get_job(reviewed['id'])
+        self.runtime.ledger.record_review(reviewed['id'],reviewed['revision'],{
+            'passed':True,'score':8.5,'model':'upper','issues':[],
+            'wisePolicy':policy['id'],'wiseScores':dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
+            'fingerprint':reviewed['revision'],
+            'evidence':{key:True for key in ('facts','images','affiliate','medical','render')},
+            'polish':{'model':'gemini-3.8-flash','validated':True}})
+        self.runtime.deliver(reviewed['id'])
+        self.assertEqual([{'kind':'produce_supplemental','jobId':None}],
+                         DeterministicDispatcher(self.runtime).plan(due)['actions'])
+
 
 if __name__ == '__main__':
     unittest.main()

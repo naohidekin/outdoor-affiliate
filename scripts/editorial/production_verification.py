@@ -155,6 +155,58 @@ def _notify_failures(root, period, failures, send, now, cost_text,
             'handledGlobalReasons':global_reasons}
 
 
+def verified_article_deliveries(root, jobs, scope):
+    """Read exact reviewed revision + Slack scope/parts evidence without mutation."""
+    if (not isinstance(scope, dict) or any(not scope.get(key) for key in SCOPE)
+            or not isinstance(jobs, list)):
+        return {}
+    root = Path(root)
+    uri = 'file:' + quote(str(root/'ledger.sqlite3'),safe='/') + '?mode=ro'
+    confirmed = {}
+    try:
+        with sqlite3.connect(uri,uri=True) as db:
+            db.execute('PRAGMA query_only=ON')
+            for job in jobs:
+                if not isinstance(job,dict) or not isinstance(job.get('id'),str):
+                    continue
+                try: valid_review(job.get('review'),job.get('revision'))
+                except (ValueError,TypeError): continue
+                requests = db.execute(
+                    'SELECT data FROM requests WHERE job_id=? AND kind=? ORDER BY rowid DESC LIMIT 50',
+                    (job['id'],'article')).fetchall()
+                deliveries = []
+                for row in db.execute(
+                        'SELECT data FROM events WHERE job_id=? AND kind=? ORDER BY rowid DESC LIMIT 50',
+                        (job['id'],'delivered')):
+                    try: value = json.loads(row[0])
+                    except (TypeError,ValueError): continue
+                    if isinstance(value,dict): deliveries.append(value)
+                for (raw,) in requests:
+                    try: request = json.loads(raw)
+                    except (TypeError,ValueError): continue
+                    parts_value = request.get('parts',{})
+                    part_scope = (parts_value.get('scope',parts_value)
+                                  if isinstance(parts_value,dict) else {})
+                    parts = parts_value.get('parts') if isinstance(parts_value,dict) else parts_value
+                    exact = (request.get('manifest_hash') == job['revision']
+                        and request.get('status') in ('delivered','decided')
+                        and all(request.get('scope',{}).get(k) == scope.get(k) for k in SCOPE)
+                        and all(part_scope.get(k) == request.get('scope',{}).get(k) for k in SCOPE)
+                        and any(event.get('status') == 'delivered' and all(event.get(k) == request.get(k)
+                            for k in ('request_id','manifest_hash','article_id','scope','parts','card_ts'))
+                            for event in deliveries)
+                        and re.fullmatch(r'\d{10}\.\d{6}',request.get('card_ts',''))
+                        and isinstance(parts,list) and bool(parts)
+                        and all(isinstance(p,dict) and p.get('verified') is True for p in parts))
+                    if exact:
+                        confirmed[job['id']] = {'id':job['id'],'revision':job['revision'],
+                                                'cardTs':request['card_ts']}
+                        break
+    except (OSError,sqlite3.Error):
+        return {}
+    return confirmed
+
+
 def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', results=None,
                   buffer_posting_enabled=False):
     now = now or datetime.now(JST)
@@ -174,36 +226,8 @@ def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', re
         return {'status':'waiting','period':period,'candidates':len(selected),'verifiedArticles':0}
     if any(j.get('stage') in ('error','held') and j.get('error') for j in selected):
         return {'status':'waiting','period':period,'candidates':3,'verifiedArticles':0}
-    confirmed = []
-    uri = 'file:' + quote(str(root/'ledger.sqlite3'),safe='/') + '?mode=ro'
-    with sqlite3.connect(uri,uri=True) as db:
-        db.execute('PRAGMA query_only=ON')
-        for job in selected:
-            try: valid_review(job.get('review'),job.get('revision'))
-            except (ValueError,TypeError): continue
-            requests = db.execute('SELECT data FROM requests WHERE job_id=? AND kind=? ORDER BY rowid DESC LIMIT 50',
-                                  (job['id'],'article')).fetchall()
-            deliveries = [json.loads(row[0]) for row in db.execute(
-                'SELECT data FROM events WHERE job_id=? AND kind=? ORDER BY rowid DESC LIMIT 50',
-                (job['id'],'delivered'))]
-            for (raw,) in requests:
-                request = json.loads(raw)
-                parts = request.get('parts',{})
-                part_scope = parts.get('scope',parts) if isinstance(parts,dict) else {}
-                parts = parts.get('parts') if isinstance(parts,dict) else parts
-                exact = (request.get('manifest_hash') == job['revision']
-                    and request.get('status') in ('delivered','decided')
-                    and all(request.get('scope',{}).get(k) == scope.get(k) and scope.get(k) for k in SCOPE)
-                    and all(part_scope.get(k) == request.get('scope',{}).get(k) for k in SCOPE)
-                    and any(event.get('status') == 'delivered' and all(event.get(k) == request.get(k)
-                        for k in ('request_id','manifest_hash','article_id','scope','parts','card_ts'))
-                        for event in deliveries)
-                    and re.fullmatch(r'\d{10}\.\d{6}',request.get('card_ts',''))
-                    and isinstance(parts,list) and bool(parts)
-                    and all(isinstance(p,dict) and p.get('verified') is True for p in parts))
-                if exact:
-                    confirmed.append({'id':job['id'],'revision':job['revision'],'cardTs':request['card_ts']})
-                    break
+    evidence = verified_article_deliveries(root,selected,scope)
+    confirmed = [evidence[job['id']] for job in selected if job['id'] in evidence]
     if len(confirmed) != 3:
         return {'status':'waiting','period':period,'candidates':3,'verifiedArticles':len(confirmed)}
     marker = root/'production-verifications'/(period+'-slack-ready.json')

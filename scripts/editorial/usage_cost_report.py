@@ -285,7 +285,7 @@ def _article_labels(root, articles):
     return labels
 
 
-def _unknown_reservations(root, period_key):
+def _unknown_reservations(root, period_key, article_ids=None):
     path = root / 'ledger.sqlite3'
     if not path.is_file():
         return None
@@ -293,11 +293,37 @@ def _unknown_reservations(root, period_key):
     try:
         with sqlite3.connect(uri, uri=True, timeout=5) as db:
             db.execute('PRAGMA query_only=ON')
-            row = db.execute("SELECT count(*) FROM model_budget_reservations "
-                             "WHERE status='unknown' AND period_key=?", (period_key,)).fetchone()
+            query = ("SELECT count(*) FROM model_budget_reservations "
+                     "WHERE status='unknown' AND period_key=?")
+            params = [period_key]
+            if article_ids is not None:
+                if not article_ids:
+                    return 0
+                query += ' AND article_id IN (' + ','.join('?' for _ in article_ids) + ')'
+                params.extend(article_ids)
+            row = db.execute(query, params).fetchone()
             return int(row[0])
     except sqlite3.Error:
         return None
+
+
+def _batch_budget(root, article_ids, cap):
+    if article_ids is None or cap is None:
+        return None
+    path = root / 'ledger.sqlite3'
+    if not path.is_file():
+        return {'status': 'unavailable'}
+    try:
+        uri = 'file:' + quote(str(path), safe='/') + '?mode=ro'
+        with sqlite3.connect(uri, uri=True, timeout=5) as db:
+            db.execute('PRAGMA query_only=ON')
+            used = 0 if not article_ids else db.execute(
+                'SELECT count(*) FROM model_budget_reservations WHERE article_id IN ('
+                + ','.join('?' for _ in article_ids) + ')', article_ids).fetchone()[0]
+        return {'cap': cap, 'used': int(used), 'remaining': max(0, cap - int(used)),
+                'scope': 'all_periods_exact_article_ids'}
+    except sqlite3.Error:
+        return {'status': 'unavailable'}
 
 
 def _codex_task_usage(root, now):
@@ -342,9 +368,27 @@ def _codex_task_usage(root, now):
             'attributionOverlapUnknown': True, 'subscriptionPercent': None}
 
 
-def usage_cost_report(root, config, kind='weekly', now=None, period_key=None):
+def usage_cost_report(root, config, kind='weekly', now=None, period_key=None,
+                      article_ids=None, batch_call_cap=None, article_since=None):
     """Return bounded read-only usage, cost and budget evidence."""
     root, now = Path(root).resolve(), _now(now)
+    if article_ids is not None:
+        if (not isinstance(article_ids, (list, tuple))
+                or any(not isinstance(value, str) or not value for value in article_ids)
+                or len(article_ids) != len(set(article_ids))):
+            raise ValueError('usage_report_article_filter_invalid')
+        article_ids = sorted(article_ids)
+    if batch_call_cap is not None and (type(batch_call_cap) is not int or batch_call_cap <= 0
+                                       or article_ids is None):
+        raise ValueError('usage_report_batch_cap_invalid')
+    since = _parse_at(article_since) if isinstance(article_since,str) else article_since
+    if (article_since is not None and (article_ids is None or not isinstance(since,datetime)
+            or since.tzinfo is None or since.utcoffset() is None or since > now)):
+        raise ValueError('usage_report_article_since_invalid')
+    if isinstance(since,datetime):
+        since = since.astimezone(JST)
+    if since is not None:
+        since = since.astimezone(JST)
     if kind == 'production' and period_key is None:
         from production_schedule import ProductionSchedule
         period_key = ProductionSchedule(config.get('productionSchedule')).period_key(now)
@@ -358,7 +402,14 @@ def usage_cost_report(root, config, kind='weekly', now=None, period_key=None):
     unknown_models = set()
     for at_raw, call in _usage_records(root):
         at = _parse_at(at_raw)
-        if at is None or at > now or not start <= at.date() <= end:
+        if at is None or at > now:
+            continue
+        if since is not None:
+            if at < since:
+                continue
+        elif not start <= at.date() <= end:
+            continue
+        if article_ids is not None and call.get('articleId') not in article_ids:
             continue
         model = call.get('actualModel') if 'actualModel' in call else call.get('model')
         if not call.get('articleId'):
@@ -394,11 +445,19 @@ def usage_cost_report(root, config, kind='weekly', now=None, period_key=None):
                                     'knownCalls': known, 'totalCalls': total_calls,
                                     'complete': known == total_calls}
     budget = _budget_snapshot(root, config, now)
+    if article_ids is not None and budget.get('status') == 'read_only':
+        budget['articles'] = {key: value for key, value in budget['articles'].items()
+                              if key in article_ids}
+        budget['articleLabels'] = {key: value for key, value in budget['articleLabels'].items()
+                                   if key in article_ids}
     codex_task = _codex_task_usage(root, now)
     return {
         'kind': kind,
         'window': {'start': start.isoformat(), 'end': end.isoformat(),
                    'timezone': 'Asia/Tokyo', 'basis': basis},
+        'attributionWindow': ({'start':since.isoformat(),'end':now.isoformat(),
+                               'basis':'exact_article_ids_from_batch_start'}
+                              if since is not None else None),
         'totals': total, 'models': dict(sorted(models.items())),
         'stages': dict(sorted(stages.items())),
         'missingUsage': {'calls': missing_usage},
@@ -410,7 +469,10 @@ def usage_cost_report(root, config, kind='weekly', now=None, period_key=None):
                                    'basis': 'current_rate_rough_estimate',
                                    'qualification': 'rough_estimate_at_current_configured_rates'},
                   'unknownModels': sorted(unknown_models)},
-        'reservations': {'unknownCalls': _unknown_reservations(root, budget.get('periodKey'))
+        'articleFilter': article_ids,
+        'batchBudget': _batch_budget(root, article_ids, batch_call_cap),
+        'reservations': {'unknownCalls': _unknown_reservations(
+                             root, budget.get('periodKey'), article_ids)
                          if budget.get('periodKey') else None,
                          'label': 'reserved_not_measured'},
         'budget': budget,
@@ -437,13 +499,22 @@ def _cost_text(value):
     return rendered
 
 
-def usage_cost_summary(root, config, kind='weekly', now=None, period_key=None):
+def usage_cost_summary(root, config, kind='weekly', now=None, period_key=None,
+                       article_ids=None, batch_call_cap=None, article_since=None):
     """Render a short Japanese inline summary; performs no model or network call."""
-    data = usage_cost_report(root, config, kind=kind, now=now, period_key=period_key)
+    data = usage_cost_report(root, config, kind=kind, now=now, period_key=period_key,
+                             article_ids=article_ids, batch_call_cap=batch_call_cap,
+                             article_since=article_since)
     start, end = date.fromisoformat(data['window']['start']), date.fromisoformat(data['window']['end'])
     weekdays = '月火水木金土日'
-    lines = [f'モデル利用・費用（{start:%Y/%m/%d}（{weekdays[start.weekday()]}）〜'
-             f'{end:%Y/%m/%d}（{weekdays[end.weekday()]}）JST、金〜木の費用窓）']
+    if data['attributionWindow']:
+        actual_start = _parse_at(data['attributionWindow']['start'])
+        actual_end = _parse_at(data['attributionWindow']['end'])
+        lines = [f'追加batch実測・モデル利用・費用（{actual_start:%Y/%m/%d %H:%M}〜'
+                 f'{actual_end:%Y/%m/%d %H:%M} JST、登録済み{len(article_ids)}記事ID限定）']
+    else:
+        lines = [f'モデル利用・費用（{start:%Y/%m/%d}（{weekdays[start.weekday()]}）〜'
+                 f'{end:%Y/%m/%d}（{weekdays[end.weekday()]}）JST、金〜木の費用窓）']
     for model, row in data['models'].items():
         lines.append(f'・{model}: {row["calls"]}回／入力{row["inputTokens"]:,}／出力{row["outputTokens"]:,}'
                      f'／cache読{row["cacheReadTokens"]:,}・書{row["cacheWriteTokens"]:,}')
@@ -464,9 +535,16 @@ def usage_cost_summary(root, config, kind='weekly', now=None, period_key=None):
     if costs['unknownModels']:
         lines.append('概算単価不明（0円扱いしない）: ' + '、'.join(costs['unknownModels']))
     budget = data['budget']
+    batch = data['batchBudget']
+    if isinstance(batch, dict) and 'used' in batch:
+        lines.append(f'追加batch予算（全period合算）: 生涯calls {batch["used"]}/{batch["cap"]}、'
+                     f'残{batch["remaining"]}')
+    elif article_ids is not None:
+        lines.append('追加batch予算（全period合算）: 読取不可')
     if budget.get('status') == 'read_only':
         row = budget['period']
-        lines.append(f'現在production period（{budget["periodKey"]}）予算: '
+        period_label = '現在production period全制作' if article_ids is not None else '現在production period'
+        lines.append(f'{period_label}（{budget["periodKey"]}）予算: '
                      f'calls {row["calls"]}/{row["calls"] + row["remaining"]["calls"]} '
                      f'({row["ratios"]["calls"]:.1%})、入力残{row["remaining"]["inputTokens"]:,}、'
                      f'出力残{row["remaining"]["outputTokens"]:,}（上記費用窓とは別）')
@@ -478,6 +556,8 @@ def usage_cost_summary(root, config, kind='weekly', now=None, period_key=None):
             lines.append(f'・記事予算は残り{len(budget["articles"]) - 5}件省略')
     else:
         lines.append('現在production period予算: 読取不可')
+    if article_ids is not None:
+        lines.append('Codex task counterは追加batch固有の実測ではありません。以下はtask全体の部分観測です。')
     codex = data['subscription']['chatgptCodex']['taskUsage']
     if codex['status'] == 'available':
         main = codex['main']

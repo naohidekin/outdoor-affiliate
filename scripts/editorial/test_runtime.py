@@ -152,6 +152,11 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual('source_hold', second['status'])
         self.assertEqual(1, len([text for text in self.slack.notices
                                 if '追加ウェア記事・参照状態' in text]))
+        notice = next(text for text in self.slack.notices if '追加ウェア記事・参照状態' in text)
+        self.assertIn('確認済み事実:',notice)
+        self.assertIn('根本原因は未確定',notice)
+        self.assertIn('追加batch実測',notice)
+        self.assertNotIn('catalog_product_not_verified',notice)
         marker = json.loads((self.runtime.root / 'supplemental-batches' /
                              'apparel-2026-11-16.json').read_text())
         health = self.runtime._supplemental_health(now + timedelta(minutes=5))
@@ -185,6 +190,18 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(1, jobs[0]['batchSlot'])
         make.assert_called_once()
 
+    def test_mixed_apparel_merchant_variants_require_approval_facing_disclosure(self):
+        gathered = {'products':[{'id':'apparel-montbell-1101493','name':'プラズマ1000'}],
+                    'evidence':{'products':[{'productId':'apparel-montbell-1101493',
+                        'destinations':[
+                            {'channel':'rakuten','apparelBinding':{'merchantOptionState':'selectable'}},
+                            {'channel':'amazon','apparelBinding':{'merchantOptionState':'fixed'}}]}]}}
+        disclosures = self.runtime._apparel_variant_disclosures(gathered)
+        self.assertEqual(1,len(disclosures))
+        self.assertIn('楽天市場はカラー・サイズ選択式',disclosures[0])
+        self.assertIn('Amazonは確認済みの固定バリエーション',disclosures[0])
+        self.assertIn('同じカラー・サイズとは限らない',disclosures[0])
+
     def test_tick_executes_one_supplemental_dispatch_action_once(self):
         self.config['supplementalApparelEnabled'] = True
         self.config['executionPolicy'] = {'mode': 'deterministic', 'suspended': False}
@@ -196,6 +213,17 @@ class RuntimeTests(unittest.TestCase):
                              return_value={'status': 'source_hold', 'articles': []}) as produce:
             self.runtime.tick()
         produce.assert_called_once()
+
+    def test_tick_exposes_bounded_supplemental_verification(self):
+        self.config['supplementalApparelEnabled'] = True
+        self.config['generationEnabled'] = False
+        expected = {'status':'waiting','batchId':'apparel-2026-11-16',
+                    'articles':[],'handledAttentionJobIds':[]}
+        with patch('supplemental_verification.verify_supplemental_batch',
+                   return_value=expected) as verify:
+            result = self.runtime.tick()
+        self.assertEqual(expected,result['supplementalVerification'])
+        verify.assert_called_once()
 
     def test_runtime_budget_path_holds_supplemental_batch_call_97_across_weeks(self):
         self.configure_production_schedule()

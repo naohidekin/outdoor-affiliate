@@ -237,6 +237,19 @@ class ModelTests(unittest.TestCase):
             self.assertIn(phrase, instruction)
         self.assertEqual(restore_model_input(json.loads(data))['context'], ctx)
 
+    def test_draft_instruction_requires_verbatim_apparel_variant_disclosure(self):
+        ctx = context()
+        ctx['apparelApprovalDisclosure'] = {
+            'requiredExpressions':['楽天市場は選択式、Amazonは固定です。'],
+            'rule':'merchant option states differ'}
+        fake = Fake(writer_response(bundle()))
+        Models(ENV,fake).draft({},ctx)
+        prompt = fake.calls[0][2]['messages'][0]['content']
+        instruction,data = prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n',1)
+        self.assertIn('include every supplied requiredExpressions string',instruction)
+        self.assertIn('do not merge fixed and selectable merchant variants',instruction)
+        self.assertEqual(ctx,restore_model_input(json.loads(data))['context'])
+
     def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
         good = bundle()
         short = copy.deepcopy(good)

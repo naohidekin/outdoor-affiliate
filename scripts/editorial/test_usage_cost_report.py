@@ -262,6 +262,51 @@ class UsageCostReportTests(unittest.TestCase):
         following_cost = following['costs']['estimatedUSD']['value'] or 0
         self.assertAlmostEqual(prior_cost + following_cost, expected)
 
+    def test_article_filter_reports_only_batch_usage_and_lifetime_call_remaining(self):
+        with sqlite3.connect(self.root / 'ledger.sqlite3') as db:
+            db.execute('CREATE TABLE jobs(id TEXT PRIMARY KEY,data TEXT NOT NULL)')
+        budget = ModelBudget(self.root, ProductionSchedule(self.schedule), self.budget_config)
+        for article, at in (('extra-1', '2026-11-13T10:00:00+09:00'),
+                            ('extra-2', '2026-11-20T10:00:00+09:00'),
+                            ('regular', '2026-11-13T11:00:00+09:00')):
+            with budget.scope(article, 'draft', now=datetime.fromisoformat(at)):
+                reservation = budget.reserve({'model': 'model-a', 'max_tokens': 5,
+                                              'messages': []})
+            budget.settle(reservation, {'input_tokens': 2, 'output_tokens': 1})
+        self._usage_file('batch.json', '2026-11-16T10:00:00+09:00', [
+            {'responseId': 'extra', 'actualModel': 'model-a', 'articleId': 'extra-1',
+             'stage': 'draft', 'usage': {'input_tokens': 10, 'output_tokens': 2}},
+            {'responseId': 'regular', 'actualModel': 'model-a', 'articleId': 'regular',
+             'stage': 'draft', 'usage': {'input_tokens': 100, 'output_tokens': 20}},
+            {'responseId': 'unknown', 'actualModel': 'model-a',
+             'stage': 'draft', 'usage': {'input_tokens': 999, 'output_tokens': 99}},
+        ])
+        result = usage_cost_report(
+            self.root, self.config, kind='production', period_key='2026-11-13',
+            now=self.now, article_ids=['extra-1', 'extra-2'], batch_call_cap=96,
+            article_since='2026-11-16T09:00:00+09:00')
+        self.assertEqual(1, result['totals']['calls'])
+        self.assertEqual(10, result['totals']['inputTokens'])
+        self.assertEqual({'cap': 96, 'used': 2, 'remaining': 94,
+                          'scope': 'all_periods_exact_article_ids'}, result['batchBudget'])
+        self.assertEqual(['extra-1', 'extra-2'], result['articleFilter'])
+        self.assertEqual(2, result['budget']['period']['calls'])
+        self.assertEqual({'extra-1'}, set(result['budget']['articles']))
+        text = usage_cost_summary(
+            self.root, self.config, kind='production', period_key='2026-11-13',
+            now=self.now, article_ids=['extra-1', 'extra-2'], batch_call_cap=96,
+            article_since='2026-11-16T09:00:00+09:00')
+        self.assertIn('追加batch実測', text)
+        self.assertIn('生涯calls 2/96、残94', text)
+        self.assertIn('現在production period全制作', text)
+        self.assertIn('Codex task counterは追加batch固有の実測ではありません', text)
+        later = usage_cost_report(
+            self.root,self.config,kind='production',period_key='2026-11-20',
+            now=datetime(2026,11,23,20,tzinfo=JST),article_ids=['extra-1','extra-2'],
+            batch_call_cap=96,article_since='2026-11-16T09:00:00+09:00')
+        self.assertEqual(1,later['totals']['calls'])
+        self.assertEqual('exact_article_ids_from_batch_start',later['attributionWindow']['basis'])
+
 
 if __name__ == '__main__':
     unittest.main()

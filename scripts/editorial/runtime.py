@@ -313,6 +313,31 @@ class Runtime:
                     'Analytics opportunities with action=improve_existing must improve the existing URL, '
                     'not become a new duplicate article. Missing signals remain unverified.'}
 
+    @staticmethod
+    def _apparel_variant_disclosures(gathered):
+        products = {product.get('id'):product.get('name') for product in gathered.get('products',[])
+                    if isinstance(product,dict)}
+        labels = {'rakuten':'楽天市場','amazon':'Amazon'}
+        disclosures = []
+        for evidence in (gathered.get('evidence') or {}).get('products',[]):
+            if not isinstance(evidence,dict): continue
+            states = {}
+            for destination in evidence.get('destinations',[]):
+                binding = destination.get('apparelBinding') if isinstance(destination,dict) else None
+                channel = destination.get('channel') if isinstance(destination,dict) else None
+                state = binding.get('merchantOptionState') if isinstance(binding,dict) else None
+                if channel in labels and state in ('fixed','selectable'):
+                    states[channel] = state
+            if set(states.values()) != {'fixed','selectable'}:
+                continue
+            details = '、'.join(labels[channel]+'は'+('カラー・サイズ選択式' if state == 'selectable'
+                                  else '確認済みの固定バリエーション')
+                               for channel,state in sorted(states.items()))
+            name = products.get(evidence.get('productId')) or evidence.get('productId') or '対象商品'
+            disclosures.append(f'{name}は販売先で選択条件が異なります。{details}です。'
+                               '同じカラー・サイズとは限らないため、購入画面で選択内容を確認してください。')
+        return list(dict.fromkeys(disclosures))
+
     def produce(self, limit=3):
         self._require_running()
         if not self.config.get('generationEnabled'):
@@ -484,10 +509,28 @@ class Runtime:
                    or prior.get('manifestFingerprint') != resolved['manifestFingerprint']
                    or prior.get('sourceStateFingerprint') != resolved['stateFingerprint'])
         if changed:
-            missing = [str(slot['slot']) + ':' + slot.get('reason', '')
+            labels = {'catalog_product_not_verified':'商品情報の確認待ち',
+                      'missing_required_destination':'購入先の確認待ち',
+                      'apparel_identity_invalid':'商品仕様の確認待ち',
+                      'duplicate_theme':'既存記事との重複確認待ち',
+                      'category_mismatch':'掲載分類の確認待ち',
+                      'theme_not_registered':'記事企画の確認待ち'}
+            missing = [f'{slot["slot"]}枠目: '+labels.get(slot.get('reason'),'確認待ち')
                        for slot in resolved['slots'] if slot['status'] != 'ready']
-            text = ('【追加ウェア記事・参照状態】' + manifest['batchId'] + '\n準備済み: '
-                    + str(resolved['readyCount']) + '/3\n保留: ' + (', '.join(missing) or 'なし'))
+            try:
+                from usage_cost_report import usage_cost_summary
+                period = self.ledger.production_schedule.period_key(now)
+                cost = usage_cost_summary(self.root,self.config,kind='production',
+                    period_key=period,now=now,article_ids=sorted(job['id'] for job in bound.values()),
+                    batch_call_cap=manifest['batchCallCap'],article_since=manifest['notBefore'])
+            except Exception:
+                cost = '追加batchの使用量・費用・予算残量: 未取得'
+            text = ('【追加ウェア記事・参照状態】\n準備済み: '
+                    + str(resolved['readyCount'])+'/3\n保留: '+(', '.join(missing) or 'なし')
+                    +'\n確認済み事実: 上記の情報・購入先・画像証跡が未確認の枠だけ停止しています。'
+                    +'\n原因判断: 未確認証跡による停止は確定、証跡が揃わない根本原因は未確定です。'
+                    +'\n次の対応: 未確認の商品情報・購入先・画像を確認し、確認済みの枠だけ順次進めます。'
+                    +'\n品質基準・予算上限・本人承認条件は変更しません。\n\n'+cost)
             state['notification'] = {'status': 'in_flight', 'stateFingerprint': resolved['stateFingerprint']}
             atomic(marker_path, state)
             try:
@@ -570,6 +613,11 @@ class Runtime:
                             verifiedAuthorFacts=copy.deepcopy(binding['verifiedAuthorFacts']))
         else:
             gathered = self.catalog.gather(job['theme'], context)
+        variant_disclosures = self._apparel_variant_disclosures(gathered)
+        if variant_disclosures:
+            gathered['apparelApprovalDisclosure'] = {
+                'requiredExpressions':variant_disclosures,
+                'rule':'merchant option states differ; never claim identical color or size'}
         atomic(self.root / 'research' / (job['id'] + '.json'), gathered)
         if not all(gathered.get('checks', {}).get(k) is True for k in ('facts', 'images', 'affiliate')):
             raise ValueError('source_product_image_or_affiliate_verification_incomplete')
@@ -596,6 +644,12 @@ class Runtime:
         bundle = self._run_model_stage(job, 'draft', draft_inputs,
             lambda: self.models.draft(job['theme'], gathered),
             self._model_routes()['draft']['requested'])
+        if any(text not in bundle.get('article',{}).get('content','') for text in variant_disclosures):
+            raise ValueError('apparel_variant_disclosure_missing')
+        if variant_disclosures:
+            for field in ('requiredExpressions','protected'):
+                bundle['brief'][field] = list(dict.fromkeys(
+                    bundle['brief'].get(field,[])+variant_disclosures))
         if revision:
             from revisions import EDIT_FIELDS, validate_revision_bundle
             draft = bundle['article']
@@ -645,6 +699,8 @@ class Runtime:
         polished_stage = self._run_model_stage(job, 'polish', polish_inputs, polish_operation,
                                                self._model_routes()['polish']['requested'])
         polished, preservation = polished_stage['polished'], polished_stage['preservation']
+        if any(text not in polished.get('content','') for text in variant_disclosures):
+            raise ValueError('apparel_variant_disclosure_changed')
         atomic(artifacts / 'candidate.json', {'kind': 'candidate', 'candidate': polished})
         bundle['article']['content'] = polished['content']
         return self._finish_article_review(job, context, gathered, bundle, source,
@@ -1755,12 +1811,38 @@ class Runtime:
                 result['productionVerification'] = {'status': 'requires_reconciliation'}
             if result['productionVerification']['status'] in ('requires_reconciliation', 'blocked'):
                 result['status'] = 'attention'
+        if self.config.get('supplementalApparelEnabled') is True:
+            try:
+                from supplemental_verification import verify_supplemental_batch
+                from usage_cost_report import usage_cost_summary
+                manifest = self._supplemental_manifest()
+                batch_jobs = [job for job in jobs if job.get('kind') == 'supplemental_article'
+                              and job.get('batchId') == manifest['batchId']]
+                marker = self.root/'supplemental-batches'/(manifest['batchId']+'.json')
+                try: source_state = json.loads(marker.read_text())
+                except (OSError,ValueError): source_state = None
+                period = self.ledger.production_schedule.period_key(now)
+                result['supplementalVerification'] = verify_supplemental_batch(
+                    self.root,jobs,manifest['batchId'],self.config['slack'],self.slack.notice,
+                    now=now,not_before=manifest['notBefore'],source_state=source_state,
+                    cost_text=lambda:usage_cost_summary(self.root,self.config,kind='production',
+                        period_key=period,now=now,
+                        article_ids=sorted(job['id'] for job in batch_jobs),
+                        batch_call_cap=manifest['batchCallCap'],
+                        article_since=manifest['notBefore']))
+            except Exception:
+                result['supplementalVerification'] = {'status':'requires_reconciliation'}
+            if result['supplementalVerification']['status'] in (
+                    'blocked','source_hold','requires_reconciliation'):
+                result['status'] = 'attention'
         if (any((job.get('error') or {}).get('reason') == 'model_budget_hold' for job in jobs)
                 or any(result['modelBudget']['eventsByStatus'].get(status, 0)
                        for status in ('in_flight', 'unknown'))):
             result['status'] = 'attention'
         atomic(self.root / 'health.json', result)
         handled_ids = set(result.get('productionVerification', {}).get('handledAttentionJobIds', []))
+        handled_ids.update(result.get('supplementalVerification', {}).get(
+            'handledAttentionJobIds', []))
         handled_reasons = set(result.get('productionVerification', {}).get('handledGlobalReasons', []))
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
                      for j in jobs if j.get('error') and j['error'].get('reason') != 'model_budget_hold'

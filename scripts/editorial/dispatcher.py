@@ -282,22 +282,32 @@ class DeterministicDispatcher:
             base['actions'].append({'kind': 'produce_supplemental',
                                     'jobId': supplemental[0]['id']})
             return base
-        # A delivered exact version waiting for its owner does not create new work.
+        pending = [job for job in jobs if job.get('kind') != 'article_revision'
+                   and not job.get('publication') and job['stage'] != 'rejected']
+        # Owner waiting may fill the separately authorized batch, but cannot take
+        # a slot from an incomplete regular production period.
         if article_waiting:
+            regular_incomplete = False
+            if (self.runtime.config.get('generationEnabled') is True
+                    and self.runtime.ledger.production_schedule.is_due(now)):
+                period = self.runtime.ledger.production_schedule.period_key(now)
+                period_count = sum(job.get('kind') not in
+                                   ('article_revision','supplemental_article')
+                                   and job.get('week') == period for job in jobs)
+                regular_incomplete = period_count < 3
+            if (not regular_incomplete and self.runtime.config.get('generationEnabled') is True
+                    and len(pending) < 3 and self.runtime.supplemental_due(now)):
+                base['actions'].append({'kind':'produce_supplemental','jobId':None})
             return base
         if (self.runtime.config.get('generationEnabled') is True
                 and self.runtime.ledger.production_schedule.is_due(now)):
             period = self.runtime.ledger.production_schedule.period_key(now)
-            pending = [job for job in jobs if job.get('kind') != 'article_revision'
-                       and not job.get('publication') and job['stage'] != 'rejected']
             period_count = sum(job.get('kind') not in ('article_revision', 'supplemental_article')
                                and job['week'] == period
                                for job in jobs)
             if len(pending) < 3 and period_count < 3:
                 base['actions'].append({'kind': 'produce', 'jobId': None})
                 return base
-        pending = [job for job in jobs if job.get('kind') != 'article_revision'
-                   and not job.get('publication') and job['stage'] != 'rejected']
         if (self.runtime.config.get('generationEnabled') is True and len(pending) < 3
                 and self.runtime.supplemental_due(now)):
             base['actions'].append({'kind': 'produce_supplemental', 'jobId': None})
