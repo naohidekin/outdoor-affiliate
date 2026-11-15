@@ -7,6 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "wise:check": "python3 scripts/editorial/verify_wise_contract.py",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"tests/**/*.test.ts\"",
     "igt:check": "node scripts/igt-validate.ts",

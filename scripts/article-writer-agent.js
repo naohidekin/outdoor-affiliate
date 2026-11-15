@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadWisePolicy } from "../src/lib/wise-contract.mjs";
 
 /**
  * Article Writer Agent — 記事本文生成（Claude API）
@@ -143,11 +144,7 @@ ${standard ? "\n【虫よけの年齢基準（この文書が唯一の正。こ�
 }
 
 function loadWiseSkill() {
-  try {
-    return fs.readFileSync(path.join(PROJECT_ROOT, "SKILL.md"), "utf-8");
-  } catch {
-    return "";
-  }
+  return loadWisePolicy().text + "\n\n" + fs.readFileSync(path.join(PROJECT_ROOT, "SKILL.md"), "utf-8");
 }
 
 // ─── 品質スコア計算 ──────────────────────────────────

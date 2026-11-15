@@ -1,7 +1,7 @@
-"""Editorial model boundary: injected transport, strict JSON, no filesystem/env reads.
+"""Editorial model boundary: injected transport, strict JSON, pinned policy validation.
 
 Context supplies catalog, references, images, CLAUDE and SKILL text (no paths are
-opened). Review checks contain facts/images/affiliate/medical/render booleans.
+opened except the pinned owner-policy contract). Review checks contain facts/images/affiliate/medical/render booleans.
 Social requires publicReadback={verified: True, url, content, images} bound to the
 bundle. These checks are supplied by independent verification, never by an LLM.
 """
@@ -14,6 +14,7 @@ from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from model_inputs import project_model_input
+from wise_contract import load_policy, valid_scores, passes
 from quality import SHORTCODE, _protected, _without_code, inspect_polish
 
 
@@ -53,8 +54,12 @@ CRITERIA_FIELDS = ("wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sens
                    "affiliate_links", "comparison_table", "internal_links", "faq", "word_count")
 REVIEW_SCHEMA = {
     "type": "object", "additionalProperties": False,
-    "required": ["passed", "score", *CATEGORIES, "evidence", "issues", "observations", "criteria"],
-    "properties": {"passed": {"type": "boolean"}, "score": {"type": "number"},
+    "required": ["passed", "score", *CATEGORIES, "evidence", "issues", "observations", "criteria", "wiseScores"],
+    "properties": {"wiseScores": {"type": "object", "additionalProperties": False,
+                       "required": ["w", "i", "s", "e", "ai", "sense"],
+                       "properties": {k: {"type": "number", "minimum": 1, "maximum": 4}
+                                      for k in ("w", "i", "s", "e", "ai", "sense")}},
+                   "passed": {"type": "boolean"}, "score": {"type": "number"},
                    **{field: {"type": "boolean"} for field in CATEGORIES},
                    "evidence": {"type": "object", "additionalProperties": False,
                                 "required": ["summary"], "properties": {"summary": {"type": "string"}}},
@@ -64,6 +69,10 @@ REVIEW_SCHEMA = {
                                 "required": list(CRITERIA_FIELDS),
                                 "properties": {field: {"type": "number"} for field in CRITERIA_FIELDS}}}
 }
+SOCIAL_REVIEW_SCHEMA = copy.deepcopy(REVIEW_SCHEMA)
+SOCIAL_REVIEW_SCHEMA['required'].remove('criteria')
+SOCIAL_REVIEW_SCHEMA['properties'].pop('criteria')
+
 SECRET = re.compile(
     r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,}|"
     r"(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password)"
@@ -580,6 +589,11 @@ class Models:
         return {"content": candidate, "model": usage["model"], "usage": usage}
 
     def review(self, bundle, checks):
+        policy = None
+        if isinstance(checks, dict) and checks.get('wisePolicy'):
+            policy = load_policy()
+            if checks['wisePolicy'] != policy:
+                raise ModelError('Owner WISE policy mismatch')
         result, usage = self._call(
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
             "When bundle.inheritedPresentationContext exists, its clinicalReverified=false means unchanged template "
@@ -611,7 +625,12 @@ class Models:
             "pan stability or usage instructions. Verify that each explicit prior Astra rejection in checks.approvedSourceSpec "
             "has actually been removed; a blanket assertion of scope compliance is not verification. "
             "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
-            "If checks.editorialRules is supplied, apply its WISE/Supervisor rubric and return a nested criteria "
+            "Apply owner WISE-AS: Wit, Insight, Sincere, Empth, AI-free, Sense. Never redefine axes. "
+            "When checks.wisePolicy is supplied, use its pinned raw text as the scoring anchors and return "
+            "wiseScores={w,i,s,e,ai,sense}, six independent 1-4 scores. Floors are 2,2,2,2,3,2. "
+            "Keep this owner gate separate from factual, medical, SEO and affiliate checks. "
+            "For social, score those six fields only; article layout/FAQ/length criteria do not apply. "
+            "If checks.editorialRules is supplied for an article, apply its WISE/Supervisor rubric and return a nested criteria "
             "object, not flat top-level scores, with eleven numeric 0-10 scores: "
             "wise_w,wise_i,wise_s,wise_e,wise_ai,wise_sense,affiliate_links,"
             "comparison_table,internal_links,faq,word_count. passed=true requires empty issues and the actual "
@@ -628,7 +647,8 @@ class Models:
             "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
             "Model assertions are opinions and cannot substitute for external evidence.",
             {"bundle": bundle, "checks": checks}, self.env.get("ARTICLE_REVIEW_MODEL") or "claude-sonnet-4-6",
-            schema=REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None)
+            schema=(SOCIAL_REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('wisePolicy') and checks.get('reviewKind') == 'social'
+                    else REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None))
         _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
         if type(result["passed"]) is not bool or any(type(result[k]) is not bool for k in CATEGORIES) or (
                 type(result["score"]) not in (int, float) or not math.isfinite(result["score"]) or
@@ -636,7 +656,7 @@ class Models:
                 not isinstance(result["evidence"], dict)):
             raise ModelError("Invalid review result")
         supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
-        if isinstance(checks, dict) and checks.get('editorialRules'):
+        if isinstance(checks, dict) and checks.get('editorialRules') and checks.get('reviewKind') != 'social':
             fields = CRITERIA_FIELDS
             criteria = result.get('criteria', {})
             if (set(result['evidence']) != {'summary'} or not isinstance(result['evidence']['summary'], str)
@@ -648,6 +668,12 @@ class Models:
                     not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields)):
                 raise ModelError('Complete WISE Supervisor scores required')
             result['score'] = min(result['score'], sum(criteria[k] for k in fields) / len(fields))
+        if policy is not None:
+            if not valid_scores(result.get('wiseScores')):
+                raise ModelError('Complete owner WISE-AS six scores required')
+            result['wisePolicy'] = policy['id']
+            if not passes(result['wiseScores']):
+                result['issues'].append('Owner WISE-AS floor failed')
         supplied = supplied if isinstance(supplied, dict) else {}
         missing = [k for k in CATEGORIES if supplied.get(k) is not True]
         for field in missing:
@@ -692,7 +718,9 @@ class Models:
             "Never invent personal experience, ownership, friend questions, "
             "user testimonials or unsupported winter performance. Do not claim unknown measurement "
             "conditions differ, infer safety temperatures, or add warming/insulating gas-can advice. "
-            "Follow supplied social rules and approved factual constraints. Do not post or claim approval.")
+            "Follow supplied social rules, pinned owner WISE-AS raw text and approved factual constraints. "
+            "Wit / Insight / Sincere / Empth / AI-free / Sense retain the owner meanings. "
+            "Do not post or claim approval.")
         source = copy.deepcopy(bundle)
         data = {"bundle": source, "url": url}
         for attempt in range(2):

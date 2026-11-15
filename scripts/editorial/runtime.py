@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
                     valid_social_images, valid_image_refresh, REFRESH_NOTICE)
 from models import Models
+from wise_contract import load_policy, require_current_review
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
 from attention_presentation import attention_text
@@ -208,6 +209,7 @@ class Runtime:
 
     def _publish(self, action, job):
         self._require_running()
+        require_current_review(job.get('bundle'), job.get('review'), self.config['repo'])
         child_env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'TZ', 'TMPDIR')}
         child_env.update(self.env)
         child_env['SEO_GUARD_CONFIG'] = self.config['seoGuardConfig']
@@ -220,7 +222,9 @@ class Runtime:
             'revision': approval['revision'], 'approverId': approval['user_id'],
             'evidence': {'requestId': approval['request_id'], 'approvedAt': approval['at'],
                          'source': approval.get('source', 'authenticated-slack-receiver')}}
-        request = {'action': action, 'bundle': job['bundle'], 'revision': job['revision'], 'approval': bound_approval}
+        request = {'action': action, 'bundle': job['bundle'], 'revision': job['revision'], 'approval': bound_approval,
+                   'review': {key: job['review'].get(key) for key in
+                              ('passed', 'wisePolicy', 'wiseScores', 'fingerprint')}}
         def failure(diagnostic):
             error = ValueError('publication_result_unknown')
             error.diagnostic = safe_publication_diagnostic(diagnostic)
@@ -241,6 +245,14 @@ class Runtime:
                            'exitCode': result.returncode})
         return value
 
+    def _wise_context(self, context):
+        context = copy.deepcopy(context)
+        policy = load_policy(self.config['repo'])
+        context['wisePolicy'] = policy
+        if policy['text'] not in context.get('editorialRules', ''):
+            context['editorialRules'] = policy['text'] + '\n\n' + context.get('editorialRules', '')
+        return context
+
     def _context(self):
         self._require_running()
         data = self.catalog.catalog()
@@ -252,7 +264,9 @@ class Runtime:
         data['existingArticles'] = data['articles']
         data['catalog'] = data.get('products', [])
         data['queuedThemes'] = [j['theme'] for j in self.ledger.list_jobs()]
-        data['editorialRules'] = '\n'.join((repo / p).read_text() for p in (
+        policy = load_policy(repo)
+        data['wisePolicy'] = policy
+        data['editorialRules'] = policy['text'] + '\n\n' + '\n'.join((repo / p).read_text() for p in (
             'CLAUDE.md', 'SKILL.md', 'docs/writing-style.md', 'docs/author-gear.md'))
         data['instructions'] = ('Three distinct new articles, verified existing catalog products. '
             'Prioritize observed Rakuten opportunities, keep Amazon routes. Avoid medical, drugs, emergency '
@@ -278,7 +292,7 @@ class Runtime:
             key = (click.get('pagePath', click.get('page_path', '')), click.get('store', 'unknown'))
             counts[key] = counts.get(key, 0) + 1
         analytics = self._analytics_context()
-        return {'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
+        return {'wisePolicy': load_policy(self.config['repo']), 'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
                 'merchantClicks': [{'article': k[0], 'store': k[1], 'clicks': n} for k, n in counts.items()],
                 'observation': {'start': observed_start.isoformat(), 'end': observed_end.isoformat(),
                                 'metric': 'affiliate link clicks only; not purchases, revenue or seasonal trend'},
@@ -352,6 +366,7 @@ class Runtime:
 
     def _make_article(self, job, context):
         self._require_running()
+        context = self._wise_context(context)
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
         if corrected:
@@ -394,7 +409,7 @@ class Runtime:
                 if not path.exists():
                     atomic(path, plan)
                 raise ValueError('prewrite_display_correction_required')
-        gathered.update({'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
+        gathered.update({'wisePolicy': context['wisePolicy'], 'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
         source_dependencies = self._source_dependencies(gathered)
         draft_inputs = {
             'theme': copy.deepcopy(job['theme']),
@@ -432,6 +447,8 @@ class Runtime:
         bundle['affiliateConfig'] = {'amazonPartnerTag': self.env.get('AMAZON_PARTNER_TAG', '')}
         if bundle.get('purchaseEvidence'):
             raise ValueError('model_purchase_evidence_not_source_bound')
+        bundle['wisePolicy'] = context['wisePolicy']['id']
+        bundle['brief']['style'] += '\n' + context['wisePolicy']['text']
         if gathered.get('purchaseEvidence'):
             from purchase_evidence import validate_purchase_evidence
             bundle.pop('purchaseEvidence', None)
@@ -464,6 +481,7 @@ class Runtime:
     def _finish_article_review(self, job, context, gathered, bundle, source,
                                preservation, polished, source_dependencies):
         self._require_running()
+        context = self._wise_context(context)
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
         binding = job.get('revisionContext') or {}
@@ -506,6 +524,7 @@ class Runtime:
                          'approvedTheme': job['theme'],
                          'preview': preview, 'polishPreservation': preservation,
                          'editorialRules': context['editorialRules'],
+                         'wisePolicy': context['wisePolicy'],
                          'medical': medical,
                          'sourceContent': source['article']['content'],
                          **({'existingArticle': public_source,
@@ -940,6 +959,9 @@ class Runtime:
         if kind == 'social' and not self._social_review_allowed(id):
             raise ValueError('social_review_disabled')
         job = self.ledger.get_job(id)
+        target = job if kind == 'article' else job.get('social', {})
+        require_current_review(target.get('bundle') if kind == 'article' else target.get('proposal'),
+                               target.get('review'), self.config.get('repo'))
         if kind == 'article' and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
             try:
                 self.ledger._current(job)
@@ -1397,6 +1419,7 @@ class Runtime:
                         results.append({'id': job['id'], 'status': 'waiting_auth',
                                         'reason': 'catalog_corrections_publication_disabled'})
                         continue
+                    require_current_review(job.get('bundle'), job.get('review'), self.config['repo'])
                     if not self.ledger.claim_effect(job['id'], 'publish'):
                         continue
                     try:
@@ -1610,6 +1633,9 @@ class Runtime:
         bundle.pop('revisionContext', None)
         account = json.loads((Path(self.config['repo']) / 'data/account-config.json').read_text())
         bundle['socialRules'] = {k: account[k] for k in ('tone', 'ngWords', 'linkRules', 'formatting', 'personaGuards') if k in account}
+        policy = load_policy(self.config['repo'])
+        bundle['socialRules']['wisePolicy'] = policy
+        bundle['brief']['style'] += '\n' + policy['text']
         bundle['socialRules']['approval'] = ('Separate exact-version human approval binds delivery mode and target account. '
             'Only the explicitly bound delivery mode may run after approval. Examples are not factual evidence.')
         bundle['publicReadback'] = {'verified': True, 'url': job['publication']['url'],
@@ -1669,13 +1695,14 @@ class Runtime:
                 raise ValueError('social_target_unconfigured')
             proposal['deliveryMode'] = 'manual'
             proposal.pop('targetAccountId', None)
+        proposal['wisePolicy'] = policy['id']
         valid_social_mode(proposal)
         final = self._measured_model_call(
             job['id'], 'social', self._model_routes()['final_review']['requested'],
             lambda: self.models.review(
                 {'article': {'content': proposal['text'] + '\n' + proposal['replyText']},
                  'source': bundle, 'proposal': proposal},
-                {'reviewKind': 'social', 'evidence': flags,
+                {'reviewKind': 'social', 'evidence': flags, 'wisePolicy': policy,
                  'publicationReadback': job['publication'],
                  'independentSocialFormat': {
                      'surface': 'X announcement and URL reply, not the source article browser',
@@ -1822,7 +1849,9 @@ class Runtime:
                      medical=self._medical({'content': text})['passed'] and job['review']['evidence']['medical'], render=format_ok)
         if not all(flags.values()):
             raise ValueError('social_source_image_url_or_format_failed')
-        checks = dict(reviewKind='social', evidence=flags, factualSource=source_text, sourceContent=proposal['text'],
+        policy = load_policy(self.config['repo'])
+        proposal['wisePolicy'] = policy['id']
+        checks = dict(reviewKind='social', wisePolicy=policy, evidence=flags, factualSource=source_text, sourceContent=proposal['text'],
                       publicationReadback={'verified': True, 'url': job['publication']['url'], 'fingerprint': job['revision']},
                       supplementalImageReadback={'verified': True, 'manifest': manifest, 'articleRevision': job['revision']},
                       independentSocialFormat={'surface': 'SNS-only supplemental card, not public article OG',
@@ -2106,6 +2135,8 @@ class Runtime:
     def prepare_social_handoff(self, job):
         """Respect the established Gearman manual-post route; never revive old X API jobs."""
         self._require_running()
+        require_current_review((job.get('social') or {}).get('proposal'),
+                               (job.get('social') or {}).get('review'), self.config.get('repo'))
         if job['social']['proposal'].get('deliveryMode', 'manual') != 'manual':
             raise ValueError('automatic_social_cannot_use_manual_handoff')
         marker = self.root / 'social-outbox' / (job['social']['revision'] + '.json')

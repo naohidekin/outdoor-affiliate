@@ -3,6 +3,7 @@
 // ネタ(ideas.jsonl の active)→ ドラフト投稿を生成し posts.jsonl に status:"draft" で積む。
 // 重要: 自己採点はしない（採点は独立 reviewer に委ねる = 自己採点の甘さを排除）。
 // SimHash 近似重複だけ writer 段で弾く（採点ではなく機械的重複防止）。
+import { loadWisePolicy } from "../../src/lib/wise-contract.mjs";
 import { loadEnv } from "./lib/file-lock.mjs";
 loadEnv();
 
@@ -27,7 +28,7 @@ const SIM_THRESHOLD = CONFIG.safety?.similarityThreshold ?? 0.7;
 const WRITER_MODEL = process.env.X_WRITER_MODEL || "claude-opus-4-8";
 const WRITER_FALLBACK = process.env.X_WRITER_FALLBACK_MODEL || "claude-sonnet-4-6";
 
-// 軸ごとの「独自視点」の出し方（WISE-GEARMAN の I 軸を作文段階で満たす）
+// 軸ごとの「独自視点」の出し方（題材補助。WISE-ASのInsightの定義を置換しない）
 const AXIS_INSIGHT = {
   camp: "10年のギア選び・比較の蓄積から来る視点を1つ入れる（同価格帯を試した結論、スペックの裏側、失敗から得た基準など）",
   doctor: "医師（内科ホームドクター）目線を1つ入れる。ただし専門科・症例・薬剤名・機器名・効能断定はNG（薬機法）。「本職柄」程度で",
@@ -39,7 +40,7 @@ function buildUserPrompt(idea) {
     ? `\n推奨タイプ: ${idea.suggestedType}`
     : "";
   const insight = AXIS_INSIGHT[idea.axis] || AXIS_INSIGHT.camp;
-  return `次のネタから、ギア男の X 投稿を1本書いてください。この投稿は独立採点者が「AI臭さ」「独自視点」「体温」で厳しく採点します。通る文章を書いてください。
+  return `次のネタから、ギア男の X 投稿を1本書いてください。原本の六軸に従って書いてください。\n${loadWisePolicy().text}\n未確認の本人経験・数字・家族の出来事を作らない。
 
 ネタ: ${idea.topic}
 切り口: ${idea.angle || "(自由)"}
@@ -121,6 +122,7 @@ export async function runWriter({ count = 6, dryRun = false } = {}) {
     const post = {
       id: generateId("gx", readJsonl(POSTS_PATH)),
       status: "draft",
+      wisePolicy: loadWisePolicy().id,
       axis: idea.axis,
       type: idea.suggestedType || "outdoor_tip",
       body,

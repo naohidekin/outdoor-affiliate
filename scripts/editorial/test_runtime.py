@@ -29,7 +29,9 @@ class ModelsFake:
         return {'content': source + ('\n## 勝手な見出し' if self.fail_polish else ''), 'model': 'gemini-3.8-flash'}
 
     def review(self, b, checks):
-        return {'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [], 'evidence': checks}
+        return {'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [], 'evidence': checks,
+                'wisePolicy': checks.get('wisePolicy', {}).get('id'),
+                'wiseScores': dict(w=3, i=3, s=3, e=3, ai=3, sense=3)}
 
     def social(self, b, url):
         return {'text': '新記事です。', 'replyText': url, 'url': url, 'images': b['images'], 'platform': 'x'}

@@ -47,6 +47,8 @@ class FixedPriceTests(unittest.TestCase):
   rt.catalog.gather.return_value={'checks':dict(facts=True,images=True,affiliate=True),'images':[dict(x,verified=True) for x in self.new['images']],'evidence':{}}
   rt.renderer.return_value={'passed':True,'clicksVerified':{'desktop':['https://example.test/verified'],'mobile':['https://example.test/verified']}}
   rt._medical.return_value={'passed':True};rt.models.polish.return_value={'content':self.new['article']['content'],'model':'gemini-3.8-flash','usage':{'model':'gemini-3.8-flash','synthetic':True}};rt.models.review.return_value={'passed':True,'score':8.5}
+  from wise_contract import load_policy
+  rt._wise_context.side_effect=lambda ctx: dict(ctx, wisePolicy=load_policy())
   rt._measured_model_call.side_effect=lambda article,stage,model,operation:operation()
   rt._model_routes.return_value={'final_review':{'requested':'claude-sonnet-4-6'}}
   return rt
@@ -57,7 +59,7 @@ class FixedPriceTests(unittest.TestCase):
  def test_fresh_operator_never_writes_drafts_or_reuses_review(self):
   rt=self.runtime();rt.ledger.get_job.return_value['theme']['selectionReason']='public reason EDITORIAL RECOVERY REQUIREMENTS private comment';result=self.run_operator(rt)
   self.assertTrue(result['requiresIndependentReview']);self.assertFalse(result['polishProof']['reused']);self.assertTrue(result['polishProof']['newModelCall'])
-  self.assertEqual(fingerprint(self.new),result['review']['fingerprint'])
+  self.assertEqual(fingerprint(result['bundle']),result['review']['fingerprint']);self.assertEqual(self.new['article'],result['bundle']['article'])
   rt.models.review.assert_called_once();self.assertEqual('public reason',rt.models.review.call_args[0][1]['approvedTheme']['selectionReason']);rt.models.draft.assert_not_called();rt.models.polish.assert_called_once()
   rt.ledger.save_bundle.assert_not_called();rt.ledger.record_review.assert_not_called();rt.deliver.assert_not_called()
   self.assertEqual(2,rt._save_usage.call_count)

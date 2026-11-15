@@ -5,6 +5,7 @@
  * binding and presence, and cannot authenticate an arbitrary stdin assertion.
  * Never upserts products, synchronizes local data or replays an unknown write.
  */
+import { requireWiseBinding } from '../../src/lib/wise-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -391,6 +392,7 @@ async function main() {
     const input = JSON.parse(raw);
     if (args.action) { requireValue(!input.action || input.action === args.action, 'conflicting action'); input.action = args.action; }
     if (['publish', 'publish-revision', 'publish-corrected'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
+    requireWiseBinding(input.bundle, input.review, input.revision);
     phase = 'dependency_setup';
     const deps = input.action === 'publish-corrected'
       ? (await import('./corrected-publisher.mjs')).correctedDependencies(env)

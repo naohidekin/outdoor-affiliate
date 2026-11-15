@@ -25,7 +25,9 @@ class RefreshTests(unittest.TestCase):
                            channel_id='C', thread_ts='1.0'))
         self.models, self.slack = Mock(), Mock()
         self.models.usage = []
-        self.models.review.return_value = dict(passed=True, score=8.5, model='claude-sonnet-4-6')
+        from wise_contract import load_policy
+        self.models.review.return_value = dict(passed=True, score=8.5, model='claude-sonnet-4-6',
+            wisePolicy=load_policy()['id'], wiseScores=dict(w=3, i=3, s=3, e=3, ai=3, sense=3))
         self.runtime = Runtime(self.config, models=self.models, slack=self.slack, catalog=Fetcher())
         self.runtime._medical = lambda _: {'passed': True}
         self.job = approved_job()

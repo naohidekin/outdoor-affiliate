@@ -90,7 +90,9 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     job = runtime.ledger.get_job(id)
     bound = validate_fixed_candidate(job, candidate)
     bundle = copy.deepcopy(candidate['bundle'])
-    context = copy.deepcopy(live_context)
+    context = runtime._wise_context(live_context)
+    bundle['wisePolicy'] = context['wisePolicy']['id']
+    bundle['brief']['style'] += '\n' + context['wisePolicy']['text']
     validate_live_context(bound['catalogCorrectionContext'], context['products'])
     by_id = {p['id']: p for p in bundle['products']}
     context['products'] = [copy.deepcopy(by_id.get(p['id'], p)) for p in context['products']]
@@ -158,7 +160,7 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
             runtime._model_routes()['final_review']['requested'], lambda: runtime.models.review(public, {'evidence':flags,'structural':structural,
             'source':gathered.get('evidence', {}),'approvedTheme':approved_theme,'preview':preview,
             'polishPreservation':dict(preservation, freshExactBody=True, contentSha256=polish['contentSha256']),
-            'editorialRules':context['editorialRules'],'medical':medical,
+            'editorialRules':context['editorialRules'],'wisePolicy':context['wisePolicy'],'medical':medical,
             'sourceContent':job['bundle']['article']['content']}))
     finally:
         runtime._save_usage()

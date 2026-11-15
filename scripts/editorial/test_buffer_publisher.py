@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from buffer_publisher import BufferPublisher
 from ledger import canonical, fingerprint, Ledger
@@ -26,6 +27,8 @@ DUE = '2026-11-16T03:00:00Z'
 
 
 def approved_job():
+    from wise_contract import load_policy
+    policy = load_policy()
     image = dict(url=IMAGE_URL, finalUrl=IMAGE_URL, contentType='image/png',
                  sha256=IMAGE_SHA, size=len(PNG), verified=True, role='social-card')
     manifest = {key: image[key] for key in ('url', 'finalUrl', 'contentType', 'sha256', 'size')}
@@ -36,8 +39,11 @@ def approved_job():
                     platform='x', deliveryMode='buffer_x', targetAccountIdX=ACCOUNT,
                     buffer={'organizationId': ORG, 'channelId': CHANNEL,
                             'schedulingPolicy': 'next_available_slot'})
+    proposal['wisePolicy'] = policy['id']
+    bundle['wisePolicy'] = policy['id']
     revision = fingerprint(proposal)
-    review = dict(passed=True, score=8.5, fingerprint=revision,
+    review = dict(passed=True, score=8.5, fingerprint=revision, wisePolicy=policy['id'],
+                  wiseScores=dict(w=3, i=3, s=3, e=3, ai=3, sense=3),
                   evidence={key: True for key in ('facts', 'images', 'affiliate', 'medical', 'render')},
                   polish={'model': 'gemini-3.8-flash', 'validated': True})
     return dict(stage='social_approved', bundle=bundle, revision=fingerprint(bundle),
@@ -155,6 +161,46 @@ class BufferPublisherTests(unittest.TestCase):
 
     def schedule(self):
         return self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 11, 0, tzinfo=JST))
+
+    def legacy_policy(self):
+        social = self.job['social']
+        social['proposal']['wisePolicy'] = 'historical-policy'
+        social['review']['wisePolicy'] = 'historical-policy'
+        social['review'].pop('wiseScores', None)
+        social['revision'] = fingerprint(social['proposal'])
+        social['review']['fingerprint'] = social['revision']
+        social['approval']['revision'] = social['revision']
+
+    def test_legacy_scheduled_intent_allows_get_without_new_create_or_edit(self):
+        self.legacy_policy()
+        with patch('buffer_publisher.require_current_review'):
+            self.schedule()  # Synthetic historical intent created under its former policy.
+        self.buffer.calls.clear()
+        result = self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 12, 0, tzinfo=JST))
+        self.assertEqual('pending', result['status'])
+        self.assertIn('post', [name for name, _ in self.buffer.calls])
+        self.assertFalse({'create_post', 'edit_post'} & {name for name, _ in self.buffer.calls})
+        state = json.loads(self.marker().read_text())
+        self.assertEqual(self.job['social']['revision'], state['revision'])
+        self.assertEqual('historical-policy', self.job['social']['proposal']['wisePolicy'])
+
+    def test_legacy_draft_intent_allows_get_but_blocks_scheduling_patch(self):
+        self.legacy_policy()
+        with patch('buffer_publisher.require_current_review'):
+            self.schedule()
+        self.buffer.status = 'draft'
+        self.buffer.calls.clear()
+        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+            self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 12, 0, tzinfo=JST))
+        self.assertIn('post', [name for name, _ in self.buffer.calls])
+        self.assertFalse({'create_post', 'edit_post'} & {name for name, _ in self.buffer.calls})
+
+    def test_legacy_new_approval_cannot_create_any_remote_intent(self):
+        self.legacy_policy()
+        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+            self.schedule()
+        self.assertEqual([], self.buffer.calls)
+        self.assertFalse(self.marker().exists())
 
     def test_draft_exact_readback_then_minimal_add_to_queue(self):
         result = self.schedule()

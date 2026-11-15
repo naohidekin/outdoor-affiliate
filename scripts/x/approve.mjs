@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { requireWiseReview } from "../../src/lib/wise-contract.mjs";
 // scripts/x/approve.mjs
 // 人間承認段（reviewed → approved）＋ 既存投稿レールへの橋渡し。
 // reviewed になった投稿を、既存 data/post-queue.json の queue 配列に
@@ -54,6 +55,10 @@ function toQueueItem(post) {
     // トレーサビリティ（既存コンシューマは未知フィールドを無視する）
     _pipelineId: post.id,
     _wiseScores: post.wiseScores || null,
+    wiseScores: post.wiseScores,
+    wisePolicy: post.wisePolicy,
+    wiseReviewPassed: post.wiseReviewPassed,
+    wiseContentHash: post.wiseContentHash,
   };
 }
 
@@ -74,7 +79,7 @@ function main() {
       const s = p.wiseScores || {};
       const man = requiresManual(p) ? " [manual承認必須]" : "";
       const fc = p.needsHumanFactCheck ? ` ⚠要事実確認:${(p.claimsToVerify || []).length}件` : "";
-      console.log(`\n─ ${p.id} (${p.axis}/${p.type})${man} W${s.w ?? "-"}I${s.i ?? "-"}S${s.s ?? "-"}E${s.e ?? "-"}AI${s.ai ?? "-"}${fc}`);
+      console.log(`\n─ ${p.id} (${p.axis}/${p.type})${man} W${s.w ?? "-"}I${s.i ?? "-"}S${s.s ?? "-"}E${s.e ?? "-"}AI${s.ai ?? "-"}Sense${s.sense ?? "-"}${fc}`);
       console.log(p.body); // 全文表示
       if (p.claimsToVerify && p.claimsToVerify.length) {
         console.log(`  ⚠要確認: ${p.claimsToVerify.join(" / ")}`);
@@ -96,6 +101,7 @@ function main() {
   const queue = loadQueue();
   let approved = 0;
   for (const post of targets) {
+    requireWiseReview(post);
     queue.queue.push(toQueueItem(post));
     updatePost(post.id, { status: "approved", approvedAt: jstNow(), approvedBy: "human" });
     approved++;

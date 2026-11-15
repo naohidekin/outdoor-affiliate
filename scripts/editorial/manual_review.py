@@ -197,6 +197,7 @@ class ManualReview:
         context = rt._context()
         gathered_inputs = copy.deepcopy(gathered)
         gathered_inputs.update({
+            'wisePolicy': context['wisePolicy'],
             'CLAUDE': context['editorialRules'],
             'SKILL': (Path(rt.config['repo']) / 'SKILL.md').read_text(),
         })

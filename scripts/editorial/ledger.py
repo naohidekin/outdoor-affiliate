@@ -160,9 +160,12 @@ def valid_social_images(job, proposal):
 def valid_image_refresh(old, proposal, review):
     valid_review(old.get('review'), old['revision'])
     require(fingerprint(old['proposal']) == old['revision'], 'old social changed')
-    excluded = {'images', 'supplementalCard', 'approvalNotice', 'priorPostUrl'}
+    excluded = {'images', 'supplementalCard', 'approvalNotice', 'priorPostUrl', 'wisePolicy'}
     require({k: v for k, v in old['proposal'].items() if k not in excluded} ==
             {k: v for k, v in proposal.items() if k not in excluded}, 'image-only refresh changed text or delivery')
+    if proposal.get('wisePolicy') != old['proposal'].get('wisePolicy'):
+        from wise_contract import require_current_review
+        require_current_review(proposal, review)
     binding = dict(kind='image_only', fromRevision=old['revision'], toRevision=fingerprint(proposal), modelRerun=True)
     require(review.get('imageRefresh') == binding and str(review.get('model', '')).startswith('claude-'),
             'independent current Claude image review required')

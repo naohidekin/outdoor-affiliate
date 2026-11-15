@@ -292,9 +292,13 @@ class ManagerTests(unittest.TestCase):
     def test_review_delivery_uses_runtime_gate_once_without_approval(self):
         from test_quality import bundle
         job = self.job()
-        saved = self.runtime.ledger.save_bundle(job['id'], bundle())
+        from wise_contract import load_policy
+        policy = load_policy()
+        current_bundle = bundle(); current_bundle['wisePolicy'] = policy['id']
+        saved = self.runtime.ledger.save_bundle(job['id'], current_bundle)
         self.runtime.ledger.record_review(job['id'], saved['revision'], dict(
-            passed=True, score=8, fingerprint=saved['revision'],
+            passed=True, score=8, fingerprint=saved['revision'], wisePolicy=policy['id'],
+            wiseScores=dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
             evidence={k: True for k in ('facts', 'images', 'affiliate', 'medical', 'render')},
             polish=dict(model='gemini-3.8-flash', validated=True)))
         self.assertEqual('completed', self.evaluate(self.provider('deliver_reviewed', job['id']))['status'])
@@ -401,7 +405,10 @@ class ManagerTests(unittest.TestCase):
     def test_current_corrected_context_requires_independent_astra_qa(self):
         from test_quality import bundle
         job = self.job()
-        saved = self.runtime.ledger.save_bundle(job['id'], bundle())
+        from wise_contract import load_policy
+        policy = load_policy()
+        current_bundle = bundle(); current_bundle['wisePolicy'] = policy['id']
+        saved = self.runtime.ledger.save_bundle(job['id'], current_bundle)
         review = dict(passed=True, score=8, fingerprint=saved['revision'],
             evidence={k: True for k in ('facts', 'images', 'affiliate', 'medical', 'render')},
             polish=dict(model='gemini-3.8-flash', validated=True))

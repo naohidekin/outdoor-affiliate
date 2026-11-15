@@ -199,14 +199,17 @@ class ManualReviewTests(unittest.TestCase):
         atomic(artifact_dir / 'source.json', source)
         atomic(artifact_dir / 'candidate.json', candidate)
         atomic(self.base / 'state' / 'research' / (job['id'] + '.json'), gathered)
+        from wise_contract import load_policy
+        policy = load_policy()
         editorial_rules = {'rule': 'synthetic-review'}
         routes = {'draft': {'requested': 'writer'}, 'polish': {'requested': 'polisher'},
                   'final_review': {'requested': 'reviewer'}}
         runtime = CompleteReviewRuntime(
             self.base / 'state', Path(__file__).resolve().parents[2], job,
-            {'editorialRules': editorial_rules}, routes)
+            {'editorialRules': editorial_rules, 'wisePolicy': policy}, routes)
         gathered_inputs = copy.deepcopy(gathered)
         gathered_inputs.update({
+            'wisePolicy': policy,
             'CLAUDE': editorial_rules,
             'SKILL': (Path(runtime.config['repo']) / 'SKILL.md').read_text(),
         })

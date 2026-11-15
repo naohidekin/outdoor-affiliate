@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from ledger import Ledger, fingerprint
 from runtime import Runtime
@@ -19,14 +20,19 @@ IMAGE_URL = 'https://images.example.com/known.png'
 
 
 def approved_job():
+    from wise_contract import load_policy
+    policy = load_policy()
     image = dict(url=IMAGE_URL, finalUrl=IMAGE_URL, contentType='image/png',
                  sha256=hashlib.sha256(PNG).hexdigest(), size=len(PNG), verified=True)
     bundle = {'article': {'title': 'Approved'}, 'products': [], 'images': [image],
               'brief': {}, 'references': []}
     proposal = dict(text='新しい記事を公開しました。', replyText=URL, url=URL, images=[image],
                     platform='x', deliveryMode='auto_x', targetAccountId='123')
+    proposal['wisePolicy'] = policy['id']
+    bundle['wisePolicy'] = policy['id']
     revision = fingerprint(proposal)
-    review = dict(passed=True, score=8.5, fingerprint=revision,
+    review = dict(passed=True, score=8.5, fingerprint=revision, wisePolicy=policy['id'],
+                  wiseScores=dict(w=3, i=3, s=3, e=3, ai=3, sense=3),
                   evidence={key: True for key in ('facts', 'images', 'affiliate', 'medical', 'render')},
                   polish={'model': 'gemini-3.8-flash', 'validated': True})
     return dict(stage='social_approved', bundle=bundle, revision=fingerprint(bundle),
@@ -98,6 +104,37 @@ class SocialPublisherTests(unittest.TestCase):
 
     def marker(self):
         return self.root / 'social-publications' / (self.job['social']['revision'] + '.json')
+
+    def legacy_policy(self):
+        social = self.job['social']
+        social['proposal']['wisePolicy'] = 'historical-policy'
+        social['review']['wisePolicy'] = 'historical-policy'
+        social['review'].pop('wiseScores', None)
+        social['revision'] = fingerprint(social['proposal'])
+        social['review']['fingerprint'] = social['revision']
+        social['approval']['revision'] = social['revision']
+
+    def test_legacy_unknown_main_readback_get_works_without_new_reply(self):
+        self.legacy_policy()
+        self.x.fail = 'read'
+        with patch('social_publisher.require_current_review'):
+            self.assertEqual('mainread', self.publisher.publish(self.job)['phase'])
+        self.x.fail = None
+        self.x.calls.clear()
+        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+            self.publisher.publish(self.job)
+        self.assertIn('read', [name for name, _ in self.x.calls])
+        self.assertFalse({'upload', 'maincreate', 'replycreate'} & {name for name, _ in self.x.calls})
+        state = json.loads(self.marker().read_text())
+        self.assertEqual('111', state['mainId'])
+        self.assertEqual(self.job['social']['revision'], state['proposalFingerprint'])
+
+    def test_legacy_new_approval_blocks_all_x_mutations(self):
+        self.legacy_policy()
+        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+            self.publisher.publish(self.job)
+        self.assertFalse({'upload', 'maincreate', 'replycreate'} & {name for name, _ in self.x.calls})
+        self.assertFalse(self.marker().exists())
 
     def test_exact_approved_text_image_reply_and_readback_once(self):
         result = self.publisher.publish(self.job)

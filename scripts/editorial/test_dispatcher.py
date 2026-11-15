@@ -52,9 +52,14 @@ class DispatcherTests(unittest.TestCase):
 
     def test_review_delivery_and_approval_wait_do_not_schedule_generation(self):
         reviewed = self.runtime.ledger.create_candidate({'slug': 'reviewed', 'title': 'Reviewed'}, now=NOW)
-        self.runtime.ledger.save_bundle(reviewed['id'], __import__('test_quality').bundle())
+        from wise_contract import load_policy
+        policy = load_policy()
+        current_bundle = __import__('test_quality').bundle()
+        current_bundle['wisePolicy'] = policy['id']
+        self.runtime.ledger.save_bundle(reviewed['id'], current_bundle)
         reviewed = self.runtime.ledger.get_job(reviewed['id'])
         review = {'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [],
+            'wisePolicy': policy['id'], 'wiseScores':dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
                   'fingerprint': reviewed['revision'],
                   'evidence': {k: True for k in ('facts', 'images', 'affiliate', 'medical', 'render')},
                   'polish': {'model': 'gemini-3.8-flash', 'validated': True}}
@@ -65,10 +70,15 @@ class DispatcherTests(unittest.TestCase):
 
     def test_delivered_review_does_not_block_an_existing_candidate(self):
         reviewed = self.runtime.ledger.create_candidate({'slug': 'delivered', 'title': 'Delivered'}, now=NOW)
-        self.runtime.ledger.save_bundle(reviewed['id'], __import__('test_quality').bundle())
+        from wise_contract import load_policy
+        policy = load_policy()
+        current_bundle = __import__('test_quality').bundle()
+        current_bundle['wisePolicy'] = policy['id']
+        self.runtime.ledger.save_bundle(reviewed['id'], current_bundle)
         reviewed = self.runtime.ledger.get_job(reviewed['id'])
         self.runtime.ledger.record_review(reviewed['id'], reviewed['revision'], {
             'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [],
+            'wisePolicy': policy['id'], 'wiseScores':dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
             'fingerprint': reviewed['revision'],
             'evidence': {k: True for k in ('facts', 'images', 'affiliate', 'medical', 'render')},
             'polish': {'model': 'gemini-3.8-flash', 'validated': True},
@@ -97,10 +107,15 @@ class DispatcherTests(unittest.TestCase):
                     db.execute('DELETE FROM jobs')
                 reviewed = self.runtime.ledger.create_candidate(
                     {'slug': 'astra-' + kind, 'title': 'Astra wait'}, now=NOW)
-                self.runtime.ledger.save_bundle(reviewed['id'], __import__('test_quality').bundle())
+                from wise_contract import load_policy
+                policy = load_policy()
+                current_bundle = __import__('test_quality').bundle()
+                current_bundle['wisePolicy'] = policy['id']
+                self.runtime.ledger.save_bundle(reviewed['id'], current_bundle)
                 reviewed = self.runtime.ledger.get_job(reviewed['id'])
                 self.runtime.ledger.record_review(reviewed['id'], reviewed['revision'], {
                     'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [],
+            'wisePolicy': policy['id'], 'wiseScores':dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
                     'fingerprint': reviewed['revision'],
                     'evidence': {k: True for k in ('facts', 'images', 'affiliate', 'medical', 'render')},
                     'polish': {'model': 'gemini-3.8-flash', 'validated': True},

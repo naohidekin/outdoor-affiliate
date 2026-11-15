@@ -418,3 +418,36 @@ medical gateは不変で、最終reviewは候補と既存adviceの矛盾も審�
 コピーは記事のsocial-card manifestと同じ保存先originの、SHAを含む固定pathに限定。PNGは`editorial-social-cards`または`editorial-delivery-images`の`.png`、JPEGは`editorial-delivery-images`の`.jpg`だけを許可する。元画像のMIME・SHA・サイズが一致し、2MiB以下で、fresh GETの同一バイト照合を全て満たす場合だけ本文の配信を始める。古い対応表や内容不一致は停止する。
 
 アイキャッチ用bucket/uploaderは従来どおりPNG・1200×630を維持。商品写真用の独立bucketは公開・2MiB・PNG/JPEGに限定し、登録前に元データの完全デコードと保存後GETを確認する。変換・上書きはしない。送信途中の再開は既送信receiptと未送信の根拠を照合し、未知結果は盲目的に再送しない。本人の公開承認とSNS別承認は変更しない。
+
+
+## WISE-AS 原本とドリフト確認
+
+`rules/common/wise-master.md` と `sense-master.md` はオーナー原文の固定コピー。
+Wit / Insight / Sincere / Empth / AI-free / Sense を生成・推敲・審査へ渡す。
+`wise-contract.json` と Python/JavaScript の固定SHA256で出典・説明文の変更を検出する。
+
+現在の記事審査は六軸の `wiseScores`（各1–4点、下限2/2/2/2/3/2）と、既存の
+Supervisor 11項目（各0–10点、丸め前平均7.5以上）を別々に検査する。
+SNSは原本の六軸を採点し、記事用の比較表・FAQ・字数条件を転用しない。
+事実・医療安全・広告・アフィリエイト・表示・URL検証は引き続き独立した必須検査。
+モデル・呼出し回数・修正回数・予算・時間上限は変更しない。
+
+本文と審査に現在の `wisePolicy` を結び、旧版・欠落・Sense不足なら送達・公開・投稿を保留する。
+過去の承認・受領・試行記録を書き換えず、自動で再生成・再審査もしない。
+既存の送信intent・予約・既知IDは旧版のままGET照合できる。新規upload/create/edit/replyだけは現在版の六軸審査を必須とし、旧承認で再送しない。
+手動再審査の再利用キーにも原本を含める。画像だけのSNS再審査も六軸を再確認し、
+policyの移行は新候補のfingerprintに含め、新しい本人承認を必要とする。
+旧JavaScript経路も同じ原本と六軸を使い、審査失敗時の仮合格を廃止する。
+旧Sheets行は現在のローカル審査証拠と本文が一致する場合だけ先へ進める。
+
+オフライン確認（ネットワーク・モデル呼出し・台帳変更なし）:
+
+```sh
+npm run wise:check
+python3 -m unittest discover -s scripts/editorial -p 'test_wise_contract.py'
+node --test tests/wise-contract.test.mjs
+```
+
+`verify_wise_contract.py` は18の現在・旧実行経路の原本接続、採点・handoff・action gateを確認する。
+原本・説明文の改変、Warm/Weight/Scienceへの再定義、Senseの脱落は検査を失敗させる。
+このコマンドは常駐ジョブや本番の制作再開を作らない。
