@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlsplit
 
 def _emit_result(value):
@@ -30,6 +31,8 @@ SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
 RAKUTEN_DOMAINS = ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp',
                    'transition.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
+PURCHASE_EVIDENCE_FIELDS = {'productId', 'channel', 'status', 'reason', 'checkedAt', 'reviewedBy'}
+AUDITED_REVISION_TARGETS = {'article-005', 'article-024'}
 
 
 def _result(checks):
@@ -41,6 +44,80 @@ def _result(checks):
 
 def _check(name, status, reason):
     return {'name': name, 'status': status, 'reason': reason}
+
+
+def _aware_stamp(value):
+    if not isinstance(value, str):
+        raise ValueError()
+    parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError()
+    return parsed
+
+
+def _intentional_absences(job, bundle):
+    """Return browser-safe proofs only for exact owner-approved revision NA records."""
+    evidence = bundle.get('purchaseEvidence')
+    if evidence in (None, []):
+        return [], False
+    context = job.get('revisionContext') or {}
+    target = (context.get('baseArticle') or {}).get('id')
+    if job.get('kind') != 'article_revision' or target not in AUDITED_REVISION_TARGETS:
+        return [], False
+    try:
+        if not isinstance(evidence, list) or not evidence:
+            raise ValueError()
+        approval, publication = job.get('approval') or {}, job.get('publication') or {}
+        revision = job.get('revision')
+        checked_before = _aware_stamp(approval.get('at'))
+        published = _aware_stamp(publication.get('at'))
+        now = datetime.now(timezone.utc)
+        if (not isinstance(revision, str) or approval.get('revision') != revision
+                or publication.get('revision') != revision
+                or checked_before > published or published > now):
+            raise ValueError()
+        before = {p.get('id'): p for p in context.get('baseProducts', []) if isinstance(p, dict)}
+        candidates = bundle.get('products')
+        if not isinstance(candidates, list) or len(before) != len(candidates):
+            raise ValueError()
+        fields = {'rakuten': 'affiliateUrl', 'amazon': 'amazonUrl'}
+        missing = {}
+        for index, product in enumerate(candidates):
+            product_id = product.get('id')
+            old = before.get(product_id)
+            if (not old or not isinstance(product.get('name'), str) or not product['name'].strip()
+                    or not isinstance(product.get('brand'), str) or not product['brand'].strip()):
+                raise ValueError()
+            for channel, field in fields.items():
+                if product.get(field) in (None, ''):
+                    other = 'amazon' if channel == 'rakuten' else 'rakuten'
+                    other_field = fields[other]
+                    if not isinstance(old.get(field), str) or not old[field] or not isinstance(product.get(other_field), str) or not product[other_field]:
+                        continue
+                    missing[(product_id, channel)] = (index, product, old[field], other, product[other_field])
+        records = {}
+        for record in evidence:
+            if (not isinstance(record, dict) or set(record) != PURCHASE_EVIDENCE_FIELDS
+                    or record.get('status') != 'NA' or record.get('channel') not in fields
+                    or not isinstance(record.get('productId'), str)
+                    or not isinstance(record.get('reason'), str) or not record['reason'].strip()
+                    or not isinstance(record.get('reviewedBy'), str) or not record['reviewedBy'].strip()):
+                raise ValueError()
+            key = (record['productId'], record['channel'])
+            stamp = _aware_stamp(record['checkedAt'])
+            if key in records or key not in missing or stamp > checked_before or stamp > now:
+                raise ValueError()
+            records[key] = record
+        if set(records) != set(missing):
+            raise ValueError()
+        result = []
+        for (product_id, channel), (index, product, old_href, other, other_href) in missing.items():
+            result.append({'productId': product_id, 'productIndex': index, 'productName': product.get('name'),
+                           'brand': product.get('brand'), 'channel': channel, 'oldHref': old_href,
+                           'remainingChannel': other, 'remainingHref': other_href, 'status': 'NA'})
+        return result, False
+    except Exception:
+        return [], True
 
 
 def _child_env():
@@ -265,6 +342,9 @@ class PostPublicationAudit:
         for n, product in enumerate(products):
             proof = [i for i in images if i.get('productId') == product['id'] and i.get('url') == product.get('imageUrl')]
             add('product_image_binding.' + str(n), len(proof) == 1, 'product_image_bound', 'product_image_proof_missing')
+        intentional_absences, invalid_purchase_evidence = _intentional_absences(job, bundle)
+        if invalid_purchase_evidence:
+            checks.append(_check('purchase_evidence', 'failed', 'invalid_intentional_absence_evidence'))
         # One bounded pool per live audit. Catalog still validates DNS, redirects,
         # host allowlists and byte limits; reuse here never crosses an audit run.
         catalog = self._request_pool = AuditRequests(catalog, started + 150)
@@ -305,13 +385,16 @@ class PostPublicationAudit:
             except Exception:
                 checks.append(_check(name, 'unverified', 'public_image_get_unavailable'))
         # Never let a browser bypass a rejected/mismatched public source.
+        browser_checks = []
         if source.hashes == [digest] and source.titles == [title]:
             try:
                 if not budget():
                     raise TimeoutError()
                 observed = self._browser({'url': url, 'html': html, 'bundle': {'article': article,
-                    'products': products, 'images': images}, 'repo': self.config.get('repo', str(Path(__file__).resolve().parents[2]))})
-                checks.extend(observed['checks'])
+                    'products': products, 'images': images}, 'intentionalAbsences': intentional_absences,
+                    'repo': self.config.get('repo', str(Path(__file__).resolve().parents[2]))})
+                browser_checks = observed['checks']
+                checks.extend(browser_checks)
                 for name in ('desktop', 'mobile'):
                     if not any(c['name'] == name for c in observed['checks']):
                         checks.append(_check(name, 'unverified', 'viewport_evidence_missing'))
@@ -326,6 +409,19 @@ class PostPublicationAudit:
                 name = 'destination.' + str(n) + '.' + channel
                 href = product.get(field)
                 if not href:
+                    approved = [a for a in intentional_absences
+                                if a['productIndex'] == n and a['productId'] == product.get('id') and a['channel'] == channel]
+                    proof_names = ['desktop.purchase_absent.' + str(n) + '.' + channel,
+                                   'mobile.purchase_absent.' + str(n) + '.' + channel]
+                    proofs = [[c for c in browser_checks if c.get('name') == proof_name]
+                              for proof_name in proof_names]
+                    if (len(approved) == 1 and all(len(found) == 1 and found[0].get('status') == 'passed'
+                            and found[0].get('reason') == 'approved_purchase_channel_absent' for found in proofs)):
+                        checks.append(_check(name, 'passed', 'approved_intentional_absence_verified'))
+                        continue
+                    if approved:
+                        checks.append(_check(name, 'unverified', 'intentional_absence_browser_proof_missing'))
+                        continue
                     checks.append(_check(name, 'unverified', 'approved_merchant_url_missing'))
                     continue
                 if not self.env.get('RAKUTEN_AFFILIATE_ID' if channel == 'rakuten' else 'AMAZON_PARTNER_TAG'):

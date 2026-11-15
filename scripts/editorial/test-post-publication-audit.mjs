@@ -15,12 +15,25 @@ const content = '## Visible heading\n\nApproved text.';
   const digest = createHash('sha256').update(content).digest('hex');
   return { url: 'https://camp-gear-lab.com/articles/stove', bundle: {
     article: { slug: 'stove', title: 'Approved title', content },
-    products: [{ id: 'p1', imageUrl: image, amazonUrl: amazon, affiliateUrl: rakuten }], images: [],
+    products: [{ id: 'p1', name: 'SOTO ST-310', brand: 'SOTO', imageUrl: image, amazonUrl: amazon, affiliateUrl: rakuten }], images: [],
   }, html: `<!doctype html><html><head><style>body{margin:0} .article-body{min-height:1600px} img{width:40px;height:40px}</style></head>
 <body><main><article data-review-content-sha256="${digest}"><h1>Approved title</h1><div class="article-body"><div class="prose"><h2>Visible heading</h2><p>Approved text.</p>${extra}</div></div>
     <details><summary>Hidden links</summary><a href="${amazon}" target="_blank">hidden</a></details>
     <img loading="lazy" src="${image}"><a href="${amazon}" target="_blank" onclick="fetch('/api/track-click',{method:'POST',body:'{}'});navigator.sendBeacon('/api/click','{}')">Amazon</a>
     <a href="${rakuten}" target="_blank">Rakuten</a></article></main></body></html>` };
+}
+
+function intentionalAbsenceFixture(extra = '') {
+  const input = fixture();
+  input.bundle.products[0].amazonUrl = '';
+  input.intentionalAbsences = [{ productId: 'p1', productIndex: 0, productName: 'SOTO ST-310', brand: 'SOTO',
+    channel: 'amazon', oldHref: amazon, remainingChannel: 'rakuten', remainingHref: rakuten, status: 'NA' }];
+  input.html = input.html
+    .replace(`<details><summary>Hidden links</summary><a href="${amazon}" target="_blank">hidden</a></details>`, '')
+    .replace(`<a href="${amazon}" target="_blank" onclick="fetch('/api/track-click',{method:'POST',body:'{}'});navigator.sendBeacon('/api/click','{}')">Amazon</a>`, '')
+    .replace(`<a href="${rakuten}" target="_blank">Rakuten</a>`,
+      `<div class="product-card"><h3>SOTO ST-310</h3><a href="${rakuten}" aria-label="SOTO ST-310の価格・在庫を楽天市場で確認（新しいタブ）" target="_blank">Rakuten</a></div>${extra}`);
+  return input;
 }
 
 test('headings ignore fenced and indented code and retain actual H2', () => {
@@ -106,5 +119,97 @@ test('offline Chromium fails hidden body, absent headings, tags and overflow', a
     hidden.html = hidden.html.replace('class="article-body"', 'class="article-body" style="display:none"');
     const result2 = await auditPublicPage(hidden, { browser, fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
     assert.ok(result2.checks.some(c => c.reason === 'article_body_missing_or_hidden'));
+  } finally { await browser.close(); }
+});
+
+test('intentional missing purchase channel needs strict absence proof in both viewports', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const result = await auditPublicPage(intentionalAbsenceFixture(), { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.deepEqual(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`), {
+        name: `${viewport}.purchase_absent.0.amazon`, status: 'passed', reason: 'approved_purchase_channel_absent',
+      });
+    }
+  } finally { await browser.close(); }
+});
+
+test('hidden old URL and replacement merchant links reject every viewport', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    for (const extra of [
+      `<a hidden href="${amazon}">old</a>`,
+      '<a hidden href="https://www.amazon.co.jp/dp/B000000001?tag=owner-22" aria-label="SOTO ST-310の価格・在庫をAmazonで確認（新しいタブ）">replacement</a>',
+    ]) {
+      const result = await auditPublicPage(intentionalAbsenceFixture(extra), { browser,
+        fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+      for (const viewport of ['desktop', 'mobile']) {
+        const proof = result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`);
+        assert.equal(proof?.status, 'failed', `${viewport}: ${extra}`);
+      }
+    }
+  } finally { await browser.close(); }
+});
+
+test('unrelated product merchant links do not create a false product absence failure', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const other = 'https://www.amazon.co.jp/dp/B000000002?tag=owner-22';
+    const input = intentionalAbsenceFixture(`<div class="product-card"><h3>Other product</h3><a href="${other}" target="_blank" aria-label="Other productの価格・在庫をAmazonで確認（新しいタブ）">Amazon</a></div>`);
+    input.bundle.products.push({ id: 'p2', name: 'Other product', imageUrl: image, amazonUrl: other, affiliateUrl: '' });
+    const result = await auditPublicPage(input, { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.equal(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`)?.status, 'passed', JSON.stringify(result));
+    }
+  } finally { await browser.close(); }
+});
+
+test('an approved other-product URL cannot hide in an identified comparison column', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const other = 'https://www.amazon.co.jp/dp/B000000003?tag=owner-22';
+    const table = `<table class="product-comparison"><thead><tr><th scope="col">比較項目</th><th scope="col">SOTO ST-310</th></tr></thead><tbody><tr><th scope="row">販売店</th><td><a href="${other}" target="_blank">wrong approved product</a></td></tr></tbody></table>`;
+    const input = intentionalAbsenceFixture(table);
+    input.bundle.products.push({ id: 'p2', name: 'Other product', imageUrl: image, amazonUrl: other, affiliateUrl: rakuten });
+    const result = await auditPublicPage(input, { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.equal(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`)?.status, 'failed');
+    }
+  } finally { await browser.close(); }
+});
+
+test('every RecommendationCTA product row must retain the approved remaining store', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const row = (links, alt = 'SOTO ST-310') => `<div class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4"><div><img src="${image}" alt="${alt}"><p class="text-base font-semibold">SOTO ST-310</p></div><div>${links}</div></div>`;
+    const remaining = `<a href="${rakuten}" target="_blank" aria-label="SOTO ST-310の価格・在庫を楽天市場で確認（新しいタブ）">Rakuten</a>`;
+    for (const [markup, expected] of [
+      [row('<p>販売店リンクは現在掲載していません。</p>'), 'failed'],
+      [row(remaining), 'passed'],
+      [row(remaining, 'Wrong product'), 'failed'],
+    ]) {
+      const result = await auditPublicPage(intentionalAbsenceFixture(markup), { browser,
+        fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+      for (const viewport of ['desktop', 'mobile']) {
+        assert.equal(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`)?.status,
+          expected, `${viewport}: ${markup}`);
+      }
+    }
+  } finally { await browser.close(); }
+});
+
+test('ambiguous missing product container never passes absence from an empty selector', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const input = intentionalAbsenceFixture();
+    input.html = input.html.replace('<div class="product-card"><h3>SOTO ST-310</h3>', '<div><p>SOTO ST-310</p>');
+    const result = await auditPublicPage(input, { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.equal(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`)?.status, 'failed');
+    }
   } finally { await browser.close(); }
 });

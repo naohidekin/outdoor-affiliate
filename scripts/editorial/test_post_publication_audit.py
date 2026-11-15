@@ -14,6 +14,9 @@ from unittest.mock import patch
 
 from catalog import Catalog
 from post_publication_audit import PostPublicationAudit, _merchant_identity, _audit_model
+from revisions import validated_context
+from test_inherited_advice import context as inherited_context
+from test_revision_workflow import baseline, spec
 
 
 SITE = 'https://camp-gear-lab.com/articles/stove'
@@ -39,13 +42,60 @@ def fixture():
     return {'bundle': bundle, 'publication': {'url': SITE, 'contentHash': digest, 'verified': True}}, html
 
 
+def revision_na_fixture(*, missing=True):
+    base = baseline()
+    request = spec(base)
+    old = request['baseProducts'][0]
+    old.update(name='SOTO ST-310', brand='SOTO', categoryId='burner', specs={'model': 'ST-310'},
+               imageUrl='https://images.example/stove.png', amazonUrl=AMAZON, affiliateUrl=RAKUTEN)
+    candidate = copy.deepcopy(old)
+    if missing:
+        candidate.update(amazonUrl='', updatedAt='2026-11-01T08:00:00+09:00')
+    request['candidateProducts'] = [candidate]
+    context = validated_context(request)
+    article = copy.deepcopy(base)
+    bundle = {'article': article, 'products': copy.deepcopy(context['candidateProducts']),
+              'images': [{'productId': old['id'], 'url': old['imageUrl'], 'verified': True,
+                          'sha256': DIGEST, 'size': len(PNG), 'contentType': 'image/png'}],
+              'revisionContext': copy.deepcopy(context),
+              'inheritedPresentationContext': inherited_context(article['slug']),
+              'purchaseEvidence': [{'productId': old['id'], 'channel': 'amazon', 'status': 'NA',
+                                    'reason': '対象型番のAmazon取扱いを確認できない',
+                                    'checkedAt': '2026-11-01T09:00:00+09:00', 'reviewedBy': 'owner'}]}
+    digest = hashlib.sha256(article['content'].encode()).hexdigest()
+    revision = 'f' * 64
+    url = 'https://camp-gear-lab.com/articles/' + article['slug']
+    job = {'id': 'revision-audit', 'kind': 'article_revision', 'stage': 'published',
+           'revisionContext': copy.deepcopy(context), 'bundle': bundle, 'revision': revision,
+           'approval': {'revision': revision, 'at': '2026-11-10T09:00:00+09:00'},
+           'publication': {'url': url, 'contentHash': digest, 'verified': True,
+                           'revision': revision, 'at': '2026-11-10T10:00:00+09:00'}}
+    html = (f'<html><head></head><body><main><article data-review-content-sha256="{digest}">'
+            f'<h1>{article["title"]}</h1><div class="article-body"><p>published</p></div>'
+            '</article></main></body></html>')
+    return job, html
+
+
+def na_browser(statuses=None):
+    statuses = statuses or {'desktop': 'passed', 'mobile': 'passed'}
+    checks = []
+    for viewport in ('desktop', 'mobile'):
+        status = statuses[viewport]
+        checks.append({'name': f'{viewport}.purchase_absent.0.amazon', 'status': status,
+                       'reason': ('approved_purchase_channel_absent' if status == 'passed'
+                                  else 'approved_purchase_channel_present')})
+        checks.append({'name': viewport, 'status': status,
+                       'reason': 'viewport_verified' if status == 'passed' else 'viewport_checks_incomplete'})
+    return {'checks': checks}
+
+
 class FakeCatalog:
     def __init__(self, html):
         self.html, self.calls, self.merchant = html, [], '<title>SOTO ST-310 stove</title>'
 
     def request(self, url, headers=None, allowed_domains=None, exact_domains=False):
         self.calls.append((url, headers, allowed_domains))
-        if url == SITE:
+        if url.startswith('https://camp-gear-lab.com/articles/'):
             return {'url': url, 'status': 200, 'headers': {'content-type': 'text/html'}, 'body': self.html.encode()}
         if url == 'https://images.example/stove.png':
             return {'url': url, 'status': 200, 'headers': {'content-type': 'image/png'}, 'body': PNG}
@@ -181,6 +231,65 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result['status'], 'passed')
         self.assertEqual(result['issues'], [])
         self.assertNotIn('do-not-output', json.dumps(result))
+
+    def test_revision_typed_na_with_both_viewport_absence_proofs_passes_without_expiry(self):
+        job, html = revision_na_fixture()
+        audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=FakeCatalog(html))
+        payloads = []
+        with patch.object(audit, '_browser', side_effect=lambda payload: payloads.append(payload) or na_browser()):
+            result = audit.check(job)
+        destination = next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')
+        self.assertEqual(destination, {'name': 'destination.0.amazon', 'status': 'passed',
+                                      'reason': 'approved_intentional_absence_verified'})
+        self.assertTrue(result['passed'], result)
+        self.assertEqual(payloads[0]['intentionalAbsences'], [{
+            'productId': job['bundle']['products'][0]['id'], 'productIndex': 0,
+            'productName': job['bundle']['products'][0]['name'],
+            'brand': job['bundle']['products'][0]['brand'], 'channel': 'amazon',
+            'oldHref': AMAZON, 'remainingChannel': 'rakuten', 'remainingHref': RAKUTEN,
+            'status': 'NA'}])
+
+    def test_revision_na_rejects_leftover_link_proof_in_either_viewport(self):
+        job, html = revision_na_fixture()
+        for viewport in ('desktop', 'mobile'):
+            statuses = {'desktop': 'passed', 'mobile': 'passed'}
+            statuses[viewport] = 'failed'
+            result = self.run_audit(job, html, browser=na_browser(statuses))
+            destination = next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')
+            self.assertNotEqual(destination['status'], 'passed', viewport)
+            self.assertEqual(result['status'], 'failed', viewport)
+
+    def test_revision_na_rejects_duplicate_wrong_product_bad_chronology_and_missing_browser_proof(self):
+        job, html = revision_na_fixture()
+        invalid = []
+        duplicate = copy.deepcopy(job)
+        duplicate['bundle']['purchaseEvidence'].append(copy.deepcopy(duplicate['bundle']['purchaseEvidence'][0]))
+        invalid.append(duplicate)
+        wrong = copy.deepcopy(job)
+        wrong['bundle']['purchaseEvidence'][0]['productId'] = 'other'
+        invalid.append(wrong)
+        for checked_at in ('2026-11-01T09:00:00', '2099-01-01T00:00:00+09:00',
+                           '2026-11-10T09:00:01+09:00'):
+            chronology = copy.deepcopy(job)
+            chronology['bundle']['purchaseEvidence'][0]['checkedAt'] = checked_at
+            invalid.append(chronology)
+        for changed in invalid:
+            result = self.run_audit(changed, html, browser=na_browser())
+            self.assertEqual(result['status'], 'failed', result)
+            self.assertTrue(any(c['name'] == 'purchase_evidence' and c['status'] == 'failed'
+                                for c in result['checks']), result)
+        result = self.run_audit(job, html, browser={'checks': [
+            {'name': 'desktop', 'status': 'passed', 'reason': 'viewport_verified'},
+            {'name': 'mobile', 'status': 'passed', 'reason': 'viewport_verified'}]})
+        destination = next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')
+        self.assertEqual(destination['status'], 'unverified')
+
+    def test_na_for_nonempty_candidate_url_is_rejected_as_malicious_evidence(self):
+        job, html = revision_na_fixture(missing=False)
+        result = self.run_audit(job, html)
+        self.assertEqual(result['status'], 'failed', result)
+        self.assertTrue(any(c['name'] == 'purchase_evidence' and c['status'] == 'failed'
+                            for c in result['checks']), result)
 
     def test_hydration_cannot_supply_public_title_or_hash(self):
         job, html = fixture()

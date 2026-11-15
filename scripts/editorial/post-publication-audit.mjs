@@ -107,6 +107,26 @@ function variants(source) {
   return urls;
 }
 
+function merchantStore(source) {
+  try {
+    const host = new URL(source).hostname.toLowerCase();
+    if (host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amzn.to' || host === 'amzn.asia') return 'amazon';
+    if (host === 'rakuten.co.jp' || host.endsWith('.rakuten.co.jp') || host === 'a.r10.to') return 'rakuten';
+    if (host === 'shopping.yahoo.co.jp' || host === 'ck.jp.ap.valuecommerce.com') return 'yahoo';
+  } catch { /* Invalid anchors are not approved merchant URLs. */ }
+  return null;
+}
+
+function approvedBodyUrls(bundle) {
+  const result = [];
+  for (const html of approvedProse(bundle)) {
+    for (const match of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/gi)) {
+      result.push(match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
+    }
+  }
+  return result;
+}
+
 export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher = safeGet } = {}) {
   const checks = [], active = new Set();
   let browser = suppliedBrowser;
@@ -116,6 +136,24 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
     if (!input || input.url !== `https://camp-gear-lab.com/articles/${input.bundle?.article?.slug}` ||
         typeof input.html !== 'string' || Buffer.byteLength(input.html) > MAX_BYTES) throw new Error();
     const origin = new URL(input.url).origin, bundle = input.bundle;
+    const intentionalAbsences = input.intentionalAbsences ?? [];
+    if (!Array.isArray(intentionalAbsences)) throw new Error();
+    const absenceKeys = new Set();
+    for (const absence of intentionalAbsences) {
+      const keys = ['productId', 'productIndex', 'productName', 'brand', 'channel', 'oldHref', 'remainingChannel', 'remainingHref', 'status'];
+      const product = bundle.products?.[absence?.productIndex];
+      const field = absence?.channel === 'amazon' ? 'amazonUrl' : absence?.channel === 'rakuten' ? 'affiliateUrl' : null;
+      const remainingField = absence?.remainingChannel === 'amazon' ? 'amazonUrl' : absence?.remainingChannel === 'rakuten' ? 'affiliateUrl' : null;
+      const key = `${absence?.productIndex}.${absence?.channel}`;
+      if (!absence || Object.keys(absence).sort().join() !== keys.sort().join() || absence.status !== 'NA'
+          || !product || product.id !== absence.productId || product.name !== absence.productName || product.brand !== absence.brand
+          || !field || !remainingField || absence.channel === absence.remainingChannel || product[field]
+          || product[remainingField] !== absence.remainingHref || merchantStore(absence.oldHref) !== absence.channel
+          || merchantStore(absence.remainingHref) !== absence.remainingChannel || absenceKeys.has(key)) throw new Error();
+      absenceKeys.add(key);
+    }
+    const approvedMerchantUrls = new Set([...bundle.products.flatMap(p => [p.affiliateUrl, p.amazonUrl, p.yahooUrl]),
+      ...approvedBodyUrls(bundle)].filter(Boolean).map(value => new URL(value, input.url).href));
     if (!browser) {
       const require = createRequire(path.join(input.repo || path.resolve(directory, '../..'), 'package.json'));
       const { chromium } = require('playwright');
@@ -272,7 +310,11 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
           });
           add(`product_image.${i}`, shown, 'approved_product_image_rendered', 'approved_product_image_not_rendered');
           for (const [store, href] of [['rakuten', product.affiliateUrl], ['amazon', product.amazonUrl]]) {
-            if (!href) { add(`click.${i}.${store}`, false, '', 'approved_merchant_url_missing', 'unverified'); continue; }
+            if (!href) {
+              if (!intentionalAbsences.some(a => a.productIndex === i && a.productId === product.id && a.channel === store))
+                add(`click.${i}.${store}`, false, '', 'approved_merchant_url_missing', 'unverified');
+              continue;
+            }
             const links = article.locator('a');
             let visible = null;
             for (const link of await links.all()) {
@@ -287,6 +329,93 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
               'exact_approved_navigation_intercepted', 'approved_navigation_not_captured');
             for (const popup of context.pages()) if (popup !== page) await popup.close().catch(() => {});
           }
+        }
+        for (const absence of intentionalAbsences) {
+          const proof = await article.evaluate((root, value) => {
+            const normalize = text => (text || '').replace(/\s+/g, ' ').trim();
+            const href = anchor => { try { return new URL(anchor.getAttribute('href'), location.href).href; } catch { return ''; } };
+            const store = source => {
+              try {
+                const host = new URL(source).hostname.toLowerCase();
+                if (host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amzn.to' || host === 'amzn.asia') return 'amazon';
+                if (host === 'rakuten.co.jp' || host.endsWith('.rakuten.co.jp') || host === 'a.r10.to') return 'rakuten';
+                if (host === 'shopping.yahoo.co.jp' || host === 'ck.jp.ap.valuecommerce.com') return 'yahoo';
+              } catch { return null; }
+              return null;
+            };
+            const visible = node => Boolean(node.getClientRects().length) && getComputedStyle(node).visibility === 'visible'
+              && getComputedStyle(node).display !== 'none';
+            const anchors = [...root.querySelectorAll('a[href]')];
+            const approved = new Set(value.approvedMerchantUrls);
+            const productAnchors = anchors.filter(anchor => anchor.dataset.productId === value.productId
+              || (anchor.getAttribute('aria-label') || '').startsWith(`${value.productName}の価格・在庫を`));
+            const containers = new Set();
+            const identifiedTitles = new Set();
+            const exactTitle = node => normalize(node?.textContent) === normalize(value.productName);
+            const tableTitle = normalize(`${value.brand || ''} ${value.productName.replace(`${value.brand || ''} `, '')}`);
+            const exactTableTitle = node => exactTitle(node) || normalize(node?.textContent) === tableTitle;
+            const titleNodes = [...root.querySelectorAll('h3')].filter(exactTitle).concat(
+              [...root.querySelectorAll('table.product-comparison thead th[scope="col"]')].filter(exactTableTitle));
+            for (const card of root.querySelectorAll('.product-card')) {
+              for (const title of card.querySelectorAll('h3')) {
+                if (exactTitle(title)) { containers.add(card); identifiedTitles.add(title); }
+              }
+            }
+            for (const card of root.querySelectorAll('section[aria-label="商品スペック比較"] > div')) {
+              for (const title of card.querySelectorAll(':scope > h3')) {
+                if (exactTitle(title)) { containers.add(card); identifiedTitles.add(title); }
+              }
+            }
+            for (const title of root.querySelectorAll('h3')) {
+              if (!exactTitle(title)) continue;
+              let candidate = title.parentElement;
+              while (candidate && candidate !== root) {
+                if ([...candidate.querySelectorAll('a[href]')].some(a => href(a) === value.remainingHref)) {
+                  containers.add(candidate); identifiedTitles.add(title); break;
+                }
+                candidate = candidate.parentElement;
+              }
+            }
+            for (const title of root.querySelectorAll('p')) {
+              if (!exactTitle(title)) continue;
+              let row = title.parentElement;
+              while (row && row !== root && !(row.classList.contains('flex') && row.classList.contains('flex-col')
+                  && row.classList.contains('sm:flex-row'))) row = row.parentElement;
+              if (!row || row === root) continue;
+              titleNodes.push(title);
+              if (![...row.querySelectorAll('img[alt]')].some(image => image.getAttribute('alt') === value.productName)) continue;
+              containers.add(row); identifiedTitles.add(title);
+            }
+            for (const table of root.querySelectorAll('table.product-comparison')) {
+              const headers = [...table.querySelectorAll('thead th[scope="col"]')].slice(1);
+              const index = headers.findIndex(exactTableTitle);
+              if (index < 0) continue;
+              const merchantRow = [...table.querySelectorAll('tbody tr')].find(row =>
+                normalize(row.querySelector('th[scope="row"]')?.textContent) === '販売店');
+              const cell = merchantRow?.querySelectorAll('td')[index];
+              if (cell) { containers.add(cell); identifiedTitles.add(headers[index]); }
+            }
+            const containerProofs = [...containers].map(container => {
+              const links = [...container.querySelectorAll('a[href]')];
+              return { noTarget: links.every(a => store(href(a)) !== value.channel),
+                       remaining: links.some(a => href(a) === value.remainingHref) };
+            });
+            return {
+              oldAbsent: anchors.every(anchor => href(anchor) !== value.oldHref),
+              approvedOnly: anchors.every(anchor => !store(href(anchor)) || approved.has(href(anchor))),
+              productScopedAbsent: productAnchors.every(anchor => store(href(anchor)) !== value.channel),
+              remainingScopedVisible: productAnchors.some(anchor => href(anchor) === value.remainingHref && visible(anchor)),
+              containers: containerProofs.length,
+              allTitlesIdentified: titleNodes.length > 0 && titleNodes.every(title => identifiedTitles.has(title)),
+              allContainersExact: containerProofs.every(item => item.noTarget && item.remaining),
+            };
+          }, { ...absence, approvedMerchantUrls: [...approvedMerchantUrls] });
+          const click = checks.find(c => c.name === `${name}.click.${absence.productIndex}.${absence.remainingChannel}`);
+          const passed = proof.oldAbsent && proof.approvedOnly && proof.productScopedAbsent
+            && proof.remainingScopedVisible && proof.containers > 0 && proof.allTitlesIdentified && proof.allContainersExact
+            && click?.status === 'passed' && click.reason === 'exact_approved_navigation_intercepted';
+          add(`purchase_absent.${absence.productIndex}.${absence.channel}`, passed,
+            'approved_purchase_channel_absent', 'approved_purchase_channel_present_or_unproven');
         }
         if (resourceFailures.length) add('resources', false, '', 'safe_resource_get_unavailable', 'unverified');
       } catch {
