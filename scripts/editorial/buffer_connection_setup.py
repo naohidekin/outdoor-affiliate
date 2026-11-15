@@ -61,7 +61,7 @@ def serve(host='macpro'):
             raw = body.encode('utf-8')
             self.send_response(code)
             for key, value in [('Content-Type', 'text/html; charset=utf-8'),
-                               ('Cache-Control', 'no-store'), ('Referrer-Policy', 'no-referrer'),
+                               ('Cache-Control', 'no-store'), ('Referrer-Policy', 'same-origin'),
                                ('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"),
                                ('X-Content-Type-Options', 'nosniff'), ('Content-Length', str(len(raw)))]:
                 self.send_header(key, value)

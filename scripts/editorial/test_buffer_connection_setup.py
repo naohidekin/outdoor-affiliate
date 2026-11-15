@@ -7,6 +7,7 @@ import sys
 import unittest
 from types import SimpleNamespace
 from urllib.parse import urlsplit
+from urllib.request import urlopen
 from buffer_connection_setup import valid_key, save_remote, REMOTE_SAVE
 
 
@@ -16,6 +17,8 @@ class ConnectionSetupTests(unittest.TestCase):
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
             url = urlsplit(json.loads(child.stdout.readline())['setupUrl'])
+            with urlopen(url.geturl(), timeout=3) as response:
+                self.assertEqual('same-origin', response.headers['Referrer-Policy'])
             with socket.create_connection((url.hostname, url.port), timeout=8) as connection:
                 request = ('POST ' + url.path + ' HTTP/1.1\r\nHost: ' + url.netloc +
                            '\r\nOrigin: http://' + url.netloc +
