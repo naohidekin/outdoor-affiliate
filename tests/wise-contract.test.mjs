@@ -6,6 +6,21 @@ import path from 'node:path';
 import { loadWisePolicy, passesWise, validWiseScores, requireWiseReview, wiseContentHash, findWiseProof, requireWiseBinding } from '../src/lib/wise-contract.mjs';
 
 const scores = { w: 2, i: 2, s: 2, e: 2, ai: 3, sense: 2 };
+test('default WISE root is independent of the CLI working directory', () => {
+  const original = process.cwd();
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'wise-cwd-'));
+  try {
+    process.chdir(elsewhere);
+    const policy = loadWisePolicy();
+    assert.deepEqual(policy.sourceHashes, {
+      'wise-master.md': '7f3a5a347bca6ffb57eccf053b2eef5a4c40c79cae8032b6ad7dcb95a4cd6144',
+      'sense-master.md': '5099cf3df213c1a63f45aca9b28a1c3a858a0492fe6a4ae2c819f9f9fd85b2f8',
+    });
+  } finally {
+    process.chdir(original);
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  }
+});
 test('all six independent owner floors fail closed including missing Sense and wrong axis', () => {
   assert.equal(passesWise(scores), true);
   for (const key of Object.keys(scores)) {

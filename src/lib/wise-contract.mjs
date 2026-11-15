@@ -1,18 +1,25 @@
 // Owner WISE-AS, pinned raw source. No model or network calls.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
-const ROOT = fileURLToPath(new URL("../../", import.meta.url));
+import { dirname, resolve } from "node:path";
+const MODULE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const WISE_AXES = Object.freeze(["Wit", "Insight", "Sincere", "Empth", "AI-free", "Sense"]);
 export const WISE_FLOORS = Object.freeze({ w: 2, i: 2, s: 2, e: 2, ai: 3, sense: 2 });
 const PINNED = {"wise-master.md": "7f3a5a347bca6ffb57eccf053b2eef5a4c40c79cae8032b6ad7dcb95a4cd6144", "sense-master.md": "5099cf3df213c1a63f45aca9b28a1c3a858a0492fe6a4ae2c819f9f9fd85b2f8"};
 const ARTIFACTS = {"SKILL.md": "6dcf364e2094d7714adbf281eb9a3f186f6e4fe13e040db39d386db0808b921a", "docs/WISE-GEARMAN.md": "43a983ac458c006426a2d241e800b65cad539a94b6d6b6ea1c246b1b4bedc5e2", "docs/sense-definition.md": "e56ed9144bcaf544f1270fd4481fb77ad20351e98de364a065711fca82046c41"};
+const REQUIRED = ["rules/common/wise-contract.json", ...Object.keys(PINNED).map(name => `rules/common/${name}`), ...Object.keys(ARTIFACTS)];
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 const stable = (value) => value && typeof value === "object"
   ? Array.isArray(value) ? value.map(stable) : Object.fromEntries(Object.keys(value).sort().map(k => [k, stable(value[k])]))
   : value;
-export function loadWisePolicy(root = ROOT) {
+function defaultWiseRoot() {
+  for (const root of [MODULE_ROOT, resolve(process.cwd())]) {
+    if (REQUIRED.every(name => existsSync(resolve(root, name)))) return root;
+  }
+  throw new Error("wise_policy_root_unavailable");
+}
+export function loadWisePolicy(root = defaultWiseRoot()) {
   const folder = resolve(root, "rules/common");
   const contract = JSON.parse(readFileSync(resolve(folder, "wise-contract.json"), "utf8"));
   if (contract.schemaVersion !== 1 || JSON.stringify(contract.axes) !== JSON.stringify(WISE_AXES)

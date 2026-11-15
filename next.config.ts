@@ -77,7 +77,15 @@ const nextConfig: NextConfig = {
   // Vercel の自動 file tracing は動的読み込みを検出できないため、明示的に
   // bundle に含める。これがないと本番で ENOENT エラーになる。
   outputFileTracingIncludes: {
-    "/api/x-posts/generate": ["./data/**/*"],
+    "/api/x-posts/generate": [
+      "./data/**/*",
+      "./rules/common/wise-contract.json",
+      "./rules/common/wise-master.md",
+      "./rules/common/sense-master.md",
+      "./SKILL.md",
+      "./docs/WISE-GEARMAN.md",
+      "./docs/sense-definition.md",
+    ],
     "/api/x-posts": ["./data/**/*"],
     "/api/viral-scout": ["./data/**/*"],
   },
