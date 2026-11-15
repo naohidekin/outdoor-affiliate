@@ -1,9 +1,11 @@
 """Bounded deterministic reports on the existing tick; no LLM or approval changes."""
 from datetime import datetime, timedelta, timezone
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import subprocess
 from urllib.parse import urlsplit
@@ -46,6 +48,72 @@ def read_snapshot(path):
         return value if isinstance(value, dict) else None
     except (OSError, ValueError, TypeError):
         return None
+
+
+def valid_report_reconciliation(root, kind, period, scope):
+    """Verify additive native-delivery evidence without changing either receipt."""
+    root = Path(root).resolve()
+    if kind not in ('weekly','editorial','monthly') or not isinstance(period,str) \
+            or not isinstance(scope,dict) or not scope:
+        return False
+    receipt = read_snapshot(root/'report-reconciliations'/kind/(period+'.json'))
+    if not receipt or receipt.get('status') != 'evidence_reconciled' \
+            or receipt.get('kind') != kind or receipt.get('period') != period \
+            or receipt.get('scope') != scope:
+        return False
+
+    def bound(spec, expected=None):
+        if not isinstance(spec,dict) or set(spec) != {'path','sha256'} \
+                or not isinstance(spec.get('path'),str) \
+                or not re.fullmatch(r'[a-f0-9]{64}',str(spec.get('sha256',''))):
+            return None
+        path = root/spec['path']
+        try:
+            resolved = path.resolve()
+            if resolved.parent != root and root not in resolved.parents or path.is_symlink() \
+                    or not path.is_file() or (expected and spec['path'] != expected):
+                return None
+            raw = path.read_bytes()
+            if len(raw) > MAX_BYTES or hashlib.sha256(raw).hexdigest() != spec['sha256']:
+                return None
+            return raw
+        except OSError:
+            return None
+
+    original = bound(receipt.get('original'),f'reports/{kind}/{period}.json')
+    outbound = bound(receipt.get('outbound'))
+    proof_raw = bound(receipt.get('nativeProof'))
+    if original is None or outbound is None or proof_raw is None:
+        return False
+    try: proof,outbound_value = json.loads(proof_raw),json.loads(outbound)
+    except (ValueError,TypeError): return False
+    expected = outbound_value.get('expected') if isinstance(outbound_value,dict) else None
+    text = expected.get('text') if isinstance(expected,dict) else None
+    if not isinstance(text,str) or outbound_value.get('status') != 'sent_unverified' \
+            or expected.get('channel') != scope.get('channel_id') \
+            or expected.get('thread_ts') != scope.get('thread_ts'):
+        return False
+    text_hash = hashlib.sha256(text.encode()).hexdigest()
+    proof_scope = proof.get('scope') if isinstance(proof,dict) else None
+    bot = scope.get('bot_user_id')
+    parts = proof.get('parts') if isinstance(proof,dict) else None
+    valid_parts = isinstance(parts,list) and len(parts) == 2 and all(
+        isinstance(part,dict) and set(part) == {'ts','textSha256','chars','user','thread_ts'}
+        and re.fullmatch(r'\d{10}\.\d{6}',str(part.get('ts','')))
+        and re.fullmatch(r'[a-f0-9]{64}',str(part.get('textSha256','')))
+        and type(part.get('chars')) is int and part['chars'] >= 0
+        and part.get('user') == bot and part.get('thread_ts') == scope.get('thread_ts')
+        for part in parts)
+    return bool(isinstance(proof,dict) and proof.get('status') == 'verified'
+        and proof.get('readOnly') is True and proof.get('scanComplete') is True
+        and proof.get('joinMode') == 'decodedNewline'
+        and proof.get('expectedTextSha256') == proof.get('observedTextSha256') == text_hash
+        and proof.get('outboundSha256') == receipt['outbound']['sha256']
+        and proof.get('originalReportSha256') == receipt['original']['sha256']
+        and proof_scope == scope
+        and isinstance(bot,str) and bool(bot) and valid_parts
+        and [part['ts'] for part in parts] == sorted(part['ts'] for part in parts)
+        and outbound_value.get('message_ts') == parts[-1]['ts'])
 
 
 def slot(kind, now=None, manual=False):
@@ -196,6 +264,8 @@ class Reporter:
             fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         except FileExistsError:
             existing = read_snapshot(marker) or {}
+            if valid_report_reconciliation(self.root,kind,period,self.config.get('slack',{})):
+                return {'kind':kind,'period':period,'status':'evidence_reconciled'}
             if kind == 'monthly' and existing.get('status') == 'verified_unavailable':
                 if not manual and now.isoformat() < existing.get('retryAfter', ''):
                     return {'kind': kind, 'period': period, 'status': 'data_pending'}

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
 
-from reporting import Reporter, slot, editorial_report, seo_status, JST
+from reporting import Reporter, slot, editorial_report, seo_status, valid_report_reconciliation, JST
 from test_analytics import snapshot
 
 
@@ -83,6 +83,48 @@ class ReportTests(unittest.TestCase):
         marker = Path(self.config['stateRoot']) / 'reports/editorial/2026-11-02.json'
         self.assertNotIn('credential', marker.read_text())
         self.assertEqual(json.loads(marker.read_text())['status'], 'in_flight')
+
+    def _reconciliation(self, kind='weekly', period='2026-11-02'):
+        root=Path(self.config['stateRoot']);source=root/f'reports/{kind}/{period}.json'
+        outbound=root/'slack-outbound/report.json';proof=root/'repairs/20261115/weekly-delivery-native-readback.json'
+        source.parent.mkdir(parents=True,exist_ok=True);outbound.parent.mkdir(parents=True);proof.parent.mkdir(parents=True)
+        source.write_text('{"status":"in_flight"}')
+        scope=dict(self.config.get('slack') or self.reporter.config.get('slack') or {})
+        if not scope: scope=dict(team_id='T',app_id='A',user_id='U',bot_user_id='UBOT',
+                                 channel_id='C',thread_ts='1793000000.000001')
+        expected='bounded report\nsecond part'
+        outbound.write_text(json.dumps({'status':'sent_unverified','message_ts':'1793700001.123456',
+            'expected':{'text':expected,'channel':scope['channel_id'],'thread_ts':scope['thread_ts']}}))
+        text_hash=hashlib.sha256(expected.encode()).hexdigest()
+        outbound_hash=hashlib.sha256(outbound.read_bytes()).hexdigest()
+        original_hash=hashlib.sha256(source.read_bytes()).hexdigest()
+        native={'status':'verified','readOnly':True,'scanComplete':True,
+                'expectedTextSha256':text_hash,'observedTextSha256':text_hash,'joinMode':'decodedNewline',
+                'outboundSha256':outbound_hash,'originalReportSha256':original_hash,
+                'scope':scope,
+                'parts':[{'ts':'1793700000.123456','textSha256':'a'*64,'chars':14,'user':scope['bot_user_id'],'thread_ts':scope['thread_ts']},
+                         {'ts':'1793700001.123456','textSha256':'b'*64,'chars':11,'user':scope['bot_user_id'],'thread_ts':scope['thread_ts']}]}
+        proof.write_text(json.dumps(native))
+        receipt={'status':'evidence_reconciled','kind':kind,'period':period,'scope':scope,
+                 'original':{'path':str(source.relative_to(root)),'sha256':original_hash},
+                 'outbound':{'path':str(outbound.relative_to(root)),'sha256':outbound_hash},
+                 'nativeProof':{'path':str(proof.relative_to(root)),'sha256':hashlib.sha256(proof.read_bytes()).hexdigest()}}
+        target=root/f'report-reconciliations/{kind}/{period}.json';target.parent.mkdir(parents=True)
+        target.write_text(json.dumps(receipt));return scope,source
+
+    def test_valid_report_reconciliation_returns_evidence_status_without_resend(self):
+        scope,_=self._reconciliation();self.reporter.config['slack']=scope
+        self.assertTrue(valid_report_reconciliation(self.config['stateRoot'],'weekly','2026-11-02',scope))
+        result=self.reporter.send('weekly',now=self.now,manual=True)
+        self.assertEqual('evidence_reconciled',result['status']);self.assertEqual([],self.slack.messages)
+
+    def test_report_reconciliation_rejects_mutated_original(self):
+        scope,source=self._reconciliation();source.write_text('{"status":"changed"}')
+        self.assertFalse(valid_report_reconciliation(self.config['stateRoot'],'weekly','2026-11-02',scope))
+
+    def test_report_reconciliation_rejects_wrong_scope(self):
+        scope,_=self._reconciliation();wrong=dict(scope,channel_id='OTHER')
+        self.assertFalse(valid_report_reconciliation(self.config['stateRoot'],'weekly','2026-11-02',wrong))
 
     def test_monthly_snapshot_is_separate_and_unequal_months_are_reported(self):
         data = snapshot('2026-10-01', '2026-10-31')
