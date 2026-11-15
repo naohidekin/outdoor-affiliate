@@ -15,6 +15,7 @@ from buffer_api import BufferAPI, POST_FIELDS
 KEY_PATTERN = re.compile(r'[A-Za-z0-9_.:/+=-]{16,2048}')
 X_POST = re.compile(r'https://(?:www\.)?x\.com/[^/]+/status/[1-9][0-9]*')
 JST = timezone(timedelta(hours=9))
+PREPARED_MAX_BYTES = 1024 * 1024
 
 
 def _require(condition, code):
@@ -253,6 +254,62 @@ def _write_marker(path, value):
         raise ValueError('buffer_rotation_marker_unknown') from None
 
 
+def _normalized_baseline(value):
+    _require(isinstance(value, list) and len(value) <= 100,
+             'buffer_rotation_prepared_invalid')
+    result = []
+    for item in value:
+        _require(isinstance(item, dict), 'buffer_rotation_prepared_invalid')
+        rebuilt = _normalize_post({
+            'id': item.get('id'), 'channelId': item.get('channelId'),
+            'channelService': item.get('channelService'), 'status': item.get('status'),
+            'text': item.get('text'), 'dueAt': item.get('dueAt'),
+            'sentAt': item.get('sentAt'), 'externalLink': item.get('externalLink'),
+            'assets': item.get('assets'), 'shareMode': item.get('shareMode'),
+            'isCustomScheduled': item.get('isCustomScheduled'),
+            'metadata': {'threadCount': item.get('threadCount'),
+                         'thread': item.get('thread')},
+        })
+        _require(rebuilt == item, 'buffer_rotation_prepared_invalid')
+        result.append(rebuilt)
+    _require([item['id'] for item in result] == sorted({item['id'] for item in result}),
+             'buffer_rotation_prepared_invalid')
+    return result
+
+
+def _read_prepared(path):
+    if not path.exists():
+        return None
+    try:
+        info = path.lstat()
+        _require(stat.S_ISREG(info.st_mode) and not path.is_symlink()
+                 and stat.S_IMODE(info.st_mode) == 0o600
+                 and info.st_uid == os.geteuid()
+                 and 0 < info.st_size <= PREPARED_MAX_BYTES,
+                 'buffer_rotation_prepared_invalid')
+        value = json.loads(path.read_text())
+    except (OSError, ValueError, TypeError):
+        raise ValueError('buffer_rotation_prepared_invalid') from None
+    required = {'schemaVersion', 'phase', 'target', 'binding', 'originalIdentity',
+                'oldKeySha256', 'baselineDigest', 'baseline', 'priorMarkerDigest',
+                'preparedAt'}
+    _require(isinstance(value, dict) and set(value) == required
+             and value.get('schemaVersion') == 1 and value.get('phase') == 'prepared'
+             and isinstance(value.get('target'), str)
+             and isinstance(value.get('binding'), dict)
+             and isinstance(value.get('originalIdentity'), dict)
+             and re.fullmatch(r'[a-f0-9]{64}', str(value.get('oldKeySha256'))) is not None
+             and re.fullmatch(r'[a-f0-9]{64}', str(value.get('baselineDigest'))) is not None
+             and (value.get('priorMarkerDigest') is None
+                  or re.fullmatch(r'[a-f0-9]{64}', str(value['priorMarkerDigest'])) is not None)
+             and isinstance(value.get('preparedAt'), str),
+             'buffer_rotation_prepared_invalid')
+    value['baseline'] = _normalized_baseline(value['baseline'])
+    _require(hashlib.sha256(_canonical(value['baseline']).encode()).hexdigest()
+             == value['baselineDigest'], 'buffer_rotation_prepared_invalid')
+    return value
+
+
 def _file_identity(path):
     try:
         fd = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW)
@@ -299,6 +356,7 @@ class RotationSession:
             self.lock = os.fdopen(lock_fd, 'a+')
             fcntl.flock(self.lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             self.rotation_marker = root / 'buffer-key-rotations' / 'latest.json'
+            prior = None
             if self.rotation_marker.exists():
                 info = self.rotation_marker.lstat()
                 _require(stat.S_ISREG(info.st_mode) and not self.rotation_marker.is_symlink()
@@ -308,6 +366,9 @@ class RotationSession:
                 _require(isinstance(prior, dict), 'buffer_rotation_marker_invalid')
                 _require(prior.get('phase') not in ('inflight', 'unknown', 'validation_unknown'),
                          'buffer_rotation_reconciliation_required')
+            prior_digest = (hashlib.sha256(_canonical(prior).encode()).hexdigest()
+                            if prior is not None else None)
+            self.prepared_receipt = root / 'buffer-key-rotations' / 'prepared.json'
             self.dest, old_key = _target(config)
             journals = root / 'buffer-publications'
             if journals.exists():
@@ -329,12 +390,34 @@ class RotationSession:
                      and self.now.utcoffset() is not None, 'buffer_rotation_time_invalid')
             self.client_factory = client_factory
             self.original_identity = _file_identity(self.dest)
+            old_key_sha256 = hashlib.sha256(old_key.encode('ascii')).hexdigest()
             _require(self.original_identity['contentSha256'] == hashlib.sha256(
                 ('BUFFER_API_KEY=' + old_key + '\n').encode('ascii')).hexdigest(),
                 'buffer_rotation_cas_mismatch')
-            self.baseline = _snapshot(client_factory(old_key), self.binding)
-            self.baseline_digest = hashlib.sha256(_canonical(self.baseline).encode()).hexdigest()
-            self.old_key_digest = hashlib.sha256(old_key.encode('ascii')).digest()
+            prepared = _read_prepared(self.prepared_receipt)
+            if prepared is not None and prepared['priorMarkerDigest'] == prior_digest:
+                _require(prepared['target'] == str(self.dest)
+                         and prepared['binding'] == self.binding
+                         and prepared['originalIdentity'] == self.original_identity
+                         and prepared['oldKeySha256'] == old_key_sha256,
+                         'buffer_rotation_prepared_mismatch')
+                self.baseline = prepared['baseline']
+                self.baseline_digest = prepared['baselineDigest']
+            else:
+                self.baseline = _snapshot(client_factory(old_key), self.binding)
+                self.baseline_digest = hashlib.sha256(
+                    _canonical(self.baseline).encode()).hexdigest()
+                prepared = {'schemaVersion': 1, 'phase': 'prepared',
+                    'target': str(self.dest), 'binding': self.binding,
+                    'originalIdentity': self.original_identity,
+                    'oldKeySha256': old_key_sha256,
+                    'baselineDigest': self.baseline_digest, 'baseline': self.baseline,
+                    'priorMarkerDigest': prior_digest,
+                    'preparedAt': self.now.astimezone(JST).isoformat()}
+                _require(len((_canonical(prepared) + '\n').encode('utf-8'))
+                         <= PREPARED_MAX_BYTES, 'buffer_rotation_prepared_too_large')
+                _write_marker(self.prepared_receipt, prepared)
+            self.old_key_digest = bytes.fromhex(old_key_sha256)
         except (BlockingIOError, OSError):
             self.close()
             raise ValueError('buffer_rotation_lock_unavailable') from None

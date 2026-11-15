@@ -163,6 +163,36 @@ class RotationTests(unittest.TestCase):
         self.assertNotIn(self.old, json.dumps(proof))
         self.assertNotIn(self.new, json.dumps(proof))
 
+    def test_prepared_baseline_survives_restart_without_old_key_api(self):
+        receipt = self.root / 'buffer-key-rotations' / 'prepared.json'
+        with RotationSession(self.config, client_factory=self.factory) as session:
+            baseline_digest = session.baseline_digest
+        prepared = json.loads(receipt.read_text())
+        self.assertEqual(receipt.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(prepared['phase'], 'prepared')
+        self.assertEqual(prepared['baselineDigest'], baseline_digest)
+        self.assertEqual(prepared['baseline'][0]['id'], 'post-1')
+        self.assertEqual(prepared['baseline'][0]['text'], 'approved')
+        self.assertEqual(prepared['baseline'][0]['dueAt'], '2026-11-20T03:00:00Z')
+        self.assertEqual(prepared['binding'], {'organizationId': 'org-1',
+                                               'channelId': 'channel-1',
+                                               'xAccountId': 'account-1'})
+        self.assertTrue(prepared['preparedAt'].endswith('+09:00'))
+        self.assertNotIn(self.old, receipt.read_text())
+        self.assertNotIn(self.new, receipt.read_text())
+        old_calls = list(self.old_client.calls)
+
+        def after_regeneration(key):
+            if key == self.old:
+                raise AssertionError('invalidated old key must not be called after restart')
+            return self.new_client
+
+        with RotationSession(self.config, client_factory=after_regeneration) as session:
+            proof = session.commit(self.new, posts_write_confirmed=True)
+        self.assertEqual(proof['snapshotDigest'], baseline_digest)
+        self.assertEqual(self.old_client.calls, old_calls)
+        self.assertEqual(self.dest.read_text(), 'BUFFER_API_KEY=' + self.new + '\n')
+
     def test_wrong_account_and_queue_mismatch_never_replace(self):
         self.new_client.channel['serviceId'] = 'wrong-account'
         with RotationSession(self.config, client_factory=self.factory) as session:
