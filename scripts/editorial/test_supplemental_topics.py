@@ -76,6 +76,22 @@ class SupplementalTopicsTests(unittest.TestCase):
         self.assertEqual(['missing_required_destination', 'apparel_identity_invalid',
                           'duplicate_theme'], [slot['reason'] for slot in result['slots']])
 
+    def test_duplicate_slug_or_title_independently_holds_before_sources(self):
+        value = manifest()
+        for index, slot in enumerate(value['slots'], 1):
+            slot.update(slug=f'wear-{index}', title=f'Wear {index}', categoryId='wear',
+                        query=f'winter wear {index}', selectionReason='verified fixture')
+        value['slots'][0].update(slug=' SAME-SLUG ', title='Different title')
+        value['slots'][1].update(slug='different-slug', title='Ｓａｍｅ　Ｔｉｔｌｅ')
+        catalog = {'products': [product(slot['productIds'][0]) for slot in value['slots']],
+                   'articles': [{'slug': 'same-slug', 'title': 'Published title'}]}
+        queued = [{'slug': 'queued-other', 'title': 'same title'}]
+        result = resolve_batch(value, catalog, queued,
+                               datetime(2026, 11, 16, 9, tzinfo=JST))
+        self.assertEqual(['duplicate_theme', 'duplicate_theme', 'ready'],
+                         [slot['reason'] if slot['status'] == 'source_hold' else 'ready'
+                          for slot in result['slots']])
+
     def test_manifest_is_strict_and_loads_from_configured_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'batch.json'

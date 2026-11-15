@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
+import unicodedata
 
 from apparel_identity import ApparelIdentityError, apparel_contract
 
@@ -22,6 +23,11 @@ def _canonical(value):
 
 def _hash(value):
     return hashlib.sha256(_canonical(value).encode('utf-8')).hexdigest()
+
+
+def _theme_key(value):
+    return (' '.join(unicodedata.normalize('NFKC', value).split()).casefold()
+            if isinstance(value, str) and value.strip() else None)
 
 
 def _aware(value):
@@ -99,17 +105,21 @@ def resolve_batch(manifest, catalog, queued_themes, now):
         raise ValueError('live catalog required')
     products = catalog['products']
     existing = list(catalog.get('articles') or []) + list(queued_themes or [])
-    used = {(item.get('slug'), item.get('title'), item.get('query'))
-            for item in existing if isinstance(item, dict)}
+    used = {field: {_theme_key(item.get(field)) for item in existing
+                    if isinstance(item, dict) and _theme_key(item.get(field))}
+            for field in ('slug', 'title', 'query')}
     results = []
     for slot in value['slots']:
-        key = (slot['slug'], slot['title'], slot['query'])
         reason = None
         if not all(isinstance(slot[field], str) and slot[field].strip() for field in THEME_FIELDS):
             reason = 'theme_not_registered'
-        elif key in used:
+        elif any(_theme_key(slot[field]) in used[field]
+                 for field in ('slug', 'title', 'query')):
             reason = 'duplicate_theme'
-        used.add(key)
+        for field in ('slug', 'title', 'query'):
+            key = _theme_key(slot[field])
+            if key:
+                used[field].add(key)
         matched = []
         if reason is None:
             for product_id in slot['productIds']:
