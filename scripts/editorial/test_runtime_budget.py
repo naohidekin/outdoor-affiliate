@@ -87,3 +87,43 @@ class RuntimeBudgetTests(unittest.TestCase):
         result = f.runtime.tick()
         self.assertEqual('attention', result['status'])
         self.assertEqual([], f.slack.notices)
+
+    def test_requested_period_budget_hold_reports_cause_and_task_cost(self):
+        from datetime import datetime
+        from runtime import JST
+        f = self.fixture
+        f.config['modelBudget'] = {'article': {'calls': 1}}
+        f.config['productionVerificationPeriod'] = '2026-11-20'
+        f.configure_production_schedule()
+        runtime = f.runtime
+        with runtime.model_budget.scope('fixture-article', 'draft', datetime(2026,11,20,10,tzinfo=JST)):
+            runtime.model_budget.reserve({'max_tokens':100,'messages':[]})
+            with self.assertRaisesRegex(Exception,'model_budget_hold'):
+                runtime.model_budget.reserve({'max_tokens':100,'messages':[]})
+        with patch('usage_cost_report.usage_cost_summary', return_value='TASK_ONLY_COST_AND_BUDGET') as summary:
+            runtime._flush_budget_notifications()
+        hold = next(text for text in f.slack.notices if '工程保留' in text)
+        self.assertIn('原因（確定）',hold)
+        self.assertIn('TASK_ONLY_COST_AND_BUDGET',hold)
+        self.assertEqual('2026-11-20',summary.call_args.kwargs['period_key'])
+        self.assertEqual('production',summary.call_args.kwargs['kind'])
+
+    def test_requested_period_failure_has_one_detailed_notice_without_generic_duplicate(self):
+        from datetime import datetime
+        from runtime import JST
+        f = self.fixture
+        f.config['generationEnabled'] = False
+        f.config['productionVerificationPeriod'] = '2026-11-20'
+        f.configure_production_schedule()
+        runtime=f.runtime
+        job=runtime.ledger.create_candidate({'slug':'failure-fixture','title':'確認用記事'},
+            now=datetime(2026,11,20,9,tzinfo=JST))
+        runtime.ledger.set_stage(job['id'],'error',{'reason':'source_product_image_or_affiliate_verification_incomplete'})
+        with patch('runtime.datetime') as clock, patch('usage_cost_report.usage_cost_summary',return_value='TASK_COST_AND_REMAINING'):
+            clock.now.return_value=datetime(2026,11,20,10,tzinfo=JST)
+            result=runtime.tick()
+        self.assertEqual('blocked',result['productionVerification']['status'])
+        self.assertEqual('attention',result['status'])
+        self.assertEqual(1,len(f.slack.notices))
+        self.assertIn('TASK_COST_AND_REMAINING',f.slack.notices[0])
+        self.assertEqual([],f.writes)

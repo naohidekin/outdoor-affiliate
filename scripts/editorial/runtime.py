@@ -869,11 +869,23 @@ class Runtime:
                           for j in self.ledger.list_jobs()}
                 text = (heading + '\n対象：' + str(titles.get(event.get('articleId'), event.get('articleId')) or '制作週全体') +
                         '\n制作週：' + str(event.get('periodKey')) +
+                        '\n発生日時：' + str(event.get('createdAt')) + '\n工程：' + str(event.get('stage')) +
                         '\n判定：' + str(event.get('budgetScope')) + ' / ' + str(event.get('dimension')) +
                         ' ' + str(event.get('projected')) + '（上限 ' + str(event.get('cap')) + '）' +
                         '\n品質基準・記事とSNSの別承認は維持します。' +
                         '\n利用記録と残工程を確認して再評価してください。自動増枠・再試行はしません。' +
                         '\n予算はトークンの実測・保守的予約に基づく制御で、実請求額ではありません。')
+                text += ('\n原因（確定）：設定された予算制限により工程を保留しました。'
+                         if event.get('level') == 'hold' else
+                         '\n原因（確定）：予算の警告しきい値に達しました。品質確認は省略しません。')
+                if event.get('periodKey') == self.config.get('productionVerificationPeriod'):
+                    self._save_usage()
+                    try:
+                        from usage_cost_report import usage_cost_summary
+                        text += '\n\n' + usage_cost_summary(self.root, self.config, kind='production',
+                                                             period_key=event['periodKey'])
+                    except Exception:
+                        text += '\nこのタスクの利用量・概算費用・予算残量は集計できませんでした。確認が必要です。'
                 receipt = self.slack.notice(text)
                 verified = isinstance(receipt, dict) and receipt.get('verified') is True
             except Exception:
@@ -1463,24 +1475,30 @@ class Runtime:
                 from usage_cost_report import usage_cost_summary
                 period = self.config['productionVerificationPeriod']
                 result['productionVerification'] = verify_period(self.root, jobs, period,
-                    self.config['slack'], self.slack.notice, now=now,
+                    self.config['slack'], self.slack.notice, now=now, results=results,
                     cost_text=lambda: usage_cost_summary(self.root, self.config, kind='production',
                                                          period_key=period, now=now))
             except Exception:
                 result['productionVerification'] = {'status': 'requires_reconciliation'}
-            if result['productionVerification']['status'] == 'requires_reconciliation':
+            if result['productionVerification']['status'] in ('requires_reconciliation', 'blocked'):
                 result['status'] = 'attention'
         if (any((job.get('error') or {}).get('reason') == 'model_budget_hold' for job in jobs)
                 or any(result['modelBudget']['eventsByStatus'].get(status, 0)
                        for status in ('in_flight', 'unknown'))):
             result['status'] = 'attention'
         atomic(self.root / 'health.json', result)
+        handled_ids = set(result.get('productionVerification', {}).get('handledAttentionJobIds', []))
+        handled_reasons = set(result.get('productionVerification', {}).get('handledGlobalReasons', []))
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
-                     for j in jobs if j.get('error') and j['error'].get('reason') != 'model_budget_hold']
+                     for j in jobs if j.get('error') and j['error'].get('reason') != 'model_budget_hold'
+                     and j['id'] not in handled_ids]
         titles = {j['id']: j['theme'].get('title', '記事制作の処理') for j in jobs}
         attention += [{'id': r.get('id', 'runtime'), 'title': titles.get(r.get('id'), '記事制作の管理処理'),
                        'error': {'reason': r.get('reason', '確認が必要')}}
-                      for r in results if r.get('status') == 'attention']
+                      for r in results if r.get('status') == 'attention'
+                      and r.get('reason') != 'model_budget_hold'
+                      and r.get('reason') not in handled_reasons
+                      and r.get('id') not in handled_ids]
         if attention:
             result['status'] = 'attention'
             atomic(self.root / 'health.json', result)
