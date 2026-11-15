@@ -10,6 +10,7 @@ from urllib.error import HTTPError
 
 from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
                     CRITERIA_FIELDS, SOCIAL_SCHEMA)
+from model_inputs import restore_model_input
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -75,6 +76,36 @@ def http(code):
     return HTTPError("https://provider.invalid", code, "test-claude-key SECRET BODY", {}, io.BytesIO(b"secret"))
 
 
+def prompt_data(prompt):
+    raw = prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1]
+    return restore_model_input(json.loads(raw))
+
+
+class Budget:
+    def __init__(self, events=None, failure=None, settle_failure=None):
+        self.events = events if events is not None else []
+        self.failure = failure
+        self.settle_failure = settle_failure
+        self.holds = []
+        self.settlements = []
+        self.response_ids = []
+
+    def reserve(self, payload, model):
+        self.events.append(('reserve', model))
+        if self.failure is not None:
+            raise self.failure
+        hold = 'hold-%d' % (len(self.holds) + 1)
+        self.holds.append((hold, copy.deepcopy(payload), model))
+        return hold
+
+    def settle(self, hold, usage=None, outcome='success', response_id=None):
+        self.events.append(('settle', hold, outcome))
+        self.settlements.append((hold, copy.deepcopy(usage), outcome))
+        self.response_ids.append(response_id)
+        if self.settle_failure is not None:
+            raise self.settle_failure
+
+
 THEMES = {"themes": [{"slug": "theme-%d" % i, "title": title, "query": title.lower(),
                        "categoryId": "tent", "selectionReason": "Season and verified catalog",
                        "productIds": ["tent-a"], "evidence": {"season": "winter"}}
@@ -85,6 +116,100 @@ FLAGS = dict(facts=True, images=True, affiliate=True, medical=True, render=True)
 
 
 class ModelTests(unittest.TestCase):
+    def test_budget_reserves_exact_payload_before_request_and_settles_raw_usage(self):
+        events = []
+        budget = Budget(events)
+        sent = []
+        def request(url, headers, payload, timeout):
+            events.append(('request', payload['model']))
+            sent.append(copy.deepcopy(payload))
+            return response(THEMES)
+        model = Models(ENV, request, budget=budget)
+        self.assertEqual(model.research(context()), THEMES)
+        self.assertEqual(events, [('reserve', 'claude-sonnet-4-6'), ('request', 'claude-sonnet-4-6'),
+                                  ('settle', 'hold-1', 'success')])
+        self.assertEqual(budget.holds[0][1], sent[0])
+        self.assertEqual(budget.settlements, [('hold-1', {'input_tokens': 31, 'output_tokens': 9}, 'success')])
+        self.assertEqual(budget.response_ids, ['c-1'])
+
+    def test_models_send_shorter_lossless_projection_without_changing_host_data(self):
+        ctx = context()
+        ctx['catalog'][0]['sourceNotes'] = '公称値2kg。条件付きURL https://maker.example/spec を保持。' * 20
+        ctx['products'] = copy.deepcopy(ctx['catalog'])
+        original = copy.deepcopy(ctx)
+        fake = Fake(response(THEMES))
+        Models(ENV, fake).research(ctx)
+        raw = json.loads(fake.calls[0][2]['messages'][0]['content'].split(
+            'Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+        self.assertNotEqual(raw, {'context': original})
+        self.assertEqual(restore_model_input(raw), {'context': original})
+        self.assertLess(len(json.dumps(raw, ensure_ascii=False)),
+                        len(json.dumps({'context': original}, ensure_ascii=False)))
+        self.assertEqual(ctx, original)
+
+    def test_budget_settles_every_retry_fallback_and_unknown_attempt(self):
+        budget = Budget()
+        fake = Fake(http(429), http(503), response(THEMES))
+        with patch('models.time.sleep'):
+            self.assertEqual(Models(ENV, fake, budget=budget).research({}), THEMES)
+        self.assertEqual([item[2] for item in budget.holds], ['claude-sonnet-4-6'] * 3)
+        self.assertEqual([item[2] for item in budget.settlements], ['failed', 'failed', 'success'])
+
+        budget = Budget()
+        fake = Fake(http(404), writer_response(bundle()))
+        Models(ENV, fake, budget=budget).draft({}, context())
+        self.assertEqual([item[2] for item in budget.holds], ['claude-opus-4-8', 'claude-sonnet-4-6'])
+        self.assertEqual([item[2] for item in budget.settlements], ['failed', 'success'])
+
+        for failure, outcome in ((http(500), 'failed'), (TimeoutError('private'), 'unknown'),
+                                 (ModelError('parsed transport response invalid'), 'unknown')):
+            budget = Budget()
+            with self.subTest(failure=type(failure)), self.assertRaises(ModelError):
+                Models(ENV, Fake(failure), budget=budget).research({})
+            self.assertEqual(budget.settlements, [('hold-1', None, outcome)])
+
+    def test_budget_settles_actual_response_before_provider_validation(self):
+        raw = response(THEMES)
+        raw.pop('usage')
+        budget = Budget()
+        with self.assertRaises(ModelError):
+            Models(ENV, Fake(raw), budget=budget).research({})
+        self.assertEqual(budget.settlements, [('hold-1', None, 'success')])
+
+    def test_budget_hold_propagates_without_transport_or_settlement(self):
+        class BudgetHold(RuntimeError):
+            pass
+        hold = BudgetHold('cap reached')
+        budget, fake = Budget(failure=hold), Fake(response(THEMES))
+        with self.assertRaises(BudgetHold) as caught:
+            Models(ENV, fake, budget=budget).research({})
+        self.assertIs(caught.exception, hold)
+        self.assertEqual(fake.calls, [])
+        self.assertEqual(budget.settlements, [])
+
+    def test_budget_settle_failure_propagates_after_recording_actual_usage(self):
+        class BudgetHold(RuntimeError):
+            pass
+        hold = BudgetHold('settlement failed')
+        budget = Budget(settle_failure=hold)
+        model = Models(ENV, Fake(response(THEMES)), budget=budget)
+        with self.assertRaises(BudgetHold) as caught:
+            model.research({})
+        self.assertIs(caught.exception, hold)
+        self.assertEqual(model.usage[0]['usage'], {'input_tokens': 31, 'output_tokens': 9})
+
+    def test_budget_covers_local_repair_without_bypassing_cap(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/tent'
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
+        budget = Budget()
+        fake = Fake(response(dict(text='広告' + 'あ' * 200, replyText=url)),
+                    response(dict(text='広告 選び方を確認します。', replyText=url)))
+        self.assertEqual(Models(ENV, fake, budget=budget).social(b, url)['text'], '広告 選び方を確認します。')
+        self.assertEqual(len(budget.holds), 2)
+        self.assertEqual([item[2] for item in budget.settlements], ['success', 'success'])
+
     def test_transport_without_response_is_outcome_unknown(self):
         model = Models(ENV, Fake(TimeoutError('private transport detail')))
         with self.assertRaisesRegex(ModelOutcomeUnknown, 'Provider outcome unknown'):
@@ -110,7 +235,7 @@ class ModelTests(unittest.TestCase):
                        'NO first-person past narrative', 'generic camping mishaps', 'past buying feelings',
                        'third-person research', 'Do not turn these prohibitions into long reader-facing disclaimers'):
             self.assertIn(phrase, instruction)
-        self.assertEqual(json.loads(data)['context'], ctx)
+        self.assertEqual(restore_model_input(json.loads(data))['context'], ctx)
 
     def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
         good = bundle()
@@ -129,8 +254,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual([a['responseId'] for a in artifacts], ['draft-short', 'draft-repaired'])
         self.assertEqual([u['responseId'] for u in model.usage], ['draft-short', 'draft-repaired'])
         self.assertEqual(json.loads(artifacts[0]['content'])['article']['content'], short['article']['content'])
-        payload = json.loads(fake.calls[1][2]['messages'][0]['content'].split(
-            'Return ONLY a complete JSON object, no fences or commentary.\n')[1])
+        payload = prompt_data(fake.calls[1][2]['messages'][0]['content'])
         self.assertEqual(payload['theme'], original_theme)
         self.assertEqual(payload['context'], original_context)
         self.assertEqual(payload['previousCandidate']['brief'], short['brief'])
@@ -486,7 +610,7 @@ class ModelTests(unittest.TestCase):
         fake = Fake(response({'edits': [{'index': 1, 'text': '読みやすい文章です。'}]}, gemini=True))
         result = Models(ENV, fake).polish(source, brief())
         self.assertEqual(result['content'], source.replace('直せる文章です。', '読みやすい文章です。'))
-        sent = json.loads(fake.calls[0][2]['messages'][0]['content'].split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+        sent = prompt_data(fake.calls[0][2]['messages'][0]['content'])
         self.assertEqual(sent['source'], source)
         self.assertEqual([item['index'] for item in sent['editable']], [1, 4])
         self.assertEqual(result['usage']['polishOutcome'], 'edited')
@@ -524,7 +648,7 @@ class ModelTests(unittest.TestCase):
             self.assertIn('Do not introduce ANY exact literal from brief.protected or brief.requiredExpressions', prompt)
             self.assertIn('even if natural', prompt)
             self.assertIn('original locked paragraphs', prompt)
-            payload = json.loads(prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+            payload = prompt_data(prompt)
             self.assertEqual(payload['source'], source)
             self.assertEqual(payload['brief'], original)
             self.assertIn(literal, payload['forbiddenExpressions'])
@@ -608,7 +732,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(set(SOCIAL_SCHEMA['required']), {'text', 'replyText'})
         self.assertIs(SOCIAL_SCHEMA['additionalProperties'], False)
         prompt = fake.calls[0][2]['messages'][0]['content']
-        sent = json.loads(prompt.split('Return ONLY a complete JSON object, no fences or commentary.\n', 1)[1])
+        sent = prompt_data(prompt)
         self.assertEqual(sent['bundle']['article']['content'], b['article']['content'])
         self.assertEqual(sent['bundle']['brief'], b['brief'])
         for constraint in ('160 weighted', 'hard limit 280', 'each non-ASCII', 'friend questions',
@@ -661,7 +785,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(len(fake.calls), 2)
         self.assertEqual([a['responseId'] for a in artifacts], ['attempt-1', 'attempt-2'])
         prompts = [c[2]['messages'][0]['content'] for c in fake.calls]
-        payload = json.loads(prompts[1].split('Return ONLY a complete JSON object, no fences or commentary.\n')[1])
+        payload = prompt_data(prompts[1])
         self.assertEqual(payload['bundle'], original)
         self.assertEqual(payload['previousCandidate'], previous)
         self.assertEqual(payload['validation']['weightedLength'], 400)
@@ -897,7 +1021,8 @@ class ModelTests(unittest.TestCase):
                                'slack': {'user_id': 'U'}}, catalog=object(), slack=object())
             runtime.models.request = Fake(response(None, raw='not JSON'))
             with self.assertRaisesRegex(ModelError, 'Invalid JSON response'):
-                runtime.models.research(context())
+                runtime._measured_model_call('artifact-test', 'research', 'claude-sonnet-4-6',
+                                             lambda: runtime.models.research(context()))
             name = hashlib.sha256(b'c-1').hexdigest() + '.json'
             artifact = root / 'state' / 'model-artifacts' / name
             self.assertTrue(artifact.exists())

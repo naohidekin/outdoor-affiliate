@@ -23,6 +23,7 @@ from slack import Slack
 from attention_presentation import attention_text
 from dispatcher import DeterministicDispatcher, execution_policy, social_feature_enabled
 from stage_journal import StageBlocked, StageJournal, StageUnknown
+from model_budget import ModelBudget
 
 JST = timezone(timedelta(hours=9))
 
@@ -112,7 +113,12 @@ class Runtime:
         def save_model_artifact(artifact):
             name = hashlib.sha256(artifact['responseId'].encode('utf-8')).hexdigest() + '.json'
             atomic(self.root / 'model-artifacts' / name, artifact)
-        self.models = models or Models(self.env, artifact_sink=save_model_artifact)
+        self.model_budget = ModelBudget(self.root, self.ledger.production_schedule,
+                                        config.get('modelBudget'))
+        self.models = models or Models(self.env, artifact_sink=save_model_artifact,
+                                       budget=self.model_budget)
+        if isinstance(self.models, Models):
+            self.models.budget = self.model_budget
         if catalog is None:
             from catalog import Catalog
             catalog = Catalog(self.env, source_hints=config.get('sourceHints', {}),
@@ -770,10 +776,12 @@ class Runtime:
         self._require_running()
         start = len(getattr(self.models, 'usage', []))
         try:
-            return operation()
+            with self.model_budget.scope(self._budget_article_id(article_id), stage):
+                return operation()
         finally:
             self._usage_slice(start, article_id=article_id, stage=stage, reason=reason,
                               requested_model=requested_model)
+            self._flush_budget_notifications()
 
     def _run_model_stage(self, job, stage, inputs, operation, requested_model,
                          *, explicit_retry=False):
@@ -801,7 +809,8 @@ class Runtime:
         def measured():
             nonlocal called
             called = True
-            return operation()
+            with self.model_budget.scope(self._budget_article_id(job['id']), stage):
+                return operation()
         try:
             if explicit_retry:
                 return self.stage_journal.retry_failed(job['id'], stage, inputs, measured)
@@ -819,6 +828,7 @@ class Runtime:
                                                 reason=reason_name)
                 if explicit_retry and getattr(self, '_explicit_stage_retry', None):
                     self._explicit_stage_retry = None
+                self._flush_budget_notifications()
 
     def _save_usage(self):
         records = getattr(self.models, 'usage', [])
@@ -835,6 +845,58 @@ class Runtime:
                 atomic(self.root / 'usage' / (secrets.token_hex(12) + '.json'),
                        {'at': stamp(), 'calls': unique, 'actualInvoiceUsd': None})
             records.clear()
+
+    def _budget_article_id(self, job_id):
+        """A new revision of the same public URL must share its article budget."""
+        try:
+            job = self.ledger.get_job(job_id)
+        except (KeyError, ValueError):
+            return job_id
+        slug = ((job.get('revisionContext') or {}).get('baseArticle') or {}).get('slug')
+        slug = slug or (job.get('theme') or {}).get('slug')
+        return 'article:' + fingerprint({'slug': slug}) if isinstance(slug, str) and slug else job_id
+
+    def _flush_budget_notifications(self):
+        """Claim once before sending; unknown delivery never triggers blind resend."""
+        self._require_running()
+        for event in self.model_budget.pending_events():
+            if not self.model_budget.claim_event(event['id']):
+                continue
+            verified = False
+            try:
+                heading = '【AI予算の警告】' if event.get('level') == 'warning' else '【AI予算到達・工程保留】'
+                titles = {self._budget_article_id(j['id']): j['theme'].get('title', j['id'])
+                          for j in self.ledger.list_jobs()}
+                text = (heading + '\n対象：' + str(titles.get(event.get('articleId'), event.get('articleId')) or '制作週全体') +
+                        '\n制作週：' + str(event.get('periodKey')) +
+                        '\n判定：' + str(event.get('budgetScope')) + ' / ' + str(event.get('dimension')) +
+                        ' ' + str(event.get('projected')) + '（上限 ' + str(event.get('cap')) + '）' +
+                        '\n品質基準・記事とSNSの別承認は維持します。' +
+                        '\n利用記録と残工程を確認して再評価してください。自動増枠・再試行はしません。' +
+                        '\n予算はトークンの実測・保守的予約に基づく制御で、実請求額ではありません。')
+                receipt = self.slack.notice(text)
+                verified = isinstance(receipt, dict) and receipt.get('verified') is True
+            except Exception:
+                pass
+            self.model_budget.finish_event(event['id'], verified=verified)
+
+    def _budgeted_manager_call(self, command, request):
+        from manager_cli import call
+        with self.model_budget.scope('maintenance:manager', 'manager'):
+            reservation = self.model_budget.reserve({
+                'max_tokens': request['budget']['max_output_tokens'],
+                'messages': [{'role': 'user', 'content': canonical(request)}]}, model='gpt-6-astra')
+            try:
+                response = call(command, request['snapshot'], request['prompt'],
+                    request['decisionSchema'], timeout=request['budget']['timeout_seconds'])
+            except Exception:
+                self.model_budget.settle(reservation, outcome='unknown')
+                raise
+            else:
+                self.model_budget.settle(reservation, usage=response.get('usage'), outcome='success')
+                return response
+            finally:
+                self._flush_budget_notifications()
 
     def _social_review_allowed(self, job_id):
         return social_feature_enabled(self.config, 'socialReviewEnabled')
@@ -1221,8 +1283,7 @@ class Runtime:
             command = options['command']
             if not isinstance(command, list) or not command or not all(isinstance(v, str) and v for v in command):
                 raise ValueError('invalid_manager_command')
-            provider = lambda request: call(command, request['snapshot'], request['prompt'],
-                request['decisionSchema'], timeout=request['budget']['timeout_seconds'])
+            provider = lambda request: self._budgeted_manager_call(command, request)
         except (KeyError, TypeError, ValueError):
             pass
         try:
@@ -1394,9 +1455,15 @@ class Runtime:
             result['manager'] = manager_projection
         if dispatch is not None:
             result['dispatch'] = dispatch
+        self._flush_budget_notifications()
+        result['modelBudget'] = self.model_budget.inspect()
+        if (any((job.get('error') or {}).get('reason') == 'model_budget_hold' for job in jobs)
+                or any(result['modelBudget']['eventsByStatus'].get(status, 0)
+                       for status in ('in_flight', 'unknown'))):
+            result['status'] = 'attention'
         atomic(self.root / 'health.json', result)
         attention = [{'id': j['id'], 'title': j['theme'].get('title', j['id']), 'error': j['error']}
-                     for j in jobs if j.get('error')]
+                     for j in jobs if j.get('error') and j['error'].get('reason') != 'model_budget_hold']
         titles = {j['id']: j['theme'].get('title', '記事制作の処理') for j in jobs}
         attention += [{'id': r.get('id', 'runtime'), 'title': titles.get(r.get('id'), '記事制作の管理処理'),
                        'error': {'reason': r.get('reason', '確認が必要')}}
@@ -1575,7 +1642,9 @@ class Runtime:
         # Never send the job, approval, request capabilities, private journal or history to a model.
         model_source = {k: copy.deepcopy(v) for k, v in job['bundle'].items()
                         if k not in ('revisionContext', 'catalogCorrectionContext')}
-        final = self.models.review({'article': {'content': text}, 'source': model_source, 'proposal': proposal}, checks)
+        final = self._measured_model_call(id, 'social_image_review',
+            self._model_routes()['final_review']['requested'], lambda: self.models.review(
+                {'article': {'content': text}, 'source': model_source, 'proposal': proposal}, checks))
         review = dict(final, fingerprint=fingerprint(proposal), evidence=flags, polish=copy.deepcopy(old['review']['polish']),
                       imageRefresh=dict(kind='image_only', fromRevision=old['revision'], toRevision=fingerprint(proposal), modelRerun=True),
                       polishReuse=dict(kind='unchanged_text', fromRevision=old['revision'],
@@ -1668,7 +1737,8 @@ class Runtime:
         brief = dict(purpose='校正接続検査', reader='キャンプ初心者', conclusion='部品を確認する',
                      headings=[], facts=['設営前に部品を確認する'], numbers=[], links=[], requiredExpressions=[],
                      protected=[], style='ですます調', length='短文', cta='なし', format='Markdown', externalSafe=True)
-        checked = self.models.polish(probe, brief)
+        checked = self._measured_model_call('maintenance:preflight', 'preflight',
+            self._model_routes()['polish']['requested'], lambda: self.models.polish(probe, brief))
         preservation = inspect_polish(probe, checked['content'])
         if preservation.get('passed') is not True:
             raise ValueError('preflight_polish_preservation_failed')

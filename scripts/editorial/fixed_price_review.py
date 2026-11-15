@@ -122,7 +122,8 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     atomic(artifact_dir / 'polish-source.json', {'content':source_content,'brief':bundle['brief']})
     try:
         _require_running(runtime)
-        polished = runtime.models.polish(source_content, bundle['brief'])
+        polished = runtime._measured_model_call(id, 'fixed_polish', 'gemini-3.8-flash',
+            lambda: runtime.models.polish(source_content, bundle['brief']))
         atomic(artifact_dir / 'polish-output.json', polished)
     finally:
         runtime._save_usage()
@@ -153,11 +154,12 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
         approved_theme['selectionReason'] = approved_theme['selectionReason'].split(' EDITORIAL RECOVERY REQUIREMENTS')[0]
     try:
         _require_running(runtime)
-        review = runtime.models.review(public, {'evidence':flags,'structural':structural,
+        review = runtime._measured_model_call(id, 'fixed_final_review',
+            runtime._model_routes()['final_review']['requested'], lambda: runtime.models.review(public, {'evidence':flags,'structural':structural,
             'source':gathered.get('evidence', {}),'approvedTheme':approved_theme,'preview':preview,
             'polishPreservation':dict(preservation, freshExactBody=True, contentSha256=polish['contentSha256']),
             'editorialRules':context['editorialRules'],'medical':medical,
-            'sourceContent':job['bundle']['article']['content']})
+            'sourceContent':job['bundle']['article']['content']}))
     finally:
         runtime._save_usage()
     require(review.get('passed') is True, 'fresh final review failed')

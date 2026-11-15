@@ -47,6 +47,8 @@ class FixedPriceTests(unittest.TestCase):
   rt.catalog.gather.return_value={'checks':dict(facts=True,images=True,affiliate=True),'images':[dict(x,verified=True) for x in self.new['images']],'evidence':{}}
   rt.renderer.return_value={'passed':True,'clicksVerified':{'desktop':['https://example.test/verified'],'mobile':['https://example.test/verified']}}
   rt._medical.return_value={'passed':True};rt.models.polish.return_value={'content':self.new['article']['content'],'model':'gemini-3.8-flash','usage':{'model':'gemini-3.8-flash','synthetic':True}};rt.models.review.return_value={'passed':True,'score':8.5}
+  rt._measured_model_call.side_effect=lambda article,stage,model,operation:operation()
+  rt._model_routes.return_value={'final_review':{'requested':'claude-sonnet-4-6'}}
   return rt
  def run_operator(self,rt):
   path=self.root/'candidate.json';path.write_text(json.dumps(self.c))
@@ -64,6 +66,10 @@ class FixedPriceTests(unittest.TestCase):
   with self.assertRaisesRegex(ValueError,'execution policy guard required'):self.run_operator(rt)
   rt.catalog.gather.assert_not_called();rt.models.polish.assert_not_called();rt.models.review.assert_not_called()
   self.assertFalse((self.root/'fixed-display-reviews').exists())
+ def test_fixed_operator_uses_common_budget_scope_for_both_model_calls(self):
+  rt=self.runtime();rt._measured_model_call.side_effect=lambda article,stage,model,operation:operation()
+  self.run_operator(rt)
+  self.assertEqual(['fixed_polish','fixed_final_review'],[c.args[1] for c in rt._measured_model_call.call_args_list])
  def test_operator_rechecks_suspension_immediately_before_model_call(self):
   rt=self.runtime()
   def require_running():

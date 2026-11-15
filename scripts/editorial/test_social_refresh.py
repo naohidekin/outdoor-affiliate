@@ -24,6 +24,7 @@ class RefreshTests(unittest.TestCase):
                            targetAccountId='123', slack=dict(user_id='owner', team_id='T', app_id='A',
                            channel_id='C', thread_ts='1.0'))
         self.models, self.slack = Mock(), Mock()
+        self.models.usage = []
         self.models.review.return_value = dict(passed=True, score=8.5, model='claude-sonnet-4-6')
         self.runtime = Runtime(self.config, models=self.models, slack=self.slack, catalog=Fetcher())
         self.runtime._medical = lambda _: {'passed': True}

@@ -13,6 +13,7 @@ import time
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
+from model_inputs import project_model_input
 from quality import SHORTCODE, _protected, _without_code, inspect_polish
 
 
@@ -168,10 +169,11 @@ def _social_validation(result, url, content):
 
 
 class Models:
-    def __init__(self, env, request=None, artifact_sink=None):
+    def __init__(self, env, request=None, artifact_sink=None, budget=None):
         self.env = dict(env)
         self.request = request if request is not None else _request
         self.artifact_sink = artifact_sink
+        self.budget = budget
         self.usage = []
 
     def _safe_public(self, value):
@@ -196,7 +198,9 @@ class Models:
         key = self.env.get(key_name)
         if not _text(key):
             raise ModelError("Missing provider credential")
-        prompt = instruction + "\nReturn ONLY a complete JSON object, no fences or commentary.\n" + self._safe_public(data)
+        self._safe_public(data)
+        projected = project_model_input(data)
+        prompt = instruction + "\nReturn ONLY a complete JSON object, no fences or commentary.\n" + self._safe_public(projected)
         url = GEMINI_URL if gemini else CLAUDE_URL
         headers = {"Content-Type": "application/json"}
         if gemini:
@@ -214,12 +218,15 @@ class Models:
                 payload["response_format"] = {"type": "json_object"}
             elif schema is not None:
                 payload["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
+            hold = self.budget.reserve(payload, model=model) if self.budget is not None else None
             status = None
             failed = False
             try:
                 raw = self.request(url, headers, payload, remaining)
             except ModelError:
                 # A parsed provider response failed a known validation contract.
+                if self.budget is not None:
+                    self.budget.settle(hold, usage=None, outcome='unknown')
                 raise
             except Exception as error:
                 # Capture only a numeric status. Never retain provider messages,
@@ -229,6 +236,8 @@ class Models:
                     status = None
                 failed = True
             if failed:
+                if self.budget is not None:
+                    self.budget.settle(hold, usage=None, outcome='failed' if status is not None else 'unknown')
                 if status == 404 and fallback and fallback != model:
                     model, fallback = fallback, None
                     continue
@@ -242,8 +251,13 @@ class Models:
                 if status is None:
                     raise ModelOutcomeUnknown("Provider outcome unknown")
                 raise ModelError("Provider request failed" + (" (HTTP %d)" % status if status else ""), status)
-            if time.monotonic() > deadline:
-                raise ModelOutcomeUnknown("Provider outcome unknown")
+            settle_error = None
+            if self.budget is not None:
+                try:
+                    self.budget.settle(hold, usage=copy.deepcopy(raw.get('usage')) if isinstance(raw, dict) else None,
+                                       outcome='success', response_id=raw.get('id') if isinstance(raw, dict) else None)
+                except Exception as error:
+                    settle_error = error
             break
         _require(raw, ("id", "model", "usage"))
         usage = raw["usage"]
@@ -255,6 +269,10 @@ class Models:
         record = {"responseId": raw["id"], "model": raw["model"], "input": usage[input_key],
                   "output": usage[output_key], "usage": copy.deepcopy(usage), "actualUSD": None}
         self.usage.append(record)
+        if settle_error is not None:
+            raise settle_error
+        if time.monotonic() > deadline:
+            raise ModelOutcomeUnknown("Provider outcome unknown")
         if gemini:
             choices = raw.get("choices")
             if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
