@@ -238,6 +238,9 @@ class Reporter:
                 unavailable = kind == 'monthly' and not all(report['evidence'].get(k) for k in ('current', 'ga4'))
                 text = editorial_report(jobs, now=now, rolling=kind == 'weekly', kind=kind) + '\n\n' + text
                 text += '\n\n' + seo_status(self.config.get('seoStateRoot'), self.root, kind=kind, now=now)
+            from usage_cost_report import usage_cost_summary
+            text += '\n\n' + usage_cost_summary(
+                self.root, self.config, kind='monthly' if kind == 'monthly' else 'weekly', now=now)
             if not isinstance(text, str) or not text.strip() or len(text) > 12000:
                 raise ValueError('report_text_invalid')
             receipt = previous_warning if unavailable and previous_warning else self.slack.notice(text)

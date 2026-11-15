@@ -1457,6 +1457,19 @@ class Runtime:
             result['dispatch'] = dispatch
         self._flush_budget_notifications()
         result['modelBudget'] = self.model_budget.inspect()
+        if self.config.get('productionVerificationPeriod'):
+            try:
+                from production_verification import verify_period
+                from usage_cost_report import usage_cost_summary
+                period = self.config['productionVerificationPeriod']
+                result['productionVerification'] = verify_period(self.root, jobs, period,
+                    self.config['slack'], self.slack.notice, now=now,
+                    cost_text=lambda: usage_cost_summary(self.root, self.config, kind='production',
+                                                         period_key=period, now=now))
+            except Exception:
+                result['productionVerification'] = {'status': 'requires_reconciliation'}
+            if result['productionVerification']['status'] == 'requires_reconciliation':
+                result['status'] = 'attention'
         if (any((job.get('error') or {}).get('reason') == 'model_budget_hold' for job in jobs)
                 or any(result['modelBudget']['eventsByStatus'].get(status, 0)
                        for status in ('in_flight', 'unknown'))):
