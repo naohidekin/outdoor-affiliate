@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import test from 'node:test';
-import { projectReadback } from './x-api.mjs';
+import { projectReadback, projectThreadReadback } from './x-api.mjs';
 
 const target = path.join(path.dirname(fileURLToPath(import.meta.url)), 'x-api.mjs');
 const run = (input, env = {}) => spawnSync(process.execPath, [target], {
@@ -41,4 +41,27 @@ test('readback projection preserves entity offsets and media key without interpr
   assert.deepEqual(result.urls, post.entities.urls);
   assert.deepEqual(result.mediaKeys, ['3_333']);
   assert.equal(result.text, post.text);
+});
+
+test('thread readback binds own direct reply and ordered public photo URLs', () => {
+  const root = { data: { id: '111', author_id: '123', text: 'main',
+    attachments: { media_keys: ['3_a'] }, referenced_tweets: [] },
+    includes: { media: [{ media_key: '3_a', type: 'photo', url: 'https://pbs.twimg.com/media/a.png' }] } };
+  const reply = { id: '222', author_id: '123', text: 'reply', attachments: { media_keys: [] },
+    referenced_tweets: [{ type: 'replied_to', id: '111' }] };
+  const result = projectThreadReadback(root, { tweets: [reply,
+    { ...reply, id: '333', author_id: '999' }] });
+  assert.equal(result.main.id, '111');
+  assert.deepEqual(result.replies.map(item => item.id), ['222']);
+  assert.deepEqual(result.media, [{ mediaKey: '3_a', type: 'photo',
+    url: 'https://pbs.twimg.com/media/a.png' }]);
+});
+
+test('thread readback rejects missing reply and non-photo media', () => {
+  const root = { data: { id: '111', author_id: '123', text: 'main',
+    attachments: { media_keys: ['3_a'] }, referenced_tweets: [] },
+    includes: { media: [{ media_key: '3_a', type: 'video', url: 'https://pbs.twimg.com/media/a' }] } };
+  assert.throws(() => projectThreadReadback(root, { tweets: [] }));
+  assert.throws(() => projectThreadReadback(root, { tweets: [{ id: '222', author_id: '123', text: 'r',
+    referenced_tweets: [{ type: 'replied_to', id: '111' }] }] }));
 });

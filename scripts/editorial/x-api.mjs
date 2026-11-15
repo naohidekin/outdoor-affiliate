@@ -15,6 +15,21 @@ export function projectReadback(post) {
     replyTo: (post.referenced_tweets ?? []).find(ref => ref.type === 'replied_to')?.id ?? null };
 }
 
+export function projectThreadReadback(rootResult, timeline) {
+  const root = rootResult?.data;
+  if (!root || !/^\d+$/.test(root.id ?? '') || !/^\d+$/.test(root.author_id ?? '')) throw Error('lookup');
+  const replies = (timeline?.tweets ?? []).filter(post => post?.author_id === root.author_id &&
+    (post.referenced_tweets ?? []).some(ref => ref.type === 'replied_to' && ref.id === root.id));
+  if (replies.length < 1 || replies.length > 8) throw Error('reply');
+  const mediaByKey = new Map((rootResult.includes?.media ?? []).map(item => [item.media_key, item]));
+  const media = (root.attachments?.media_keys ?? []).map(mediaKey => {
+    const item = mediaByKey.get(mediaKey);
+    if (!item || item.type !== 'photo' || typeof item.url !== 'string') throw Error('media');
+    return { mediaKey, type: item.type, url: item.url };
+  });
+  return { main: projectReadback(root), replies: replies.map(projectReadback), media };
+}
+
 async function main() {
 try {
   let raw = '';
@@ -24,7 +39,7 @@ try {
   }
   const request = JSON.parse(raw);
   const { action, payload } = request;
-  if (!['preflight', 'upload', 'maincreate', 'replycreate', 'read'].includes(action) ||
+  if (!['preflight', 'upload', 'maincreate', 'replycreate', 'read', 'threadread'].includes(action) ||
       !payload || typeof payload !== 'object' || Array.isArray(payload)) throw Error('action');
   const names = ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET'];
   if (names.some(name => !process.env[name])) throw Error('auth');
@@ -60,7 +75,7 @@ try {
     const result = await client.v2.tweet(payload.text, { reply: { in_reply_to_tweet_id: payload.parentId } });
     if (!/^\d+$/.test(result?.data?.id ?? '')) throw Error('reply');
     output = { id: result.data.id };
-  } else {
+  } else if (action === 'read') {
     if (!/^\d+$/.test(payload.id ?? '')) throw Error('lookup');
     const result = await client.v2.singleTweet(payload.id, {
       'tweet.fields': 'author_id,attachments,entities,referenced_tweets',
@@ -70,6 +85,24 @@ try {
     const post = result?.data;
     if (!post || post.id !== payload.id) throw Error('lookup');
     output = projectReadback(post);
+  } else {
+    if (!/^\d+$/.test(payload.id ?? '')) throw Error('lookup');
+    const fields = {
+      'tweet.fields': 'author_id,attachments,entities,referenced_tweets,conversation_id,created_at',
+      expansions: 'attachments.media_keys',
+      'media.fields': 'media_key,type,url',
+    };
+    const root = await client.v2.singleTweet(payload.id, fields);
+    if (root?.data?.id !== payload.id || !/^\d+$/.test(root?.data?.author_id ?? '')) throw Error('lookup');
+    const timeline = await client.v2.userTimeline(root.data.author_id, { ...fields, max_results: 100 });
+    let direct = timeline.tweets.filter(post => (post.referenced_tweets ?? []).some(
+      ref => ref.type === 'replied_to' && ref.id === payload.id));
+    if (!direct.length && timeline.meta?.next_token) {
+      await timeline.fetchNext(100);
+      direct = timeline.tweets.filter(post => (post.referenced_tweets ?? []).some(
+        ref => ref.type === 'replied_to' && ref.id === payload.id));
+    }
+    output = projectThreadReadback(root, { tweets: direct });
   }
   process.stdout.write(JSON.stringify(output) + '\n');
 } catch {
