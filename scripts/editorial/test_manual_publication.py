@@ -361,7 +361,8 @@ class RealLedgerManualPublicationTests(unittest.TestCase):
         self.lock = (self.root / 'runtime.flock').open('a')
         fcntl.flock(self.lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         self.ledger = Ledger(self.root, 'OWNER')
-        self.config = {'spoolDir': str(self.spool), 'slack': copy.deepcopy(SCOPE),
+        self.config = {'spoolDir': str(self.spool),
+                       'slack': {**copy.deepcopy(SCOPE), 'bot_user_id': 'BOT'},
                        'publicationEnabled': False, 'socialPostingEnabled': False,
                        'postPublicationAuditEnabled': False}
         runtime = SimpleNamespace(root=self.root, config=self.config, env={},

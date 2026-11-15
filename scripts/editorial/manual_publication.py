@@ -103,6 +103,7 @@ class ManualPublication(ManualReview):
         scope = self._runtime.config.get('slack')
         if not isinstance(scope, dict) or any(not scope.get(key) for key in SCOPE):
             raise ValueError('manual_publication_scope_invalid')
+        bound_scope = {key: scope[key] for key in SCOPE}
         spool = Path(self._runtime.config['spoolDir'])
         matches = []
         for path in sorted(spool.glob('*.json')):
@@ -118,8 +119,8 @@ class ManualPublication(ManualReview):
                     and event.get('manifest_hash') == target['revision']
                     and event.get('message_ts') == target['cardTs']
                     and event.get('action_id') == 'camp_review_approve'
-                    and event.get('user_id') == scope['user_id']
-                    and all(event.get(key) == scope[key] for key in SCOPE)):
+                    and event.get('user_id') == bound_scope['user_id']
+                    and all(event.get(key) == bound_scope[key] for key in SCOPE)):
                 matches.append((path, event, hashlib.sha256(raw).hexdigest()))
         if len(matches) != 1:
             raise ValueError('manual_publication_exact_spool_event_required')
@@ -140,23 +141,23 @@ class ManualPublication(ManualReview):
                 or request.get('article_id') != job_id
                 or request.get('manifest_hash') != target['revision']
                 or request.get('card_ts') != target['cardTs']
-                or request.get('scope') != scope):
+                or request.get('scope') != bound_scope):
             raise ValueError('manual_publication_exact_article_request_required')
         event = copy.deepcopy(event)
         event['card_ts'] = event['message_ts']
-        decided = self._runtime.ledger.decide(event, scope)
+        decided = self._runtime.ledger.decide(event, bound_scope)
         approval = decided.get('approval') or {}
         if (decided.get('id') != job_id or decided.get('stage') != 'approved'
                 or decided.get('revision') != target['revision']
                 or approval.get('action') != 'approved'
-                or approval.get('user_id') != scope['user_id']
+                or approval.get('user_id') != bound_scope['user_id']
                 or approval.get('revision') != target['revision']):
             raise ValueError('manual_publication_approval_mismatch')
         authority = {
             'schemaVersion': 1, 'jobId': job_id, 'revision': target['revision'],
             'cardTs': target['cardTs'], 'requestId': event['request_id'],
             'eventId': event['event_id'], 'eventHash': event_hash,
-            'scope': {key: scope[key] for key in SCOPE},
+            'scope': bound_scope,
         }
         authority_path = Path(self._runtime.root) / 'manual-publication-authority' / (job_id + '.json')
         if authority_path.exists():
