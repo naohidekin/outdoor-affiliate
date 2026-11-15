@@ -14,6 +14,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
 
 from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
                     valid_social_images, valid_image_refresh, REFRESH_NOTICE)
@@ -21,7 +22,9 @@ from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
 from attention_presentation import attention_text
-from dispatcher import DeterministicDispatcher, execution_policy, social_feature_enabled
+from dispatcher import (DeterministicDispatcher, buffer_social_eligible,
+                        buffer_social_outstanding, buffer_social_start,
+                        execution_policy, social_feature_enabled)
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 from model_budget import ModelBudget
 from daily_metrics import collect_daily_metrics, require_fresh_daily_metrics
@@ -91,10 +94,12 @@ def safe_publication_diagnostic(value):
 
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
-                 analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
+                 analytics=None, reporter=None, social_publisher=None, buffer_publisher=None,
+                 social_cards=None, post_auditor=None):
         self.execution_policy = execution_policy(config)
         for feature in ('socialGenerationEnabled', 'socialReviewEnabled'):
             social_feature_enabled(config, feature)
+        buffer_social_start(config)
         self.config = config
         self.root = Path(config['stateRoot'])
         if 'productionSchedule' in config and config['productionSchedule'] is None:
@@ -130,6 +135,7 @@ class Runtime:
         self.publisher = publisher or self._publish
         self.social_cards = social_cards
         self.social_publisher = social_publisher
+        self.buffer_publisher = buffer_publisher
         self.post_auditor = post_auditor
         from analytics import Analytics
         from reporting import Reporter
@@ -920,7 +926,14 @@ class Runtime:
                 self._flush_budget_notifications()
 
     def _social_review_allowed(self, job_id):
-        return social_feature_enabled(self.config, 'socialReviewEnabled')
+        if not social_feature_enabled(self.config, 'socialReviewEnabled'):
+            return False
+        if buffer_social_start(self.config) is None:
+            return True
+        job = self.ledger.get_job(job_id)
+        proposal = ((job.get('social') or {}).get('proposal') or {})
+        return (proposal.get('deliveryMode') == 'buffer_x'
+                and buffer_social_eligible(job, self.config))
 
     def deliver(self, id, kind='article'):
         self._require_running()
@@ -954,6 +967,7 @@ class Runtime:
     def consume(self):
         self._require_running()
         consume_social = social_feature_enabled(self.config, 'socialReviewEnabled')
+        buffer_rollout = buffer_social_start(self.config) is not None
         spool = Path(self.config['spoolDir'])
         processed = spool / 'editorial-processed'
         processed.mkdir(mode=0o700, exist_ok=True)
@@ -971,10 +985,27 @@ class Runtime:
                     raise ValueError('invalid_event')
                 event['card_ts'] = event.get('message_ts')
             except (ValueError, UnicodeError):
+                if buffer_rollout:
+                    continue  # Unknown legacy SNS spool remains byte-for-byte untouched.
                 if not consume_social:
                     continue  # Unknown kind stays untouched in article-only mode.
                 path.rename(quarantine / (path.stem + '-' + secrets.token_hex(4) + '.json'))
                 continue
+            with self.ledger._tx() as db:
+                row = db.execute('SELECT job_id,kind,data FROM requests WHERE id=?',
+                                 (event.get('request_id'),)).fetchone()
+                if row and row[1] == 'social' and buffer_rollout:
+                    job = self.ledger._get(db, row[0])
+                    request = json.loads(row[2])
+                    social = job.get('social') or {}
+                    proposal = social.get('proposal') or {}
+                    if (not buffer_social_eligible(job, self.config)
+                            or proposal.get('deliveryMode') != 'buffer_x'
+                            or request.get('manifest_hash') != social.get('revision')
+                            or request.get('status') != 'delivered'):
+                        continue
+                elif row is None and buffer_rollout:
+                    continue
             if not consume_social:
                 with self.ledger._tx() as db:
                     row = db.execute('SELECT kind FROM requests WHERE id=?',
@@ -1397,9 +1428,17 @@ class Runtime:
                         continue
                     self.deliver(job['id'], 'social')
                 elif job['stage'] == 'social_approved':
-                    if dispatch is not None and ('publish_social', job['id'], None) not in actions:
+                    mode = job['social']['proposal'].get('deliveryMode', 'manual')
+                    action = 'publish_buffer_social' if mode == 'buffer_x' else 'publish_social'
+                    if dispatch is not None and (action, job['id'], None) not in actions:
                         continue
-                    if job['social']['proposal'].get('deliveryMode', 'manual') == 'auto_x':
+                    if mode == 'buffer_x':
+                        if self.config.get('bufferPostingEnabled') is True:
+                            self.publish_buffer_social(job, now=now)
+                        else:
+                            results.append({'id': job['id'], 'status': 'waiting_auth',
+                                            'reason': 'buffer_posting_disabled'})
+                    elif mode == 'auto_x':
                         if self.config.get('socialPostingEnabled') is True:
                             self.publish_social(job)
                         else:
@@ -1407,6 +1446,13 @@ class Runtime:
                                             'reason': 'social_posting_disabled'})
                     else:
                         raise ValueError('legacy_social_requires_mode_migration')
+                elif job['stage'] == 'social_scheduled':
+                    if self._buffer_scheduled_notice_status(job) != 'verified':
+                        results.append({'id': job['id'], 'status': 'attention',
+                                        'reason': 'buffer_schedule_notice_requires_reconciliation'})
+                    if dispatch is not None and ('publish_buffer_social', job['id'], None) not in actions:
+                        continue
+                    self.publish_buffer_social(job, now=now)
                 elif job['stage'] == 'social_posted':
                     if dispatch is not None and ('notify_social', job['id'], None) not in actions:
                         continue
@@ -1538,6 +1584,23 @@ class Runtime:
         self._require_running()
         if not social_feature_enabled(self.config, 'socialGenerationEnabled'):
             raise ValueError('social_generation_disabled')
+        buffer_start = buffer_social_start(self.config)
+        if buffer_start is not None:
+            if not buffer_social_eligible(job, self.config):
+                raise ValueError('buffer_social_period_ineligible')
+            if not self._social_audit_success(job):
+                raise ValueError('buffer_social_requires_successful_public_audit')
+            self._valid_buffer_social_card(job)
+            if buffer_social_outstanding(self.ledger.list_jobs()) >= 3:
+                raise ValueError('buffer_social_outstanding_cap')
+            settings = self.config.get('buffer')
+            if not isinstance(settings, dict):
+                raise ValueError('buffer_binding_unconfigured')
+            required = {key: settings.get(key) for key in
+                        ('organizationId', 'channelId', 'xAccountId', 'schedulingPolicy')}
+            if (not all(isinstance(value, str) and value for value in required.values())
+                    or required['schedulingPolicy'] != 'next_available_slot'):
+                raise ValueError('buffer_binding_unconfigured')
         publication = job.get('publication') or {}
         proof = publication.get('readback') or {}
         if publication.get('verified') is not True or proof.get('verified') is not True or proof.get('fingerprint') != job['revision']:
@@ -1548,7 +1611,7 @@ class Runtime:
         account = json.loads((Path(self.config['repo']) / 'data/account-config.json').read_text())
         bundle['socialRules'] = {k: account[k] for k in ('tone', 'ngWords', 'linkRules', 'formatting', 'personaGuards') if k in account}
         bundle['socialRules']['approval'] = ('Separate exact-version human approval binds delivery mode and target account. '
-            'Only explicitly auto_x proposals may automatically post after approval. Examples are not factual evidence.')
+            'Only the explicitly bound delivery mode may run after approval. Examples are not factual evidence.')
         bundle['publicReadback'] = {'verified': True, 'url': job['publication']['url'],
                                    'content': bundle['article']['content'], 'images': bundle['images']}
         manifest = bundle['article'].get('generationMeta', {}).get('socialCard')
@@ -1591,7 +1654,15 @@ class Runtime:
         if not all(flags.values()):
             raise ValueError('social_source_image_url_or_format_failed')
         target = self.config.get('targetAccountId')
-        if target is not None:
+        if buffer_start is not None:
+            proposal.update(deliveryMode='buffer_x', targetAccountIdX=required['xAccountId'],
+                            buffer={'organizationId': required['organizationId'],
+                                    'channelId': required['channelId'],
+                                    'schedulingPolicy': 'next_available_slot'})
+            proposal.pop('targetAccountId', None)
+            proposal.pop('dueAt', None)
+            proposal.pop('scheduledAt', None)
+        elif target is not None:
             proposal.update(deliveryMode='auto_x', targetAccountId=target)
         else:
             if self.config.get('socialPostingEnabled') is True:
@@ -1619,6 +1690,76 @@ class Runtime:
         self.ledger.record_social(job['id'], proposal, review)
         if social_feature_enabled(self.config, 'socialReviewEnabled'):
             self.deliver(job['id'], 'social')
+
+    def _social_audit_success(self, job):
+        """Read only an exact cached public-audit success or valid same-version closure."""
+        publication = job.get('publication') or {}
+        key = fingerprint({'id': job.get('id'), 'revision': job.get('revision'),
+                           'publication': publication})
+        relative = 'post-publication-audits/' + key + '.json'
+        path = self.root / relative
+        if path.exists() and not path.is_symlink():
+            try:
+                audit = json.loads(path.read_text())
+                result = audit.get('result') or {}
+                checks = result.get('checks')
+                if (audit.get('schemaVersion') == 1
+                        and audit.get('status') == 'success' and audit.get('id') == job.get('id')
+                        and audit.get('revision') == job.get('revision')
+                        and audit.get('auditKey') == key
+                        and audit.get('publication') == publication
+                        and result.get('passed') is True and result.get('status') == 'passed'
+                        and result.get('issues') == [] and isinstance(checks, list) and checks
+                        and all(isinstance(check, dict) and isinstance(check.get('name'), str)
+                                and check['name'] and check.get('status') == 'passed'
+                                for check in checks)):
+                    return True
+            except (OSError, ValueError):
+                return False
+        try:
+            from record_reconciliation import project_reconciliations
+            projected = project_reconciliations(self.root)
+        except Exception:
+            return False
+        for item in projected.get('reconciledSources', []):
+            if (item.get('recordType') == 'post_publication_audit'
+                    and (item.get('sourceIdentity') or {}).get('path') == relative
+                    and item.get('jobId') == job.get('id')
+                    and item.get('revision') == job.get('revision')
+                    and any(proof.get('kind') == 'same_version_audit_passed'
+                            for proof in item.get('proofs', []))):
+                return True
+        return False
+
+    @staticmethod
+    def _valid_buffer_social_card(job):
+        bundle = job.get('bundle') or {}
+        article = bundle.get('article') or {}
+        manifest = (article.get('generationMeta') or {}).get('socialCard')
+        images = bundle.get('images')
+        if not isinstance(manifest, dict) or not isinstance(images, list):
+            raise ValueError('buffer_social_card_binding_invalid')
+        digest = manifest.get('sha256')
+        url = manifest.get('url')
+        matches = [image for image in images if isinstance(image, dict)
+                   and image.get('role') == 'social-card']
+        try:
+            parsed = urlsplit(url)
+            valid = (len(matches) == 1 and re.fullmatch(r'[a-f0-9]{64}', digest or '')
+                     and type(manifest.get('size')) is int and manifest['size'] > 0
+                     and manifest.get('contentType') == 'image/png'
+                     and manifest.get('finalUrl') == url
+                     and parsed.scheme == 'https' and bool(parsed.hostname)
+                     and not parsed.query and not parsed.fragment
+                     and parsed.path.endswith('/' + digest[:2] + '/' + digest + '.png')
+                     and matches[0].get('verified') is True
+                     and all(matches[0].get(key) == manifest.get(key)
+                             for key in ('url', 'sha256', 'size', 'contentType')))
+        except (AttributeError, TypeError, ValueError):
+            valid = False
+        if not valid:
+            raise ValueError('buffer_social_card_binding_invalid')
+        return manifest
 
     def hold_social_refresh(self, id, *, expected_social_revision):
         self._require_running()
@@ -1746,6 +1887,173 @@ class Runtime:
         posted = self.ledger.record_social_publication(current['id'], social['revision'], evidence)
         self.notify_social_posted(posted)
         return posted
+
+    def publish_buffer_social(self, job, *, now=None):
+        """Schedule or verify one exact approved Buffer proposal; direct X stays disabled."""
+        self._require_running()
+        now = now or datetime.now(JST)
+        if self.config.get('bufferPostingEnabled') is not True:
+            raise ValueError('buffer_posting_disabled')
+        if self.config.get('socialPostingEnabled') is not False:
+            raise ValueError('direct_x_must_remain_disabled')
+        current = self.ledger.get_job(job['id'])
+        if not self._social_audit_success(current):
+            raise ValueError('buffer_social_requires_successful_public_audit')
+        self._valid_buffer_social_card(current)
+        social = current.get('social') or {}
+        proposal = social.get('proposal') or {}
+        valid_social_mode(proposal)
+        settings = self.config.get('buffer') or {}
+        expected = {'organizationId': settings.get('organizationId'),
+                    'channelId': settings.get('channelId'),
+                    'schedulingPolicy': 'next_available_slot'}
+        if (current.get('stage') not in ('social_approved', 'social_scheduled')
+                or proposal.get('deliveryMode') != 'buffer_x'
+                or proposal.get('buffer') != expected
+                or proposal.get('targetAccountIdX') != settings.get('xAccountId')
+                or fingerprint(proposal) != social.get('revision')):
+            raise ValueError('approved_buffer_target_required')
+        valid_review(social.get('review'), social['revision'])
+        approval = social.get('approval') or {}
+        if (approval.get('action') != 'approved' or approval.get('revision') != social['revision']
+                or approval.get('user_id') != self.config['slack']['user_id']):
+            raise ValueError('current_social_owner_approval_required')
+        if self.buffer_publisher is None:
+            buffer_env = dict(self.env)
+            path = self.config.get('bufferEnvFile')
+            if path:
+                candidate = Path(path)
+                if candidate.is_file() and not candidate.is_symlink():
+                    buffer_env.update(env_file(candidate))
+            from buffer_publisher import BufferPublisher
+            self.buffer_publisher = BufferPublisher(self.config, buffer_env, fetcher=self.catalog)
+        before = self._buffer_request_snapshot(social['revision'])
+        schedule = social.get('bufferSchedule') or {}
+        if (before.get('pending')
+                or before.get('phase') not in (None, 'scheduled', 'verified')
+                or current.get('stage') == 'social_scheduled'
+                and before.get('phase') not in ('scheduled', 'verified')
+                or current.get('stage') == 'social_scheduled'
+                and (schedule.get('nextCheckAt') is None or schedule.get('duePolls', 0) >= 3)
+                and before.get('phase') != 'verified'):
+            raise ValueError('buffer_publication_requires_reconciliation')
+        maximum = (settings.get('maxBufferRequestsPerPost', 18)
+                   if type(settings.get('maxBufferRequestsPerPost', 18)) is int else 18)
+        allowance = max(0, maximum - before['requestCount'])
+        period = self.ledger.production_schedule.period_key(now)
+        if period is None:
+            raise ValueError('buffer_budget_period_unavailable')
+        hold = (self.ledger.reserve_buffer_requests(period, allowance, now=now)
+                if allowance else None)
+        result = None
+        caught = None
+        try:
+            result = self.buffer_publisher.schedule_or_check(current, now=now)
+        except Exception as error:
+            caught = error
+        after = self._buffer_request_snapshot(social['revision'])
+        actual = after['requestCount'] - before['requestCount']
+        if actual < 0 or hold is None and actual:
+            raise ValueError('buffer_request_budget_requires_reconciliation')
+        if hold is not None:
+            if actual == 0:
+                self.ledger.cancel_buffer_request_reservation(hold, now=now)
+            else:
+                windows = after.get('rateLimits')
+                if not isinstance(windows, list) or {item.get('window') for item in windows} != {
+                        900, 86400, 2592000}:
+                    raise ValueError('buffer_request_budget_requires_reconciliation')
+                observation = {
+                    'requestCount': actual, 'observedAt': now.isoformat(),
+                    'rateLimitWindows': [{
+                        'windowSeconds': item['window'], 'limit': item['quota'],
+                        'remaining': item['remaining'],
+                        'resetAt': (now + timedelta(seconds=item['resetAfter'])).isoformat(),
+                    } for item in windows],
+                }
+                reason_text = str(caught) if caught is not None else str((result or {}).get('reason', ''))
+                if reason_text in ('buffer_rate_limited', 'buffer_rate_limit_429'):
+                    observation['statusCode'] = 429
+                    if isinstance(after.get('retryAfter'), int):
+                        observation['retryAfterSeconds'] = after['retryAfter']
+                self.ledger.settle_buffer_requests(
+                    hold, observation,
+                    outcome='failed' if caught is not None or (result or {}).get('status') == 'unverified'
+                    else 'success', now=now)
+        if caught is not None:
+            raise caught
+        if not isinstance(result, dict):
+            raise ValueError('buffer_publication_requires_reconciliation')
+        if result.get('status') in ('scheduled', 'pending') and result.get('verified') is False:
+            interval = settings.get('duePollIntervalSeconds', 1800)
+            scheduled = self.ledger.record_buffer_social_schedule(
+                current['id'], social['revision'], result, now=now,
+                poll_interval_seconds=interval,
+                max_due_polls=settings.get('maxDuePolls', 3))
+            if result.get('status') == 'scheduled':
+                self._notify_buffer_scheduled(scheduled)
+            return scheduled
+        if result.get('status') == 'verified' and result.get('verified') is True:
+            posted = self.ledger.record_buffer_social_publication(
+                current['id'], social['revision'], result)
+            self.notify_social_posted(posted)
+            return posted
+        raise ValueError('buffer_publication_requires_reconciliation')
+
+    def _buffer_request_snapshot(self, revision):
+        marker = self.root / 'buffer-publications' / (revision + '.json')
+        if not marker.exists():
+            return {'requestCount': 0, 'rateLimits': [], 'retryAfter': None,
+                    'phase': None, 'pending': None}
+        if marker.is_symlink() or marker.stat().st_mode & 0o777 != 0o600:
+            raise ValueError('buffer_request_budget_requires_reconciliation')
+        try:
+            state = json.loads(marker.read_text())
+        except (OSError, ValueError):
+            raise ValueError('buffer_request_budget_requires_reconciliation') from None
+        if state.get('revision') != revision or type(state.get('bufferRequests', 0)) is not int:
+            raise ValueError('buffer_request_budget_requires_reconciliation')
+        return {'requestCount': state.get('bufferRequests', 0),
+                'rateLimits': copy.deepcopy(state.get('sharedRateLimits', [])),
+                'retryAfter': state.get('retryAfter'), 'phase': state.get('phase'),
+                'pending': copy.deepcopy(state.get('pending'))}
+
+    def _notify_buffer_scheduled(self, job):
+        social = job.get('social') or {}
+        schedule = social.get('bufferSchedule') or {}
+        revision = social.get('revision')
+        binding = {'revision': revision, 'bufferPostId': schedule.get('bufferPostId'),
+                   'dueAt': schedule.get('dueAt')}
+        path = self.root / 'buffer-scheduled-notices' / (str(revision) + '.json')
+        if path.exists():
+            saved = json.loads(path.read_text())
+            if saved.get('binding') != binding:
+                raise ValueError('buffer_schedule_notice_conflict')
+            return saved.get('status', 'requires_reconciliation')
+        due = datetime.fromisoformat(schedule['dueAt'].replace('Z', '+00:00')).astimezone(JST)
+        text = ('【Buffer予約確認済み】' + job['bundle']['article']['title'] + '\n'
+                + 'Bufferの次の空き枠: ' + due.strftime('%Y-%m-%d %H:%M JST'))
+        marker = {'status': 'in_flight', 'at': stamp(), 'binding': binding,
+                  'textHash': hashlib.sha256(text.encode('utf-8')).hexdigest()}
+        atomic(path, marker)
+        try:
+            receipt = self.slack.notice(text)
+            if not isinstance(receipt, dict) or receipt.get('verified') is not True:
+                raise ValueError('buffer_schedule_notice_unknown')
+            marker.update(status='verified', receipt=receipt, at=stamp())
+        except Exception:
+            marker.update(status='requires_reconciliation', at=stamp())
+        atomic(path, marker)
+        return marker['status']
+
+    def _buffer_scheduled_notice_status(self, job):
+        revision = (job.get('social') or {}).get('revision')
+        path = self.root / 'buffer-scheduled-notices' / (str(revision) + '.json')
+        try:
+            value = json.loads(path.read_text())
+        except (OSError, ValueError):
+            return 'requires_reconciliation'
+        return 'verified' if value.get('status') == 'verified' else 'requires_reconciliation'
 
     def notify_social_posted(self, job):
         self._require_running()

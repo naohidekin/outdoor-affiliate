@@ -72,13 +72,32 @@ def valid_astra_review(review, revision):
 
 def valid_social_mode(proposal):
     mode = proposal.get('deliveryMode', 'manual')
-    require(mode in ('manual', 'auto_x'), 'unknown social delivery mode')
+    require(mode in ('manual', 'auto_x', 'buffer_x'), 'unknown social delivery mode')
     if mode == 'auto_x':
         require(isinstance(proposal.get('targetAccountId'), str) and
                 re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountId']) is not None,
                 'fixed X account ID required')
+        require(not proposal.get('targetAccountIdX') and not proposal.get('buffer'),
+                'direct X target cannot use Buffer binding')
+    elif mode == 'buffer_x':
+        binding = proposal.get('buffer')
+        require(isinstance(binding, dict) and set(binding) ==
+                {'organizationId', 'channelId', 'schedulingPolicy'},
+                'exact Buffer binding required')
+        require(all(isinstance(binding.get(key), str) and
+                    re.fullmatch(r'[A-Za-z0-9_-]{3,128}', binding[key])
+                    for key in ('organizationId', 'channelId')),
+                'fixed Buffer organization and channel required')
+        require(binding['schedulingPolicy'] == 'next_available_slot',
+                'next available Buffer slot required')
+        require(isinstance(proposal.get('targetAccountIdX'), str) and
+                re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountIdX']) is not None,
+                'fixed Buffer X account ID required')
+        require(all(key not in proposal for key in ('targetAccountId', 'dueAt', 'scheduledAt')),
+                'Buffer approval must not bind a fixed time')
     else:
-        require(not proposal.get('targetAccountId'), 'manual social target must be absent')
+        require(not proposal.get('targetAccountId') and not proposal.get('targetAccountIdX')
+                and not proposal.get('buffer'), 'manual social target must be absent')
 
 
 def valid_social_images(job, proposal):
@@ -196,6 +215,8 @@ def validate_display_suppression(previous, candidate):
 
 
 class Ledger:
+    BUFFER_REQUEST_LIMIT = 60
+
     def __init__(self, root, owner_id, production_schedule=None, *, target_account_id=None):
         self.production_schedule = ProductionSchedule(production_schedule)
         self.target_account_id = target_account_id
@@ -247,6 +268,150 @@ class Ledger:
         row = db.execute('SELECT data FROM jobs WHERE id=?', (id,)).fetchone()
         require(row is not None, 'unknown job')
         return json.loads(row[0])
+
+    @classmethod
+    def _buffer_budget_default(cls):
+        return {'limit': cls.BUFFER_REQUEST_LIMIT, 'used': 0, 'reservations': {},
+                'rateLimitWindows': [], 'lastObservation': None, 'holdReason': None,
+                'retryAfterUntil': None}
+
+    @staticmethod
+    def _buffer_budget_key(period):
+        require(isinstance(period, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', period),
+                'buffer budget period required')
+        try:
+            date = datetime.fromisoformat(period).date()
+        except ValueError:
+            raise ValueError('buffer budget period required') from None
+        require(date.isoformat() == period, 'buffer budget period required')
+        return 'buffer_request_budget:' + period
+
+    @staticmethod
+    def _valid_buffer_usage(usage, now):
+        require(isinstance(usage, dict) and set(usage) <= {
+            'requestCount', 'observedAt', 'rateLimitWindows', 'statusCode',
+            'retryAfterSeconds'}, 'buffer request usage invalid')
+        require(type(usage.get('requestCount')) is int and usage['requestCount'] >= 0,
+                'buffer request usage invalid')
+        observed = timestamp(usage.get('observedAt'))
+        require(observed <= now, 'buffer request usage invalid')
+        windows = usage.get('rateLimitWindows')
+        require(isinstance(windows, list) and len(windows) == 3,
+                'buffer rate limit windows required')
+        expected = {900, 86400, 2592000}
+        normalized = []
+        for item in windows:
+            require(isinstance(item, dict) and set(item) == {
+                'windowSeconds', 'limit', 'remaining', 'resetAt'},
+                'buffer rate limit windows required')
+            require(type(item.get('windowSeconds')) is int
+                    and type(item.get('limit')) is int and item['limit'] > 0
+                    and type(item.get('remaining')) is int
+                    and 0 <= item['remaining'] <= item['limit'],
+                    'buffer rate limit windows required')
+            reset = timestamp(item.get('resetAt'))
+            normalized.append({**item, 'resetAt': reset.isoformat()})
+        require({item['windowSeconds'] for item in normalized} == expected,
+                'buffer rate limit windows required')
+        status = usage.get('statusCode')
+        require(status is None or type(status) is int and 100 <= status <= 599,
+                'buffer request usage invalid')
+        retry = usage.get('retryAfterSeconds')
+        require(retry is None or type(retry) is int and 0 <= retry <= 2592000,
+                'buffer request usage invalid')
+        require(status == 429 or retry is None, 'Retry-After requires Buffer 429')
+        return {**usage, 'observedAt': observed.isoformat(),
+                'rateLimitWindows': sorted(normalized, key=lambda item: item['windowSeconds'])}
+
+    def reserve_buffer_requests(self, period, amount, *, now=None):
+        """Reserve the adapter's bounded worst case before any shared Buffer request."""
+        now = timestamp(now)
+        key = self._buffer_budget_key(period)
+        require(type(amount) is int and 1 <= amount <= 18, 'buffer request reservation invalid')
+        with self._tx() as db:
+            row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
+            state = self._buffer_budget_default() if row is None else json.loads(row[0])
+            require(state.get('limit') == self.BUFFER_REQUEST_LIMIT
+                    and type(state.get('used')) is int and state['used'] >= 0
+                    and isinstance(state.get('reservations'), dict),
+                    'buffer request budget requires reconciliation')
+            reserved = sum(state['reservations'].values())
+            require(all(type(value) is int and 1 <= value <= 18
+                        for value in state['reservations'].values()),
+                    'buffer request budget requires reconciliation')
+            retry_until = state.get('retryAfterUntil')
+            if retry_until is not None:
+                require(now >= timestamp(retry_until), 'buffer_rate_limit_429')
+            require(state['used'] + reserved + amount <= self.BUFFER_REQUEST_LIMIT,
+                    'buffer_request_budget_hold')
+            hold_id = secrets.token_hex(16)
+            state['reservations'][hold_id] = amount
+            db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)', (key, canonical(state)))
+            self._event(db, 'buffer-budget:' + period, 'buffer_request_reserved',
+                        {'period': period, 'holdId': hold_id, 'amount': amount,
+                         'used': state['used']}, now)
+        return {'id': hold_id, 'period': period, 'reserved': amount}
+
+    def settle_buffer_requests(self, hold, usage, *, outcome, now=None):
+        """Settle only measured requests and retain the provider's shared windows."""
+        now = timestamp(now)
+        require(isinstance(hold, dict) and set(hold) == {'id', 'period', 'reserved'}
+                and isinstance(hold.get('id'), str) and hold['id'],
+                'buffer request reservation invalid')
+        require(outcome in ('success', 'failed', 'unknown'), 'buffer request outcome invalid')
+        key = self._buffer_budget_key(hold.get('period'))
+        measured = self._valid_buffer_usage(usage, now)
+        with self._tx() as db:
+            row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
+            require(row is not None, 'buffer request reservation missing')
+            state = json.loads(row[0])
+            reserved = (state.get('reservations') or {}).get(hold['id'])
+            require(reserved == hold.get('reserved')
+                    and measured['requestCount'] <= reserved,
+                    'buffer request settlement conflict')
+            state['reservations'].pop(hold['id'])
+            state['used'] += measured['requestCount']
+            require(state['used'] <= self.BUFFER_REQUEST_LIMIT,
+                    'buffer request budget exceeded')
+            state['rateLimitWindows'] = measured['rateLimitWindows']
+            state['lastObservation'] = measured
+            if measured.get('statusCode') == 429:
+                state['holdReason'] = 'buffer_rate_limit_429'
+                retry = measured.get('retryAfterSeconds')
+                state['retryAfterUntil'] = ((now + timedelta(seconds=retry)).isoformat()
+                                             if retry is not None else None)
+            db.execute('UPDATE meta SET value=? WHERE key=?', (canonical(state), key))
+            self._event(db, 'buffer-budget:' + hold['period'], 'buffer_request_settled',
+                        {'period': hold['period'], 'holdId': hold['id'],
+                         'outcome': outcome, 'usage': measured, 'used': state['used']}, now)
+        return self.inspect_buffer_requests(hold['period'])
+
+    def cancel_buffer_request_reservation(self, hold, *, now=None):
+        """Release only a reservation proven to have made zero Buffer requests."""
+        now = timestamp(now)
+        require(isinstance(hold, dict) and set(hold) == {'id', 'period', 'reserved'},
+                'buffer request reservation invalid')
+        key = self._buffer_budget_key(hold.get('period'))
+        with self._tx() as db:
+            row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
+            require(row is not None, 'buffer request reservation missing')
+            state = json.loads(row[0])
+            require((state.get('reservations') or {}).get(hold.get('id')) == hold.get('reserved'),
+                    'buffer request reservation missing')
+            state['reservations'].pop(hold['id'])
+            db.execute('UPDATE meta SET value=? WHERE key=?', (canonical(state), key))
+            self._event(db, 'buffer-budget:' + hold['period'], 'buffer_request_cancelled',
+                        {'period': hold['period'], 'holdId': hold['id'],
+                         'reason': 'zero_requests_observed'}, now)
+        return self.inspect_buffer_requests(hold['period'])
+
+    def inspect_buffer_requests(self, period):
+        key = self._buffer_budget_key(period)
+        with sqlite3.connect(self.db_path) as db:
+            row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
+        state = self._buffer_budget_default() if row is None else json.loads(row[0])
+        reserved = sum((state.get('reservations') or {}).values())
+        return {**state, 'remaining': self.BUFFER_REQUEST_LIMIT - state.get('used', 0) - reserved}
 
     def _event(self, db, id, kind, data, now=None):
         db.execute('INSERT INTO events(at,job_id,kind,data) VALUES (?,?,?,?)',
@@ -861,6 +1026,7 @@ class Ledger:
                 old_revision = job['social']['revision']
                 require(not (self.root / 'social-publications' / (old_revision + '.json')).exists()
                         and not (self.root / 'social-outbox' / (old_revision + '.json')).exists()
+                        and not (self.root / 'buffer-publications' / (old_revision + '.json')).exists()
                         and not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone(),
                         'social effect requires explicit reconciliation')
             require('supplementalCard' not in proposal, 'supplemental card requires explicit image refresh')
@@ -899,7 +1065,8 @@ class Ledger:
             valid_social_images(job, proposal)
             valid_image_refresh(old, proposal, review)
             require(not db.execute('SELECT 1 FROM effects WHERE job_id=? AND kind=?', (id, 'social')).fetchone()
-                    and not (self.root / 'social-outbox' / (old['revision'] + '.json')).exists(),
+                    and not (self.root / 'social-outbox' / (old['revision'] + '.json')).exists()
+                    and not (self.root / 'buffer-publications' / (old['revision'] + '.json')).exists(),
                     'legacy social effect requires reconciliation')
             marker = self.root / 'social-publications' / (old['revision'] + '.json')
             journal = None
@@ -969,6 +1136,169 @@ class Ledger:
             job.update(social=dict(proposal=proposal, revision=revision, review=review, approval=None,
                                    modeTransition=transition), stage='social_review')
             return self._put(db, job, 'social_mode_migrated')
+
+    def record_buffer_social_schedule(self, id, revision, evidence, *, now=None,
+                                      poll_interval_seconds=1800, max_due_polls=3):
+        """Persist an exact Buffer schedule without treating it as an X publication."""
+        require(isinstance(evidence, dict) and evidence.get('status') in ('scheduled', 'pending')
+                and evidence.get('verified') is False and evidence.get('fingerprint') == revision,
+                'verified Buffer schedule required')
+        require(isinstance(evidence.get('bufferPostId'), str) and evidence['bufferPostId'].strip(),
+                'Buffer post identity required')
+        due = timestamp(evidence.get('dueAt'))
+        now = timestamp(now)
+        require(type(poll_interval_seconds) is int and 60 <= poll_interval_seconds <= 86400,
+                'buffer poll interval invalid')
+        require(type(max_due_polls) is int and max_due_polls == 3,
+                'buffer due poll limit invalid')
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            social = job.get('social') or {}
+            require(social.get('revision') == revision
+                    and fingerprint(social.get('proposal')) == revision, 'social revision mismatch')
+            proposal = social['proposal']
+            valid_social_mode(proposal)
+            valid_review(social.get('review'), revision)
+            valid_social_images(job, proposal)
+            publication = job.get('publication') or {}
+            readback = publication.get('readback') or {}
+            require(publication.get('verified') is True
+                    and publication.get('revision') == job.get('revision')
+                    and readback.get('verified') is True
+                    and readback.get('fingerprint') == job.get('revision'),
+                    'verified article publication required')
+            approval = social.get('approval') or {}
+            require(proposal.get('deliveryMode') == 'buffer_x'
+                    and approval.get('action') == 'approved'
+                    and approval.get('revision') == revision
+                    and approval.get('user_id') == self.owner_id,
+                    'current Buffer owner approval required')
+            require(job['stage'] in ('social_approved', 'social_scheduled'),
+                    'Buffer schedule stage unavailable')
+            saved = social.get('bufferSchedule')
+            immutable = {'fingerprint': revision, 'bufferPostId': evidence['bufferPostId'],
+                         'dueAt': due.isoformat()}
+            if saved:
+                require(all(saved.get(key) == value for key, value in immutable.items()),
+                        'Buffer schedule conflict')
+            polls = (saved or {}).get('duePolls', 0)
+            require(type(polls) is int and 0 <= polls <= max_due_polls,
+                    'Buffer schedule requires reconciliation')
+            if now >= due and evidence['status'] == 'pending' and polls < max_due_polls:
+                polls += 1
+            terminal = polls >= max_due_polls and evidence['status'] == 'pending'
+            schedule = dict(immutable,
+                            status='requires_reconciliation' if terminal else evidence['status'],
+                            verified=False, duePolls=polls,
+                            nextCheckAt=None if terminal else
+                            (due if now < due else
+                             now + timedelta(seconds=poll_interval_seconds)).isoformat())
+            social['bufferSchedule'] = schedule
+            job['stage'] = 'social_scheduled'
+            return self._put(db, job, 'buffer_social_scheduled')
+
+    def record_buffer_social_publication(self, id, revision, evidence):
+        """Accept only a Buffer-bound, exact X thread readback for the approved proposal."""
+        require(isinstance(evidence, dict) and evidence.get('status') == 'verified'
+                and evidence.get('verified') is True and evidence.get('fingerprint') == revision,
+                'verified Buffer publication required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            self._current(job)
+            social = job.get('social') or {}
+            require(social.get('revision') == revision
+                    and fingerprint(social.get('proposal')) == revision, 'social revision mismatch')
+            proposal = social['proposal']
+            valid_social_mode(proposal)
+            valid_social_images(job, proposal)
+            approval = social.get('approval') or {}
+            require(proposal.get('deliveryMode') == 'buffer_x'
+                    and approval.get('action') == 'approved'
+                    and approval.get('revision') == revision
+                    and approval.get('user_id') == self.owner_id,
+                    'current Buffer owner approval required')
+            schedule = social.get('bufferSchedule') or {}
+            require(job['stage'] == 'social_scheduled'
+                    and evidence.get('bufferPostId') == schedule.get('bufferPostId'),
+                    'bound Buffer schedule required')
+            account = proposal['targetAccountIdX']
+            readback = evidence.get('readback') or {}
+            main, reply, media = readback.get('main'), readback.get('reply'), readback.get('media')
+            require(readback.get('verified') is True and readback.get('fingerprint') == revision
+                    and readback.get('accountId') == account and evidence.get('accountId') == account
+                    and isinstance(main, dict) and isinstance(reply, dict),
+                    'bound Buffer X readback required')
+            require(isinstance(media, dict) and media.get('verified') is True
+                    and isinstance(media.get('items'), list),
+                    'Buffer X media identity required')
+            require(main.get('id') == evidence.get('mainId')
+                    and reply.get('id') == evidence.get('replyId')
+                    and re.fullmatch(r'[1-9][0-9]*', str(main.get('id', '')))
+                    and re.fullmatch(r'[1-9][0-9]*', str(reply.get('id', '')))
+                    and main.get('authorId') == account and reply.get('authorId') == account
+                    and exact_x_text(main, proposal['text'])
+                    and exact_x_text(reply, proposal['replyText'])
+                    and main.get('replyTo') is None and reply.get('replyTo') == main.get('id')
+                    and isinstance(main.get('mediaKeys'), list)
+                    and len(main['mediaKeys']) == len(proposal['images'])
+                    and reply.get('mediaKeys') == [], 'approved Buffer X thread mismatch')
+            media_keys = []
+            require(len(media['items']) == len(proposal['images']),
+                    'Buffer X media identity required')
+            for image, actual in zip(proposal['images'], media['items']):
+                require(isinstance(actual, dict)
+                        and isinstance(actual.get('mediaKey'), str) and actual['mediaKey']
+                        and isinstance(actual.get('url'), str)
+                        and re.fullmatch(r'https://pbs\.twimg\.com/[^?#]+', actual['url'])
+                        and re.fullmatch(r'[a-f0-9]{64}', str(actual.get('actualSha256', ''))),
+                        'Buffer X media identity required')
+                identity = actual.get('identity')
+                require(isinstance(identity, dict)
+                        and identity.get('approvedSha256') == image.get('sha256'),
+                        'Buffer X media identity required')
+                if identity.get('kind') == 'byte_sha256':
+                    require(set(identity) == {'kind', 'approvedSha256'}
+                            and actual['actualSha256'] == image['sha256'],
+                            'Buffer X media identity required')
+                elif identity.get('kind') == 'decoded_rgba_sha256':
+                    width, height = identity.get('width'), identity.get('height')
+                    require(set(identity) == {'kind', 'approvedSha256', 'pixelSha256',
+                                              'width', 'height'}
+                            and re.fullmatch(r'[a-f0-9]{64}', str(identity.get('pixelSha256', '')))
+                            and type(width) is int and type(height) is int
+                            and 0 < width <= 8192 and 0 < height <= 8192
+                            and width * height <= 16 * 1024 * 1024,
+                            'Buffer X media identity required')
+                elif identity.get('kind') == 'jpeg_encoding_reproduced':
+                    width, height = identity.get('width'), identity.get('height')
+                    require(set(identity) == {'kind', 'approvedSha256', 'pixelSha256',
+                                              'width', 'height', 'quantizationSha256',
+                                              'subsampling'}
+                            and re.fullmatch(r'[a-f0-9]{64}',
+                                             str(identity.get('pixelSha256', '')))
+                            and re.fullmatch(r'[a-f0-9]{64}',
+                                             str(identity.get('quantizationSha256', '')))
+                            and type(identity.get('subsampling')) is int
+                            and identity['subsampling'] in (0, 1, 2)
+                            and type(width) is int and type(height) is int
+                            and 0 < width <= 8192 and 0 < height <= 8192
+                            and width * height <= 16 * 1024 * 1024,
+                            'Buffer X media identity required')
+                else:
+                    raise ValueError('Buffer X media identity required')
+                media_keys.append(actual['mediaKey'])
+            require(len(set(media_keys)) == len(media_keys)
+                    and main['mediaKeys'] == media_keys,
+                    'Buffer X media identity required')
+            publication = json.loads(canonical(evidence))
+            publication.update(at=timestamp().isoformat(),
+                               mainUrl='https://x.com/i/web/status/' + main['id'],
+                               replyUrl='https://x.com/i/web/status/' + reply['id'])
+            social['publication'] = publication
+            job['stage'] = 'social_posted'
+            self._invalidate(db, id, 'social')
+            return self._put(db, job, 'buffer_social_publication')
 
     def record_social_publication(self, id, revision, evidence):
         """Accept only bound main/reply/media readbacks from the real publisher."""

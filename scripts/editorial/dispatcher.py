@@ -1,6 +1,6 @@
 """Pure deterministic planning for the existing editorial runtime."""
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 import json
 import sqlite3
 
@@ -22,6 +22,32 @@ def social_feature_enabled(config, feature):
     if type(config[feature]) is not bool:
         raise ValueError('invalid social feature flag')
     return config[feature]
+
+
+def buffer_social_start(config):
+    value = config.get('bufferSocialStartPeriod')
+    if value is None:
+        return None
+    try:
+        parsed = date.fromisoformat(value)
+    except (TypeError, ValueError):
+        raise ValueError('invalid bufferSocialStartPeriod') from None
+    if parsed.weekday() != 4:
+        raise ValueError('invalid bufferSocialStartPeriod')
+    return value
+
+
+def buffer_social_eligible(job, config):
+    start = buffer_social_start(config)
+    return (start is not None and job.get('kind') != 'article_revision'
+            and isinstance(job.get('week'), str) and job['week'] >= start)
+
+
+def buffer_social_outstanding(jobs):
+    stages = {'social_review', 'social_held', 'social_approved', 'social_scheduled'}
+    return sum(job.get('stage') in stages
+               and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'buffer_x'
+               and not (job.get('social') or {}).get('publication') for job in jobs)
 
 
 def execution_policy(config):
@@ -87,6 +113,21 @@ class DeterministicDispatcher:
             return False, 'delivery_requires_reconciliation'
         return True, None
 
+    def _buffer_journal(self, job):
+        revision = (job.get('social') or {}).get('revision')
+        path = self.runtime.root / 'buffer-publications' / (str(revision) + '.json')
+        if not path.exists():
+            return None
+        try:
+            if path.is_symlink() or path.stat().st_mode & 0o777 != 0o600:
+                raise ValueError()
+            value = json.loads(path.read_text())
+            if value.get('revision') != revision:
+                raise ValueError()
+            return value
+        except (OSError, ValueError):
+            return {'phase': 'requires_reconciliation', 'pending': True}
+
     def plan(self, now):
         policy = execution_policy(self.runtime.config)
         if policy is None or policy.mode != 'deterministic':
@@ -140,9 +181,20 @@ class DeterministicDispatcher:
             elif (stage == 'published' and job.get('kind') != 'article_revision'
                   and not job.get('social')
                   and social_feature_enabled(self.runtime.config, 'socialGenerationEnabled')):
-                base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
+                start = buffer_social_start(self.runtime.config)
+                if start is None:
+                    base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
+                elif (buffer_social_eligible(job, self.runtime.config)
+                      and buffer_social_outstanding(jobs) < 3
+                      and self.runtime._social_audit_success(job)):
+                    base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
             elif (stage == 'social_review'
                   and social_feature_enabled(self.runtime.config, 'socialReviewEnabled')):
+                start = buffer_social_start(self.runtime.config)
+                proposal = ((job.get('social') or {}).get('proposal') or {})
+                if (start is not None and (proposal.get('deliveryMode') != 'buffer_x'
+                                           or not buffer_social_eligible(job, self.runtime.config))):
+                    continue
                 needed, blocked = self._delivery_needed(job['id'], 'social', now)
                 if blocked:
                     base['blocked'].append({'jobId': job['id'], 'reason': blocked})
@@ -153,6 +205,41 @@ class DeterministicDispatcher:
                   and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'auto_x'
                   and self.runtime.config.get('socialPostingEnabled') is True):
                 base['actions'].append({'kind': 'publish_social', 'jobId': job['id']})
+            elif (stage == 'social_approved'
+                  and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'buffer_x'
+                  and self.runtime.config.get('bufferPostingEnabled') is True):
+                journal = self._buffer_journal(job)
+                if journal and (journal.get('pending')
+                                or journal.get('phase') not in ('scheduled', 'verified')):
+                    base['blocked'].append({'jobId': job['id'],
+                                            'reason': 'buffer_publication_requires_reconciliation'})
+                else:
+                    base['actions'].append({'kind': 'publish_buffer_social', 'jobId': job['id']})
+            elif (stage == 'social_scheduled'
+                  and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'buffer_x'
+                  and self.runtime.config.get('bufferPostingEnabled') is True):
+                schedule = (job.get('social') or {}).get('bufferSchedule') or {}
+                journal = self._buffer_journal(job)
+                if (schedule.get('nextCheckAt') is None or schedule.get('duePolls', 0) >= 3
+                        or journal is None or journal.get('pending')
+                        or journal.get('phase') not in ('scheduled', 'verified')):
+                    base['blocked'].append({'jobId': job['id'],
+                                            'reason': 'buffer_publication_requires_reconciliation'})
+                    continue
+                if journal.get('phase') == 'verified':
+                    base['actions'].append({'kind': 'publish_buffer_social', 'jobId': job['id']})
+                    continue
+                try:
+                    due = datetime.fromisoformat(schedule['nextCheckAt'].replace('Z', '+00:00'))
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    base['blocked'].append({'jobId': job['id'],
+                                            'reason': 'buffer_schedule_requires_reconciliation'})
+                else:
+                    if due.tzinfo is None or due.utcoffset() is None:
+                        base['blocked'].append({'jobId': job['id'],
+                                                'reason': 'buffer_schedule_requires_reconciliation'})
+                    elif now >= due:
+                        base['actions'].append({'kind': 'publish_buffer_social', 'jobId': job['id']})
             elif stage == 'social_posted':
                 revision = (job.get('social') or {}).get('revision')
                 marker = self.runtime.root / 'social-posted-notices' / (str(revision) + '.json')

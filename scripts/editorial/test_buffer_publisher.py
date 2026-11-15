@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime, timedelta, timezone
 import hashlib
+from io import BytesIO
 import json
 from pathlib import Path
 import sqlite3
@@ -346,6 +347,38 @@ class BufferPublisherTests(unittest.TestCase):
         self.assertEqual(changed['reason'], 'x_media_pixels_mismatch')
         self.assertEqual(changed['mainId'], '111')
         self.assertEqual(changed['replyCandidateIds'], ['222'])
+
+    def test_x_jpeg_encoding_reproduction_is_exact_and_rejects_wrong_image(self):
+        from PIL import Image
+
+        source_image = Image.new('RGB', (16, 16))
+        source_image.putdata([
+            ((x * 17 + y * 3) % 256, (x * 7 + y * 19) % 256, (x * 13 + y * 11) % 256)
+            for y in range(16) for x in range(16)])
+        source_file, native_file = BytesIO(), BytesIO()
+        source_image.save(source_file, format='PNG')
+        source_image.save(native_file, format='JPEG', quality=83, subsampling=2)
+        source, native = source_file.getvalue(), native_file.getvalue()
+        approved = {'url': IMAGE_URL, 'finalUrl': IMAGE_URL, 'contentType': 'image/png',
+                    'sha256': hashlib.sha256(source).hexdigest(), 'size': len(source),
+                    'verified': True, 'role': 'social-card'}
+        self.fetcher.body, self.fetcher.x_body = source, native
+        items = self.publisher._verify_x_media([
+            {'mediaKey': '3_333', 'type': 'photo',
+             'url': 'https://pbs.twimg.com/media/native.jpg'}], {'images': [approved]})
+        identity = items[0]['identity']
+        self.assertEqual(identity['kind'], 'jpeg_encoding_reproduced')
+        self.assertEqual(identity['subsampling'], 2)
+        self.assertRegex(identity['quantizationSha256'], r'^[a-f0-9]{64}$')
+
+        wrong = Image.new('RGB', (16, 16), (255, 0, 0))
+        wrong_file = BytesIO()
+        wrong.save(wrong_file, format='JPEG', quality=83, subsampling=2)
+        self.fetcher.x_body = wrong_file.getvalue()
+        with self.assertRaisesRegex(ValueError, 'x_media_pixels_mismatch'):
+            self.publisher._verify_x_media([
+                {'mediaKey': '3_333', 'type': 'photo',
+                 'url': 'https://pbs.twimg.com/media/wrong.jpg'}], {'images': [approved]})
 
     def test_per_post_buffer_request_budget_stops_before_next_call(self):
         self.publisher.settings['maxBufferRequestsPerPost'] = 6

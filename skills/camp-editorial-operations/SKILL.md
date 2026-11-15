@@ -54,3 +54,13 @@ production設定、launchd、Codex automationを有効化しない。
 対象外制作・承認・公開・SNS投稿を行わない。未知の送達は照合してから扱う。
 報告は対象、観測結果、残る確認、必要な本人操作だけに絞る。
 実モデル・実測利用量・欠測・推定費用・実請求を区別し、キャッシュ利用を新規利用量に加算しない。
+
+## Buffer経由のSNS
+
+[Buffer連携](../../docs/editorial-deterministic.md#buffer経由のsns) に従い、`buffer_x` の承認版と
+`buffer-publications` の工程記録を照合する。記事承認・SNS承認、Buffer予約・Buffer送信・X実投稿確認は別の状態。
+旧 `auto_x` の承認・spoolを移行せず、別の既存Buffer投稿を引き取って予約・変更しない。
+本文・画像SHA・画像順序・記事URL・Bufferチャンネル・Xアカウント・予約方針を対象版へ固定する。
+結果不明のcreate/editは再送せず照合する。時刻前の待機はAPIを呼ばず、確認回数・共有API枠の上限を守る。
+Bufferがsentでも、Xの本文・画像・返信の証拠が不足すれば未確認とする。画像の近似一致を合格にしない。
+接続キーの入力は専用ローカル画面へ本人が行い、キーをチャットや引継ぎへ記載しない。

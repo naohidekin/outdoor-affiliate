@@ -222,13 +222,26 @@ class Slack:
         article = bundle['article']
         social = request.get('kind') == 'social'
         auto_x = False
+        buffer_x = False
         if social:
             proposal = job['social']['proposal']
             mode = proposal.get('deliveryMode')
             auto_x = mode == 'auto_x'
-            if mode not in (None, 'manual', 'auto_x') or (auto_x and (
+            buffer_x = mode == 'buffer_x'
+            binding = proposal.get('buffer')
+            buffer_valid = (buffer_x and isinstance(binding, dict)
+                            and set(binding) == {'organizationId', 'channelId', 'schedulingPolicy'}
+                            and all(isinstance(binding.get(key), str) and binding[key]
+                                    for key in ('organizationId', 'channelId'))
+                            and binding.get('schedulingPolicy') == 'next_available_slot'
+                            and isinstance(proposal.get('targetAccountIdX'), str)
+                            and re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountIdX'])
+                            and all(key not in proposal for key in
+                                    ('targetAccountId', 'dueAt', 'scheduledAt')))
+            if mode not in (None, 'manual', 'auto_x', 'buffer_x') or (auto_x and (
                     not isinstance(proposal.get('targetAccountId'), str)
-                    or not re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountId']))):
+                    or not re.fullmatch(r'[1-9][0-9]{0,19}', proposal['targetAccountId']))) \
+                    or (buffer_x and not buffer_valid):
                 raise ValueError('social_delivery_mode_invalid')
             body = social_body(proposal)
         else:
@@ -295,12 +308,14 @@ class Slack:
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
         revision = job.get('kind') == 'article_revision'
         approve_label = ('再開後の公開を承認' if revision and self.execution_suspended else
+                         '本文・画像を承認してBuffer予約' if buffer_x else
                          '再開後のX投稿を承認' if auto_x and self.execution_suspended else
                          '更新を公開する' if revision else 'Xに投稿する' if auto_x else
                          'この告知案を承認' if social else '公開する')
         labels = [('approve', approve_label),
                   ('reject', '修正を依頼'), ('hold', '保留')]
-        explanation = ('承認した本文・画像をXへ投稿し、記事リンクを返信として自動投稿します。' if auto_x else
+        explanation = ('承認後、本文・画像と記事リンク返信をBufferの次の空き枠へ予約します。' if buffer_x else
+                       '承認した本文・画像をXへ投稿し、記事リンクを返信として自動投稿します。' if auto_x else
                        'Xへの投稿は手動です。' if social else '本文・画像・購入先を確認してから公開を選んでください。')
         if auto_x and self.execution_suspended:
             explanation = ('承認した本文・画像と記事リンク返信が投稿の対象です。\n'

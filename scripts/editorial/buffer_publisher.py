@@ -489,10 +489,15 @@ class BufferPublisher:
                              'x_media_pixels_mismatch')
                     pixel_sha = hashlib.sha256(actual_pixels).hexdigest()
                 except Exception:
-                    raise ValueError('x_media_pixels_mismatch') from None
-                identity = {'kind': 'decoded_rgba_sha256', 'approvedSha256': approved['sha256'],
-                            'pixelSha256': pixel_sha, 'width': actual_size[0],
-                            'height': actual_size[1]}
+                    try:
+                        identity = self._jpeg_encoding_identity(source, body, approved['sha256'])
+                    except Exception:
+                        raise ValueError('x_media_pixels_mismatch') from None
+                else:
+                    identity = {'kind': 'decoded_rgba_sha256',
+                                'approvedSha256': approved['sha256'],
+                                'pixelSha256': pixel_sha, 'width': actual_size[0],
+                                'height': actual_size[1]}
             verified.append({'mediaKey': actual['mediaKey'], 'url': actual['url'],
                              'actualSha256': actual_sha, 'identity': identity})
         return verified
@@ -514,6 +519,69 @@ class BufferPublisher:
                 image.load()
                 rgba = image.convert('RGBA')
                 return rgba.size, rgba.tobytes()
+
+    @staticmethod
+    def _jpeg_encoding_identity(source, actual, approved_sha):
+        try:
+            from PIL import Image, JpegImagePlugin
+        except ImportError:
+            raise ValueError('x_media_decoder_unavailable') from None
+
+        def bounded(image):
+            _require(getattr(image, 'n_frames', 1) == 1
+                     and not getattr(image, 'is_animated', False)
+                     and 0 < image.width <= 8192 and 0 < image.height <= 8192
+                     and image.width * image.height <= 16 * 1024 * 1024,
+                     'x_media_dimensions_invalid')
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', Image.DecompressionBombWarning)
+            with Image.open(BytesIO(actual)) as native:
+                bounded(native)
+                _require(native.format == 'JPEG', 'x_media_jpeg_required')
+                sampling = JpegImagePlugin.get_sampling(native)
+                tables = native.quantization
+                _require(type(sampling) is int and sampling in (0, 1, 2)
+                         and isinstance(tables, dict) and 1 <= len(tables) <= 4,
+                         'x_media_jpeg_parameters_invalid')
+                normalized = []
+                for key in sorted(tables):
+                    table = tables[key]
+                    _require(type(key) is int and 0 <= key <= 3
+                             and isinstance(table, (list, tuple)) and len(table) == 64
+                             and all(type(value) is int and 1 <= value <= 255 for value in table),
+                             'x_media_jpeg_parameters_invalid')
+                    normalized.append([key, list(table)])
+                native.load()
+                native_rgba = native.convert('RGBA')
+                native_size, native_pixels = native_rgba.size, native_rgba.tobytes()
+
+            with Image.open(BytesIO(source)) as approved:
+                bounded(approved)
+                approved.load()
+                approved_rgba = approved.convert('RGBA')
+                _require(approved_rgba.size == native_size
+                         and approved_rgba.getchannel('A').getextrema() == (255, 255),
+                         'x_media_jpeg_source_invalid')
+                output = BytesIO()
+                approved_rgba.convert('RGB').save(
+                    output, format='JPEG', qtables=tables, subsampling=sampling)
+
+            with Image.open(BytesIO(output.getvalue())) as reproduced:
+                bounded(reproduced)
+                _require(reproduced.format == 'JPEG' and reproduced.size == native_size,
+                         'x_media_jpeg_reproduction_mismatch')
+                reproduced.load()
+                reproduced_pixels = reproduced.convert('RGBA').tobytes()
+                _require(reproduced_pixels == native_pixels,
+                         'x_media_jpeg_reproduction_mismatch')
+
+        quantization_sha = hashlib.sha256(json.dumps(
+            normalized, separators=(',', ':'), ensure_ascii=True).encode('ascii')).hexdigest()
+        return {'kind': 'jpeg_encoding_reproduced', 'approvedSha256': approved_sha,
+                'pixelSha256': hashlib.sha256(native_pixels).hexdigest(),
+                'width': native_size[0], 'height': native_size[1],
+                'quantizationSha256': quantization_sha, 'subsampling': sampling}
 
     @staticmethod
     def _result(status, state, verified):
