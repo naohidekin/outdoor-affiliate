@@ -51,6 +51,11 @@ def _next_step(reason):
     return f'{target}を手動確認し、自動再試行せず明示的に再開します。'
 
 
+def _social_route(buffer_posting_enabled):
+    return ('SNSは別の本人対象版承認後にBuffer予約、予約後はX実投稿を確認。直接X投稿は停止中。'
+            if buffer_posting_enabled else 'SNSは別承認、X投稿は停止中です。')
+
+
 def _failures(jobs, period, results, now):
     selected = [j for j in jobs if j.get('week') == period and j.get('kind') != 'article_revision']
     by_id = {job.get('id'): job for job in selected}
@@ -93,7 +98,8 @@ def _failures(jobs, period, results, now):
     return [unique[key] for key in sorted(unique)]
 
 
-def _notify_failures(root, period, failures, send, now, cost_text):
+def _notify_failures(root, period, failures, send, now, cost_text,
+                     buffer_posting_enabled=False):
     identity = [{k:item[k] for k in ('jobId','stage','revision','inputKey','reason')}
                 for item in failures]
     digest = hashlib.sha256(json.dumps(identity,sort_keys=True,separators=(',',':')).encode()).hexdigest()
@@ -120,7 +126,7 @@ def _notify_failures(root, period, failures, send, now, cost_text):
                   f'  原因: 確認済み事実は停止ゲート {item["reason"]}。根本原因は未確定です。',
                   '  次の対応: '+action]
     lines += ['品質基準とモデル予算上限は維持し、自動で引き上げません。',
-              '公開は本人承認後です。SNSは別承認、X投稿は停止中です。']
+              '公開は本人承認後です。' + _social_route(buffer_posting_enabled)]
     try:
         usage = cost_text() if callable(cost_text) else cost_text
         if not isinstance(usage,str) or not usage.strip(): raise ValueError()
@@ -148,7 +154,8 @@ def _notify_failures(root, period, failures, send, now, cost_text):
             'handledGlobalReasons':global_reasons}
 
 
-def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', results=None):
+def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', results=None,
+                  buffer_posting_enabled=False):
     now = now or datetime.now(JST)
     if now.tzinfo is None or not isinstance(period, str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',period):
         raise ValueError('invalid production verification period')
@@ -158,7 +165,8 @@ def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', re
     root = Path(root)
     failures = _failures(jobs,period,results,now)
     if failures:
-        return _notify_failures(root,period,failures,send,now,cost_text)
+        return _notify_failures(root,period,failures,send,now,cost_text,
+                                buffer_posting_enabled)
     selected = [j for j in jobs if j.get('week') == period and j.get('kind') != 'article_revision']
     if len(selected) != 3:
         return {'status':'waiting','period':period,'candidates':len(selected),'verifiedArticles':0}
@@ -203,15 +211,20 @@ def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', re
         try: previous = json.loads(marker.read_text())
         except (ValueError,OSError): return {'status':'requires_reconciliation','period':period}
         return {'status':'verified' if previous.get('status')=='verified' else 'requires_reconciliation','period':period}
-    receipt = {'status':'in_flight','period':period,'at':now.isoformat(),'articles':confirmed}
-    with os.fdopen(fd,'w') as f:
-        json.dump(receipt,f);f.flush();os.fsync(f.fileno())
     titles = ['・'+re.sub(r'[<>\r\n]',' ',str(j.get('theme',{}).get('title') or j['id']))[:180] for j in selected]
+    try:
+        usage = cost_text() if callable(cost_text) else cost_text
+        if not isinstance(usage,str) or not usage.strip(): raise ValueError()
+    except Exception: usage = '使用量・費用・予算残量: 未取得'
     text = ('【制作枠の到達確認】'+period+'開始\n3記事の品質審査とSlack対象版の送達を確認しました。\n'
         +'\n'.join(titles)+'\n公開は本人承認後です。本人既読・承認は送達成功と区別します。'
-        +'\nSNSは別承認、X投稿は停止中です。')
+        +'\n'+_social_route(buffer_posting_enabled)+'\n\n'+usage)
+    text_hash = hashlib.sha256(text.encode()).hexdigest()
+    receipt = {'status':'in_flight','period':period,'at':now.isoformat(),'articles':confirmed,
+               'reportedCostText':usage,'expectedText':text,'textHash':text_hash}
+    with os.fdopen(fd,'w') as f:
+        json.dump(receipt,f,ensure_ascii=False);f.flush();os.fsync(f.fileno())
     try:
-        text += '\n\n' + (cost_text() if callable(cost_text) else cost_text)
         delivered = send(text)
         receipt.update(status='verified' if isinstance(delivered,dict) and delivered.get('verified') is True
                        and delivered.get('message_ts') else 'unknown')

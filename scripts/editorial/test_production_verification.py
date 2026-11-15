@@ -30,10 +30,12 @@ class VerificationTests(unittest.TestCase):
         self.now = datetime(2026,11,20,12,tzinfo=JST)
 
     def tearDown(self): self.tmp.cleanup()
-    def run_check(self, jobs=None, send=None, results=None, cost_text='使用量：fixture'):
+    def run_check(self, jobs=None, send=None, results=None, cost_text='使用量：fixture',
+                  buffer_posting_enabled=False):
         def delivery(text): self.sent.append(text); return {'verified':True,'message_ts':'1793000000.123456'}
         return verify_period(self.root,self.jobs if jobs is None else jobs,'2026-11-20',self.scope,
-            send or delivery,now=self.now,cost_text=cost_text,results=results)
+            send or delivery,now=self.now,cost_text=cost_text,results=results,
+            buffer_posting_enabled=buffer_posting_enabled)
 
     def test_exact_three_reviews_and_delivery_send_one_result_without_approving(self):
         self.assertEqual('verified',self.run_check()['status'])
@@ -41,6 +43,32 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(1,len(self.sent))
         self.assertIn('公開は本人承認後',self.sent[0])
         self.assertFalse(any(j.get('approval') for j in self.jobs))
+
+    def test_buffer_ready_notice_and_receipt_bind_route_cost_and_exact_text_before_send(self):
+        observed_presend = {}
+        def delivery(text):
+            self.sent.append(text)
+            observed_presend.update(json.loads((self.root/'production-verifications'/
+                '2026-11-20-slack-ready.json').read_text()))
+            return {'verified':True,'message_ts':'1793000000.123456'}
+        result = self.run_check(send=delivery, cost_text='このタスクの使用量・費用：fixture',
+                                buffer_posting_enabled=True)
+        self.assertEqual('verified', result['status'])
+        route = ('SNSは別の本人対象版承認後にBuffer予約、予約後はX実投稿を確認。'
+                 '直接X投稿は停止中。')
+        self.assertIn(route, self.sent[0])
+        self.assertNotIn('SNSは別承認、X投稿は停止中です。', self.sent[0])
+        receipt = json.loads((self.root/'production-verifications'/
+                              '2026-11-20-slack-ready.json').read_text())
+        self.assertEqual('このタスクの使用量・費用：fixture', receipt['reportedCostText'])
+        self.assertEqual(self.sent[0], receipt['expectedText'])
+        self.assertEqual(hashlib.sha256(self.sent[0].encode()).hexdigest(), receipt['textHash'])
+        self.assertEqual('in_flight', observed_presend['status'])
+        self.assertEqual(receipt['reportedCostText'], observed_presend['reportedCostText'])
+        self.assertEqual(receipt['expectedText'], observed_presend['expectedText'])
+        self.assertEqual(receipt['textHash'], observed_presend['textHash'])
+        self.run_check(cost_text='変更後の費用', buffer_posting_enabled=True)
+        self.assertEqual(1, len(self.sent))
 
     def test_partial_or_stale_delivery_never_claims_success(self):
         self.assertEqual('waiting',self.run_check(self.jobs[:2])['status'])
@@ -79,6 +107,22 @@ class VerificationTests(unittest.TestCase):
                          'X投稿は停止中'):
             self.assertIn(expected, text)
         self.assertEqual('blocked', self.run_check(jobs)['status'])
+        self.assertEqual(1, len(self.sent))
+
+    def test_buffer_failure_notice_describes_separate_owner_approval_and_native_check(self):
+        jobs = copy.deepcopy(self.jobs)
+        jobs[0].update(stage='error', error={'reason':'source_validation_failed'})
+        self.run_check(jobs, buffer_posting_enabled=True)
+        self.assertIn(
+            'SNSは別の本人対象版承認後にBuffer予約、予約後はX実投稿を確認。直接X投稿は停止中。',
+            self.sent[0])
+        self.assertNotIn('SNSは別承認、X投稿は停止中です。', self.sent[0])
+        marker = next((self.root/'production-verifications'/'2026-11-20-failures').glob('*.json'))
+        receipt = json.loads(marker.read_text())
+        self.assertEqual('使用量：fixture', receipt['reportedCostText'])
+        self.assertEqual(self.sent[0], receipt['expectedText'])
+        self.assertEqual('blocked', self.run_check(
+            jobs, buffer_posting_enabled=True)['status'])
         self.assertEqual(1, len(self.sent))
 
     def test_held_error_reports_but_normal_owner_review_wait_does_not(self):

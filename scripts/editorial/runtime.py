@@ -1563,7 +1563,8 @@ class Runtime:
                 result['productionVerification'] = verify_period(self.root, jobs, period,
                     self.config['slack'], self.slack.notice, now=now, results=results,
                     cost_text=lambda: usage_cost_summary(self.root, self.config, kind='production',
-                                                         period_key=period, now=now))
+                                                         period_key=period, now=now),
+                    buffer_posting_enabled=self.config.get('bufferPostingEnabled') is True)
             except Exception:
                 result['productionVerification'] = {'status': 'requires_reconciliation'}
             if result['productionVerification']['status'] in ('requires_reconciliation', 'blocked'):
