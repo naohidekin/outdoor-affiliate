@@ -67,6 +67,7 @@ class SupplementalVerificationTests(unittest.TestCase):
         self.assertEqual('verified',ready['status'])
         self.assertEqual(3,len(self.sent))
         self.assertTrue(all('本文・画像を含む対象版' in text for text in self.sent))
+        self.assertTrue(all('使用画像・PC/スマホ表示・楽天/Amazon購入導線' in text for text in self.sent))
         self.assertTrue(all('本人承認ではありません' in text for text in self.sent))
         receipt = json.loads((self.root/'supplemental-verifications'/
                               'apparel-2026-11-16-ready.json').read_text())

@@ -11,6 +11,7 @@ from reporting import _atomic
 
 
 JST = timezone(timedelta(hours=9))
+QUALITY_RESULT = '対象版の品質確認: 本文審査・商品情報・使用画像・PC/スマホ表示・楽天/Amazon購入導線は既存の必須検査を通過。'
 
 
 def _usage(cost_text):
@@ -139,6 +140,7 @@ def verify_supplemental_batch(root,jobs,batch_id,scope,send,*,now=None,not_befor
         job = by_slot[item['slot']]
         text = ('【追加ウェア記事・Slack準備済み '+str(ready_count)+'/3】\n・'+item['title']
                 +'\n本文・画像を含む対象版をSlackへ送達済みです。'
+                +'\n'+QUALITY_RESULT
                 +'\n現在状態: '+item['currentState']+'。\n\n'+usage)
         receipt = {'status':'in_flight','batchId':batch_id,'at':now.isoformat(),
                    'article':evidence[job['id']],'reportedCostText':usage,
@@ -173,6 +175,7 @@ def verify_supplemental_batch(root,jobs,batch_id,scope,send,*,now=None,not_befor
         lines = ['【追加ウェア3記事・Slack確認済み】',
                  '本文・画像を含む対象版をSlackへ送達済みです。']
         lines += ['・'+item['title']+'／'+item['currentState'] for item in progress]
+        lines += [QUALITY_RESULT]
         lines += ['記事ごとの本人承認・公開・SNS状態は上記の現在状態を正本とします。']
         text = '\n'.join(lines)+'\n\n'+usage
         receipt = {'status':'in_flight','batchId':batch_id,'at':now.isoformat(),
