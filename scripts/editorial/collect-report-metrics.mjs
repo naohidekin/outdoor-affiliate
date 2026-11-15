@@ -8,6 +8,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const DAY = 86400000;
 const jstDay = now => new Date(new Date(now).getTime() + 9 * 3600000).toISOString().slice(0, 10);
 const jstStamp = now => new Date(new Date(now).getTime() + 9 * 3600000).toISOString().replace('Z', '+09:00');
+const dateInZone = (now, zone) => {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: zone,
+    year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(now))
+    .filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
 const shift = (day, days) => new Date(Date.parse(day + 'T12:00:00Z') + days * DAY).toISOString().slice(0, 10);
 
 export function monthPeriods(month, now = new Date()) {
@@ -75,15 +81,61 @@ export async function collectMonthly({ seoRepo, month, now = new Date() }, env =
   return result;
 }
 
+export async function collectDaily({ seoRepo, now = new Date() }, env = process.env, injected = null) {
+  if (typeof seoRepo !== 'string' || !path.isAbsolute(seoRepo)) throw new Error('daily_repository_required');
+  let google, collectGsc, collectGa4;
+  if (injected) ({ google, collectGsc, collectGa4 } = injected);
+  else {
+    ({ collectGsc, collectGa4 } = await import(pathToFileURL(path.join(seoRepo, 'scripts/seo/metrics.mjs')).href));
+    ({ google } = createRequire(path.join(seoRepo, 'package.json'))('googleapis'));
+  }
+  let credentials;
+  try { credentials = JSON.parse(env.INDEXING_CREDENTIALS || env.GOOGLE_CREDENTIALS || '{}'); }
+  catch { throw new Error('daily_credentials_unavailable'); }
+  if (!credentials.client_email || !credentials.private_key) throw new Error('daily_credentials_unavailable');
+  google.options({ timeout: 45000, retry: false });
+  const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/webmasters.readonly'] });
+  const api = google.webmasters({ version: 'v3', auth });
+  const current = await collectGsc(api, {});
+  const ptToday = dateInZone(now, 'America/Los_Angeles');
+  const currentAgeDays = Math.round((Date.parse(`${ptToday}T12:00:00Z`) -
+    Date.parse(`${current?.endDate}T12:00:00Z`)) / DAY);
+  if (!current || current.status !== 'ok' || typeof current.startDate !== 'string' ||
+      typeof current.endDate !== 'string' || current.settledThrough !== current.endDate ||
+      current.dateBasis !== 'America/Los_Angeles' ||
+      currentAgeDays < 1 || currentAgeDays > 11 ||
+      shift(current.startDate, 27) !== current.endDate) throw new Error('daily_gsc_unavailable');
+  const previousPeriod = { startDate: shift(current.startDate, -28), endDate: shift(current.startDate, -1) };
+  const [previous, rawGa4, rawPreviousGa4] = await Promise.all([
+    collectGsc(api, previousPeriod),
+    collectGa4(google, credentials, env.GA4_PROPERTY_ID, current.startDate, current.endDate),
+    collectGa4(google, credentials, env.GA4_PROPERTY_ID, previousPeriod.startDate, previousPeriod.endDate),
+  ]);
+  validGsc(previous, previousPeriod);
+  if (previous.dateBasis !== 'America/Los_Angeles') throw new Error('daily_gsc_unavailable');
+  const ga4 = safeGa4(rawGa4, { startDate: current.startDate, endDate: current.endDate }, now);
+  const previousGa4 = safeGa4(rawPreviousGa4, previousPeriod, now);
+  if (ga4.status !== 'ok' || previousGa4.status !== 'ok' || ga4.dateBasis !== previousGa4.dateBasis)
+    throw new Error('daily_ga4_unavailable');
+  const result = { schemaVersion: 1, collectionKind: 'daily', collectedAt: jstStamp(now),
+    operationTimezone: 'Asia/Tokyo', current, previous, ga4, previousGa4 };
+  const encoded = JSON.stringify(result);
+  if (Buffer.byteLength(encoded) > 4 * 1024 * 1024 ||
+      [credentials.private_key, credentials.client_email].some(secret => secret && encoded.includes(secret)))
+    throw new Error('daily_snapshot_rejected');
+  return result;
+}
+
 export async function main() {
+  let kind = 'monthly';
   try {
     const raw = fs.readFileSync(0, 'utf8');
     if (Buffer.byteLength(raw) > 16384) throw new Error('input');
-    const input = JSON.parse(raw);
-    if (!input || Object.keys(input).some(key => !['seoRepo', 'month', 'now'].includes(key))) throw new Error('input');
-    console.log(JSON.stringify(await collectMonthly(input)));
+    const input = JSON.parse(raw); kind = input?.kind === 'daily' ? 'daily' : 'monthly';
+    if (!input || Object.keys(input).some(key => !['seoRepo', 'month', 'now', 'kind'].includes(key))) throw new Error('input');
+    console.log(JSON.stringify(input.kind === 'daily' ? await collectDaily(input) : await collectMonthly(input)));
   } catch {
-    console.log(JSON.stringify({ error: 'monthly_collection_unavailable' }));
+    console.log(JSON.stringify({ error: kind + '_collection_unavailable' }));
     process.exitCode = 1;
   }
 }

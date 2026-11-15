@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { collectMonthly, monthPeriods } from './collect-report-metrics.mjs';
+import { collectDaily, collectMonthly, monthPeriods } from './collect-report-metrics.mjs';
 
 const now = '2026-03-05T20:00:00+09:00';
 const env = { GOOGLE_CREDENTIALS: JSON.stringify({ client_email: 'test@invalid.example', private_key: 'test-key-never-output' }), GA4_PROPERTY_ID: '123' };
@@ -74,4 +74,83 @@ test('CLI failure emits only safe fixed error with no credential reflection', ()
   assert.equal(result.status, 1);
   assert.deepEqual(JSON.parse(result.stdout), { error: 'monthly_collection_unavailable' });
   assert.equal(result.stderr, '');
+});
+
+test('daily collection uses latest settled 28 days plus contiguous previous 28 days', async () => {
+  const injected = deps();
+  injected.collectGsc = async (api, period = {}) => {
+    const resolved = period.startDate ? period : { startDate: '2026-10-20', endDate: '2026-11-16' };
+    injected.calls.push(['gsc', resolved]);
+    return { status: 'ok', ...resolved, settledThrough: '2026-11-16',
+      dateBasis: 'America/Los_Angeles', summary: null };
+  };
+  const result = await collectDaily(
+    { seoRepo: '/configured/seo', now: '2026-11-20T08:05:00+09:00' }, env, injected);
+  assert.deepEqual([result.current.startDate, result.current.endDate], ['2026-10-20', '2026-11-16']);
+  assert.deepEqual([result.previous.startDate, result.previous.endDate], ['2026-09-22', '2026-10-19']);
+  assert.deepEqual([result.ga4.startDate, result.ga4.endDate], ['2026-10-20', '2026-11-16']);
+  assert.deepEqual([result.previousGa4.startDate, result.previousGa4.endDate], ['2026-09-22', '2026-10-19']);
+  assert.equal(result.collectionKind, 'daily');
+  assert.deepEqual(injected.calls.find(c => c[0] === 'options')[1], { timeout: 45000, retry: false });
+});
+
+test('daily collection rejects unavailable GA4 and never reflects raw errors', async () => {
+  for (const ga4 of [
+    { status: 'error', reason: 'RAW_PRIVATE_ERROR' },
+    { status: 'ok', dateBasis: 'not/a-zone', landingPages: [], aiReferrals: [] },
+  ]) {
+    const injected = deps();
+    injected.collectGsc = async (api, period = {}) => ({ status: 'ok',
+      ...(period.startDate ? period : { startDate: '2026-10-20', endDate: '2026-11-16' }),
+      settledThrough: '2026-11-16', dateBasis: 'America/Los_Angeles', summary: null });
+    injected.collectGa4 = async (g, c, p, startDate, endDate) => ({ ...ga4, startDate, endDate });
+    await assert.rejects(
+      collectDaily({ seoRepo: '/configured/seo', now: '2026-11-20T08:05:00+09:00' }, env, injected),
+      /daily_ga4_unavailable/);
+  }
+});
+
+test('daily CLI failure emits only its fixed safe error', () => {
+  const result = spawnSync(process.execPath, ['scripts/editorial/collect-report-metrics.mjs'], {
+    input: JSON.stringify({ kind: 'daily', seoRepo: '/does/not/exist', now }),
+    env: { PATH: process.env.PATH, GOOGLE_CREDENTIALS: 'RAW_PRIVATE_ERROR' }, encoding: 'utf8' });
+  assert.equal(result.status, 1);
+  assert.deepEqual(JSON.parse(result.stdout), { error: 'daily_collection_unavailable' });
+  assert.equal(result.stderr, '');
+});
+
+test('daily rejects valid wrong GSC timezone and mixed GA4 property timezones', async () => {
+  const setup = () => {
+    const injected = deps();
+    injected.collectGsc = async (api, period = {}) => ({ status: 'ok',
+      ...(period.startDate ? period : { startDate: '2026-10-20', endDate: '2026-11-16' }),
+      settledThrough: '2026-11-16', dateBasis: 'America/Los_Angeles', summary: null });
+    return injected;
+  };
+  const wrongGsc = setup(), originalGsc = wrongGsc.collectGsc;
+  wrongGsc.collectGsc = async (...args) => ({ ...await originalGsc(...args), dateBasis: 'Asia/Tokyo' });
+  await assert.rejects(collectDaily(
+    { seoRepo: '/configured/seo', now: '2026-11-20T08:05:00+09:00' }, env, wrongGsc),
+  /daily_gsc_unavailable/);
+  const mixedGa4 = setup(); let call = 0;
+  mixedGa4.collectGa4 = async (g, c, p, startDate, endDate) => ({ status: 'ok', startDate, endDate,
+    dateBasis: call++ ? 'America/Los_Angeles' : 'Asia/Tokyo', landingPages: [], aiReferrals: [] });
+  await assert.rejects(collectDaily(
+    { seoRepo: '/configured/seo', now: '2026-11-20T08:05:00+09:00' }, env, mixedGa4),
+  /daily_ga4_unavailable/);
+});
+
+test('daily rejects current GSC older than 11 PT days or behind settledThrough', async () => {
+  for (const current of [
+    { startDate: '2026-10-19', endDate: '2026-11-15', settledThrough: '2026-11-16' },
+    { startDate: '2026-09-20', endDate: '2026-10-17', settledThrough: '2026-10-17' },
+  ]) {
+    const injected = deps();
+    injected.collectGsc = async (api, period = {}) => ({ status: 'ok',
+      ...(period.startDate ? period : current), settledThrough: period.startDate ? period.endDate : current.settledThrough,
+      dateBasis: 'America/Los_Angeles', summary: null });
+    await assert.rejects(collectDaily(
+      { seoRepo: '/configured/seo', now: '2026-11-20T08:05:00+09:00' }, env, injected),
+    /daily_gsc_unavailable/);
+  }
 });

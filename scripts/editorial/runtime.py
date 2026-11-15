@@ -24,6 +24,7 @@ from attention_presentation import attention_text
 from dispatcher import DeterministicDispatcher, execution_policy, social_feature_enabled
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 from model_budget import ModelBudget
+from daily_metrics import collect_daily_metrics, require_fresh_daily_metrics
 
 JST = timezone(timedelta(hours=9))
 
@@ -292,8 +293,16 @@ class Runtime:
         pending = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and not j['publication'] and j['stage'] != 'rejected']
         if not any(j['stage'] == 'candidate' for j in pending) and (current or len(pending) >= 3):
             return {'status': 'idle', 'articles': []}
+        new_research = not current and len(pending) < 3
+        if new_research:
+            try:
+                require_fresh_daily_metrics(self.config, now)
+            except ValueError:
+                if not any(job.get('stage') == 'candidate' for job in pending):
+                    raise
+                new_research = False
         context = self._context()
-        if not current and len(pending) < 3:
+        if new_research:
             research_attempt = self.root / 'production-attempts' / (week + '.json')
             if research_attempt.exists():
                 raise ValueError('weekly_research_requires_reconciliation')
@@ -1326,6 +1335,10 @@ class Runtime:
             return {'status': 'suspended', 'mode': 'deterministic'}
         decisions = self.consume()
         now = datetime.now(JST)
+        try:
+            daily_metrics = collect_daily_metrics(self.config, self.env, now=now)
+        except Exception:
+            daily_metrics = {'status': 'failed', 'reason': 'daily_metrics_collection_failed'}
         dispatch = (DeterministicDispatcher(self).plan(now)
                     if self.execution_policy is not None else None)
         actions = {(action['kind'], action.get('jobId'), action.get('deliveryKind'))
@@ -1336,6 +1349,9 @@ class Runtime:
         except Exception as error:
             audits = [self._post_audit_fault(error)]
         results = []
+        if daily_metrics.get('status') in ('failed','already_failed','requires_reconciliation'):
+            results.append({'id':'daily-metrics','status':'attention',
+                            'reason':'daily_metrics_collection_failed'})
         if dispatch is not None:
             results.extend({'id': item.get('jobId') or 'deterministic-dispatch',
                             'status': 'attention', 'reason': item['reason']}
@@ -1453,6 +1469,7 @@ class Runtime:
                               or a.get('notificationStatus') == 'requires_reconciliation' for a in audits)
         result = {'status': 'attention' if audit_attention or report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
                   'at': stamp(), 'decisions': decisions, 'results': results,
+                  'dailyMetrics': daily_metrics,
                   'articles': [dict({k: j[k] for k in ('id', 'theme', 'stage', 'revision', 'error')},
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
                       approval={'action': 'approved' if j.get('approval') else None},

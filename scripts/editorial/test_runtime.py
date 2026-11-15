@@ -135,6 +135,65 @@ class RuntimeTests(unittest.TestCase):
                 self.runtime.tick()
                 self.assertEqual(int(due), produce.call_count)
 
+    def test_daily_metrics_collection_runs_before_tick_production(self):
+        self.config.update(dailyMetricsEnabled=True,seoStateRoot=str(Path(self.tmp.name)/'seo'),
+                           seoRepo=str(Path(self.tmp.name)/'repo'))
+        self.configure_production_schedule(); events=[]
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.collect_daily_metrics',side_effect=lambda *a,**k: events.append('metrics') or {'status':'success'}), \
+                patch.object(self.runtime,'produce',side_effect=lambda *a,**k: events.append('produce') or {'status':'idle'}):
+            clock.now.return_value=datetime(2026,11,20,9,tzinfo=JST)
+            self.runtime.tick()
+        self.assertEqual(['metrics','produce'],events)
+
+    def test_new_research_freshness_gate_precedes_context_and_weekly_attempt(self):
+        self.config.update(dailyMetricsEnabled=True,seoStateRoot=str(Path(self.tmp.name)/'seo'),
+                           seoRepo=str(Path(self.tmp.name)/'repo'))
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics',side_effect=ValueError('daily_metrics_not_fresh')) as fresh, \
+                patch.object(self.runtime,'_context') as context:
+            clock.now.return_value=datetime(2026,11,20,9,tzinfo=JST)
+            with self.assertRaisesRegex(ValueError,'daily_metrics_not_fresh'):
+                self.runtime.produce()
+        fresh.assert_called_once();context.assert_not_called()
+        self.assertFalse((self.runtime.root/'production-attempts'/'2026-11-20.json').exists())
+
+    def test_existing_candidate_resumes_without_daily_freshness_gate(self):
+        candidate=self.runtime.ledger.create_candidate({'slug':'already-selected'},
+                                                        '2026-11-19T09:00:00+09:00')
+        self.config.update(dailyMetricsEnabled=True,seoStateRoot=str(Path(self.tmp.name)/'seo'),
+                           seoRepo=str(Path(self.tmp.name)/'repo'))
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics',side_effect=ValueError('daily_metrics_not_fresh')) as fresh:
+            clock.now.return_value=datetime(2026,11,20,9,tzinfo=JST)
+            result=self.runtime.produce(limit=1)
+        fresh.assert_called_once()
+        self.assertEqual(candidate['id'],result['articles'][0]['id'])
+        self.assertFalse((self.runtime.root/'production-attempts'/'2026-11-20.json').exists())
+
+    def test_daily_collection_failure_does_not_block_existing_owner_approved_publication(self):
+        self.runtime.produce(limit=1);job=next(j for j in self.runtime.ledger.list_jobs() if j['bundle'])
+        self.config['generationEnabled']=False;self.approve(job)
+        self.config.update(dailyMetricsEnabled=True,seoStateRoot=str(Path(self.tmp.name)/'seo'),
+                           seoRepo=str(Path(self.tmp.name)/'repo'))
+        with patch('runtime.collect_daily_metrics',return_value={'status':'failed'}):
+            result=self.runtime.tick()
+        self.assertEqual('failed',result['dailyMetrics']['status'])
+        self.assertEqual('attention',result['status'])
+        self.assertIn({'id':'daily-metrics','status':'attention',
+                       'reason':'daily_metrics_collection_failed'},result['results'])
+        attention=lambda: [text for text in self.slack.notices
+                           if text.startswith('【記事制作が止まっています】')]
+        self.assertEqual(1,len(attention()))
+        self.assertEqual('published',self.runtime.ledger.get_job(job['id'])['stage'])
+        self.assertEqual(1,[action for action,_ in self.writes].count('publish'))
+        with patch('runtime.collect_daily_metrics',return_value={'status':'already_failed'}):
+            second=self.runtime.tick()
+        self.assertEqual('attention',second['status'])
+        self.assertEqual(1,len(attention()))
+
     def test_pending_candidates_resume_without_rewriting_legacy_slots(self):
         candidate = self.runtime.ledger.create_candidate({'slug': 'pending'},
             datetime(2026, 11, 4, 9, tzinfo=JST))

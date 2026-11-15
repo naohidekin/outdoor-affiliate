@@ -328,4 +328,11 @@ class Slack:
         return parts, receipt['message_ts']
 
     def notice(self, text):
-        return self.post(text)
+        if re.search(r'xox[baprs]-[A-Za-z0-9-]+|xapp-[A-Za-z0-9-]+', text):
+            raise ValueError('secret_in_slack_text')
+        parts = chunks(text, limit=2600)
+        if len(parts) <= 1:
+            return self.post(text)
+        receipts = [self.post(part) for part in parts]
+        return {'message_ts': receipts[-1]['message_ts'], 'hash': digest(text),
+                'verified': all(part.get('verified') is True for part in receipts), 'parts': receipts}

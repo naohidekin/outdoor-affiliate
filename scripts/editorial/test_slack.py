@@ -12,6 +12,25 @@ from presentation import article_body
 
 
 class SlackTests(unittest.TestCase):
+    def test_long_notice_verifies_each_bounded_part_without_changing_text(self):
+        client = Slack(self.config, call=self.call)
+        text = '日次の確認結果です。\n' * 500
+        receipts = [{'verified': True, 'message_ts': '1794222165.' + str(i).zfill(6)} for i in range(10)]
+        with patch.object(client, 'post', side_effect=receipts) as post:
+            result = client.notice(text)
+        parts = [call.args[0] for call in post.call_args_list]
+        self.assertEqual(text, ''.join(parts))
+        self.assertTrue(all(len(part.encode('utf-16-le')) // 2 <= 2600 for part in parts))
+        self.assertTrue(result['verified'])
+        self.assertEqual(len(parts), len(result['parts']))
+
+    def test_partial_notice_failure_does_not_send_later_parts(self):
+        client = Slack(self.config, call=self.call)
+        with patch.object(client, 'post', side_effect=[{'verified': True}, ValueError('unknown')]) as post:
+            with self.assertRaisesRegex(ValueError, 'unknown'):
+                client.notice('本文' * 5000)
+        self.assertEqual(2, post.call_count)
+
     def alias_fixture(self, root, mime='image/png', bucket='editorial-social-cards'):
         from test_catalog_legacy_primary import JPEG
         raw = (base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jzVQAAAAASUVORK5CYII=')
