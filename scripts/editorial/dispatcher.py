@@ -1,6 +1,6 @@
 """Pure deterministic planning for the existing editorial runtime."""
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 import json
 import sqlite3
 
@@ -37,8 +37,14 @@ def buffer_social_start(config):
     return value
 
 
-def buffer_social_eligible(job, config):
+def buffer_social_eligible(job, config, now=None):
     start = buffer_social_start(config)
+    if job.get('kind') == 'supplemental_article':
+        current = now or datetime.now(timezone(timedelta(hours=9)))
+        if current.tzinfo is None or current.utcoffset() is None:
+            raise ValueError('aware buffer eligibility time required')
+        return (start is not None and job.get('socialEligiblePeriod') == start
+                and current.astimezone(timezone(timedelta(hours=9))).date() >= date.fromisoformat(start))
     return (start is not None and job.get('kind') != 'article_revision'
             and isinstance(job.get('week'), str) and job['week'] >= start)
 
@@ -184,7 +190,7 @@ class DeterministicDispatcher:
                 start = buffer_social_start(self.runtime.config)
                 if start is None:
                     base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
-                elif (buffer_social_eligible(job, self.runtime.config)
+                elif (buffer_social_eligible(job, self.runtime.config, now)
                       and buffer_social_outstanding(jobs) < 3
                       and self.runtime._social_audit_success(job)):
                     base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
@@ -193,7 +199,7 @@ class DeterministicDispatcher:
                 start = buffer_social_start(self.runtime.config)
                 proposal = ((job.get('social') or {}).get('proposal') or {})
                 if (start is not None and (proposal.get('deliveryMode') != 'buffer_x'
-                                           or not buffer_social_eligible(job, self.runtime.config))):
+                                           or not buffer_social_eligible(job, self.runtime.config, now))):
                     continue
                 needed, blocked = self._delivery_needed(job['id'], 'social', now)
                 if blocked:
@@ -265,9 +271,16 @@ class DeterministicDispatcher:
             job = min(revisions, key=lambda item: item['priority'])
             base['actions'].append({'kind': 'produce_revision', 'jobId': job['id']})
             return base
-        articles = [job for job in candidates if job.get('kind') != 'article_revision']
+        articles = [job for job in candidates if job.get('kind') not in
+                    ('article_revision', 'supplemental_article')]
         if articles and self.runtime.config.get('generationEnabled') is True:
             base['actions'].append({'kind': 'produce', 'jobId': articles[0]['id']})
+            return base
+        supplemental = [job for job in candidates
+                        if job.get('kind') == 'supplemental_article']
+        if supplemental and self.runtime.config.get('generationEnabled') is True:
+            base['actions'].append({'kind': 'produce_supplemental',
+                                    'jobId': supplemental[0]['id']})
             return base
         # A delivered exact version waiting for its owner does not create new work.
         if article_waiting:
@@ -277,8 +290,15 @@ class DeterministicDispatcher:
             period = self.runtime.ledger.production_schedule.period_key(now)
             pending = [job for job in jobs if job.get('kind') != 'article_revision'
                        and not job.get('publication') and job['stage'] != 'rejected']
-            period_count = sum(job.get('kind') != 'article_revision' and job['week'] == period
+            period_count = sum(job.get('kind') not in ('article_revision', 'supplemental_article')
+                               and job['week'] == period
                                for job in jobs)
             if len(pending) < 3 and period_count < 3:
                 base['actions'].append({'kind': 'produce', 'jobId': None})
+                return base
+        pending = [job for job in jobs if job.get('kind') != 'article_revision'
+                   and not job.get('publication') and job['stage'] != 'rejected']
+        if (self.runtime.config.get('generationEnabled') is True and len(pending) < 3
+                and self.runtime.supplemental_due(now)):
+            base['actions'].append({'kind': 'produce_supplemental', 'jobId': None})
         return base

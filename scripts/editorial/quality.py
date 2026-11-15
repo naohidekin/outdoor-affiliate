@@ -21,6 +21,10 @@ import re
 from datetime import datetime
 from urllib.parse import parse_qs, urlsplit
 
+from apparel_identity import (ApparelIdentityError, apparel_class, apparel_contract,
+                              apparel_requested,
+                              binding_matches_product)
+
 
 BRIEF_FIELDS = ("purpose", "reader", "conclusion", "headings", "facts", "numbers",
                 "links", "requiredExpressions", "protected", "style", "length", "cta", "format")
@@ -344,6 +348,39 @@ def inspect_bundle(bundle):
     if brief.get("format") in ("ranking", "comparison") and not any(m.group(1) == "comparison" for m in SHORTCODE.finditer(visible)):
         fail("comparison", "ranking/comparison needs comparison shortcode")
 
+    apparel_classes = []
+    for pid, product in product_map.items():
+        if not apparel_requested(product):
+            continue
+        kind = apparel_class(product)
+        if not kind:
+            fail("apparel", f"{pid}: explicit apparel classification invalid or missing")
+            continue
+        apparel_classes.append(kind)
+        try:
+            apparel_contract(product)
+        except ApparelIdentityError:
+            fail("apparel", f"{pid}: incomplete model/gender/fabric/weight/option contract")
+            continue
+        official = [ref for ref in references
+                    if ref.get("productId") == pid and ref.get("kind") == "manufacturer"
+                    and binding_matches_product(ref.get("apparelBinding"), product)]
+        if len(official) != 1:
+            fail("apparel", f"{pid}: exactly one bound official apparel identity required")
+        for channel, field in (("rakuten", "affiliateUrl"), ("amazon", "amazonUrl"),
+                               ("yahoo", "yahooUrl")):
+            if product.get(field) in (None, ""):
+                continue
+            merchant = [ref for ref in references
+                        if ref.get("productId") == pid and ref.get("kind") == "purchase"
+                        and ref.get("channel") == channel
+                        and binding_matches_product(ref.get("apparelBinding"), product, channel)]
+            if len(merchant) != 1:
+                fail("apparel", f"{pid}: {channel} destination lacks exact apparel binding")
+    if apparel_classes and (len(apparel_classes) != len(product_map)
+                            or len(set(apparel_classes)) != 1):
+        fail("apparel", "comparison must contain apparel of one explicit position only")
+
     if not references:
         fail("reference", "checked references required; presence does not prove completeness")
     for ref in references:
@@ -376,8 +413,16 @@ def inspect_bundle(bundle):
             continue
         image_url = product.get("imageUrl")
         url(image_url, f"product {pid}.imageUrl")
-        if not any(i.get("productId") == pid and i.get("url") == image_url and i.get("verified") is True for i in images):
+        matching_images = [i for i in images if i.get("productId") == pid
+                           and i.get("url") == image_url and i.get("verified") is True]
+        if not matching_images:
             fail("image", f"{pid}: matching runner verified image metadata required")
+        if apparel_requested(product) and not any(
+                binding_matches_product(image.get("apparelBinding"), product)
+                and isinstance(image["apparelBinding"].get("imageUrls"), list)
+                and image.get("url") in image["apparelBinding"]["imageUrls"]
+                for image in matching_images):
+            fail("apparel", f"{pid}: official image lacks exact apparel binding")
         usable = 0
         for channel, field in (("rakuten", "affiliateUrl"), ("amazon", "amazonUrl"), ("yahoo", "yahooUrl")):
             value = product.get(field)

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "batchId": "apparel-2026-11-16",
+  "kind": "supplemental_article_batch",
+  "notBefore": "2026-11-16T09:00:00+09:00",
+  "socialEligiblePeriod": "2026-11-20",
+  "maxArticles": 3,
+  "batchCallCap": 96,
+  "status": "awaiting_verified_source",
+  "apparelPolicy": {
+    "version": 1,
+    "requirements": [
+      "exact live catalog product",
+      "strict apparel identity and variant binding",
+      "verified manufacturer facts",
+      "verified product image identity",
+      "verified affiliate and Amazon destinations"
+    ],
+    "missingEvidence": "hold",
+    "researchScope": {
+      "classes": ["down", "hardshell", "active-layer", "heavy-layer", "fleece", "base-layer"],
+      "comparison": ["cross-brand", "same-position"],
+      "claims": "verified evidence only; demand and field use remain unverified"
+    }
+  },
+  "slots": [
+    {"slot": 1, "productIds": ["apparel-montbell-1101493"], "slug": "plasma1000-1101493-layering-guide", "title": "プラズマ1000 ダウンジャケット1101493｜軽量ダウンを重ね着で使う前の確認点", "categoryId": "wear", "query": "プラズマ1000 1101493 選び方", "selectionReason": "owner winter apparel priority; official model availability observed; demand and field use unverified"},
+    {"slot": 2, "productIds": ["apparel-montbell-1107704"], "slug": "zeoline-mw-1107704-guide", "title": "ジオラインM.W. 1107704｜中厚手インナーの素材と購入前の確認点", "categoryId": "wear", "query": "ジオラインM.W. 1107704 機能", "selectionReason": "owner winter apparel priority; official model availability observed; demand and field use unverified"},
+    {"slot": 3, "productIds": ["apparel-montbell-1114881"], "slug": "chameece-1114881-layering-guide", "title": "シャミース1114881｜薄手フリースの役割と重ね着の確認点", "categoryId": "wear", "query": "シャミース1114881 冬 重ね着", "selectionReason": "owner winter apparel priority; official model availability observed; demand and field use unverified"}
+  ]
+}

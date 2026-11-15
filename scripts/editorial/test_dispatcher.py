@@ -4,7 +4,7 @@ import json
 import sqlite3
 import unittest
 
-from dispatcher import DeterministicDispatcher, execution_policy
+from dispatcher import DeterministicDispatcher, buffer_social_eligible, execution_policy
 from runtime import JST
 import test_runtime
 
@@ -166,6 +166,27 @@ class DispatcherTests(unittest.TestCase):
         self.config['executionPolicy']['suspended'] = True
         self.assertEqual({'mode': 'deterministic', 'status': 'suspended', 'actions': [],
                           'blocked': [], 'exceptionAI': False}, self.plan())
+
+    def test_regular_period_has_priority_then_supplemental_lane_is_separate(self):
+        self.config['supplementalApparelEnabled'] = True
+        test_runtime.RuntimeTests.configure_production_schedule(self)
+        due = datetime(2026, 11, 16, 9, tzinfo=JST)
+        plan = DeterministicDispatcher(self.runtime).plan(due)
+        self.assertEqual([{'kind': 'produce', 'jobId': None}], plan['actions'])
+        for index in range(3):
+            job = self.runtime.ledger.create_candidate({'slug': f'regular-{index}'}, now=due)
+            self.runtime.ledger.set_stage(job['id'], 'rejected')
+        plan = DeterministicDispatcher(self.runtime).plan(due)
+        self.assertEqual([{'kind': 'produce_supplemental', 'jobId': None}], plan['actions'])
+
+    def test_supplemental_social_waits_for_bound_november_twentieth_route(self):
+        self.config['bufferSocialStartPeriod'] = '2026-11-20'
+        job = {'kind': 'supplemental_article', 'week': '2026-11-13',
+               'socialEligiblePeriod': '2026-11-20'}
+        self.assertFalse(buffer_social_eligible(
+            job, self.config, datetime(2026, 11, 19, 23, 59, tzinfo=JST)))
+        self.assertTrue(buffer_social_eligible(
+            job, self.config, datetime(2026, 11, 20, 0, 0, tzinfo=JST)))
 
 
 if __name__ == '__main__':

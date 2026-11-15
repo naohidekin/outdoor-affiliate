@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import copy
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -64,6 +65,14 @@ class ModelBudgetTests(unittest.TestCase):
         self.assertEqual(2, summary['period']['calls'])
         self.assertEqual(2, summary['articles']['article-1']['calls'])
         self.assertEqual(2, summary['reservationsByStatus']['reserved'])
+
+    def test_standalone_budget_without_jobs_table_keeps_ordinary_scope_contract(self):
+        with sqlite3.connect(self.root / 'ledger.sqlite3') as db:
+            db.execute('DROP TABLE jobs')
+        budget = ModelBudget(self.root, self.schedule)
+        with budget.scope('ordinary-standalone', 'draft', NOW):
+            reservation = budget.reserve(self.payload())
+        self.assertIsInstance(reservation, str)
 
     def test_exact_usage_replaces_upper_bounds_and_unknown_keeps_reservation(self):
         budget = ModelBudget(self.root, self.schedule)
@@ -214,6 +223,37 @@ class ModelBudgetTests(unittest.TestCase):
         with budget.scope('article-1', 'polish', next_period):
             budget.reserve(self.payload('legitimate next-period update'))
         self.assertEqual(1, budget.inspect(next_period)['articles']['article-1']['calls'])
+
+    def test_supplemental_batch_call_cap_is_atomic_across_articles_and_periods(self):
+        limits = config(article__calls=200, period__calls=200)
+        with sqlite3.connect(self.root / 'ledger.sqlite3') as db:
+            for index in range(3):
+                job = {'id': f'article-extra-{index}', 'kind': 'supplemental_article',
+                       'batchId': 'apparel-2026-11-16', 'batchCallCap': 96}
+                db.execute('INSERT INTO jobs VALUES (?,?)',
+                           (job['id'], json.dumps(job, separators=(',', ':'))))
+        budget = ModelBudget(self.root, self.schedule, limits)
+        for index in range(95):
+            at = NOW if index < 50 else NOW + timedelta(days=7)
+            with budget.scope(f'article-extra-{index % 3}', 'draft', at):
+                budget.reserve(self.payload(str(index)))
+
+        def attempt(article):
+            local = ModelBudget(self.root, self.schedule, limits)
+            try:
+                with local.scope(article, 'polish', NOW + timedelta(days=14)):
+                    local.reserve(self.payload(article))
+                return 'reserved'
+            except BudgetHold as error:
+                return error.reason_code
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(attempt, ('article-extra-0', 'article-extra-1')))
+        self.assertEqual(['batch_calls_cap', 'reserved'], sorted(outcomes))
+        with sqlite3.connect(self.root / 'ledger.sqlite3') as db:
+            total = db.execute('SELECT count(*) FROM model_budget_reservations WHERE article_id LIKE ?',
+                               ('article-extra-%',)).fetchone()[0]
+        self.assertEqual(96, total)
 
     def test_actual_overshoot_is_charged_and_held_before_downstream_effects(self):
         budget = ModelBudget(self.root, self.schedule, config(article__inputTokens=1000))

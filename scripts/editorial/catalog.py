@@ -19,6 +19,13 @@ import struct
 import zlib
 from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
 
+from apparel_identity import (ApparelIdentityError, apparel_class, apparel_contract,
+                              apparel_requested,
+                              claim_binding as apparel_claim_binding,
+                              inspect_apparel_page, official_domains as apparel_domains,
+                              is_merchant_field,
+                              public_binding as public_apparel_binding)
+
 JST = timezone(timedelta(hours=9))
 PRODUCT_FIELDS = 'id,name,brand,price,image_url,affiliate_url,amazon_url,yahoo_url,category_id,specs,description,rating,created_at,updated_at,auto_added,added_by,added_at,source_api,availability'
 ARTICLE_FIELDS = 'id,title,slug,category_id,content,excerpt,product_ids,status,faqs,meta_description,tags,created_at,updated_at,published_at,auto_generated,quality_score,scheduled_publish_date,generation_meta,eyecatch'
@@ -43,6 +50,13 @@ MAKERS.update({'primus': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-
                'tokyocamp': ('tokyocamp.ooo',),
                'solo stove': ('store.upioutdoor.com', 'solostove.com'),
                'ソロストーブ': ('store.upioutdoor.com', 'solostove.com')})
+
+# Apparel additions are deliberately bounded to configured, verified primary hosts.
+MAKERS.update({'columbia': ('columbiasports.co.jp',), 'コロンビア': ('columbiasports.co.jp',),
+               'patagonia': ('patagonia.jp',), 'パタゴニア': ('patagonia.jp',),
+               'the north face': ('goldwin.co.jp',), 'thenorthface': ('goldwin.co.jp',),
+               'ザ・ノース・フェイス': ('goldwin.co.jp',), 'ザノースフェイス': ('goldwin.co.jp',),
+               'モンベル': ('montbell.jp', 'montbell.com'), 'ナンガ': ('nanga.jp',)})
 
 
 class CatalogError(ValueError):
@@ -736,10 +750,24 @@ class Catalog:
             item = {'productId': pid, 'model': model, 'facts': False, 'images': False, 'affiliate': False,
                     'claims': [], 'destinations': [], 'issues': [], 'checkedAt': checked_at}
             maker_pages, mall_pages = [], []
+            apparel_kind = apparel_class(product)
+            apparel_mode = apparel_requested(product)
+            apparel = None
+            if apparel_mode:
+                try:
+                    apparel = apparel_contract(product)
+                    model = apparel['model']
+                    item.update(model=model, apparelClass=apparel_kind,
+                                apparelContract=apparel)
+                except ApparelIdentityError:
+                    item['issues'].append('apparel catalogue identity incomplete')
+            apparel_sources = {}
             fixed_firepit_ids = ('fp-001', 'fp-002', 'fp-004', 'fp-005')
             firepit_sources = {}
 
             def source_binding(res, parsed, key, value):
+                if apparel_mode:
+                    return apparel_claim_binding(apparel_sources.get(parsed), key, value)
                 primary = firepit_sources.get(parsed)
                 if primary is not None:
                     expected = (primary['model'] if key in ('model', 'modelNumber', '型番', '品番', 'モデル番号')
@@ -755,6 +783,9 @@ class Catalog:
                                       brand=product.get('brand', ''))
 
             def source_images(res, parsed):
+                if apparel_mode:
+                    binding = apparel_sources.get(parsed)
+                    return binding.get('imageUrls', []) if binding else []
                 primary = firepit_sources.get(parsed)
                 if primary is not None:
                     return primary['imageUrls']
@@ -788,21 +819,39 @@ class Catalog:
             except (CatalogError, TypeError, ValueError):
                 raise CatalogError('required notice unavailable') from None
             references.extend(notice_references)
-            def page(url, kind):
+            def page(url, kind, channel=None):
                 nonlocal model
                 # These fixed public product pages return 429 JSON to an empty
                 # UA but ordinary HTML to a normal browser UA. Send explicit
                 # read-only headers once; no retry or verification bypass.
                 headers = ({'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0'}
                            if kind == 'manufacturer' and pid in fixed_firepit_ids else None)
+                if apparel_mode and kind == 'purchase' and channel == 'amazon':
+                    headers = {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept-Language': 'ja-JP,ja;q=0.9',
+                        'User-Agent': ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                                       'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                       'Chrome/142.0.0.0 Safari/537.36'),
+                    }
                 res = self.request(url, headers, allowed_domains=domains if kind == 'manufacturer' else None)
                 if not res['headers'].get('content-type', '').lower().startswith('text/html'):
                     raise CatalogError('HTML required')
                 html = _decode_html(res['body'], res['headers'].get('content-type', ''))
                 parsed = _Page(html)
                 identity = None
+                apparel_binding = None
+                if apparel_mode and apparel:
+                    apparel_binding = inspect_apparel_page(
+                        product, res['url'], html,
+                        product.get('imageUrl') if kind == 'manufacturer' else None,
+                        source_role=kind, channel=channel)
+                    if apparel_binding:
+                        apparel_sources[parsed] = apparel_binding
                 if kind == 'manufacturer':
-                    if pid in fixed_firepit_ids:
+                    if apparel_mode:
+                        identity = 'json-ld-product' if apparel_binding else None
+                    elif pid in fixed_firepit_ids:
                         from primary_firepit import extract_primary
                         primary = extract_primary(product, res['url'], html)
                         if primary and (primary['model'] == model or
@@ -815,7 +864,10 @@ class Catalog:
                             identity = primary['scope']
                     else:
                         identity = _primary_identity(parsed, model, product.get('brand', ''))
-                match = bool(identity) if kind == 'manufacturer' else (model_matches(model, parsed.title) and product.get('brand', '').casefold() in parsed.title.casefold())
+                match = (bool(identity) if kind == 'manufacturer' else
+                         bool(apparel_binding) if apparel_mode else
+                         (model_matches(model, parsed.title)
+                          and product.get('brand', '').casefold() in parsed.title.casefold()))
                 fixed_purchase_identity = None
                 if kind == 'purchase' and pid in ('fp-004', 'tent-f03', 'tent-f06', 'tent-f-landlock-x'):
                     from primary_firepit import fixed_amazon_identity
@@ -876,18 +928,28 @@ class Catalog:
                             'conditions': (['Manufacturer0398.SP includes two skewers; this merchant bundle count is unconfirmed.']
                                            if not bundle_verified else [])}
                         match = match and bundle_verified
-                if kind == 'purchase' and pid not in fixed_firepit_ids:
+                if kind == 'purchase' and apparel_mode:
+                    # Apparel never falls back to title/fuzzy merchant identity.
+                    match = bool(apparel_binding)
+                elif kind == 'purchase' and pid not in fixed_firepit_ids:
                     from merchant_identity import inspect_merchant_identity
                     decision = inspect_merchant_identity(product, model, parsed.title)
                     match = decision['status'] == 'passed' or bool(
                         fixed_purchase_identity and decision['status'] != 'failed')
                 # Store evidence of exact comparisons, never user review text.
                 if match:
-                    references.append({'productId': pid, 'kind': kind, 'url': res['url'], 'checkedAt': checked_at,
-                                       'text': 'Brand title and primary identity (' + (identity or 'title') + '): ' + model})
+                    reference = {'productId': pid, 'kind': kind, 'url': res['url'],
+                                 'checkedAt': checked_at,
+                                 'text': 'Brand and primary identity (' + (identity or 'structured') + '): ' + model}
+                    if apparel_binding:
+                        reference.update(apparelBinding=public_apparel_binding(apparel_binding))
+                        if channel:
+                            reference['channel'] = channel
+                    references.append(reference)
                 return res, parsed, match
             try:
-                domains = MAKERS.get(product.get('brand', '').casefold(), ())
+                domains = (apparel_domains(product) if apparel_mode else
+                           MAKERS.get(product.get('brand', '').casefold(), ()))
                 for url in self.source_hints.get(pid, []):
                     try:
                         host = urlsplit(url).hostname or ''
@@ -901,13 +963,16 @@ class Catalog:
                         item['issues'].append('manufacturer page unavailable')
                 specs = product.get('specs') or {}
                 image_url = product.get('imageUrl', '')
-                hints_complete = bool(model and maker_pages and specs and image_url
+                official_specs = {key: value for key, value in specs.items()
+                                  if not apparel_mode or not is_merchant_field(key)}
+                hints_complete = bool(model and maker_pages and official_specs and image_url
                     and all(isinstance(value, str) and value and any(
                         source_binding(res, parsed, key, value)
-                        for res, parsed in maker_pages) for key, value in specs.items())
+                        for res, parsed in maker_pages)
+                            for key, value in official_specs.items())
                     and any(image_url in source_images(res, parsed)
                             for res, parsed in maker_pages))
-                if not hints_complete and self.env.get('BRAVE_API_KEY'):
+                if not apparel_mode and not hints_complete and self.env.get('BRAVE_API_KEY'):
                     data = self._json('https://api.search.brave.com/res/v1/web/search?' + urlencode({'q': product['brand'] + ' ' + product['name'] + ' 公式 仕様', 'count': 5}),
                                       {'X-Subscription-Token': self.env['BRAVE_API_KEY'], 'Accept': 'application/json'})
                     for found in data.get('web', {}).get('results', [])[:5]:
@@ -921,7 +986,8 @@ class Catalog:
                                     maker_pages.append((res, parsed))
                             except CatalogError:
                                 item['issues'].append('manufacturer page unavailable')
-                if not hints_complete and self.env.get('RAKUTEN_APP_ID') and self.env.get('RAKUTEN_ACCESS_KEY'):
+                if (not apparel_mode and not hints_complete and self.env.get('RAKUTEN_APP_ID')
+                        and self.env.get('RAKUTEN_ACCESS_KEY')):
                     data = self._json('https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701?' + urlencode({
                         'applicationId': self.env['RAKUTEN_APP_ID'], 'accessKey': self.env['RAKUTEN_ACCESS_KEY'],
                         'keyword': product['name'], 'hits': 5, 'formatVersion': 2}),
@@ -941,6 +1007,8 @@ class Catalog:
                 item['issues'].append('research unavailable')
             specs = product.get('specs') or {}
             for key, value in specs.items():
+                if apparel_mode and is_merchant_field(key):
+                    continue
                 if not isinstance(value, str) or not value:
                     item['claims'].append({'field': key, 'verified': False})
                     continue
@@ -968,6 +1036,12 @@ class Catalog:
                          'sha256': hashlib.sha256(res['body']).hexdigest(), 'size': len(res['body']),
                          'contentType': declared_type, 'identitySource': identity_source,
                          'checkedAt': checked_at, 'verified': verified}
+                if apparel_mode and identity_source:
+                    binding = next((apparel_sources.get(parsed) for source_res, parsed in maker_pages
+                                    if source_res['url'] == identity_source
+                                    and apparel_sources.get(parsed)), None)
+                    if binding:
+                        image['apparelBinding'] = public_apparel_binding(binding)
                 if res['headers'].get('x-catalog-original-content-type') == 'image':
                     image['declaredContentType'] = 'image'
                 images.append(image)
@@ -978,7 +1052,7 @@ class Catalog:
                 if not product.get(field):
                     continue
                 try:
-                    res, parsed, match = page(product[field], 'purchase')
+                    res, parsed, match = page(product[field], 'purchase', channel)
                     host = urlsplit(res['url']).hostname or ''
                     allowed = (host == 'item.rakuten.co.jp' if channel == 'rakuten' else
                                host in ('amazon.co.jp', 'www.amazon.co.jp') if channel == 'amazon' else
@@ -988,6 +1062,9 @@ class Catalog:
                     item['destinations'].append({'channel': channel, 'url': product[field], 'finalUrl': res['url'],
                                                  'verified': verified, 'checkedAt': checked_at,
                                                  'text': 'catalog brand and exact model title check'})
+                    if apparel_mode and apparel_sources.get(parsed):
+                        item['destinations'][-1]['apparelBinding'] = public_apparel_binding(
+                            apparel_sources[parsed])
                     if getattr(parsed, 'firepit_purchase_binding', None):
                         item['destinations'][-1]['identityBinding'] = parsed.firepit_purchase_binding
                 except CatalogError:
@@ -1005,7 +1082,21 @@ class Catalog:
                 counts[key] = counts.get(key, 0) + 1
         merchant_clicks = [{'productId': pid, 'store': store, 'clicks': count}
                            for (pid, store), count in sorted(counts.items())]
-        return self._public({'theme': theme, 'catalog': selected, 'products': selected, 'productIds': ids,
+        result = {'theme': theme, 'catalog': selected, 'products': selected, 'productIds': ids,
                 'existingArticles': existing, 'categories': [c for c in catalog.get('categories', []) if c.get('id') == selected[0]['categoryId']],
                 'merchantClicks': merchant_clicks, 'references': references, 'images': images,
-                'checks': checks, 'evidence': {'products': details}, 'blocked': not all(checks.values())})
+                'checks': checks, 'evidence': {'products': details}, 'blocked': not all(checks.values())}
+        if any(apparel_requested(product) for product in selected):
+            result['apparelSourcing'] = {
+                'status': 'verified' if all(checks.values()) else 'hold',
+                'requirements': [
+                    'exact official JSON-LD product identity and official image',
+                    'model/gender/fabric/weight and explicit option state',
+                    'fixed variant/color/size or explicit selectable color/size options',
+                    'each merchant destination bound to the same product contract',
+                    'typed NA for a missing required merchant channel',
+                    'existing same-position articles checked before candidate creation',
+                ],
+                'existingSamePositionArticles': existing,
+            }
+        return self._public(result)

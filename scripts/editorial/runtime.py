@@ -272,10 +272,19 @@ class Runtime:
             'Prioritize observed Rakuten opportunities, keep Amazon routes. Avoid medical, drugs, emergency '
             'and child safety advice; those require a separate physician evidence review. '
             'Every theme must include slug, title, categoryId, productIds, query and selectionReason.')
+        from supplemental_topics import apparel_policy, load_batch
+        manifest = load_batch(self.config.get('supplementalApparelBatchManifest'))
+        data['apparelPolicy'] = apparel_policy(manifest)
+        data['instructions'] += (' Apply the bound apparel policy to apparel candidates; missing '
+                                 'identity, image, affiliate or Amazon evidence is a hold. '
+                                 'Prioritize owner-requested autumn/winter apparel directions among '
+                                 'verified eligible products; source evidence and duplication rules '
+                                 'override preference.')
         return data
 
     def _research_context(self, context):
         from catalog import _model, MAKERS
+        from supplemental_topics import apparel_policy, load_batch
         eligible = [p for p in context['products'] if _model(p) and p.get('brand', '').casefold() in MAKERS
                     and p.get('imageUrl') and p.get('affiliateUrl') and p.get('amazonUrl')]
         products = [{k: p.get(k) for k in ('id', 'name', 'brand', 'categoryId', 'specs')} for p in eligible[:60]]
@@ -292,7 +301,10 @@ class Runtime:
             key = (click.get('pagePath', click.get('page_path', '')), click.get('store', 'unknown'))
             counts[key] = counts.get(key, 0) + 1
         analytics = self._analytics_context()
-        return {'wisePolicy': load_policy(self.config['repo']), 'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
+        owner_apparel_policy = context.get('apparelPolicy') or apparel_policy(
+            load_batch(self.config.get('supplementalApparelBatchManifest')))
+        return {'wisePolicy': load_policy(self.config['repo']), 'apparelPolicy': owner_apparel_policy,
+                'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
                 'merchantClicks': [{'article': k[0], 'store': k[1], 'clicks': n} for k, n in counts.items()],
                 'observation': {'start': observed_start.isoformat(), 'end': observed_end.isoformat(),
                                 'metric': 'affiliate link clicks only; not purchases, revenue or seasonal trend'},
@@ -309,7 +321,8 @@ class Runtime:
         week = self.ledger.production_schedule.period_key(now)
         if week is None:
             return {'status': 'idle', 'articles': []}
-        current = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and j['week'] == week]
+        current = [j for j in self.ledger.list_jobs() if j.get('kind') not in
+                   ('article_revision', 'supplemental_article') and j['week'] == week]
         pending = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and not j['publication'] and j['stage'] != 'rejected']
         if not any(j['stage'] == 'candidate' for j in pending) and (current or len(pending) >= 3):
             return {'status': 'idle', 'articles': []}
@@ -336,7 +349,8 @@ class Runtime:
                 self._save_usage()
             for theme in themes[:3 - len(pending)]:
                 self.ledger.create_candidate(theme, now=now)
-            current = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and j['week'] == week]
+            current = [j for j in self.ledger.list_jobs() if j.get('kind') not in
+                       ('article_revision', 'supplemental_article') and j['week'] == week]
         results = []
         with self.ledger._tx() as db:
             row = db.execute('SELECT value FROM meta WHERE key=?',
@@ -349,7 +363,7 @@ class Runtime:
             ordered_jobs.sort(key=lambda item: item['id'] != preferred)
         # Pending candidates retain their slot and may resume after a week boundary.
         for job in ordered_jobs:
-            if job.get('kind') == 'article_revision' or job['stage'] not in ('candidate',) or len(results) >= limit:
+            if job.get('kind') in ('article_revision', 'supplemental_article') or job['stage'] not in ('candidate',) or len(results) >= limit:
                 continue
             try:
                 delivery = self._make_article(job, context)
@@ -363,6 +377,164 @@ class Runtime:
             finally:
                 self._save_usage()
         return {'status': 'completed', 'articles': results}
+
+    def _supplemental_manifest(self):
+        from supplemental_topics import load_batch
+        return load_batch(self.config.get('supplementalApparelBatchManifest'))
+
+    def supplemental_due(self, now):
+        if self.config.get('supplementalApparelEnabled') is not True:
+            return False
+        manifest = self._supplemental_manifest()
+        not_before = datetime.fromisoformat(manifest['notBefore'])
+        complete = sum(job.get('kind') == 'supplemental_article'
+                       and job.get('batchId') == manifest['batchId']
+                       for job in self.ledger.list_jobs()) >= manifest['maxArticles']
+        if now.astimezone(JST) < not_before or complete:
+            return False
+        candidates = any(job.get('kind') == 'supplemental_article'
+                         and job.get('batchId') == manifest['batchId']
+                         and job.get('stage') == 'candidate' for job in self.ledger.list_jobs())
+        if candidates:
+            return True
+        marker = self.root / 'supplemental-batches' / (manifest['batchId'] + '.json')
+        try:
+            saved = json.loads(marker.read_text())
+            due = datetime.fromisoformat(saved['nextSourceCheckAt'])
+            from supplemental_topics import batch_fingerprint
+            if (saved.get('manifestFingerprint') == batch_fingerprint(manifest)
+                    and due.tzinfo is not None and now.astimezone(JST) < due.astimezone(JST)):
+                return False
+        except (OSError, KeyError, TypeError, ValueError):
+            pass
+        return True
+
+    def _supplemental_health(self, now):
+        if self.config.get('supplementalApparelEnabled') is not True:
+            return {'status': 'disabled'}
+        manifest = self._supplemental_manifest()
+        not_before = datetime.fromisoformat(manifest['notBefore'])
+        ids = [job['id'] for job in self.ledger.list_jobs()
+               if job.get('kind') == 'supplemental_article'
+               and job.get('batchId') == manifest['batchId']]
+        calls = 0
+        if ids:
+            with sqlite3.connect(self.ledger.db_path) as db:
+                calls = db.execute('SELECT count(*) FROM model_budget_reservations WHERE article_id IN ('
+                                   + ','.join('?' for _ in ids) + ')', ids).fetchone()[0]
+        base = {'batchId': manifest['batchId'], 'notBefore': manifest['notBefore'],
+                'maxArticles': manifest['maxArticles'], 'batchCallCap': manifest['batchCallCap'],
+                'modelCallsUsed': int(calls),
+                'modelCallsRemaining': manifest['batchCallCap'] - int(calls)}
+        if now.astimezone(JST) < not_before:
+            return dict(base, status='awaiting_start', ready=0, held=3)
+        marker = self.root / 'supplemental-batches' / (manifest['batchId'] + '.json')
+        try:
+            value = json.loads(marker.read_text())
+            slots = value.get('slots') if isinstance(value.get('slots'), list) else []
+            return dict(base, status=value.get('status', 'source_hold'),
+                        ready=sum(slot.get('status') == 'ready' for slot in slots),
+                        held=sum(slot.get('status') != 'ready' for slot in slots),
+                        nextSourceCheckAt=value.get('nextSourceCheckAt'),
+                        sourceStateFingerprint=value.get('sourceStateFingerprint'))
+        except (OSError, ValueError, TypeError):
+            return dict(base, status='awaiting_source_check', ready=0, held=3)
+
+    def produce_supplemental(self, limit=1, job_id=None, now=None):
+        """Resolve and progress at most one independently verified supplemental slot."""
+        self._require_running()
+        if (self.config.get('generationEnabled') is not True
+                or self.config.get('supplementalApparelEnabled') is not True):
+            return {'status': 'disabled', 'articles': []}
+        now = now or datetime.now(JST)
+        manifest = self._supplemental_manifest()
+        not_before = datetime.fromisoformat(manifest['notBefore'])
+        if now.astimezone(JST) < not_before:
+            return {'status': 'not_due', 'articles': []}
+        config = self.model_budget.config
+        if config['article']['calls'] > 32 or config['period']['calls'] > 128:
+            raise ValueError('supplemental_model_budget_bounds_required')
+        marker_path = self.root / 'supplemental-batches' / (manifest['batchId'] + '.json')
+        prior = None
+        try:
+            prior = json.loads(marker_path.read_text())
+        except (OSError, ValueError):
+            pass
+        context = self._context()
+        from supplemental_topics import resolve_batch
+        jobs = self.ledger.list_jobs()
+        other_themes = [job['theme'] for job in jobs
+                        if job.get('kind') != 'supplemental_article']
+        resolved = resolve_batch(manifest, context, other_themes, now)
+        bound = {job.get('batchSlot'): job for job in jobs
+                 if job.get('kind') == 'supplemental_article'
+                 and job.get('batchId') == manifest['batchId']}
+        state = {'schemaVersion': 1, 'batchId': manifest['batchId'],
+                 'manifestFingerprint': resolved['manifestFingerprint'],
+                 'sourceStateFingerprint': resolved['stateFingerprint'],
+                 'status': resolved['status'], 'batchCallCap': manifest['batchCallCap'],
+                 'slots': [{key: slot.get(key) for key in
+                            ('slot', 'status', 'reason', 'sourceBinding')}
+                           for slot in resolved['slots']],
+                 'articleIds': {str(slot): job['id'] for slot, job in bound.items()},
+                 'observedAt': now.astimezone(JST).isoformat(),
+                 'nextSourceCheckAt': (now.astimezone(JST) + timedelta(hours=1)).isoformat(),
+                 'notification': prior.get('notification') if isinstance(prior, dict) else None}
+        changed = (not isinstance(prior, dict)
+                   or prior.get('manifestFingerprint') != resolved['manifestFingerprint']
+                   or prior.get('sourceStateFingerprint') != resolved['stateFingerprint'])
+        if changed:
+            missing = [str(slot['slot']) + ':' + slot.get('reason', '')
+                       for slot in resolved['slots'] if slot['status'] != 'ready']
+            text = ('【追加ウェア記事・参照状態】' + manifest['batchId'] + '\n準備済み: '
+                    + str(resolved['readyCount']) + '/3\n保留: ' + (', '.join(missing) or 'なし'))
+            state['notification'] = {'status': 'in_flight', 'stateFingerprint': resolved['stateFingerprint']}
+            atomic(marker_path, state)
+            try:
+                receipt = self.slack.notice(text)
+                state['notification'] = {'status': 'delivered',
+                    'stateFingerprint': resolved['stateFingerprint'], 'receipt': receipt}
+            except Exception:
+                state['notification'] = {'status': 'unknown',
+                    'stateFingerprint': resolved['stateFingerprint']}
+            atomic(marker_path, state)
+        else:
+            atomic(marker_path, state)
+        # Existing jobs resume first; a new slot is created only when the global cap permits it.
+        candidates = [job for job in jobs if job.get('kind') == 'supplemental_article'
+                      and job.get('batchId') == manifest['batchId'] and job['stage'] == 'candidate']
+        if job_id:
+            candidates = [job for job in candidates if job['id'] == job_id]
+        if not candidates and not job_id:
+            pending = [job for job in jobs if job.get('kind') != 'article_revision'
+                       and not job.get('publication') and job['stage'] != 'rejected']
+            if len(pending) < 3:
+                ready = next((slot for slot in resolved['slots']
+                              if slot['status'] == 'ready' and slot['slot'] not in bound), None)
+                if ready:
+                    candidates = [self.ledger.create_supplemental_candidate(
+                        ready['theme'], manifest['batchId'], ready['slot'], ready['sourceBinding'],
+                        social_eligible_period=manifest['socialEligiblePeriod'], now=now)]
+                    state['articleIds'][str(ready['slot'])] = candidates[0]['id']
+                    atomic(marker_path, state)
+        results = []
+        for job in candidates[:min(limit, 1)]:
+            current = next((slot for slot in resolved['slots']
+                            if slot['slot'] == job['batchSlot']), None)
+            if (not current or current['status'] != 'ready'
+                    or current['sourceBinding'] != job['sourceBinding']):
+                results.append({'id': job['id'], 'status': 'source_hold'})
+                continue
+            try:
+                self._make_article(job, context)
+                results.append({'id': job['id'], 'status': 'awaiting_approval'})
+            except Exception as error:
+                self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+                results.append({'id': job['id'], 'status': 'blocked', 'reason': reason(error)})
+            finally:
+                self._save_usage()
+        return {'status': 'completed' if results else resolved['status'], 'articles': results,
+                'batchId': manifest['batchId']}
 
     def _make_article(self, job, context):
         self._require_running()
@@ -663,7 +835,8 @@ class Runtime:
             db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)',
                        ('runtime_retry_candidate', id))
         try:
-            return self.produce(limit=1)
+            return (self.produce_supplemental(limit=1, job_id=id)
+                    if job.get('kind') == 'supplemental_article' else self.produce(limit=1))
         finally:
             self._explicit_stage_retry = None
 
@@ -885,6 +1058,8 @@ class Runtime:
         try:
             job = self.ledger.get_job(job_id)
         except (KeyError, ValueError):
+            return job_id
+        if job.get('kind') == 'supplemental_article':
             return job_id
         slug = ((job.get('revisionContext') or {}).get('baseArticle') or {}).get('slug')
         slug = slug or (job.get('theme') or {}).get('slug')
@@ -1500,6 +1675,16 @@ class Runtime:
                 except Exception as error:
                     results.append({'status': 'attention', 'reason': reason(error),
                                     'production': {'status': 'blocked', 'reason': reason(error)}})
+            supplemental_action = next((action for action in dispatch['actions']
+                                        if action['kind'] == 'produce_supplemental'), None)
+            if supplemental_action is not None:
+                try:
+                    results.append({'supplementalProduction': self.produce_supplemental(
+                        limit=1, job_id=supplemental_action.get('jobId'), now=now)})
+                except Exception as error:
+                    results.append({'status': 'attention', 'reason': reason(error),
+                                    'supplementalProduction': {'status': 'blocked',
+                                                               'reason': reason(error)}})
         elif self._manager_enabled():
             try:
                 manager_projection = self._evaluate_manager(now)
@@ -1549,6 +1734,7 @@ class Runtime:
                   'reports': reports, 'reportAttention': report_attention,
                   'indexTracking': index_tracking, 'postPublicationAudits': audits, 'postPublicationAuditEnabled': self.config.get('postPublicationAuditEnabled') is True,
                   'telegramEnabled': False, 'publicationEnabled': bool(self.config.get('publicationEnabled'))}
+        result['supplementalApparel'] = self._supplemental_health(now)
         if manager_projection is not None:
             result['manager'] = manager_projection
         if dispatch is not None:

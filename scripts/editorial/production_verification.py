@@ -57,7 +57,8 @@ def _social_route(buffer_posting_enabled):
 
 
 def _failures(jobs, period, results, now):
-    selected = [j for j in jobs if j.get('week') == period and j.get('kind') != 'article_revision']
+    selected = [j for j in jobs if j.get('week') == period and j.get('kind') not in
+                ('article_revision', 'supplemental_article')]
     by_id = {job.get('id'): job for job in selected}
     target_start = datetime.combine(date.fromisoformat(period),datetime.min.time(),JST).replace(hour=9)
     global_window = target_start <= now.astimezone(JST) < target_start + timedelta(days=7)
@@ -167,7 +168,8 @@ def verify_period(root, jobs, period, scope, send, *, now=None, cost_text='', re
     if failures:
         return _notify_failures(root,period,failures,send,now,cost_text,
                                 buffer_posting_enabled)
-    selected = [j for j in jobs if j.get('week') == period and j.get('kind') != 'article_revision']
+    selected = [j for j in jobs if j.get('week') == period and j.get('kind') not in
+                ('article_revision', 'supplemental_article')]
     if len(selected) != 3:
         return {'status':'waiting','period':period,'candidates':len(selected),'verifiedArticles':0}
     if any(j.get('stage') in ('error','held') and j.get('error') for j in selected):

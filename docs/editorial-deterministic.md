@@ -339,11 +339,26 @@ Bufferキーは `bufferEnvFile` が指定するリポジトリ直下 `.env.buffe
 専用ローカル入力画面は15分間・一度限りで、macproへSSHの標準入力で直接保存する。フォームのOrigin検証を保つため
 Referrer-Policyはsame-originとし、null Originを広く許可しない。本人既読、キー更新、料金プラン変更は自動化しない。
 
-## Bufferキーの本人更新手順（更新機能の実装完了とは別）
+## Bufferキーの本人更新手順
+更新用のread-only照合・一度限り入力・原子的差替え経路は実装済み。実行は本人がキー更新を行う回だけに限り、通常運転や接続確認では起動しない。
 11/28失効表示に備え11/26 JSTまでの切替を推奨する。再生成は旧キーを即失効させるため、同じキーを使う他の接続先も先に確認する。
 切替前にCampの新規予約・API操作をローカルで静止し、既存Bufferキュー自体は停止・編集せず、投稿ID／日時／本文／画像順序・SHA／返信URLと承認版を控える。
 本人はBuffer API設定の対象キーを再生成し、従来のaccount読取・posts読取／書込権限を維持し、新しいキーを専用ローカル更新画面にのみ入力する。
-現在のbuffer_connection_setupは初回登録専用で既存ファイルを上書きしない。更新用の検証・原子的差替え経路は切替前に別途準備し、旧キーの削除で迂回しない。
+初回登録は従来どおり `buffer_connection_setup.py` の既定モードを使い、既存ファイルを上書きしない。更新時だけ
+`python3 scripts/editorial/buffer_connection_setup.py --rotate --host macpro` を使う。この機能を起動しただけでは更新せず、URL表示前に
+macproの `runtime.flock` を取得し、旧キーで対象organization／channel／X accountと、全draft・scheduled・sending（最大100件、次ページなし）を
+read-only snapshotする。通常の単発投稿はthreadなしのまま照合し、本文・画像URL・thread・予約日時を変更しない。snapshot準備完了後に本人がBuffer UIで
+同じキーを再生成し、表示された一度限りのlocalhost画面へ新キーを入力する。再生成前に画面を準備できなかった場合は旧snapshotを後から推定せず中止する。
+
+候補キーではaccount readとposts readを再実行し、同じ投稿IDとpayload／日時を照合する。posts writeはread-only APIでは証明できないため、Buffer UIでの本人確認を
+未証明の申告として記録し、APIで確認済みとは表示しない。snapshot後に状態がsendingへ変化した場合、またはscheduled／sendingがsentへ進んだ場合、同じX実投稿のnative readbackまでその場で証明できなければ
+資格情報を差し替えず手動照合へ保留する。再作成・再予約・queue pauseは行わない。100件超、次ページあり、結果不明、別account、payload差分は一度で保留し、自動再試行しない。
+
+照合成功時だけ、候補キーを同一directoryの0600 staging inodeへfsyncして `.env.buffer.local` へ原子的renameする。これは原子的差替えに必要な短命candidateであり、
+旧キーbackupは作らず、失敗時はstagingを削除する。キーはlocalhost／SSHの標準入力／remote process memory／最終credential file以外へ出力せず、引数・ログへ含めない。
+差替え直前に旧credential fileのdevice／inode／content SHAを再確認し、非秘密の0600 effect markerをinflightで耐久保存する。候補検証結果不明、inflight、差替え結果不明は
+次の更新準備を停止して手動照合し、キー入力やAPI照合を自動再試行しない。成功時だけ同じmarkerをverifiedへ進める。
+記事承認、SNS承認、ledger、Buffer journal、投稿、queue、設定flagは変更しない。キー再生成で影響するCamp以外の利用先は自動検出できないため、更新前に本人が別consumerを確認する。
 更新では資格情報だけを差し替え、投稿・予約時刻・本文・画像・承認・試行／予算記録・投稿journalを変更しない。キー再生成を承認に読み替えない。
 接続先と権限を確認し、同じ投稿IDの予約・本文・画像・返信URLを読取照合する。切替中に正常送信された投稿はX証跡で照合し、予約へ戻したり再作成しない。
 不一致・結果不明は当該操作を保留してSlack報告し、盲目的なcreate/edit再送や予約の作り直しをしない。本人操作は認証とキー入力のみ、照合はCodexが担当する。

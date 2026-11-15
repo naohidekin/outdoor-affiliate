@@ -274,6 +274,44 @@ class ModelBudget:
                     violations.append((budget_scope, dimension, cap, projected, event_id))
         return article, period, violations
 
+    def _batch_call_scope(self, db, context):
+        """Return a supplemental batch lifetime call count under this transaction."""
+        try:
+            row = db.execute('SELECT data FROM jobs WHERE id=?',
+                             (context['articleId'],)).fetchone()
+        except sqlite3.OperationalError as error:
+            if 'no such table: jobs' in str(error):
+                return None
+            raise
+        if row is None:
+            return None
+        try:
+            job = json.loads(row[0])
+        except (TypeError, ValueError):
+            return None
+        if job.get('kind') != 'supplemental_article':
+            return None
+        batch_id, cap = job.get('batchId'), job.get('batchCallCap')
+        if not isinstance(batch_id, str) or not batch_id or cap != 96:
+            raise ValueError('invalid supplemental batch budget binding')
+        members = []
+        for member_id, raw in db.execute('SELECT id,data FROM jobs'):
+            try:
+                member = json.loads(raw)
+            except (TypeError, ValueError):
+                continue
+            if (member.get('kind') == 'supplemental_article'
+                    and member.get('batchId') == batch_id):
+                if member.get('batchCallCap') != cap:
+                    raise ValueError('supplemental batch budget conflict')
+                members.append(member_id)
+        if context['articleId'] not in members or len(members) > 3:
+            raise ValueError('invalid supplemental batch membership')
+        placeholders = ','.join('?' for _ in members)
+        calls = db.execute('SELECT count(*) FROM model_budget_reservations WHERE article_id IN ('
+                           + placeholders + ')', members).fetchone()[0]
+        return {'id': batch_id, 'cap': cap, 'calls': int(calls)}
+
     def _warnings(self, db, context, article, period, additions, request_bytes=None,
                   include_article=True):
         ratio = self.config['warningRatio']
@@ -310,6 +348,16 @@ class ModelBudget:
                 db.commit()
                 raise BudgetHold(reason_code='request_input_bytes_cap', budget_scope='request',
                                  dimension='inputBytes', cap=request_cap, projected=input_bound,
+                                 article_id=context['articleId'], stage=context['stage'],
+                                 period_key=context['periodKey'], event_id=event_id)
+            batch = self._batch_call_scope(db, context)
+            if batch is not None and batch['calls'] + 1 > batch['cap']:
+                projected = batch['calls'] + 1
+                event_id = self._event(db, context, 'hold', 'batch', 'calls',
+                                       batch['cap'], projected)
+                db.commit()
+                raise BudgetHold(reason_code='batch_calls_cap', budget_scope='batch',
+                                 dimension='calls', cap=batch['cap'], projected=projected,
                                  article_id=context['articleId'], stage=context['stage'],
                                  period_key=context['periodKey'], event_id=event_id)
             article, period, violations = self._limits(db, context, additions)

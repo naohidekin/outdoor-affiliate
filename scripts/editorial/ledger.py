@@ -507,7 +507,8 @@ class Ledger:
         week = self.production_schedule.period_key(now)
         with self._tx() as db:
             jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
-            jobs = [job for job in jobs if job.get('kind') != 'article_revision']
+            jobs = [job for job in jobs if job.get('kind') not in
+                    ('article_revision', 'supplemental_article')]
             for job in jobs:
                 old_slug = job['theme'].get('slug') if isinstance(job['theme'], dict) else job['theme']
                 if old_slug == slug:
@@ -519,6 +520,51 @@ class Ledger:
                        bundle=None, revision=None, review=None, approval=None, publication=None, social=None, error=None,
                        created_at=now.isoformat())
             return self._put(db, job, 'candidate')
+
+    def create_supplemental_candidate(self, theme, batch_id, slot, source_binding, *,
+                                      social_eligible_period, now=None):
+        """Create one immutable slot in the bounded batch without consuming regular 3/week."""
+        now = timestamp(now)
+        require(isinstance(theme, dict) and all(isinstance(theme.get(key), str)
+                and theme[key].strip() for key in
+                ('slug', 'title', 'categoryId', 'query', 'selectionReason')),
+                'complete supplemental theme required')
+        ids = theme.get('productIds')
+        require(isinstance(ids, list) and ids and len(ids) == len(set(ids))
+                and all(isinstance(item, str) and item for item in ids),
+                'supplemental apparel product IDs required')
+        require(batch_id == 'apparel-2026-11-16' and type(slot) is int and 1 <= slot <= 3,
+                'invalid supplemental batch slot')
+        require(isinstance(source_binding, str)
+                and re.fullmatch(r'[a-f0-9]{64}', source_binding), 'source binding required')
+        require(social_eligible_period == '2026-11-20', 'invalid supplemental social period')
+        with self._tx() as db:
+            jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
+            existing = [job for job in jobs if job.get('kind') == 'supplemental_article'
+                        and job.get('batchId') == batch_id and job.get('batchSlot') == slot]
+            if existing:
+                require(len(existing) == 1 and existing[0].get('theme') == theme
+                        and existing[0].get('sourceBinding') == source_binding,
+                        'supplemental slot conflict')
+                return existing[0]
+            require(sum(job.get('kind') == 'supplemental_article'
+                        and job.get('batchId') == batch_id for job in jobs) < 3,
+                    'supplemental batch cap reached')
+            require(sum(job.get('kind') != 'article_revision' and not job.get('publication')
+                        and job.get('stage') != 'rejected' for job in jobs) < 3,
+                    'pending cap reached')
+            require(not any((job.get('theme') or {}).get('slug') == theme['slug'] for job in jobs),
+                    'theme already exists')
+            week = self.production_schedule.period_key(now)
+            require(week is not None, 'supplemental production period unavailable')
+            job = dict(id='article-' + secrets.token_hex(12), kind='supplemental_article',
+                       batchId=batch_id, batchSlot=slot, sourceBinding=source_binding,
+                       batchCallCap=96, socialEligiblePeriod=social_eligible_period,
+                       theme=json.loads(canonical(theme)),
+                       week=week, stage='candidate', bundle=None, revision=None, review=None,
+                       approval=None, publication=None, social=None, error=None,
+                       created_at=now.isoformat())
+            return self._put(db, job, 'supplemental_candidate')
 
     def request_revision(self, specification, now=None):
         from revisions import validated_context, TARGETS, _aware

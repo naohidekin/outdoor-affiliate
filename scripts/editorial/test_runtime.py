@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from runtime import Runtime, atomic, JST
+from model_budget import BudgetHold
 from test_quality import bundle
 
 
@@ -125,6 +126,104 @@ class RuntimeTests(unittest.TestCase):
                 self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
         self.assertEqual([], self.runtime.ledger.list_jobs())
         self.assertFalse((self.runtime.root / 'production-attempts').exists())
+
+    def test_supplemental_before_not_before_has_no_catalog_marker_or_model(self):
+        self.config['supplementalApparelEnabled'] = True
+        calls = []
+        self.runtime.catalog.catalog = lambda: calls.append('catalog') or {}
+        result = self.runtime.produce_supplemental(
+            now=datetime(2026, 11, 16, 8, 59, tzinfo=JST))
+        self.assertEqual('not_due', result['status'])
+        self.assertEqual([], calls)
+        self.assertFalse((self.runtime.root / 'supplemental-batches').exists())
+        self.assertEqual({'status': 'awaiting_start', 'batchId': 'apparel-2026-11-16',
+                          'notBefore': '2026-11-16T09:00:00+09:00', 'maxArticles': 3,
+                          'batchCallCap': 96, 'modelCallsUsed': 0,
+                          'modelCallsRemaining': 96, 'ready': 0, 'held': 3},
+                         self.runtime._supplemental_health(
+                             datetime(2026, 11, 16, 8, 59, tzinfo=JST)))
+
+    def test_supplemental_missing_sources_holds_and_notifies_once_per_state(self):
+        self.config['supplementalApparelEnabled'] = True
+        now = datetime(2026, 11, 16, 9, tzinfo=JST)
+        first = self.runtime.produce_supplemental(now=now)
+        second = self.runtime.produce_supplemental(now=now + timedelta(minutes=5))
+        self.assertEqual('source_hold', first['status'])
+        self.assertEqual('source_hold', second['status'])
+        self.assertEqual(1, len([text for text in self.slack.notices
+                                if '追加ウェア記事・参照状態' in text]))
+        marker = json.loads((self.runtime.root / 'supplemental-batches' /
+                             'apparel-2026-11-16.json').read_text())
+        health = self.runtime._supplemental_health(now + timedelta(minutes=5))
+        self.assertEqual(('source_hold', 0, 3),
+                         (health['status'], health['ready'], health['held']))
+        self.assertEqual('source_hold', marker['status'])
+        self.assertEqual({}, marker['articleIds'])
+        instructions = self.runtime._context()['instructions']
+        self.assertIn('Prioritize owner-requested autumn/winter apparel directions among verified '
+                      'eligible products; source evidence and duplication rules override preference.',
+                      instructions)
+
+    def test_supplemental_ready_slot_creates_only_one_bound_candidate(self):
+        self.config['supplementalApparelEnabled'] = True
+        product = {'id': 'apparel-montbell-1101493', 'name': 'Plasma',
+            'brand': 'mont-bell', 'categoryId': 'wear',
+            'imageUrl': 'https://img.example/item.png',
+            'affiliateUrl': 'https://affiliate.example/item',
+            'amazonUrl': 'https://amazon.example/item',
+            'specs': {'apparelClass': 'down', 'model': '1101493', 'gender': 'unisex',
+                      'fabric': 'nylon', 'optionState': 'selectable'}}
+        self.runtime.catalog.catalog = lambda: {'articles': [], 'products': [product],
+                                                'categories': [], 'clicks': []}
+        with patch.object(self.runtime, '_make_article', return_value={'status': 'review'}) as make:
+            result = self.runtime.produce_supplemental(
+                now=datetime(2026, 11, 16, 9, tzinfo=JST))
+        self.assertEqual(1, len(result['articles']))
+        jobs = self.runtime.ledger.list_jobs()
+        self.assertEqual(1, len(jobs))
+        self.assertEqual('supplemental_article', jobs[0]['kind'])
+        self.assertEqual(1, jobs[0]['batchSlot'])
+        make.assert_called_once()
+
+    def test_tick_executes_one_supplemental_dispatch_action_once(self):
+        self.config['supplementalApparelEnabled'] = True
+        self.config['executionPolicy'] = {'mode': 'deterministic', 'suspended': False}
+        plan = {'mode': 'deterministic', 'status': 'ready', 'actions': [
+            {'kind': 'produce_supplemental', 'jobId': None}], 'blocked': [],
+            'exceptionAI': False}
+        with patch('runtime.DeterministicDispatcher.plan', return_value=plan), \
+                patch.object(self.runtime, 'produce_supplemental',
+                             return_value={'status': 'source_hold', 'articles': []}) as produce:
+            self.runtime.tick()
+        produce.assert_called_once()
+
+    def test_runtime_budget_path_holds_supplemental_batch_call_97_across_weeks(self):
+        self.configure_production_schedule()
+        jobs = []
+        for slot in range(1, 4):
+            theme = {'slug': f'extra-{slot}', 'title': f'Extra {slot}',
+                     'categoryId': 'wear', 'productIds': [f'apparel-item-{slot}'],
+                     'query': f'extra {slot}', 'selectionReason': 'verified fixture'}
+            jobs.append(self.runtime.ledger.create_supplemental_candidate(
+                theme, 'apparel-2026-11-16', slot, str(slot) * 64,
+                social_eligible_period='2026-11-20',
+                now='2026-11-16T09:00:00+09:00'))
+        payload = {'model': 'fixture-model', 'max_tokens': 1,
+                   'messages': [{'role': 'user', 'content': 'fixture'}]}
+        for index in range(96):
+            at = (datetime(2026, 11, 16, 10, tzinfo=JST)
+                  if index < 48 else datetime(2026, 11, 23, 10, tzinfo=JST))
+            job = jobs[index % 3]
+            with self.runtime.model_budget.scope(
+                    self.runtime._budget_article_id(job['id']), 'draft', at):
+                self.runtime.model_budget.reserve(payload)
+        self.assertTrue(all(self.runtime._budget_article_id(job['id']) == job['id']
+                            for job in jobs))
+        with self.assertRaises(BudgetHold) as held:
+            self.runtime._measured_model_call(
+                jobs[0]['id'], 'polish', 'fixture-model',
+                lambda: self.runtime.model_budget.reserve(payload))
+        self.assertEqual('batch_calls_cap', held.exception.reason_code)
 
     def test_configured_tick_due_and_catchup(self):
         self.configure_production_schedule()

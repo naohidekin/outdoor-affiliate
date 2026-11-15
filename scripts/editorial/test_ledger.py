@@ -121,6 +121,71 @@ class LedgerTests(unittest.TestCase):
             Ledger(self.root, 'U', production_schedule=schedule).create_candidate(
                 {'slug': 'fourth'}, '2026-11-13T09:00:00+09:00')
 
+    def test_supplemental_lane_is_batch_bound_and_not_a_regular_weekly_slot(self):
+        schedule = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+                        initialProductionAt='2026-11-08T00:00:00+09:00')
+        ledger = Ledger(self.root, 'U', production_schedule=schedule)
+        theme = {'slug': 'wear-one', 'title': 'Wear one', 'categoryId': 'wear',
+                 'productIds': ['apparel-montbell-1101493'], 'query': 'wear',
+                 'selectionReason': 'verified apparel source'}
+        extra = ledger.create_supplemental_candidate(
+            theme, 'apparel-2026-11-16', 1, 'a' * 64,
+            social_eligible_period='2026-11-20', now='2026-11-16T09:00:00+09:00')
+        self.assertEqual('supplemental_article', extra['kind'])
+        self.assertEqual(1, extra['batchSlot'])
+        self.assertEqual(extra, ledger.create_supplemental_candidate(
+            theme, 'apparel-2026-11-16', 1, 'a' * 64,
+            social_eligible_period='2026-11-20', now='2026-11-16T10:00:00+09:00'))
+        ledger.set_stage(extra['id'], 'rejected')
+        for index in range(3):
+            ledger.create_candidate({'slug': f'regular-{index}'}, '2026-11-20T09:00:00+09:00')
+            if index < 2:
+                ledger.set_stage(ledger.list_jobs()[-1]['id'], 'rejected')
+        self.assertEqual(3, sum(j.get('kind') != 'supplemental_article'
+                                for j in ledger.list_jobs()))
+
+    def test_supplemental_lane_keeps_global_pending_cap_three(self):
+        schedule = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+                        initialProductionAt='2026-11-08T00:00:00+09:00')
+        ledger = Ledger(self.root, 'U', production_schedule=schedule)
+        for index in range(2):
+            ledger.create_candidate({'slug': f'regular-{index}'}, '2026-11-13T09:00:00+09:00')
+        theme = {'slug': 'wear', 'title': 'Wear', 'categoryId': 'wear',
+                 'productIds': ['apparel-montbell-1101493'], 'query': 'wear',
+                 'selectionReason': 'verified'}
+        ledger.create_supplemental_candidate(theme, 'apparel-2026-11-16', 1, 'b' * 64,
+                                             social_eligible_period='2026-11-20',
+                                             now='2026-11-16T09:00:00+09:00')
+        with self.assertRaisesRegex(ValueError, 'pending cap'):
+            ledger.create_supplemental_candidate(dict(theme, slug='wear-two'),
+                'apparel-2026-11-16', 2, 'c' * 64,
+                social_eligible_period='2026-11-20', now='2026-11-16T09:01:00+09:00')
+
+    def test_concurrent_direct_supplemental_creation_cannot_exceed_pending_three(self):
+        schedule = dict(weekday=4, hour=9, effectiveFrom='2026-11-13',
+                        initialProductionAt='2026-11-08T00:00:00+09:00')
+        ledger = Ledger(self.root, 'U', production_schedule=schedule)
+        for index in range(2):
+            ledger.create_candidate({'slug': f'pending-{index}'}, '2026-11-13T09:00:00+09:00')
+
+        def create(slot):
+            theme = {'slug': f'wear-{slot}', 'title': f'Wear {slot}', 'categoryId': 'wear',
+                     'productIds': [f'apparel-{slot}'], 'query': 'wear',
+                     'selectionReason': 'verified'}
+            try:
+                ledger.create_supplemental_candidate(theme, 'apparel-2026-11-16', slot,
+                    str(slot) * 64, social_eligible_period='2026-11-20',
+                    now='2026-11-16T09:00:00+09:00')
+                return 'created'
+            except ValueError as error:
+                return str(error)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(create, (1, 2)))
+        self.assertEqual(['created', 'pending cap reached'], sorted(outcomes))
+        self.assertEqual(3, sum(not job.get('publication') and job['stage'] != 'rejected'
+                                for job in ledger.list_jobs()))
+
     def test_bundle_changes_invalidate_all_approvals(self):
         for index, field in enumerate(('images', 'products', 'references', 'article')):
             with self.subTest(field=field):

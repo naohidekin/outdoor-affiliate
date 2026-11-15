@@ -44,6 +44,14 @@ class VerificationTests(unittest.TestCase):
         self.assertIn('公開は本人承認後',self.sent[0])
         self.assertFalse(any(j.get('approval') for j in self.jobs))
 
+    def test_supplemental_batch_is_outside_regular_exact_three_verification(self):
+        extra = dict(id='article-extra', kind='supplemental_article',
+                     week='2026-11-20', theme={'title': '追加ウェア'},
+                     stage='error', error={'reason': 'source_hold'})
+        result = self.run_check(self.jobs + [extra])
+        self.assertEqual('verified', result['status'])
+        self.assertEqual(1, len(self.sent))
+
     def test_buffer_ready_notice_and_receipt_bind_route_cost_and_exact_text_before_send(self):
         observed_presend = {}
         def delivery(text):
