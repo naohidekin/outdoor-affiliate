@@ -60,7 +60,15 @@ def track_publications(jobs, root, env, config, now, save):
     sitemap_loaded = False
     sitemap = None
     attempted = 0
-    for job in jobs:
+    from publication_selection import latest_published_jobs
+    from record_reconciliation import project_reconciliations
+    projected = project_reconciliations(root)
+    reconciled = {item['sourceIdentity'].get('path'): item
+                  for item in projected['reconciledSources'] if item['recordType'] == 'index_tracking'}
+    selected = latest_published_jobs(jobs, on_invalid=lambda error, versions:
+        summaries.extend(dict(id=item['id'], revision=item.get('revision'),
+                              error='publication_version_requires_reconciliation') for item in versions))
+    for job in selected:
         publication = job.get('publication') or {}
         readback = publication.get('readback') or {}
         revision = job.get('revision')
@@ -75,6 +83,14 @@ def track_publications(jobs, root, env, config, now, save):
             continue
         key = fingerprint([job['id'], revision, publication['at']])
         path = root / 'index-tracking' / (key + '.json')
+        closure = reconciled.get('index-tracking/' + path.name)
+        if closure and closure['jobId'] == job['id'] and closure['revision'] == revision:
+            proof = next((p for p in closure['proofs'] if p['kind'] == 'same_version_indexed'), None)
+            if proof:
+                summaries.append(dict(id=job['id'], revision=revision, url=url, nextAt=None,
+                    resolution='evidence_reconciled', latest=dict(index='indexed', sitemap='current',
+                    sourceLastCrawlTime=proof['observedAt'], evidence=proof['evidenceIdentity'])))
+                continue
         state = json.loads(path.read_text()) if path.exists() else {
             'id': job['id'], 'revision': revision, 'url': url,
             'startedAt': (now if historical else published_at).isoformat(), 'checks': [],

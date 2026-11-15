@@ -14,6 +14,16 @@ class ExecutionPolicy:
     auto_ai_exceptions: bool = False
 
 
+def social_feature_enabled(config, feature):
+    if feature not in ('socialGenerationEnabled', 'socialReviewEnabled'):
+        raise ValueError('invalid social feature')
+    if feature not in config:
+        return execution_policy(config) is None
+    if type(config[feature]) is not bool:
+        raise ValueError('invalid social feature flag')
+    return config[feature]
+
+
 def execution_policy(config):
     """Return the opt-in policy, rejecting every malformed policy fail-closed."""
     if 'executionPolicy' not in config:
@@ -104,7 +114,7 @@ class DeterministicDispatcher:
             else:
                 ready.append(job)
 
-        waiting = False
+        article_waiting = False
         for job in [item for item in ready if item['stage'] != 'candidate']:
             stage = job['stage']
             if stage == 'review':
@@ -113,7 +123,7 @@ class DeterministicDispatcher:
                     if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
                         valid_astra_review(job.get('astraReview'), job.get('revision'))
                 except ValueError:
-                    waiting = True
+                    article_waiting = True
                     continue
                 needed, blocked = self._delivery_needed(job['id'], 'article', now)
                 if blocked:
@@ -122,29 +132,27 @@ class DeterministicDispatcher:
                     base['actions'].append({'kind': 'deliver', 'jobId': job['id'],
                                             'deliveryKind': 'article'})
                 else:
-                    waiting = True
+                    article_waiting = True
             elif stage == 'approved' and self.runtime.config.get('publicationEnabled') is True:
                 base['actions'].append({'kind': 'publish', 'jobId': job['id']})
             elif stage == 'approved':
-                waiting = True
+                article_waiting = True
             elif (stage == 'published' and job.get('kind') != 'article_revision'
-                  and not job.get('social')):
+                  and not job.get('social')
+                  and social_feature_enabled(self.runtime.config, 'socialGenerationEnabled')):
                 base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
-            elif stage == 'social_review':
+            elif (stage == 'social_review'
+                  and social_feature_enabled(self.runtime.config, 'socialReviewEnabled')):
                 needed, blocked = self._delivery_needed(job['id'], 'social', now)
                 if blocked:
                     base['blocked'].append({'jobId': job['id'], 'reason': blocked})
                 elif needed:
                     base['actions'].append({'kind': 'deliver', 'jobId': job['id'],
                                             'deliveryKind': 'social'})
-                else:
-                    waiting = True
             elif (stage == 'social_approved'
                   and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'auto_x'
                   and self.runtime.config.get('socialPostingEnabled') is True):
                 base['actions'].append({'kind': 'publish_social', 'jobId': job['id']})
-            elif stage == 'social_approved':
-                waiting = True
             elif stage == 'social_posted':
                 revision = (job.get('social') or {}).get('revision')
                 marker = self.runtime.root / 'social-posted-notices' / (str(revision) + '.json')
@@ -175,7 +183,7 @@ class DeterministicDispatcher:
             base['actions'].append({'kind': 'produce', 'jobId': articles[0]['id']})
             return base
         # A delivered exact version waiting for its owner does not create new work.
-        if waiting:
+        if article_waiting:
             return base
         if (self.runtime.config.get('generationEnabled') is True
                 and self.runtime.ledger.production_schedule.is_due(now)):

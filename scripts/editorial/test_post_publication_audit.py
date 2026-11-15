@@ -13,6 +13,7 @@ import zlib
 from unittest.mock import patch
 
 from catalog import Catalog
+from ledger import fingerprint
 from post_publication_audit import PostPublicationAudit, _merchant_identity, _audit_model
 from revisions import validated_context
 from test_inherited_advice import context as inherited_context
@@ -42,8 +43,8 @@ def fixture():
     return {'bundle': bundle, 'publication': {'url': SITE, 'contentHash': digest, 'verified': True}}, html
 
 
-def revision_na_fixture(*, missing=True):
-    base = baseline()
+def revision_na_fixture(*, missing=True, target='article-024', slug='firepit-beginner-guide'):
+    base = baseline(target, slug)
     request = spec(base)
     old = request['baseProducts'][0]
     old.update(name='SOTO ST-310', brand='SOTO', categoryId='burner', specs={'model': 'ST-310'},
@@ -63,13 +64,15 @@ def revision_na_fixture(*, missing=True):
                                     'reason': '対象型番のAmazon取扱いを確認できない',
                                     'checkedAt': '2026-11-01T09:00:00+09:00', 'reviewedBy': 'owner'}]}
     digest = hashlib.sha256(article['content'].encode()).hexdigest()
-    revision = 'f' * 64
+    revision = fingerprint(bundle)
     url = 'https://camp-gear-lab.com/articles/' + article['slug']
     job = {'id': 'revision-audit', 'kind': 'article_revision', 'stage': 'published',
            'revisionContext': copy.deepcopy(context), 'bundle': bundle, 'revision': revision,
-           'approval': {'revision': revision, 'at': '2026-11-10T09:00:00+09:00'},
+           'approval': {'revision': revision, 'action': 'approved', 'user_id': 'OWNER',
+                        'at': '2026-11-10T09:00:00+09:00'},
            'publication': {'url': url, 'contentHash': digest, 'verified': True,
-                           'revision': revision, 'at': '2026-11-10T10:00:00+09:00'}}
+                           'revision': revision, 'at': '2026-11-10T10:00:00+09:00',
+                           'readback': {'verified': True, 'fingerprint': revision}}}
     html = (f'<html><head></head><body><main><article data-review-content-sha256="{digest}">'
             f'<h1>{article["title"]}</h1><div class="article-body"><p>published</p></div>'
             '</article></main></body></html>')
@@ -87,6 +90,23 @@ def na_browser(statuses=None):
         checks.append({'name': viewport, 'status': status,
                        'reason': 'viewport_verified' if status == 'passed' else 'viewport_checks_incomplete'})
     return {'checks': checks}
+
+
+def new_article_na_fixture():
+    job, html = fixture()
+    product = job['bundle']['products'][0]
+    product['amazonUrl'] = ''
+    job['bundle']['purchaseEvidence'] = [{
+        'productId': product['id'], 'channel': 'amazon', 'status': 'NA',
+        'reason': '型番一致の取扱いを確認できない',
+        'checkedAt': '2026-11-10T08:00:00+09:00', 'reviewedBy': 'owner'}]
+    revision = fingerprint(job['bundle'])
+    job.update(kind='article', stage='published', revision=revision,
+               approval={'revision': revision, 'action': 'approved', 'user_id': 'OWNER',
+                         'at': '2026-11-10T09:00:00+09:00'})
+    job['publication'].update(revision=revision, at='2026-11-10T10:00:00+09:00',
+                              readback={'verified': True, 'fingerprint': revision})
+    return job, html
 
 
 class FakeCatalog:
@@ -219,7 +239,8 @@ class AuditTests(unittest.TestCase):
 
     def run_audit(self, job=None, html=None, catalog=None, browser=None):
         original, source = fixture()
-        audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=catalog or FakeCatalog(html or source))
+        audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
+                                     catalog=catalog or FakeCatalog(html or source))
         with patch.object(audit, '_browser', return_value=browser or {'checks': [
                 {'name': 'desktop', 'status': 'passed', 'reason': 'render_verified'},
                 {'name': 'mobile', 'status': 'passed', 'reason': 'render_verified'}]}):
@@ -234,7 +255,8 @@ class AuditTests(unittest.TestCase):
 
     def test_revision_typed_na_with_both_viewport_absence_proofs_passes_without_expiry(self):
         job, html = revision_na_fixture()
-        audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=FakeCatalog(html))
+        audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
+                                     catalog=FakeCatalog(html))
         payloads = []
         with patch.object(audit, '_browser', side_effect=lambda payload: payloads.append(payload) or na_browser()):
             result = audit.check(job)
@@ -248,6 +270,22 @@ class AuditTests(unittest.TestCase):
             'brand': job['bundle']['products'][0]['brand'], 'channel': 'amazon',
             'oldHref': AMAZON, 'remainingChannel': 'rakuten', 'remainingHref': RAKUTEN,
             'status': 'NA'}])
+
+    def test_new_article_typed_na_passes_without_baseline_old_url(self):
+        job, html = new_article_na_fixture()
+        audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
+                                     catalog=FakeCatalog(html))
+        payloads = []
+        with patch.object(audit, '_browser', side_effect=lambda payload: payloads.append(payload) or na_browser()):
+            result = audit.check(job)
+        self.assertTrue(result['passed'], result)
+        self.assertEqual(payloads[0]['intentionalAbsences'][0]['oldHref'], '')
+        self.assertEqual(next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')['status'], 'passed')
+
+    def test_other_revision_target_typed_na_uses_bound_baseline(self):
+        job, html = revision_na_fixture(target='article-002', slug='landlock-vs-landnest-shelter')
+        result = self.run_audit(job, html, browser=na_browser())
+        self.assertTrue(result['passed'], result)
 
     def test_revision_na_rejects_leftover_link_proof_in_either_viewport(self):
         job, html = revision_na_fixture()
@@ -290,6 +328,26 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result['status'], 'failed', result)
         self.assertTrue(any(c['name'] == 'purchase_evidence' and c['status'] == 'failed'
                             for c in result['checks']), result)
+
+    def test_na_requires_exact_owner_bundle_revision_and_public_readback(self):
+        job, html = new_article_na_fixture()
+        variants = []
+        for mutate in (
+            lambda value: value['approval'].update(user_id='OTHER'),
+            lambda value: value['approval'].update(action='held'),
+            lambda value: value.update(revision='0' * 64),
+            lambda value: value['bundle']['purchaseEvidence'][0].update(reason='改変済み'),
+            lambda value: value['publication']['readback'].update(fingerprint='0' * 64),
+            lambda value: value['publication'].update(verified=False),
+        ):
+            changed = copy.deepcopy(job)
+            mutate(changed)
+            variants.append(changed)
+        for changed in variants:
+            result = self.run_audit(changed, html, browser=na_browser())
+            self.assertEqual(result['status'], 'failed', result)
+            self.assertTrue(any(c['name'] == 'purchase_evidence' and c['status'] == 'failed'
+                                for c in result['checks']), result)
 
     def test_hydration_cannot_supply_public_title_or_hash(self):
         job, html = fixture()

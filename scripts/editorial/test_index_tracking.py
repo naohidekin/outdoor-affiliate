@@ -9,6 +9,38 @@ from index_tracking import instant, track_publications
 
 
 class IndexTrackingTests(unittest.TestCase):
+    def test_validated_historical_index_proof_avoids_requery_and_preserves_source(self):
+        from ledger import fingerprint
+        from unittest.mock import Mock
+        at = '2026-11-13T09:00:00+09:00'
+        url = 'https://camp-gear-lab.com/articles/example'
+        publication = dict(at=at, url=url, revision='rev', verified=True,
+                           readback=dict(verified=True, fingerprint='rev'))
+        job = dict(id='article', revision='rev', publication=publication)
+        key = fingerprint(['article', 'rev', at])
+        projection = {'reconciledSources': [{'recordType': 'index_tracking', 'jobId': 'article',
+            'revision': 'rev', 'sourceIdentity': {'path': 'index-tracking/' + key + '.json'},
+            'proofs': [{'kind': 'same_version_indexed', 'observedAt': '2026-11-14T01:00:00Z',
+                        'evidenceIdentity': {'path': 'deployments/proof.json'}}]}]}
+        with tempfile.TemporaryDirectory() as directory, \
+                patch('record_reconciliation.project_reconciliations', return_value=projection), \
+                patch('index_tracking.read_sitemap') as sitemap, \
+                patch('index_tracking.inspect_url') as inspect:
+            root = Path(directory)
+            source = root / 'index-tracking' / (key + '.json')
+            source.parent.mkdir()
+            source.write_text('{"checks":[{"index":"not_indexed"}]}')
+            original = source.read_bytes()
+            save = Mock()
+            result = track_publications([job], root, {},
+                dict(indexTrackingEnabled=True, indexTrackingSince=at), instant(at), save)
+            self.assertEqual('evidence_reconciled', result[0]['resolution'])
+            self.assertEqual('indexed', result[0]['latest']['index'])
+            self.assertEqual(original, source.read_bytes())
+            inspect.assert_not_called()
+            sitemap.assert_not_called()
+            save.assert_not_called()
+
     def test_verified_revision_is_inspected_at_publication_then_days_one_and_seven(self):
         at = '2026-11-10T09:00:00+09:00'
         url = 'https://camp-gear-lab.com/articles/example'

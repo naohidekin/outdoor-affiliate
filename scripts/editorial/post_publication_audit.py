@@ -32,7 +32,6 @@ LIMIT = 8 * 1024 * 1024
 RAKUTEN_DOMAINS = ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp',
                    'transition.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
 PURCHASE_EVIDENCE_FIELDS = {'productId', 'channel', 'status', 'reason', 'checkedAt', 'reviewedBy'}
-AUDITED_REVISION_TARGETS = {'article-005', 'article-024'}
 
 
 def _result(checks):
@@ -55,46 +54,61 @@ def _aware_stamp(value):
     return parsed
 
 
-def _intentional_absences(job, bundle):
-    """Return browser-safe proofs only for exact owner-approved revision NA records."""
+def _intentional_absences(job, bundle, owner_id):
+    """Return browser-safe proofs only for an exact owner-approved published bundle."""
     evidence = bundle.get('purchaseEvidence')
     if evidence in (None, []):
-        return [], False
-    context = job.get('revisionContext') or {}
-    target = (context.get('baseArticle') or {}).get('id')
-    if job.get('kind') != 'article_revision' or target not in AUDITED_REVISION_TARGETS:
         return [], False
     try:
         if not isinstance(evidence, list) or not evidence:
             raise ValueError()
         approval, publication = job.get('approval') or {}, job.get('publication') or {}
+        readback = publication.get('readback') or {}
         revision = job.get('revision')
         checked_before = _aware_stamp(approval.get('at'))
         published = _aware_stamp(publication.get('at'))
         now = datetime.now(timezone.utc)
-        if (not isinstance(revision, str) or approval.get('revision') != revision
+        from ledger import fingerprint
+        digest = hashlib.sha256(bundle['article']['content'].encode()).hexdigest()
+        if (job.get('stage') != 'published' or not isinstance(owner_id, str) or not owner_id
+                or not isinstance(revision, str) or fingerprint(bundle) != revision
+                or approval.get('revision') != revision or approval.get('action') != 'approved'
+                or approval.get('user_id') != owner_id
                 or publication.get('revision') != revision
+                or publication.get('verified') is not True or publication.get('contentHash') != digest
+                or readback.get('verified') is not True or readback.get('fingerprint') != revision
                 or checked_before > published or published > now):
             raise ValueError()
-        before = {p.get('id'): p for p in context.get('baseProducts', []) if isinstance(p, dict)}
+        context = (job.get('revisionContext') or {}) if job.get('kind') == 'article_revision' else {}
+        base_products = context.get('baseProducts', []) if isinstance(context, dict) else []
+        if not isinstance(base_products, list) or any(not isinstance(p, dict) for p in base_products):
+            raise ValueError()
+        before = {p.get('id'): p for p in base_products}
+        if len(before) != len(base_products):
+            raise ValueError()
         candidates = bundle.get('products')
-        if not isinstance(candidates, list) or len(before) != len(candidates):
+        if not isinstance(candidates, list):
             raise ValueError()
         fields = {'rakuten': 'affiliateUrl', 'amazon': 'amazonUrl'}
         missing = {}
         for index, product in enumerate(candidates):
             product_id = product.get('id')
-            old = before.get(product_id)
-            if (not old or not isinstance(product.get('name'), str) or not product['name'].strip()
+            old = before.get(product_id, {})
+            if (not isinstance(product.get('name'), str) or not product['name'].strip()
                     or not isinstance(product.get('brand'), str) or not product['brand'].strip()):
                 raise ValueError()
             for channel, field in fields.items():
                 if product.get(field) in (None, ''):
                     other = 'amazon' if channel == 'rakuten' else 'rakuten'
                     other_field = fields[other]
-                    if not isinstance(old.get(field), str) or not old[field] or not isinstance(product.get(other_field), str) or not product[other_field]:
+                    if not isinstance(product.get(other_field), str) or not product[other_field]:
                         continue
-                    missing[(product_id, channel)] = (index, product, old[field], other, product[other_field])
+                    old_href = old.get(field, '')
+                    if old_href is None:
+                        old_href = ''
+                    if not isinstance(old_href, str):
+                        raise ValueError()
+                    missing[(product_id, channel)] = (index, product, old_href, other, product[other_field])
         records = {}
         for record in evidence:
             if (not isinstance(record, dict) or set(record) != PURCHASE_EVIDENCE_FIELDS
@@ -210,6 +224,8 @@ class _Source(HTMLParser):
 class PostPublicationAudit:
     def __init__(self, config, env, catalog=None):
         self.config = dict(config)
+        slack = config.get('slack') if isinstance(config.get('slack'), dict) else {}
+        self.owner_id = config.get('ownerId') or slack.get('user_id')
         # Account identifiers only. Never pass database/API credentials onward.
         self.env = {k: env[k] for k in ('AMAZON_PARTNER_TAG', 'RAKUTEN_AFFILIATE_ID') if k in env}
         self.catalog = catalog
@@ -225,7 +241,8 @@ class PostPublicationAudit:
                     self._request_pool.close()
                     self._request_pool = None
         payload = {'job': job, 'env': self.env,
-                   'config': {k: self.config[k] for k in ('repo', 'node') if k in self.config}}
+                   'config': {**{k: self.config[k] for k in ('repo', 'node') if k in self.config},
+                              **({'ownerId': self.owner_id} if self.owner_id else {})}}
         # Temporary output caps the data read into memory; no raw stderr escapes.
         with tempfile.TemporaryFile() as output:
             child = None
@@ -342,7 +359,7 @@ class PostPublicationAudit:
         for n, product in enumerate(products):
             proof = [i for i in images if i.get('productId') == product['id'] and i.get('url') == product.get('imageUrl')]
             add('product_image_binding.' + str(n), len(proof) == 1, 'product_image_bound', 'product_image_proof_missing')
-        intentional_absences, invalid_purchase_evidence = _intentional_absences(job, bundle)
+        intentional_absences, invalid_purchase_evidence = _intentional_absences(job, bundle, self.owner_id)
         if invalid_purchase_evidence:
             checks.append(_check('purchase_evidence', 'failed', 'invalid_intentional_absence_evidence'))
         # One bounded pool per live audit. Catalog still validates DNS, redirects,

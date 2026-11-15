@@ -135,6 +135,19 @@ test('intentional missing purchase channel needs strict absence proof in both vi
   } finally { await browser.close(); }
 });
 
+test('new article intentional absence permits an empty baseline URL without weakening DOM proof', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const input = intentionalAbsenceFixture();
+    input.intentionalAbsences[0].oldHref = '';
+    const result = await auditPublicPage(input, { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.equal(result.checks.find(c => c.name === `${viewport}.purchase_absent.0.amazon`)?.status, 'passed');
+    }
+  } finally { await browser.close(); }
+});
+
 test('hidden old URL and replacement merchant links reject every viewport', async () => {
   const browser = await chromium.launch({ headless: true });
   try {

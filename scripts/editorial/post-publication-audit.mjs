@@ -148,7 +148,8 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
       if (!absence || Object.keys(absence).sort().join() !== keys.sort().join() || absence.status !== 'NA'
           || !product || product.id !== absence.productId || product.name !== absence.productName || product.brand !== absence.brand
           || !field || !remainingField || absence.channel === absence.remainingChannel || product[field]
-          || product[remainingField] !== absence.remainingHref || merchantStore(absence.oldHref) !== absence.channel
+          || product[remainingField] !== absence.remainingHref
+          || (absence.oldHref !== '' && merchantStore(absence.oldHref) !== absence.channel)
           || merchantStore(absence.remainingHref) !== absence.remainingChannel || absenceKeys.has(key)) throw new Error();
       absenceKeys.add(key);
     }
@@ -401,7 +402,7 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
                        remaining: links.some(a => href(a) === value.remainingHref) };
             });
             return {
-              oldAbsent: anchors.every(anchor => href(anchor) !== value.oldHref),
+              oldAbsent: !value.oldHref || anchors.every(anchor => href(anchor) !== value.oldHref),
               approvedOnly: anchors.every(anchor => !store(href(anchor)) || approved.has(href(anchor))),
               productScopedAbsent: productAnchors.every(anchor => store(href(anchor)) !== value.channel),
               remainingScopedVisible: productAnchors.some(anchor => href(anchor) === value.remainingHref && visible(anchor)),

@@ -5,6 +5,8 @@ import re
 import sqlite3
 from urllib.parse import quote
 
+from record_reconciliation import project_reconciliations
+
 
 MAX_ROWS = 1000
 MAX_FILES = 500
@@ -48,11 +50,12 @@ def _verified_parts(request):
                 all(isinstance(part, dict) and part.get('verified') is True for part in parts))
 
 
-def _folder_summary(root, name, diagnostics, budget, revision_jobs):
+def _folder_summary(root, name, diagnostics, budget, revision_jobs, reconciled):
     folder = root / name
     if not folder.is_dir() or folder.is_symlink():
         diagnostics.append({'scope': name, 'code': 'folder_missing_or_invalid'})
         return {'kind': name, 'count': None, 'incompleteCount': None,
+                'historicalReconciledCount': 0,
                 'unknownBindingCount': None, 'records': [], 'truncated': False}
     files, scanned = [], 0
     for path in folder.iterdir():
@@ -62,9 +65,13 @@ def _folder_summary(root, name, diagnostics, budget, revision_jobs):
         if len(files) > MAX_FILES or scanned > MAX_FILES * 4:
             break
     truncated = len(files) > MAX_FILES or scanned > MAX_FILES * 4 or budget[0] + min(len(files), MAX_FILES) > MAX_FILES * len(FOLDERS)
-    records, incomplete, unknown = [], 0, 0
+    records, incomplete, unknown, historical = [], 0, 0, 0
     for path in files[:MAX_FILES]:
         budget[0] += 1
+        identity = ('json', name + '/' + path.name)
+        if identity in reconciled:
+            historical += 1
+            continue
         try:
             value = _json_file(path)
             raw_status = value.get('status') or value.get('phase')
@@ -94,6 +101,7 @@ def _folder_summary(root, name, diagnostics, budget, revision_jobs):
                 records.append({'articleId': None, 'status': 'unknown',
                                 'safeReasonCode': name.replace('-', '_') + '_unreadable'})
     return {'kind': name, 'count': len(files), 'incompleteCount': incomplete,
+            'historicalReconciledCount': historical,
             'unknownBindingCount': unknown, 'records': records, 'truncated': truncated}
 
 
@@ -201,9 +209,27 @@ def inspect_records(state_root):
         result['unresolvedEffects'] = [{'jobId': _safe(j), 'kind': _safe(k), 'status': s,
             'safeReasonCode': 'effect_outcome_unconfirmed'} for j, k, s in effect_rows[:MAX_ROWS]]
         result['deliveries'] = _delivery_summary(root, request_rows[:MAX_ROWS], jobs, diagnostics)
+        reconciliations = project_reconciliations(root)
+        reconciled = set()
+        for item in reconciliations['reconciledSources']:
+            identity = item['sourceIdentity']
+            if identity['kind'] == 'json':
+                reconciled.add(('json', identity['path']))
+            elif identity['kind'] == 'sqlite_meta':
+                reconciled.add(('sqlite_meta', identity['key']))
+        result['recordReconciliations'] = {
+            'status': reconciliations['status'],
+            'receiptCount': reconciliations['receiptCount'],
+            'invalidReceiptCount': reconciliations['invalidReceiptCount'],
+            'historicalReconciledCounts': reconciliations['historicalReconciledCounts'],
+            'truncated': reconciliations['truncated'],
+        }
+        if reconciliations['status'] != 'read_only':
+            diagnostics.append({'scope': 'record-reconciliations',
+                                'code': 'reconciliation_receipt_invalid'})
         executions = {key: 0 for key in MANAGER_UNRESOLVED}
         work = {}
-        unknown_manager = 0
+        unknown_manager, raw_human_needed, historical_manager = 0, 0, 0
         for key, raw in meta_rows[:MAX_ROWS]:
             try:
                 value = json.loads(raw)
@@ -212,19 +238,28 @@ def inspect_records(state_root):
                 continue
             if key.startswith('editorial_manager_work:'):
                 if value.get('status') == 'human_needed':
+                    raw_human_needed += 1
+                    if ('sqlite_meta', key) in reconciled:
+                        historical_manager += 1
+                        continue
                     group = (_safe(value.get('action')), _safe(value.get('jobId')),
                              _safe(value.get('revision')))
                     work[group] = work.get(group, 0) + 1
             elif value.get('status') in executions:
                 executions[value['status']] += 1
         result['managerExecutions'] = {'counts': executions, 'unknownLegacyCount': unknown_manager}
-        result['managerWorkOrders'] = {'status': 'human_needed', 'total': sum(work.values()),
+        active_work = sum(work.values())
+        result['managerWorkOrders'] = {
+            'status': 'human_needed' if active_work else 'clear', 'total': active_work,
+            'rawHumanNeededCount': raw_human_needed,
+            'historicalReconciledCount': historical_manager,
             'groups': [{'action': key[0], 'jobId': key[1], 'revision': key[2], 'count': count}
                        for key, count in sorted(work.items(), key=lambda item: str(item[0]))]}
         budget = [0]
         revision_jobs = {revision: _safe(job_id) for job_id, job in jobs.items() for revision in
                          (job.get('revision'), (job.get('social') or {}).get('revision')) if revision}
-        result['receiptFolders'] = [_folder_summary(root, name, diagnostics, budget, revision_jobs)
+        result['receiptFolders'] = [_folder_summary(root, name, diagnostics, budget, revision_jobs,
+                                                    reconciled)
                                     for name in FOLDERS]
         result['truncated'] |= result['deliveries']['truncated'] or any(
             folder['truncated'] for folder in result['receiptFolders'])

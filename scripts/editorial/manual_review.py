@@ -51,6 +51,8 @@ def _require_manual_config(config):
             or any(config.get(field) is not False for field in DISABLED_CONFIG_FLAGS)
             or config.get('socialCardsEnabled') is not True
             or config.get('telegramEnabled', False) is not False
+            or any(config.get(field, False) is not False for field in
+                   ('socialGenerationEnabled', 'socialReviewEnabled'))
             or not isinstance(manager, dict) or manager.get('enabled') is not False):
         raise ValueError('manual_review_requires_suspended_unpublished_config')
 
@@ -74,6 +76,10 @@ class _ScopedRuntime(Runtime):
 
     def _forbidden(self, *_args, **_kwargs):
         raise ValueError('manual_review_entrypoint_forbidden')
+
+    def _social_review_allowed(self, job_id):
+        self._require_running()
+        return job_id in ALLOWED_SOCIAL_JOB_IDS
 
     produce = _forbidden
     _publish = _forbidden

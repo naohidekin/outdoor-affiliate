@@ -75,6 +75,28 @@ class PostAuditRuntimeTests(unittest.TestCase):
                           slack=self.slack, post_auditor=auditor)
         self.assertIs(runtime.post_auditor, auditor)
 
+    def test_hash_validated_historical_audit_proof_does_not_reset_failed_attempts(self):
+        job = self.seed()
+        self.enable()
+        key = fingerprint({'id': job['id'], 'revision': job['revision'],
+                           'publication': job['publication']})
+        path = self.runtime.root / 'post-publication-audits' / (key + '.json')
+        atomic(path, {'status': 'failed', 'attempts': [{'status': 'failed'}] * 3})
+        original = path.read_bytes()
+        projection = {'reconciledSources': [{'recordType': 'post_publication_audit',
+            'jobId': job['id'], 'revision': job['revision'],
+            'sourceIdentity': {'path': 'post-publication-audits/' + path.name},
+            'proofs': [{'kind': 'same_version_audit_passed',
+                       'observedAt': '2026-11-14T17:51:42+09:00',
+                       'evidenceIdentity': {'path': 'deployments/proof.json'}}]}]}
+        with patch('record_reconciliation.project_reconciliations', return_value=projection):
+            result = self.runtime._post_publication_audits()
+        self.assertEqual('evidence_reconciled', result[0]['resolution'])
+        self.assertEqual(3, result[0]['attempts'])
+        self.assertEqual([], self.runtime.post_auditor.calls)
+        self.assertEqual(original, path.read_bytes())
+        self.assertEqual([], self.slack.notices)
+
     def test_success_final_private_one_per_tick_and_held_unchanged(self):
         first, second = self.seed(), self.seed('second')
         self.enable()

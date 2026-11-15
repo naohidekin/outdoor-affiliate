@@ -21,7 +21,7 @@ from models import Models
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
 from attention_presentation import attention_text
-from dispatcher import DeterministicDispatcher, execution_policy
+from dispatcher import DeterministicDispatcher, execution_policy, social_feature_enabled
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 
 JST = timezone(timedelta(hours=9))
@@ -91,6 +91,8 @@ class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
                  analytics=None, reporter=None, social_publisher=None, social_cards=None, post_auditor=None):
         self.execution_policy = execution_policy(config)
+        for feature in ('socialGenerationEnabled', 'socialReviewEnabled'):
+            social_feature_enabled(config, feature)
         self.config = config
         self.root = Path(config['stateRoot'])
         if 'productionSchedule' in config and config['productionSchedule'] is None:
@@ -407,6 +409,12 @@ class Runtime:
         if gathered.get('images'):
             bundle['images'] = gathered['images']
         bundle['affiliateConfig'] = {'amazonPartnerTag': self.env.get('AMAZON_PARTNER_TAG', '')}
+        if bundle.get('purchaseEvidence'):
+            raise ValueError('model_purchase_evidence_not_source_bound')
+        if gathered.get('purchaseEvidence'):
+            from purchase_evidence import validate_purchase_evidence
+            bundle.pop('purchaseEvidence', None)
+            bundle = validate_purchase_evidence(bundle, gathered['purchaseEvidence'], datetime.now(JST))
         # Every acceptance binds the source bundle, then the separately generated polish candidate.
         source = copy.deepcopy(bundle)
         artifacts = self.root / 'research' / 'artifacts' / job['id'] / fingerprint(source)
@@ -828,8 +836,13 @@ class Runtime:
                        {'at': stamp(), 'calls': unique, 'actualInvoiceUsd': None})
             records.clear()
 
+    def _social_review_allowed(self, job_id):
+        return social_feature_enabled(self.config, 'socialReviewEnabled')
+
     def deliver(self, id, kind='article'):
         self._require_running()
+        if kind == 'social' and not self._social_review_allowed(id):
+            raise ValueError('social_review_disabled')
         job = self.ledger.get_job(id)
         if kind == 'article' and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
             try:
@@ -857,13 +870,16 @@ class Runtime:
 
     def consume(self):
         self._require_running()
+        consume_social = social_feature_enabled(self.config, 'socialReviewEnabled')
         spool = Path(self.config['spoolDir'])
         processed = spool / 'editorial-processed'
         processed.mkdir(mode=0o700, exist_ok=True)
         quarantine = spool / 'editorial-quarantine'
         quarantine.mkdir(mode=0o700, exist_ok=True)
         count = 0
-        for path in sorted(spool.glob('*.json'))[:100]:
+        for path in sorted(spool.glob('*.json'))[:1000]:
+            if count >= 100:
+                break
             if path.is_symlink() or path.stat().st_size > 16384:
                 continue
             try:
@@ -872,8 +888,16 @@ class Runtime:
                     raise ValueError('invalid_event')
                 event['card_ts'] = event.get('message_ts')
             except (ValueError, UnicodeError):
+                if not consume_social:
+                    continue  # Unknown kind stays untouched in article-only mode.
                 path.rename(quarantine / (path.stem + '-' + secrets.token_hex(4) + '.json'))
                 continue
+            if not consume_social:
+                with self.ledger._tx() as db:
+                    row = db.execute('SELECT kind FROM requests WHERE id=?',
+                                     (event.get('request_id'),)).fetchone()
+                if row is None or row[0] != 'article':
+                    continue
             try:
                 self.ledger.decide(event, self.config['slack'])
                 count += 1
@@ -1050,7 +1074,15 @@ class Runtime:
         summaries = []
         attempted = False
         now = datetime.now(JST)
-        for job in self.ledger.list_jobs():
+        from publication_selection import latest_published_jobs
+        from record_reconciliation import project_reconciliations
+        projected = project_reconciliations(self.root)
+        reconciled = {item['sourceIdentity'].get('path'): item
+                      for item in projected['reconciledSources']
+                      if item['recordType'] == 'post_publication_audit'}
+        jobs = latest_published_jobs(self.ledger.list_jobs(), on_invalid=lambda error, versions:
+            summaries.extend(self._post_audit_fault(error, item['id']) for item in versions))
+        for job in jobs:
             try:
                 publication = job.get('publication') or {}
                 readback = publication.get('readback') or {}
@@ -1067,6 +1099,17 @@ class Runtime:
                 audit = json.loads(path.read_text()) if path.exists() else {
                     'schemaVersion': 1, 'id': job['id'], 'revision': job['revision'],
                     'publication': publication, 'auditKey': key, 'status': 'pending', 'attempts': []}
+                closure = reconciled.get('post-publication-audits/' + path.name)
+                if closure and closure['jobId'] == job['id'] and closure['revision'] == job['revision']:
+                    proof = next((p for p in closure['proofs']
+                                  if p['kind'] == 'same_version_audit_passed'), None)
+                    if proof:
+                        summaries.append({'id': job['id'], 'revision': job['revision'],
+                            'auditKey': key, 'status': 'success', 'resolution': 'evidence_reconciled',
+                            'observedAt': proof['observedAt'], 'evidence': proof['evidenceIdentity'],
+                            'attempts': len(audit['attempts']), 'receipt': str(path),
+                            'nextAttemptAt': None, 'notificationStatus': 'not_needed'})
+                        continue
                 if audit['status'] == 'in_flight':
                     audit.update(status='requires_reconciliation',
                                  action='Inspect interrupted audit evidence; explicitly reconcile before another check')
@@ -1378,6 +1421,8 @@ class Runtime:
 
     def make_social(self, job):
         self._require_running()
+        if not social_feature_enabled(self.config, 'socialGenerationEnabled'):
+            raise ValueError('social_generation_disabled')
         publication = job.get('publication') or {}
         proof = publication.get('readback') or {}
         if publication.get('verified') is not True or proof.get('verified') is not True or proof.get('fingerprint') != job['revision']:
@@ -1457,7 +1502,8 @@ class Runtime:
         review = dict(final, fingerprint=fingerprint(proposal), evidence=flags,
                       polish={'model': polished['model'], 'validated': True})
         self.ledger.record_social(job['id'], proposal, review)
-        self.deliver(job['id'], 'social')
+        if social_feature_enabled(self.config, 'socialReviewEnabled'):
+            self.deliver(job['id'], 'social')
 
     def hold_social_refresh(self, id, *, expected_social_revision):
         self._require_running()
