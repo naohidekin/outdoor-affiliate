@@ -61,6 +61,7 @@ data/x/replies.jsonl
 data/x/posts.jsonl
 data/x/ideas.jsonl
 .env.local
+.env.buffer.local
 .env.production
 
 # 手動記入するワークシート。リモート側の再生成とローカルの記入内容が
