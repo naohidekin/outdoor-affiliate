@@ -19,6 +19,7 @@
  *   node scripts/post-to-x.js --dry-run  # 実行せずに対象を表示
  */
 
+import { findWiseProof } from "../src/lib/wise-contract.mjs";
 import { google } from "googleapis";
 import { TwitterApi } from "twitter-api-v2";
 import fs from "fs";
@@ -350,6 +351,9 @@ async function postToX() {
 
   console.log(`投稿対象: ${targets.length}件 (本日残枠: ${remaining}件)`);
 
+  const proofQueue = (readJson("post-queue.json") || {}).queue || [];
+  const proofPath = path.join(__dirname, "../data/x/posts.jsonl");
+  const localProofs = fs.existsSync(proofPath) ? fs.readFileSync(proofPath, "utf8").split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
   for (const target of targets) {
     const [, postType, rawText, imageUrl, sourceUrl, scheduledAt, , , selfReply] = target.data;
     const targetTweetId = target.targetTweetId || null;
@@ -362,6 +366,10 @@ async function postToX() {
     console.log(`  [${postType}] ${preview}...`);
 
     if (dryRun) continue;
+    if (!findWiseProof(text, [...proofQueue, ...localProofs])) {
+      console.warn("[poster] Current exact-text owner WISE-AS review required; held");
+      continue;
+    }
 
     try {
       let tweetId;

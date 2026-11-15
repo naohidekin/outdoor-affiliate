@@ -53,3 +53,33 @@ node scripts/seo/cli.mjs --root "$SEO_STATE_ROOT" report --write
 1ページに複数の新規仮説を重ねない。新規介入の前には現行の Supabase 対象行だけを読み、隔離作業場所の同じ対象行を照合する。旧チェックアウトに他人の未コミット変更がある場合は触らない。全行同期や本番管理 API の一括更新での公開は禁止し、選択的 publish CLI を用いる。復旧が必要なら同じ manifest を再実行して、書き込みの二重適用を防いで検証を完了する。
 
 公開 CLI の照合用記事ミラーは `$SEO_STATE_ROOT/mirror/articles.json` を既定にする。公開リポジトリの `data/articles.json` は照合ミラーに使わない。本番には独立した既存更新があるため、全行を取り込むと無関係な差分まで混ざる。新規候補の baseline を取る時は `node scripts/seo/snapshot.mjs --article "$ARTICLE_ID" --env-file "$ORIGINAL_REPO/.env.local"` を実行する。必要なら `publish.mjs --articles-file FILE` で照合ミラーを明示できる。既存ジョブは共通の publication lock と snapshot により保護対象を全行 upsert から除外する。観測中の別編集は observe が hash で検出し pause する。
+
+## WISE-ASの原本と公開条件
+
+サイト上の実行元も `rules/common/wise-master.md` と `sense-master.md` のオーナー原文を使う。
+正式な六軸は Wit / Insight / Sincere / Empth / AI-free / Sense。
+`src/lib/wise-contract.mjs` が原文・説明文のSHA256を検証し、軸の欠落・定義の変更時は停止する。
+記事Supervisorの11項目平均7.5以上は維持し、六軸の1–4点と下限2/2/2/2/3/2を独立して検査する。
+SEO・事実・医療・広告・アフィリエイトの条件は別に検査する。
+
+既存記事のSEO manifestには次を含め、六軸それぞれの根拠を空欄にしない。
+`policyId` は実行するサイトの `loadWisePolicy().id` から取得する。
+
+```js
+wiseReview: {
+  policyId: loadWisePolicy().id,
+  scores: { w: 3, i: 3, s: 3, e: 3, ai: 3, sense: 3 },
+  reasons: { w: '対象文に即した根拠', i: '根拠', s: '根拠', e: '根拠', ai: '根拠', sense: '根拠' }
+}
+```
+
+この値全体を既存のmanifestHashとAstra承認に結び、古い承認を使い回さない。
+過去のmanifest・承認・公開intentは変更せず、読取専用確認は継続できる。
+新しいDB・ローカル本文・ISRの変更には現在の六軸審査を必要とする。
+古い直接書換え・公開スクリプトも、未審査の公開本文やタイトルを反映しない。
+原文を渡しただけの生成結果を、六軸審査や本人承認として扱わない。
+モデル、呼出し・再試行上限、予算、既存の権限は変更しない。
+
+オフライン検査は `npm run wise:check` と
+`node --test tests/wise-contract.test.mjs tests/wise-site-surfaces.test.mjs tests/seo-publish.test.ts`。
+スケジュールを追加せず、モデル・公開API・本番台帳を呼び出さない。

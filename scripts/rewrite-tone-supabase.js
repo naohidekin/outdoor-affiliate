@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadWisePolicy, requireWiseReview } from "../src/lib/wise-contract.mjs";
 
 /**
  * Supabase記事の文体一括変換スクリプト
@@ -60,7 +61,7 @@ ${content}
   const res = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content: prompt + "\n\n【WISE-AS オーナー原本】\n" + loadWisePolicy().text + "\n内容・結論・根拠を増減せず、未確認の体験・数字を作らない。" }],
   });
 
   return res.content[0].text.trim();
@@ -118,6 +119,7 @@ async function main() {
     process.stdout.write(`[${successCount + 1}/${targets.length}] ${art.slug} ... `);
     try {
       const rewritten = await rewriteContent(art.content);
+      if (art.status === "published") requireWiseReview({...art, content:rewritten});
       const { error: updateError } = await supabase
         .from("articles")
         .update({ content: rewritten, updated_at: new Date().toISOString() })

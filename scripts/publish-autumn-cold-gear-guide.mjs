@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {requireWiseReview} from "../src/lib/wise-contract.mjs";
 
 /**
  * 秋の新記事「秋冬キャンプの寒さ対策ギア完全ガイド」を公開する。
@@ -26,6 +27,7 @@ if (!a) {
 if (a.status === "published") {
   console.log(`⏭️ 既に公開済み: ${SLUG}`);
 } else {
+  requireWiseReview(a);
   a.status = "published";
   if (!a.publishedAt) a.publishedAt = now;
   a.updatedAt = now;

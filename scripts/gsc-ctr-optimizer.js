@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import {validateManifest, articleHash} from "./seo/publish.mjs";
+import { loadWisePolicy } from "../src/lib/wise-contract.mjs";
 /**
  * GSC CTR 最適化スクリプト
  *
@@ -141,7 +143,7 @@ ${pageList}
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 4000,
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content: prompt + "\n\n【WISE-AS オーナー原本】\n" + loadWisePolicy().text + "\n内容・結論・根拠を増減せず、未確認の体験・数字を作らない。" }],
   });
 
   const text = response.content[0].text;
@@ -157,6 +159,14 @@ function applyToArticles(improvements, articles) {
   for (const imp of improvements) {
     const idx = articles.findIndex((a) => a.slug === imp.slug);
     if (idx === -1) { console.warn(`  ⚠ slug not found: ${imp.slug}`); continue; }
+    const manifest = imp.publicationManifest;
+    if (!manifest) throw new Error("Current WISE-AS reviewed publicationManifest required; use scripts/seo/publish.mjs");
+    validateManifest(manifest);
+    if (manifest.articleId !== articles[idx].id || manifest.slug !== articles[idx].slug
+        || manifest.baseline.hash !== articleHash(articles[idx])
+        || manifest.patches.title !== imp.title || manifest.patches.metaDescription !== imp.metaDescription) {
+      throw new Error("Reviewed SEO manifest does not bind this exact title/meta candidate");
+    }
     articles[idx].title = imp.title;
     articles[idx].metaDescription = imp.metaDescription;
     count++;

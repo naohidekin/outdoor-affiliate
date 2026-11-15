@@ -5,30 +5,19 @@
 //   - 書き手=Claude に対し 採点=GPT-4o（別ベンダー）で独立性を担保 → 自己採点の甘さを排除
 //   - pass 判定はサーバ側で再計算（モデルの pass フラグを信用しない）
 //   - OPENAI_API_KEY が無ければ Claude 別モデル(haiku)へ警告付きフォールバック
-// 採点基準は docs/WISE-GEARMAN.md（W/I/S/E/AI 各1-4、合格 W≥2,I≥2,S≥2,E≥2,AI≥3）。
+// 採点基準は docs/WISE-GEARMAN.md（Wit/Insight/Sincere/Empth/AI-free/Sense 各1-4、原本の合格基準）。
+import { loadWisePolicy, passesWise, validWiseScores, wiseContentHash } from "../../src/lib/wise-contract.mjs";
 import { loadEnv } from "./lib/file-lock.mjs";
 loadEnv();
 
-import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { readJsonl, updatePost, jstNow, POSTS_PATH } from "./lib/file-lock.mjs";
 import { callGPT, hasOpenAIKey } from "./lib/openai-api.mjs";
 import { callClaude } from "./lib/claude-api.mjs";
 
-const ROOT = resolve(import.meta.dirname, "../..");
-const WISE_PATH = resolve(ROOT, "docs/WISE-GEARMAN.md");
-let WISE_TEXT = "";
-try {
-  if (existsSync(WISE_PATH)) WISE_TEXT = readFileSync(WISE_PATH, "utf8");
-} catch {
-  /* fall back to inline */
-}
-
-const PASS = { w: 2, i: 2, s: 2, e: 2, ai: 3 };
-
-function judgePass(s) {
-  return s.w >= PASS.w && s.i >= PASS.i && s.s >= PASS.s && s.e >= PASS.e && s.ai >= PASS.ai;
-}
+const POLICY = loadWisePolicy();
+const WISE_TEXT = POLICY.text;
+const judgePass = passesWise;
 
 function buildPrompt(body, ideaTopic) {
   return `以下の X 投稿を独立レビューしてください。
@@ -45,16 +34,16 @@ ${body}
 """
 
 ## 採点基準（WISE-GEARMAN、各1-4）
-${WISE_TEXT || "W(体温:実体験), I(独自視点:医師×ギアオタク), S(誠実:正直・押し付けない), E(共感:読者に刺さる), AI(AI臭くない)"}
+${WISE_TEXT}
 
 ## 指示
-1. W/I/S/E/AI を各1-4で独立採点
+1. Wit/Insight/Sincere/Empth/AI-free/Sense を各1-4で独立採点
 2. AI軸は特に厳しく: Claude特有の丁寧すぎ・構造的すぎ・定型句・文末単調を検出
 3. この投稿はClaudeが生成したもの。同系列に甘くならないよう厳格に
 
 ## 出力（JSONのみ）
-{ "scores": { "w": N, "i": N, "s": N, "e": N, "ai": N }, "notes": "所見(日本語2文)" }
-合格: W≥2 AND I≥2 AND S≥2 AND E≥2 AND AI≥3`;
+{ "scores": { "w": N, "i": N, "s": N, "e": N, "ai": N, "sense": N }, "notes": "所見(日本語2文)" }
+合格: W≥2 AND I≥2 AND S≥2 AND E≥2 AND AI≥3 AND Sense≥2`;
 }
 
 function parse(responseText) {
@@ -63,7 +52,7 @@ function parse(responseText) {
   // 壊れJSON対策: コードフェンス除去 + 末尾カンマ除去
   const cleaned = m[0].replace(/```json?/gi, "").replace(/,\s*([}\]])/g, "$1");
   const parsed = JSON.parse(cleaned);
-  if (!parsed.scores || typeof parsed.scores.w !== "number") throw new Error("scores 構造が不正");
+  if (!validWiseScores(parsed.scores)) throw new Error("scores 構造が不正");
   parsed.pass = judgePass(parsed.scores); // サーバ側で再計算（モデルの判定を信用しない）
   return parsed;
 }
@@ -131,6 +120,9 @@ export async function runReviewer({ dryRun = false } = {}) {
 
     const patch = {
       wiseScores: result.scores,
+      wisePolicy: POLICY.id,
+      wiseReviewPassed: result.pass,
+      wiseContentHash: wiseContentHash(post.body),
       reviewedBy,
       reviewedAt: jstNow(),
     };
@@ -138,13 +130,13 @@ export async function runReviewer({ dryRun = false } = {}) {
       if (!dryRun) updatePost(post.id, { ...patch, status: "cross_reviewed", reviewNotes: result.notes });
       passed++;
       const s = result.scores;
-      console.log(`[reviewer] PASS ${post.id} (${reviewedBy}) W${s.w} I${s.i} S${s.s} E${s.e} AI${s.ai}`);
+      console.log(`[reviewer] PASS ${post.id} (${reviewedBy}) W${s.w} I${s.i} S${s.s} E${s.e} AI${s.ai} Sense${s.sense}`);
     } else {
       if (!dryRun)
         updatePost(post.id, { ...patch, status: "rejected", rejectedBy: "reviewer", rejectionReason: result.notes });
       rejected++;
       const s = result.scores;
-      console.log(`[reviewer] REJECT ${post.id} W${s.w} I${s.i} S${s.s} E${s.e} AI${s.ai} | ${result.notes}`);
+      console.log(`[reviewer] REJECT ${post.id} W${s.w} I${s.i} S${s.s} E${s.e} AI${s.ai} Sense${s.sense} | ${result.notes}`);
     }
   }
   console.log(`[reviewer] 完了。pass ${passed} / reject ${rejected}`);

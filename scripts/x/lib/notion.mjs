@@ -108,10 +108,10 @@ export async function pushPostToNotion(post, { status = "draft" } = {}) {
     "生成日時": { date: { start: post.createdAt || new Date().toISOString() } },
   };
   if (post.wiseScores) {
-    const { w, i, s, e, ai } = post.wiseScores;
+    const { w, i, s, e, ai, sense } = post.wiseScores;
     const note = post.reviewedBy ? ` (${post.reviewedBy})` : "";
     const fc = post.needsHumanFactCheck ? ` ⚠要事実確認:${(post.claimsToVerify || []).length}` : "";
-    properties["WISE"] = { rich_text: [{ text: { content: `W${w} I${i} S${s} E${e} AI${ai}${note}${fc}` } }] };
+    properties["WISE"] = { rich_text: [{ text: { content: `W${w} I${i} S${s} E${e} AI${ai} Sense${sense}${note}${fc}` } }] };
   }
   if (post.selfReply) {
     properties["自己返信"] = { rich_text: [{ text: { content: post.selfReply.slice(0, 2000) } }] };

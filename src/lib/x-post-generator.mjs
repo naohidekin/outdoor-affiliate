@@ -1,3 +1,4 @@
+import { loadWisePolicy, passesWise, WISE_FLOORS, wiseContentHash } from "./wise-contract.mjs";
 // @ts-nocheck
 /**
  * X投稿自動生成モジュール（4軸10タイプ対応）
@@ -49,11 +50,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // src/lib/ から data/ はルート直下なので 2つ上がる
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 
-// ギア男 WISE定義（docs/WISE-GEARMAN.md）
-const WISE_GEARMAN_PATH = path.join(__dirname, "..", "..", "docs", "WISE-GEARMAN.md");
-const WISE_GEARMAN_TEXT = fs.existsSync(WISE_GEARMAN_PATH)
-  ? fs.readFileSync(WISE_GEARMAN_PATH, "utf-8")
-  : "";
+// Owner raw WISE-AS source; docs/WISE-GEARMAN.md is a pinned explainer.
+const WISE_POLICY = loadWisePolicy();
+const WISE_GEARMAN_TEXT = WISE_POLICY.text;
 
 // ギア男 X Posts Notion DB ID
 const GEARMAN_POSTS_DB_ID = "1d9bbe0c-30a5-4bfd-86b3-ced628cf05eb";
@@ -227,8 +226,8 @@ async function createNotionPost(post, token) {
   if (post.url) properties["リンク"] = { url: post.url };
   // WISEスコア・Codexメモを WISE プロパティに格納（DB に存在する場合）
   if (post.wiseScores) {
-    const { w, i, s, e, ai } = post.wiseScores;
-    const wiseStr = `W${w} I${i} S${s} E${e} AI${ai}`;
+    const { w, i, s, e, ai, sense } = post.wiseScores;
+    const wiseStr = `W${w} I${i} S${s} E${e} AI${ai} Sense${sense}`;
     const codexNote = post.codexNotes ? ` | Codex: ${post.codexNotes}` : "";
     properties["WISE"] = { rich_text: [{ text: { content: wiseStr + codexNote } }] };
   }
@@ -330,7 +329,7 @@ function formatThreadForSheets(tweets) {
 
 // === WISE自己採点（Claude Haiku） ===
 
-const WISE_PASS = { w: 2, i: 2, s: 2, e: 2, ai: 3 };
+const WISE_PASS = WISE_FLOORS;
 
 async function wiseScorePost(client, { type, axis, text }) {
   const prompt = `あなたはギア男（@camp_gear_lab）のX投稿品質審査員です。
@@ -346,12 +345,12 @@ ${text}
 ${WISE_GEARMAN_TEXT}
 
 ## 採点指示
-W/I/S/E/AI の5軸を各1〜4点で採点してください。
+Wit/Insight/Sincere/Empth/AI-free/Sense の6軸を各1〜4点で採点してください。
 AIは「AI臭さのなさ」です（4が最も人間らしい）。
 各軸に理由を1文で添えてください。
 
 ## 出力形式（JSONのみ、他テキスト禁止）
-{ "w": 3, "i": 2, "s": 3, "e": 3, "ai": 3, "comment": "改善ポイントを1文で" }`;
+{ "w": 3, "i": 2, "s": 3, "e": 3, "ai": 3, "sense": 3, "comment": "改善ポイントを1文で" }`;
 
   try {
     const response = await client.messages.create({
@@ -364,18 +363,13 @@ AIは「AI臭さのなさ」です（4が最も人間らしい）。
     return JSON.parse(jsonMatch[0]);
   } catch (err) {
     console.warn(`[wise-score] 採点失敗: ${err.message}`);
-    return { w: 2, i: 2, s: 2, e: 2, ai: 3, comment: "scoring failed, default pass" };
+    return { w: 0, i: 0, s: 0, e: 0, ai: 0, sense: 0, comment: "scoring unavailable" };
   }
 }
 
 function wisePass(scores) {
-  return (
-    scores.w >= WISE_PASS.w &&
-    scores.i >= WISE_PASS.i &&
-    scores.s >= WISE_PASS.s &&
-    scores.e >= WISE_PASS.e &&
-    scores.ai >= WISE_PASS.ai
-  );
+  const { comment, ...axes } = scores || {};
+  return passesWise(axes);
 }
 
 // === Codexクロスレビュー（GPT-4o） ===
@@ -384,7 +378,7 @@ async function reviewWithCodex(text) {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
     console.warn("[codex-review] OPENAI_API_KEY未設定 — スキップ");
-    return { pass: true, scores: {}, notes: "skipped (no key)", reviewer: "skipped" };
+    return { pass: false, scores: {}, notes: "skipped (no key)", reviewer: "skipped" };
   }
 
   const prompt = `以下のX投稿をWISE-GEARMANフレームワークで独立レビューしてください。
@@ -403,16 +397,16 @@ ${text}
 ${WISE_GEARMAN_TEXT}
 
 ## 採点指示
-1. W/I/S/E/AI の5軸を各1〜4で独立採点
+1. Wit/Insight/Sincere/Empth/AI-free/Sense の6軸を各1〜4で独立採点
 2. AI軸では特にチェック:
    - Claude特有の丁寧すぎる文体・「〜と言えるでしょう」等の定型句
    - 不自然な完璧さ・敬語の過剰使用・文末パターンの単調さ
 3. この投稿はClaudeが生成したものです。独立した立場から厳しく採点すること
 
 ## 出力形式（JSONのみ、他テキスト禁止）
-{ "scores": { "w": N, "i": N, "s": N, "e": N, "ai": N }, "pass": true/false, "notes": "総合所見（日本語2文）" }
+{ "scores": { "w": N, "i": N, "s": N, "e": N, "ai": N, "sense": N }, "pass": true/false, "notes": "総合所見（日本語2文）" }
 
-合格基準: W>=2 AND I>=2 AND S>=2 AND E>=2 AND AI>=3`;
+合格基準: W>=2 AND I>=2 AND S>=2 AND E>=2 AND AI>=3 AND Sense>=2`;
 
   const body = JSON.stringify({
     model: "gpt-4o",
@@ -458,20 +452,18 @@ ${WISE_GEARMAN_TEXT}
             const result = JSON.parse(jsonMatch[0]);
             // サーバー側で合否を再計算（GPTの判定を盲信しない）
             const s = result.scores || {};
-            const pass =
-              (s.w ?? 0) >= 2 && (s.i ?? 0) >= 2 && (s.s ?? 0) >= 2 &&
-              (s.e ?? 0) >= 2 && (s.ai ?? 0) >= 3;
+            const pass = passesWise(s);
             resolve({ pass, scores: s, notes: result.notes || "", reviewer: "gpt-4o" });
           } catch (err) {
             console.warn(`[codex-review] エラー: ${err.message}`);
-            resolve({ pass: true, scores: {}, notes: "error — default pass", reviewer: "gpt-4o" });
+            resolve({ pass: false, scores: {}, notes: "review unavailable", reviewer: "gpt-4o" });
           }
         });
       }
     );
     req.on("error", (err) => {
       console.warn(`[codex-review] 接続エラー: ${err.message}`);
-      resolve({ pass: true, scores: {}, notes: "connection error — default pass", reviewer: "gpt-4o" });
+      resolve({ pass: false, scores: {}, notes: "connection unavailable", reviewer: "gpt-4o" });
     });
     req.write(body);
     req.end();
@@ -1024,6 +1016,7 @@ async function generatePosts(opts) {
 
     // プロンプト生成（フォーマットパターン + 書き出しローテーション + バズ1行目 + Analyst ディレクティブ）
     let prompt = getPromptForType(item.type, context);
+    prompt += "\n\n【WISE-AS オーナー原本】\n" + WISE_GEARMAN_TEXT + "\n未確認の本人経験・数値を作らない。";
     prompt += buildFormatPatternBlock();
     prompt += buildPatternRotationBlock();
     prompt += buildBuzzFirstLinesBlock(item.type);
@@ -1144,7 +1137,7 @@ async function generatePosts(opts) {
         });
         const wisePassed = wisePass(wiseResult);
 
-        console.log(`[${item.type}] WISE: W=${wiseResult.w} I=${wiseResult.i} S=${wiseResult.s} E=${wiseResult.e} AI=${wiseResult.ai} → ${wisePassed ? "✓" : "✗"}`);
+        console.log(`[${item.type}] WISE: W=${wiseResult.w} I=${wiseResult.i} S=${wiseResult.s} E=${wiseResult.e} AI=${wiseResult.ai} Sense=${wiseResult.sense} → ${wisePassed ? "✓" : "✗"}`);
         if (wiseResult.comment) {
           console.log(`  └ ${wiseResult.comment}`);
         }
@@ -1155,7 +1148,8 @@ async function generatePosts(opts) {
           if (wiseResult.i < WISE_PASS.i) fails.push(`I=${wiseResult.i}`);
           if (wiseResult.s < WISE_PASS.s) fails.push(`S=${wiseResult.s}`);
           if (wiseResult.e < WISE_PASS.e) fails.push(`E=${wiseResult.e}`);
-          if (wiseResult.ai < WISE_PASS.ai) fails.push(`AI=${wiseResult.ai}`);
+          if (wiseResult.ai < WISE_PASS.ai) fails.push(`AI=${wiseResult.ai} Sense=${wiseResult.sense}`);
+          if (!(wiseResult.sense >= WISE_PASS.sense)) fails.push(`Sense=${wiseResult.sense}`);
           console.log(`[${item.type}] WISE不合格 (${fails.join(", ")}) → 再生成`);
           qualityRetries++;
           needsRetry = true;
@@ -1190,7 +1184,7 @@ async function generatePosts(opts) {
         const wiseTotal = wiseResult.w + wiseResult.i + wiseResult.s + wiseResult.e;
         const scoreResult = {
           total: Math.round((wiseTotal / 16) * 10 * 10) / 10, // 16点満点→10点換算
-          scores: [wiseResult.w, wiseResult.i, wiseResult.s, wiseResult.e, wiseResult.ai],
+          scores: [wiseResult.w, wiseResult.i, wiseResult.s, wiseResult.e, wiseResult.ai, wiseResult.sense],
           comment: wiseResult.comment,
         };
 
@@ -1239,7 +1233,10 @@ async function generatePosts(opts) {
           retryCount: attempt,
           selfReply: g.selfReply || "",
           formatPattern: g.formatPattern || "",
-          wiseScores: wiseResult,
+          wiseScores: Object.fromEntries(Object.keys(WISE_FLOORS).map(k => [k, wiseResult[k]])),
+          wisePolicy: WISE_POLICY.id,
+          wiseReviewPassed: wisePassed && codexResult.pass === true,
+          wiseContentHash: wiseContentHash(postText),
           codexNotes: codexResult.notes || "",
         });
       }

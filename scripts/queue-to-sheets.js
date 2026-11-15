@@ -14,6 +14,7 @@
  *   node scripts/queue-to-sheets.js --max=1 --random-delay=59
  */
 
+import { findWiseProof } from "../src/lib/wise-contract.mjs";
 import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
@@ -63,6 +64,12 @@ async function queueToSheets() {
     range: `${DRAFT_SHEET}!A2:U`,
   });
   const rows = res.data.values || [];
+  // Legacy Sheets lack policy fields. Require exact current local review proof;
+  // never promote a historical approved row or infer scores from display text.
+  const queueProofs = (readJson("post-queue.json") || {}).queue || [];
+  const jsonl = path.join(__dirname, "../data/x/posts.jsonl");
+  const localProofs = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, "utf8").split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
+  const proofs = [...queueProofs, ...localProofs];
 
   // 承認済みで投稿予定日が今日以前の行を特定
   const toQueue = [];
@@ -71,7 +78,10 @@ async function queueToSheets() {
     const status = row[6]; // G: status列
     const scheduledDate = row[7]; // H: scheduledDate列
     if (status === "approved" && scheduledDate <= today) {
+      const proof = findWiseProof(row[2], proofs);
+      if (!proof) { console.warn("[queue] Current owner WISE-AS review required; held"); continue; }
       toQueue.push({
+        wisePolicy: proof.wisePolicy, wiseReviewPassed: proof.wiseReviewPassed, wiseScores: proof.wiseScores ?? proof.wise_scores, wiseContentHash: proof.wiseContentHash,
         rowIndex: i + 2, // +2 for header + 1-indexed
         id: row[0],
         type: row[1],
@@ -201,6 +211,7 @@ async function queueToSheets() {
   for (const p of toQueue2) {
     queueJson.queue.push({
       status: "ready",
+      wisePolicy: p.wisePolicy, wiseReviewPassed: p.wiseReviewPassed, wiseScores: p.wiseScores, wiseContentHash: p.wiseContentHash,
       type: p.type,
       text: p.text,
       url: p.url || "",

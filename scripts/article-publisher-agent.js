@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { requireWiseReview } from "../src/lib/wise-contract.mjs";
 
 /**
  * Article Publisher Agent — 品質判定→公開 / draft + Indexing API + X連携
@@ -214,6 +215,7 @@ async function main() {
       process.exit(1);
     }
     console.log(`[article-publisher] 強制公開: ${target.title}`);
+    requireWiseReview(target);
     target.status = "published";
     target.publishedAt = jstIsoString();
     // updatedAtを進めないと、sync時のauto-pullがDB側のdraft状態で
@@ -254,6 +256,7 @@ async function main() {
     );
 
     for (const article of candidates) {
+      try { requireWiseReview(article); } catch { console.warn("[article-publisher] Current owner WISE-AS review required; held"); continue; }
       console.log(`\n[article-publisher] 公開: ${article.title}`);
       console.log(`  スコア: ${article.qualityScore} / 予定日: ${article.scheduledPublishDate}`);
 

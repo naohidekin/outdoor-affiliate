@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {requireWiseReview} from "../src/lib/wise-contract.mjs";
 
 /**
  * 秋クラスターの残り2本（ハブ／服装）を公開する。
@@ -23,6 +24,7 @@ for (const slug of SLUGS) {
   const a = articles.find((x) => x.slug === slug);
   if (!a) { console.log(`⚠️ 記事なし: ${slug}（先に create-系スクリプトを実行）`); continue; }
   if (a.status === "published") { console.log(`  ⏭️ 既に公開済み: ${slug}`); continue; }
+  requireWiseReview(a);
   a.status = "published";
   if (!a.publishedAt) a.publishedAt = now;
   a.updatedAt = now;

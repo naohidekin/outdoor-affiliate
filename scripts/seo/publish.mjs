@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {loadWisePolicy, passesWise} from '../../src/lib/wise-contract.mjs';
 import fs from 'node:fs';
 import { withProcessLock } from './process-lock.mjs';
 import path from 'node:path';
@@ -11,7 +12,19 @@ export function manifestHash(manifest) {
   const body = Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'approval'));
   return hash(body);
 }
-export function validateManifest(manifest) {
+export function validateWiseReview(review) {
+  const policy = loadWisePolicy();
+  const keys = ['w', 'i', 's', 'e', 'ai', 'sense'];
+  if (!review || typeof review !== 'object' || Object.keys(review).sort().join(',') !== 'policyId,reasons,scores'
+      || review.policyId !== policy.id || !passesWise(review.scores)
+      || !keys.every(key => Number.isInteger(review.scores[key]))
+      || !review.reasons || typeof review.reasons !== 'object' || Object.keys(review.reasons).length !== keys.length
+      || !keys.every(key => typeof review.reasons[key] === 'string' && review.reasons[key].trim())) {
+    throw new Error('Current owner WISE-AS six-axis review and reasons required');
+  }
+  return review;
+}
+export function validateManifest(manifest, {requireCurrentWise = true} = {}) {
   if (!/^[a-zA-Z0-9_-]+$/.test(manifest.experimentId || '') || !manifest.articleId || !manifest.slug) throw new Error('Manifest identity required');
   if (!manifest.baseline?.updated_at || !Number.isFinite(Date.parse(manifest.baseline.updated_at)) || !/^[a-f0-9]{64}$/.test(manifest.baseline.hash || '')) throw new Error('Baseline timestamp and hash required');
   const fields = Object.keys(manifest.patches || {});
@@ -23,6 +36,7 @@ export function validateManifest(manifest) {
     else if (!['tags', 'faqs'].includes(field) && (typeof value !== 'string' || !value.trim())) throw new Error(`Invalid ${field}`);
   }
   if (!Array.isArray(manifest.evidence) || !manifest.evidence.length) throw new Error('Evidence required');
+  if (requireCurrentWise) validateWiseReview(manifest.wiseReview);
   const approval = manifest.approval;
   if (approval?.model !== 'gpt-6-astra' || approval.decision !== 'approved' || approval.manifestHash !== manifestHash(manifest) || approval.evidenceReviewed !== true || approval.noInventedClaims !== true) throw new Error('Astra approval bound to exact manifest and evidence required');
   return manifest;
@@ -113,7 +127,7 @@ export function supabaseAdapter(client) {
   };
 }
 export async function publishExperiment(manifest, options) {
-  validateManifest(manifest);
+  validateManifest(manifest, {requireCurrentWise:false});
   const { db, root = seoRoot(), articlesFile = path.join(root, 'mirror/articles.json'), apply = false, revalidateSecret, fetchImpl = fetch, now = jstNow, onStatus = async () => {}, authorize = async () => { throw new Error('Persistent experiment approval authorization required'); } } = options;
   // Dry-run validates evidence under a read-only lease. It never changes
   // articles, journals or experiment state, and sends no DB writes or ISR calls.
@@ -131,6 +145,9 @@ export async function publishExperiment(manifest, options) {
     if (!alreadyApplied && (articleHash(current) !== manifest.baseline.hash || !sameTime(current.updated_at, manifest.baseline.updated_at))) throw new Error('Remote baseline changed; refusing stale publication');
     if (articleHash(local) !== manifest.baseline.hash && !(alreadyApplied && articleHash(local) === articleHash(current))) throw new Error('Local authoritative article differs from approved baseline');
     if (!apply) return { status: 'dry_run', experimentId: manifest.experimentId, fields: Object.keys(manifest.patches), alreadyApplied: !!alreadyApplied };
+    // Existing immutable manifests remain readable. Current policy is mandatory
+    // before any new journal/local/DB/ISR mutation, including recovery POSTs.
+    validateWiseReview(manifest.wiseReview);
     if (!revalidateSecret) throw new Error('REVALIDATE_SECRET required before applying publication');
     if (!alreadyApplied) {
       const patch = Object.fromEntries(Object.entries(manifest.patches).map(([key, value]) => [PATCH_FIELDS[key], value]));

@@ -1,3 +1,4 @@
+import { loadWisePolicy } from "../../src/lib/wise-contract.mjs";
 import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -55,7 +56,7 @@ export async function generate4komaStory(theme) {
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 2048,
-    system: SYSTEM_PROMPT,
+    system: SYSTEM_PROMPT + "\n\n" + loadWisePolicy().text + "\n未確認の本人経験・数字を事実として作らない。",
     messages: [{ role: 'user', content: USER_TEMPLATE(theme) }],
   });
 

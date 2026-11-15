@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadWisePolicy, passesWise, wiseContentHash } from "../src/lib/wise-contract.mjs";
 
 /**
  * Supervisor Agent — 全体監視・KILL SWITCH 制御・異常検知・バックアップ
@@ -110,12 +111,12 @@ function scoreWiseArticle(article, topic) {
   }[wf] || [3000, 5000];
 
   const criterionScores = {
-    wise_w: Math.max(1, Math.min(10, Math.round(((wise.w || 3) / 5) * 10))),
-    wise_i: Math.max(1, Math.min(10, Math.round(((wise.i || 3) / 5) * 10))),
-    wise_s: Math.max(1, Math.min(10, Math.round(((wise.s || 3) / 5) * 10))),
-    wise_e: Math.max(1, Math.min(10, Math.round(((wise.e || 3) / 5) * 10))),
-    wise_ai: Math.max(1, Math.min(10, Math.round(((wise.ai || 3) / 5) * 10))),
-    wise_sense: Math.max(1, Math.min(10, Math.round(((wise.sense || 3) / 5) * 10))),
+    wise_w: (article.supervisor_scores?.wise_w ?? 0),
+    wise_i: (article.supervisor_scores?.wise_i ?? 0),
+    wise_s: (article.supervisor_scores?.wise_s ?? 0),
+    wise_e: (article.supervisor_scores?.wise_e ?? 0),
+    wise_ai: (article.supervisor_scores?.wise_ai ?? 0),
+    wise_sense: (article.supervisor_scores?.wise_sense ?? 0),
     affiliate_links: hasAmazon && hasRakuten ? 10 : (hasAmazon || hasRakuten ? 6 : 2),
     comparison_table: hasComparisonTag ? 10 : 2,
     internal_links: linkCount >= 2 ? 10 : (linkCount >= 1 ? 6 : 2),
@@ -124,11 +125,14 @@ function scoreWiseArticle(article, topic) {
   };
 
   const average = WISE_CRITERIA.reduce((s, k) => s + criterionScores[k], 0) / WISE_CRITERIA.length;
-  const score = Number(average.toFixed(2));
-  const passed = score >= WISE_PASS_THRESHOLD;
+  const score = average;
+  const current = article.wiseReviewPassed === true && article.wisePolicy === loadWisePolicy().id && article.wiseContentHash === wiseContentHash(content);
+  const scoresValid = WISE_CRITERIA.every(k => typeof criterionScores[k] === "number" && Number.isFinite(criterionScores[k]) && criterionScores[k] >= 0 && criterionScores[k] <= 10);
+  const passed = current && passesWise(wise) && scoresValid && average >= WISE_PASS_THRESHOLD;
   const feedback = WISE_CRITERIA
     .filter((k) => criterionScores[k] < 8)
     .map((k) => `${k} が不足 (${criterionScores[k]}/10)`);
+  if (!current || !passesWise(wise) || !scoresValid) feedback.push("Current owner WISE-AS six-axis review required");
   if (bannedHits > 0) feedback.push(`禁止フレーズ検出 ${bannedHits}件`);
 
   return { passed, score, criterionScores, feedback };

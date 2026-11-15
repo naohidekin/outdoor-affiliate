@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Deliberately mutable fault-injection fixtures model malformed manifests and database responses. */
 import test from 'node:test';
+import {loadWisePolicy} from '../src/lib/wise-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -19,6 +20,7 @@ function fixture(t: { after: (fn: () => void) => void }) {
   delete (local as Partial<typeof row>).updated_at;
   fs.writeFileSync(articlesFile, JSON.stringify([local, { id: 'other', title: 'untouched' }]));
   const manifest: any = { experimentId: 'exp-1', articleId: row.id, slug: row.slug, baseline: { updated_at: row.updated_at, hash: articleHash(row) }, patches: { title: 'New title' }, evidence: [{ url: 'https://camp-gear-lab.com/articles/tent', note: 'Editorial evidence' }] };
+  manifest.wiseReview = {policyId:loadWisePolicy().id, scores:{w:3,i:3,s:3,e:3,ai:3,sense:3}, reasons:Object.fromEntries(['w','i','s','e','ai','sense'].map(key=>[key,'Synthetic owner-axis evidence']))};
   function approve() { manifest.approval = { model: 'gpt-6-astra', decision: 'approved', evidenceReviewed: true, noInventedClaims: true, manifestHash: manifestHash(manifest) }; }
   approve();
   let remote: any = structuredClone(row);
@@ -163,4 +165,54 @@ test('changed FAQ must match visible answer and FAQPage, not hidden scripts',()=
 
 test('inline Japanese links do not add artificial spaces in rendered comparison',()=>{
   assert.equal(verifyPublicHtml('<p>製品の<a href="https://example.com/spec">公式仕様</a>です。</p>',{patches:{content:'製品の[公式仕様](https://example.com/spec)です。'}},{content:'古い説明です。'}),true);
+});
+
+
+test('WISE-AS missing/old/malformed/low-score proofs block publication before effects',async t=>{
+ for(const mode of ['missing','old','missingSense','lowSense','wrongAxis','missingReason','emptyReason']){
+  const f=fixture(t);
+  if(mode==='missing') delete f.manifest.wiseReview;
+  if(mode==='old') f.manifest.wiseReview.policyId='old-policy';
+  if(mode==='missingSense') delete f.manifest.wiseReview.scores.sense;
+  if(mode==='lowSense') f.manifest.wiseReview.scores.sense=1;
+  if(mode==='wrongAxis'){f.manifest.wiseReview.scores.science=3;delete f.manifest.wiseReview.scores.s;}
+  if(mode==='missingReason') delete f.manifest.wiseReview.reasons.sense;
+  if(mode==='emptyReason') f.manifest.wiseReview.reasons.sense='  ';
+  f.approve();
+  const before=fs.readFileSync(f.options.articlesFile,'utf8');
+  await assert.rejects(publishExperiment(f.manifest,{...f.options,apply:true}),/WISE-AS/);
+  assert.equal(f.writes,0);assert.equal(f.requests,0);
+  assert.equal(fs.readFileSync(f.options.articlesFile,'utf8'),before);
+  assert.equal(fs.existsSync(path.join(f.root,'snapshots')),false);
+ }
+});
+test('WISE-AS proof is included in existing manifest hash and cannot reuse old Astra approval',async t=>{
+ const f=fixture(t);const before=manifestHash(f.manifest);
+ f.manifest.wiseReview.scores.sense=4;
+ assert.notEqual(manifestHash(f.manifest),before);
+ await assert.rejects(publishExperiment(f.manifest,{...f.options,apply:true}),/Astra approval/);
+ assert.equal(f.writes,0);assert.equal(f.requests,0);
+ f.approve();
+ assert.equal((await publishExperiment(f.manifest,f.options)).status,'dry_run');
+});
+
+test('legacy approved manifest remains GET/read-only inspectable without migrating approvals',async t=>{
+ const f=fixture(t);delete f.manifest.wiseReview;f.approve();
+ const before=JSON.stringify(f.manifest);const local=fs.readFileSync(f.options.articlesFile,'utf8');
+ assert.equal((await publishExperiment(f.manifest,f.options)).status,'dry_run');
+ assert.equal(JSON.stringify(f.manifest),before);assert.equal(f.writes,0);assert.equal(f.requests,0);
+ assert.equal(fs.readFileSync(f.options.articlesFile,'utf8'),local);
+ await assert.rejects(publishExperiment(f.manifest,{...f.options,apply:true}),/WISE-AS/);
+ assert.equal(f.writes,0);assert.equal(f.requests,0);
+});
+
+test('SEO WISE-AS manifest rejects fractional scores independently on every owner axis',async t=>{
+ for(const key of ['w','i','s','e','ai','sense']){
+  const f=fixture(t);f.manifest.wiseReview.scores[key]=3.5;f.approve();
+  const local=fs.readFileSync(f.options.articlesFile,'utf8');
+  await assert.rejects(publishExperiment(f.manifest,{...f.options,apply:true}),/WISE-AS/);
+  assert.equal(f.writes,0);assert.equal(f.requests,0);
+  assert.equal(fs.readFileSync(f.options.articlesFile,'utf8'),local);
+  assert.equal(fs.existsSync(path.join(f.root,'snapshots')),false);
+ }
 });

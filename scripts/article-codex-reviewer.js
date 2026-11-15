@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "fs";
+import { loadWisePolicy, validWiseScores, passesWise, wiseContentHash } from "../src/lib/wise-contract.mjs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Anthropic from "@anthropic-ai/sdk";
@@ -31,19 +32,12 @@ function parseArgs() {
 }
 
 function loadSkillDoc() {
-  try {
-    return fs.readFileSync(SKILL_PATH, "utf-8");
-  } catch {
-    return "";
-  }
+  return loadWisePolicy().text + "\n\n" + fs.readFileSync(SKILL_PATH, "utf-8");
 }
 
 function fallbackResult(content) {
-  return {
-    wise_scores: { w: 3, i: 3, s: 3, e: 3, ai: 3, sense: 3 },
-    issues: [{ criterion: "AI", severity: "minor", note: "review skipped" }],
-    revised_content: content,
-  };
+  return { passed: false, wise_scores: null, supervisor_scores: null, wisePolicy: null,
+    issues: [{ criterion: "WISE-AS", severity: "major", note: "review unavailable" }], revised_content: content };
 }
 
 async function reviewWithClaude(content, topicBrief) {
@@ -66,12 +60,14 @@ ${content}
 
 出力はJSONのみ。必ず以下の形式:
 {
-  "wise_scores": { "w": 1-5, "i": 1-5, "s": 1-5, "e": 1-5, "ai": 1-5, "sense": 1-5 },
+  "wise_scores": { "w": 1-4, "i": 1-4, "s": 1-4, "e": 1-4, "ai": 1-4, "sense": 1-4 },
+  "supervisor_scores": { "wise_w": 0-10, "wise_i": 0-10, "wise_s": 0-10, "wise_e": 0-10, "wise_ai": 0-10, "wise_sense": 0-10 },
   "issues": [{ "criterion": "W|I|S|E|AI|Sense", "severity": "major|minor", "note": "具体的な問題点" }],
   "revised_content": "修正済みMarkdown"
 }
 
 制約:
+- 六軸は原本の1–4点。Supervisor用の六フィールドは同じ意味を独立して0–10点で評価し、1–4点から換算しない
 - 問題が軽微なら最小修正
 - 問題がなければ原文をそのまま返す
 - 禁止フレーズがあれば必ず置換`;
@@ -130,8 +126,17 @@ async function main() {
 
   try {
     const reviewed = await reviewWithClaude(inputContent, topicBrief || {});
+    const keys = ["wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sense"];
+    if (!validWiseScores(reviewed.wise_scores) || !reviewed.supervisor_scores
+        || Object.keys(reviewed.supervisor_scores).length !== keys.length
+        || !keys.every(k => typeof reviewed.supervisor_scores[k] === "number" && Number.isFinite(reviewed.supervisor_scores[k]) && reviewed.supervisor_scores[k] >= 0 && reviewed.supervisor_scores[k] <= 10)) throw new Error("complete owner and supervisor scores required");
     const safe = {
-      wise_scores: reviewed.wise_scores || { w: 3, i: 3, s: 3, e: 3, ai: 3, sense: 3 },
+      passed: passesWise(reviewed.wise_scores) && Array.isArray(reviewed.issues) && !reviewed.issues.some(issue => issue.severity === "major"),
+      wiseReviewPassed: passesWise(reviewed.wise_scores) && Array.isArray(reviewed.issues) && !reviewed.issues.some(issue => issue.severity === "major"),
+      wisePolicy: loadWisePolicy().id,
+      wiseContentHash: wiseContentHash(reviewed.revised_content || inputContent),
+      wise_scores: reviewed.wise_scores,
+      supervisor_scores: reviewed.supervisor_scores,
       issues: Array.isArray(reviewed.issues) ? reviewed.issues : [],
       revised_content: reviewed.revised_content || inputContent,
     };

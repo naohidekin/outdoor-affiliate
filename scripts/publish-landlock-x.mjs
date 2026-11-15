@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {requireWiseReview} from "../src/lib/wise-contract.mjs";
 
 /**
  * snow-peak-landlock-x-review を発売後向けに微修正して公開する。
@@ -63,6 +64,7 @@ for (const [from, to] of REPLACEMENTS) {
 
 // 公開状態に
 const wasPublished = a.status === "published";
+requireWiseReview(a);
 a.status = "published";
 if (!a.publishedAt) a.publishedAt = now;
 a.updatedAt = now;

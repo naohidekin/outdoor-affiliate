@@ -1,3 +1,4 @@
+import { loadWisePolicy } from "./wise-contract.mjs";
 // @ts-nocheck
 /**
  * Viral Scout Agent — バイラル投稿の発見・分析・引用投稿/リプライ生成（モジュール）
@@ -524,7 +525,7 @@ async function generateContentWithProfiles(client, posts, accountProfiles) {
         messages: [
           {
             role: "user",
-            content: `${personaPreamble}
+            content: `${loadWisePolicy().text}\n未確認の本人経験・数字・医療的助言を加えない。\n${personaPreamble}
 
 ${patternBlock}## タスク
 以下のバイラル投稿に対して、(A) バズる引用投稿 と (B) バズるリプライ を作ってください。
@@ -628,7 +629,7 @@ async function editGeneratedContent(client, posts) {
 ## 修正方針
 - NG語があれば別の表現に置き換える
 - 200字超過なら削る（意味を変えない）
-- 具体性が低ければ「個人的には〜」「3年使って〜」型の体験談に変える
+- 具体性が低い場合も未確認の本人経験を作らず、確認済みの根拠の範囲で表現を見直す
 - 問題なければそのままでOK（changedをfalseにする）`;
 
   const results = [...posts];
@@ -658,7 +659,7 @@ async function editGeneratedContent(client, posts) {
         messages: [
           {
             role: "user",
-            content: `${editorPrompt}
+            content: `${loadWisePolicy().text}\n新しい事実・体験・結論を作らない。\n${editorPrompt}
 
 ## 草案
 ${draftsText}

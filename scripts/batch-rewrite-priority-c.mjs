@@ -4,6 +4,7 @@
  * WISE+Sense基準で短い記事を順次改善する
  */
 
+import { loadWisePolicy } from '../src/lib/wise-contract.mjs';
 import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -71,13 +72,9 @@ const PERSONA = `
 - 断言できることは断言する。「〜かもしれません」を多用しない
 - AIくさい表現を全て排除：「〜することができます」「〜において」「〜と言えるでしょう」「〜解説していきましょう」「〜見ていきましょう」など全て口語に置き換え
 
-【記事に必ず入れるもの（WISE+Sense）】
-W（Warm/体温）：キャンプでの具体的な失敗体験や発見を冒頭か途中に入れる。時・場所・行動が伝わること
-I（Insight/独自視点）：医師の目線か10年ギア選びをしてきた知見を1箇所以上入れる
-S（Sincere/切実さ）：具体的な数値・製品名・比較・失敗談で説得力を持たせる
-E（Empathy/共感）：ファミリーキャンパーが「あるある」と思える内容を含める
-AI（AI臭さなし）：自然な人間の文章にする
-Sense（半歩先）：「他のキャンプブログと同じことを言わない」角度を入れる
+【WISE-AS オーナー原本】
+${loadWisePolicy().text}
+未確認の本人経験・数値・家族の出来事を作らない。
 
 【NGワード】
 - 絶対/最強/神ギア/間違いなし（→「〜なら十分」「〜が一番落ち着く」に置き換え）

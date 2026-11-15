@@ -455,6 +455,10 @@ async function weeklyPipeline(dryRun) {
               latest[idx].content = codexResult.revised_content;
             }
             latest[idx].wise_scores = codexResult.wise_scores || null;
+            latest[idx].supervisor_scores = codexResult.supervisor_scores || null;
+            latest[idx].wisePolicy = codexResult.wisePolicy || null;
+            latest[idx].wiseReviewPassed = codexResult.wiseReviewPassed === true;
+            latest[idx].wiseContentHash = codexResult.wiseContentHash || null;
             latest[idx].updatedAt = jstIsoString();
             writeJson("articles.json", latest);
           }
@@ -483,6 +487,10 @@ async function weeklyPipeline(dryRun) {
                 latest[idx].content = codexResultCycle2.revised_content;
               }
               latest[idx].wise_scores = codexResultCycle2.wise_scores || null;
+              latest[idx].supervisor_scores = codexResultCycle2.supervisor_scores || null;
+              latest[idx].wisePolicy = codexResultCycle2.wisePolicy || null;
+              latest[idx].wiseReviewPassed = codexResultCycle2.wiseReviewPassed === true;
+              latest[idx].wiseContentHash = codexResultCycle2.wiseContentHash || null;
               latest[idx].updatedAt = jstIsoString();
               writeJson("articles.json", latest);
             }

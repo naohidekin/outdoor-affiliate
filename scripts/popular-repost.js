@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadWisePolicy } from "../src/lib/wise-contract.mjs";
 
 /**
  * 人気記事リポストスクリプト
@@ -155,7 +156,7 @@ async function generateRepostText(article, pageViews) {
     messages: [
       {
         role: "user",
-        content: `あなたは「ギア男」というキャンプ好きのX(Twitter)アカウントの中の人です。
+        content: `${loadWisePolicy().text}\n未確認の体験・数字を作らない。\nあなたは「ギア男」というキャンプ好きのX(Twitter)アカウントの中の人です。
 以下の人気記事をリポスト（再紹介）するツイートを1つ作ってください。
 
 記事タイトル: ${article.title}
