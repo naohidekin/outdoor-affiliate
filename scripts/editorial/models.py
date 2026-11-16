@@ -57,7 +57,9 @@ REVIEW_SCHEMA = {
     "required": ["passed", "score", *CATEGORIES, "evidence", "issues", "observations", "criteria", "wiseScores"],
     "properties": {"wiseScores": {"type": "object", "additionalProperties": False,
                        "required": ["w", "i", "s", "e", "ai", "sense"],
-                       "properties": {k: {"type": "number", "minimum": 1, "maximum": 4}
+                       # Claude's wire schema cannot express numeric bounds.
+                       # valid_scores()/passes() enforce the range and floors locally.
+                       "properties": {k: {"type": "number"}
                                       for k in ("w", "i", "s", "e", "ai", "sense")}},
                    "passed": {"type": "boolean"}, "score": {"type": "number"},
                    **{field: {"type": "boolean"} for field in CATEGORIES},
@@ -420,6 +422,13 @@ class Models:
             "Distinguish manufacturer claims from independently verified performance and preserve their qualifications. "
             "This excerpt does not verify catalog description, price, rating or availability. "
             "Never infer winter warmth, safe cold temperatures or survival suitability from weight, fill power or layer class. "
+            "Unless a supplied excerpt literally supports the claim, do not assert that a thin shell cannot stop wind, "
+            "that average weight excludes size or individual variation, that storage dimensions assume ideal packing, "
+            "that the garment suits indoor or high-activity use, or that 1000FP guarantees warmth. "
+            "Missing evidence means 今回の根拠では未確認, not that the manufacturer never states it anywhere "
+            "or publishes no temperature rating globally. Do not add scientific definitions of denier or fill power "
+            "unless supplied by the sources. Explain purchase decisions using documented weight, storage, pockets "
+            "and variant choices without inferring performance or safety, including in FAQs and metadata. "
             "Do not expose internal field names or values such as apparelClass or optionState in reader-facing prose; "
             "translate only supported product/variant distinctions into ordinary language. "
             "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "

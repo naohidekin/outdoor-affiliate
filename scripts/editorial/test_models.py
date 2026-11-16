@@ -9,7 +9,8 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
-                    CRITERIA_FIELDS, SOCIAL_SCHEMA)
+                    CRITERIA_FIELDS, SOCIAL_SCHEMA, SOCIAL_REVIEW_SCHEMA)
+from wise_contract import load_policy
 from model_inputs import restore_model_input
 from nonproduct_contract_fixture import fixture as nonproduct_fixture
 
@@ -312,6 +313,15 @@ class ModelTests(unittest.TestCase):
                 'bounded public primary excerpts, not verified personal experience',
                 'Distinguish manufacturer claims', 'safe cold temperatures or survival suitability',
                 'does not verify catalog description, price, rating or availability',
+                'Unless a supplied excerpt literally supports the claim',
+                'a thin shell cannot stop wind', 'average weight excludes size or individual variation',
+                'storage dimensions assume ideal packing', 'indoor or high-activity use',
+                '1000FP guarantees warmth', 'Missing evidence means 今回の根拠では未確認',
+                'not that the manufacturer never states it anywhere',
+                'publishes no temperature rating globally',
+                'Do not add scientific definitions of denier or fill power unless supplied by the sources',
+                'documented weight, storage, pockets and variant choices without inferring performance or safety',
+                'including in FAQs and metadata',
                 'Do not expose internal field names or values such as apparelClass or optionState',
                 'without filler, repeated summaries, new facts or invented examples',
                 '2-3 distinct internal Markdown links /articles/slug across the WHOLE article.content',
@@ -516,6 +526,51 @@ class ModelTests(unittest.TestCase):
         blocked = Models(ENV, Fake(response(REVIEW))).review(contract['bundle'], broken)
         self.assertFalse(blocked['passed'])
         self.assertIn('Missing independent affiliate evidence', blocked['issues'])
+
+    def test_claude_review_wire_omits_unsupported_bounds_but_local_wise_gate_remains_strict(self):
+        policy = load_policy()
+        scores = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)
+        for kind, schema in (('article', REVIEW_SCHEMA), ('social', SOCIAL_REVIEW_SCHEMA)):
+            checks = dict(wisePolicy=policy, reviewKind=kind, evidence=FLAGS)
+            if kind == 'article':
+                checks['editorialRules'] = policy['text']
+            value = dict(REVIEW, wiseScores=scores, criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
+                         observations=[], evidence={'summary': 'Synthetic reviewed claims'})
+            fake = Fake(response(value))
+            self.assertTrue(Models(ENV, fake).review(bundle(), checks)['passed'])
+            wire = fake.calls[0][2]['output_config']['format']['schema']
+            self.assertEqual(schema, wire)
+            self.assertEqual({axis: {'type': 'number'} for axis in scores},
+                             wire['properties']['wiseScores']['properties'])
+            for axis in scores:
+                for bad in (0, 5, True, '3'):
+                    with self.subTest(kind=kind, axis=axis, value=bad):
+                        fake = Fake(response(dict(value, wiseScores=dict(scores, **{axis: bad}))))
+                        with self.assertRaisesRegex(ModelError, 'Complete owner WISE-AS six scores required'):
+                            Models(ENV, fake).review(bundle(), checks)
+                        self.assertEqual(1, len(fake.calls))
+                with self.subTest(kind=kind, floor=axis):
+                    low = dict(value, wiseScores=dict(scores, **{axis: scores[axis] - 1}))
+                    reviewed = Models(ENV, Fake(response(low))).review(bundle(), checks)
+                    self.assertFalse(reviewed['passed'])
+                    self.assertIn('Owner WISE-AS floor failed', reviewed['issues'])
+
+    def test_review_http400_schema_failure_is_safe_terminal_and_charged_once(self):
+        body = b'{"error":{"type":"invalid_request_error","message":"schema minimum SECRET BODY"}}'
+        failure = HTTPError('https://provider.invalid', 400, 'schema SECRET BODY', {}, io.BytesIO(body))
+        fake, budget = Fake(failure, response(REVIEW)), Budget()
+        model = Models(ENV, fake, budget=budget)
+        with patch('models.time.sleep') as sleep:
+            with self.assertRaises(ModelError) as caught:
+                model.review(bundle(), FLAGS)
+            sleep.assert_not_called()
+        self.assertEqual('Provider request failed (HTTP 400)', str(caught.exception))
+        self.assertEqual(400, caught.exception.status)
+        self.assertIsNone(caught.exception.__context__)
+        self.assertEqual(1, len(fake.calls))
+        self.assertEqual(1, len(budget.holds))
+        self.assertEqual([('hold-1', None, 'failed')], budget.settlements)
+        self.assertEqual([], model.usage)
 
     def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
         checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
