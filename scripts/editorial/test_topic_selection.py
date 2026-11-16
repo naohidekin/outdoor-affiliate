@@ -145,6 +145,16 @@ class TopicSelectionTests(unittest.TestCase):
             validate_proposals([proposal('long-title', 'テント' * 30)],
                                catalog_ids=set(), category_ids={'camp-howto'})
 
+    def test_mixed_validator_preserves_legacy_unverified_firsthand_title_guard(self):
+        banned = ('実測', '実証', '検証済み', '実体験', '愛用', '使って', '使った',
+                  '使用歴', 'tested', 'hands.on')
+        for index, term in enumerate(banned):
+            with self.subTest(term=term), self.assertRaisesRegex(ValueError, 'proposal_contract'):
+                validate_proposals([proposal(
+                    f'firsthand-{index}', 'テントを乾燥して保管するには？',
+                    categoryId='tent', title=term + 'テント乾燥')],
+                    catalog_ids=set(), category_ids={'tent'})
+
     def test_seasonal_problem_with_verified_products_keeps_product_route(self):
         item = proposal('rain-setup', '雨の日の設営で必要な道具は？', topicType='seasonal_problem',
                         productIds=['verified-tarp'], needsStatus='seasonal_hypothesis')

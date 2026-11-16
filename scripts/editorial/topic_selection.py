@@ -30,6 +30,9 @@ SOURCE_KEYWORDS = {
 HIGH_RISK = re.compile(
     r"低体温|凍傷|雪山|登山安全|サバイバル|救命|応急処置|医療|治療|診断|服薬|一酸化炭素|死亡|極寒"
 )
+UNVERIFIED_FIRSTHAND = re.compile(
+    r"実測|実証|検証済み|実体験|愛用|使って|使った|使用歴|tested|hands.on", re.I
+)
 CLAIM_SCOPE_PATTERNS = {
     "tent-care": re.compile(r"テント|幕|乾燥|保管|汚れ|撤収"),
     "camp-care": re.compile(r"テント|幕|寝袋|シュラフ|乾燥|保管|汚れ|撤収"),
@@ -315,6 +318,7 @@ def validate_proposals(raw, *, catalog_ids, existing_ids=(), category_ids=None):
                 or not isinstance(proposal["priority"], int) or not 1 <= proposal["priority"] <= 100
                 or not re.fullmatch(r"[a-z0-9][a-z0-9-]{2,79}", str(proposal["slug"]))
                 or not _clean_text(proposal["title"], 80)
+                or UNVERIFIED_FIRSTHAND.search(proposal["title"])
                 or any(not _clean_text(proposal[key], 500) for key in
                        ("categoryId", "query", "readerQuestion", "overlapRationale", "selectionReason"))
                 or (category_ids is not None and proposal["categoryId"] not in set(category_ids))
