@@ -126,6 +126,12 @@ python3 scripts/editorial/operations.py --state-root /absolute/path/to/state --c
 既存のsource/画像/購入先/表示/Gemini/Claude審査と同じ記事・週・batch予算を通す。
 Slack送達は承認ではなく、公開とSNS予約はそれぞれ本人の対象版承認を待つ。
 
+11/17のプラズマ1000には、本人が今回だけ本文修正→Gemini校正→Claude審査を追加許可した。
+`supplemental_review_recovery.prepare/execute`は対象job・旧artifact・schema拒否記録・許可参照・
+manifestを固定し、新namespaceで各工程1試行だけ実行する。旧試行数・失敗・利用量・総予算を
+保持し、未公開draft保存とSlack配信だけを許可する。中断・失敗・送達不明は照合待ちで止まり、
+他の記事や通常自動化の追加リトライ権限にはしない。
+
 ```bash
 python3 scripts/editorial/stage_journal.py /absolute/path/to/ledger.sqlite3
 python3 scripts/editorial/stage_journal.py /absolute/path/to/ledger.sqlite3 --job-id ARTICLE_ID
