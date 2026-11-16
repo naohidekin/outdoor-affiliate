@@ -13,6 +13,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { templateHashes, captureInheritedAdvice, assertTemplateFiles } from './template-context.mjs';
+import { isStrictNonproductBundle, validateNonproductBundle } from './publish.mjs';
 
 export function childEnvironment(home, inherited = process.env) {
   // An allowlist, not a blacklist: no Supabase, NEXT_PUBLIC_*, NODE_OPTIONS,
@@ -36,6 +37,7 @@ export function validateInput(input) {
   if (ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length)
     throw new Error('product IDs must be unique nonempty strings');
   for (const id of a.productIds) if (!ids.includes(id)) throw new Error(`missing product: ${id}`);
+  if (a.productIds.length === 0 || bundle.products.length === 0) validateNonproductBundle(bundle);
   // Missing custom-tag IDs otherwise disappear silently in ArticleContent.
   for (const match of a.content.matchAll(/\{\{(product|comparison|ranking|price):([^}]+)\}\}/g))
     for (const id of match[2].split(',').map(x => x.trim()))
@@ -114,6 +116,9 @@ async function copyTree(source, target) {
 
 export async function prepareApp(input, app, modules) {
   const { repo, bundle } = input;
+  const zeroProductRoute = bundle.article?.productIds?.length === 0 || bundle.products?.length === 0;
+  if (zeroProductRoute) validateNonproductBundle(bundle);
+  const nonproductProof = zeroProductRoute ? bundle.images[0] : null;
   for (const dir of ['components', 'lib']) await copyTree(path.join(repo, 'src', dir), path.join(app, 'src', dir));
   await copyTree(path.join(repo, 'src/app/articles'), path.join(app, 'src/app/articles'));
   // Only page sources: no production API routes, middleware, instrumentation,
@@ -139,12 +144,19 @@ export default function Layout({children}:{children:React.ReactNode}) { return <
     if (!image.path) continue;
     const ext = path.extname(image.path).toLowerCase();
     if (!['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.svg'].includes(ext)) throw new Error('unsupported local image');
-    const name = `editorial-candidate-${i}${ext}`;
+    const name = nonproductProof ? `editorial-proof-${nonproductProof.sha256}.png` : `editorial-candidate-${i}${ext}`;
+    if (nonproductProof) {
+      if (image !== nonproductProof || ext !== '.png') throw new Error('nonproduct image replacement rejected');
+      const bytes = await fs.readFile(path.resolve(image.path));
+      const detected = bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ? 'image/png' : null;
+      if (image.sha256 !== imageHash(bytes) || image.size !== bytes.length || image.contentType !== detected)
+        throw new Error('local image proof mismatch');
+    }
     await fs.copyFile(path.resolve(image.path), path.join(app, 'public', name));
     const url = `/${name}`;
     const product = products.find(p => p.id === image.productId);
     if (product) product.imageUrl = url;
-    if (image.role === 'eyecatch' || image.path === article.eyecatch) article.eyecatch = url;
+    if (nonproductProof ? image === nonproductProof : image.role === 'eyecatch' || image.path === article.eyecatch) article.eyecatch = url;
     if (image.url) article.content = article.content.split(image.url).join(url);
   }
   for (const [file, value] of Object.entries({ articles: [article], products, categories }))
@@ -317,6 +329,23 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       shortcode: /\{\{[^}]+\}\}/.test(document.body.innerText),
       overflow: document.documentElement.scrollWidth > innerWidth + 1,
       brokenImages: [...document.images].filter(i => i.getClientRects().length && (!i.complete || i.naturalWidth <= 0)).map(i => i.currentSrc || i.src),
+      paragraphCount: [...document.querySelectorAll('main article .prose p, main article .article-body p')]
+        .filter(p => p.getClientRects().length && p.innerText.trim()).length,
+      internalLinks: [...document.querySelectorAll('main article a[href]')].filter(a => a.getClientRects().length).map(a => {
+        const u = new URL(a.getAttribute('href'), location.href);
+        return u.origin === location.origin ? u.pathname + u.search + u.hash : null;
+      }).filter(Boolean),
+      sponsoredCtaCount: [...document.querySelectorAll('main article a[href]')].filter(a => {
+        const rel = (a.getAttribute('rel') || '').split(/\s+/);
+        try {
+          const u = new URL(a.getAttribute('href'), location.href), h = u.hostname.toLowerCase();
+          return rel.includes('sponsored') || h === 'amazon.co.jp' || h.endsWith('.amazon.co.jp') || h === 'amzn.to' || h === 'amzn.asia' ||
+            h === 'rakuten.co.jp' || h.endsWith('.rakuten.co.jp') || h === 'a.r10.to' || h === 'shopping.yahoo.co.jp' ||
+            h === 'ck.jp.ap.valuecommerce.com' || /(?:^|[.-])(affiliate|tracking|track|click)(?:[.-]|$)/i.test(h) ||
+            /\/(?:affiliate|tracking|track-click|click)(?:\/|$)/i.test(u.pathname);
+        } catch { return true; }
+      }).length,
+      articleAnchors: [...document.querySelectorAll('main article a[href]')].filter(a => a.getClientRects().length).map(a => a.href),
     }));
     const visibleFaqSegments = await page.evaluate(() => {
       const segments = [];
@@ -343,7 +372,7 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
     if (observations.h1 !== 1) result.failures.push(`${name}: expected one H1, got ${observations.h1}`);
     if (observations.shortcode) result.failures.push(`${name}: unresolved shortcode`);
     if (observations.overflow) result.failures.push(`${name}: horizontal overflow`);
-    for (const _src of observations.brokenImages) result.failures.push(`${name}: image failed`);
+    if (observations.brokenImages.length) result.failures.push(...observations.brokenImages.map(() => `${name}: image failed`));
     result.failures.push(...verifyFaqVisibility(input.bundle.article.faqs, visibleFaqSegments, name));
     await page.evaluate(() => window.scrollTo(0, 0));
     const screenshot = path.join(input.outputDir, `${name}.png`);
@@ -379,16 +408,44 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       for (const popup of context.pages()) if (popup !== page) await popup.close();
     }
     for (const e of expected) if (!seen.has(`${e.productId}/${e.store}`)) result.failures.push(`${name}: missing verified merchant CTA: ${e.productId}/${e.store}`);
+    if (isStrictNonproductBundle(input.bundle)) {
+      const expectedInternal = [...input.bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\((\/[^\s)]+)(?:\s+["'][^"']*["'])?\)/g)].map(match => match[1]);
+      const imageSources = await page.locator('main article img').evaluateAll(images => images.filter(i => i.getClientRects().length && i.complete && i.naturalWidth > 0)
+        .map(i => i.currentSrc || i.src));
+      const proof = input.bundle.images.find(image => input.bundle.article.generationMeta.editorialContext.imageProofIds.includes(image.id));
+      const normalizeImage = source => {
+        const url = new URL(source, origin);
+        if (url.origin === origin && url.pathname === '/_next/image') return new URL(url.searchParams.get('url'), origin).href;
+        return url.href;
+      };
+      const stagedProof = new URL(`/editorial-proof-${proof.sha256}.png`, origin).href;
+      const ownedEyecatchRendered = imageSources.map(normalizeImage).some(source => source === proof.url || source === stagedProof);
+      const allowedReferences = new Set(input.bundle.references.map(reference => reference.url));
+      const allAnchorsVerified = observations.articleAnchors.every(source => {
+        const url = new URL(source, origin);
+        return url.origin === origin || allowedReferences.has(url.href);
+      });
+      result.viewportEvidence[name] = { paragraphCount: observations.paragraphCount,
+        internalLinks: [...new Set(observations.internalLinks)].sort(), ownedEyecatchRendered, allAnchorsVerified };
+      result.sponsoredCtaCount[name] = observations.sponsoredCtaCount;
+      if (observations.paragraphCount < 1) result.failures.push(`${name}: visible paragraph missing`);
+      if (!expectedInternal.every(link => observations.internalLinks.includes(link))) result.failures.push(`${name}: internal link missing`);
+      if (!ownedEyecatchRendered) result.failures.push(`${name}: owned eyecatch not rendered`);
+      if (observations.sponsoredCtaCount !== 0) result.failures.push(`${name}: commercial link present on nonproduct route`);
+      if (!allAnchorsVerified) result.failures.push(`${name}: unapproved anchor present`);
+    }
     result.clicksVerified[name] = checked;
     result.failures.push(...errors.map(e => `${name}: browser error: ${e}`));
   } finally { await context.close(); }
 }
 
 export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {}) {
-  const result = { passed: false, desktop: null, mobile: null, failures: [], clicksVerified: { desktop: [], mobile: [] }, status: 'failed', imageReadback: [] };
+  const result = { passed: false, desktop: null, mobile: null, failures: [], clicksVerified: { desktop: [], mobile: [] }, status: 'failed',
+    imageReadback: [], sponsoredCtaCount: { desktop: 0, mobile: 0 }, viewportEvidence: {}, allAnchorsVerified: false };
   let temp, server, browser;
   try {
     const input = validateInput(raw);
+    if (isStrictNonproductBundle(input.bundle)) result.commercialRoute = { status: 'not_applicable', measured: false, reason: 'verified_nonproduct_article' };
     const major = Number(process.versions.node.split('.')[0]);
     if (![20, 24].includes(major)) { result.status = 'blocked'; throw new Error('Node 20 or 24 required'); }
     const root = path.resolve(input.dependenciesRoot || input.repo);
@@ -432,6 +489,8 @@ export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {
       if (!result.inheritedPresentationContext) throw new Error('inherited_advice_preview_missing');
       assertTemplateFiles(result.inheritedPresentationContext, await templateHashes(input.repo));
     }
+    if (isStrictNonproductBundle(input.bundle)) result.allAnchorsVerified = ['desktop', 'mobile']
+      .every(name => result.viewportEvidence[name]?.allAnchorsVerified === true);
     result.passed = result.failures.length === 0 && !!result.desktop && !!result.mobile;
     result.status = result.passed ? 'passed' : 'failed';
   } catch (e) { result.failures.push(e.message); }

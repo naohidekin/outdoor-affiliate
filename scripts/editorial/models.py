@@ -360,9 +360,46 @@ class Models:
                 queries.add(normalized)
         return result
 
+    def research_mixed(self, context):
+        """One bounded research call; local code decides overlap and selection."""
+        from topic_selection import validate_proposals
+        result, _ = self._call(
+            "Propose between one and nine regular-period Camp Gear Lab topics, preferably up to three for each "
+            "topicType when evidence supports them; this is soft coverage, never a quota. This is proposal generation, "
+            "not final selection. Use only supplied evidence IDs and never invent search volume, trend, clicks, "
+            "products, ownership, experience or safety claims. GSC/GA4 are own-site aggregates, not market demand. "
+            "A gsc-change record is only a matched own-site period comparison and never Google Trends. Calendar month "
+            "is not evidence. topicType must be product, seasonal_problem or knowhow. product topics require existing "
+            "productIds; seasonal_problem/knowhow may use verified existing productIds only when needed, otherwise []. "
+            "For every proposal return readerQuestion, intent, "
+            "a title of at most 80 characters, 3-5 concise outline headings of at most 40 characters each, "
+            "ordinal priority 1-100, "
+            "overlapRationale, selectionReason and exact sourceIds. "
+            "Use only a supplied categoryId. Set needsStatus=measured_change for seasonal_problem only with an exact "
+            "gsc-change evidence ID; otherwise set seasonal_hypothesis. All other topic types use not_applicable. "
+            "Do not claim semantic uniqueness. Compare reader question and outline with bounded existing summaries. "
+            "Set proposedAction=new with overlapArticleIds:[] only when distinct; existing_update with known article IDs "
+            "for a semantic overlap; hold when ambiguous. Exclude medical, survival, extreme-cold, "
+            "emergency and other high-stakes advice. Return ONLY {proposals:[...]}. Each proposal has exactly "
+            "slug,title,categoryId,productIds,topicType,query,readerQuestion,intent,outline,priority,"
+            "overlapRationale,selectionReason,sourceIds,proposedAction,overlapArticleIds,needsStatus.",
+            {"context": context}, "claude-sonnet-4-6")
+        if not isinstance(result, dict) or set(result) != {"proposals"}:
+            raise ModelError("Invalid mixed research response")
+        catalog_ids = {item["id"] for item in context.get("catalog", [])
+                       if isinstance(item, dict) and _text(item.get("id"))}
+        existing_ids = {item["id"] for item in context.get("existingArticles", [])
+                        if isinstance(item, dict) and _text(item.get("id"))}
+        category_ids = {item["id"] for item in context.get("categories", [])
+                        if isinstance(item, dict) and _text(item.get("id"))}
+        return {"proposals": validate_proposals(result["proposals"], catalog_ids=catalog_ids,
+                                                  existing_ids=existing_ids,
+                                                  category_ids=category_ids)}
+
     def draft(self, theme, context):
         _require(context, ("catalog", "references"))
-        if not isinstance(context["catalog"], list) or not context["catalog"]:
+        nonproduct = theme.get("productIds") == [] and isinstance(context.get("commercialRoute"), dict)
+        if not isinstance(context["catalog"], list) or (not context["catalog"] and not nonproduct):
             raise ModelError("Verified catalog required")
         if not any(context.get(k) for k in ("CLAUDE", "claude", "template", "templates")) or not any(
                 context.get(k) for k in ("SKILL", "skill", "template", "templates")):
@@ -408,8 +445,11 @@ class Models:
             "If context.apparelApprovalDisclosure is present, include every supplied requiredExpressions string "
             "verbatim in article.content and brief.requiredExpressions/protected; do not merge fixed and selectable "
             "merchant variants or claim they share a color or size. "
-            "Include {{product:exact-ID}} for every selected product so verified purchase cards can render. "
-            "Ranking/comparison must also include concrete {{comparison:exact-product-ids}} tags. Use ONLY supplied verified catalog/specifications/references and exact product IDs. "
+            "For product articles include {{product:exact-ID}} for every selected product so verified purchase cards can render. "
+            "Product ranking/comparison must also include concrete {{comparison:exact-product-ids}} tags. "
+            "For a verified nonproduct route, productIds must stay [] and no product/comparison/ranking/price shortcode, "
+            "merchant recommendation, affiliate claim, real-product image claim, medical or survival advice may be added. "
+            "Use ONLY supplied verified catalog/specifications/references and exact product IDs. "
             "Use supplied CLAUDE/SKILL article template, no body H1. "
             "Never invent ownership, experiences, prices, reviews, medical advice or claims. Without verified experiences "
             "explicitly label the article as research. No synthetic missing data. Resolve editorial purpose, reader, "
@@ -470,7 +510,9 @@ class Models:
         selected_ids = theme.get("productIds") if isinstance(theme, dict) else None
         if selected_ids is None:
             selected_ids = [p["id"] for p in catalog]
-        if (not isinstance(selected_ids, list) or not selected_ids or
+        nonproduct = (selected_ids == [] and isinstance(context.get("commercialRoute"), dict)
+                      and context["commercialRoute"].get("status") == "not_applicable")
+        if (not isinstance(selected_ids, list) or (not selected_ids and not nonproduct) or
                 any(not _text(pid) for pid in selected_ids) or len(selected_ids) != len(set(selected_ids))):
             raise ModelError("Invalid selected product IDs")
         selected = [copy.deepcopy(next((p for p in catalog if p["id"] == pid), None)) for pid in selected_ids]
@@ -479,8 +521,9 @@ class Models:
         if not isinstance(context["references"], list) or not isinstance(context.get("images", []), list):
             raise ModelError("Invalid supplied evidence lists")
         result.update(products=selected, references=copy.deepcopy(context["references"]),
-                      images=copy.deepcopy([image for image in context.get("images", [])
-                                            if isinstance(image, dict) and image.get("productId") in selected_ids]))
+                      images=copy.deepcopy(context.get("images", []) if nonproduct else
+                          [image for image in context.get("images", [])
+                           if isinstance(image, dict) and image.get("productId") in selected_ids]))
         if (not _text(result["article"]["content"]) or not isinstance(result["article"]["productIds"], list)
                 or any(not _text(pid) for pid in result["article"]["productIds"])):
             raise ModelError("Invalid article")
@@ -519,7 +562,7 @@ class Models:
         internal = re.findall(r"(?<!!)\[[^\]\n]+\]\((/articles/[^)\s]+)\)", article["content"])
         if not 2 <= len(set(internal)) <= 3:
             raise ModelError("Two to three distinct internal article links required")
-        if format_name in ("ranking", "comparison") and not re.search(r"\{\{comparison:[^}]+\}\}", article["content"]):
+        if not nonproduct and format_name in ("ranking", "comparison") and not re.search(r"\{\{comparison:[^}]+\}\}", article["content"]):
             raise ModelError("Concrete product comparison component required")
         for field in ("products", "references", "images"):
             if not isinstance(result[field], list):
@@ -536,13 +579,13 @@ class Models:
         if any(ref not in context["references"] for ref in result["references"]):
             raise ModelError("Unverified reference")
         for image in result["images"]:
-            _require(image, ("productId", "url"))
+            _require(image, (("url",) if nonproduct else ("productId", "url")))
             if "images" in context and not any(isinstance(known, dict) and
                     all(k in known and known[k] == v for k, v in image.items()) for known in context["images"]):
                 raise ModelError("Modified or invented image evidence")
             if "images" not in context and image.get("verified") is True:
                 raise ModelError("Independent image verification required")
-            if not any(p["id"] == image["productId"] and p.get("imageUrl") == image["url"] for p in selected):
+            if not nonproduct and not any(p["id"] == image["productId"] and p.get("imageUrl") == image["url"] for p in selected):
                 raise ModelError("Unverified product image")
         self._safe_public(result)
         if check_length and not lower <= len(article["content"]) <= upper:
@@ -643,6 +686,10 @@ class Models:
             "When bundle.proposal is present, review that SNS proposal, not the source article as a new draft. "
             "Use checks.publicationReadback for publication status; historical source.article.status is not current. "
             "For images and render, audit consistency of the supplied independent verification records. "
+            "For a strictly validated nonproduct bundle, checks.evidence.affiliate is a typed not-applicable "
+            "record with measured=false. Treat affiliate=true in this review schema only as confirmation that "
+            "the noncommercial applicability contract is valid and no commerce route exists; it is never a "
+            "merchant-link measurement or affiliate PASS. "
             "Their flags may pass when those records support them; lack of your own browser is not itself failure. "
             "For SNS, render means verified platform format and length, not re-rendering the source article. "
             "Missing or contradictory independent evidence must still fail; never replace it with model opinion. "
@@ -678,7 +725,15 @@ class Models:
             if not passes(result['wiseScores']):
                 result['issues'].append('Owner WISE-AS floor failed')
         supplied = supplied if isinstance(supplied, dict) else {}
-        missing = [k for k in CATEGORIES if supplied.get(k) is not True]
+        affiliate_na = False
+        if isinstance(supplied.get('affiliate'), dict):
+            try:
+                from topic_selection import nonproduct_affiliate_review
+                affiliate_na = supplied['affiliate'] == nonproduct_affiliate_review(bundle)
+            except (ValueError, TypeError, KeyError):
+                affiliate_na = False
+        missing = [k for k in CATEGORIES
+                   if supplied.get(k) is not True and not (k == 'affiliate' and affiliate_na)]
         for field in missing:
             result[field] = False
             result["issues"].append("Missing independent %s evidence" % field)

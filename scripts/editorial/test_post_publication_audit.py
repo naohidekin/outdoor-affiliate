@@ -10,14 +10,17 @@ import time
 from pathlib import Path
 import unittest
 import zlib
+import base64
 from unittest.mock import patch
 
 from catalog import Catalog
 from ledger import fingerprint
-from post_publication_audit import PostPublicationAudit, _merchant_identity, _audit_model
+from post_publication_audit import (PostPublicationAudit, _audit_model, _merchant_identity,
+                                    _result, _validated_browser_result)
 from revisions import validated_context
 from test_inherited_advice import context as inherited_context
 from test_revision_workflow import baseline, spec
+from nonproduct_contract_fixture import fixture as nonproduct_contract_fixture
 
 
 SITE = 'https://camp-gear-lab.com/articles/stove'
@@ -224,7 +227,7 @@ class AuditTests(unittest.TestCase):
         clock = [0]
         job['bundle']['images'][0]['sha256'] = 'a' * 64
         audit = PostPublicationAudit({'repo': '/unused'}, ENV, catalog=FakeCatalog(html))
-        def browser(payload):
+        def browser(payload, **_kwargs):
             clock[0] = 151
             return {'checks': [{'name': n, 'status': 'passed', 'reason': 'render_verified'}
                                for n in ('desktop', 'mobile')]}
@@ -253,12 +256,94 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result['issues'], [])
         self.assertNotIn('do-not-output', json.dumps(result))
 
+    def test_nonproduct_audit_reports_commerce_not_applicable_without_merchant_pass(self):
+        generated = nonproduct_contract_fixture()
+        bundle = generated['bundle']
+        data = base64.b64decode(generated['imageDataBase64'])
+        content = bundle['article']['content']
+        digest = hashlib.sha256(content.encode()).hexdigest()
+        slug = bundle['article']['slug']
+        url = 'https://camp-gear-lab.com/articles/' + slug
+        html = (f'<html><head></head><body><main><article data-review-content-sha256="{digest}">'
+                f'<h1>{bundle["article"]["title"]}</h1><div class="article-body">fixture</div>'
+                '</article></main></body></html>')
+        class NonproductCatalog:
+            def request(self, target, *args, **kwargs):
+                if target == url:
+                    return {'url': url, 'status': 200, 'headers': {'content-type': 'text/html'},
+                            'body': html.encode()}
+                return {'url': target, 'status': 200, 'headers': {'content-type': 'image/png'},
+                        'body': data}
+        revision = fingerprint(bundle)
+        job = {'id': bundle['article']['id'], 'stage': 'published', 'bundle': bundle,
+               'revision': revision, 'publication': {'url': url, 'contentHash': digest,
+               'verified': True, 'revision': revision, 'readback': {'verified': True,
+               'fingerprint': revision}}}
+        audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
+                                     catalog=NonproductCatalog())
+        payloads = []
+        def browser(payload, **_kwargs):
+            payloads.append(payload)
+            return {'checks': [
+                {'name': 'desktop.merchant', 'status': 'not_applicable',
+                 'reason': 'verified_nonproduct_article'},
+                {'name': 'desktop', 'status': 'passed', 'reason': 'viewport_verified'},
+                {'name': 'mobile.merchant', 'status': 'not_applicable',
+                 'reason': 'verified_nonproduct_article'},
+                {'name': 'mobile', 'status': 'passed', 'reason': 'viewport_verified'}],
+                'commercialRoute': {'status': 'not_applicable', 'measured': False,
+                                    'reason': 'verified_nonproduct_article'}}
+        with patch.object(audit, '_browser', side_effect=browser):
+            result = audit.check(job)
+        applicability = next(c for c in result['checks'] if c['name'] == 'commercial_applicability')
+        self.assertEqual('nonproduct_commerce_not_applicable_not_measured', applicability['reason'])
+        self.assertFalse(any(c['name'].startswith('destination.') for c in result['checks']))
+        self.assertTrue(result['passed'], result)
+        self.assertEqual(bundle['references'], payloads[0]['bundle']['references'])
+        self.assertEqual(bundle['commercialRoute'], payloads[0]['bundle']['commercialRoute'])
+
+    def test_python_fixture_actual_js_audit_response_has_only_strict_merchant_na(self):
+        generated = nonproduct_contract_fixture()
+        bundle = generated['bundle']
+        digest = hashlib.sha256(bundle['article']['content'].encode()).hexdigest()
+        module = (Path(__file__).with_name('post-publication-audit.mjs')).as_uri()
+        script = f"""
+import {{ auditPublicPage }} from {json.dumps(module)};
+import {{ chromium }} from 'playwright';
+const chunks = [];
+for await (const chunk of process.stdin) chunks.push(chunk);
+const input = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+const browser = await chromium.launch({{ headless: true }});
+try {{
+  const result = await auditPublicPage(input.payload, {{ browser,
+    fetcher: async url => ({{ body: Buffer.from(input.imageDataBase64, 'base64'),
+      contentType: 'image/png', url }}) }});
+  process.stdout.write(JSON.stringify(result));
+}} finally {{ await browser.close(); }}
+"""
+        html = (f'<!doctype html><html><head><style>.article-body{{min-height:1000px}}'
+                'img{width:600px;max-width:100%;height:auto}</style></head><body><main>'
+                f'<article data-review-content-sha256="{digest}"><h1>{bundle["article"]["title"]}</h1>'
+                '<div class="article-body"><div class="prose"><h2>手順</h2><p>図解です。</p>'
+                f'</div></div><img src="{bundle["article"]["eyecatch"]}" alt="保管手順の図解">'
+                '</article></main></body></html>')
+        child = subprocess.run(['node', '--input-type=module', '-e', script],
+            input=json.dumps({'payload': {'url': 'https://camp-gear-lab.com/articles/'
+                + bundle['article']['slug'], 'html': html, 'bundle': bundle},
+                'imageDataBase64': generated['imageDataBase64']}),
+            text=True, capture_output=True, timeout=45, cwd=Path(__file__).resolve().parents[2])
+        self.assertEqual(0, child.returncode, child.stderr)
+        observed = _validated_browser_result(json.loads(child.stdout), nonproduct=True)
+        result = _result(observed['checks'])
+        self.assertTrue(result['passed'], result)
+        self.assertEqual([], result['issues'])
+
     def test_revision_typed_na_with_both_viewport_absence_proofs_passes_without_expiry(self):
         job, html = revision_na_fixture()
         audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
                                      catalog=FakeCatalog(html))
         payloads = []
-        with patch.object(audit, '_browser', side_effect=lambda payload: payloads.append(payload) or na_browser()):
+        with patch.object(audit, '_browser', side_effect=lambda payload, **_: payloads.append(payload) or na_browser()):
             result = audit.check(job)
         destination = next(c for c in result['checks'] if c['name'] == 'destination.0.amazon')
         self.assertEqual(destination, {'name': 'destination.0.amazon', 'status': 'passed',
@@ -276,7 +361,7 @@ class AuditTests(unittest.TestCase):
         audit = PostPublicationAudit({'repo': '/unused', 'slack': {'user_id': 'OWNER'}}, ENV,
                                      catalog=FakeCatalog(html))
         payloads = []
-        with patch.object(audit, '_browser', side_effect=lambda payload: payloads.append(payload) or na_browser()):
+        with patch.object(audit, '_browser', side_effect=lambda payload, **_: payloads.append(payload) or na_browser()):
             result = audit.check(job)
         self.assertTrue(result['passed'], result)
         self.assertEqual(payloads[0]['intentionalAbsences'][0]['oldHref'], '')

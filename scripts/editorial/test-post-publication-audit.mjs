@@ -36,6 +36,34 @@ function intentionalAbsenceFixture(extra = '') {
   return input;
 }
 
+function nonproductFixture(extra = '') {
+  const content = '## 手順\n\n汚れを落とし、十分に乾かします。\n\n[テントの記事一覧](/categories/tent)';
+  const digest = createHash('sha256').update(content).digest('hex');
+  const imageHash = createHash('sha256').update(png).digest('hex');
+  const receiptHash = '91022beb32baf836592d38c866d230a6328949aa4358d06b04eaf9629dfe4036';
+  const sourceReceiptSha256 = 'ec7c19d069f5d651fb6569481606c81c7331281ccdcc49ba4afe5be1c6478dab';
+  const sourceId = 'public:coleman-care', imageId = `illustration:${imageHash.slice(0, 20)}`;
+  return { url: 'https://camp-gear-lab.com/articles/tent-care', bundle: {
+    article: { slug: 'tent-care', title: 'テントをしまう前の確認手順', content, productIds: [], eyecatch: image,
+      generationMeta: { editorialContext: { schemaVersion: 1, articleType: 'nonproduct', sourceApplicability: 'verified_public_references',
+        commerceApplicability: 'not_applicable', imageApplicability: 'owned_illustration', sourceIds: [sourceId], sourceReceiptSha256,
+        imageProofIds: [imageId] } } },
+    products: [], references: [{ id: sourceId, kind: 'public-primary', url: 'https://www.coleman.co.jp/customersupport/faq/',
+      canonicalUrl: 'https://www.coleman.co.jp/customersupport/faq/', title: 'Coleman FAQ', excerpt: '汚れを落として十分に乾燥させます。',
+      claimScope: 'tent-care', checkedAt: '2026-11-16T10:00:00+09:00', httpStatus: 200, receiptSha256: receiptHash,
+      excerptSha256: createHash('sha256').update('汚れを落として十分に乾燥させます。').digest('hex'), scope: 'tent-care' }],
+    images: [{ id: imageId, role: 'eyecatch', ownership: 'owned_editorial_illustration', depictsRealProduct: false, referenceIds: [sourceId],
+      compositionSha256: 'c'.repeat(64), url: image, finalUrl: image, sha256: imageHash, size: png.length, contentType: 'image/png',
+      width: 1200, height: 630, verified: true, checkedAt: '2026-11-16T10:05:00+09:00',
+      rendererEvidence: { passed: true, evidencePassed: true, version: 'editorial-illustration-v1', width: 1200, height: 630,
+        pngSha256: imageHash, bytes: png.length, contentHash: 'c'.repeat(64), sourceIds: [sourceId], sourceReceiptSha256, networkRequests: 0 } }],
+    commercialRoute: { status: 'not_applicable', reason: 'verified_nonproduct_article', verifiedBy: 'deterministic_contract_v1' },
+  }, html: `<!doctype html><html><head><style>.article-body{min-height:1000px}img{width:600px;max-width:100%;height:auto}</style></head><body><main>` +
+    `<article data-review-content-sha256="${digest}"><h1>テントをしまう前の確認手順</h1><div class="article-body"><div class="prose">` +
+    `<h2>手順</h2><p>汚れを落とし、十分に乾かします。</p><p><a href="/categories/tent">テントの記事一覧</a></p>${extra}</div></div>` +
+    `<img src="${image}" alt="テント保管手順の図解"></article></main></body></html>` };
+}
+
 test('headings ignore fenced and indented code and retain actual H2', () => {
   assert.deepEqual(approvedHeadings('## A\n```md\n## B\n```\n    ## C\nD\n---\n## **E**'), ['A', 'D', 'E']);
 });
@@ -103,6 +131,36 @@ test('offline Chromium: lazy images, visible exact links, popup first request, n
     assert.deepEqual(result.checks.filter(c => c.status !== 'passed'), [], result);
     assert.deepEqual(gets, [image]);
     assert.equal(result.checks.filter(c => c.reason === 'exact_approved_navigation_intercepted').length, 4);
+  } finally { await browser.close(); }
+});
+
+test('strict nonproduct audit records merchant NA in both viewports while all content, image, paragraph, and internal-link checks still pass', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const result = await auditPublicPage(nonproductFixture(), { browser,
+      fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    assert.deepEqual(result.commercialRoute, { status: 'not_applicable', measured: false, reason: 'verified_nonproduct_article' });
+    for (const viewport of ['desktop', 'mobile']) {
+      assert.deepEqual(result.checks.find(c => c.name === `${viewport}.merchant`), {
+        name: `${viewport}.merchant`, status: 'not_applicable', reason: 'verified_nonproduct_article',
+      });
+      for (const suffix of ['binding', 'body', 'prose', 'title', 'heading.0', 'images', 'eyecatch', 'paragraphs', 'internal_links', 'overflow', viewport])
+        assert.equal(result.checks.find(c => c.name === `${viewport}.${suffix}` || c.name === suffix)?.status, 'passed', `${viewport}.${suffix}`);
+    }
+  } finally { await browser.close(); }
+});
+
+test('nonproduct audit rejects forged metadata or merchant links instead of omitting merchant checks', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const forged = nonproductFixture('<a href="https://www.amazon.co.jp/dp/B000000001">merchant</a>');
+    const withMerchant = await auditPublicPage(forged, { browser, fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile'])
+      assert.equal(withMerchant.checks.find(c => c.name === `${viewport}.merchant`)?.status, 'failed');
+    const badMeta = nonproductFixture();
+    badMeta.bundle.article.generationMeta.editorialContext.sourceReceiptSha256 = '0'.repeat(64);
+    const rejected = await auditPublicPage(badMeta, { browser, fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    assert.ok(rejected.checks.some(c => c.name === 'browser' && c.status === 'unverified'));
   } finally { await browser.close(); }
 });
 

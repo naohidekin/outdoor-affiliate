@@ -27,8 +27,12 @@ from dispatcher import (DeterministicDispatcher, buffer_social_eligible,
                         buffer_social_outstanding, buffer_social_start,
                         execution_policy, social_feature_enabled)
 from stage_journal import StageBlocked, StageJournal, StageUnknown
-from model_budget import ModelBudget
+from model_budget import BudgetHold, ModelBudget
 from daily_metrics import collect_daily_metrics, require_fresh_daily_metrics
+from topic_selection import (bind_nonproduct_theme, collect_primary_sources, editorial_context,
+                             editorial_signals, gather_nonproduct, mixed_period,
+                             nonproduct_affiliate_review, reverify_bound_public_sources,
+                             select_proposals, NonproductSourceHold, TOPIC_TYPES)
 
 JST = timezone(timedelta(hours=9))
 
@@ -282,7 +286,7 @@ class Runtime:
                                  'override preference.')
         return data
 
-    def _research_context(self, context):
+    def _research_context(self, context, feed=None, existing_summaries=None):
         from catalog import _model, MAKERS
         from supplemental_topics import apparel_policy, load_batch
         eligible = [p for p in context['products'] if _model(p) and p.get('brand', '').casefold() in MAKERS
@@ -303,8 +307,12 @@ class Runtime:
         analytics = self._analytics_context()
         owner_apparel_policy = context.get('apparelPolicy') or apparel_policy(
             load_batch(self.config.get('supplementalApparelBatchManifest')))
-        return {'wisePolicy': load_policy(self.config['repo']), 'apparelPolicy': owner_apparel_policy,
-                'catalog': products, 'existingArticles': context['articles'], 'queuedThemes': context['queuedThemes'],
+        result = {'wisePolicy': load_policy(self.config['repo']), 'apparelPolicy': owner_apparel_policy,
+                'catalog': products, 'existingArticles': (existing_summaries or context['articles']),
+                'categories': [{key: item.get(key) for key in ('id', 'name')}
+                               for item in context.get('categories', [])
+                               if isinstance(item, dict) and item.get('id')],
+                'queuedThemes': context['queuedThemes'],
                 'merchantClicks': [{'article': k[0], 'store': k[1], 'clicks': n} for k, n in counts.items()],
                 'observation': {'start': observed_start.isoformat(), 'end': observed_end.isoformat(),
                                 'metric': 'affiliate link clicks only; not purchases, revenue or seasonal trend'},
@@ -312,6 +320,21 @@ class Runtime:
                 'instructions': context['instructions'] + ' Calendar month alone is not seasonal-demand evidence. '
                     'Analytics opportunities with action=improve_existing must improve the existing URL, '
                     'not become a new duplicate article. Missing signals remain unverified.'}
+        if feed is not None:
+            result['instructions'] = ('Propose at most nine mixed editorial candidates across product, '
+                'seasonal_problem and knowhow. Product topics require verified catalog products; the other '
+                'genres may use products only when needed and otherwise require verified public references. '
+                'For every candidate provide reader question, intent, outline, priority, source IDs, '
+                'selection rationale and structured overlap action. Existing article summaries contain '
+                'title/slug/known query/excerpt/headings only. Deterministic code checks the complete article '
+                'index. Avoid medical, cold/survival, emergency and child-safety advice. ')
+            result['editorialSignals'] = editorial_signals(analytics, feed)
+            result['publicSources'] = copy.deepcopy(feed.get('sources', []))
+            result['externalTrend'] = {'status': 'unconnected', 'records': [],
+                                       'limitations': 'No external trend inference or Google Trends claim'}
+            result['instructions'] += ('Own-site GSC/GA4 signals are not market demand; '
+                'seasonal_problem is a hypothesis unless an explicit measured comparison evidence ID is supplied.')
+        return result
 
     @staticmethod
     def _apparel_variant_disclosures(gathered):
@@ -359,19 +382,109 @@ class Runtime:
                 if not any(job.get('stage') == 'candidate' for job in pending):
                     raise
                 new_research = False
+        if new_research and mixed_period(week) and pending:
+            return {'status': 'blocked', 'reason': 'mixed_period_waiting_for_three_pending_slots',
+                    'articles': [], 'pending': len(pending)}
         context = self._context()
         if new_research:
             research_attempt = self.root / 'production-attempts' / (week + '.json')
             if research_attempt.exists():
+                try:
+                    prior_attempt = json.loads(research_attempt.read_text())
+                except (OSError, ValueError):
+                    prior_attempt = None
+                if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'budget_hold':
+                    return {'status': 'blocked', 'reason': 'model_budget_hold', 'articles': [],
+                            'retryable': prior_attempt.get('retryable') is True}
+                if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'selection_hold':
+                    return {'status': 'blocked', 'reason': prior_attempt.get('holdReason'),
+                            'articles': [], 'eligibleCount': prior_attempt.get('eligibleCount'),
+                            'unfilled': prior_attempt.get('unfilled')}
+                if (isinstance(prior_attempt, dict)
+                        and prior_attempt.get('status') == 'budget_hold_after_request'):
+                    return {'status': 'blocked', 'reason': 'weekly_research_requires_reconciliation',
+                            'articles': [], 'retryable': False}
                 raise ValueError('weekly_research_requires_reconciliation')
             atomic(research_attempt, {'status': 'in_flight', 'at': stamp()})
             try:
-                themes = self._measured_model_call(
-                    'research:' + week, 'research', 'claude-sonnet-4-6',
-                    lambda: self.models.research(self._research_context(context)))['themes']
-                atomic(research_attempt, {'status': 'generated', 'themes': themes, 'at': stamp()})
+                if mixed_period(week):
+                    raw_articles = self.catalog.catalog().get('articles', [])
+                    def bounded(article):
+                        return {**{key: article.get(key) for key in
+                                   ('id', 'slug', 'title', 'query', 'excerpt')},
+                                'headings': re.findall(r'(?m)^#{2,4}\s+(.+?)\s*$',
+                                                       str(article.get('content') or ''))[:8]}
+                    existing_index = [bounded(article) for article in raw_articles]
+                    feed = collect_primary_sources(
+                        self.catalog.request, period=week,
+                        output_path=self.root / 'public-sources' / (week + '.json'), now=now)
+                    research_context = self._research_context(
+                        context, feed=feed, existing_summaries=existing_index)
+                    proposals = self._measured_model_call(
+                        'research:' + week, 'research', 'claude-sonnet-4-6',
+                        lambda: self.models.research_mixed(research_context))['proposals']
+                    selection = select_proposals(
+                        proposals, signals=research_context['editorialSignals'],
+                        existing=existing_index, queued=context['queuedThemes'],
+                        feed=feed, limit=3)
+                    themes = [bind_nonproduct_theme(theme, feed) for theme in selection['selected']]
+                    genre_coverage = {}
+                    qualified_reasons = {'deterministic_priority_with_soft_variety',
+                                         'insufficient_qualified_period_pool', 'period_selection_limit'}
+                    for genre in sorted(TOPIC_TYPES):
+                        rows = [decision for decision in selection['decisions']
+                                if decision['proposal']['topicType'] == genre]
+                        qualified = sum(decision['status'] == 'selected'
+                                        or decision['reason'] in qualified_reasons for decision in rows)
+                        genre_coverage[genre] = {'proposals': len(rows), 'qualified': qualified,
+                            'selected': sum(decision['status'] == 'selected' for decision in rows),
+                            'rejectionReasons': sorted({decision['reason'] for decision in rows
+                                                       if decision['status'] != 'selected'}),
+                            'unavailableReason': ('no_proposal' if not rows else
+                                'no_qualified_evidence' if not qualified else None)}
+                    receipt = {'schemaVersion': 1, 'period': week, 'at': stamp(),
+                               'status': selection['status'], 'holdReason': selection['holdReason'],
+                               'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled'],
+                               'proposalCount': len(proposals), 'decisions': selection['decisions'],
+                               'selectedSlugs': [theme['slug'] for theme in themes],
+                               'sourceIds': [signal['id'] for signal in research_context['editorialSignals']],
+                               'genreCoverage': genre_coverage}
+                    atomic(self.root / 'period-receipts' / (week + '.json'), receipt)
+                    updates = [decision for decision in selection['decisions']
+                               if decision['status'] == 'existing_update']
+                    atomic(self.root / 'existing-update-proposals' / (week + '.json'),
+                           {'schemaVersion': 1, 'period': week, 'private': True,
+                            'publication': 'prohibited', 'proposals': updates})
+                    atomic(research_attempt, {
+                        'status': ('selection_hold' if selection['status'] == 'hold' else 'generated'),
+                        'proposals': proposals, 'selection': selection['status'],
+                        'holdReason': selection['holdReason'],
+                        'eligibleCount': selection['eligibleCount'],
+                        'unfilled': selection['unfilled'], 'at': stamp()})
+                else:
+                    themes = self._measured_model_call(
+                        'research:' + week, 'research', 'claude-sonnet-4-6',
+                        lambda: self.models.research(self._research_context(context)))['themes']
+                    atomic(research_attempt, {'status': 'generated', 'themes': themes, 'at': stamp()})
+            except BudgetHold as hold:
+                requested = self.model_budget.has_request_reservation(
+                    hold.article_id, hold.stage, hold.period_key)
+                atomic(research_attempt, {
+                    'status': 'budget_hold_after_request' if requested else 'budget_hold', 'at': stamp(),
+                    'reason': hold.reason_code, 'budgetScope': hold.budget_scope,
+                    'stage': hold.stage, 'eventId': hold.event_id,
+                    'retryable': not requested, 'transportReservation': requested,
+                    'requestMayHaveOccurred': requested,
+                    'requestOccurred': None if requested else False})
+                return {'status': 'blocked',
+                        'reason': ('weekly_research_requires_reconciliation' if requested
+                                   else 'model_budget_hold'),
+                        'articles': [], 'retryable': not requested}
             finally:
                 self._save_usage()
+            if mixed_period(week) and selection['status'] == 'hold':
+                return {'status': 'blocked', 'reason': selection['holdReason'], 'articles': [],
+                        'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled']}
             for theme in themes[:3 - len(pending)]:
                 self.ledger.create_candidate(theme, now=now)
             current = [j for j in self.ledger.list_jobs() if j.get('kind') not in
@@ -397,7 +510,9 @@ class Runtime:
                           else 'awaiting_approval')
                 results.append({'id': job['id'], 'status': status})
             except Exception as error:
-                self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+                self.ledger.set_stage(job['id'],
+                    'held' if isinstance(error, NonproductSourceHold) else 'error',
+                    {'reason': reason(error), 'at': stamp()})
                 results.append({'id': job['id'], 'status': 'blocked', 'reason': reason(error)})
             finally:
                 self._save_usage()
@@ -584,6 +699,8 @@ class Runtime:
         context = self._wise_context(context)
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
+        nonproduct = (not revision and not corrected and job.get('theme', {}).get('productIds') == []
+                      and mixed_period(job.get('week')))
         if corrected:
             from catalog_corrections import validate_context, validate_live_context
             correction = validate_context(job['catalogCorrectionContext'])
@@ -611,6 +728,23 @@ class Runtime:
             gathered.update(existingArticle=public_source,
                             editorialCorrectionInstructions=binding['editorialCorrectionInstructions'],
                             verifiedAuthorFacts=copy.deepcopy(binding['verifiedAuthorFacts']))
+        elif nonproduct:
+            gathered = gather_nonproduct(job['theme'], context)
+            source_recheck = reverify_bound_public_sources(
+                self.catalog.request, gathered['references'])
+            atomic(self.root / 'source-rechecks' / job['id'] /
+                   (job['theme']['nonProductContract']['sourceReceiptSha256'] + '.json'),
+                   {'jobId': job['id'], 'sourceReceiptSha256':
+                    job['theme']['nonProductContract']['sourceReceiptSha256'], **source_recheck})
+            if self.social_cards is None:
+                from social_cards import SocialCards
+                self.social_cards = SocialCards(self.config, self.env, self.catalog)
+            contract = job['theme']['nonProductContract']
+            image = self.social_cards.build_editorial_illustration(
+                job['theme'], gathered['references'], contract['sourceReceiptSha256'])
+            gathered['images'] = [image]
+            gathered['checks']['images'] = True
+            gathered['evidence']['ownedIllustrations'] = [image]
         else:
             gathered = self.catalog.gather(job['theme'], context)
         variant_disclosures = self._apparel_variant_disclosures(gathered)
@@ -619,9 +753,14 @@ class Runtime:
                 'requiredExpressions':variant_disclosures,
                 'rule':'merchant option states differ; never claim identical color or size'}
         atomic(self.root / 'research' / (job['id'] + '.json'), gathered)
-        if not all(gathered.get('checks', {}).get(k) is True for k in ('facts', 'images', 'affiliate')):
+        source_ready = (gathered.get('checks', {}).get('facts') is True
+                        and gathered.get('checks', {}).get('images') is True
+                        and ((nonproduct and gathered.get('checks', {}).get('affiliate') == 'not_applicable'
+                              and gathered.get('commercialRoute', {}).get('status') == 'not_applicable')
+                             or (not nonproduct and gathered.get('checks', {}).get('affiliate') is True)))
+        if not source_ready:
             raise ValueError('source_product_image_or_affiliate_verification_incomplete')
-        if self.config.get('prewriteDisplayGateEnabled') is True:
+        if self.config.get('prewriteDisplayGateEnabled') is True and not nonproduct:
             from publication_display_gate import build_prewrite_plan
             plan = build_prewrite_plan(job, gathered)
             if plan['status'] == 'correction_required':
@@ -664,13 +803,21 @@ class Runtime:
                 publishedAt=None, scheduledPublishDate=None, autoGenerated=True)
             bundle['article'].setdefault('createdAt', job['created_at'])
             bundle['article']['updatedAt'] = bundle['article']['createdAt']
+        if nonproduct:
+            bundle['article'].setdefault('generationMeta', {})['editorialContext'] = editorial_context(
+                job['theme'], gathered['images'])
+            bundle['article']['eyecatch'] = gathered['images'][0]['url']
+            bundle['commercialRoute'] = {'status': 'not_applicable',
+                                         'reason': 'verified_nonproduct_article',
+                                         'verifiedBy': 'deterministic_contract_v1'}
         if corrected:
             bundle['catalogCorrectionContext'] = copy.deepcopy(correction)
             from catalog_corrections import validate_bundle
             validate_bundle(job, bundle)
         if gathered.get('images'):
             bundle['images'] = gathered['images']
-        bundle['affiliateConfig'] = {'amazonPartnerTag': self.env.get('AMAZON_PARTNER_TAG', '')}
+        if not nonproduct:
+            bundle['affiliateConfig'] = {'amazonPartnerTag': self.env.get('AMAZON_PARTNER_TAG', '')}
         if bundle.get('purchaseEvidence'):
             raise ValueError('model_purchase_evidence_not_source_bound')
         bundle['wisePolicy'] = context['wisePolicy']['id']
@@ -716,7 +863,8 @@ class Runtime:
         public_source = ({k: copy.deepcopy(binding['baseArticle'].get(k))
                           for k in ('title', 'slug', 'categoryId', 'productIds')}
                          if revision else None)
-        if self.config.get('socialCardsEnabled') is True:
+        nonproduct = bundle.get('article', {}).get('productIds') == []
+        if self.config.get('socialCardsEnabled') is True and not nonproduct:
             if self.social_cards is None:
                 from social_cards import SocialCards
                 self.social_cards = SocialCards(self.config, self.env, self.catalog)
@@ -738,16 +886,28 @@ class Runtime:
             from inherited_advice import validate_presentation
             inherited = validate_presentation(preview.get('inheritedPresentationContext'), bundle['article']['slug'])
             bundle['inheritedPresentationContext'] = copy.deepcopy(inherited)
-        flags = {k: evidence.get(k) is True for k in ('facts', 'images', 'affiliate')}
+        flags = {k: evidence.get(k) is True for k in ('facts', 'images')}
+        flags['affiliate'] = (nonproduct_affiliate_review(bundle) if nonproduct
+                              else evidence.get('affiliate') is True)
         medical = self._medical(bundle['article'])
         if revision:
             medical.update(scope='candidate_article_only', inheritedClinicalReverified=False)
         click_results = preview.get('clicksVerified', {})
-        clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
+        if nonproduct:
+            clicks_ok = (click_results == {'desktop': [], 'mobile': []}
+                         and preview.get('sponsoredCtaCount') == {'desktop': 0, 'mobile': 0}
+                         and preview.get('allAnchorsVerified') is True)
+        else:
+            clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
         flags.update(medical=medical['passed'], render=preview.get('passed') is True and clicks_ok)
+        model_flags = dict(flags)
+        if nonproduct:
+            # The reviewer schema remains boolean; the persisted ledger evidence below
+            # retains the typed not-applicable contract instead of claiming a merchant pass.
+            model_flags['affiliate'] = True
         review_bundle = {k: v for k, v in bundle.items()
                          if k not in ('revisionContext', 'catalogCorrectionContext')}
-        review_checks = {'evidence': flags, 'structural': checks,
+        review_checks = {'evidence': model_flags, 'structural': checks,
                          'source': gathered.get('evidence', {}),
                          'approvedTheme': job['theme'],
                          'preview': preview, 'polishPreservation': preservation,
@@ -763,7 +923,7 @@ class Runtime:
             'checks': self._review_dependencies(review_checks),
             'dependencies': {'verifiedSource': source_dependencies,
                              'routes': self._model_routes(),
-                             'qualityFlags': flags,
+                             'qualityFlags': model_flags,
                              'structural': checks,
                              'renderer': self._review_dependencies(preview),
                              'editorialRules': context['editorialRules']},
@@ -857,7 +1017,7 @@ class Runtime:
                    for request in requests):
                 raise ValueError('delivery_requires_reconciliation')
             self.ledger._current(job)
-            valid_review(job.get('review'), job['revision'])
+            valid_review(job.get('review'), job['revision'], job.get('bundle'))
             restored = self.ledger.set_stage(id, 'review')
             return {'status': restored['stage'], 'id': id, 'sameWeeklySlot': True,
                     'checkpoint': 'review'}
@@ -1196,7 +1356,7 @@ class Runtime:
         if kind == 'article' and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
             try:
                 self.ledger._current(job)
-                valid_review(job.get('review'), job['revision'])
+                valid_review(job.get('review'), job['revision'], job.get('bundle'))
                 valid_astra_review(job.get('astraReview'), job['revision'])
             except ValueError:
                 return {'status': 'awaiting_astra_review', 'deferred': True}
@@ -2003,16 +2163,32 @@ class Runtime:
                 audit = json.loads(path.read_text())
                 result = audit.get('result') or {}
                 checks = result.get('checks')
+                bundle = job.get('bundle') or {}
+                nonproduct = bundle.get('article', {}).get('productIds') == []
+                valid_checks = False
+                if isinstance(checks, list) and checks:
+                    na = {check.get('name') for check in checks
+                          if isinstance(check, dict) and check.get('status') == 'not_applicable'}
+                    valid_checks = all(
+                        isinstance(check, dict) and isinstance(check.get('name'), str) and check['name']
+                        and (check.get('status') == 'passed'
+                             or (nonproduct and check.get('status') == 'not_applicable'
+                                 and check.get('name') in {'desktop.merchant', 'mobile.merchant'}
+                                 and check.get('reason') == 'verified_nonproduct_article'))
+                        for check in checks)
+                    if nonproduct:
+                        from topic_selection import validate_nonproduct_bundle
+                        validate_nonproduct_bundle(bundle)
+                        valid_checks = valid_checks and na == {'desktop.merchant', 'mobile.merchant'}
+                    else:
+                        valid_checks = valid_checks and not na
                 if (audit.get('schemaVersion') == 1
                         and audit.get('status') == 'success' and audit.get('id') == job.get('id')
                         and audit.get('revision') == job.get('revision')
                         and audit.get('auditKey') == key
                         and audit.get('publication') == publication
                         and result.get('passed') is True and result.get('status') == 'passed'
-                        and result.get('issues') == [] and isinstance(checks, list) and checks
-                        and all(isinstance(check, dict) and isinstance(check.get('name'), str)
-                                and check['name'] and check.get('status') == 'passed'
-                                for check in checks)):
+                        and result.get('issues') == [] and valid_checks):
                     return True
             except (OSError, ValueError):
                 return False

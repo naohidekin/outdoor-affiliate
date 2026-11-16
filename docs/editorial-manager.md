@@ -10,6 +10,11 @@ continue normally. The implementation is integrated locally. Deployment verifica
 Main-owned; the reported CLI v3 GUI result is recorded below as dated evidence,
 not a claim of model execution by this implementation task.
 
+Regular production periods from 2026-11-20 use the bounded mixed-topic planning
+contract documented in [editorial-deterministic.md](editorial-deterministic.md#2026-11-20以降の通常企画).
+The manager must consume its private receipt/state projection; it must not add a
+second research call, watcher, candidate refill loop, or publication authority.
+
 ## Integrated Runtime API (Boole)
 
 The following illustrates the existing integration, not an additional caller to

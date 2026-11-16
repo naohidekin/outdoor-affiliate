@@ -24,6 +24,7 @@ from urllib.parse import parse_qs, urlsplit
 from apparel_identity import (ApparelIdentityError, apparel_class, apparel_contract,
                               apparel_requested,
                               binding_matches_product)
+from topic_selection import TopicSelectionError, validate_nonproduct_bundle
 
 
 BRIEF_FIELDS = ("purpose", "reader", "conclusion", "headings", "facts", "numbers",
@@ -327,6 +328,16 @@ def inspect_bundle(bundle):
     if len(set(ids)) != len(ids):
         fail("product", "duplicate productIds")
     selected = set(ids)
+    nonproduct = not ids
+    if nonproduct:
+        try:
+            validate_nonproduct_bundle(bundle)
+        except TopicSelectionError as error:
+            fail("nonproduct", str(error))
+        if product_map:
+            fail("nonproduct", "products must be empty")
+        if brief.get("format") in ("ranking", "comparison", "review"):
+            fail("nonproduct", "nonproduct article must use guide/how-to format")
     used = set()
     for m in SHORTCODE.finditer(visible):
         tag_ids = [s.strip() for s in m.group(2).split(",")]
@@ -391,6 +402,12 @@ def inspect_bundle(bundle):
         url(image.get("url"), "images.url")
         if image.get("sha256") is not None and not re.fullmatch(r"[a-fA-F0-9]{64}", str(image["sha256"])):
             fail("image", "invalid sha256")
+        if nonproduct and (image.get("ownership") != "owned_editorial_illustration"
+                           or image.get("depictsRealProduct") is not False
+                           or image.get("verified") is not True
+                           or not isinstance(image.get("referenceIds"), list)
+                           or not image["referenceIds"]):
+            fail("image", "owned nonproduct illustration provenance required")
 
     evidence = bundle.get("purchaseEvidence", [])
     if not isinstance(evidence, list) or any(not isinstance(e, dict) for e in evidence):

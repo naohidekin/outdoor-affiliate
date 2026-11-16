@@ -26,23 +26,46 @@ if __name__ == '__main__':
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 from catalog import Catalog, _affiliate_route, _decode_html, _image_type, _model, _Page, model_matches, safe_url
 from audit_requests import AuditRequests
+from topic_selection import TopicSelectionError, validate_nonproduct_bundle
 
 SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
 RAKUTEN_DOMAINS = ('hb.afl.rakuten.co.jp', 'pt.afl.rakuten.co.jp',
                    'transition.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp')
 PURCHASE_EVIDENCE_FIELDS = {'productId', 'channel', 'status', 'reason', 'checkedAt', 'reviewedBy'}
+NONPRODUCT_MERCHANT_NA = {'desktop.merchant', 'mobile.merchant'}
 
 
 def _result(checks):
     status = 'failed' if any(c['status'] == 'failed' for c in checks) else (
         'unverified' if not checks or any(c['status'] == 'unverified' for c in checks) else 'passed')
     return {'passed': status == 'passed', 'status': status,
-            'issues': [c['name'] + ': ' + c['reason'] for c in checks if c['status'] != 'passed'], 'checks': checks}
+            'issues': [c['name'] + ': ' + c['reason'] for c in checks
+                       if c['status'] not in ('passed', 'not_applicable')], 'checks': checks}
 
 
 def _check(name, status, reason):
     return {'name': name, 'status': status, 'reason': reason}
+
+
+def _validated_browser_result(value, *, nonproduct=False):
+    checks = value.get('checks') if isinstance(value, dict) else None
+    if not isinstance(checks, list) or not checks or len(checks) > 256 or any(
+            not isinstance(c, dict) or c.get('status') not in ('passed', 'failed', 'unverified', 'not_applicable')
+            or not re.fullmatch(r'[a-z0-9_.-]{1,80}', c.get('name', ''))
+            or not re.fullmatch(r'[a-z0-9_]{1,100}', c.get('reason', '')) for c in checks):
+        raise ValueError()
+    na = {c.get('name') for c in checks if c.get('status') == 'not_applicable'}
+    if nonproduct:
+        if (na != NONPRODUCT_MERCHANT_NA
+                or any(c.get('reason') != 'verified_nonproduct_article' for c in checks
+                       if c.get('status') == 'not_applicable')
+                or value.get('commercialRoute') != {'status': 'not_applicable', 'measured': False,
+                                                     'reason': 'verified_nonproduct_article'}):
+            raise ValueError()
+    elif na or 'commercialRoute' in value:
+        raise ValueError()
+    return value
 
 
 def _aware_stamp(value):
@@ -289,19 +312,12 @@ class PostPublicationAudit:
                         pass
                     child.wait()
 
-    def _browser(self, payload):
+    def _browser(self, payload, *, nonproduct=False):
         child = subprocess.run([self.config.get('node', 'node'), str(Path(__file__).with_name('post-publication-audit.mjs'))],
             input=json.dumps(payload), capture_output=True, text=True, env=_child_env(), timeout=85)
         if child.returncode or len(child.stdout) > 65536:
             raise ValueError()
-        value = json.loads(child.stdout)
-        checks = value.get('checks')
-        if not isinstance(checks, list) or not checks or len(checks) > 256 or any(
-                not isinstance(c, dict) or c.get('status') not in ('passed', 'failed', 'unverified')
-                or not re.fullmatch(r'[a-z0-9_.-]{1,80}', c.get('name', ''))
-                or not re.fullmatch(r'[a-z0-9_]{1,100}', c.get('reason', '')) for c in checks):
-            raise ValueError()
-        return value
+        return _validated_browser_result(json.loads(child.stdout), nonproduct=nonproduct)
 
     def _audit(self, job):
         checks, started = [], time.monotonic()
@@ -330,6 +346,9 @@ class PostPublicationAudit:
             ids = article['productIds']
             if not isinstance(ids, list) or len(set(ids)) != len(ids) or set(ids) != {p['id'] for p in products} or len(products) != len(ids):
                 raise ValueError()
+            nonproduct = ids == []
+            if nonproduct:
+                validate_nonproduct_bundle(bundle)
         except Exception:
             return _result([_check('input', 'failed', 'invalid_publication_binding')])
         digest = hashlib.sha256(content.encode()).hexdigest()
@@ -347,6 +366,9 @@ class PostPublicationAudit:
             return _result([_check('public_source', 'unverified', 'public_get_unavailable')])
         add('public_title', source.titles == [title], 'public_title_exact', 'public_title_mismatch')
         add('approved_body', source.hashes == [digest], 'approved_body_hash_exact', 'approved_body_hash_mismatch')
+        if nonproduct:
+            checks.append(_check('commercial_applicability', 'passed',
+                                 'nonproduct_commerce_not_applicable_not_measured'))
         card = (article.get('generationMeta') or {}).get('socialCard')
         if card:
             proofs = [i for i in images if i.get('role') == 'social-card']
@@ -407,9 +429,14 @@ class PostPublicationAudit:
             try:
                 if not budget():
                     raise TimeoutError()
-                observed = self._browser({'url': url, 'html': html, 'bundle': {'article': article,
-                    'products': products, 'images': images}, 'intentionalAbsences': intentional_absences,
-                    'repo': self.config.get('repo', str(Path(__file__).resolve().parents[2]))})
+                browser_bundle = {'article': article, 'products': products, 'images': images}
+                if nonproduct:
+                    browser_bundle.update(references=bundle['references'],
+                                          commercialRoute=bundle['commercialRoute'])
+                observed = self._browser({'url': url, 'html': html, 'bundle': browser_bundle,
+                    'intentionalAbsences': intentional_absences,
+                    'repo': self.config.get('repo', str(Path(__file__).resolve().parents[2]))},
+                    nonproduct=nonproduct)
                 browser_checks = observed['checks']
                 checks.extend(browser_checks)
                 for name in ('desktop', 'mobile'):

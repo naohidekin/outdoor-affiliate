@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { childEnvironment } from './render-preview.mjs';
+import { validateNonproductBundle } from './publish.mjs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
@@ -129,6 +130,7 @@ function approvedBodyUrls(bundle) {
 
 export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher = safeGet } = {}) {
   const checks = [], active = new Set();
+  let nonproduct = false;
   let browser = suppliedBrowser;
   let expired = false;
   const timer = setTimeout(() => { expired = true; for (const c of active) c.kill('SIGKILL'); void browser?.close(); }, 70000);
@@ -136,6 +138,10 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
     if (!input || input.url !== `https://camp-gear-lab.com/articles/${input.bundle?.article?.slug}` ||
         typeof input.html !== 'string' || Buffer.byteLength(input.html) > MAX_BYTES) throw new Error();
     const origin = new URL(input.url).origin, bundle = input.bundle;
+    if (bundle.article?.productIds?.length === 0 || bundle.products?.length === 0) {
+      validateNonproductBundle(bundle);
+      nonproduct = true;
+    }
     const intentionalAbsences = input.intentionalAbsences ?? [];
     if (!Array.isArray(intentionalAbsences)) throw new Error();
     const absenceKeys = new Set();
@@ -303,6 +309,40 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
         }));
         add('images', imageState.loaded, 'visible_images_loaded', 'visible_images_not_loaded', resourceFailures.length ? 'unverified' : 'failed');
         add('overflow', !imageState.overflow, 'no_horizontal_overflow', 'horizontal_overflow');
+        if (nonproduct) {
+          const proof = bundle.images.find(image => bundle.article.generationMeta.editorialContext.imageProofIds.includes(image.id));
+          const shown = imageState.sources.some(source => {
+            const url = new URL(source, origin);
+            const normalized = url.origin === origin && url.pathname === '/_next/image' ? new URL(url.searchParams.get('url'), origin).href : url.href;
+            return variants(proof.url).includes(normalized);
+          });
+          add('eyecatch', shown, 'owned_eyecatch_rendered', 'owned_eyecatch_missing_or_hidden');
+          const contentEvidence = await article.evaluate(root => {
+            const paragraphs = [...root.querySelectorAll('.prose p, .article-body p')]
+              .filter(p => p.getClientRects().length && getComputedStyle(p).visibility === 'visible' && p.innerText.trim()).length;
+            const internalLinks = [...root.querySelectorAll('a[href]')].filter(a => a.getClientRects().length).map(a => {
+              const u = new URL(a.getAttribute('href'), location.href);
+              return u.origin === location.origin ? u.pathname + u.search + u.hash : null;
+            }).filter(Boolean);
+            const commercialLinks = [...root.querySelectorAll('a[href]')].filter(a => {
+              const rel = (a.getAttribute('rel') || '').split(/\s+/);
+              try {
+                const u = new URL(a.getAttribute('href'), location.href), h = u.hostname.toLowerCase();
+                return rel.includes('sponsored') || h === 'amazon.co.jp' || h.endsWith('.amazon.co.jp') || h === 'amzn.to' || h === 'amzn.asia' ||
+                  h === 'rakuten.co.jp' || h.endsWith('.rakuten.co.jp') || h === 'a.r10.to' || h === 'shopping.yahoo.co.jp' ||
+                  h === 'ck.jp.ap.valuecommerce.com' || /(?:^|[.-])(affiliate|tracking|track|click)(?:[.-]|$)/i.test(h) ||
+                  /\/(?:affiliate|tracking|track-click|click)(?:\/|$)/i.test(u.pathname);
+              } catch { return true; }
+            }).length;
+            return { paragraphs, internalLinks, commercialLinks };
+          });
+          const expectedInternal = [...bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\((\/[^\s)]+)(?:\s+["'][^"']*["'])?\)/g)].map(match => match[1]);
+          add('paragraphs', contentEvidence.paragraphs > 0, 'visible_paragraphs_rendered', 'visible_paragraphs_missing');
+          add('internal_links', expectedInternal.every(link => contentEvidence.internalLinks.includes(link)),
+            'approved_internal_links_rendered', 'approved_internal_links_missing');
+          checks.push(check(`${name}.merchant`, contentEvidence.commercialLinks === 0 ? 'not_applicable' : 'failed',
+            contentEvidence.commercialLinks === 0 ? 'verified_nonproduct_article' : 'commercial_link_present'));
+        }
         for (const [i, product] of bundle.products.entries()) {
           const wanted = variants(product.imageUrl);
           const shown = imageState.sources.some(source => {
@@ -432,7 +472,7 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
     for (const child of active) child.kill('SIGKILL');
     if (browser && !suppliedBrowser) await browser.close().catch(() => {});
   }
-  return { checks };
+  return { checks, ...(nonproduct ? { commercialRoute: { status: 'not_applicable', measured: false, reason: 'verified_nonproduct_article' } } : {}) };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
