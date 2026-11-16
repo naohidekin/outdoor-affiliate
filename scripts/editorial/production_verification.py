@@ -169,7 +169,7 @@ def verified_article_deliveries(root, jobs, scope):
             for job in jobs:
                 if not isinstance(job,dict) or not isinstance(job.get('id'),str):
                     continue
-                try: valid_review(job.get('review'),job.get('revision'))
+                try: valid_review(job.get('review'),job.get('revision'),job.get('bundle'))
                 except (ValueError,TypeError): continue
                 requests = db.execute(
                     'SELECT data FROM requests WHERE job_id=? AND kind=? ORDER BY rowid DESC LIMIT 50',

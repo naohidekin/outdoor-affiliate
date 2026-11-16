@@ -1,5 +1,20 @@
 # Camp Gear Lab 編集パイプライン（実装と配備状況）
 
+## 2026-11-20以降の通常mixed-topic企画
+
+通常制作は既存のresearch call 1回で最大9案を作り、ローカルgateが最大3案を選ぶ。対象は商品、季節課題、know-howで、
+soft varietyはquotaではない。GSC/GA4のsanitized evidence ID、固定一次情報、任意の検証済みtrend以外を根拠にせず、
+raw query、架空検索量、暦月だけの季節推測はモデルへ渡さない。既存記事との意味重複はprivate update proposal、曖昧ならhold。
+確認済み案が3件未満なら全案holdとし、追加researchや補充はしない。
+
+証跡はstateRoot内の `period-receipts/<period>.json`、`existing-update-proposals/<period>.json`、
+`public-sources/<period>.json`。前者は全案の理由・source ID・ジャンルcoverageを保存する。pre-2026-11-20と
+11/16 supplemental batchはこの分岐を使わない。
+
+非商品記事は `article.generationMeta.editorialContext`、確認済み一次情報receipt、所有図解PNGのbytes/hash/readback、
+実renderとCTA 0件を束縛する。`productIds: []` だけでは通さず、commerceはmerchant PASSではなく
+`not_applicable/not_measured`。商品を含む季節課題・know-howは従来の商品・merchant検証を通す。
+
 ## 2026-11-08 本人指定の制作日程変更
 
 制作週は金曜〜木曜。初回は11月8日（日）に開始し、本人承認後の11月12日（木）までの公開を目標とする。次回は11月13日（金）09時JST以降、その後も毎金曜09時以降に既存tickで処理する。`productionSchedule`を設定し、初回の期間キーは11月6日、次は11月13日とする。過去の月曜キー・履歴を変更しない。各制作期間最大3候補・未公開3件上限を維持し、承認待ちによって次期制作が停止する場合は補充しない。品質基準・記事/SNS別の本人承認は変更しない。木曜までの公開は承認・品質検証の完了が条件で、期限による自動承認はしない。

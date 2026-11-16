@@ -10,9 +10,17 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { childEnvironment, validateInput, expectedMerchants, verifyClick, verifyFaqVisibility, prepareApp, renderPreview, privateOutputDirectory, fetchPublicImage, createRequestHandler, IMAGE_HELPER } from './render-preview.mjs';
+import { validateBundle } from './publish.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const merchant = { productId: 'preview-p1', productName: '検証用テント', store: 'amazon', href: 'https://www.amazon.co.jp/dp/B012345678/?tag=camp78-22' };
+function pythonContractFixture() {
+  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py'], {
+    cwd: repo, encoding: 'utf8', env: { PATH: process.env.PATH || '/usr/bin:/bin', PYTHONPATH: 'scripts/editorial', TZ: 'Asia/Tokyo' },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
 function request(outputDir = '/tmp/privateoutput') {
   return { repo, outputDir, bundle: {
     article: { id: 'preview-a1', slug: 'editorial-preview-test', title: '検証用のテント比較', categoryId: 'tent',
@@ -23,6 +31,34 @@ function request(outputDir = '/tmp/privateoutput') {
       categoryId: 'tent', description: '実際の本文コンポーネントを検証します。', imageUrl: '/tent-icon.svg',
       affiliateUrl: 'https://hb.afl.rakuten.co.jp/ichiba/preview/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Ftent%2F',
       amazonUrl: merchant.href, createdAt: '2026-11-03T09:00:00+09:00', updatedAt: '2026-11-03T09:00:00+09:00' }], images: [] } };
+}
+
+function nonproductRequest(outputDir = '/tmp/privateoutput') {
+  const input = request(outputDir), imageHash = digest(imageBytes);
+  const receiptHash = '91022beb32baf836592d38c866d230a6328949aa4358d06b04eaf9629dfe4036';
+  const sourceReceiptSha256 = 'ec7c19d069f5d651fb6569481606c81c7331281ccdcc49ba4afe5be1c6478dab';
+  const sourceId = 'public:coleman-care', imageId = `illustration:${imageHash.slice(0, 20)}`;
+  input.bundle = {
+    article: { id: 'preview-nonproduct', slug: 'tent-care-steps', title: 'テントをしまう前の確認手順', categoryId: 'tent',
+      content: '## 手順\n\n汚れを落とし、十分に乾かします。\n\n[テントの記事一覧](/categories/tent)', productIds: [], excerpt: '保管前の確認手順',
+      tags: [], faqs: [], createdAt: '2026-11-16T09:00:00+09:00', updatedAt: '2026-11-16T09:00:00+09:00', publishedAt: null, status: 'draft',
+      eyecatch: 'https://assets.example/editorial-card.png', generationMeta: { editorialContext: { schemaVersion: 1, articleType: 'nonproduct',
+        sourceApplicability: 'verified_public_references', commerceApplicability: 'not_applicable', imageApplicability: 'owned_illustration',
+        sourceIds: [sourceId], sourceReceiptSha256, imageProofIds: [imageId] } } },
+    products: [],
+    references: [{ id: sourceId, kind: 'public-primary', url: 'https://www.coleman.co.jp/customersupport/faq/',
+      canonicalUrl: 'https://www.coleman.co.jp/customersupport/faq/', title: 'Coleman FAQ', excerpt: '汚れを落として十分に乾燥させます。',
+      claimScope: 'tent-care', checkedAt: '2026-11-16T10:00:00+09:00', httpStatus: 200, receiptSha256: receiptHash,
+      excerptSha256: digest(Buffer.from('汚れを落として十分に乾燥させます。')), scope: 'tent-care' }],
+    images: [{ id: imageId, role: 'eyecatch', ownership: 'owned_editorial_illustration', depictsRealProduct: false, referenceIds: [sourceId],
+      compositionSha256: 'c'.repeat(64), url: 'https://assets.example/editorial-card.png', finalUrl: 'https://assets.example/editorial-card.png',
+      sha256: imageHash, size: imageBytes.length, contentType: 'image/png', width: 1200, height: 630, verified: true,
+      checkedAt: '2026-11-16T10:05:00+09:00', rendererEvidence: { passed: true, evidencePassed: true, version: 'editorial-illustration-v1',
+        width: 1200, height: 630, pngSha256: imageHash, bytes: imageBytes.length, contentHash: 'c'.repeat(64), sourceIds: [sourceId],
+        sourceReceiptSha256, networkRequests: 0 } }],
+    commercialRoute: { status: 'not_applicable', reason: 'verified_nonproduct_article', verifiedBy: 'deterministic_contract_v1' },
+  };
+  return input;
 }
 
 test('child environment drops all credentials, proxies and injection options', () => {
@@ -41,6 +77,55 @@ test('input rejects missing products, duplicate IDs and path-like slugs', () => 
     r => { r.bundle.products.push(r.bundle.products[0]); }, r => { r.bundle.article.content += '{{price:missing}}'; }]) {
     const bad = request(); mutate(bad); assert.throws(() => validateInput(bad));
   }
+});
+
+test('preview permits zero merchants only for strict nonproduct provenance and rejects empty-route forgery', () => {
+  const good = nonproductRequest();
+  assert.equal(validateInput(good).bundle.article.productIds.length, 0);
+  assert.deepEqual(expectedMerchants(good.bundle.products), []);
+  for (const mutate of [
+    r => { delete r.bundle.article.generationMeta; },
+    r => { r.bundle.references[0].url = 'https://example.com/forged'; },
+    r => { r.bundle.images[0].verified = false; },
+    r => { r.bundle.commercialRoute.status = 'passed'; },
+  ]) { const bad = nonproductRequest(); mutate(bad); assert.throws(() => validateInput(bad)); }
+  const replacement = nonproductRequest();
+  replacement.bundle.images.push({ ...replacement.bundle.images[0], id: 'illustration:' + 'f'.repeat(20),
+    url: 'https://attacker.example/replacement.png', finalUrl: 'https://attacker.example/replacement.png' });
+  assert.throws(() => validateInput(replacement), /image/);
+});
+
+test('strict nonproduct staging maps only the approved proof SHA to its exact local filename', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'render-proof-stage-'));
+  try {
+    const source = path.join(root, 'approved.png');
+    await fs.writeFile(source, imageBytes);
+    const input = nonproductRequest();
+    input.bundle.images[0].path = source;
+    const app = path.join(root, 'app');
+    await prepareApp(input, app, path.join(repo, 'node_modules'));
+    const staged = JSON.parse(await fs.readFile(path.join(app, 'data/articles.json'), 'utf8'))[0];
+    const expected = `/editorial-proof-${input.bundle.images[0].sha256}.png`;
+    assert.equal(staged.eyecatch, expected);
+    assert.deepEqual(await fs.readFile(path.join(app, 'public', expected.slice(1))), imageBytes);
+    await assert.rejects(fs.access(path.join(app, 'public', 'editorial-candidate-0.png')));
+
+    const forged = nonproductRequest();
+    forged.bundle.images[0].path = source;
+    forged.bundle.images.push({ ...forged.bundle.images[0], id: 'illustration:' + 'e'.repeat(20), role: 'eyecatch',
+      url: 'https://attacker.example/replacement.png', finalUrl: 'https://attacker.example/replacement.png' });
+    await assert.rejects(prepareApp(forged, path.join(root, 'forged-app'), path.join(repo, 'node_modules')), /image/);
+  } finally { await fs.rm(root, { recursive: true, force: true }); }
+});
+
+test('Python-generated canonical nonproduct fixture passes the JS publisher and preview contract without a duplicate JSON fixture', () => {
+  const fixture = pythonContractFixture();
+  assert.doesNotThrow(() => validateBundle(fixture.bundle));
+  assert.equal(validateInput({ repo, outputDir: '/tmp/privateoutput', bundle: fixture.bundle }).bundle.article.productIds.length, 0);
+  assert.deepEqual(fixture.expectedPreview, { clicksVerified: { desktop: [], mobile: [] },
+    sponsoredCtaCount: { desktop: 0, mobile: 0 }, allAnchorsVerified: true });
+  assert.deepEqual(fixture.reviewAffiliateEvidence, { applicability: 'not_applicable', measured: false,
+    provenanceFingerprint: fixture.reviewAffiliateEvidence.provenanceFingerprint });
 });
 
 test('expected merchants keeps per-product identity and excludes unsafe hrefs', () => {
@@ -168,6 +253,48 @@ test('real desktop/mobile render, images, CTA beacons/events and aborted popups;
       assert.equal(bad.passed, false);
       for (const condition of ['one H1', 'unresolved shortcode', 'image failed'])
         assert.ok(bad.failures.some(f => f.includes(condition)), JSON.stringify(bad));
+    } finally { await fs.rm(temp, { recursive: true, force: true }); }
+  });
+
+test('real nonproduct desktop/mobile verifies owned image, paragraph, internal link, and zero sponsored CTA without dummy clicks',
+  { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {
+    const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-nonproduct-'));
+    try {
+      const input = nonproductRequest(path.join(temp, 'privateoutput'));
+      if (process.env.RENDER_DEPS) input.dependenciesRoot = process.env.RENDER_DEPS;
+      const result = await renderPreview(input, { imageFetcher: async url => {
+        assert.equal(url, input.bundle.article.eyecatch);
+        return { body: imageBytes, contentType: 'image/png' };
+      } });
+      assert.equal(result.passed, true, JSON.stringify(result));
+      assert.deepEqual(result.sponsoredCtaCount, { desktop: 0, mobile: 0 });
+      assert.equal(result.allAnchorsVerified, true);
+      assert.deepEqual(result.commercialRoute, { status: 'not_applicable', measured: false, reason: 'verified_nonproduct_article' });
+      assert.deepEqual(result.clicksVerified, { desktop: [], mobile: [] });
+      for (const viewport of ['desktop', 'mobile']) {
+        assert.ok(result.viewportEvidence[viewport].paragraphCount >= 1);
+        assert.ok(result.viewportEvidence[viewport].internalLinks.includes('/categories/tent'));
+        assert.equal(result.viewportEvidence[viewport].ownedEyecatchRendered, true);
+        assert.equal(result.viewportEvidence[viewport].allAnchorsVerified, true);
+      }
+    } finally { await fs.rm(temp, { recursive: true, force: true }); }
+  });
+
+test('real preview consumes the Python-generated canonical bundle and actual PNG bytes',
+  { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {
+    const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-python-contract-'));
+    try {
+      const fixture = pythonContractFixture();
+      const input = { repo, outputDir: path.join(temp, 'privateoutput'), bundle: fixture.bundle };
+      if (process.env.RENDER_DEPS) input.dependenciesRoot = process.env.RENDER_DEPS;
+      const bytes = Buffer.from(fixture.imageDataBase64, 'base64');
+      const result = await renderPreview(input, { imageFetcher: async url => {
+        assert.equal(url, fixture.bundle.article.eyecatch);
+        return { body: bytes, contentType: 'image/png' };
+      } });
+      assert.equal(result.passed, true, JSON.stringify(result));
+      assert.deepEqual({ clicksVerified: result.clicksVerified, sponsoredCtaCount: result.sponsoredCtaCount,
+        allAnchorsVerified: result.allAnchorsVerified }, fixture.expectedPreview);
     } finally { await fs.rm(temp, { recursive: true, force: true }); }
   });
 

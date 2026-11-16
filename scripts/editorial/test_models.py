@@ -11,6 +11,7 @@ from urllib.error import HTTPError
 from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
                     CRITERIA_FIELDS, SOCIAL_SCHEMA)
 from model_inputs import restore_model_input
+from nonproduct_contract_fixture import fixture as nonproduct_fixture
 
 
 ENV = {"ANTHROPIC_API_KEY": "test-claude-key", "GEMINI_API_KEY": "test-gemini-key"}
@@ -395,6 +396,19 @@ class ModelTests(unittest.TestCase):
                        'medical=false means a risk or failed check, never N/A',
                        'apply ONLY to candidate article content', 'never certify inherited clinical accuracy'):
             self.assertIn(phrase, prompt)
+
+    def test_review_accepts_only_bound_nonproduct_affiliate_na_without_claiming_measurement(self):
+        contract = nonproduct_fixture()
+        checks = dict(facts=True, images=True, medical=True, render=True,
+                      affiliate=contract['reviewAffiliateEvidence'])
+        reviewed = Models(ENV, Fake(response(REVIEW))).review(contract['bundle'], checks)
+        self.assertTrue(reviewed['passed'])
+        self.assertFalse(checks['affiliate']['measured'])
+        broken = copy.deepcopy(checks)
+        broken['affiliate']['provenanceFingerprint'] = '0' * 64
+        blocked = Models(ENV, Fake(response(REVIEW))).review(contract['bundle'], broken)
+        self.assertFalse(blocked['passed'])
+        self.assertIn('Missing independent affiliate evidence', blocked['issues'])
 
     def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
         checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}

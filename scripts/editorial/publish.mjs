@@ -34,6 +34,14 @@ const sha = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const nonempty = v => typeof v === 'string' && v.trim().length > 0;
 const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const timestamp = () => new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T') + '+09:00';
+const PUBLIC_REFERENCE_URLS = new Set([
+  'https://www.coleman.co.jp/customersupport/faq/',
+  'https://www.snowpeak.co.jp/contents/campstarterbook/',
+  'https://www.montbell.jp/generalpage/disp.php?id=507',
+]);
+const EDITORIAL_CONTEXT_KEYS = ['articleType', 'commerceApplicability', 'imageApplicability', 'imageProofIds',
+  'schemaVersion', 'sourceApplicability', 'sourceIds', 'sourceReceiptSha256'].sort();
+const COMMERCIAL_NA = { status: 'not_applicable', reason: 'verified_nonproduct_article', verifiedBy: 'deterministic_contract_v1' };
 function sorted(v) {
   if (typeof v === 'number') requireValue(Number.isFinite(v) && (!Number.isInteger(v) || Number.isSafeInteger(v)), 'non-finite or unsafe integer');
   if (Array.isArray(v)) return v.map(sorted);
@@ -41,6 +49,81 @@ function sorted(v) {
   return v;
 }
 const equal = (a, b) => JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
+const uniqueStrings = value => Array.isArray(value) && value.length > 0 && value.every(nonempty) && new Set(value).size === value.length;
+const awareTimestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+  && Number.isFinite(Date.parse(value));
+const canonicalHash = value => sha(JSON.stringify(sorted(value)));
+function merchantOrTrackingUrl(value) {
+  try {
+    const url = new URL(value, SITE), host = url.hostname.toLowerCase();
+    return host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amzn.to' || host === 'amzn.asia' ||
+      host === 'rakuten.co.jp' || host.endsWith('.rakuten.co.jp') || host === 'a.r10.to' ||
+      host === 'shopping.yahoo.co.jp' || host === 'ck.jp.ap.valuecommerce.com' ||
+      /(?:^|[.-])(affiliate|tracking|track|click)(?:[.-]|$)/i.test(host) || /\/(?:affiliate|tracking|track-click|click)(?:\/|$)/i.test(url.pathname);
+  } catch { return true; }
+}
+
+function nonproductContentLinks(content) {
+  const links = [];
+  for (const match of String(content).matchAll(/(?<!!)\[[^\]]*\]\(([^\s)]+)(?:\s+["'][^"']*["'])?\)|<a\b[^>]*\bhref\s*=\s*["']([^"']+)["']/gi))
+    links.push(match[1] || match[2]);
+  return links;
+}
+
+export function validateNonproductBundle(bundle) {
+  requireValue(record(bundle) && record(bundle.article) && bundle.article.productIds?.length === 0 && bundle.products?.length === 0,
+    'strict nonproduct route required');
+  const context = bundle.article.generationMeta?.editorialContext;
+  requireValue(record(context) && equal(Object.keys(context).sort(), EDITORIAL_CONTEXT_KEYS) && context.schemaVersion === 1 &&
+    context.articleType === 'nonproduct' && context.sourceApplicability === 'verified_public_references' &&
+    context.commerceApplicability === 'not_applicable' && context.imageApplicability === 'owned_illustration' &&
+    uniqueStrings(context.sourceIds) && uniqueStrings(context.imageProofIds) && /^[a-f0-9]{64}$/.test(context.sourceReceiptSha256 || ''),
+  'nonproduct editorial context invalid');
+  requireValue(Array.isArray(bundle.references) && bundle.references.length === context.sourceIds.length &&
+    bundle.references.every(record) && equal(bundle.references.map(item => item.id), context.sourceIds), 'nonproduct references invalid');
+  for (const reference of bundle.references) {
+    const rawId = typeof reference.id === 'string' && reference.id.startsWith('public:') ? reference.id.slice('public:'.length) : '';
+    const receipt = { id: rawId, url: reference.url, canonicalUrl: reference.canonicalUrl, checkedAt: reference.checkedAt,
+      httpStatus: reference.httpStatus, excerpt: reference.excerpt, claimScope: reference.claimScope };
+    requireValue(PUBLIC_REFERENCE_URLS.has(reference.url) && reference.canonicalUrl === reference.url && reference.kind === 'public-primary' &&
+      reference.httpStatus === 200 && nonempty(reference.title) && nonempty(reference.excerpt) && reference.excerpt.length <= 500 &&
+      nonempty(reference.claimScope) && awareTimestamp(reference.checkedAt) && /^[a-f0-9]{64}$/.test(reference.receiptSha256 || '') &&
+      reference.excerptSha256 === sha(reference.excerpt), 'nonproduct reference binding invalid');
+    requireValue(nonempty(rawId) && reference.receiptSha256 === canonicalHash(receipt), 'nonproduct reference receipt invalid');
+  }
+  requireValue(context.sourceReceiptSha256 === canonicalHash(bundle.references.map(item => item.receiptSha256)),
+    'nonproduct source receipt invalid');
+  requireValue(!/\{\{\s*(?:product|price|comparison|ranking)\s*:/i.test(bundle.article.content) &&
+    nonproductContentLinks(bundle.article.content).every(value => {
+      try {
+        const url = new URL(value, SITE);
+        return !merchantOrTrackingUrl(url.href) && (url.origin === SITE || PUBLIC_REFERENCE_URLS.has(url.href));
+      } catch { return false; }
+    }), 'nonproduct commercial or unapproved link invalid');
+  requireValue(Array.isArray(bundle.images) && bundle.images.length === 1 && context.imageProofIds.length === 1,
+    'nonproduct images must contain exactly one bound proof');
+  const proofs = context.imageProofIds.map(id => bundle.images.find(image => image?.id === id));
+  requireValue(proofs.every(record) && new Set(proofs).size === proofs.length && proofs[0] === bundle.images[0], 'nonproduct image proof missing');
+  for (const image of proofs) {
+    const evidence = image.rendererEvidence;
+    requireValue(image.id === `illustration:${String(image.sha256).slice(0, 20)}` && image.role === 'eyecatch' &&
+      image.ownership === 'owned_editorial_illustration' && image.depictsRealProduct === false && image.verified === true &&
+      equal(image.referenceIds, context.sourceIds) && /^[a-f0-9]{64}$/.test(image.compositionSha256 || '') &&
+      /^[a-f0-9]{64}$/.test(image.sha256 || '') && Number.isSafeInteger(image.size) && image.size > 0 && image.size <= 8 * 1024 * 1024 &&
+      image.contentType === 'image/png' && image.width === 1200 && image.height === 630 && awareTimestamp(image.checkedAt) &&
+      nonempty(image.url) && (!image.finalUrl || image.finalUrl === image.url) && record(evidence) && evidence.evidencePassed === true &&
+      evidence.version === 'editorial-illustration-v1' && evidence.networkRequests === 0 && evidence.pngSha256 === image.sha256 &&
+      evidence.bytes === image.size && evidence.contentHash === image.compositionSha256 && equal(evidence.sourceIds, context.sourceIds) &&
+      evidence.sourceReceiptSha256 === context.sourceReceiptSha256, 'nonproduct owned illustration invalid');
+  }
+  requireValue(proofs.length === 1 && bundle.article.eyecatch === proofs[0].url && equal(bundle.commercialRoute, COMMERCIAL_NA),
+    'nonproduct public route binding invalid');
+  return context;
+}
+
+export function isStrictNonproductBundle(bundle) {
+  try { validateNonproductBundle(bundle); return true; } catch { return false; }
+}
 
 // Raw JSON is essential: JSON.parse discards Python 1.0 vs 1 information. Use
 // stdlib Python on the original received bytes. All JSON fields are bound,
@@ -106,7 +189,12 @@ export function validateBundle(bundle) {
     requireValue(nonempty(a[k]), 'article required fields missing');
   requireValue(/^(?:editorial-[a-zA-Z0-9_-]+|article-[a-f0-9]{24})$/.test(a.id) && /^[a-z0-9][a-z0-9-]*$/.test(a.slug), 'new editorial identity required');
   requireValue(a.status === 'draft' && a.publishedAt == null, 'bundle must be draft');
-  requireValue(Array.isArray(a.productIds) && a.productIds.length > 0 && new Set(a.productIds).size === a.productIds.length, 'product IDs required');
+  requireValue(Array.isArray(a.productIds), 'product IDs required');
+  if (a.productIds.length === 0 || bundle.products.length === 0) {
+    validateNonproductBundle(bundle);
+    return;
+  }
+  requireValue(new Set(a.productIds).size === a.productIds.length, 'product IDs required');
   requireValue(bundle.products.length === a.productIds.length && bundle.products.every(p => record(p) && a.productIds.includes(p.id)) &&
     new Set(bundle.products.map(p => p.id)).size === bundle.products.length, 'exact selected product set required');
   for (const p of bundle.products) {
@@ -121,6 +209,7 @@ function assertDraft(rows, expected) {
   return rows[0];
 }
 async function assertProducts(db, products) {
+  if (products.length === 0) return;
   const rows = await db.getProducts(products.map(p => p.id));
   requireValue(rows.length === products.length && new Set(rows.map(p => p.id)).size === rows.length, 'product mismatch');
   for (const product of products) {
@@ -178,6 +267,14 @@ export function verifyPublicHTML(html, bundle) {
   });
   const expectedImages = [...bundle.products.map(p => p.imageUrl), ...(bundle.article.eyecatch ? [bundle.article.eyecatch] : [])];
   if (expectedImages.some(url => !nonempty(url) || !imageVariants(url).some(v => images.includes(v)))) return false;
+  if (bundle.article.productIds?.length === 0) {
+    if (!isStrictNonproductBundle(bundle)) return false;
+    return !tags.some(tag => tag.name === 'a' && (String(tag.attrs.rel || '').split(/\s+/).includes('sponsored') || (() => {
+      try {
+        return merchantOrTrackingUrl(new URL(tag.attrs.href, SITE).href);
+      } catch { return true; }
+    })()));
+  }
   const destinations = bundle.products.flatMap(p => [p.affiliateUrl, p.amazonUrl, p.yahooUrl].filter(nonempty));
   return destinations.length > 0 && destinations.every(url => links.includes(url));
 }
@@ -222,7 +319,8 @@ export async function verifyApprovedImages(bundle, imageDigest = secureImageDige
       Number.isSafeInteger(image.size) && image.size > 0 && image.size <= 8 * 1024 * 1024, 'approved image proof invalid');
     const actual = await imageDigest(image.url);
     requireValue(record(actual) && actual.sha256 === image.sha256 && actual.size === image.size &&
-      actual.size <= 8 * 1024 * 1024 && typeof actual.contentType === 'string' && actual.contentType.startsWith('image/'), 'approved image bytes mismatch');
+      actual.size <= 8 * 1024 * 1024 && typeof actual.contentType === 'string' && actual.contentType.startsWith('image/') &&
+      (!isStrictNonproductBundle(bundle) || actual.contentType === image.contentType), 'approved image bytes mismatch');
   }
 }
 
@@ -294,8 +392,14 @@ export async function executeNewArticle(input, deps = {}) {
       requireValue(verifyPublicHTML(html, bundle), 'public HTML verification failed');
       await verifyApprovedImages(bundle, deps.imageDigest || secureImageDigest);
       // No true until DB, cache and public page all agree with the approved bytes.
+      const commercialRoute = bundle.article.productIds.length === 0 ? { status: 'not_applicable', measured: false, sponsoredCtaCount: 0,
+        reason: COMMERCIAL_NA.reason, verifiedBy: COMMERCIAL_NA.verifiedBy } : undefined;
       return { verified: true, url, contentHash: sha(expected.content), remoteUpdatedAt: readback[0].updated_at,
-        readback: { verified: true, fingerprint: revision, ...(bundle.article.generationMeta?.socialCard ? { socialCard: bundle.article.generationMeta.socialCard } : {}) } };
+        readback: { verified: true, fingerprint: revision, ...(commercialRoute ? { productIds: [], commercialRoute,
+          editorialContext: bundle.article.generationMeta.editorialContext,
+          imageProofs: bundle.images.filter(image => bundle.article.generationMeta.editorialContext.imageProofIds.includes(image.id))
+            .map(image => ({ id: image.id, url: image.url, sha256: image.sha256, size: image.size, contentType: image.contentType })) } : {}),
+          ...(bundle.article.generationMeta?.socialCard ? { socialCard: bundle.article.generationMeta.socialCard } : {}) } };
     } catch { throw new Error('unknown: publication requires reconciliation'); }
   });
 }

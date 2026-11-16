@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, parseArguments, loadEnv, productionDependencies } from './publish.mjs';
+import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, validateBundle, parseArguments, loadEnv, productionDependencies } from './publish.mjs';
 import { withPublicationLock } from '../seo/article-guard.mjs';
 
 function bundle() {
@@ -31,9 +31,103 @@ function harness(b = bundle()) {
   return { b, state, deps, input: { bundle: b, revision: bundleHash(b) } };
 }
 function approval(revision) { return { revision, approverId: 'U-owner', evidence: { event: 'trusted-ledger-event' } }; }
+function pythonContractFixture() {
+  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py'], {
+    encoding: 'utf8', env: { PATH: process.env.PATH || '/usr/bin:/bin', PYTHONPATH: 'scripts/editorial', TZ: 'Asia/Tokyo' },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
 function html(b) {
   return `<main data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"><h1>${b.article.title}</h1><img src="/_next/image?url=${encodeURIComponent(b.products[0].imageUrl)}&amp;w=800"><a href="${b.products[0].affiliateUrl}">購入</a></main>`;
 }
+
+function nonproductBundle() {
+  const imageHash = createHash('sha256').update('approved-image-bytes').digest('hex');
+  const receiptHash = '91022beb32baf836592d38c866d230a6328949aa4358d06b04eaf9629dfe4036';
+  const sourceReceiptSha256 = 'ec7c19d069f5d651fb6569481606c81c7331281ccdcc49ba4afe5be1c6478dab';
+  const sourceId = 'public:coleman-care';
+  const imageId = `illustration:${imageHash.slice(0, 20)}`;
+  return {
+    article: { id: 'editorial-nonproduct-test', slug: 'tent-care-steps', title: 'テントをしまう前の確認手順', categoryId: 'tent',
+      content: '## 手順\n汚れを落とし、十分に乾かします。\n\n[テントの記事一覧](/categories/tent)', excerpt: '保管前の確認手順', author: 'ギア男',
+      productIds: [], status: 'draft', createdAt: '2026-11-16T12:00:00+09:00', updatedAt: '2026-11-16T12:00:00+09:00', publishedAt: null,
+      eyecatch: 'https://assets.example/editorial-card.png', generationMeta: { editorialContext: {
+        schemaVersion: 1, articleType: 'nonproduct', sourceApplicability: 'verified_public_references', commerceApplicability: 'not_applicable',
+        imageApplicability: 'owned_illustration', sourceIds: [sourceId], sourceReceiptSha256, imageProofIds: [imageId],
+      } } },
+    products: [],
+    references: [{ id: sourceId, kind: 'public-primary', url: 'https://www.coleman.co.jp/customersupport/faq/',
+      canonicalUrl: 'https://www.coleman.co.jp/customersupport/faq/', title: 'Coleman FAQ', excerpt: '汚れを落として十分に乾燥させます。',
+      claimScope: 'tent-care', checkedAt: '2026-11-16T10:00:00+09:00', httpStatus: 200, receiptSha256: receiptHash,
+      excerptSha256: createHash('sha256').update('汚れを落として十分に乾燥させます。').digest('hex'), scope: 'tent-care' }],
+    images: [{ id: imageId, role: 'eyecatch', ownership: 'owned_editorial_illustration', depictsRealProduct: false,
+      referenceIds: [sourceId], compositionSha256: 'c'.repeat(64), url: 'https://assets.example/editorial-card.png',
+      finalUrl: 'https://assets.example/editorial-card.png', sha256: imageHash, size: 20, contentType: 'image/png', width: 1200, height: 630,
+      verified: true, checkedAt: '2026-11-16T10:05:00+09:00', rendererEvidence: { passed: true, evidencePassed: true,
+        version: 'editorial-illustration-v1', width: 1200, height: 630, pngSha256: imageHash, bytes: 20, contentHash: 'c'.repeat(64),
+        sourceIds: [sourceId], sourceReceiptSha256, networkRequests: 0 } }],
+    commercialRoute: { status: 'not_applicable', reason: 'verified_nonproduct_article', verifiedBy: 'deterministic_contract_v1' },
+  };
+}
+
+function nonproductHtml(b, extra = '') {
+  return `<main><article data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"><h1>${b.article.title}</h1>` +
+    `<img src="${b.article.eyecatch}"><p>汚れを落とし、十分に乾かします。</p><a href="/categories/tent">テントの記事一覧</a>${extra}</article></main>`;
+}
+
+test('strict nonproduct contract is the only zero-product route and rejects provenance forgeries', () => {
+  const good = nonproductBundle();
+  assert.doesNotThrow(() => validateBundle(good));
+  assert.equal(verifyPublicHTML(nonproductHtml(good), good), true);
+  const mutations = [
+    b => { delete b.article.generationMeta.editorialContext; },
+    b => { b.references[0].url = 'https://example.com/forged'; },
+    b => { b.article.generationMeta.editorialContext.sourceReceiptSha256 = '0'.repeat(64); },
+    b => { b.images[0].depictsRealProduct = true; },
+    b => { b.images[0].referenceIds = ['public:other']; },
+    b => { b.article.eyecatch = 'https://assets.example/unbound.png'; },
+    b => { b.commercialRoute.status = 'passed'; },
+  ];
+  for (const mutate of mutations) { const forged = structuredClone(good); mutate(forged); assert.throws(() => validateBundle(forged)); }
+  const rewrittenExcerpt = structuredClone(good);
+  rewrittenExcerpt.references[0].excerpt = '差し替えた本文を、検証済みのように見せます。';
+  rewrittenExcerpt.references[0].excerptSha256 = createHash('sha256').update(rewrittenExcerpt.references[0].excerpt).digest('hex');
+  rewrittenExcerpt.article.generationMeta.editorialContext.sourceReceiptSha256 = createHash('sha256')
+    .update(JSON.stringify(rewrittenExcerpt.references.map(reference => reference.receiptSha256))).digest('hex');
+  assert.throws(() => validateBundle(rewrittenExcerpt), /reference receipt/);
+  assert.equal(verifyPublicHTML(nonproductHtml(good, '<a href="https://www.amazon.co.jp/dp/B000000001">merchant</a>'), good), false);
+});
+
+test('nonproduct stage and publish skip product DB lookup and record explicit merchant NA after public zero-link readback', async () => {
+  const b = nonproductBundle();
+  const h = harness(b);
+  let productReads = 0;
+  h.deps.db.getProducts = async () => { productReads++; throw new Error('must not read products for strict nonproduct'); };
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  h.state.html = nonproductHtml(b);
+  const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
+  assert.equal(productReads, 0);
+  assert.deepEqual(result.readback.productIds, []);
+  assert.deepEqual(result.readback.commercialRoute, { status: 'not_applicable', measured: false, sponsoredCtaCount: 0,
+    reason: 'verified_nonproduct_article', verifiedBy: 'deterministic_contract_v1' });
+  assert.deepEqual(result.readback.editorialContext, b.article.generationMeta.editorialContext);
+  assert.deepEqual(result.readback.imageProofs, [{ id: b.images[0].id, url: b.images[0].url, sha256: b.images[0].sha256,
+    size: b.images[0].size, contentType: 'image/png' }]);
+  assert.equal(result.readback.verified, true);
+});
+
+test('JS publication readback exactly matches the Python ledger boundary fixture', async () => {
+  const fixture = pythonContractFixture();
+  assert.ok(fixture.expectedPublicationReadback, 'Python fixture must publish the ledger readback contract');
+  const h = harness(fixture.bundle), proof = fixture.bundle.images[0];
+  h.deps.imageDigest = async () => ({ sha256: proof.sha256, size: proof.size, contentType: proof.contentType });
+  await execute({ ...h.input, action: 'stage' }, h.deps);
+  h.state.html = nonproductHtml(fixture.bundle);
+  const result = await execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps);
+  assert.deepEqual({ productIds: result.readback.productIds, editorialContext: result.readback.editorialContext,
+    commercialRoute: result.readback.commercialRoute, imageProofs: result.readback.imageProofs }, fixture.expectedPublicationReadback);
+});
 
 test('production minimal insert accepts empty 201 only with exact stage readback', async t => {
   const h = harness();

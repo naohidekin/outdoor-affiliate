@@ -22,7 +22,7 @@ flowchart TD
   M --> O["AI: 公開記事に基づくSNS本文案<br/>SNS生成の個別有効化が必要"]
   O --> P["P: SNS画像・文字数・URL・記事版を検査しSlack配信"]
   P --> Q{"本人: SNSの本文・画像を別承認"}
-  Q -->|承認| R["P: 投稿対象と重複を確認<br/>Buffer予約同期は未実装・別途確認が必要"]
+  Q -->|承認| R["P: 投稿対象と重複を確認<br/>有効期間では承認版をBufferの次の空き枠へ予約"]
   R --> S["P: X投稿の個別有効化後のみ<br/>承認本文・画像を投稿、記事URLを返信"]
   S --> T["P: account・本文・画像SHA／mediaKey<br/>返信の親ID・記事URLを読み戻し照合"]
   N --> U["P: 週次／月次の実績・欠測・利用量を集計"]
@@ -45,7 +45,28 @@ flowchart TD
 SNSの待機は、公開済み記事の次の制作期を止めない。未公開記事の本人承認待ちと件数上限は維持する。
 画像の基本は実商品の公式写真とプログラムによる合成。AIによる商品外観や未確認仕様の創作で置き換えない。
 待機・同一状態・件数判定・旧記録照合にはAIを呼ばない。成功結果の再利用は依存入力hashが一致する場合だけ。
-Buffer同期は未実装であり、空キューを推定しない。X停止中は承認済みSNSも投稿しない。
+Buffer経路は別のSNS対象版承認、接続確認、期間・共有API枠を満たす場合だけ使う。空キューを推定せず、
+直接X投稿の停止とBuffer経由の予約を混同しない。未接続・対象期間外では予約しない。
+
+## 2026-11-20以降の通常企画
+
+通常制作期の調査は既存Claude callを1回だけ使い、`product`、`seasonal_problem`、`knowhow` を最大9案まで提案する。
+AIへ渡す既存記事はtitle/slug/known query/excerpt/headingsの要約だけで、全既存記事indexによる重複判定はローカルで行う。
+GSC/GA4はquery本文を渡さないown-site実績IDであり、市場需要やGoogle Trendsとは呼ばない。比較期が一致するGSCだけを
+期間比較として扱い、ゼロ基準を無限成長へ変換しない。外部trendは未接続なら未確認のままにする。
+
+決定論gateは最大3案を選び、ジャンルは近い優先度のtie-breakにだけ使ってquotaを強制しない。意味重複または曖昧な案は
+新記事にせずprivateな既存記事更新案またはholdへ送る。3枠を満たす確認済み案がない場合は全体をholdし、追加AI callや
+無限補充を行わない。前期の未公開jobが残る間は新しい調査を開始せず、枠解放後に同じ通常経路を開始する。
+
+期間証跡は `period-receipts/<period>.json`、既存記事更新案は
+`existing-update-proposals/<period>.json`、一次情報取得証跡は `public-sources/<period>.json` にprivate保存する。
+receiptは全提案のselected/rejected/update/hold理由、source ID、ジャンル別の提案・適格・選定件数と不足理由を保持する。
+
+`productIds: []` は単独では許可にならない。非商品記事は固定一次情報URLの実取得excerpt、receipt hash、所有図解の実PNG
+bytes/hash/readback、desktop/mobile表示、スポンサーCTA 0件、`generationMeta.editorialContext` とtyped
+`commerceApplicability: not_applicable` が完全に束縛された場合だけ進む。merchant検査はPASSではなく
+`not_applicable/not_measured` と記録する。商品を使う記事は従来の商品・画像・購入先検証を変更しない。
 
 この変更は隔離ブランチで検証する。既存の本番設定・launchd・承認台帳を切り替える手順ではない。
 停止中のCodex確認用automationを、この変更の導入やテストを理由に再開しない。

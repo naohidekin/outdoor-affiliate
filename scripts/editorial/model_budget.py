@@ -457,6 +457,13 @@ class ModelBudget:
                     'outcome': outcome, 'chargedInputTokens': actual_input,
                     'chargedOutputTokens': actual_output}
 
+    def has_request_reservation(self, article_id, stage, period_key):
+        """True means a provider attempt may already have occurred for this exact scope."""
+        with self._connect() as db:
+            return db.execute('''SELECT 1 FROM model_budget_reservations
+                WHERE article_id=? AND stage=? AND period_key=? LIMIT 1''',
+                (article_id, stage, period_key)).fetchone() is not None
+
     def import_usage(self, records):
         if not isinstance(records, list):
             raise ValueError('model usage records required')

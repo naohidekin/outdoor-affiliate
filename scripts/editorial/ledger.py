@@ -51,12 +51,19 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def valid_review(review, revision):
+def valid_review(review, revision, bundle=None):
     score = review.get('score') if isinstance(review, dict) else None
     require(isinstance(score, (int, float)) and not isinstance(score, bool)
             and math.isfinite(score) and score >= 7.5 and review.get('passed') is True, 'review failed')
-    require(isinstance(review.get('evidence'), dict)
-            and all(review['evidence'].get(flag) is True for flag in FLAGS), 'evidence flags required')
+    evidence = review.get('evidence')
+    require(isinstance(evidence, dict)
+            and all(evidence.get(flag) is True for flag in FLAGS if flag != 'affiliate'),
+            'evidence flags required')
+    affiliate = evidence.get('affiliate')
+    if affiliate is not True:
+        from topic_selection import nonproduct_affiliate_review
+        require(bundle is not None and affiliate == nonproduct_affiliate_review(bundle),
+                'typed nonproduct affiliate applicability required')
     polish = review.get('polish', {})
     require(isinstance(polish, dict) and polish.get('model') == 'gemini-3.8-flash'
             and polish.get('validated') is True, 'validated Gemini polish required')
@@ -158,7 +165,7 @@ def valid_social_images(job, proposal):
 
 
 def valid_image_refresh(old, proposal, review):
-    valid_review(old.get('review'), old['revision'])
+    valid_review(old.get('review'), old['revision'], old.get('bundle'))
     require(fingerprint(old['proposal']) == old['revision'], 'old social changed')
     excluded = {'images', 'supplementalCard', 'approvalNotice', 'priorPostUrl', 'wisePolicy'}
     require({k: v for k, v in old['proposal'].items() if k not in excluded} ==
@@ -749,7 +756,7 @@ class Ledger:
             job = self._get(db, id)
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')
-            valid_review(review, revision)
+            valid_review(review, revision, job.get('bundle'))
             job.update(review=json.loads(canonical(review)), approval=None, stage='review')
             self._invalidate(db, id, 'article')
             return self._put(db, job, 'review')
@@ -763,7 +770,7 @@ class Ledger:
                     'only unapproved revision or catalog correction in review can receive Astra QA')
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')
-            valid_review(job['review'], revision)
+            valid_review(job['review'], revision, job.get('bundle'))
             valid_astra_review(review, revision)
             job['astraReview'] = dict(json.loads(canonical(review)), recordedAt=timestamp().isoformat())
             return self._put(db, job, 'astra_review')
@@ -776,7 +783,7 @@ class Ledger:
             self._current(job)
             if kind == 'article':
                 revision = job['revision']
-                valid_review(job['review'], revision)
+                valid_review(job['review'], revision, job.get('bundle'))
                 if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
                     valid_astra_review(job.get('astraReview'), revision)
             else:
@@ -784,7 +791,7 @@ class Ledger:
                 require(not job['social'].get('publication'), 'posted social is immutable')
                 revision = fingerprint(job['social']['proposal'])
                 require(revision == job['social']['revision'], 'social changed')
-                valid_review(job['social']['review'], revision)
+                valid_review(job['social']['review'], revision, job['social'].get('proposal'))
             request_id, nonce = 'camp-' + secrets.token_hex(12), secrets.token_hex(16)
             payload = dict(request_id=request_id, article_id=id, manifest_hash=revision, nonce=nonce)
             request = dict(payload, kind=kind, payload=payload, status='created', expires_at=(now + timedelta(days=7)).isoformat())
@@ -839,7 +846,7 @@ class Ledger:
             if req['kind'] == 'social':
                 require(fingerprint(target['proposal']) == target['revision'] and job['publication']
                         and job['publication'].get('verified') is True, 'social changed or unpublished')
-            valid_review(target['review'], target['revision'])
+            valid_review(target['review'], target['revision'], target.get('bundle') or target.get('proposal'))
             stage = stages[event['action_id']]
             target['approval'] = dict(request_id=req['request_id'], revision=req['manifest_hash'], user_id=self.owner_id,
                                       action=stage, at=now.isoformat()) if stage == 'approved' else None
@@ -920,7 +927,7 @@ class Ledger:
             job = self._get(db, id)
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')
-            valid_review(job['review'], revision)
+            valid_review(job['review'], revision, job.get('bundle'))
             require(not job['publication'] and not job['approval'], 'already published or approved')
             require(job['stage'] not in ('approved', 'published', 'publishing', 'scheduled',
                                          'schedule_pending', 'publication_pending'), 'publication/schedule pending')
@@ -963,7 +970,7 @@ class Ledger:
             social = job.get('social') or {}
             proposal = social.get('proposal') or {}
             require(social.get('revision') == revision and fingerprint(proposal) == revision, 'social revision mismatch')
-            valid_review(social.get('review'), revision)
+            valid_review(social.get('review'), revision, social.get('proposal'))
             valid_social_mode(proposal)
             valid_social_images(job, proposal)
             require(proposal.get('platform') == 'x' and proposal.get('deliveryMode') == 'auto_x'
@@ -1053,6 +1060,24 @@ class Ledger:
             require(evidence.get('verified') is True and isinstance(evidence.get('url'), str)
                     and evidence['url'].startswith('https://') and isinstance(readback, dict)
                     and readback.get('verified') is True and readback.get('fingerprint') == revision, 'verified URL readback required')
+            context = ((job.get('bundle') or {}).get('article') or {}).get('generationMeta', {}).get('editorialContext')
+            if context is not None:
+                from topic_selection import validate_nonproduct_bundle
+                validate_nonproduct_bundle(job['bundle'])
+                expected_route = {'status': 'not_applicable', 'measured': False,
+                                  'sponsoredCtaCount': 0,
+                                  'reason': 'verified_nonproduct_article',
+                                  'verifiedBy': 'deterministic_contract_v1'}
+                proof_ids = context['imageProofIds']
+                expected_images = [{key: image.get(key) for key in
+                    ('id', 'url', 'sha256', 'size', 'contentType')}
+                    for image in job['bundle']['images'] if image.get('id') in proof_ids]
+                require(readback.get('productIds') == []
+                        and readback.get('editorialContext') == context
+                        and readback.get('commercialRoute') == expected_route
+                        and readback.get('imageProofs') == expected_images
+                        and [item['id'] for item in expected_images] == proof_ids,
+                        'nonproduct public metadata readback required')
             job.update(publication=dict(evidence, revision=revision, at=timestamp().isoformat()), stage='published')
             return self._put(db, job, 'publication')
 
@@ -1172,7 +1197,7 @@ class Ledger:
             require(old.get('deliveryMode', 'manual') == 'manual' and not old.get('targetAccountId'),
                     'only manual social can be migrated')
             require(fingerprint(old) == social['revision'], 'social changed')
-            valid_review(social['review'], social['revision'])
+            valid_review(social['review'], social['revision'], social.get('proposal'))
             proposal = dict(old, deliveryMode='auto_x', targetAccountId=target_id)
             valid_social_mode(proposal)
             revision = fingerprint(proposal)

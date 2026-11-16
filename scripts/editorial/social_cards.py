@@ -9,6 +9,7 @@ import re
 import struct
 import subprocess
 import tempfile
+from datetime import datetime, timedelta, timezone
 
 from catalog import Catalog, _image_type, safe_url
 
@@ -16,6 +17,8 @@ from catalog import Catalog, _image_type, safe_url
 BUCKET = 'editorial-social-cards'
 TEMPLATE_VERSION = 'lake-sky-social-card-v2'
 MAX_CARD_BYTES = 2 * 1024 * 1024
+EDITORIAL_TEMPLATE_VERSION = 'editorial-illustration-v1'
+JST = timezone(timedelta(hours=9))
 
 
 def _require(condition, code):
@@ -85,8 +88,78 @@ class SocialCards:
         _require(len(json.dumps(evidence, ensure_ascii=False)) <= 16000, 'social_card_render_evidence_invalid')
         return {'bytes': data, 'evidence': evidence}
 
+    def _render_editorial(self, spec, output_path):
+        value = self._node('render-editorial-card.mjs', {**spec, 'outputPath': str(output_path)})
+        data = output_path.read_bytes() if output_path.exists() else b''
+        shown = value.get('displayText') or {}
+        renderer = value.get('renderer') or {}
+        _require(value.get('passed') is True and value.get('evidencePassed') is True
+                 and value.get('version') == EDITORIAL_TEMPLATE_VERSION
+                 and value.get('width') == 1200 and value.get('height') == 630
+                 and value.get('networkRequests') == 0
+                 and value.get('pngSha256') == hashlib.sha256(data).hexdigest()
+                 and value.get('bytes') == len(data)
+                 and value.get('sourceIds') == spec['sourceIds']
+                 and value.get('sourceReceiptSha256') == spec['sourceReceiptSha256']
+                 and shown == {'title': spec['title'], 'heading': spec['heading'],
+                               'steps': spec['steps'], 'badge': 'キャンプのヒント',
+                               'disclaimer': 'Camp Gear Lab編集部の図解'}
+                 and re.fullmatch(r'[a-f0-9]{64}', str(value.get('contentHash', '')))
+                 and isinstance(value.get('layout'), dict) and renderer.get('engine')
+                 and renderer.get('platform') and renderer.get('fontFamily'),
+                 'editorial_card_render_evidence_invalid')
+        evidence = {key: value[key] for key in
+                    ('passed', 'evidencePassed', 'version', 'width', 'height', 'pngSha256',
+                     'bytes', 'contentHash', 'displayText', 'layout', 'renderer',
+                     'networkRequests', 'sourceIds', 'sourceReceiptSha256')}
+        return {'bytes': data, 'evidence': evidence}
+
     def _store(self, data, path):
         return self._node('social-card-storage.mjs', {'path': path, 'dataBase64': base64.b64encode(data).decode('ascii')})
+
+    def build_editorial_illustration(self, theme, references, source_receipt_sha256):
+        source_ids = [item.get('id') for item in references]
+        _require(source_ids and len(source_ids) == len(set(source_ids))
+                 and all(isinstance(value, str) and value.startswith('public:') for value in source_ids)
+                 and re.fullmatch(r'[a-f0-9]{64}', str(source_receipt_sha256)),
+                 'editorial_card_sources_invalid')
+        outline = theme.get('outline')
+        _require(isinstance(outline, list) and 3 <= len(outline) <= 5
+                 and all(isinstance(value, str) and value.strip() and len(value.strip()) <= 40
+                         for value in outline),
+                 'editorial_card_steps_invalid')
+        steps = [{'kind': 'editorial_outline', 'text': text.strip()} for text in outline]
+        spec = {'title': theme['title'], 'heading': _heading(theme['title']), 'steps': steps,
+                'sourceIds': source_ids, 'sourceReceiptSha256': source_receipt_sha256}
+        with tempfile.TemporaryDirectory(prefix='camp-editorial-card-') as directory:
+            output = Path(directory) / 'card.png'
+            rendered = self._render_editorial(spec, output)
+        data = rendered['bytes']
+        _require(0 < len(data) <= MAX_CARD_BYTES and _image_type(data) == 'image/png'
+                 and len(data) >= 24 and struct.unpack('>II', data[16:24]) == (1200, 630),
+                 'editorial_card_png_invalid')
+        digest = hashlib.sha256(data).hexdigest()
+        path = digest[:2] + '/' + digest + '.png'
+        _require(bool(self.env.get('SUPABASE_URL')) and bool(self.env.get('SUPABASE_SERVICE_ROLE_KEY')),
+                 'social_card_storage_unconfigured')
+        base = self.env['SUPABASE_URL'].rstrip('/')
+        stored = self.storage(data, path)
+        url = base + '/storage/v1/object/public/' + BUCKET + '/' + path
+        _require(isinstance(stored, dict) and stored.get('verified') is True
+                 and stored.get('url') == url and stored.get('sha256') == digest
+                 and stored.get('size') == len(data), 'editorial_card_upload_unverified')
+        public = self.catalog.request(url, {'Accept': 'image/png', 'Cache-Control': 'no-cache'})
+        _require(public['body'] == data and
+                 public['headers'].get('content-type', '').split(';')[0].lower() == 'image/png',
+                 'editorial_card_public_readback_mismatch')
+        return {'id': 'illustration:' + digest[:20], 'role': 'eyecatch',
+                'ownership': 'owned_editorial_illustration', 'depictsRealProduct': False,
+                'referenceIds': source_ids,
+                'compositionSha256': rendered['evidence']['contentHash'],
+                'url': url, 'finalUrl': url, 'sha256': digest, 'size': len(data),
+                'contentType': 'image/png', 'width': 1200, 'height': 630,
+                'verified': True, 'checkedAt': datetime.now(JST).isoformat(),
+                'rendererEvidence': rendered['evidence']}
 
     def build(self, bundle):
         _require(isinstance(bundle, dict) and isinstance(bundle.get('article'), dict)

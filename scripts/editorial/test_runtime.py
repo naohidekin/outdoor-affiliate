@@ -6,11 +6,14 @@ import sqlite3
 import tempfile
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from runtime import Runtime, atomic, JST
 from model_budget import BudgetHold
 from test_quality import bundle
+from test_topic_selection import (feed as nonproduct_feed, nonproduct_bundle,
+                                  proposal as nonproduct_proposal)
+from topic_selection import bind_nonproduct_theme
 
 
 class ModelsFake:
@@ -45,6 +48,9 @@ class CatalogFake:
     def gather(self, theme, context):
         return {'catalog': bundle()['products'], 'references': bundle()['references'],
                 'checks': {k: True for k in ('facts', 'images', 'affiliate')}}
+
+    def request(self, *_args, **_kwargs):
+        raise OSError('offline fixture')
 
 
 class SlackFake:
@@ -101,7 +107,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual([], self.runtime.ledger.list_jobs())
             for day, key in ((8, '2026-11-06'), (9, '2026-11-06'),
                              (11, '2026-11-06'), (12, '2026-11-06'),
-                             (13, '2026-11-13'), (20, '2026-11-20')):
+                             (13, '2026-11-13')):
                 clock.now.return_value = datetime(2026, 11, day, 9, tzinfo=JST)
                 result = self.runtime.produce(limit=99)
                 self.assertEqual(0 if day in (9, 11, 12) else 3, len(result['articles']))
@@ -114,9 +120,9 @@ class RuntimeTests(unittest.TestCase):
                 if day not in (9, 11, 12):
                     self.models.research = lambda context, day=day: {'themes': [
                         {'slug': f'after-{day}-{i}', 'title': '新記事'} for i in range(3)]}
-        self.assertEqual(['2026-11-06.json', '2026-11-13.json', '2026-11-20.json'],
+        self.assertEqual(['2026-11-06.json', '2026-11-13.json'],
             sorted(p.name for p in (self.runtime.root / 'production-attempts').glob('*.json')))
-        self.assertEqual(9, len(self.runtime.ledger.list_jobs()))
+        self.assertEqual(6, len(self.runtime.ledger.list_jobs()))
 
     def test_configured_manual_produce_cannot_bypass_friday_hour(self):
         self.configure_production_schedule()
@@ -126,6 +132,155 @@ class RuntimeTests(unittest.TestCase):
                 self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
         self.assertEqual([], self.runtime.ledger.list_jobs())
         self.assertFalse((self.runtime.root / 'production-attempts').exists())
+
+    def test_mixed_period_waits_for_three_free_pending_slots_then_uses_one_research_call(self):
+        self.configure_production_schedule()
+        old = [self.runtime.ledger.create_candidate({'slug': f'carry-{i}'},
+               f'2026-11-13T09:0{i}:00+09:00') for i in range(2)]
+        proposals = []
+        topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
+                  ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
+                  ('sleeping-bag-care', '寝袋を乾燥して保管するには？', ['汚れ確認', '乾燥', '保管'])]
+        public_ids = ['public:tent', 'public:layer', 'public:camp']
+        for i, (slug, question, outline) in enumerate(topics):
+            proposals.append({'slug': slug, 'title': question, 'categoryId': 'tent',
+                'productIds': [], 'topicType': 'knowhow', 'query': question,
+                'readerQuestion': question, 'intent': 'informational',
+                'outline': outline, 'priority': 90-i,
+                'overlapRationale': 'distinct', 'selectionReason': 'verified',
+                'sourceIds': ['gsc:fixture', public_ids[i]], 'proposedAction': 'new',
+                'overlapArticleIds': [], 'needsStatus': 'not_applicable'})
+        feed = {'status': 'verified', 'sources': [
+                {'id': 'public:tent', 'scope': 'tent-care', 'receiptSha256': 'a' * 64},
+                {'id': 'public:layer', 'scope': 'layering-concept-only', 'receiptSha256': 'b' * 64},
+                {'id': 'public:camp', 'scope': 'camp-care', 'receiptSha256': 'c' * 64}],
+                'illustrations': []}
+        research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
+            *[{'id': item['id'], 'kind': 'public_reference'} for item in feed['sources']]]}
+        self.runtime.catalog.request = lambda *_args, **_kwargs: None
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.collect_primary_sources', return_value=feed) as collect, \
+                patch.object(self.runtime, '_research_context', return_value=research), \
+                patch.object(self.models, 'research_mixed', create=True,
+                             return_value={'proposals': proposals}) as model, \
+                patch.object(self.runtime, '_make_article', return_value={'status': 'review'}):
+            clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
+            blocked = self.runtime.produce(limit=99)
+            self.assertEqual('mixed_period_waiting_for_three_pending_slots', blocked['reason'])
+            collect.assert_not_called(); model.assert_not_called()
+            for job in old:
+                self.runtime.ledger.set_stage(job['id'], 'rejected')
+            result = self.runtime.produce(limit=99)
+        self.assertEqual(3, len(result['articles']))
+        collect.assert_called_once(); model.assert_called_once()
+        self.assertEqual(3, len([job for job in self.runtime.ledger.list_jobs()
+                                if job['week'] == '2026-11-20']))
+        receipt = json.loads((self.runtime.root / 'period-receipts' / '2026-11-20.json').read_text())
+        self.assertEqual({'knowhow', 'product', 'seasonal_problem'}, set(receipt['genreCoverage']))
+        self.assertEqual('no_proposal', receipt['genreCoverage']['product']['unavailableReason'])
+
+    def test_mixed_precall_budget_hold_is_terminal_and_quiet_on_next_tick(self):
+        self.configure_production_schedule()
+        feed = {'status': 'partial', 'sources': [], 'illustrations': []}
+        research = {'editorialSignals': [], 'categories': []}
+        hold = BudgetHold(reason_code='period_calls_cap', budget_scope='period',
+                          dimension='calls', cap=3, projected=4,
+                          article_id='research:2026-11-20', stage='research',
+                          period_key='2026-11-20', event_id='budget-event')
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics'), \
+                patch('runtime.collect_primary_sources', return_value=feed) as collect, \
+                patch.object(self.runtime, '_research_context', return_value=research), \
+                patch.object(self.models, 'research_mixed', create=True,
+                             side_effect=hold) as model:
+            clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
+            first = self.runtime.produce()
+            second = self.runtime.produce()
+        self.assertEqual(('model_budget_hold', True),
+                         (first['reason'], first['retryable']))
+        self.assertEqual(first, second)
+        collect.assert_called_once()
+        model.assert_called_once()
+        marker = json.loads((self.runtime.root / 'production-attempts' /
+                             '2026-11-20.json').read_text())
+        self.assertEqual('budget_hold', marker['status'])
+        self.assertFalse(marker['transportReservation'])
+        self.assertFalse(marker['requestMayHaveOccurred'])
+        self.assertFalse(marker['requestOccurred'])
+
+    def test_mixed_budget_hold_after_reservation_requires_reconciliation(self):
+        self.configure_production_schedule()
+        hold = BudgetHold(reason_code='period_calls_cap', budget_scope='period',
+                          dimension='calls', cap=3, projected=4,
+                          article_id='research:2026-11-20', stage='research',
+                          period_key='2026-11-20', event_id='budget-event-after-request')
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics'), \
+                patch('runtime.collect_primary_sources', return_value={
+                    'status': 'partial', 'sources': [], 'illustrations': []}), \
+                patch.object(self.runtime, '_research_context', return_value={
+                    'editorialSignals': [], 'categories': []}), \
+                patch.object(self.runtime.model_budget, 'has_request_reservation',
+                             return_value=True), \
+                patch.object(self.models, 'research_mixed', create=True,
+                             side_effect=hold) as model:
+            clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
+            first = self.runtime.produce()
+            second = self.runtime.produce()
+        self.assertEqual(('weekly_research_requires_reconciliation', False),
+                         (first['reason'], first['retryable']))
+        self.assertEqual(first, second)
+        model.assert_called_once()
+        marker = json.loads((self.runtime.root / 'production-attempts' /
+                             '2026-11-20.json').read_text())
+        self.assertEqual('budget_hold_after_request', marker['status'])
+        self.assertTrue(marker['transportReservation'])
+        self.assertTrue(marker['requestMayHaveOccurred'])
+        self.assertIsNone(marker['requestOccurred'])
+
+    def test_mixed_insufficient_pool_returns_same_known_hold_without_second_ai_call(self):
+        self.configure_production_schedule()
+        proposals = [
+            {'slug': 'tent-dry-hold', 'title': 'テントを乾燥して保管するには？',
+             'categoryId': 'tent', 'productIds': [], 'topicType': 'knowhow',
+             'query': 'テント 乾燥 保管', 'readerQuestion': 'テントを乾燥して保管するには？',
+             'intent': 'informational', 'outline': ['汚れ確認', '乾燥', '保管'],
+             'priority': 90, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
+             'sourceIds': ['gsc:fixture', 'public:tent'], 'proposedAction': 'new',
+             'overlapArticleIds': [], 'needsStatus': 'not_applicable'},
+            {'slug': 'layering-hold', 'title': '重ね着の順番は？',
+             'categoryId': 'wear', 'productIds': [], 'topicType': 'knowhow',
+             'query': '重ね着 順番', 'readerQuestion': '重ね着の順番は？',
+             'intent': 'informational', 'outline': ['肌着', '中間着', '上着'],
+             'priority': 89, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
+             'sourceIds': ['gsc:fixture', 'public:layer'], 'proposedAction': 'new',
+             'overlapArticleIds': [], 'needsStatus': 'not_applicable'}]
+        feed = {'status': 'verified', 'sources': [
+            {'id': 'public:tent', 'scope': 'tent-care', 'receiptSha256': 'a' * 64},
+            {'id': 'public:layer', 'scope': 'layering-concept-only', 'receiptSha256': 'b' * 64}],
+            'illustrations': []}
+        research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
+            {'id': 'public:tent', 'kind': 'public_reference'},
+            {'id': 'public:layer', 'kind': 'public_reference'}], 'categories': []}
+        with patch('runtime.datetime') as clock, patch('runtime.require_fresh_daily_metrics'), \
+                patch('runtime.collect_primary_sources', return_value=feed) as collect, \
+                patch.object(self.runtime, '_research_context', return_value=research), \
+                patch.object(self.models, 'research_mixed', create=True,
+                             return_value={'proposals': proposals}) as model:
+            clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
+            first = self.runtime.produce()
+            second = self.runtime.produce()
+        expected = {'status': 'blocked', 'reason': 'insufficient_qualified_period_pool',
+                    'articles': [], 'eligibleCount': 2, 'unfilled': 1}
+        self.assertEqual(expected, first)
+        self.assertEqual(expected, second)
+        collect.assert_called_once()
+        model.assert_called_once()
+        marker = json.loads((self.runtime.root / 'production-attempts' /
+                             '2026-11-20.json').read_text())
+        self.assertEqual('selection_hold', marker['status'])
+        self.assertEqual('insufficient_qualified_period_pool', marker['holdReason'])
+        self.assertEqual([], self.runtime.ledger.list_jobs())
 
     def test_supplemental_before_not_before_has_no_catalog_marker_or_model(self):
         self.config['supplementalApparelEnabled'] = True
@@ -435,6 +590,155 @@ class RuntimeTests(unittest.TestCase):
         self.runtime.tick()
         self.assertEqual(1, [a for a, _ in self.writes].count('publish'))
         self.assertTrue(any(r['kind'] == 'social' for _, r in self.slack.deliveries))
+
+    def test_nonproduct_actual_make_article_requires_separate_article_and_social_approval(self):
+        self.config.update(socialCardsEnabled=True, prewriteDisplayGateEnabled=True,
+                           socialGenerationEnabled=True, socialReviewEnabled=True)
+        self.configure_production_schedule()
+        draft = nonproduct_bundle()
+        theme = bind_nonproduct_theme(
+            nonproduct_proposal('tent-dry-runtime', 'テントを乾かす手順は？'),
+            nonproduct_feed())
+        job = self.runtime.ledger.create_candidate(
+            theme, datetime(2026, 11, 20, 9, tzinfo=JST))
+        illustration = copy.deepcopy(draft['images'][0])
+
+        class EditorialCards:
+            def build_editorial_illustration(inner, selected, references, receipt):
+                self.assertEqual(theme['outline'], selected['outline'])
+                self.assertEqual(theme['nonProductContract']['references'], references)
+                self.assertEqual(theme['nonProductContract']['sourceReceiptSha256'], receipt)
+                return copy.deepcopy(illustration)
+
+        self.runtime.social_cards = EditorialCards()
+        excerpt = theme['nonProductContract']['references'][0]['excerpt']
+        self.runtime.catalog.request = lambda url, _headers: {
+            'url': url, 'status': 200, 'headers': {'content-type': 'text/html; charset=utf-8'},
+            'body': ('<html><body><p>' + excerpt + '</p></body></html>').encode()}
+        self.models.draft = lambda selected, gathered: copy.deepcopy(draft)
+        self.runtime.renderer = lambda built, current: {
+            'passed': True, 'clicksVerified': {'desktop': [], 'mobile': []},
+            'sponsoredCtaCount': {'desktop': 0, 'mobile': 0},
+            'allAnchorsVerified': True}
+
+        def publish(action, current):
+            self.writes.append((action, current['revision']))
+            context = current['bundle']['article']['generationMeta']['editorialContext']
+            return {'verified': True,
+                    'url': 'https://camp-gear-lab.com/articles/' + current['theme']['slug'],
+                    'readback': {'verified': True, 'fingerprint': current['revision'],
+                                 'productIds': [], 'editorialContext': context,
+                                 'commercialRoute': {'status': 'not_applicable', 'measured': False,
+                                     'sponsoredCtaCount': 0, 'reason': 'verified_nonproduct_article',
+                                     'verifiedBy': 'deterministic_contract_v1'},
+                                 'imageProofs': [{key: current['bundle']['images'][0][key]
+                                     for key in ('id', 'url', 'sha256', 'size', 'contentType')}]}}
+
+        self.runtime.publisher = publish
+        delivered = self.runtime._make_article(job, self.runtime._context())
+        current = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('delivered', delivered['status'])
+        self.assertEqual('review', current['stage'])
+        self.assertEqual([], current['bundle']['article']['productIds'])
+        self.assertEqual('not_applicable', current['review']['evidence']['affiliate']['applicability'])
+        source_checks = list((self.runtime.root / 'source-rechecks' / job['id']).glob('*.json'))
+        self.assertEqual(1, len(source_checks))
+        self.assertEqual('verified', json.loads(source_checks[0].read_text())['status'])
+        self.assertEqual(theme['nonProductContract'], current['theme']['nonProductContract'])
+        article_request = self.slack.deliveries[-1][1]
+        self.assertEqual('article', article_request['kind'])
+        self.assertEqual(current['revision'], article_request['manifest_hash'])
+
+        with patch('runtime.collect_daily_metrics', return_value={'status': 'success'}), \
+                patch.object(self.runtime, '_post_publication_audits', return_value=[]):
+            self.runtime.tick()
+        self.assertNotIn('publish', [action for action, _ in self.writes])
+
+        self.approve(current)
+        self.runtime.consume()
+        approved = self.runtime.ledger.get_job(job['id'])
+        bad_readback = {'verified': True, 'fingerprint': approved['revision'],
+                        'productIds': [], 'editorialContext':
+                        approved['bundle']['article']['generationMeta']['editorialContext'],
+                        'commercialRoute': {'status': 'not_applicable', 'measured': False,
+                            'sponsoredCtaCount': 0, 'reason': 'verified_nonproduct_article',
+                            'verifiedBy': 'deterministic_contract_v1'}}
+        with self.assertRaisesRegex(ValueError, 'nonproduct public metadata readback required'):
+            self.runtime.ledger.record_publication(job['id'], approved['revision'], {
+                'verified': True, 'url': 'https://camp-gear-lab.com/articles/' + theme['slug'],
+                'readback': bad_readback})
+        self.assertEqual('approved', self.runtime.ledger.get_job(job['id'])['stage'])
+        with patch('runtime.collect_daily_metrics', return_value={'status': 'success'}), \
+                patch.object(self.runtime, '_post_publication_audits', return_value=[]):
+            self.runtime.tick()
+            published = self.runtime.ledger.get_job(job['id'])
+            self.assertEqual('published', published['stage'])
+            from ledger import fingerprint
+            audit_key = fingerprint({'id': published['id'], 'revision': published['revision'],
+                                     'publication': published['publication']})
+            audit = {'schemaVersion': 1, 'status': 'success', 'id': published['id'],
+                     'revision': published['revision'], 'auditKey': audit_key,
+                     'publication': published['publication'], 'result': {
+                         'passed': True, 'status': 'passed', 'issues': [], 'checks': [
+                             {'name': 'approved_body', 'status': 'passed',
+                              'reason': 'approved_body_hash_exact'},
+                             {'name': 'desktop.merchant', 'status': 'not_applicable',
+                              'reason': 'verified_nonproduct_article'},
+                             {'name': 'mobile.merchant', 'status': 'not_applicable',
+                              'reason': 'verified_nonproduct_article'}]}}
+            path = self.runtime.root / 'post-publication-audits' / (audit_key + '.json')
+            forged = copy.deepcopy(audit)
+            forged['result']['checks'].pop()
+            atomic(path, forged)
+            self.assertFalse(self.runtime._social_audit_success(published))
+            atomic(path, audit)
+            self.assertTrue(self.runtime._social_audit_success(published))
+            self.runtime.tick()
+        social_review = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('social_review', social_review['stage'])
+        self.assertIsNone(social_review['social']['approval'])
+        social_request = self.slack.deliveries[-1][1]
+        self.assertEqual('social', social_request['kind'])
+        self.assertNotEqual(article_request['manifest_hash'], social_request['manifest_hash'])
+
+        self.approve(social_review)
+        self.runtime.consume()
+        social_approved = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('social_approved', social_approved['stage'])
+        self.assertNotEqual(social_approved['approval']['revision'],
+                            social_approved['social']['approval']['revision'])
+
+    def test_nonproduct_source_changed_or_unavailable_holds_before_ai(self):
+        self.configure_production_schedule()
+        theme = bind_nonproduct_theme(
+            nonproduct_proposal('tent-source-recheck', 'テントを乾かす手順は？'),
+            nonproduct_feed())
+        job = self.runtime.ledger.create_candidate(
+            theme, datetime(2026, 11, 20, 9, tzinfo=JST))
+        self.runtime.social_cards = Mock()
+        original_contract = copy.deepcopy(theme['nonProductContract'])
+        with patch('runtime.datetime') as clock, patch.object(self.models, 'draft') as draft, \
+                patch.object(self.models, 'review') as review:
+            clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
+            self.runtime.catalog.request = lambda url, _headers: {
+                'url': url, 'status': 200, 'headers': {'content-type': 'text/html'},
+                'body': '<html><p>別の内容へ変更されました。</p></html>'.encode()}
+            changed = self.runtime.produce(limit=1)
+            self.assertEqual('nonproduct_source_recheck_changed', changed['articles'][0]['reason'])
+            self.assertEqual('held', self.runtime.ledger.get_job(job['id'])['stage'])
+
+            self.runtime.ledger.set_stage(job['id'], 'candidate')
+            self.runtime.catalog.request = Mock(side_effect=OSError('offline'))
+            unavailable = self.runtime.produce(limit=1)
+            self.assertEqual('nonproduct_source_recheck_unavailable',
+                             unavailable['articles'][0]['reason'])
+            self.assertEqual('held', self.runtime.ledger.get_job(job['id'])['stage'])
+            draft.assert_not_called()
+            review.assert_not_called()
+            self.runtime.social_cards.build_editorial_illustration.assert_not_called()
+        self.assertEqual(original_contract,
+                         self.runtime.ledger.get_job(job['id'])['theme']['nonProductContract'])
+        self.assertFalse((self.runtime.root / 'source-rechecks' / job['id']).exists())
 
     def test_foreign_owner_never_publishes(self):
         self.runtime.produce(limit=1)
