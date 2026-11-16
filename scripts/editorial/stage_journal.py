@@ -174,7 +174,8 @@ def _public(record):
     return {key: copy.deepcopy(record.get(key)) for key in (
         'stageKey', 'jobId', 'stage', 'status', 'attempts', 'maxAttempts',
         'inputHash', 'dependencyHash', 'schemaHash', 'createdAt', 'updatedAt',
-        'failureType', 'usageReferencePresent', 'responseReceiptCount',
+        'failureType', 'successorKey', 'predecessorKey', 'inheritedAttempts',
+        'usageReferencePresent', 'responseReceiptCount',
         'missingUsageAttemptCount', 'missingUsage', 'cacheHits') if key in record}
 
 
@@ -213,7 +214,8 @@ def read_status(db_path, *, job_id=None, stage=None):
             'stageAttempts': 0, 'responseReceipts': 0, 'missingUsageAttempts': 0,
             'hits': 0, 'records': 0,
         })
-        item['stageAttempts'] += record.get('attempts', 0)
+        item['stageAttempts'] += (record.get('attempts', 0)
+                                  - record.get('inheritedAttempts', 0))
         item['responseReceipts'] += record.get('responseReceiptCount', 0)
         item['missingUsageAttempts'] += record.get('missingUsageAttemptCount', 0)
         item['hits'] += record.get('cacheHits', 0)
@@ -300,7 +302,8 @@ class StageJournal:
             if record.get('status') != 'failed':
                 raise StageBlocked('only known failures may be retried', stage_key=key,
                                    status=record.get('status'))
-            if record.get('attempts', 0) >= min(2, record.get('maxAttempts', 0)):
+            if (record.get('successorKey') or record.get('predecessorKey')
+                    or record.get('attempts', 0) >= min(2, record.get('maxAttempts', 0))):
                 raise StageBlocked('stage retry limit reached', stage_key=key, status='exhausted')
             record['attempts'] += 1
             record['status'] = 'in_flight'
@@ -308,6 +311,41 @@ class StageJournal:
             record.pop('failureType', None)
             self._save(db, key, record)
             self.ledger._event(db, job_id, 'stage_retry_reserved', _public(record))
+        return self._operate(key, record, operation)
+
+    def retry_corrected_failed(self, job_id, stage, old_key, new_inputs, operation):
+        """Spend the failed lineage's remaining attempt on exact current inputs.
+
+        Binding and reservation commit together before any external operation.
+        Old usage and failure remain authoritative; no counters are reset or copied.
+        """
+        key, hashes = _identity(job_id, stage, new_inputs)
+        with self.ledger._tx() as db:
+            old = self._load(db, old_key)
+            if (old is None or old.get('jobId') != job_id or old.get('stage') != stage):
+                raise StageBlocked('exact failed lineage not found', stage_key=old_key,
+                                   status='missing')
+            if old.get('status') == 'in_flight':
+                raise StageUnknown('stage outcome requires reconciliation', stage_key=old_key)
+            if old.get('status') != 'failed':
+                raise StageBlocked('only known failures may be corrected', stage_key=old_key,
+                                   status=old.get('status'))
+            if (old.get('successorKey') or old.get('predecessorKey')
+                    or old.get('attempts') != 1 or old.get('maxAttempts') != 2):
+                raise StageBlocked('stage retry limit reached', stage_key=old_key, status='exhausted')
+            if key == old_key or self._load(db, key) is not None:
+                raise StageBlocked('corrected inputs must have a new unreserved key', stage_key=key)
+            self._block_other_in_flight(db, job_id, stage, key)
+            now = _now()
+            record = dict(schemaVersion=SCHEMA, stageKey=key, jobId=job_id, stage=stage,
+                          status='in_flight', attempts=2, maxAttempts=2,
+                          predecessorKey=old_key, inheritedAttempts=1,
+                          createdAt=now, updatedAt=now, responseReceiptCount=0,
+                          missingUsageAttemptCount=0, missingUsage=False, cacheHits=0, **hashes)
+            old.update(successorKey=key, updatedAt=now)
+            self._save(db, old_key, old)
+            self._save(db, key, record)
+            self.ledger._event(db, job_id, 'stage_corrected_retry_reserved', _public(record))
         return self._operate(key, record, operation)
 
     def reconcile_in_flight(self, job_id, stage, inputs, *, outcome,
@@ -404,6 +442,11 @@ class StageJournal:
                     'in_flight', 'failed', 'succeeded'):
                 raise StageUnknown('unknown stage journal status', stage_key=meta_key,
                                    status='corrupt')
+            if (record.get('jobId') == job_id and record.get('stage') == stage
+                    and (record.get('successorKey') or record.get('predecessorKey'))
+                    and key not in (record.get('successorKey'), record.get('predecessorKey'))):
+                raise StageBlocked('corrected stage lineage is exhausted',
+                                   stage_key=meta_key, status='exhausted')
             if (isinstance(record, dict) and record.get('jobId') == job_id
                     and record.get('stage') == stage and record.get('status') == 'in_flight'):
                 raise StageUnknown('previous stage input requires reconciliation',

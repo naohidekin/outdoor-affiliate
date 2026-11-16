@@ -11,6 +11,7 @@ colour and size options.  A fixed purchasable variant instead requires exact
 variant, colour and size values.  Missing evidence is a hold, never a pass.
 """
 from html.parser import HTMLParser
+import hashlib
 import json
 import re
 import unicodedata
@@ -750,6 +751,64 @@ def _rakuten_product_page(url):
     return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
 
 
+MONTBELL_EXCERPT_LIMIT = 4000
+
+
+class _ExcerptText(HTMLParser):
+    """Visible source text only; never script, navigation or purchase controls."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.parts = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        hidden = (tag in ('script', 'style', 'template', 'noscript', 'nav', 'header', 'footer',
+                          'aside', 'form', 'select', 'button')
+                  or 'hidden' in attrs or attrs.get('aria-hidden') == 'true'
+                  or re.search(r'display\s*:\s*none|visibility\s*:\s*hidden', attrs.get('style', ''), re.I))
+        if tag not in ('area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+                       'meta', 'param', 'source', 'track', 'wbr'):
+            self.stack.append((tag, bool(hidden) or bool(self.stack and self.stack[-1][1])))
+        if tag in ('p', 'br', 'h4', 'li'):
+            self.parts.append('\n')
+
+    def handle_endtag(self, tag):
+        if self.stack and self.stack[-1][0] == tag:
+            self.stack.pop()
+        if tag in ('p', 'h4', 'li'):
+            self.parts.append('\n')
+
+    def handle_data(self, data):
+        if not self.stack or not self.stack[-1][1]:
+            self.parts.append(data)
+
+
+def _montbell_excerpt(html, page_url, model):
+    """Bound 商品情報 + 仕様, before 機能 or 詳細情報; invalid scope yields no excerpt."""
+    starts = list(re.finditer(r'<h3\b[^>]*>\s*商品情報\s*</h3\s*>', html, re.I))
+    if len(starts) != 1:
+        return None
+    start = starts[0].end()
+    end = re.search(r'<h4\b[^>]*>\s*(機能)\s*</h4\s*>|'
+                    r'<h3\b[^>]*>\s*(詳細情報)\s*</h3\s*>', html[start:], re.I)
+    if end is None:
+        return None
+    fragment = html[start:start + end.start()]
+    if (len(fragment) > 32000 or re.search(r'<h[1-3]\b', fragment, re.I)
+            or len(re.findall(r'<h4\b[^>]*>\s*仕様\s*</h4\s*>', fragment, re.I)) != 1):
+        return None
+    page = _ExcerptText()
+    page.feed(fragment)
+    text = '\n'.join(' '.join(line.split()) for line in ''.join(page.parts).splitlines() if line.strip())
+    if (not text or len(text) > MONTBELL_EXCERPT_LIMIT
+            or re.search(r'価格|税込|税抜|[¥￥]|\d[\d,]*\s*円|在庫|入荷|カート|関連商品|おすすめ商品', text)):
+        return None
+    return {'sourceUrl': page_url, 'model': model, 'text': text,
+            'excerptSHA256': hashlib.sha256(text.encode('utf-8')).hexdigest(),
+            'scope': '商品情報 through 仕様, before first ' + (end.group(1) or end.group(2))}
+
+
 def _inspect_montbell(product, page_url, html, image_url):
     try:
         contract = apparel_contract(product)
@@ -802,8 +861,12 @@ def _inspect_montbell(product, page_url, html, image_url):
             colors, sizes = [contract["color"]], [contract["size"]]
         else:
             colors, sizes = available_colors, available_sizes
-        return dict(contract, colors=colors, sizes=sizes, imageUrls=images,
-                    sourceUrl=page_url, sourceKind="montbell-product-dom")
+        result = dict(contract, colors=colors, sizes=sizes, imageUrls=images,
+                      sourceUrl=page_url, sourceKind="montbell-product-dom")
+        excerpt = _montbell_excerpt(html, page_url, contract['model'])
+        if excerpt:
+            result['manufacturerExcerpt'] = excerpt
+        return result
     except (ApparelIdentityError, TypeError, ValueError):
         return None
 

@@ -1,12 +1,14 @@
 """Offline apparel identity and source-hold contracts."""
 import copy
 import html
+import hashlib
 import json
 import unittest
 
 from apparel_identity import (ApparelIdentityError, apparel_class, apparel_contract,
                               binding_matches_product, claim_binding, inspect_apparel_page,
                               official_domains, public_binding)
+from apparel_identity import MONTBELL_EXCERPT_LIMIT
 
 
 def product(**changes):
@@ -40,7 +42,75 @@ def jsonld(value, url="https://webshop.montbell.jp/goods/disp.php?product_id=110
     return '<script type="application/ld+json">' + json.dumps(node, ensure_ascii=False) + '</script>'
 
 
+def montbell_dom():
+    return '''<h2 class="ttlType01">Plasma Men's</h2><div id="maindataCont">
+    <div>品番 #1101493 ブランド モンベル 価格 ¥27,940 在庫あり</div>
+    <a href="/common/images/product/prod_k/k_1101493_bk.jpg"></a>
+    <select name="sel_size"><option value="S">S</option></select>
+    <input name="all_color" value="BK"><input name="product_id" value="1101493"></div>
+    <nav>ナビゲーション</nav><h3 class="ttlType02c">商品情報</h3>
+    <div class="column1 type01"><div class="innerCont"><p>1000フィルパワーのダウンを封入。
+    メーカー調べ（後加工なしの天然の状態）。Light＆Fast。</p>
+    <script>var unrelated = "おすすめ商品";</script><style>.x {color:red}</style>
+    <nav>ナビゲーション</nav><span hidden>隠れた在庫あり</span>
+    </div></div><div class="column1 type01"><div class="innerCont">
+    <h4 class="ttlType03">仕様</h4><p>【素材】7デニール ナイロン<br>
+    【平均重量】130g<br>【収納サイズ】1.1L<br>【特長】ポケット2個（腰）／スタッフバッグ付き<br></p>
+    </div></div><div><h4 class="ttlType03">機能</h4><p>機能欄は対象外</p></div>
+    <h3>関連商品</h3><p>別商品は900フィルパワー 在庫あり</p>'''
+
+
 class ApparelIdentityTests(unittest.TestCase):
+    def test_montbell_excerpt_stops_at_first_functions_or_detail_heading(self):
+        current = product(imageUrl='https://webshop.montbell.jp/common/images/product/prod_k/k_1101493_bk.jpg')
+        url = 'https://webshop.montbell.jp/goods/disp.php?product_id=1101493'
+        for boundary in ('機能', '詳細情報'):
+            with self.subTest(boundary=boundary):
+                source = montbell_dom().replace('<h4 class="ttlType03">機能</h4>',
+                    '<h3 class="ttlType02c">詳細情報</h3>' if boundary == '詳細情報' else
+                    '<h4 class="ttlType03">機能</h4>')
+                source += '<h3>詳細情報</h3><p>別モデルのクールメッシュ</p><h4>機能</h4>'
+                excerpt = inspect_apparel_page(current, url, source, current['imageUrl'])['manufacturerExcerpt']
+                self.assertTrue(excerpt['scope'].endswith('before first ' + boundary))
+                self.assertIn('ポケット2個（腰）', excerpt['text'])
+                self.assertNotIn('機能欄', excerpt['text'])
+                self.assertNotIn('クールメッシュ', excerpt['text'])
+
+    def test_montbell_excerpt_bound_to_exact_identity_and_full_qualified_source(self):
+        current = product(imageUrl='https://webshop.montbell.jp/common/images/product/prod_k/k_1101493_bk.jpg')
+        url = 'https://webshop.montbell.jp/goods/disp.php?product_id=1101493'
+        binding = inspect_apparel_page(current, url, montbell_dom(), current['imageUrl'])
+        excerpt = binding['manufacturerExcerpt']
+        self.assertEqual((url, '1101493'), (excerpt['sourceUrl'], excerpt['model']))
+        self.assertEqual(hashlib.sha256(excerpt['text'].encode('utf-8')).hexdigest(), excerpt['excerptSHA256'])
+        for value in ('1000フィルパワー', 'メーカー調べ（後加工なしの天然の状態）',
+                      'Light＆Fast', '【平均重量】130g', '1.1L', 'ポケット2個（腰）'):
+            self.assertIn(value, excerpt['text'])
+        for value in ('価格', '在庫', 'ナビゲーション', 'var unrelated', 'color:red', '機能欄', '900フィルパワー'):
+            self.assertNotIn(value, excerpt['text'])
+        self.assertNotIn('manufacturerExcerpt', public_binding(binding))
+        for bad_url, bad_html in ((url + '0', montbell_dom()),
+                                  (url, montbell_dom().replace('value="1101493"', 'value="11014930"')),
+                                  (url, montbell_dom().replace('130g', '131g'))):
+            with self.subTest(url=bad_url, html=bad_html):
+                self.assertIsNone(inspect_apparel_page(current, bad_url, bad_html, current['imageUrl']))
+
+    def test_montbell_excerpt_missing_ambiguous_oversize_or_commercial_scope_is_not_exposed(self):
+        current = product(imageUrl='https://webshop.montbell.jp/common/images/product/prod_k/k_1101493_bk.jpg')
+        url = 'https://webshop.montbell.jp/goods/disp.php?product_id=1101493'
+        for source in (
+                montbell_dom().replace('商品情報', '説明'),
+                montbell_dom().replace('>機能<', '>詳細<'),
+                montbell_dom().replace('>仕様<', '>データ<'),
+                montbell_dom() + '<h3>商品情報</h3>',
+                montbell_dom().replace('1000フィルパワー', '文' * (MONTBELL_EXCERPT_LIMIT + 1)),
+                montbell_dom().replace('1000フィルパワー', '<!--' + 'x' * 32001 + '-->1000フィルパワー'),
+                montbell_dom().replace('1000フィルパワー', '価格 ¥1000 在庫あり'),
+                montbell_dom().replace('1000フィルパワー', '<h3>関連商品</h3>1000フィルパワー')):
+            with self.subTest(source=source[:100]):
+                binding = inspect_apparel_page(current, url, source, current['imageUrl'])
+                self.assertNotIn('manufacturerExcerpt', binding or {})
+
     def test_explicit_classification_and_bounded_domains_leave_gear_unchanged(self):
         self.assertEqual(apparel_class(product()), "down")
         self.assertEqual(apparel_class(product(categoryId="wear",

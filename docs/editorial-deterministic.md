@@ -119,6 +119,13 @@ python3 scripts/editorial/operations.py --state-root /absolute/path/to/state --c
 実行は対象と失敗根拠を確認し、停止していないことと復旧権限を確認した運用時に限る。
 工程記録だけを確認するときは、既存SQLiteを指定する。
 
+11/16追加3記事のdraft内部リンク数・文字数エラーを修正版で直す場合は、同じ引数で
+`retry-corrected-stage`を使う。dry-runで旧失敗キーを確認し、本人の修正指示の範囲だけ
+`--execute`する。旧失敗・usageを残したまま旧キーと新入力キーを原子的に結び、
+初回＋修正1回の残り1試行だけを引き継ぐ。未知結果、既使用の修正枠、別記事・別batchは拒否する。
+既存のsource/画像/購入先/表示/Gemini/Claude審査と同じ記事・週・batch予算を通す。
+Slack送達は承認ではなく、公開とSNS予約はそれぞれ本人の対象版承認を待つ。
+
 ```bash
 python3 scripts/editorial/stage_journal.py /absolute/path/to/ledger.sqlite3
 python3 scripts/editorial/stage_journal.py /absolute/path/to/ledger.sqlite3 --job-id ARTICLE_ID

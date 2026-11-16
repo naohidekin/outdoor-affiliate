@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from model_inputs import project_model_input
 from wise_contract import load_policy, valid_scores, passes
-from quality import SHORTCODE, _protected, _without_code, inspect_polish
+from quality import SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -416,6 +416,12 @@ class Models:
             "When existingArticle is supplied, rewrite that exact existing URL using editorialCorrectionInstructions. "
             "existingArticle and existingArticles supply identity/navigation only, not factual evidence; "
             "never infer product, experience or usage claims from their titles. "
+            "Manufacturer-description references are bounded public primary excerpts, not verified personal experience. "
+            "Distinguish manufacturer claims from independently verified performance and preserve their qualifications. "
+            "This excerpt does not verify catalog description, price, rating or availability. "
+            "Never infer winter warmth, safe cold temperatures or survival suitability from weight, fill power or layer class. "
+            "Do not expose internal field names or values such as apparelClass or optionState in reader-facing prose; "
+            "translate only supported product/variant distinctions into ordinary language. "
             "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "
             "Only sourced manufacturer usage warnings may remain; never add clinical advice. "
             "Preserve every supplied verifiedAuthorFacts statement exactly; never infer ownership or experience from legacy prose. "
@@ -429,8 +435,19 @@ class Models:
             "either write the actual question-and-answer pairs under that heading or omit the body heading "
             "and let the structured article.faqs render. Keep the required body length unchanged. "
             "Content length by brief.format: ranking/comparison 5000-8000 characters; guide/how-to 3000-5000; "
-            "review 2000-3500. Include 2-3 distinct internal Markdown links /articles/slug. "
+            "review 2000-3500. Include 2-3 distinct internal Markdown links /articles/slug across the WHOLE article.content, "
+            "not 2-3 per section. Use only exact destinations supplied by context.existingArticles, derived from their slugs; "
+            "exclude the current article's slug. Repeated destinations count once; never invent another destination. "
             "Aim inside those ranges: guide/how-to body 4000-4700 characters, ranking/comparison 6000-7000, review 2500-3000. "
+            "These are Japanese character counts (Python len of the decoded article.content string), NOT tokens, words, "
+            "UTF-8 bytes or JSON escape lengths. Before writing, budget meaningful explanation across the required sections. "
+            "For a guide, a possible 4200-character budget is introduction 300, five existing main sections 700 each, "
+            "and conclusion 400; adapt the allocation to the supplied structure without adding unnecessary headings. "
+            "In each section explain what the supplied facts mean for the reader's stated decision, distinguish documented "
+            "options and their sourced limitations, and connect the reasoning to the conclusion. Do not infer unverified "
+            "performance or usage advice. A 2200-2800-character outline is not a complete guide. "
+            "Check the whole body against the character budget before returning; expand underexplained existing points "
+            "using only supplied verified facts, without filler, repeated summaries, new facts or invented examples. "
             "Count ONLY article.content, excluding excerpt, metaDescription and structured FAQs; do not pad with repeated specifications. "
             "Selection reasons and data-correction history are editorial instructions, not publishable factual sources. "
             "Never turn obsolete internal catalog values into claims about online shops or other websites. "
@@ -478,11 +495,19 @@ class Models:
         repaired, repaired_record = self._call(
             instruction + "\nOne length-only repair: article.content has " + str(count) +
             " characters; the unchanged brief.format requires " + str(lower) + "-" + str(upper) +
-            " characters. Return the same article and brief, changing ONLY article.content. "
+            " characters. Minimum net addition required: " + str(max(0, lower - count)) +
+            " characters; minimum net removal required: " + str(max(0, count - upper)) +
+            " characters. These deltas reach the hard boundary only; aim for the format's interior target above. "
+            "Plan the net change across existing sections and check the final decoded body character count; "
+            "a small partial expansion that remains below the minimum fails. "
+            "Return the same article and brief, changing ONLY article.content. "
             "Do not change brief.format or any other brief field, article identity or metadata. "
             "Do not add new facts, numbers, links, headings, claims or experiences. "
             "Keep verified author sentences and protected facts verbatim. Explain the existing verified facts "
             "more clearly within the existing structure, or remove redundant prose if too long. "
+            "Preserve the exact text, occurrence count and order of all headings, numbers, URLs, link destinations, "
+            "tables, code, product IDs, shortcodes and disclosure lines. Do not duplicate, move or remove these protected "
+            "elements while expanding prose; do not repeat protected literals in added explanations. "
             "Do not pad with repeated text or specifications. Do not reclassify the format. "
             "This is the only repair attempt; count ONLY article.content and satisfy the original hard range.",
             dict(theme=theme, context=context, previousCandidate=previous, validation=feedback),
@@ -559,8 +584,23 @@ class Models:
         if format_name not in ARTICLE_LENGTHS:
             raise ModelError("Unknown article format")
         lower, upper = ARTICLE_LENGTHS[format_name]
-        internal = re.findall(r"(?<!!)\[[^\]\n]+\]\((/articles/[^)\s]+)\)", article["content"])
-        if not 2 <= len(set(internal)) <= 3:
+        existing = context.get('existingArticles')
+        if (not isinstance(existing, list) or not existing or any(
+                not isinstance(item, dict) or not isinstance(item.get('slug'), str)
+                or not re.fullmatch(r'[^/\s?#]+', item['slug']) for item in existing)):
+            raise ModelError('Known existing article slugs required')
+        allowed = {'/articles/' + item['slug'] for item in existing}
+        internal = set()
+        for _, destination in _article_links(_without_code(article['content'])):
+            parsed = urlsplit(destination)
+            if not (destination.startswith('/articles/') or
+                    parsed.hostname in SITE_HOSTS and parsed.path.startswith('/articles/')):
+                continue
+            if (parsed.path not in allowed or parsed.path == '/articles/' + article['slug']
+                    or parsed.query or parsed.fragment):
+                raise ModelError('Unknown or self internal article link')
+            internal.add(parsed.path)
+        if not 2 <= len(internal) <= 3:
             raise ModelError("Two to three distinct internal article links required")
         if not nonproduct and format_name in ("ranking", "comparison") and not re.search(r"\{\{comparison:[^}]+\}\}", article["content"]):
             raise ModelError("Concrete product comparison component required")

@@ -4,6 +4,10 @@ from io import StringIO
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
+import fcntl
+
+import test_deterministic_runtime
 
 import operations
 import test_runtime
@@ -40,6 +44,45 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual({'status': 'planned', 'operation': 'retry-stage', 'jobId': 'article-id',
                           'stage': 'polish', 'inputKey': 'stage_journal:v1:key',
                           'executed': False}, value)
+
+    def test_corrected_cli_dryrun_validates_exact_failure_without_mutation(self):
+        job, key, _, _ = test_deterministic_runtime.DeterministicRuntimeTests.corrected_fixture(self)
+        self.config_path.write_text(json.dumps(self.config))
+        before = self.runtime.ledger.db_path.read_bytes()
+        output = StringIO()
+        args = ['--state-root', str(self.runtime.root), '--config', str(self.config_path),
+                '--job-id', job['id'], '--stage', 'draft', '--input-key', key,
+                'retry-corrected-stage']
+        with redirect_stdout(output), patch('runtime.Runtime.__init__', side_effect=AssertionError('construction')):
+            operations.main(args)
+        value = json.loads(output.getvalue())
+        self.assertEqual('retry-corrected-stage', value['operation'])
+        self.assertFalse(value['executed'])
+        self.assertEqual(before, self.runtime.ledger.db_path.read_bytes())
+        self.assertFalse((self.runtime.root / 'runtime.flock').exists())
+        with self.assertRaises(__import__('stage_journal').StageBlocked):
+            operations.main([arg if arg != key else 'wrong-key' for arg in args])
+
+    def test_corrected_cli_execute_uses_existing_runtime_lock(self):
+        job, key, manifest, context = test_deterministic_runtime.DeterministicRuntimeTests.corrected_fixture(self)
+        self.config_path.write_text(json.dumps(self.config))
+        args = ['--state-root', str(self.runtime.root), '--config', str(self.config_path),
+                '--job-id', job['id'], '--stage', 'draft', '--input-key', key,
+                '--execute', 'retry-corrected-stage']
+        output = StringIO()
+        with (self.runtime.root / 'runtime.flock').open('a') as lease:
+            fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with redirect_stdout(output), patch('runtime.Runtime', side_effect=AssertionError('busy')):
+                operations.main(args)
+        self.assertEqual('busy', json.loads(output.getvalue())['status'])
+        output = StringIO()
+        with redirect_stdout(output), patch('runtime.Runtime', wraps=test_runtime.Runtime, return_value=self.runtime), \
+                patch.object(self.runtime, '_supplemental_manifest', return_value=manifest), \
+                patch.object(self.runtime.catalog, 'catalog', return_value=context):
+            operations.main(args)
+        self.assertEqual('awaiting_approval', json.loads(output.getvalue())['articles'][0]['status'])
+        self.assertEqual('review', self.runtime.ledger.get_job(job['id'])['stage'])
+        self.assertEqual(1, len(self.slack.deliveries))
 
     def test_suspended_retry_returns_before_runtime_even_with_execute(self):
         self.config['executionPolicy']['suspended'] = True

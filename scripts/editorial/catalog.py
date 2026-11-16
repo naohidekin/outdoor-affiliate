@@ -946,6 +946,12 @@ class Catalog:
                         if channel:
                             reference['channel'] = channel
                     references.append(reference)
+                    if kind == 'manufacturer' and apparel_binding and apparel_binding.get('manufacturerExcerpt'):
+                        excerpt = apparel_binding['manufacturerExcerpt']
+                        references.append({'productId': pid, 'kind': 'manufacturer-description',
+                            'url': res['url'], 'checkedAt': checked_at, **excerpt,
+                            'conditions': ['Public primary manufacturer excerpt, not verified personal experience.',
+                                           'Attribute manufacturer claims; preserve all source qualifiers.']})
                 return res, parsed, match
             try:
                 domains = (apparel_domains(product) if apparel_mode else

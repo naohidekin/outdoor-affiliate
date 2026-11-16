@@ -1,11 +1,38 @@
 """Catalog apparel requests must fail closed before generic gear matching."""
+import hashlib
 import unittest
 
 from catalog import Catalog
 from test_catalog import PNG, response
+from test_apparel_identity import product, montbell_dom
 
 
 class CatalogApparelTests(unittest.TestCase):
+    def test_exact_montbell_description_is_public_reference_not_catalog_certification(self):
+        url = 'https://webshop.montbell.jp/goods/disp.php?product_id=1101493'
+        current = product(imageUrl='https://webshop.montbell.jp/common/images/product/prod_k/k_1101493_bk.jpg',
+                          description='Unsupported catalogue warmth', price=999, rating=5, availability='in-stock')
+        for source, expected in ((montbell_dom(), True),
+                                 (montbell_dom().replace('>機能<', '>詳細<'), False),
+                                 (montbell_dom().replace('value="1101493"', 'value="11014930"'), False)):
+            with self.subTest(expected=expected, source=source[:100]):
+                def fetch(target, *_):
+                    return response(PNG, 'image/png') if target == current['imageUrl'] else response(source)
+                result = Catalog({}, fetch, source_hints={current['id']: [url]}).gather(
+                    {'productIds': [current['id']]}, {'products': [current]})
+                refs = [ref for ref in result['references'] if ref['kind'] == 'manufacturer-description']
+                self.assertEqual(int(expected), len(refs))
+                if expected:
+                    ref = refs[0]
+                    self.assertEqual((current['id'], url, url, '1101493'),
+                                     (ref['productId'], ref['url'], ref['sourceUrl'], ref['model']))
+                    self.assertEqual(hashlib.sha256(ref['text'].encode('utf-8')).hexdigest(), ref['excerptSHA256'])
+                    self.assertIn('ポケット2個（腰）', ref['text'])
+                    self.assertNotIn('Unsupported catalogue warmth', ref['text'])
+                    self.assertIn('not verified personal experience', ' '.join(ref['conditions']))
+                detail = result['evidence']['products'][0]
+                self.assertEqual(['description', 'rating', 'price', 'availability'], detail['unverifiedFields'])
+
     def test_broad_wear_missing_or_invalid_class_never_falls_back_to_gear(self):
         for explicit in (None, "unknown-layer"):
             specs = {"model": "1101493", "gender": "Men's", "material": "nylon",

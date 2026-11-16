@@ -95,7 +95,8 @@ def main(argv=None):
     parser.add_argument('--stage', choices=('draft', 'polish', 'final_review'))
     parser.add_argument('--input-key')
     parser.add_argument('--execute', action='store_true')
-    parser.add_argument('command', choices=('status', 'records', 'plan', 'retry-stage'))
+    parser.add_argument('command', choices=('status', 'records', 'plan', 'retry-stage',
+                                               'retry-corrected-stage'))
     args = parser.parse_args(argv)
     root = _root(args.state_root)
     if args.command == 'status':
@@ -111,16 +112,24 @@ def main(argv=None):
         else:
             if not args.job_id or not args.stage or not args.input_key:
                 raise ValueError('job stage and exact input key required')
+            if Path(config['stateRoot']).resolve() != root:
+                raise ValueError('config state root mismatch')
             policy = execution_policy(config)
             if policy is not None and policy.suspended:
                 value = {'status': 'suspended', 'mode': 'deterministic'}
             elif not args.execute:
-                value = {'status': 'planned', 'operation': 'retry-stage',
+                if args.command == 'retry-corrected-stage':
+                    from runtime import Runtime
+                    job = next((job for job in _rows(_database(root))
+                                if job['id'] == args.job_id), None)
+                    if job is None:
+                        raise ValueError('job_not_found')
+                    Runtime.validate_corrected_retry(job, args.stage, args.input_key,
+                        read_status(_database(root), job_id=args.job_id, stage=args.stage)['records'])
+                value = {'status': 'planned', 'operation': args.command,
                          'jobId': args.job_id, 'stage': args.stage,
                          'inputKey': args.input_key, 'executed': False}
             else:
-                if Path(config['stateRoot']).resolve() != root:
-                    raise ValueError('config state root mismatch')
                 from runtime import Runtime
                 with (root / 'runtime.flock').open('a') as lease:
                     os.chmod(lease.name, 0o600)
@@ -130,8 +139,12 @@ def main(argv=None):
                         value = {'status': 'busy'}
                     else:
                         runtime = Runtime(config)
-                        value = runtime.retry_stage(args.job_id, args.stage, args.input_key)
-                        runtime._save_usage()
+                        try:
+                            retry = (runtime.retry_corrected_stage
+                                     if args.command == 'retry-corrected-stage' else runtime.retry_stage)
+                            value = retry(args.job_id, args.stage, args.input_key)
+                        finally:
+                            runtime._save_usage()
     print(json.dumps(value, ensure_ascii=False, allow_nan=False))
     return 0
 

@@ -41,6 +41,7 @@ def bundle():
 def context():
     b = bundle()
     return dict(catalog=b["products"], references=b["references"], images=b["images"],
+                existingArticles=[{'slug': slug} for slug in ('setup', 'pack', 'compare', 'store', 'tent-guide')],
                 CLAUDE="Article template: no H1", SKILL="WISE score at least 7.5",
                 gsc=[{"query": "winter tent weight", "impressions": 123}],
                 season="winter", merchantClicks=[{"productId": "tent-a", "clicks": 8}])
@@ -251,6 +252,104 @@ class ModelTests(unittest.TestCase):
         self.assertIn('do not merge fixed and selectable merchant variants',instruction)
         self.assertEqual(ctx,restore_model_input(json.loads(data))['context'])
 
+    def test_draft_rejects_unknown_self_or_unbound_internal_article_links(self):
+        for destination in ('/articles/invented', '/articles/tent-guide', '/articles/setup?fake=1',
+                            '/articles/setup#fake', 'https://camp-gear-lab.com/articles/invented'):
+            with self.subTest(destination=destination):
+                candidate = bundle()
+                candidate['article']['content'] = candidate['article']['content'].replace('/articles/pack', destination)
+                fake = Fake(writer_response(candidate), writer_response(bundle()))
+                with self.assertRaisesRegex(ModelError, 'Unknown or self internal article link'):
+                    Models(ENV, fake).draft({}, context())
+                self.assertEqual(1, len(fake.calls))
+        for existing in (None, [], {}, [{'title': 'No slug'}], [{'slug': 'setup/extra'}]):
+            with self.subTest(existing=existing):
+                ctx = context()
+                ctx['existingArticles'] = existing
+                fake = Fake(writer_response(bundle()))
+                with self.assertRaisesRegex(ModelError, 'Known existing article slugs required'):
+                    Models(ENV, fake).draft({}, ctx)
+                self.assertEqual(1, len(fake.calls))
+
+    def test_draft_internal_link_count_uses_actual_markdown_not_code_images_or_unused_definitions(self):
+        for fake_link in ('`[撤収](/articles/pack)`', '![撤収](/articles/pack)',
+                          '```md\n[撤収](/articles/pack)\n```',
+                          '[撤収]: /articles/pack', '![撤収][pack]\n[pack]: /articles/pack'):
+            with self.subTest(fake_link=fake_link):
+                candidate = bundle()
+                candidate['article']['content'] = candidate['article']['content'].replace(
+                    '[撤収](/articles/pack)', '\n' + fake_link + '\n')
+                fake = Fake(writer_response(candidate))
+                with self.assertRaisesRegex(ModelError, 'Two to three distinct internal article links required'):
+                    Models(ENV, fake).draft({}, context())
+                self.assertEqual(1, len(fake.calls))
+
+    def test_draft_known_inline_and_reference_links_pass_and_duplicate_destinations_count_once(self):
+        for links in ('[設営](/articles/setup) [撤収](/articles/pack) [再掲](/articles/setup)',
+                      '[設営][setup] [撤収][pack]\n\n[setup]: /articles/setup\n[pack]: /articles/pack',
+                      '[設営](https://camp-gear-lab.com/articles/setup) [撤収](/articles/pack)'):
+            with self.subTest(links=links):
+                candidate = bundle()
+                candidate['article']['content'] = candidate['article']['content'].replace(
+                    '[設営](/articles/setup) [撤収](/articles/pack)', links)
+                fake = Fake(writer_response(candidate))
+                self.assertEqual(candidate['article']['content'], Models(ENV, fake).draft({}, context())['article']['content'])
+                self.assertEqual(1, len(fake.calls))
+
+    def test_draft_instruction_budgets_japanese_body_and_whole_body_internal_links(self):
+        ctx = context()
+        ctx['existingArticles'] = [{'slug': slug} for slug in ('setup', 'pack', 'tent-guide')]
+        fake = Fake(writer_response(bundle()))
+        Models(ENV, fake).draft({'slug': 'tent-guide', 'productIds': ['tent-a']}, ctx)
+        instruction = fake.calls[0][2]['messages'][0]['content']
+        for phrase in (
+                'Japanese character counts (Python len of the decoded article.content string)',
+                'NOT tokens, words', 'UTF-8 bytes or JSON escape lengths',
+                'guide/how-to body 4000-4700 characters',
+                'introduction 300, five existing main sections 700 each, and conclusion 400',
+                'adapt the allocation to the supplied structure',
+                "reader's stated decision", 'sourced limitations',
+                'bounded public primary excerpts, not verified personal experience',
+                'Distinguish manufacturer claims', 'safe cold temperatures or survival suitability',
+                'does not verify catalog description, price, rating or availability',
+                'Do not expose internal field names or values such as apparelClass or optionState',
+                'without filler, repeated summaries, new facts or invented examples',
+                '2-3 distinct internal Markdown links /articles/slug across the WHOLE article.content',
+                'not 2-3 per section', 'exact destinations supplied by context.existingArticles',
+                "exclude the current article's slug", 'Repeated destinations count once'):
+            self.assertIn(phrase, instruction)
+        self.assertEqual(ctx, prompt_data(instruction)['context'])
+        self.assertEqual(1, len(fake.calls))
+
+    def test_draft_short_body_with_four_internal_urls_still_fails_without_repair(self):
+        candidate = bundle()
+        candidate['article']['content'] = (
+            candidate['article']['content'][:2200] +
+            '\n[比較](/articles/compare) [収納](/articles/store)\n')
+        candidate['article']['content'] += '文' * (2308 - len(candidate['article']['content']))
+        fake = Fake(writer_response(candidate), writer_response(bundle()))
+        model = Models(ENV, fake)
+        with self.assertRaisesRegex(ModelError, 'Two to three distinct internal article links required'):
+            model.draft({}, context())
+        self.assertEqual(1, len(fake.calls))
+        self.assertEqual(1, len(model.usage))
+
+    def test_draft_repair_reports_exact_japanese_character_deficit(self):
+        for size in (2224, 2308, 2334):
+            with self.subTest(size=size):
+                short = bundle()
+                short['article']['content'] = short['article']['content'][:size]
+                fake = Fake(writer_response(short), writer_response(bundle()))
+                Models(ENV, fake).draft({}, context())
+                instruction = fake.calls[1][2]['messages'][0]['content']
+                self.assertIn('Minimum net addition required: ' + str(3000 - size) + ' characters', instruction)
+                self.assertIn('minimum net removal required: 0 characters', instruction)
+                self.assertIn('aim for the format\'s interior target above', instruction)
+                self.assertIn('exact text, occurrence count and order', instruction)
+                self.assertIn('Do not duplicate, move or remove', instruction)
+                self.assertIn('do not repeat protected literals', instruction)
+                self.assertEqual(2, len(fake.calls))
+
     def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
         good = bundle()
         short = copy.deepcopy(good)
@@ -280,7 +379,7 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(all(c[0] == 'https://api.anthropic.com/v1/messages' for c in fake.calls))
 
     def test_draft_length_repair_is_bounded_even_if_second_still_short_or_too_long(self):
-        for size in (2106, 5100):
+        for size in (2106, 2718, 2755, 5100):
             b = bundle()
             b['article']['content'] = b['article']['content'][:2106]
             final = copy.deepcopy(b)
@@ -308,7 +407,8 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(len(fake.calls), 1)
 
     def test_draft_repair_cannot_change_identity_brief_or_protected_facts(self):
-        for mode in ('slug', 'title', 'categoryId', 'format', 'facts', 'numbers', 'bodyfact', 'literal', 'links'):
+        for mode in ('slug', 'title', 'categoryId', 'format', 'facts', 'numbers', 'bodyfact', 'literal', 'links',
+                     'duplicate_heading', 'reorder_links'):
             first, final = bundle(), bundle()
             first['article']['content'] = first['article']['content'][:2106]
             if mode in ('slug', 'title', 'categoryId'): final['article'][mode] = 'different'
@@ -317,6 +417,10 @@ class ModelTests(unittest.TestCase):
             if mode == 'literal': final['article']['content'] = final['article']['content'].replace('Weight 2kg', 'Mass 2kg')
             if mode == 'bodyfact': final['article']['content'] = final['article']['content'].replace('2kg', '3kg')
             if mode == 'links': final['article']['content'] = final['article']['content'].replace('/articles/pack', '/articles/other')
+            if mode == 'duplicate_heading': final['article']['content'] += '\n## Choice\n'
+            if mode == 'reorder_links':
+                final['article']['content'] = final['article']['content'].replace(
+                    '[設営](/articles/setup) [撤収](/articles/pack)', '[撤収](/articles/pack) [設営](/articles/setup)')
             fake = Fake(writer_response(first), writer_response(final), writer_response(bundle()))
             with self.subTest(mode=mode), self.assertRaises(ModelError):
                 Models(ENV, fake).draft({}, context())
@@ -329,6 +433,9 @@ class ModelTests(unittest.TestCase):
         fake = Fake(writer_response(long), writer_response(good))
         self.assertEqual(Models(ENV, fake).draft({}, context())['article']['content'], good['article']['content'])
         self.assertEqual(len(fake.calls), 2)
+        instruction = fake.calls[1][2]['messages'][0]['content']
+        self.assertIn('Minimum net addition required: 0 characters', instruction)
+        self.assertIn('minimum net removal required: ' + str(len(long['article']['content']) - 5000) + ' characters', instruction)
         for failure in (http(404), http(500), response(None, raw='not JSON')):
             short = copy.deepcopy(good)
             short['article']['content'] = short['article']['content'][:2106]

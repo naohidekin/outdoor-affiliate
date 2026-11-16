@@ -156,6 +156,191 @@ class DeterministicRuntimeTests(unittest.TestCase):
         self.assertEqual(2, polish.call_count)
         self.assertEqual('review', self.runtime.ledger.get_job(failed['id'])['stage'])
 
+    def corrected_fixture(self):
+        from datetime import datetime
+        from supplemental_topics import resolve_batch
+        from test_supplemental_topics import manifest, product
+        from runtime import JST
+        value = manifest()
+        value['slots'][2].update(slug='repair-third', title='Repair third', categoryId='wear',
+                                query='winter third', selectionReason='verified fixture')
+        context = {'products': [product(value['slots'][2]['productIds'][0])], 'articles': []}
+        now = datetime(2026, 11, 17, 9, tzinfo=JST)
+        slot = resolve_batch(value, context, [], now)['slots'][2]
+        job = self.runtime.ledger.create_supplemental_candidate(
+            slot['theme'], value['batchId'], 3, slot['sourceBinding'],
+            social_eligible_period='2026-11-20', now=now)
+        inputs = {'theme': job['theme'], 'dependencies': {'implementation': 'old'}, 'schemaVersion': 1}
+        from models import ModelError
+        with self.assertRaises(ModelError):
+            self.runtime.stage_journal.run(job['id'], 'draft', inputs,
+                lambda: (_ for _ in ()).throw(ModelError('Two to three distinct internal article links required')))
+        self.runtime.ledger.set_stage(job['id'], 'error',
+            {'reason': 'Two to three distinct internal article links required'})
+        self.config['supplementalApparelEnabled'] = True
+        return job, self.runtime.stage_journal.key(job['id'], 'draft', inputs), value, context
+
+    def test_corrected_retry_reaches_review_with_current_sources_and_real_hashes(self):
+        job, old, manifest, context = self.corrected_fixture()
+        with patch.object(self.runtime, '_supplemental_manifest', return_value=manifest), \
+                patch.object(self.runtime.catalog, 'catalog', return_value=context), \
+                patch.object(self.runtime.catalog, 'gather', wraps=self.runtime.catalog.gather) as gather, \
+                patch.object(self.models, 'draft', wraps=self.models.draft) as draft, \
+                patch.object(self.runtime, '_run_model_stage', wraps=self.runtime._run_model_stage) as stages, \
+                patch.object(self.runtime, 'consume', side_effect=AssertionError('consume')), \
+                patch.object(self.runtime, 'tick', side_effect=AssertionError('tick')):
+            result = self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+        self.assertEqual('awaiting_approval', result['articles'][0]['status'])
+        saved = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('review', saved['stage'])
+        self.assertIsNone(saved['approval'])
+        self.assertIsNone(saved['publication'])
+        self.assertEqual(1, len(self.slack.deliveries))
+        self.assertTrue(all(action == 'stage' for action, _ in self.writes))
+        self.assertEqual((1, 1), (gather.call_count, draft.call_count))
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        self.assertEqual([1, 2], sorted(r['attempts'] for r in records))
+        draft_inputs = next(call.args[2] for call in stages.call_args_list if call.args[1] == 'draft')
+        import hashlib
+        from pathlib import Path
+        expected_hashes = {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+                           for name in ('models.py', 'quality.py')}
+        self.assertEqual(expected_hashes, draft_inputs['dependencies']['routes']['implementationHashes'])
+        successor = next(r for r in records if r.get('predecessorKey') == old)
+        dependencies = json.dumps(draft_inputs['dependencies'], sort_keys=True, ensure_ascii=False,
+                                  separators=(',', ':'), allow_nan=False).encode('utf-8')
+        self.assertEqual(hashlib.sha256(dependencies).hexdigest(), successor['dependencyHash'])
+        self.assertEqual(1, len(self.runtime.ledger.list_jobs()))
+        with self.assertRaises((ValueError, __import__('stage_journal').StageBlocked)):
+            self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+
+    def test_corrected_nonprogress_keeps_error_and_never_schedules_natural_retry(self):
+        job, old, manifest, context = self.corrected_fixture()
+        unrelated = self.runtime.ledger.create_candidate({'slug': 'unrelated', 'title': 'Unrelated'})
+        for mode in ('source_hold', 'changed_binding', 'exception'):
+            live = copy.deepcopy(context)
+            if mode == 'source_hold':
+                live['products'] = []
+            elif mode == 'changed_binding':
+                live['products'][0]['name'] = 'Changed source'
+            with self.subTest(mode=mode), \
+                    patch.object(self.runtime, '_supplemental_manifest', return_value=manifest), \
+                    patch.object(self.runtime.catalog, 'catalog',
+                        side_effect=OSError('private details') if mode == 'exception' else None,
+                        return_value=live), \
+                    patch.object(self.models, 'draft', side_effect=AssertionError('must not call')):
+                try:
+                    self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+                except OSError:
+                    pass
+            saved = self.runtime.ledger.get_job(job['id'])
+            self.assertEqual('error', saved['stage'])
+            self.assertNotIn('private details', str(saved['error']))
+            self.assertEqual('candidate', self.runtime.ledger.get_job(unrelated['id'])['stage'])
+            self.assertEqual(1, len(self.runtime.stage_journal.status(job_id=job['id'])['records']))
+            with self.runtime.ledger._tx() as db:
+                self.assertIsNone(db.execute("SELECT value FROM meta WHERE key='runtime_retry_candidate'").fetchone())
+
+    def test_corrected_new_failure_keeps_actual_cause_and_original_as_history(self):
+        job, old, manifest, context = self.corrected_fixture()
+        original = self.runtime.ledger.get_job(job['id'])['error']
+        with patch.object(self.runtime, '_supplemental_manifest', return_value=manifest), \
+                patch.object(self.runtime.catalog, 'catalog', return_value=context), \
+                patch.object(self.runtime.catalog, 'gather', side_effect=ValueError('source_unverified')):
+            result = self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+        self.assertEqual('source_unverified', result['articles'][0]['reason'])
+        saved = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('error', saved['stage'])
+        self.assertEqual('source_unverified', saved['error']['reason'])
+        self.assertIn('at', saved['error'])
+        self.assertEqual(original, saved['error']['originalFailure'])
+        self.assertEqual(1, len(self.runtime.stage_journal.status(job_id=job['id'])['records']))
+
+    def test_corrected_reserved_failure_keeps_budget_cause_and_failed_lineage(self):
+        job, old, manifest, context = self.corrected_fixture()
+        with patch.object(self.runtime, '_supplemental_manifest', return_value=manifest), \
+                patch.object(self.runtime.catalog, 'catalog', return_value=context), \
+                patch.object(self.models, 'draft', side_effect=ValueError('model_budget_hold')):
+            result = self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+        saved = self.runtime.ledger.get_job(job['id'])
+        self.assertEqual('model_budget_hold', saved['error']['reason'])
+        self.assertEqual('model_budget_hold', result['articles'][0]['reason'])
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        self.assertEqual([('failed', 1), ('failed', 2)],
+                         sorted((r['status'], r['attempts']) for r in records))
+        self.assertEqual([], self.slack.deliveries)
+        with self.assertRaises((ValueError, __import__('stage_journal').StageBlocked)):
+            self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+
+    def test_corrected_scope_rejects_other_jobs_stages_errors_and_nonempty_outputs(self):
+        job, old, _, _ = self.corrected_fixture()
+        job = self.runtime.ledger.get_job(job['id'])
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        changes = ({'kind': 'article_revision'}, {'batchId': 'different'},
+                   {'stage': 'candidate'}, {'bundle': {}}, {'bundle': {'article': {}}},
+                   {'approval': {}}, {'publication': {}},
+                   {'approval': {'revision': 'old'}}, {'publication': {'verified': False}},
+                   {'error': {'reason': 'unrelated_failure'}})
+        for change in changes:
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                self.runtime.validate_corrected_retry(dict(job, **change), 'draft', old, records)
+        with self.assertRaises(ValueError):
+            self.runtime.validate_corrected_retry(job, 'polish', old, records)
+        self.config['executionPolicy']['suspended'] = True
+        with self.assertRaisesRegex(ValueError, 'execution_suspended'):
+            self.runtime.retry_corrected_stage(job['id'], 'draft', old)
+
+    def assert_corrected_budget_hold(self, scope):
+        from datetime import datetime
+        from runtime import JST
+        from model_budget import BudgetHold
+        job, old, _, _ = self.corrected_fixture()
+        budget = self.runtime.model_budget
+        payload = {'model': 'fixture', 'max_tokens': 1, 'messages': []}
+        if scope == 'article':
+            seeds = [(job['id'], 32, None)]
+        elif scope == 'period':
+            seeds = [('other-' + str(i), 32, None) for i in range(4)]
+        else:
+            # Batch calls span production periods; article/period totals do not.
+            prior = datetime(2026, 10, 1, 9, tzinfo=JST)
+            seeds = [(job['id'], 32, prior)]
+            for slot in (1, 2):
+                sibling = self.runtime.ledger.create_supplemental_candidate(
+                    dict(job['theme'], slug='sibling-' + str(slot)), job['batchId'], slot,
+                    job['sourceBinding'], social_eligible_period='2026-11-20')
+                seeds.append((sibling['id'], 32, prior))
+        for article, calls, now in seeds:
+            with budget.scope(article, 'draft', now):
+                for _ in range(calls):
+                    budget.reserve(payload)
+        self.runtime._explicit_stage_retry = {'jobId': job['id'], 'stage': 'draft',
+                                               'inputKey': old, 'corrected': True}
+        inputs = {'theme': job['theme'], 'dependencies': {'routes': self.runtime._model_routes()},
+                  'schemaVersion': 1}
+        with self.assertRaises(BudgetHold) as caught:
+            self.runtime._run_model_stage(job, 'draft', inputs,
+                lambda: budget.reserve(payload), 'fixture')
+        self.assertEqual(scope + '_calls_cap', caught.exception.reason_code)
+        self.assertEqual(job['id'], caught.exception.article_id)
+        self.assertEqual({'article': 32, 'period': 128, 'batch': 96}[scope], caught.exception.cap)
+        with self.runtime.ledger._tx() as db:
+            count = db.execute('SELECT count(*) FROM model_budget_reservations').fetchone()[0]
+        self.assertEqual({'article': 32, 'period': 128, 'batch': 96}[scope], count)
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        successor = next(r for r in records if r.get('predecessorKey') == old)
+        self.assertEqual(('failed', 2, 2),
+                         (successor['status'], successor['attempts'], successor['maxAttempts']))
+
+    def test_corrected_retry_retains_article_32_call_cap(self):
+        self.assert_corrected_budget_hold('article')
+
+    def test_corrected_retry_retains_period_128_call_cap(self):
+        self.assert_corrected_budget_hold('period')
+
+    def test_corrected_retry_retains_lifetime_batch_96_call_cap(self):
+        self.assert_corrected_budget_hold('batch')
+
     def test_failed_final_review_is_not_cached_as_success(self):
         failed_review = {'passed': False, 'score': 2, 'model': 'upper', 'issues': ['fix']}
         with patch.object(self.models, 'review', return_value=failed_review):

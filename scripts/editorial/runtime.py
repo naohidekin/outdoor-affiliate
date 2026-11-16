@@ -659,8 +659,13 @@ class Runtime:
         else:
             atomic(marker_path, state)
         # Existing jobs resume first; a new slot is created only when the global cap permits it.
+        retry = getattr(self, '_explicit_stage_retry', None)
+        corrected_id = (retry['jobId'] if retry and retry.get('corrected')
+                        and retry['jobId'] == job_id else None)
         candidates = [job for job in jobs if job.get('kind') == 'supplemental_article'
-                      and job.get('batchId') == manifest['batchId'] and job['stage'] == 'candidate']
+                      and job.get('batchId') == manifest['batchId']
+                      and (job['stage'] == 'candidate'
+                           or (job['id'] == corrected_id and job['stage'] == 'error'))]
         if job_id:
             candidates = [job for job in candidates if job['id'] == job_id]
         if not candidates and not job_id:
@@ -680,7 +685,8 @@ class Runtime:
             current = next((slot for slot in resolved['slots']
                             if slot['slot'] == job['batchSlot']), None)
             if (not current or current['status'] != 'ready'
-                    or current['sourceBinding'] != job['sourceBinding']):
+                    or current['sourceBinding'] != job['sourceBinding']
+                    or (job['id'] == corrected_id and current['theme'] != job['theme'])):
                 results.append({'id': job['id'], 'status': 'source_hold'})
                 continue
             try:
@@ -1056,6 +1062,51 @@ class Runtime:
         finally:
             self._explicit_stage_retry = None
 
+    @staticmethod
+    def validate_corrected_retry(job, stage, input_key, records):
+        """Read-only eligibility check shared by operator planning and execution."""
+        allowed_errors = {
+            'Two to three distinct internal article links required',
+            'Article length outside existing SKILL limits',
+        }
+        if (stage != 'draft' or job.get('kind') != 'supplemental_article'
+                or job.get('batchId') != 'apparel-2026-11-16'
+                or job.get('batchCallCap') != 96 or job.get('stage') != 'error'
+                or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))
+                or (job.get('error') or {}).get('reason') not in allowed_errors):
+            raise ValueError('job_not_corrected_stage_retryable')
+        record = next((r for r in records if r.get('stageKey') == input_key), None)
+        if (len(records) != 1 or record is None or record.get('jobId') != job['id']
+                or record.get('stage') != stage or record.get('status') != 'failed'
+                or record.get('attempts') != 1 or record.get('maxAttempts') != 2
+                or record.get('successorKey') or record.get('predecessorKey')):
+            raise StageBlocked('exact corrected failed stage retry unavailable', stage_key=input_key)
+
+    def retry_corrected_stage(self, id, stage, input_key):
+        """Operator-only recovery of an existing Nov16 supplemental draft.
+
+        Caller holds runtime.flock. Keep error until the existing producer saves
+        a reviewed bundle: a crash or source hold cannot enqueue a fresh attempt.
+        """
+        self._require_running()
+        job = self.ledger.get_job(id)
+        self.validate_corrected_retry(job, stage, input_key,
+            self.stage_journal.status(job_id=id, stage=stage)['records'])
+        self._explicit_stage_retry = {'jobId': id, 'stage': stage,
+                                      'inputKey': input_key, 'corrected': True}
+        try:
+            return self.produce_supplemental(limit=1, job_id=id)
+        finally:
+            self._explicit_stage_retry = None
+            current = self.ledger.get_job(id)
+            if not current.get('bundle'):
+                detail = dict(current.get('error') or job['error'])
+                if current.get('error') and current['error'] != job['error']:
+                    detail['originalFailure'] = copy.deepcopy(job['error'])
+                detail['correctedRetry'] = 'no_review_progress_requires_explicit_recovery'
+                self.ledger.set_stage(id, 'error', detail)
+            self._save_usage()
+
     def _retry_revision_stage(self, job, stage, input_key):
         marker = self.root / 'revision-production-attempts' / (job['id'] + '.json')
         try:
@@ -1222,7 +1273,7 @@ class Runtime:
                     raise StageBlocked('prior stage inputs changed before explicit retry',
                                        stage_key=key, status='changed')
             elif stage == target:
-                if key != retry['inputKey']:
+                if key != retry['inputKey'] and not retry.get('corrected'):
                     raise StageBlocked('exact failed stage inputs changed', stage_key=key,
                                        status='changed')
                 explicit_retry = True
@@ -1235,6 +1286,9 @@ class Runtime:
             with self.model_budget.scope(self._budget_article_id(job['id']), stage):
                 return operation()
         try:
+            if explicit_retry and retry and retry.get('corrected'):
+                return self.stage_journal.retry_corrected_failed(
+                    job['id'], stage, retry['inputKey'], inputs, measured)
             if explicit_retry:
                 return self.stage_journal.retry_failed(job['id'], stage, inputs, measured)
             return self.stage_journal.run(job['id'], stage, inputs, measured, max_attempts=2)

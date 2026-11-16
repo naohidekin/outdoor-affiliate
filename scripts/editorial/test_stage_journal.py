@@ -140,6 +140,141 @@ class StageJournalTests(unittest.TestCase):
         self.assertEqual(2, len(calls))
         self.assertEqual(2, self.journal.status()['records'][0]['attempts'])
 
+    def failed_key(self, job='job-1', stage='draft', *, max_attempts=2):
+        with self.assertRaisesRegex(RuntimeError, '^failed$'):
+            self.journal.run(job, stage, self.inputs(),
+                             lambda: (_ for _ in ()).throw(RuntimeError('failed')),
+                             max_attempts=max_attempts)
+        return self.journal.key(job, stage, self.inputs())
+
+    def test_corrected_retry_preserves_failure_usage_and_inherits_attempt_limit(self):
+        old = self.failed_key()
+        self.journal.record_usage('job-1', 'draft', old,
+                                  [{'responseId': 'old', 'usage': {'input_tokens': 7}}])
+        inputs = self.inputs('corrected', 'current-code')
+        new = self.journal.key('job-1', 'draft', inputs)
+        self.assertEqual({'ok': True}, self.journal.retry_corrected_failed(
+            'job-1', 'draft', old, inputs, lambda: {'ok': True}))
+        records = {r['stageKey']: r for r in self.journal.status()['records']}
+        self.assertEqual(('failed', 1, new),
+                         (records[old]['status'], records[old]['attempts'], records[old]['successorKey']))
+        self.assertEqual(('succeeded', 2, 2, old),
+                         (records[new]['status'], records[new]['attempts'],
+                          records[new]['maxAttempts'], records[new]['predecessorKey']))
+        self.assertEqual(2, self.journal.status()['byStage']['draft']['stageAttempts'])
+        with self.ledger._tx() as db:
+            stored = self.journal._load(db, old)
+        self.assertEqual('old', stored['usageBatches'][0]['records'][0]['responseId'])
+        for retry in (
+                lambda: self.journal.retry_failed('job-1', 'draft', self.inputs(), self.fail_call),
+                lambda: self.journal.retry_failed('job-1', 'draft', inputs, self.fail_call),
+                lambda: self.journal.retry_corrected_failed('job-1', 'draft', old, inputs, self.fail_call),
+                lambda: self.journal.retry_corrected_failed('job-1', 'draft', new, self.inputs('third'), self.fail_call),
+                lambda: self.journal.run('job-1', 'draft', self.inputs('third'), self.fail_call)):
+            with self.assertRaises((StageBlocked, StageUnknown)):
+                retry()
+
+    @staticmethod
+    def fail_call():
+        raise AssertionError('must not execute')
+
+    def test_corrected_crash_is_atomically_bound_and_durable(self):
+        old = self.failed_key()
+        inputs = self.inputs('corrected')
+        with self.assertRaises(SimulatedCrash):
+            self.journal.retry_corrected_failed('job-1', 'draft', old, inputs,
+                lambda: (_ for _ in ()).throw(SimulatedCrash()))
+        self.journal = StageJournal(Ledger(self.root, 'owner'))
+        records = {r['stageKey']: r for r in self.journal.status()['records']}
+        new = records[old]['successorKey']
+        self.assertEqual(('in_flight', 2), (records[new]['status'], records[new]['attempts']))
+        with self.assertRaises((StageBlocked, StageUnknown)):
+            self.journal.retry_corrected_failed('job-1', 'draft', old, inputs, self.fail_call)
+        self.journal.reconcile_in_flight('job-1', 'draft', inputs, outcome='failed')
+        with self.assertRaises(StageBlocked):
+            self.journal.retry_corrected_failed('job-1', 'draft', new, self.inputs('chain'), self.fail_call)
+        with self.assertRaises(StageBlocked):
+            self.journal.retry_failed('job-1', 'draft', inputs, self.fail_call)
+
+    def test_corrected_retry_denies_missing_cross_scope_same_and_exhausted(self):
+        old = self.failed_key()
+        for job, stage, key, inputs in (
+                ('job-1', 'draft', 'missing', self.inputs('new')),
+                ('job-2', 'draft', old, self.inputs('new')),
+                ('job-1', 'polish', old, self.inputs('new')),
+                ('job-1', 'draft', old, self.inputs())):
+            with self.subTest(job=job, stage=stage, key=key), self.assertRaises(StageBlocked):
+                self.journal.retry_corrected_failed(job, stage, key, inputs, self.fail_call)
+        with self.assertRaises(RuntimeError):
+            self.journal.retry_failed('job-1', 'draft', self.inputs(),
+                lambda: (_ for _ in ()).throw(RuntimeError()))
+        with self.assertRaises(StageBlocked):
+            self.journal.retry_corrected_failed('job-1', 'draft', old, self.inputs('new'), self.fail_call)
+        single = self.failed_key('single', max_attempts=1)
+        with self.assertRaises(StageBlocked):
+            self.journal.retry_corrected_failed('single', 'draft', single, self.inputs('new'), self.fail_call)
+
+    def test_corrected_retry_rolls_back_binding_if_reservation_event_cannot_commit(self):
+        from unittest.mock import patch
+        old = self.failed_key()
+        with patch.object(self.ledger, '_event', side_effect=OSError('commit interrupted')):
+            with self.assertRaises(OSError):
+                self.journal.retry_corrected_failed('job-1', 'draft', old,
+                    self.inputs('new'), self.fail_call)
+        records = self.journal.status()['records']
+        self.assertEqual(1, len(records))
+        self.assertNotIn('successorKey', records[0])
+        self.assertEqual(1, records[0]['attempts'])
+
+    def test_corrected_retry_denies_succeeded_unknown_inflight_and_reserved_destination(self):
+        for status in ('succeeded', 'unknown', 'in_flight'):
+            with self.subTest(status=status):
+                with self.ledger._tx() as db:
+                    db.execute('DELETE FROM meta')
+                job = 'job-' + status
+                old = self.failed_key(job)
+                with self.ledger._tx() as db:
+                    record = self.journal._load(db, old)
+                    record['status'] = status
+                    self.journal._save(db, old, record)
+                with self.assertRaises((StageBlocked, StageUnknown)):
+                    self.journal.retry_corrected_failed(job, 'draft', old,
+                        self.inputs('new'), self.fail_call)
+        # A pre-existing output must never be adopted as a corrected reservation.
+        with self.ledger._tx() as db:
+            db.execute('DELETE FROM meta')
+        old = self.failed_key()
+        self.journal.run('job-1', 'draft', self.inputs('new'), lambda: {'existing': True})
+        with self.assertRaises(StageBlocked):
+            self.journal.retry_corrected_failed('job-1', 'draft', old,
+                self.inputs('new'), self.fail_call)
+
+    def test_two_corrected_operators_can_spend_only_one_remaining_attempt(self):
+        old = self.failed_key()
+        entered, release = threading.Event(), threading.Event()
+        outcomes = []
+        def operation():
+            entered.set()
+            release.wait(5)
+            return {'winner': True}
+        def first():
+            outcomes.append(self.journal.retry_corrected_failed(
+                'job-1', 'draft', old, self.inputs('new'), operation))
+        worker = threading.Thread(target=first)
+        worker.start()
+        try:
+            self.assertTrue(entered.wait(5))
+            other = StageJournal(Ledger(self.root, 'owner'))
+            for inputs in (self.inputs('new'), self.inputs('different')):
+                with self.assertRaises((StageBlocked, StageUnknown)):
+                    other.retry_corrected_failed('job-1', 'draft', old, inputs, self.fail_call)
+        finally:
+            release.set()
+            worker.join(5)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual([{'winner': True}], outcomes)
+        self.assertEqual(2, self.journal.status()['byStage']['draft']['stageAttempts'])
+
     def test_tampered_cached_output_fails_closed(self):
         inputs = self.inputs()
         self.journal.run('job-1', 'draft', inputs, lambda: {'safe': True})
