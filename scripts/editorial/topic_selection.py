@@ -123,7 +123,7 @@ def collect_primary_sources(request, *, period, output_path, now=None):
             # Snow Peak may place the two bounded concepts in adjacent paragraphs.
             matches = [block for block in parsed.blocks if 20 <= len(block) <= 300
                        and any(keyword in block for keyword in keywords)]
-            excerpt = " ".join(matches[:2]) if all(any(k in block for block in matches) for k in keywords) else None
+            excerpt = "\n\n".join(matches[:2]) if all(any(k in block for block in matches) for k in keywords) else None
         if not excerpt or len(excerpt) > 500:
             failures.append({"url": url, "reason": "bounded_claim_not_found"})
             continue
@@ -183,13 +183,15 @@ def reverify_bound_public_sources(request, references, *, now=None):
             parsed.feed(html)
         except (ValueError, TypeError):
             raise NonproductSourceHold("nonproduct_source_recheck_unavailable") from None
-        visible = " ".join(parsed.blocks)
-        excerpt = " ".join(str(reference.get("excerpt", "")).split())
-        if not excerpt or excerpt not in visible:
+        visible_blocks = {" ".join(block.split()) for block in parsed.blocks if block.strip()}
+        raw_excerpt = str(reference.get("excerpt", ""))
+        excerpt_parts = [" ".join(part.split()) for part in raw_excerpt.split("\n\n")
+                         if part.strip()]
+        if not excerpt_parts or any(part not in visible_blocks for part in excerpt_parts):
             raise NonproductSourceHold("nonproduct_source_recheck_changed")
         observations.append({"sourceId": reference.get("id"), "url": url,
                              "checkedAt": checked_at, "httpStatus": 200,
-                             "boundExcerptSha256": _sha(excerpt),
+                             "boundExcerptSha256": _sha(raw_excerpt),
                              "responseSha256": hashlib.sha256(body).hexdigest()})
     return {"schemaVersion": 1, "status": "verified", "checkedAt": checked_at,
             "observations": observations}

@@ -9,9 +9,9 @@ import unittest
 
 from ledger import fingerprint, valid_review
 from quality import inspect_bundle
-from topic_selection import (JST, bind_nonproduct_theme, collect_primary_sources,
+from topic_selection import (JST, NonproductSourceHold, bind_nonproduct_theme, collect_primary_sources,
                              editorial_context, editorial_signals,
-                             nonproduct_affiliate_review, select_proposals,
+                             nonproduct_affiliate_review, reverify_bound_public_sources, select_proposals,
                              validate_nonproduct_bundle, validate_proposals)
 
 
@@ -233,6 +233,38 @@ class TopicSelectionTests(unittest.TestCase):
         self.assertEqual('unavailable', result['status'])
         self.assertEqual([], result['sources'])
         self.assertEqual({None, 503}, {item['httpStatus'] for item in result['sourceFailures']})
+
+    def test_noncontiguous_fallback_paragraphs_reverify_exactly_from_same_response(self):
+        urls = {
+            'coleman': 'https://www.coleman.co.jp/customersupport/faq/',
+            'snowpeak': 'https://www.snowpeak.co.jp/contents/campstarterbook/',
+            'montbell': 'https://www.montbell.jp/generalpage/disp.php?id=507'}
+        snow_parts = (
+            '撤収後の道具は十分に乾燥させる手順を確認してください。',
+            '収納する前に状態を確かめて適切に保管してください。')
+        bodies = {
+            urls['coleman']: '<p>テントは汚れを落とし、十分に乾燥させてから収納します。</p>',
+            urls['snowpeak']: '<p>' + snow_parts[0] + '</p><aside>別の説明です。</aside><p>' + snow_parts[1] + '</p>',
+            urls['montbell']: '<p>レイヤリングは肌着、中間着、上着を重ねる考え方です。</p>'}
+        def request(url, _headers):
+            return {'url': url, 'status': 200,
+                    'headers': {'content-type': 'text/html; charset=utf-8'},
+                    'body': ('<html><body>' + bodies[url] + '</body></html>').encode()}
+        with tempfile.TemporaryDirectory() as root:
+            collected = collect_primary_sources(request, period='2026-11-20',
+                output_path=Path(root) / 'receipt.json', now=NOW)
+        snow = next(item for item in collected['sources'] if item['id'] == 'public:snowpeak-care')
+        self.assertEqual('\n\n'.join(snow_parts), snow['excerpt'])
+        self.assertEqual('verified', reverify_bound_public_sources(
+            request, [snow], now=NOW)['status'])
+        original = bodies[urls['snowpeak']]
+        for changed in (original.replace('<p>' + snow_parts[0] + '</p>', ''),
+                        original.replace(snow_parts[1], snow_parts[1] + '変更')):
+            with self.subTest(changed=changed), self.assertRaisesRegex(
+                    NonproductSourceHold, 'nonproduct_source_recheck_changed'):
+                bodies[urls['snowpeak']] = changed
+                reverify_bound_public_sources(request, [snow], now=NOW)
+        bodies[urls['snowpeak']] = original
 
     def test_nonproduct_quality_and_typed_ledger_na(self):
         bundle = nonproduct_bundle()
