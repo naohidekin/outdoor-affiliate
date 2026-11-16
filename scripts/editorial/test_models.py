@@ -297,6 +297,24 @@ class ModelTests(unittest.TestCase):
                 self.assertEqual(candidate['article']['content'], Models(ENV, fake).draft({}, context())['article']['content'])
                 self.assertEqual(1, len(fake.calls))
 
+    def test_product_guide_prompt_turns_verified_variant_differences_into_purchase_choices(self):
+        fake = Fake(writer_response(bundle()))
+        Models(ENV, fake).draft({}, context())
+        instruction = fake.calls[0][2]['messages'][0]['content']
+        for phrase in (
+                'sourced Markdown comparison table of official, 楽天 and Amazon color/size/options',
+                'when supplied references.apparelBinding confirms them',
+                'Include only confirmed channels and exact fixed/selectable variant differences',
+                'purchase-option comparison, not a multi-product ranking',
+                'without inferring price or availability', 'Lead with concrete purchaser choices',
+                'documented specifications and variant discrepancies',
+                'One concise research disclosure is enough',
+                'do not repeat editorial verification or moral claims in every section',
+                'Keep necessary source qualifications beside the relevant claim',
+                'without fabricating firsthand experience, scientific explanations, performance or safety claims'):
+            self.assertIn(phrase, instruction)
+        self.assertEqual(1, len(fake.calls))
+
     def test_draft_instruction_budgets_japanese_body_and_whole_body_internal_links(self):
         ctx = context()
         ctx['existingArticles'] = [{'slug': slug} for slug in ('setup', 'pack', 'tent-guide')]
