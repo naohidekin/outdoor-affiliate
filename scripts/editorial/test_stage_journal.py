@@ -15,6 +15,21 @@ class SimulatedCrash(BaseException):
 
 
 class StageJournalTests(unittest.TestCase):
+    def test_provider_status_is_preserved_without_raw_error_and_cleared_on_retry(self):
+        from models import ModelError
+        from runtime import reason
+        error = ModelError('Provider request failed (HTTP 400): private-response', status=400)
+        self.assertEqual('provider_http_400', reason(error))
+        inputs = self.inputs()
+        with self.assertRaises(ModelError):
+            self.journal.run('job-http', 'final_review', inputs,
+                             lambda: (_ for _ in ()).throw(error))
+        record = self.journal.status(job_id='job-http')['records'][0]
+        self.assertEqual(400, record['failureStatus'])
+        self.assertNotIn(b'private-response', self.ledger.db_path.read_bytes())
+        self.journal.retry_failed('job-http', 'final_review', inputs, lambda: {'passed': True})
+        self.assertNotIn('failureStatus', self.journal.status(job_id='job-http')['records'][0])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name) / 'private-ledger'

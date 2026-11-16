@@ -71,6 +71,9 @@ def env_file(path):
 
 
 def reason(error):
+    status = getattr(error, 'status', None)
+    if type(status) is int and 100 <= status <= 599:
+        return 'provider_http_' + str(status)
     text = str(error)
     return text if re.fullmatch(r'[A-Za-z0-9_ .:/-]{1,180}', text) else type(error).__name__
 

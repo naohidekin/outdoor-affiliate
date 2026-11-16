@@ -174,7 +174,7 @@ def _public(record):
     return {key: copy.deepcopy(record.get(key)) for key in (
         'stageKey', 'jobId', 'stage', 'status', 'attempts', 'maxAttempts',
         'inputHash', 'dependencyHash', 'schemaHash', 'createdAt', 'updatedAt',
-        'failureType', 'successorKey', 'predecessorKey', 'inheritedAttempts',
+        'failureType', 'failureStatus', 'successorKey', 'predecessorKey', 'inheritedAttempts',
         'usageReferencePresent', 'responseReceiptCount',
         'missingUsageAttemptCount', 'missingUsage', 'cacheHits') if key in record}
 
@@ -309,6 +309,7 @@ class StageJournal:
             record['status'] = 'in_flight'
             record['updatedAt'] = _now()
             record.pop('failureType', None)
+            record.pop('failureStatus', None)
             self._save(db, key, record)
             self.ledger._event(db, job_id, 'stage_retry_reserved', _public(record))
         return self._operate(key, record, operation)
@@ -400,6 +401,9 @@ class StageJournal:
                 if record is not None and record.get('status') == 'in_flight':
                     record.update(status='failed', failureType=type(exc).__name__, updatedAt=_now(),
                                   usageReferencePresent=False)
+                    status = getattr(exc, 'status', None)
+                    if type(status) is int and 100 <= status <= 599:
+                        record['failureStatus'] = status
                     self._save(db, key, record)
                     self.ledger._event(db, record['jobId'], 'stage_failed', _public(record))
             raise
