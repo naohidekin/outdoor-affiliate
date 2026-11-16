@@ -1,7 +1,19 @@
 """Owner-facing explanations only; never changes gates or retries effects."""
 import re
 
+# These editorial validation failures need internal correction, not owner action.
+INTERNAL_REASONS = {
+    'Two to three distinct internal article links required',
+    'Article length outside existing SKILL limits',
+}
+
 REASONS = {
+    'Two to three distinct internal article links required': (
+        '本文の関連記事リンクが規定の2〜3本になっていません。',
+        '本人の操作は不要です。関連記事リンクの修正対象として内部で保持します。'),
+    'Article length outside existing SKILL limits': (
+        '本文の文字数が記事形式ごとの規定範囲から外れています。',
+        '本人の操作は不要です。文字数の調整対象として内部で保持します。'),
     'source_product_image_or_affiliate_verification_incomplete': (
         '商品の仕様・写真・購入リンクの確認がそろっていないため、制作を止めています。',
         '「商品情報を再調査して」と返信できます。正しい商品ページをご存じなら、そのURLも添えてください。'),

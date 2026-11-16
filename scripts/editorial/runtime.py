@@ -1854,6 +1854,10 @@ class Runtime:
                       and r.get('reason') != 'model_budget_hold'
                       and r.get('reason') not in handled_reasons
                       and r.get('id') not in handled_ids]
+        # Keep validation failures in health/articles; do not ask the owner to debug them.
+        from attention_presentation import INTERNAL_REASONS
+        attention = [item for item in attention
+                     if (item.get('error') or {}).get('reason') not in INTERNAL_REASONS]
         if attention:
             result['status'] = 'attention'
             atomic(self.root / 'health.json', result)

@@ -10,6 +10,14 @@ class AttentionPresentationTests(unittest.TestCase):
             self.assertNotIn(reason, text)
             self.assertNotIn('internal-id', text)
             self.assertIn('公開の承認依頼ではありません', text)
+    def test_internal_quality_failures_need_no_owner_reply(self):
+        from attention_presentation import INTERNAL_REASONS
+        for reason in INTERNAL_REASONS:
+            text = attention_text([{'title': '記事', 'error': {'reason': reason}}], {})
+            self.assertIn('本人の操作は不要', text)
+            self.assertNotIn('「原因を調べて」', text)
+            self.assertNotIn('具体的な原因はまだ', text)
+
     def test_unknown_reason_not_leaked_or_guessed(self):
         text = attention_text([{'id': 'secret-id', 'title': 'secret-id', 'error': {'reason':'private_error'}}], {})
         self.assertIn('具体的な原因はまだ確認できていません', text)

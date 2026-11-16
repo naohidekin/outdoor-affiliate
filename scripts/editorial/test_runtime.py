@@ -323,6 +323,19 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual('attention',second['status'])
         self.assertEqual(1,len(attention()))
 
+    def test_internal_validation_failures_stay_in_health_without_owner_notice(self):
+        self.config['generationEnabled'] = False
+        from attention_presentation import INTERNAL_REASONS
+        for index, reason in enumerate(sorted(INTERNAL_REASONS)):
+            candidate = self.runtime.ledger.create_candidate({'slug': 'internal-quality-'+str(index)},
+                                                            '2026-11-16T09:00:00+09:00')
+            self.runtime.ledger.set_stage(candidate['id'], 'error', {'reason': reason})
+            result = self.runtime.tick()
+            self.assertEqual('error', self.runtime.ledger.get_job(candidate['id'])['stage'])
+            self.assertFalse(any(text.startswith('【記事制作が止まっています】') for text in self.slack.notices))
+        self.assertTrue(any(j.get('error') for j in result['articles']))
+        self.assertEqual([], self.models.usage)
+
     def test_pending_candidates_resume_without_rewriting_legacy_slots(self):
         candidate = self.runtime.ledger.create_candidate({'slug': 'pending'},
             datetime(2026, 11, 4, 9, tzinfo=JST))
