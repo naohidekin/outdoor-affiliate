@@ -157,6 +157,9 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
              and isinstance(proof.get('corrections'), list) and proof['corrections']
              and all(isinstance(item, dict) for item in proof['corrections']), 'proposal_proof_binding')
     _require(proposed.get('kind') in ('candidate', 'correction-plan'), 'correction_proposal_required')
+    if 'approvedWritingBrief' in proposed:
+        _require(isinstance(proposed['approvedWritingBrief'], dict) and proposed['approvedWritingBrief'],
+                 'approved_writing_brief_must_be_nonempty_object')
     body = (proposed.get('candidate') or {}).get('content')
     _require(proposed['kind'] == 'correction-plan' or isinstance(body, str) and body.strip(),
              'proposed_body_required')
@@ -326,6 +329,9 @@ class _GrantedRuntime(Runtime):
             with self.model_budget.scope(JOB_ID, stage):
                 result = operation()
             if stage == 'draft':
+                _require(result['brief']['format'] == 'guide'
+                         and all(result['article'].get(k) == job['theme'][k]
+                                 for k in ('productIds', 'slug', 'categoryId')), 'corrected_article_identity_or_format_changed')
                 _require(result['article']['content'] != self._original['content'],
                          'unsupported_original_body_not_corrected')
             measured_usage = self.models.usage[start:]
@@ -414,6 +420,13 @@ def execute(runtime, manifest, *, owner_grant):
                 'Remove the listed unsupported inferences from title/body/FAQ/metadata. '
                 'Use ONLY the newly gathered primary evidence; add no facts from legacy prose.\n'
                 + json.dumps(original['bundle']['article'], ensure_ascii=False))
+            proposed, proposed_sha = _read(paths['proposed'])
+            _require(proposed_sha == manifest['sha256']['proposedCandidate'], 'pinned_proposal_changed')
+            if 'approvedWritingBrief' in proposed:
+                context['editorialRules'] += ('\nMain upper-editor approvedWritingBrief (not a new factual source); '
+                    'all facts must match freshly gathered primary references. Preserve guide format, '
+                    'selected products, slug and category.\n'
+                    + json.dumps(proposed['approvedWritingBrief'], ensure_ascii=False))
             result = view._make_article(job, context)
             _require(view._executed_stages == {'draft', 'polish', 'final_review'}, 'incomplete_owner_pipeline')
             _receipt(runtime, status='completed', result=result)

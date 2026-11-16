@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 
 from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
                     valid_social_images, valid_image_refresh, REFRESH_NOTICE)
-from models import Models
+from models import Models, ARTICLE_LENGTHS
 from wise_contract import load_policy, require_current_review
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
@@ -917,6 +917,12 @@ class Runtime:
         review_bundle = {k: v for k, v in bundle.items()
                          if k not in ('revisionContext', 'catalogCorrectionContext')}
         review_checks = {'evidence': model_flags, 'structural': checks,
+                         'articleMeasurements': {
+                             'format': bundle['brief']['format'],
+                             'contentCharacters': len(bundle['article']['content']),
+                             'minimumCharacters': ARTICLE_LENGTHS[bundle['brief']['format']][0],
+                             'maximumCharacters': ARTICLE_LENGTHS[bundle['brief']['format']][1],
+                             'method': 'python_len_decoded_article_content'},
                          'source': gathered.get('evidence', {}),
                          'approvedTheme': job['theme'],
                          'preview': preview, 'polishPreservation': preservation,

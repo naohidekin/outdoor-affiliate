@@ -43,11 +43,12 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
         atomic(self.snapshot, snapshot)
         atomic(self.config, {'stateRoot': str(self.root), 'supplementalApparelBatchManifest': str(self.batch_path)})
         self.source = bundle()
+        self.source['brief']['format'] = 'guide'
         self.source['products'] = products
         self.source['article'].update(id=self.job['id'], slug=slot['theme']['slug'], content='Old unsupported claim')
         inputs = {'dependencies': {'protocol': 'old'}, 'schemaVersion': 1}
         with self.assertRaises(ValueError):
-            self.journal.run(self.job['id'], 'draft', inputs, self.fail)
+            self.journal.run(self.job['id'], 'draft', inputs, self.fail_operation)
         initial = self.journal.key(self.job['id'], 'draft', inputs)
         corrected = {'dependencies': {'protocol': 'corrected'}, 'schemaVersion': 1}
         self.journal.retry_corrected_failed(self.job['id'], 'draft', initial, corrected, lambda: self.source)
@@ -55,9 +56,9 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
         self.journal.run(self.job['id'], 'polish', inputs,
                          lambda: {'polished': self.polished, 'preservation': {'passed': True}})
         with self.assertRaises(ValueError):
-            self.journal.run(self.job['id'], 'final_review', inputs, self.fail)
+            self.journal.run(self.job['id'], 'final_review', inputs, self.fail_operation)
         with self.assertRaises(ValueError):
-            self.journal.retry_failed(self.job['id'], 'final_review', inputs, self.fail)
+            self.journal.retry_failed(self.job['id'], 'final_review', inputs, self.fail_operation)
         self.old_key = self.journal.key(self.job['id'], 'final_review', inputs)
         self.ledger.set_stage(self.job['id'], 'error', {'reason': 'ModelError'})
         self.artifacts = self.root / 'research' / 'artifacts' / self.job['id'] / fingerprint(self.source)
@@ -95,7 +96,7 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
         self.tmp.cleanup()
 
     @staticmethod
-    def fail():
+    def fail_operation():
         raise ValueError('HTTP 400')
 
     def write_proof(self):
@@ -316,6 +317,51 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
         self.assertEqual([], request.calls)
         with self.ledger._tx() as db:
             self.assertIsNone(db.execute('SELECT 1 FROM meta WHERE key=?', (recovery.RECEIPT_KEY,)).fetchone())
+
+    def test_approved_writing_brief_reaches_writer_after_legacy_with_all_normal_gates(self):
+        import supplemental_review_recovery as recovery
+        from test_models import prompt_data
+        brief = {'purpose': 'Explain documented choices', 'reader': 'Buyers',
+                 'conclusion': 'Compare sourced variants', 'headings': ['Choice'],
+                 'facts': ['Only supplied primary facts'], 'numbers': [], 'links': [],
+                 'style': 'Concise research', 'length': '3000-5000', 'cta': 'Check variants'}
+        proposed = json.loads(self.proposed.read_text())
+        proposed['approvedWritingBrief'] = brief
+        atomic(self.proposed, proposed)
+        self.write_proof()
+        runtime, plan, grant, request = self.execution_fixture()
+        recovery.execute(runtime, plan, owner_grant=grant)
+        rules = prompt_data(request.calls[0][2]['messages'][0]['content'])['context']['CLAUDE']
+        self.assertIn(json.dumps(brief, ensure_ascii=False), rules)
+        self.assertGreater(rules.index(json.dumps(brief, ensure_ascii=False)), rules.index('Old unsupported claim'))
+        self.assertIn('not a new factual source', rules)
+        self.assertEqual(3, len(request.calls))
+        saved = self.ledger.get_job(self.job['id'])['bundle']
+        self.assertEqual('guide', saved['brief']['format'])
+        self.assertEqual(self.job['theme']['productIds'], saved['article']['productIds'])
+        self.assertEqual(self.job['theme']['slug'], saved['article']['slug'])
+        self.assertEqual(self.job['theme']['categoryId'], saved['article']['categoryId'])
+
+    def test_provided_writing_brief_must_be_a_nonempty_dictionary(self):
+        for invalid in ({}, None, [], ''):
+            proposed = json.loads(self.proposed.read_text())
+            proposed['approvedWritingBrief'] = invalid
+            atomic(self.proposed, proposed)
+            self.write_proof()
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, 'approved_writing_brief'):
+                self.prepare()
+
+    def test_corrected_writer_cannot_change_guide_format(self):
+        import supplemental_review_recovery as recovery
+        runtime, plan, grant, request = self.execution_fixture()
+        result = json.loads(request.results[0]['content'][0]['text'])
+        result['brief']['format'] = 'how-to'
+        request.results[0]['content'][0]['text'] = json.dumps(result)
+        with self.assertRaises(Exception):
+            recovery.execute(runtime, plan, owner_grant=grant)
+        self.assertIsNone(self.ledger.get_job(self.job['id'])['bundle'])
+        self.assertEqual([], self.published)
+        self.assertEqual(1, len(request.calls))
 
     def test_execute_refuses_missing_or_unbound_owner_grant_before_any_runtime_use(self):
         import supplemental_review_recovery as recovery

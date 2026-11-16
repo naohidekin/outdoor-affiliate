@@ -69,6 +69,17 @@ class SlackFake:
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_final_reviewer_receives_measured_body_length_and_unchanged_format_bounds(self):
+        from unittest.mock import patch
+        from models import ARTICLE_LENGTHS
+        with patch.object(self.models, 'review', wraps=self.models.review) as review:
+            self.runtime.produce(limit=1)
+        candidate, checks = review.call_args.args
+        measurement = checks['articleMeasurements']
+        self.assertEqual(len(candidate['article']['content']), measurement['contentCharacters'])
+        self.assertEqual(ARTICLE_LENGTHS[candidate['brief']['format']],
+                         (measurement['minimumCharacters'], measurement['maximumCharacters']))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(self.tmp.name)

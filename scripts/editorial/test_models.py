@@ -545,6 +545,58 @@ class ModelTests(unittest.TestCase):
         self.assertFalse(blocked['passed'])
         self.assertIn('Missing independent affiliate evidence', blocked['issues'])
 
+    def test_review_recomputes_postpolish_length_before_any_provider_request(self):
+        from models import ARTICLE_LENGTHS
+        for format_name, (lower, upper) in ARTICLE_LENGTHS.items():
+            for count in (lower - 1, lower, upper, upper + 1):
+                with self.subTest(format=format_name, count=count):
+                    candidate = bundle()
+                    candidate['brief']['format'] = format_name
+                    candidate['article']['content'] = '文' * count
+                    measurements = dict(format=format_name, contentCharacters=count, minimumCharacters=lower,
+                                        maximumCharacters=upper, method='python_len_decoded_article_content')
+                    checks = dict(evidence=FLAGS, articleMeasurements=measurements)
+                    fake = Fake(response(REVIEW))
+                    model = Models(ENV, fake)
+                    if lower <= count <= upper:
+                        self.assertTrue(model.review(candidate, checks)['passed'])
+                        self.assertEqual(1, len(fake.calls))
+                        prompt = fake.calls[0][2]['messages'][0]['content']
+                        self.assertIn('checks.articleMeasurements is the source of truth', prompt)
+                        self.assertEqual(measurements, prompt_data(prompt)['checks']['articleMeasurements'])
+                    else:
+                        with self.assertRaisesRegex(ModelError, 'Article length outside existing SKILL limits'):
+                            model.review(candidate, checks)
+                        self.assertEqual([], fake.calls)
+
+    def test_review_rejects_forged_or_invalid_measurements_before_provider_request(self):
+        candidate = bundle()
+        original = dict(format='guide', contentCharacters=len(candidate['article']['content']),
+                        minimumCharacters=3000, maximumCharacters=5000, method='python_len_decoded_article_content')
+        for forged in (None, {}, dict(original, contentCharacters=3000), dict(original, format='review'),
+                       dict(original, minimumCharacters=2000), dict(original, maximumCharacters=8000),
+                       dict(original, method='tokens'), dict(original, extra=True),
+                       dict(original, contentCharacters=float(original['contentCharacters']))):
+            with self.subTest(forged=forged):
+                fake = Fake(response(REVIEW))
+                with self.assertRaisesRegex(ModelError, 'Article measurements do not match'):
+                    Models(ENV, fake).review(candidate, dict(evidence=FLAGS, articleMeasurements=forged))
+                self.assertEqual([], fake.calls)
+        for invalid in ({}, dict(candidate, brief={'format': 'unknown'}),
+                        dict(candidate, article={'content': None}), dict(candidate, brief={'format': []})):
+            with self.subTest(invalid=invalid):
+                fake = Fake(response(REVIEW))
+                with self.assertRaisesRegex(ModelError, 'Invalid article measurement source'):
+                    Models(ENV, fake).review(invalid, dict(evidence=FLAGS, articleMeasurements=original))
+                self.assertEqual([], fake.calls)
+
+    def test_review_without_measurements_retains_legacy_direct_call_compatibility(self):
+        candidate = bundle()
+        candidate['article']['content'] = 'Short legacy fixture'
+        fake = Fake(response(REVIEW))
+        self.assertTrue(Models(ENV, fake).review(candidate, FLAGS)['passed'])
+        self.assertEqual(1, len(fake.calls))
+
     def test_claude_review_wire_omits_unsupported_bounds_but_local_wise_gate_remains_strict(self):
         policy = load_policy()
         scores = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)

@@ -689,6 +689,23 @@ class Models:
         return {"content": candidate, "model": usage["model"], "usage": usage}
 
     def review(self, bundle, checks):
+        if isinstance(checks, dict) and 'articleMeasurements' in checks:
+            article = bundle.get('article') if isinstance(bundle, dict) else None
+            brief = bundle.get('brief') if isinstance(bundle, dict) else None
+            content = article.get('content') if isinstance(article, dict) else None
+            format_name = brief.get('format') if isinstance(brief, dict) else None
+            if not isinstance(content, str) or not isinstance(format_name, str) or format_name not in ARTICLE_LENGTHS:
+                raise ModelError('Invalid article measurement source')
+            lower, upper = ARTICLE_LENGTHS[format_name]
+            measured = dict(format=format_name, contentCharacters=len(content), minimumCharacters=lower,
+                            maximumCharacters=upper, method='python_len_decoded_article_content')
+            supplied = checks['articleMeasurements']
+            if (not isinstance(supplied, dict) or supplied != measured or any(
+                    type(supplied.get(key)) is not int
+                    for key in ('contentCharacters', 'minimumCharacters', 'maximumCharacters'))):
+                raise ModelError('Article measurements do not match actual content and format')
+            if not lower <= len(content) <= upper:
+                raise ModelError('Article length outside existing SKILL limits')
         policy = None
         if isinstance(checks, dict) and checks.get('wisePolicy'):
             policy = load_policy()
@@ -696,6 +713,7 @@ class Models:
                 raise ModelError('Owner WISE policy mismatch')
         result, usage = self._call(
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
+            "When supplied, checks.articleMeasurements is the source of truth for body character count and format bounds; do not infer counts or manufacture scores from it. "
             "When bundle.inheritedPresentationContext exists, its clinicalReverified=false means unchanged template "
             "context, not newly verified medical guidance. Review the revised title/body/FAQs and their consistency "
             "with that inherited advice. Any contradiction is a blocker. The medical flag and evidence for this "
