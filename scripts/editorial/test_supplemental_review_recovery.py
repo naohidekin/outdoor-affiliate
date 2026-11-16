@@ -144,6 +144,26 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
             with self.subTest(change=change):
                 self.assertTrue(self.prepare()['blockers'])
 
+    def test_extra_history_artifact_is_retained_and_only_pinned_directory_selected(self):
+        expected = self.prepare()
+        other = self.artifacts.parent / ('a' * 64)
+        atomic(other / 'source.json', {'kind': 'source', 'bundle': {'unrelated': True}})
+        atomic(other / 'candidate.json', {'kind': 'candidate', 'candidate': {'content': 'Unrelated history'}})
+        before = {p: p.read_bytes() for p in other.iterdir()}
+        self.assertEqual(expected, self.prepare())
+        self.assertEqual(before, {p: p.read_bytes() for p in other.iterdir()})
+
+    def test_wrong_pinned_source_hash_is_rejected_even_with_valid_copy_elsewhere(self):
+        other = self.artifacts.parent / ('b' * 64)
+        other.mkdir()
+        for name in ('source.json', 'candidate.json'):
+            (other / name).write_bytes((self.artifacts / name).read_bytes())
+        original = (self.artifacts / 'source.json').read_text()
+        (self.artifacts / 'source.json').write_text(original + ' ')
+        with self.assertRaisesRegex(ValueError, 'pinned_original_artifacts_required'):
+            self.prepare()
+        self.assertEqual(original.encode(), (other / 'source.json').read_bytes())
+
     def test_proposal_proof_binding_and_artifact_integrity_fail_closed(self):
         self.proposed.write_text(self.proposed.read_text() + ' ')
         with self.assertRaisesRegex(ValueError, 'proposal_proof_binding'):

@@ -137,14 +137,13 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
              and parent.get('status') == 'failed' and parent.get('attempts') == 1
              and parent.get('successorKey') == successes['draft']['stageKey'], 'original_failed_lineage_required')
     successes['original_failed_draft'] = parent
-    paths = list((root / 'research' / 'artifacts' / job_id).glob('*/source.json'))
-    _require(len(paths) == 1 and paths[0].parent.name == SOURCE_DIR, 'unique_source_artifact_required')
-    source, source_sha = _read(paths[0])
-    candidate, candidate_sha = _read(paths[0].with_name('candidate.json'))
+    source_path = root / 'research' / 'artifacts' / job_id / SOURCE_DIR / 'source.json'
+    source, source_sha = _read(source_path)
+    candidate, candidate_sha = _read(source_path.with_name('candidate.json'))
     gathered, gathered_sha = _read(root / 'research' / (job_id + '.json'))
     _require(source_sha == SOURCE_SHA and candidate_sha == CANDIDATE_SHA, 'pinned_original_artifacts_required')
     _require(source.get('kind') == 'source' and isinstance(source.get('bundle'), dict)
-             and paths[0].parent.name == fingerprint(source['bundle'])
+             and source_path.parent.name == fingerprint(source['bundle'])
              and source['bundle'].get('article', {}).get('content') == draft.get('article', {}).get('content'),
              'source_artifact_mismatch')
     _require(candidate.get('kind') == 'candidate' and candidate.get('candidate') == polish.get('polished')
