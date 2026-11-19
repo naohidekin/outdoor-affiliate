@@ -1341,5 +1341,40 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(fake.calls, [])
 
 
+
+class PurchaseAnchorModelTests(unittest.TestCase):
+    def test_raw_or_changed_purchase_anchors_fail_before_polish_or_length_repair(self):
+        from test_quality import bundle as qa_bundle
+        canonical = qa_bundle()['products'][0]
+        bad = ['https://item.rakuten.co.jp/alice00/00brd5003/',
+               'https://hb.afl.rakuten.co.jp/ichiba/other-product/',
+               canonical['amazonUrl'].replace('camp78-22', 'wrong-22'),
+               canonical['amazonUrl'].replace('B012345678', 'B999999999'),
+               'www.amazon.co.jp/dp/B012345678/?tag=camp78-22']
+        for destination in bad:
+            data = bundle()
+            # Even a short body must fail this gate before the bounded length repair.
+            data['article']['content'] = '広告\n' + destination + '\n<' + destination + '>'
+            ctx = context()
+            ctx['catalog'][0].update(affiliateUrl=canonical['affiliateUrl'], amazonUrl=canonical['amazonUrl'])
+            request = Fake(writer_response(data))
+            with self.subTest(destination=destination), self.assertRaisesRegex(ModelError, 'Purchase anchor'):
+                Models(ENV, request).draft({'productIds': ['tent-a']}, ctx)
+            self.assertEqual(1, len(request.calls))
+
+    def test_exact_routes_and_manufacturer_citation_survive_normal_writer_validation(self):
+        from test_quality import bundle as qa_bundle
+        canonical = qa_bundle()['products'][0]
+        data = bundle()
+        data['article']['content'] += ('\n[楽天](' + canonical['affiliateUrl'] + ')'
+            + '\n[Amazon](' + canonical['amazonUrl'] + ')\n[公式](https://maker.example/tent)')
+        ctx = context()
+        ctx['catalog'][0].update(affiliateUrl=canonical['affiliateUrl'], amazonUrl=canonical['amazonUrl'])
+        request = Fake(writer_response(data))
+        result = Models(ENV, request).draft({'productIds': ['tent-a']}, ctx)
+        self.assertEqual(data['article']['content'], result['article']['content'])
+        self.assertEqual(1, len(request.calls))
+        self.assertIn('Raw merchant reference URLs are evidence only', request.calls[0][2]['messages'][0]['content'])
+
 if __name__ == "__main__":
     unittest.main()

@@ -162,6 +162,52 @@ def _without_code(text):
     return _code_pattern().sub("", text)
 
 
+def purchase_anchor_issues(content, products):
+    """Visible Markdown purchase anchors must equal a selected canonical route.
+
+    Source metadata, code and image destinations are not purchase anchors.
+    Product-card route identity/tag validation remains a separate existing gate.
+    """
+    allowed = {p.get(field) for p in products if isinstance(p, dict)
+               for field in ('affiliateUrl', 'amazonUrl') if _text(p.get(field))}
+    visible = _without_code(content)
+    destinations = [dest for _, dest in _article_links(visible)]
+    # Mask inline destinations (including images) already handled above. GFM
+    # also makes bare URLs and angle autolinks clickable outside Markdown links.
+    masked = list(visible)
+    for offset, dest in _destinations(visible):
+        if re.search(r'\]\(\s*$', visible[:offset]):
+            size = len(dest) + (2 if visible[offset:offset + 1] == '<' else 0)
+            masked[offset:offset + size] = ' ' * size
+    text = ''.join(masked)
+    text = re.sub(r'(?m)^ {0,3}\[[^\]\n]+\]:[^\n]*', '', text)
+    # This check covers Markdown/GFM, not HTML attributes or rendered HTML.
+    text = re.sub(r'<(?!https?://)[^>]*>', '', text, flags=re.I)
+    for match in re.finditer(r'\b(?:https?://|www\.)[^\s<>"\[\]]+', text, re.I):
+        dest = match.group().rstrip('.,;:!')
+        while dest.endswith(')') and dest.count(')') > dest.count('('):
+            dest = dest[:-1]
+        destinations.append(dest)
+    issues = []
+    for destination in destinations:
+        try:
+            parsed = urlsplit('https://' + destination if destination.lower().startswith('www.') else destination)
+            host = (parsed.hostname or '').lower().rstrip('.')
+        except ValueError:
+            issues.append('malformed purchase anchor URL')
+            continue
+        rakuten = (host in ('item.rakuten.co.jp', 'm.rakuten.co.jp',
+                            'product.rakuten.co.jp', 'shop.rakuten.co.jp',
+                            'search.rakuten.co.jp', 'hb.afl.rakuten.co.jp', 'a.r10.to')
+                   or host.endswith('.rakuten.ne.jp'))
+        amazon = (re.fullmatch(r'(?:www\.|m\.|smile\.)?amazon\.(?:[a-z]{2,3}|co\.[a-z]{2}|com\.[a-z]{2})', host)
+                  and not re.match(r'^/(?:gp/help|help)(?:/|$)', parsed.path, re.I))
+        merchant = rakuten or amazon or host in ('amzn.to', 'a.co')
+        if merchant and destination not in allowed:
+            issues.append('purchase anchor must use an exact selected canonical affiliateUrl or amazonUrl')
+    return issues
+
+
 def _code_pattern():
     return re.compile(r"(?m)^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[ \t]*(?=\n|$)|\Z)"
                       r"|^(?:(?: {4}|\t)[^\n]*(?:\n|$))+|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\2(?!`)"
@@ -314,6 +360,9 @@ def inspect_bundle(bundle):
             return []
         return value
     products, images, references = records("products"), records("images"), records("references")
+    selected_products = [p for p in products if p.get('id') in (article.get('productIds') or [])]
+    for issue in purchase_anchor_issues(content, selected_products):
+        fail('affiliate', issue)
     product_map = {}
     for product in products:
         pid = product.get("id")

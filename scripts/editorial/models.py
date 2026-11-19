@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from model_inputs import project_model_input
 from wise_contract import load_policy, valid_scores, passes
-from quality import SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
+from quality import purchase_anchor_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -436,6 +436,7 @@ class Models:
             "Lead with concrete purchaser choices: explain how documented specifications and variant discrepancies affect what to select or check before buying. "
             "One concise research disclosure is enough; do not repeat editorial verification or moral claims in every section. "
             "Keep necessary source qualifications beside the relevant claim, without fabricating firsthand experience, scientific explanations, performance or safety claims. "
+            "Raw merchant reference URLs are evidence only; purchase CTAs must use the exact supplied selected-product affiliateUrl or amazonUrl, never a raw listing URL or altered tag/ASIN. "
             "Legacy prose is NOT verified evidence: remove unsupported medical/child-safety claims and invented experiences. "
             "Only sourced manufacturer usage warnings may remain; never add clinical advice. "
             "Preserve every supplied verifiedAuthorFacts statement exactly; never infer ownership or experience from legacy prose. "
@@ -567,6 +568,8 @@ class Models:
                 or any(not _text(pid) for pid in result["article"]["productIds"])):
             raise ModelError("Invalid article")
         article = result["article"]
+        if purchase_anchor_issues(article['content'], selected):
+            raise ModelError('Purchase anchor must use exact selected canonical affiliate URLs')
         if context.get("existingArticle"):
             if article.get("slug") != context["existingArticle"]["slug"]:
                 raise ModelError("Revision source URL changed")

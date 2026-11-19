@@ -237,5 +237,91 @@ class PolishTests(unittest.TestCase):
             self.assertFalse(inspect_polish(source, candidate)["passed"])
 
 
+
+class PurchaseAnchorTests(unittest.TestCase):
+    def test_only_exact_selected_routes_are_allowed(self):
+        from quality import purchase_anchor_issues
+        data = bundle()
+        p = data['products'][0]
+        bad = ['https://item.rakuten.co.jp/alice00/00brd5003/',
+               'https://hb.afl.rakuten.co.jp/ichiba/another-product/',
+               p['amazonUrl'].replace('camp78-22', 'wrong-22'),
+               p['amazonUrl'].replace('B012345678', 'B999999999'),
+               'https://amzn.to/unknown', 'https://shop.rakuten.ne.jp/other/']
+        for destination in bad:
+            for text in ('[購入](' + destination + ')', '[購入][buy]\n\n[buy]: ' + destination):
+                with self.subTest(text=text):
+                    self.assertTrue(purchase_anchor_issues(text, [p]))
+        for destination in (p['affiliateUrl'], p['amazonUrl'], 'https://maker.example.com/manual'):
+            self.assertEqual([], purchase_anchor_issues('[確認](' + destination + ')', [p]))
+
+    def test_gfm_bare_and_angle_purchase_urls_use_the_same_gate(self):
+        from quality import purchase_anchor_issues
+        data = bundle()
+        product = data['products'][0]
+        for destination in ('https://item.rakuten.co.jp/alice00/00brd5003/',
+                            product['amazonUrl'].replace('camp78-22', 'wrong-22'),
+                            'www.amazon.co.jp/dp/B012345678/?tag=camp78-22'):
+            texts = (destination,) if destination.startswith('www.') else (destination, '<' + destination + '>')
+            for text in texts:
+                with self.subTest(text=text):
+                    self.assertTrue(purchase_anchor_issues(text, [product]))
+                    candidate = copy.deepcopy(data)
+                    candidate['article']['content'] += '\n' + text
+                    self.assertFalse(inspect_bundle(candidate)['passed'])
+        for destination in (product['affiliateUrl'], product['amazonUrl']):
+            for text in (destination, '<' + destination + '>'):
+                self.assertEqual([], purchase_anchor_issues(text, [product]))
+        raw = 'https://item.rakuten.co.jp/alice00/00brd5003/'
+        ignored = ('`' + raw + '`\n`<' + raw + '>`\n'
+                   '![画像](<' + raw + '>)\n![画像][picture]\n\n'
+                   '[picture]: <' + raw + '>\n[unused]: ' + raw)
+        self.assertEqual([], purchase_anchor_issues(ignored, [product]))
+
+    def test_informational_body_citations_are_not_purchase_routes(self):
+        from quality import purchase_anchor_issues
+        data = bundle()
+        for destination in ('https://www.amazon.co.jp/gp/help/customer/display.html',
+                            'https://affiliate.rakuten.co.jp/guide'):
+            text = '[案内](' + destination + ')'
+            self.assertEqual([], purchase_anchor_issues(text, data['products']))
+            data['article']['content'] += '\n' + text
+        self.assertTrue(inspect_bundle(data)['passed'])
+        for destination in ('https://www.amazon.co.jp/gp/product/B012345678',
+                            'https://www.amazon.co.jp/product-name/dp/B999999999?tag=wrong-22',
+                            'https://www.amazon.co.jp/gp/offer-listing/B999999999',
+                            'https://www.amazon.co.jp/gp/aw/d/B012345678',
+                            'https://www.amazon.co.jp/s?k=tent',
+                            'https://search.rakuten.co.jp/search/mall/tent/',
+                            'https://a.r10.to/unknown'):
+            self.assertTrue(purchase_anchor_issues('[購入](' + destination + ')', data['products']))
+
+    def test_code_images_unused_definitions_and_source_metadata_do_not_trigger(self):
+        from quality import purchase_anchor_issues
+        raw = 'https://item.rakuten.co.jp/shop/item/'
+        content = ('`[例](' + raw + ')`\n```md\n[例](' + raw + ')\n```\n'
+                   '![画像](' + raw + ')\n![画像][image]\n\n[image]: ' + raw + '\n[unused]: ' + raw)
+        data = bundle()
+        self.assertEqual([], purchase_anchor_issues(content, data['products']))
+        data['article']['content'] += '\n' + content
+        data['references'].append({'url': raw, 'checkedAt': '2026-11-20T01:00:00+09:00'})
+        self.assertTrue(inspect_bundle(data)['passed'])
+
+    def test_final_gate_rejects_untracked_and_unselected_product_anchors_without_edits(self):
+        for destination in ('https://item.rakuten.co.jp/alice00/00brd5003/',
+                            'https://hb.afl.rakuten.co.jp/ichiba/other/',
+                            'https://www.amazon.co.jp/dp/B999999999/?tag=camp78-22'):
+            data = bundle()
+            data['article']['content'] += '\n[購入](' + destination + ')'
+            before = copy.deepcopy(data)
+            result = inspect_bundle(data)
+            self.assertFalse(result['passed'])
+            self.assertTrue(any('affiliate: purchase anchor' in f for f in result['failures']))
+            self.assertEqual(before, data)
+        data = bundle()
+        for field in ('affiliateUrl', 'amazonUrl'):
+            data['article']['content'] += '\n[購入](' + data['products'][0][field] + ')'
+        self.assertTrue(inspect_bundle(data)['passed'])
+
 if __name__ == "__main__":
     unittest.main()
