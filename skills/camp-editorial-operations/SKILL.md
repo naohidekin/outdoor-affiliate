@@ -45,6 +45,14 @@ source hold・未知結果・上限到達では止まり、別キーや別記事
 prepare/executeを使う。旧artifact・失敗・許可参照・manifestを固定し、追加工程を各1試行に限定する。
 通常のリトライ枠や予算は変更せず、この許可を他記事へ流用しない。
 
+2026-11-20の最新本人指示は、ジオライン／シャミース2記事の原因を採点不整合と本文品質に分け、
+本文・購入リンクを直して既存予算内でSlack承認待ちまで進めるcompletion権限を含む。
+`supplemental_pair_recovery.py`の`phase='completion'`でfresh source・現失敗artifact/hash・具体的な別修正仕様を束縛する。
+既知のfinal_review_failed後は同じ本人指示で別仕様を進められるが、各工程1試行、同一仕様・過去本文の再採点は禁止する。
+32calls/記事・128calls/制作期間・96calls/batchの既存総枠、旧claim・履歴・実測利用量を維持し、枠を作り直さない。
+unknown/in_flight・provider/schema異常は停止して照合し、本文validation失敗を同入力で再試行しない。
+この権限を他記事・本人承認・公開・SNS予約／投稿へ流用せず、承認は対象版ごとに別途扱う。
+
 ## 品質と承認を確認する
 
 工程結果の再利用は執筆・校正・審査の重複呼出しを避ける手段に限る。

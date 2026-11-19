@@ -365,6 +365,7 @@ class Runtime:
         return list(dict.fromkeys(disclosures))
 
     def produce(self, limit=3):
+        from regular_backfill import backfill, load_selection, pending as is_pending
         self._require_running()
         if not self.config.get('generationEnabled'):
             return {'status': 'disabled'}
@@ -374,10 +375,15 @@ class Runtime:
             return {'status': 'idle', 'articles': []}
         current = [j for j in self.ledger.list_jobs() if j.get('kind') not in
                    ('article_revision', 'supplemental_article') and j['week'] == week]
-        pending = [j for j in self.ledger.list_jobs() if j.get('kind') != 'article_revision' and not j['publication'] and j['stage'] != 'rejected']
-        if not any(j['stage'] == 'candidate' for j in pending) and (current or len(pending) >= 3):
+        pending = [j for j in self.ledger.list_jobs() if is_pending(j)]
+        candidates = any(j.get('kind') not in ('article_revision', 'supplemental_article')
+                         and j['stage'] == 'candidate' for j in pending)
+        if not candidates and (len(current) >= 3 or len(pending) >= 3):
             return {'status': 'idle', 'articles': []}
-        new_research = not current and len(pending) < 3
+        saved_themes = load_selection(self.root, week)
+        if current and saved_themes is None and not candidates:
+            return {'status': 'idle', 'articles': []}
+        new_research = not current and saved_themes is None and len(pending) < 3
         if new_research:
             try:
                 require_fresh_daily_metrics(self.config, now)
@@ -385,9 +391,6 @@ class Runtime:
                 if not any(job.get('stage') == 'candidate' for job in pending):
                     raise
                 new_research = False
-        if new_research and mixed_period(week) and pending:
-            return {'status': 'blocked', 'reason': 'mixed_period_waiting_for_three_pending_slots',
-                    'articles': [], 'pending': len(pending)}
         context = self._context()
         if new_research:
             research_attempt = self.root / 'production-attempts' / (week + '.json')
@@ -460,6 +463,7 @@ class Runtime:
                             'publication': 'prohibited', 'proposals': updates})
                     atomic(research_attempt, {
                         'status': ('selection_hold' if selection['status'] == 'hold' else 'generated'),
+                        'period': week, 'themes': themes,
                         'proposals': proposals, 'selection': selection['status'],
                         'holdReason': selection['holdReason'],
                         'eligibleCount': selection['eligibleCount'],
@@ -468,7 +472,8 @@ class Runtime:
                     themes = self._measured_model_call(
                         'research:' + week, 'research', 'claude-sonnet-4-6',
                         lambda: self.models.research(self._research_context(context)))['themes']
-                    atomic(research_attempt, {'status': 'generated', 'themes': themes, 'at': stamp()})
+                    atomic(research_attempt, {'status': 'generated', 'period': week,
+                                              'themes': themes, 'at': stamp()})
             except BudgetHold as hold:
                 requested = self.model_budget.has_request_reservation(
                     hold.article_id, hold.stage, hold.period_key)
@@ -488,10 +493,9 @@ class Runtime:
             if mixed_period(week) and selection['status'] == 'hold':
                 return {'status': 'blocked', 'reason': selection['holdReason'], 'articles': [],
                         'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled']}
-            for theme in themes[:3 - len(pending)]:
-                self.ledger.create_candidate(theme, now=now)
-            current = [j for j in self.ledger.list_jobs() if j.get('kind') not in
-                       ('article_revision', 'supplemental_article') and j['week'] == week]
+            saved_themes = themes
+        if saved_themes is not None:
+            backfill(self.ledger, week, saved_themes, now)
         results = []
         with self.ledger._tx() as db:
             row = db.execute('SELECT value FROM meta WHERE key=?',
@@ -1331,6 +1335,15 @@ class Runtime:
                 atomic(self.root / 'usage' / (secrets.token_hex(12) + '.json'),
                        {'at': stamp(), 'calls': unique, 'actualInvoiceUsd': None})
             records.clear()
+        diagnostics = vars(self.models).get('review_diagnostics', [])
+        while diagnostics:
+            record = diagnostics[0]
+            response_id = record.get('responseId') if isinstance(record, dict) else None
+            if not isinstance(response_id, str) or not response_id:
+                raise ValueError('review diagnostic response id required')
+            name = hashlib.sha256(response_id.encode('utf-8')).hexdigest() + '.json'
+            atomic(self.root / 'review-diagnostics' / name, record)
+            del diagnostics[0]
 
     def _budget_article_id(self, job_id):
         """A new revision of the same public URL must share its article budget."""

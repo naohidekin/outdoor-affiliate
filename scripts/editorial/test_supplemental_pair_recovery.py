@@ -408,5 +408,159 @@ class ChameeceSourceOnlyRecoveryTests(SourceOnlyRecoveryTests):
     SLOT = 3
 
 
+class CompletionRecoveryTests(SourceOnlyRecoveryTests):
+    def completion_fixture(self, mean=8):
+        rt, source_plan, source_grant, request, _ = self.source_fixture(mean=6)
+        self.completion_answers = copy.deepcopy(request.results)
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, source_plan, owner_grant=source_grant)
+        return self.next_completion(rt, 1, mean)
+
+    def next_completion(self, rt, sequence, mean=8):
+        from test_models import Fake
+        from models import CRITERIA_FIELDS
+        job = self.ledger.get_job(self.job['id'])
+        previous_key = job['error']['ownerRecoveryReceipt']
+        with self.ledger._tx() as db:
+            receipt = json.loads(db.execute('SELECT value FROM meta WHERE key=?', (previous_key,)).fetchone()[0])
+        namespace = 'owner_oneoff:' + receipt['ownerGrant']['reference'] + ':'
+        if receipt.get('planSha256'):
+            namespace += receipt['planSha256'] + ':'
+        records = self.journal.status(job_id=self.job['id'])['records']
+        draft = next(r for r in records if r['stage'] == namespace + 'draft')
+        failed = next(r for r in records if r['stage'] == namespace + 'final_review')
+        with self.ledger._tx() as db:
+            draft = json.loads(db.execute('SELECT value FROM meta WHERE key=?', (draft['stageKey'],)).fetchone()[0])
+        artifact = next(p.parent for p in (self.root / 'research' / 'artifacts' / self.job['id']).glob('*/source.json')
+                        if json.loads(p.read_text())['bundle']['article']['content'] == draft['output']['article']['content'])
+        self.proposed = self.base / ('completion-' + str(sequence) + '-proposal.json')
+        self.proof = self.base / ('completion-' + str(sequence) + '-proof.json')
+        atomic(self.proposed, {'kind': 'correction-plan', 'approvedWritingBrief': {
+            'purpose': 'Repair purchase anchors and clarify buyer choices ' + str(sequence)},
+            'completionPlan': {'diagnosis': {'scoringInconsistency': 'No threshold exemption; eleven-score mean applies',
+                'bodyQuality': 'Purchase links and concrete buying explanations need correction'},
+                'changes': [{'target': 'purchase_links',
+                    'change': 'Use exact canonical tracked destinations and explain confirmed variants ' + str(sequence)}]}})
+        self.write_proof()
+        proof = json.loads(self.proof.read_text())
+        proof['historicalArtifacts'] = dict(directory=artifact.name,
+            source=hashlib.sha256((artifact / 'source.json').read_bytes()).hexdigest(),
+            candidate=hashlib.sha256((artifact / 'candidate.json').read_bytes()).hexdigest())
+        atomic(self.proof, proof)
+        plan = recovery.prepare(self.config, self.job['id'], failed['stageKey'], self.proposed,
+            self.proof, self.snapshot, self.fresh, phase='completion')
+        answers = copy.deepcopy(self.completion_answers)
+        for i, answer in enumerate(answers):
+            answer['id'] = 'completion-' + str(sequence) + '-response-' + str(i)
+        writer = json.loads(answers[0]['content'][0]['text'])
+        writer['article']['content'] += '\n新しい購入先の確認事項を説明します。' + str(sequence)
+        answers[0]['content'][0]['text'] = json.dumps(writer)
+        upper = json.loads(answers[2]['content'][0]['text'])
+        upper['criteria'] = dict.fromkeys(CRITERIA_FIELDS, mean)
+        answers[2]['content'][0]['text'] = json.dumps(upper)
+        request = Fake(*answers)
+        rt.models.request = request
+        grant = dict(reference=recovery.COMPLETION_AUTHORIZATION, answer=recovery.COMPLETION_ANSWER,
+                     jobId=self.job['id'], manifestSha256=fingerprint(plan))
+        return rt, plan, grant, request
+
+    def test_completion_success_preserves_every_closed_claim_and_source_only_inputs(self):
+        rt, plan, grant, request = self.completion_fixture()
+        self.assertEqual('ready_for_budgeted_completion', plan['status'])
+        with self.ledger._tx() as db:
+            before = dict(db.execute('SELECT key,value FROM meta'))
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(3, len(request.calls))
+        self.assertEqual(1, len(self.slack.deliveries))
+        self.assertNotIn('LEGACY_BODY_SENTINEL', json.dumps(request.calls))
+        self.assertNotIn('LEGACY_BRIEF_SENTINEL', json.dumps(request.calls))
+        writer_payload = json.dumps(request.calls[0])
+        self.assertIn('Pinned diagnosis and required corrections', writer_payload)
+        self.assertIn('No threshold exemption; eleven-score mean applies', writer_payload)
+        self.assertIn('Purchase links and concrete buying explanations need correction', writer_payload)
+        self.assertIn('Use exact canonical tracked destinations and explain confirmed variants 1', writer_payload)
+        with self.ledger._tx() as db:
+            for key, value in before.items():
+                self.assertEqual(value, db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()[0])
+        self.assertIsNone(self.ledger.get_job(self.job['id'])['approval'])
+        self.assertIsNone(self.ledger.get_job(self.job['id'])['publication'])
+        with self.assertRaisesRegex(ValueError, 'already_claimed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+
+    def test_completion_known_quality_failure_allows_a_different_plan_once(self):
+        rt, plan, grant, request = self.completion_fixture(mean=6)
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        key = recovery.receipt_key(self.job['id'], 'completion', plan_sha=plan['planSha256'])
+        with self.ledger._tx() as db:
+            self.assertEqual('failed_known', json.loads(db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()[0])['status'])
+        with self.assertRaisesRegex(ValueError, 'same_plan_or_brief'):
+            recovery.prepare(self.config, self.job['id'], plan['oldFailedKey'], self.proposed,
+                self.proof, self.snapshot, self.fresh, phase='completion')
+        rt, second, second_grant, second_request = self.next_completion(rt, 2)
+        self.assertNotEqual(plan['planSha256'], second['planSha256'])
+        self.assertEqual('delivered', recovery.execute(rt, second, owner_grant=second_grant)['status'])
+        self.assertEqual(3, len(second_request.calls))
+
+    def test_completion_unknown_outcome_stops_other_plans(self):
+        rt, plan, grant, request = self.completion_fixture()
+        with patch.object(rt.catalog, 'catalog', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                recovery.execute(rt, plan, owner_grant=grant)
+        with self.assertRaisesRegex(ValueError, 'known_previous_failure|unknown_claim|previous_receipt'):
+            recovery.prepare(self.config, self.job['id'], plan['oldFailedKey'], self.proposed,
+                self.proof, self.snapshot, self.fresh, phase='completion')
+        self.assertEqual([], request.calls)
+
+    def test_pair_view_owns_its_diagnostic_list(self):
+        rt, plan, grant, request = self.completion_fixture()
+        rt.models.review_diagnostics = [{'prior': 'retain'}]
+        view = recovery._PairRuntime(rt, plan, self.polished)
+        self.assertEqual([], view.models.review_diagnostics)
+        self.assertIsNot(view.models.review_diagnostics, rt.models.review_diagnostics)
+        view.models.review_diagnostics.append({'new': 'isolated'})
+        self.assertEqual([{'prior': 'retain'}], rt.models.review_diagnostics)
+
+    def test_completion_cannot_send_historical_body_to_grader(self):
+        rt, plan, grant, request = self.completion_fixture()
+        view = recovery._PairRuntime(rt, plan, self.polished)
+        view._executed_stages = {'draft', 'polish'}
+        with self.ledger._tx() as db:
+            historical = [json.loads(raw) for raw, in db.execute(
+                "SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'")]
+        old_body = next(r['output']['polished']['content'] for r in historical
+                        if r.get('status') == 'succeeded' and r.get('stage') == 'polish')
+        inputs = {'bundle': {'article': {'content': old_body}},
+                  'dependencies': {'qualityFlags': {'facts': True}, 'structural': {'passed': True}}}
+        with self.assertRaisesRegex(ValueError, 'same_body_grader_reroll'):
+            view._run_model_stage(self.job, 'final_review', inputs, lambda: self.fail('grader called'),
+                                  'claude-sonnet-4-6')
+        self.assertEqual([], request.calls)
+
+    def test_completion_still_charges_existing_budget(self):
+        rt, plan, grant, request = self.completion_fixture()
+        with rt.model_budget.scope(self.job['id'], 'draft'):
+            for i in range(26):
+                reservation = rt.model_budget.reserve({'model': 'fixture', 'max_tokens': 1, 'messages': []})
+                rt.model_budget.settle(reservation, usage={'input_tokens': 0, 'output_tokens': 0},
+                                       response_id='settled-completion-fixture-' + str(i))
+        from model_budget import BudgetHold
+        with self.assertRaises(BudgetHold):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], request.calls)
+
+    def test_completion_unknown_budget_is_not_reusable(self):
+        rt, plan, grant, request = self.completion_fixture()
+        with rt.model_budget.scope(self.job['id'], 'draft'):
+            rt.model_budget.reserve({'model': 'fixture', 'max_tokens': 1, 'messages': []})
+        with self.assertRaisesRegex(ValueError, 'unknown_budget'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], request.calls)
+
+
+class ChameeceCompletionRecoveryTests(CompletionRecoveryTests):
+    SLOT = 3
+
+
 if __name__ == '__main__':
     unittest.main()

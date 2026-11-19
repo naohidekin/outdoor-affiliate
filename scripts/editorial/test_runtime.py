@@ -144,10 +144,12 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual([], self.runtime.ledger.list_jobs())
         self.assertFalse((self.runtime.root / 'production-attempts').exists())
 
-    def test_mixed_period_waits_for_three_free_pending_slots_then_uses_one_research_call(self):
+    def test_mixed_period_saves_three_and_backfills_one_free_slot_without_research(self):
         self.configure_production_schedule()
         old = [self.runtime.ledger.create_candidate({'slug': f'carry-{i}'},
                f'2026-11-13T09:0{i}:00+09:00') for i in range(2)]
+        for job in old:
+            self.runtime.ledger.set_stage(job['id'], 'review')
         proposals = []
         topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
                   ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
@@ -174,18 +176,27 @@ class RuntimeTests(unittest.TestCase):
                 patch.object(self.runtime, '_research_context', return_value=research), \
                 patch.object(self.models, 'research_mixed', create=True,
                              return_value={'proposals': proposals}) as model, \
-                patch.object(self.runtime, '_make_article', return_value={'status': 'review'}):
+                patch.object(self.runtime, '_make_article', side_effect=lambda job, context:
+                    self.runtime.ledger.set_stage(job['id'], 'review')) as make:
             clock.now.return_value = datetime(2026, 11, 20, 9, tzinfo=JST)
-            blocked = self.runtime.produce(limit=99)
-            self.assertEqual('mixed_period_waiting_for_three_pending_slots', blocked['reason'])
-            collect.assert_not_called(); model.assert_not_called()
+            first = self.runtime.produce(limit=99)
+            self.assertEqual(1, len(first['articles']))
+            self.assertEqual(1, make.call_count)
+            attempt = self.runtime.root / 'production-attempts' / '2026-11-20.json'
+            saved_bytes = attempt.read_bytes()
+            saved = json.loads(saved_bytes)
+            self.assertEqual([bind_nonproduct_theme(theme, feed) for theme in proposals], saved['themes'])
+            self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
             for job in old:
                 self.runtime.ledger.set_stage(job['id'], 'rejected')
-            result = self.runtime.produce(limit=99)
-        self.assertEqual(3, len(result['articles']))
+                self.assertEqual(1, len(self.runtime.produce(limit=99)['articles']))
+            self.assertEqual(3, make.call_count)
+            self.assertEqual('idle', self.runtime.produce(limit=99)['status'])
+            self.assertEqual(saved_bytes, attempt.read_bytes())
         collect.assert_called_once(); model.assert_called_once()
-        self.assertEqual(3, len([job for job in self.runtime.ledger.list_jobs()
-                                if job['week'] == '2026-11-20']))
+        current = [job for job in self.runtime.ledger.list_jobs() if job['week'] == '2026-11-20']
+        self.assertEqual([theme['slug'] for theme in proposals], [job['theme']['slug'] for job in current])
+        self.assertTrue(all(job['approval'] is None and job['publication'] is None for job in current))
         receipt = json.loads((self.runtime.root / 'period-receipts' / '2026-11-20.json').read_text())
         self.assertEqual({'knowhow', 'product', 'seasonal_problem'}, set(receipt['genreCoverage']))
         self.assertEqual('no_proposal', receipt['genreCoverage']['product']['unavailableReason'])

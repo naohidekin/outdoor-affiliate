@@ -186,6 +186,7 @@ class Models:
         self.artifact_sink = artifact_sink
         self.budget = budget
         self.usage = []
+        self.review_diagnostics = []
 
     def _safe_public(self, value):
         failed = False
@@ -780,6 +781,9 @@ class Models:
                 not 0 <= result["score"] <= 10 or not isinstance(result["issues"], list) or
                 not isinstance(result["evidence"], dict)):
             raise ModelError("Invalid review result")
+        raw_verdict = {'passed': result['passed'], 'score': result['score']}
+        actual_mean = None
+        contract_issues = []
         supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
         if isinstance(checks, dict) and checks.get('editorialRules') and checks.get('reviewKind') != 'social':
             fields = CRITERIA_FIELDS
@@ -792,7 +796,14 @@ class Models:
                     or any(type(criteria.get(k)) not in (int, float) or
                     not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields)):
                 raise ModelError('Complete WISE Supervisor scores required')
-            result['score'] = min(result['score'], sum(criteria[k] for k in fields) / len(fields))
+            actual_mean = sum(criteria[k] for k in fields) / len(fields)
+            if result['score'] > actual_mean:
+                contract_issues.append('overall_score_exceeds_criteria_mean')
+            if result['passed'] and actual_mean < 7.5:
+                contract_issues.append('model_pass_below_criteria_threshold')
+            if result['passed'] and result['score'] < 7.5:
+                contract_issues.append('model_pass_below_score_threshold')
+            result['score'] = min(result['score'], actual_mean)
         if policy is not None:
             if not valid_scores(result.get('wiseScores')):
                 raise ModelError('Complete owner WISE-AS six scores required')
@@ -818,6 +829,18 @@ class Models:
         result["passed"] = (result["passed"] and result["score"] >= 7.5 and not result["issues"]
                             and all(result[k] is True for k in CATEGORIES) and not missing)
         result["model"] = usage["model"]
+        if actual_mean is not None:
+            # Keep the provider artifact untouched. These local arithmetic facts
+            # explain a rejection without rerolling or raising any grade.
+            self.review_diagnostics.append({
+                'responseId': usage['responseId'],
+                'articleId': (bundle.get('article') or {}).get('id'),
+                'criteria': copy.deepcopy(result['criteria']),
+                'rawPassed': raw_verdict['passed'], 'rawScore': raw_verdict['score'],
+                'actualMean': actual_mean, 'normalizedPassed': result['passed'],
+                'normalizedScore': result['score'], 'contractIssues': contract_issues,
+                'issues': copy.deepcopy(result['issues']),
+                'observations': copy.deepcopy(result.get('observations', []))})
         result["evidence"] = {"model": result["evidence"], "checks": copy.deepcopy(checks)}
         return result
 

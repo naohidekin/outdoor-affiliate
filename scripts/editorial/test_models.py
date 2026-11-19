@@ -655,6 +655,35 @@ class ModelTests(unittest.TestCase):
         self.assertFalse(reviewed['passed'])
         self.assertEqual(7, reviewed['score'])
 
+    def test_failed_review_keeps_arithmetic_diagnostic_without_grade_reroll(self):
+        checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
+        raw = dict(REVIEW, passed=True, score=7.6,
+                   criteria=dict.fromkeys(CRITERIA_FIELDS, 7),
+                   evidence={'summary': 'Claims reviewed'}, observations=[])
+        provider_artifacts = []
+        fake = Fake(response(raw))
+        model = Models(ENV, fake, artifact_sink=provider_artifacts.append)
+        result = model.review(bundle(), checks)
+        diagnostic, = model.review_diagnostics
+        self.assertFalse(result['passed'])
+        self.assertEqual(7, diagnostic['actualMean'])
+        self.assertEqual(7.6, diagnostic['rawScore'])
+        self.assertTrue(diagnostic['rawPassed'])
+        self.assertFalse(diagnostic['normalizedPassed'])
+        self.assertEqual(['overall_score_exceeds_criteria_mean',
+                          'model_pass_below_criteria_threshold'], diagnostic['contractIssues'])
+        self.assertEqual(1, len(fake.calls))
+        self.assertEqual(1, len(provider_artifacts))
+
+    def test_review_reports_provider_pass_with_failing_overall_score(self):
+        raw = dict(REVIEW, passed=True, score=7.4,
+                   criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
+                   evidence={'summary': 'Claims reviewed'}, observations=[])
+        model = Models(ENV, Fake(response(raw)))
+        self.assertFalse(model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})['passed'])
+        self.assertEqual(['model_pass_below_score_threshold'],
+                         model.review_diagnostics[0]['contractIssues'])
+
     def test_review_uses_unrounded_criteria_mean_and_keeps_model_issues(self):
         checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
         fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',

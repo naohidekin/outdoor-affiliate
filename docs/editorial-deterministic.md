@@ -57,7 +57,15 @@ GSC/GA4はquery本文を渡さないown-site実績IDであり、市場需要やG
 
 決定論gateは最大3案を選び、ジャンルは近い優先度のtie-breakにだけ使ってquotaを強制しない。意味重複または曖昧な案は
 新記事にせずprivateな既存記事更新案またはholdへ送る。3枠を満たす確認済み案がない場合は全体をholdし、追加AI callや
-無限補充を行わない。前期の未公開jobが残る間は新しい調査を開始せず、枠解放後に同じ通常経路を開始する。
+無限補充を行わない。共有未公開枠に空きがあれば選定3候補を保存し、空き分だけ通常jobを作成する。
+
+`produce`の補充は `regular_backfill.py` を使う。選定済みtheme（非商品記事の出典bindingを含む）は
+`production-attempts/<period>.json` に保存し、SQLiteの `regular_selection:v1:<period>` へ固定する。
+同一期の未消費候補だけを使い、job作成とslot消費を同一transactionで確定する。補充のための再調査・AI再選定はしない。
+通常jobは失敗・却下済みも含め制作期3件まで。共有未公開3件には追加制作も含め、未確認のpublicationは空きと数えない。
+旧失敗jobの差替え、消費済みslotの再作成、選定内容の変更は行わず、期替わりで前期の未消費候補を持ち越さない。
+未照合のin_flight/unknown effectがある場合は補充を止める。旧混合receiptの復元は保存済み選定・一次情報だけを使い、不整合は照合待ちとする。
+開始日時・停止flag・対象版承認・既存の工程試行数・記事／制作期予算は引き続き適用する。
 
 期間証跡は `period-receipts/<period>.json`、既存記事更新案は
 `existing-update-proposals/<period>.json`、一次情報取得証跡は `public-sources/<period>.json` にprivate保存する。
