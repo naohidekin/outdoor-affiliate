@@ -809,6 +809,110 @@ def _montbell_excerpt(html, page_url, model):
             'scope': '商品情報 through 仕様, before first ' + (end.group(1) or end.group(2))}
 
 
+_MONTBELL_DETAIL_HEADINGS = {
+    '1107704': ('スパイラル スランテックカフ（特許取得済）', 'フラットシーマー'),
+    '1114881': ('素材の特徴＜シャミース＞',
+                '着丈はそのままでゆったり着られる＜リラックスサイズ＞',
+                '注意事項（38-990）', 'スパイラル スランテックカフ（特許取得済）'),
+}
+
+
+class _MontbellDetails(_ExcerptText):
+    """Visible paragraphs under named h4s in one closed 詳細情報 section."""
+    def __init__(self, source, headings):
+        super().__init__()
+        self.headings = headings
+        self.heading = None
+        self.active = self.closed = False
+        self.detail_count = 0
+        self.current = None
+        self.sections = []
+        self.seen = set()
+        self.duplicate = False
+        self.paragraph = None
+        self.feed(source)
+
+    def _finish(self):
+        if self.current is not None:
+            heading, parts, bad = self.current
+            if heading in self.seen:
+                self.duplicate = True
+            self.seen.add(heading)
+            text = '\n'.join(' '.join(line.split()) for line in ''.join(parts).splitlines() if line.strip())
+            if not bad and self.paragraph is None and text and len(text) <= 1800:
+                self.sections.append((heading, text))
+        self.current = self.paragraph = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('h1', 'h2', 'h3', 'h4'):
+            self._finish()
+            if tag != 'h4' and self.active:
+                self.active, self.closed = False, True
+            self.heading = (tag, [])
+        super().handle_starttag(tag, attrs)
+        if self.current and not self.heading:
+            if tag == 'p' and not self.stack[-1][1]:
+                if self.paragraph is not None:
+                    self.current[2] = True
+                self.paragraph = len(self.stack)
+            if tag == 'br' and self.paragraph:
+                self.current[1].append('\n')
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1][1]:
+            return
+        if self.heading:
+            self.heading[1].append(data)
+        elif self.current:
+            if self.paragraph:
+                self.current[1].append(data)
+            elif data.strip():
+                self.current[2] = True  # Unscoped captions/text are not prose evidence.
+
+    def handle_endtag(self, tag):
+        if tag in ('area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+                   'meta', 'param', 'source', 'track', 'wbr'):
+            return
+        if self.current and self.paragraph:
+            if not self.stack or self.stack[-1][0] != tag:
+                self.current[2] = True
+            if tag == 'p':
+                if len(self.stack) != self.paragraph:
+                    self.current[2] = True
+                self.current[1].append('\n')
+                self.paragraph = None
+        if self.heading and self.heading[0] == tag:
+            heading = (' '.join(''.join(self.heading[1]).split())
+                       if self.stack and self.stack[-1][0] == tag else '')
+            if tag == 'h3' and heading == '詳細情報':
+                self.detail_count += 1
+                self.active, self.closed = True, False
+            elif tag == 'h4' and self.active and heading in self.headings:
+                self.current = [heading, [], False]
+            self.heading = None
+        super().handle_endtag(tag)
+
+
+def _montbell_details(html, page_url, model):
+    headings = _MONTBELL_DETAIL_HEADINGS.get(model)
+    if not headings:
+        return []
+    page = _MontbellDetails(html, headings)
+    if page.detail_count != 1 or not page.closed or page.duplicate:
+        return []
+    result = []
+    for heading, text in page.sections:
+        if (re.search(r'価格|税込|税抜|[¥￥]|\d[\d,]*\s*円|在庫|入荷|カート|関連商品|おすすめ商品|写真は', text)
+                or any(value != model for value in re.findall(r'(?<!\d)\d{7}(?!\d)', text))):
+            continue
+        result.append({'heading': heading, 'text': text, 'sourceUrl': page_url, 'model': model,
+                       'excerptSHA256': hashlib.sha256(text.encode('utf-8')).hexdigest(),
+                       'scope': '詳細情報 / ' + heading + ', before next h4 or major heading',
+                       'conditions': ['Public primary manufacturer claims, not personal experience.',
+                                      'Attribute manufacturer claims; preserve all source qualifiers.']})
+    return result[:4]
+
+
 def _inspect_montbell(product, page_url, html, image_url):
     try:
         contract = apparel_contract(product)
@@ -866,6 +970,9 @@ def _inspect_montbell(product, page_url, html, image_url):
         excerpt = _montbell_excerpt(html, page_url, contract['model'])
         if excerpt:
             result['manufacturerExcerpt'] = excerpt
+        details = _montbell_details(html, page_url, contract['model'])
+        if details:
+            result['manufacturerDetails'] = details
         return result
     except (ApparelIdentityError, TypeError, ValueError):
         return None

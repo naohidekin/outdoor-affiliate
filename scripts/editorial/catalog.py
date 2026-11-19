@@ -952,6 +952,10 @@ class Catalog:
                             'url': res['url'], 'checkedAt': checked_at, **excerpt,
                             'conditions': ['Public primary manufacturer excerpt, not verified personal experience.',
                                            'Attribute manufacturer claims; preserve all source qualifiers.']})
+                    if kind == 'manufacturer' and apparel_binding:
+                        for detail in apparel_binding.get('manufacturerDetails', []):
+                            references.append({'productId': pid, 'kind': 'manufacturer-detail',
+                                'url': res['url'], 'checkedAt': checked_at, **detail})
                 return res, parsed, match
             try:
                 domains = (apparel_domains(product) if apparel_mode else

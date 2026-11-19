@@ -60,7 +60,88 @@ def montbell_dom():
     <h3>関連商品</h3><p>別商品は900フィルパワー 在庫あり</p>'''
 
 
+SPIRAL = 'スパイラル スランテックカフ（特許取得済）'
+DETAILS = {
+    '1107704': [(SPIRAL, '袖口の縫い目を斜めにすることで、伸縮性を妨げません。'),
+                ('フラットシーマー', '主要な接合部に使用し、肌あたりを良くしています。')],
+    '1114881': [('素材の特徴＜シャミース＞',
+                 '<strong>薄手ながらも保温性に優れる</strong><br />人間の毛髪の10分の1の繊維間に空気を蓄えます。'
+                 '<br />通気性とストレッチ性を備えます。'),
+                ('着丈はそのままでゆったり着られる＜リラックスサイズ＞', '着丈はそのままで身幅にゆとりがあります。'),
+                ('注意事項（38-990）', '摩擦により毛羽が抜け落ちることがあります。衣料用ブラシ等で取り除いてください。'),
+                (SPIRAL, '袖口の縫い目を斜めにすることで、伸縮性を妨げません。')],
+}
+
+
+def detail_fixture(model='1107704'):
+    image = 'https://webshop.montbell.jp/common/images/product/prod_k/k_' + model + '_bk.jpg'
+    current = product(imageUrl=image, specs={'model': model})
+    source = montbell_dom().replace('1101493', model)
+    sections = ''.join('<div><h4 class="ttlType03">' + heading + '</h4>'
+                       '<img alt="別モデル1109999 比較図"/><p class="marginTop5">' + text + '</p></div>'
+                       for heading, text in DETAILS[model])
+    source = source.replace('<h3>関連商品</h3>', '<h3 class="ttlType02c">詳細情報</h3>' + sections
+        + '<h4>白いシャツに透けにくい「ライトグレー」のインナーカラー</h4>'
+          '<p>写真はジオライン クールメッシュ VネックTシャツ Men\'s</p>'
+          '<h3>お手入れ</h3><h4>' + SPIRAL + '</h4><p>対象外のお手入れ 在庫あり</p>'
+          '<h3>関連商品</h3>')
+    return current, 'https://webshop.montbell.jp/goods/disp.php?product_id=' + model, source
+
+
 class ApparelIdentityTests(unittest.TestCase):
+    def test_named_details_are_scoped_hashed_manufacturer_claims_for_only_two_models(self):
+        for model in DETAILS:
+            current, url, source = detail_fixture(model)
+            binding = inspect_apparel_page(current, url, source, current['imageUrl'])
+            details = binding.get('manufacturerDetails', [])
+            self.assertEqual([h for h, _ in DETAILS[model]], [d['heading'] for d in details])
+            for detail in details:
+                self.assertEqual((url, model), (detail['sourceUrl'], detail['model']))
+                self.assertEqual(hashlib.sha256(detail['text'].encode()).hexdigest(), detail['excerptSHA256'])
+                self.assertIn('詳細情報', detail['scope'])
+                self.assertIn('manufacturer', ' '.join(detail['conditions']))
+                self.assertLessEqual(len(detail['text']), 1800)
+            for excluded in ('1109999', '写真は', '在庫', '対象外', '<strong>'):
+                self.assertNotIn(excluded, ''.join(d['text'] for d in details))
+            self.assertIn('manufacturerExcerpt', binding)
+            other = source.replace(model, '1101493')
+            other_product = product(imageUrl=current['imageUrl'].replace(model, '1101493'))
+            self.assertNotIn('manufacturerDetails', inspect_apparel_page(
+                other_product, url.replace(model, '1101493'), other, other_product['imageUrl']))
+
+    def test_details_omit_ambiguous_malformed_oversize_and_mixed_sections(self):
+        current, url, source = detail_fixture()
+        text = DETAILS['1107704'][0][1]
+        for bad in ('価格 ¥1000', '在庫あり', '税込100円', '関連商品 1109999',
+                    '写真は別モデル', '文' * 1801, '<p>閉じ忘れ',
+                    '<strong>未閉鎖', text + '</p>混入<p>'):
+            with self.subTest(bad=bad[:30]):
+                binding = inspect_apparel_page(current, url, source.replace(text, bad), current['imageUrl'])
+                self.assertNotIn(SPIRAL, [d['heading'] for d in binding.get('manufacturerDetails', [])])
+                self.assertIn('manufacturerExcerpt', binding)
+        for bad_source in (source + '<h3>詳細情報</h3>',
+                           source.replace('<h3>お手入れ</h3>', '<h4>' + SPIRAL + '</h4><p>重複</p><h3>お手入れ</h3>'),
+                           source.replace('>詳細情報</h3>', '>情報</h3>')):
+            binding = inspect_apparel_page(current, url, bad_source, current['imageUrl'])
+            self.assertNotIn('manufacturerDetails', binding)
+
+    def test_details_hidden_content_and_identity_mismatch_never_leak(self):
+        current, url, source = detail_fixture()
+        text = DETAILS['1107704'][0][1]
+        hidden = ('<span hidden>在庫あり 1109999</span><nav>関連商品</nav>'
+                  '<script>unsafe()</script><span style="display:none">写真は別物</span>')
+        binding = inspect_apparel_page(current, url, source.replace(text, text + hidden), current['imageUrl'])
+        self.assertEqual(text, binding['manufacturerDetails'][0]['text'])
+        for bad in (source.replace('>詳細情報</h3>', ' hidden>詳細情報</h3>'),
+                    source.replace('<h4 class="ttlType03">' + SPIRAL,
+                                   '<h4 hidden class="ttlType03">' + SPIRAL)):
+            binding = inspect_apparel_page(current, url, bad, current['imageUrl'])
+            self.assertNotIn(SPIRAL, [d['heading'] for d in binding.get('manufacturerDetails', [])])
+        for bad_url, bad_source, image in ((url + '0', source, current['imageUrl']),
+                (url, source.replace('value="1107704"', 'value="1109999"'), current['imageUrl']),
+                (url, source, current['imageUrl'].replace('1107704', '1109999'))):
+            self.assertIsNone(inspect_apparel_page(current, bad_url, bad_source, image))
+
     def test_montbell_excerpt_stops_at_first_functions_or_detail_heading(self):
         current = product(imageUrl='https://webshop.montbell.jp/common/images/product/prod_k/k_1101493_bk.jpg')
         url = 'https://webshop.montbell.jp/goods/disp.php?product_id=1101493'

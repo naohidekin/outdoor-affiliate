@@ -292,5 +292,121 @@ class ChameeceRecoveryTests(PairRecoveryTests):
     SLOT = 3
 
 
+class SourceOnlyRecoveryTests(PairRecoveryTests):
+    def source_fixture(self, mean=8):
+        from test_models import Fake
+        from models import CRITERIA_FIELDS
+        rt, original, old_grant, first = self.execution_fixture(review_mean=6)
+        answers = copy.deepcopy(first.results)
+        # Mark the previous generation's prose and brief, not fresh sources.
+        old_writer = json.loads(first.results[0]['content'][0]['text'])
+        old_writer['article']['content'] += '\nLEGACY_BODY_SENTINEL'
+        old_writer['brief']['purpose'] = 'LEGACY_BRIEF_SENTINEL'
+        first.results[0]['content'][0]['text'] = json.dumps(old_writer)
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, original, owner_grant=old_grant)
+        previous_prefix = 'owner_oneoff:' + recovery.AUTHORIZATION + ':'
+        records = self.journal.status(job_id=self.job['id'])['records']
+        failed = next(r for r in records if r['stage'] == previous_prefix + 'final_review')
+        artifact = next(p.parent for p in (self.root / 'research' / 'artifacts' / self.job['id']).glob('*/source.json')
+                        if 'LEGACY_BODY_SENTINEL' in p.read_text())
+        pins = copy.deepcopy(recovery.SOURCE_ONLY_JOBS)
+        pins[self.job['id']] = dict(final=failed['stageKey'], directory=artifact.name,
+            source=hashlib.sha256((artifact / 'source.json').read_bytes()).hexdigest(),
+            candidate=hashlib.sha256((artifact / 'candidate.json').read_bytes()).hexdigest())
+        patcher = patch.object(recovery, 'SOURCE_ONLY_JOBS', pins)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        atomic(self.proposed, {'kind': 'correction-plan',
+                              'approvedWritingBrief': {'purpose': 'FRESH_BRIEF_SENTINEL'}})
+        self.write_proof()
+        plan = recovery.prepare(self.config, self.job['id'], failed['stageKey'], self.proposed,
+            self.proof, self.snapshot, self.fresh, phase='source_only')
+        for i, answer in enumerate(answers):
+            answer['id'] = 'source-only-response-' + str(i)
+        upper = json.loads(answers[2]['content'][0]['text'])
+        upper['criteria'] = dict.fromkeys(CRITERIA_FIELDS, mean)
+        answers[2]['content'][0]['text'] = json.dumps(upper)
+        request = Fake(*answers)
+        rt.models.request = request
+        grant = dict(reference=recovery.SOURCE_ONLY_AUTHORIZATION, answer=recovery.SOURCE_ONLY_ANSWER,
+                     jobId=self.job['id'], manifestSha256=fingerprint(plan))
+        return rt, plan, grant, request, old_grant
+
+    def test_source_only_normal_pipeline_has_no_legacy_context_and_preserves_history(self):
+        rt, plan, grant, request, _ = self.source_fixture()
+        with self.ledger._tx() as db:
+            old = dict(db.execute('SELECT key,value FROM meta'))
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(3, len(request.calls))
+        payloads = json.dumps(request.calls, ensure_ascii=False)
+        self.assertIn('FRESH_BRIEF_SENTINEL', payloads)
+        self.assertNotIn('LEGACY_BODY_SENTINEL', payloads)
+        self.assertNotIn('LEGACY_BRIEF_SENTINEL', payloads)
+        with self.ledger._tx() as db:
+            for key, value in old.items():
+                self.assertEqual(value, db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()[0])
+            self.assertEqual(6, db.execute('SELECT count(*) FROM model_budget_reservations').fetchone()[0])
+        with self.assertRaisesRegex(ValueError, 'already_claimed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual(3, len(request.calls))
+
+    def test_source_only_cross_grant_and_unknown_phase_denied(self):
+        rt, plan, grant, request, old_grant = self.source_fixture()
+        old_grant['manifestSha256'] = fingerprint(plan)
+        for bad_plan, bad_grant in [(plan, old_grant), (dict(plan, phase='arbitrary'), grant),
+                                    (dict(plan, phase='original'), grant)]:
+            with self.assertRaises(ValueError):
+                recovery.execute(None, bad_plan, owner_grant=bad_grant)
+        self.assertEqual([], request.calls)
+
+    def test_source_only_budget_and_low_quality_have_no_extra_retry(self):
+        rt, plan, grant, request, _ = self.source_fixture(mean=6)
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], self.published)
+        self.assertEqual([], self.slack.deliveries)
+        self.assertEqual(3, len(request.calls))
+        with self.assertRaisesRegex(ValueError, 'already_claimed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+
+    def test_source_only_requires_intact_prior_claim_and_failed_stage(self):
+        rt, plan, grant, request, _ = self.source_fixture()
+        old_key = recovery.receipt_key(self.job['id'])
+        with self.ledger._tx() as db:
+            raw = db.execute('SELECT value FROM meta WHERE key=?', (old_key,)).fetchone()[0]
+            value = json.loads(raw)
+            value['status'] = 'completed'
+            db.execute('UPDATE meta SET value=? WHERE key=?', (json.dumps(value), old_key))
+        with self.assertRaisesRegex(ValueError, 'previous_grant_failed_quality_required'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        with self.ledger._tx() as db:
+            db.execute('UPDATE meta SET value=? WHERE key=?', (raw, old_key))
+            key = plan['oldFailedKey']
+            record = json.loads(db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()[0])
+            record['attempts'] = 2
+            db.execute('UPDATE meta SET value=? WHERE key=?', (json.dumps(record), key))
+        with self.assertRaisesRegex(ValueError, 'exact_failed_review_required'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], request.calls)
+        with self.ledger._tx() as db:
+            self.assertIsNone(db.execute('SELECT 1 FROM meta WHERE key=?',
+                (recovery.receipt_key(self.job['id'], 'source_only'),)).fetchone())
+
+    def test_source_only_existing_budget_still_holds(self):
+        rt, plan, grant, request, _ = self.source_fixture()
+        with rt.model_budget.scope(self.job['id'], 'draft'):
+            for _ in range(29):
+                rt.model_budget.reserve({'model': 'fixture', 'max_tokens': 1, 'messages': []})
+        from model_budget import BudgetHold
+        with self.assertRaises(BudgetHold):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], request.calls)
+
+
+class ChameeceSourceOnlyRecoveryTests(SourceOnlyRecoveryTests):
+    SLOT = 3
+
+
 if __name__ == '__main__':
     unittest.main()

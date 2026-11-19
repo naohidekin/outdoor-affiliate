@@ -33,6 +33,31 @@ def response(body, kind='text/html', status=200, headers=None):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_montbell_detail_references_bind_to_primary_identity_and_fetch_timestamp(self):
+        from test_apparel_identity import detail_fixture, DETAILS
+        for model in DETAILS:
+            product, url, source = detail_fixture(model)
+            calls = []
+            def fetch(target, *_):
+                calls.append(target)
+                return response(PNG, 'image/png') if target == product['imageUrl'] else response(source)
+            context = Catalog({}, fetch, {product['id']: [url]}).gather(
+                {'productIds': [product['id']]}, {'products': [product]})
+            maker = next(ref for ref in context['references'] if ref['kind'] == 'manufacturer')
+            details = [ref for ref in context['references'] if ref['kind'] == 'manufacturer-detail']
+            self.assertEqual(len(DETAILS[model]), len(details))
+            self.assertIn(url, calls)
+            self.assertIn(product['imageUrl'], calls)
+            for detail in details:
+                self.assertEqual((product['id'], url, url, model, maker['checkedAt']),
+                    (detail['productId'], detail['url'], detail['sourceUrl'], detail['model'], detail['checkedAt']))
+                self.assertEqual(hashlib.sha256(detail['text'].encode()).hexdigest(), detail['excerptSHA256'])
+                self.assertNotIn('1109999', detail['text'])
+            bad_source = source.replace('value="' + model + '"', 'value="1109999"')
+            rejected = Catalog({}, lambda *_: response(bad_source), {product['id']: [url]}).gather(
+                {'productIds': [product['id']]}, {'products': [product]})
+            self.assertFalse(any(ref['kind'] == 'manufacturer-detail' for ref in rejected['references']))
+
     def test_exact_domains_blocks_subdomain_before_redirect_fetch_default_compatible(self):
         source = 'https://images.example/product.png'
         redirected = 'https://unapproved.images.example/product.png'

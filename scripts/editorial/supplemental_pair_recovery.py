@@ -38,8 +38,34 @@ JOBS = {
         'source': '559a95070e7a211c05b5926fa4eeeb21452c2ab57bee670d4f6e1c003c754b58',
         'candidate': 'de66d0d115de8c0b3abb943c948bc590d657b4d4c0022eb1a6f38a9c2e3efa01'},
 }
+SOURCE_ONLY_AUTHORIZATION = 'call_b5fdac5902d24a3d8cdaa18f4e075de9'
+SOURCE_ONLY_ANSWER = '2件の追加再構成・審査を許可'
+# Fixed second-phase artifact pins; never accept caller-selected grants or jobs.
+SOURCE_ONLY_JOBS = {
+    'article-569175cfacbb87d25de6d09c': {
+        'final': 'stage_journal:v1:bbe6844c25e5da3d37e8027c4401a359b82e22df8a15015109a18742cc161c90',
+        'directory': '52c773c9359ab30f1c8e3b60ae6f7941bd1d8653653fd3b6cc9b40a9cd77f0f3',
+        'source': '72308b738940d13d634909828c01f0162d36aa8d1a6233102611d944a07d6a2c',
+        'candidate': '8db286ee5dc9a1f3c376a9c316cc9959619731448edf3641161bcd54624f3ec5'},
+    'article-0f8f00185abe2a5ec39cdbea': {
+        'final': 'stage_journal:v1:c861a651a1613247f8a183e66c9a5efc623f4b9c0688754e4144f81260a10e78',
+        'directory': 'b02cd84a90a79f447069324991f6fdeceb96e72a92f076d24dd50c63a3592036',
+        'source': 'd20a63bcf5f3f0b94645f3b1065bc15f21352244a52f67218b2f2878b9e8862e',
+        'candidate': '5bf7fa272b0d151242491677031e5e0b55ff77ace856b27c8a0e07c4d556bc3e'},
+}
+
+
+def _profile(phase):
+    _require(phase in ('original', 'source_only'), 'fixed_grant_phase_required')
+    if phase == 'source_only':
+        _require(set(SOURCE_ONLY_JOBS) == set(JOBS), 'source_only_pins_required')
+        return SOURCE_ONLY_AUTHORIZATION, SOURCE_ONLY_ANSWER, SOURCE_ONLY_JOBS
+    return AUTHORIZATION, OWNER_ANSWER, JOBS
+
+
 PROTOCOL_FILES = ('supplemental_pair_recovery.py', 'supplemental_review_recovery.py',
-                  'runtime.py', 'models.py', 'quality.py', 'model_budget.py')
+                  'runtime.py', 'models.py', 'quality.py', 'model_budget.py',
+                  'catalog.py', 'apparel_identity.py')
 LOADED_FILES = {n: hashlib.sha256(Path(__file__).with_name(n).read_bytes()).hexdigest()
                 for n in PROTOCOL_FILES}
 
@@ -51,9 +77,10 @@ def _protocol():
     return files
 
 
-def receipt_key(job_id):
+def receipt_key(job_id, phase='original'):
+    reference, _, _ = _profile(phase)
     _require(job_id in JOBS, 'fixed_pair_job_required')
-    return 'supplemental_manual_recovery:v1:' + AUTHORIZATION + ':' + job_id
+    return 'supplemental_manual_recovery:v1:' + reference + ':' + job_id
 
 
 def _slot(job, snapshot, batch, jobs, now):
@@ -65,13 +92,14 @@ def _slot(job, snapshot, batch, jobs, now):
 
 
 def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snapshot_path,
-            fresh_research_path, *, now=None):
+            fresh_research_path, *, now=None, phase='original'):
     """Read-only manifest; fresh evidence is separate from immutable old research."""
     now = now or datetime.now(JST)
     _require(now.utcoffset() is not None and now.astimezone(JST).date().isoformat() == OWNER_DATE,
              'owner_grant_date_required')
     _require(job_id in JOBS, 'fixed_pair_job_required')
-    pins = JOBS[job_id]
+    reference, _, phase_jobs = _profile(phase)
+    pins = dict(JOBS[job_id], **phase_jobs[job_id])
     _require(old_failed_key == pins['final'], 'exact_failed_review_required')
     config, digest = _read(config_path)
     _require(digest == CONFIG_SHA, 'exact_config_required')
@@ -84,6 +112,18 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
         jobs = [json.loads(r[0]) for r in db.execute('SELECT data FROM jobs')]
         records = {k: json.loads(v) for k, v in db.execute(
             "SELECT key,value FROM meta WHERE key LIKE 'stage_journal:v1:%'")}
+        prior_row = db.execute('SELECT value FROM meta WHERE key=?', (receipt_key(job_id),)).fetchone()
+    prior = json.loads(prior_row[0]) if prior_row else None
+    if phase == 'source_only':
+        _require(isinstance(prior, dict) and prior.get('status') == 'requires_reconciliation'
+                 and prior.get('jobId') == job_id and prior.get('attempts') == prior.get('maxAttempts') == 1
+                 and prior.get('failureType') == 'ValueError'
+                 and prior.get('ownerGrant') == {'reference': AUTHORIZATION, 'answer': OWNER_ANSWER,
+                     'jobId': job_id, 'manifestSha256': prior.get('manifestSha256')},
+                 'previous_grant_failed_quality_required')
+        prior_manifest, _ = _read(root / 'manual-operations' / '20261120-pair-recovery' / job_id / 'manifest.json')
+        _require(fingerprint(prior_manifest) == prior['manifestSha256']
+                 and prior_manifest.get('jobId') == job_id, 'previous_manifest_binding_required')
     job = next((j for j in jobs if j['id'] == job_id), {})
     _require(job.get('kind') == 'supplemental_article' and job.get('batchId') == BATCH
              and job.get('batchSlot') == pins['slot'] and job.get('batchCallCap') == 96
@@ -92,15 +132,19 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
              and job['theme'].get('slug') == pins['slug'] and job['theme'].get('categoryId') == 'wear'
              and all(job.get(k) is None for k in ('bundle', 'review', 'approval', 'publication'))
              and (job.get('error') or {}).get('reason') == 'final_review_failed', 'exact_failed_pair_job_required')
+    if phase == 'source_only':
+        _require(job['error'].get('ownerRecoveryReceipt') == receipt_key(job_id), 'previous_error_receipt_required')
+    old_namespace = 'owner_oneoff:' + AUTHORIZATION + ':' if phase == 'source_only' else ''
     final = records.get(old_failed_key, {})
     _require(final.get('stageKey') == old_failed_key and final.get('jobId') == job_id
-             and final.get('stage') == 'final_review' and final.get('status') == 'failed'
-             and final.get('attempts') == 1 and final.get('maxAttempts') == 2
+             and final.get('stage') == old_namespace + 'final_review' and final.get('status') == 'failed'
+             and final.get('attempts') == 1 and final.get('maxAttempts') == (1 if phase == 'source_only' else 2)
              and not final.get('successorKey'), 'exact_failed_review_required')
     old = {}
     for stage in ('draft', 'polish'):
         found = [r for r in records.values() if r.get('jobId') == job_id
-                 and r.get('stage') == stage and r.get('status') == 'succeeded']
+                 and r.get('stage') == old_namespace + stage and r.get('status') == 'succeeded'
+                 and (phase != 'source_only' or r.get('attempts') == r.get('maxAttempts') == 1)]
         _require(len(found) == 1, 'unique_successful_writer_polish_required')
         old[stage] = found[0]
     draft, polish = (_cached(old[s]) for s in ('draft', 'polish'))
@@ -139,7 +183,7 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
     limits = budget_config(config.get('modelBudget'))
     _require(limits['article']['calls'] <= 32 and limits['period']['calls'] <= 128,
              'unchanged_budget_bounds_required')
-    return {'schemaVersion': 1, 'status': 'held_for_owner_decision', 'executed': False,
+    result = {'schemaVersion': 1, 'status': 'held_for_owner_decision', 'executed': False,
         'jobId': job_id, 'oldFailedKey': old_failed_key, 'originalError': job['error'],
         'jobSha256': fingerprint(job), 'sourceBinding': job['sourceBinding'],
         'paths': {k: str(v) for k, v in dict(config=config_path, proposed=proposed_path,
@@ -150,6 +194,9 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
             batchManifest=fingerprint(batch), newProtocol=fingerprint(_protocol())),
         'oldStages': {s: fingerprint(r) for s, r in dict(old, final_review=final).items()},
         'caps': limits, 'batchCalls': 96, 'blockers': []}
+    if phase == 'source_only':
+        result.update(phase=phase, previousReceiptSha256=fingerprint(prior))
+    return result
 
 
 class _PairRuntime(Runtime):
@@ -187,7 +234,8 @@ class _PairRuntime(Runtime):
                      and inputs['dependencies']['structural'].get('passed') is True,
                      'independent_quality_gates_failed')
         self._executed_stages.add(stage)
-        namespace = 'owner_oneoff:' + AUTHORIZATION + ':' + stage
+        reference, _, _ = _profile(self._manifest.get('phase', 'original'))
+        namespace = 'owner_oneoff:' + reference + ':' + stage
         bound = dict(inputs, ownerGrantManifestSha256=fingerprint(self._manifest))
         key = self.stage_journal.key(self._job_id, namespace, bound)
         start = len(self.models.usage)
@@ -237,9 +285,9 @@ class _PairRuntime(Runtime):
     prepare_social_handoff = refresh_social_images = _forbidden
 
 
-def _receipt(rt, job_id, **fields):
+def _receipt(rt, job_id, *, phase='original', **fields):
     with rt.ledger._tx() as db:
-        key = receipt_key(job_id)
+        key = receipt_key(job_id, phase)
         row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
         _require(row is not None, 'owner_pair_claim_missing')
         value = json.loads(row[0])
@@ -250,7 +298,9 @@ def _receipt(rt, job_id, **fields):
 
 def execute(runtime, manifest, *, owner_grant):
     job_id = manifest.get('jobId')
-    _require(job_id in JOBS and owner_grant == {'reference': AUTHORIZATION, 'answer': OWNER_ANSWER,
+    phase = manifest.get('phase', 'original')
+    reference, answer, phase_jobs = _profile(phase)
+    _require(job_id in JOBS and owner_grant == {'reference': reference, 'answer': answer,
              'jobId': job_id, 'manifestSha256': fingerprint(manifest)}, 'exact_owner_grant_required')
     runtime._require_running()
     config, digest = _read(manifest['paths']['config'])
@@ -263,11 +313,11 @@ def execute(runtime, manifest, *, owner_grant):
             return {'status': 'busy', 'executed': False}
         # Check claim before prepare: a completed run has legitimately changed the job.
         with runtime.ledger._tx() as db:
-            _require(db.execute('SELECT 1 FROM meta WHERE key=?', (receipt_key(job_id),)).fetchone() is None,
+            _require(db.execute('SELECT 1 FROM meta WHERE key=?', (receipt_key(job_id, phase),)).fetchone() is None,
                      'owner_pair_already_claimed_requires_reconciliation')
         p = manifest['paths']
         current = prepare(p['config'], job_id, manifest['oldFailedKey'], p['proposed'], p['proof'],
-                          p['snapshot'], p['freshResearch'])
+                          p['snapshot'], p['freshResearch'], phase=phase)
         _require(current == manifest and not current['blockers'], 'pinned_manifest_changed_or_blocked')
         _require(runtime.model_budget.config == budget_config(config.get('modelBudget'))
                  and isinstance(runtime.models, Models) and runtime.models.budget is runtime.model_budget,
@@ -277,20 +327,20 @@ def execute(runtime, manifest, *, owner_grant):
                  and routes['final_review']['requested'] == 'claude-sonnet-4-6'
                  and routes['polish']['requested'] == 'gemini-3.8-flash', 'authorized_model_routes_required')
         with runtime.ledger._tx() as db:
-            _require(db.execute('SELECT 1 FROM meta WHERE key=?', (receipt_key(job_id),)).fetchone() is None,
+            _require(db.execute('SELECT 1 FROM meta WHERE key=?', (receipt_key(job_id, phase),)).fetchone() is None,
                      'owner_pair_already_claimed_requires_reconciliation')
             receipt = {'status': 'in_flight', 'jobId': job_id, 'attempts': 1, 'maxAttempts': 1,
                        'manifestSha256': fingerprint(manifest), 'ownerGrant': owner_grant, 'at': stamp()}
-            db.execute('INSERT INTO meta VALUES (?,?)', (receipt_key(job_id), json.dumps(receipt)))
+            db.execute('INSERT INTO meta VALUES (?,?)', (receipt_key(job_id, phase), json.dumps(receipt)))
             runtime.ledger._event(db, job_id, 'supplemental_owner_pair_claimed', receipt)
         view = None
         try:
-            archive = runtime.root / 'manual-operations' / '20261120-pair-recovery' / job_id
+            archive = runtime.root / 'manual-operations' / ('20261120-pair-source-only-recovery' if phase == 'source_only' else '20261120-pair-recovery') / job_id
             _require(not archive.exists(), 'recovery_archive_already_exists')
             historical, _ = _read(runtime.root / 'research' / (job_id + '.json'))
             atomic(archive / 'original-research.json', historical)
             atomic(archive / 'manifest.json', manifest)
-            artifact = runtime.root / 'research' / 'artifacts' / job_id / JOBS[job_id]['directory']
+            artifact = runtime.root / 'research' / 'artifacts' / job_id / phase_jobs[job_id]['directory']
             candidate, _ = _read(artifact / 'candidate.json')
             source, _ = _read(artifact / 'source.json')
             view = _PairRuntime(runtime, manifest, candidate['candidate'])
@@ -298,24 +348,32 @@ def execute(runtime, manifest, *, owner_grant):
             job = view.ledger.get_job(job_id)
             _slot(job, context, view._supplemental_manifest(), view.ledger.list_jobs(), datetime.now(JST))
             proposed, _ = _read(p['proposed'])
-            context['editorialRules'] += ('\nOwner-approved body correction. Legacy claims are unverified; '
-                'use ONLY freshly gathered primary evidence, remove unsupported inferences everywhere. '
-                'Preserve guide format, products, slug and category. Legacy article:\n'
-                + json.dumps(source['bundle']['article'], ensure_ascii=False)
-                + '\nMain upper-editor approvedWritingBrief (not a new factual source):\n'
-                + json.dumps(proposed['approvedWritingBrief'], ensure_ascii=False))
+            if phase == 'source_only':
+                context['editorialRules'] += (
+                    '\nOwner-approved source-only reconstruction. Write a new guide of 3000-5000 characters '
+                    'using ONLY freshly gathered primary references and the upper-editor writing brief. '
+                    'Preserve selected products, slug and category. Do not reconstruct legacy claims. '
+                    'Main upper-editor approvedWritingBrief (not a new factual source):\n'
+                    + json.dumps(proposed['approvedWritingBrief'], ensure_ascii=False))
+            else:
+                context['editorialRules'] += ('\nOwner-approved body correction. Legacy claims are unverified; '
+                    'use ONLY freshly gathered primary evidence, remove unsupported inferences everywhere. '
+                    'Preserve guide format, products, slug and category. Legacy article:\n'
+                    + json.dumps(source['bundle']['article'], ensure_ascii=False)
+                    + '\nMain upper-editor approvedWritingBrief (not a new factual source):\n'
+                    + json.dumps(proposed['approvedWritingBrief'], ensure_ascii=False))
             result = view._make_article(job, context)
             _require(view._executed_stages == {'draft', 'polish', 'final_review'}, 'incomplete_owner_pipeline')
-            _receipt(runtime, job_id, status='completed', result=result)
+            _receipt(runtime, job_id, phase=phase, status='completed', result=result)
             return result
         except BaseException as error:
-            _receipt(runtime, job_id, status='requires_reconciliation', failureType=type(error).__name__)
+            _receipt(runtime, job_id, phase=phase, status='requires_reconciliation', failureType=type(error).__name__)
             if isinstance(error, Exception):
                 job = runtime.ledger.get_job(job_id)
                 if job.get('approval') is None and job.get('publication') is None:
                     runtime.ledger.set_stage(job_id, 'error', {'reason': reason(error), 'at': stamp(),
                         'originalFailure': copy.deepcopy(manifest['originalError']),
-                        'ownerRecoveryReceipt': receipt_key(job_id)})
+                        'ownerRecoveryReceipt': receipt_key(job_id, phase)})
             raise
         finally:
             if view is not None:
