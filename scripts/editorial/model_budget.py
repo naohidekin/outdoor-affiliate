@@ -207,6 +207,17 @@ class ModelBudget:
             )''')
             db.commit()
 
+    def _period_key(self, at):
+        period = self.production_schedule.period_key(at)
+        initial = getattr(self.production_schedule, 'initial', None)
+        if period is None and initial is not None and at >= initial:
+            # A due-gate gap does not end the active budget period. Clamp to
+            # initial production when it started less than a day ago.
+            period = self.production_schedule.period_key(max(initial, at - timedelta(days=1)))
+        if not isinstance(period, str) or not period:
+            raise ValueError('production period unavailable')
+        return period
+
     @contextmanager
     def scope(self, article_id, stage, now=None):
         if self._active.get() is not None:
@@ -214,9 +225,7 @@ class ModelBudget:
         article_id = _safe_text(article_id, 'article id')
         stage = _safe_text(stage, 'stage')
         at = _aware(now if now is not None else datetime.now(JST))
-        period_key = self.production_schedule.period_key(at)
-        if not isinstance(period_key, str) or not period_key:
-            raise ValueError('production period unavailable')
+        period_key = self._period_key(at)
         token = self._active.set({'articleId': article_id, 'stage': stage,
                                   'at': at.isoformat(), 'periodKey': period_key})
         try:
@@ -476,9 +485,7 @@ class ModelBudget:
                           else _safe_text(record.get('articleId'), 'article id'))
             stage = _safe_text(record.get('stage'), 'stage')
             at = _aware(record.get('at'), 'usage timestamp')
-            period = self.production_schedule.period_key(at)
-            if not isinstance(period, str) or not period:
-                raise ValueError('production period unavailable')
+            period = self._period_key(at)
             usage_value = record.get('usage') if 'usage' in record else {
                 'input': record.get('input'), 'output': record.get('output')}
             measured = _usage(usage_value)
@@ -539,9 +546,7 @@ class ModelBudget:
 
     def inspect(self, now=None):
         at = _aware(now if now is not None else datetime.now(JST))
-        period_key = self.production_schedule.period_key(at)
-        if not isinstance(period_key, str) or not period_key:
-            raise ValueError('production period unavailable')
+        period_key = self._period_key(at)
         with self._read() as db:
             period = self._totals(db, 'WHERE period_key=?', (period_key,))
             articles = {}

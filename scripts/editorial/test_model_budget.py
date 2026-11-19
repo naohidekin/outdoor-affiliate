@@ -44,6 +44,115 @@ class ModelBudgetTests(unittest.TestCase):
         return {'model': 'fixture-model', 'max_tokens': max_tokens,
                 'messages': [{'role': 'user', 'content': text}]}
 
+    def friday_budget(self, limits=None, initial='2026-11-08T00:00:00+09:00'):
+        schedule = ProductionSchedule(dict(
+            weekday=4, hour=9, effectiveFrom='2026-11-13',
+            initialProductionAt=initial))
+        return ModelBudget(self.root, schedule, limits)
+
+    def test_friday_before_nine_keeps_prior_budget_until_exact_boundary(self):
+        budget = self.friday_budget()
+        with budget.scope('article-1', 'draft', NOW):
+            budget.reserve(self.payload())
+        for timestamp in ('2026-11-20T00:00:00+09:00',
+                          '2026-11-20T08:59:59+09:00',
+                          '2026-11-19T23:59:59Z'):
+            at = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            with self.subTest(timestamp=timestamp):
+                self.assertIsNone(budget.production_schedule.period_key(at))
+                self.assertFalse(budget.production_schedule.is_due(at))
+                summary = budget.inspect(at)
+                self.assertEqual('2026-11-13', summary['periodKey'])
+                self.assertEqual(1, summary['period']['calls'])
+        pre = datetime(2026, 11, 20, 8, 59, 59, tzinfo=JST)
+        with budget.scope('article-1', 'repair', pre):
+            budget.reserve(self.payload())
+        self.assertEqual(2, budget.inspect(pre)['articles']['article-1']['calls'])
+        due = datetime(2026, 11, 20, 9, tzinfo=JST)
+        with budget.scope('article-1', 'draft', due):
+            budget.reserve(self.payload())
+        self.assertEqual('2026-11-20', budget.inspect(due)['periodKey'])
+        self.assertEqual(1, budget.inspect(due)['period']['calls'])
+        self.assertEqual(2, budget.inspect(pre)['period']['calls'])
+
+    def test_initial_start_and_effective_friday_do_not_create_early_budget(self):
+        # Initial production can start less than a day before the effective Friday.
+        initial = datetime(2026, 11, 12, 23, tzinfo=JST)
+        budget = self.friday_budget(initial=initial.isoformat())
+        before = initial - timedelta(seconds=1)
+        with self.assertRaisesRegex(ValueError, 'production period unavailable'):
+            budget.inspect(before)
+        with self.assertRaisesRegex(ValueError, 'production period unavailable'):
+            with budget.scope('article-1', 'draft', before):
+                budget.reserve(self.payload())
+        with self.assertRaisesRegex(ValueError, 'production period unavailable'):
+            budget.import_usage([dict(responseId='too-early', stage='draft',
+                                     at=before.isoformat(), input=1, output=1)])
+        with budget.scope('article-1', 'draft', initial):
+            budget.reserve(self.payload())
+        for at in (initial, datetime(2026, 11, 13, 0, tzinfo=JST),
+                   datetime(2026, 11, 13, 8, 59, 59, tzinfo=JST)):
+            with self.subTest(at=at):
+                self.assertEqual('2026-11-06', budget.inspect(at)['periodKey'])
+                self.assertEqual(1, budget.inspect(at)['period']['calls'])
+        due = datetime(2026, 11, 13, 9, tzinfo=JST)
+        self.assertEqual('2026-11-13', budget.inspect(due)['periodKey'])
+        self.assertEqual(0, budget.inspect(due)['period']['calls'])
+
+    def test_historical_imports_use_each_actual_active_period(self):
+        budget = self.friday_budget()
+        records = [dict(responseId=f'history-{index}', articleId='article-1',
+                        stage='draft', at=at, input=7, output=3)
+                   for index, at in enumerate((
+                       '2026-11-08T00:00:00+09:00',
+                       '2026-11-13T08:59:59+09:00',
+                       '2026-11-13T09:00:00+09:00',
+                       '2026-11-20T00:00:00+09:00',
+                       '2026-11-20T09:00:00+09:00'))]
+        self.assertEqual({'imported': 5, 'existing': 0}, budget.import_usage(records))
+        self.assertEqual({'imported': 0, 'existing': 5}, budget.import_usage(records))
+        for day, key, calls in ((12, '2026-11-06', 2), (19, '2026-11-13', 2),
+                                (20, '2026-11-20', 1)):
+            summary = budget.inspect(datetime(2026, 11, day, 10, tzinfo=JST))
+            self.assertEqual(key, summary['periodKey'])
+            self.assertEqual(dict(calls=calls, inputTokens=7*calls, outputTokens=3*calls),
+                             summary['period'])
+
+    def test_pre_nine_imports_and_reservations_preserve_article_and_weekly_caps(self):
+        budget = self.friday_budget(config(article__calls=2, period__calls=3))
+        with budget.scope('article-1', 'draft', NOW):
+            budget.reserve(self.payload())
+        pre = datetime(2026, 11, 20, 0, tzinfo=JST)
+        budget.import_usage([dict(responseId='repair-import', articleId='article-1',
+                                 stage='polish', at=pre.isoformat(), input=7, output=3)])
+        # Restart and changed stages must not reset either cap before 09:00.
+        budget = self.friday_budget(config(article__calls=2, period__calls=3))
+        with budget.scope('article-1', 'repair', pre), self.assertRaises(BudgetHold) as held:
+            budget.reserve(self.payload())
+        self.assertEqual('article_calls_cap', held.exception.reason_code)
+        self.assertEqual('2026-11-13', held.exception.period_key)
+        with budget.scope('article-2', 'repair', pre):
+            budget.reserve(self.payload())
+        with budget.scope('article-3', 'repair', pre), self.assertRaises(BudgetHold) as held:
+            budget.reserve(self.payload())
+        self.assertEqual('period_calls_cap', held.exception.reason_code)
+        self.assertEqual('2026-11-13', held.exception.period_key)
+        self.assertEqual(3, budget.inspect(pre)['period']['calls'])
+
+    def test_cost_report_budget_snapshot_is_available_before_friday_nine(self):
+        from usage_cost_report import _budget_snapshot
+        budget = self.friday_budget()
+        with budget.scope('article-1', 'draft', NOW):
+            budget.reserve(self.payload())
+        report_config = {'productionSchedule': dict(
+            weekday=4, hour=9, effectiveFrom='2026-11-13',
+            initialProductionAt='2026-11-08T00:00:00+09:00')}
+        snapshot = _budget_snapshot(self.root, report_config,
+                                    datetime(2026, 11, 20, 0, tzinfo=JST))
+        self.assertEqual('read_only', snapshot['status'])
+        self.assertEqual('2026-11-13', snapshot['periodKey'])
+        self.assertEqual(1, snapshot['period']['calls'])
+
     def test_scope_is_required_and_same_payload_retries_persist_across_startup(self):
         limits = config(article__calls=2, period__calls=10)
         budget = ModelBudget(self.root, self.schedule, limits)
