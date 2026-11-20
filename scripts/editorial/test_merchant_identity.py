@@ -244,5 +244,65 @@ class MerchantIdentityTests(unittest.TestCase):
         )
 
 
+class ApparelMerchantIdentityTests(unittest.TestCase):
+    CASES = (
+        ('1101493', 'down', 'プラズマ1000 ダウンジャケット', 'プラズマ1000 ダウンジャケット', 'Down Jacket'),
+        ('1107704', 'base-layer', 'ジオライン M.W. ラウンドネックシャツ', 'ジオライン M.W. ラウンドネックシャツ', 'Base Layer'),
+        ('1114881', 'fleece', 'シャミース ジャケット', 'シャミース ジャケット', 'Fleece Jacket'),
+    )
+
+    def product(self, model, kind, name):
+        return {'name': name, 'brand': 'モンベル', 'categoryId': 'wear',
+                'specs': {'model': model, 'apparelClass': kind}}
+
+    def test_real_wardrobe_classes_and_japanese_english_title_evidence(self):
+        for model, kind, name, japanese, english in self.CASES:
+            p = self.product(model, kind, name)
+            for title in ('モンベル ' + model + ' ' + japanese, 'mont-bell ' + model + ' ' + english):
+                with self.subTest(model=model, title=title):
+                    self.assertEqual({'status': 'passed', 'reason': 'merchant_identity_confirmed'},
+                                     inspect_merchant_identity(p, model, title))
+
+    def test_explicit_categories_or_specific_names_work_without_broad_clothing_match(self):
+        for category, name, title in (('down-jacket', 'Plasma', 'Down Jacket'),
+                                      ('fleece', 'Chameece', 'Fleece Jacket'),
+                                      ('base-layer', 'Zeoline', 'Base Layer')):
+            p = {'brand': 'モンベル', 'name': name, 'categoryId': category}
+            self.assertEqual('passed', inspect_merchant_identity(p, '1234567', 'Montbell 1234567 ' + title)['status'])
+        p = {'brand': 'モンベル', 'name': '軽量ダウンジャケット'}
+        self.assertEqual('passed', inspect_merchant_identity(p, '1234567', 'Montbell 1234567 Down Jacket')['status'])
+
+    def test_unknown_or_conflicting_wear_remains_unverified(self):
+        for p in ({'brand': 'モンベル', 'name': 'ダウンジャケット', 'categoryId': 'wear'},
+                  {'brand': 'モンベル', 'name': '服', 'categoryId': 'wear', 'specs': {'apparelClass': 'unknown'}},
+                  {'brand': 'モンベル', 'name': '服', 'categoryId': 'outerwear'},
+                  {'brand': 'モンベル', 'name': '服', 'categoryId': 'fleece', 'specs': {'apparelClass': 'down'}}):
+            self.assertEqual({'status': 'unverified', 'reason': 'product_type_missing'},
+                inspect_merchant_identity(p, '1234567', 'Montbell 1234567 Down Jacket'))
+
+    def test_wrong_kind_and_mixed_type_titles_never_pass(self):
+        for model, kind, name, japanese, _ in self.CASES:
+            p = self.product(model, kind, name)
+            for other_model, other_kind, _, other_title, _ in self.CASES:
+                if other_kind == kind:
+                    continue
+                for title in ('モンベル ' + model + ' ' + other_title,
+                              'モンベル ' + model + ' ' + japanese + ' ' + other_title):
+                    with self.subTest(model=model, title=title):
+                        self.assertNotEqual('passed', inspect_merchant_identity(p, model, title)['status'])
+            self.assertNotEqual('passed', inspect_merchant_identity(p, model, 'モンベル ' + model + ' ウェア 服 ジャケット')['status'])
+
+    def test_wrong_model_brand_and_accessory_guards_remain_active(self):
+        for model, kind, name, japanese, _ in self.CASES:
+            p = self.product(model, kind, name)
+            for title, reason in (
+                ('モンベル ' + str(int(model) + 1) + ' ' + japanese, 'merchant_model_mismatch'),
+                ('SOTO ' + model + ' ' + japanese, 'merchant_brand_mismatch'),
+                ('モンベル ' + model + ' ' + japanese + ' 専用収納ケース', 'merchant_accessory_only'),
+                ('モンベル ' + model + ' ' + japanese + ' 本体なし', 'merchant_accessory_only')):
+                with self.subTest(title=title):
+                    self.assertEqual({'status': 'failed', 'reason': reason}, inspect_merchant_identity(p, model, title))
+
+
 if __name__ == '__main__':
     unittest.main()

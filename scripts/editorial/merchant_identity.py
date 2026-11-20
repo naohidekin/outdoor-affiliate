@@ -31,6 +31,10 @@ _TYPE_PATTERNS = {
     'sleeping-bag': r'寝袋|シュラフ|sleeping\s*bag',
     'cooler': r'クーラー|cooler',
     'firepit': r'(?:焚き?火台|ファイアグリル|fire\s*pit|fire\s*grill)(?!\s*用)',
+    'down-jacket': r'ダウン\s*(?:ジャケット|パーカ(?:ー)?)|(?<![a-z])down[\s-]+(?:jacket|parka)(?![a-z])',
+    'fleece': r'フリース|シャミース|(?<![a-z])(?:fleece|chameece)(?![a-z])',
+    'base-layer': r'ベース[\s-]*レイヤー|ジオライン|アンダー(?:ウェア|ウエア|シャツ)|インナーシャツ'
+                  r'|(?<![a-z])(?:base[\s-]*layer|zeo[\s-]*line|underwear|undershirt)(?![a-z])',
 }
 
 _BODY_EXCLUSION = re.compile(
@@ -153,6 +157,15 @@ def _sizes(text):
 
 def _product_type(product):
     category = (product.get('categoryId') or '').casefold()
+    # Reuse the catalogue's explicit apparel classification; broad/unknown
+    # wear must not fall through to generic clothing or a guessed name class.
+    try:
+        from .apparel_identity import apparel_class, apparel_requested
+    except ImportError:
+        from apparel_identity import apparel_class, apparel_requested
+    if apparel_requested(product):
+        kind = {'down': 'down-jacket', 'fleece': 'fleece', 'base-layer': 'base-layer'}.get(apparel_class(product))
+        return kind, _TYPE_PATTERNS.get(kind)
     if category == 'light' and re.search(r'ストリングライト|string\s*lights?', product.get('name', ''), re.I):
         return 'string-light', r'(?:ストリングライト|string\s*lights?)(?!\s*用)'
     if category in _TYPE_PATTERNS:
@@ -228,6 +241,11 @@ def inspect_merchant_identity(product, model, title):
 
     if _is_accessory_only(product.get('name', ''), title, type_pattern, brand_names, model):
         return _result('failed', 'merchant_accessory_only')
+
+    apparel_types = ('down-jacket', 'fleece', 'base-layer')
+    if kind in apparel_types and any(other != kind and re.search(_TYPE_PATTERNS[other], title, re.I)
+                                     for other in apparel_types):
+        return _result('unverified', 'merchant_product_type_evidence_conflicting')
 
     if not re.search(type_pattern, title, re.I):
         tent_name = re.search(r'ランド(?:ロック|ネスト(?:シェルター|ドーム)?)', product.get('name', ''))
