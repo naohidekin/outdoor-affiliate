@@ -38,14 +38,14 @@ function documentHtml(input) {
   main{position:relative;width:${WIDTH}px;height:${HEIGHT}px;overflow:hidden;background:linear-gradient(135deg,#f8f3e6 0%,#f8f3e6 55%,#e9efe8 55%,#e9efe8 100%)}
   .rail{position:absolute;left:0;top:0;width:18px;height:630px;background:#e66b3c}.brand{position:absolute;left:58px;top:38px;font-size:22px;font-weight:700;letter-spacing:1px;color:#31513f}
   .label{position:absolute;left:58px;top:86px;padding:8px 14px;border:2px solid #31513f;border-radius:999px;font-size:19px;font-weight:700;color:#31513f;background:#fffdf7}
-  .title{position:absolute;left:58px;top:143px;width:455px;max-height:90px;font-size:31px;line-height:1.34;font-weight:700;color:#52615b;overflow:hidden}
+  .title{position:absolute;left:58px;top:143px;width:455px;max-height:90px;font-size:31px;line-height:1.34;font-weight:700;color:#52615b;overflow-wrap:anywhere}
   .heading{position:absolute;left:58px;top:245px;width:470px;height:184px;font-size:49px;line-height:1.22;font-weight:800;letter-spacing:.01em;color:#17243a;display:flex;align-items:center;overflow-wrap:anywhere}
   .disclaimer{position:absolute;left:58px;bottom:50px;width:470px;font-size:20px;line-height:1.4;font-weight:700;color:#695f51}
   .diagram{position:absolute;left:585px;top:48px;width:555px;height:534px;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;justify-content:center;gap:14px}
-  .step{position:relative;min-height:82px;width:555px;padding:17px 22px 17px 92px;border:2px solid #31513f;border-radius:18px;background:#fffdf7;display:flex;align-items:center;box-shadow:7px 7px 0 #cbd8ce}
-  .step:not(:last-child)::after{content:'↓';position:absolute;left:35px;bottom:-22px;z-index:3;color:#e66b3c;font-size:24px;font-weight:900}
+  .step{position:relative;min-height:82px;flex-shrink:0;width:555px;padding:12px 22px 12px 92px;border:2px solid #31513f;border-radius:18px;background:#fffdf7;display:flex;align-items:center;box-shadow:7px 7px 0 #cbd8ce}
+  .step:not(:last-child)::after{content:'↓';position:absolute;left:35px;bottom:-16px;z-index:3;color:#e66b3c;font-size:16px;line-height:14px;font-weight:900}
   .number{position:absolute;left:20px;top:50%;transform:translateY(-50%);width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e66b3c;color:white;font-size:27px;font-weight:800}
-  .step-text{font-size:29px;line-height:1.28;font-weight:800;color:#17243a;overflow-wrap:anywhere}
+  .step-text{font-size:29px;line-height:1.28;font-weight:800;color:#17243a;overflow-wrap:anywhere;text-wrap:balance}
   </style></head><body><main><div class="rail"></div><div class="brand">Camp Gear Lab</div><div class="label">${BADGE}</div><div class="title">${escape(input.title)}</div><div class="heading">${escape(input.heading)}</div><div class="disclaimer">${DISCLAIMER}</div><ol class="diagram">${cards}</ol></main></body></html>`;
 }
 
@@ -84,15 +84,39 @@ export async function renderEditorialCard(raw) {
     await page.setContent(documentHtml(input), { waitUntil: 'load', timeout: 15000 });
     const layout = await page.evaluate(async () => {
       await document.fonts.ready;
-      const rect = element => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; };
+      const rect = element => { const r = element.getBoundingClientRect ? element.getBoundingClientRect() : element; return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; };
+      const lines = element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return [...range.getClientRects()].map(rect);
+      };
+      const contains = (outer, inner) => inner.x >= outer.x - 0.01 && inner.y >= outer.y - 0.01 &&
+        inner.right <= outer.right + 0.01 && inner.bottom <= outer.bottom + 0.01;
+      const textFits = element => element.scrollHeight <= element.clientHeight && element.scrollWidth <= element.clientWidth &&
+        lines(element).every(line => contains(rect(element), line));
+      const textBox = element => ({ ...rect(element), lines: lines(element) });
       const heading = document.querySelector('.heading'), title = document.querySelector('.title');
-      let headingFontSize = 49;
-      while ((heading.scrollHeight > heading.clientHeight || heading.scrollWidth > heading.clientWidth) && headingFontSize > 42)
-        heading.style.fontSize = --headingFontSize + 'px';
-      if (heading.scrollHeight > heading.clientHeight || heading.scrollWidth > heading.clientWidth || title.scrollHeight > title.clientHeight) throw Error('text_overflow');
-      const stepCards = [...document.querySelectorAll('.step')].map((card, index) => ({ index, text: card.querySelector('.step-text').textContent, ...rect(card) }));
-      if (stepCards.some(card => card.x < 585 || card.right > 1140 || card.y < 48 || card.bottom > 582)) throw Error('diagram_overflow');
-      return { headingFontSize, titleFontSize: 31, stepFontSize: 29, heading: rect(heading), title: rect(title), stepCards };
+      let headingFontSize = 49, titleFontSize = 31, stepFontSize = 29;
+      while (!textFits(heading) && headingFontSize > 42) heading.style.fontSize = --headingFontSize + 'px';
+      while ((!textFits(title) || lines(title).length > 2) && titleFontSize > 22) title.style.fontSize = --titleFontSize + 'px';
+      if (!textFits(heading) || !textFits(title) || lines(title).length > 2) throw Error('text_overflow');
+      const cards = [...document.querySelectorAll('.step')];
+      const diagram = rect(document.querySelector('.diagram'));
+      const stepsFit = () => cards.every(card => contains(diagram, rect(card)) && textFits(card.querySelector('.step-text')));
+      while (!stepsFit() && stepFontSize > 26) {
+        --stepFontSize;
+        for (const card of cards) card.querySelector('.step-text').style.fontSize = stepFontSize + 'px';
+      }
+      if (!stepsFit()) throw Error('diagram_overflow');
+      const stepCards = cards.map((card, index) => ({ index, text: card.querySelector('.step-text').textContent,
+        ...rect(card), textBox: textBox(card.querySelector('.step-text')), numberBox: textBox(card.querySelector('.number')) }));
+      const textBoxes = Object.fromEntries(['brand', 'label', 'title', 'heading', 'disclaimer'].map(name => [name, textBox(document.querySelector('.' + name))]));
+      const canvas = { x: 0, y: 0, right: 1200, bottom: 630 };
+      if (Object.values(textBoxes).some(box => !contains(canvas, box) || box.lines.some(line => !contains(box, line))) ||
+          rect(title).bottom > rect(heading).y || rect(heading).bottom > textBoxes.disclaimer.y) throw Error('text_overflow');
+      if (stepCards.some((card, index) => !contains(card, card.textBox) || !contains(card, card.numberBox) ||
+          card.numberBox.right >= card.textBox.x || (index > 0 && card.y - stepCards[index - 1].bottom < 14))) throw Error('diagram_overflow');
+      return { headingFontSize, titleFontSize, stepFontSize, heading: rect(heading), title: rect(title), titleLines: lines(title), textBoxes, stepCards };
     });
     if (networkRequests !== 0 || layout.stepCards.map(item => item.text).join('\n') !== input.steps.map(item => item.text).join('\n')) fail('render_evidence_mismatch');
     const png = Buffer.from(await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT } }));

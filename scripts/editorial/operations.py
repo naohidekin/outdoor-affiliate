@@ -70,6 +70,11 @@ class _ReadOnlyRuntime:
         self.root, self.config = root, config
         self.ledger = _ReadOnlyLedger(root, config)
 
+    def _social_audit_success(self, job):
+        # The shared implementation reads cached audits/reconciliation only.
+        from runtime import Runtime
+        return Runtime._social_audit_success(self, job)
+
 
 def plan(state_root, config, *, now=None):
     root = _root(state_root)

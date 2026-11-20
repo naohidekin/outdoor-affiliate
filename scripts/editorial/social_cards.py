@@ -103,7 +103,7 @@ class SocialCards:
                  and value.get('sourceReceiptSha256') == spec['sourceReceiptSha256']
                  and shown == {'title': spec['title'], 'heading': spec['heading'],
                                'steps': spec['steps'], 'badge': 'キャンプのヒント',
-                               'disclaimer': 'Camp Gear Lab編集部の図解'}
+                               'disclaimer': 'Camp Gear Lab編集部の図解', 'brand': 'Camp Gear Lab'}
                  and re.fullmatch(r'[a-f0-9]{64}', str(value.get('contentHash', '')))
                  and isinstance(value.get('layout'), dict) and renderer.get('engine')
                  and renderer.get('platform') and renderer.get('fontFamily'),
@@ -129,7 +129,9 @@ class SocialCards:
                          for value in outline),
                  'editorial_card_steps_invalid')
         steps = [{'kind': 'editorial_outline', 'text': text.strip()} for text in outline]
-        spec = {'title': theme['title'], 'heading': _heading(theme['title']), 'steps': steps,
+        title = theme['title']
+        suffix = title.partition('？')[2]
+        spec = {'title': title, 'heading': suffix or _heading(title), 'steps': steps,
                 'sourceIds': source_ids, 'sourceReceiptSha256': source_receipt_sha256}
         with tempfile.TemporaryDirectory(prefix='camp-editorial-card-') as directory:
             output = Path(directory) / 'card.png'

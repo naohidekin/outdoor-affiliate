@@ -34,6 +34,40 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual('produce', plan['actions'][0]['kind'])
         self.assertNotIn('keys', status)
 
+    def test_plan_published_buffer_eligible_job_checks_shared_audit_read_only(self):
+        from datetime import datetime
+        from ledger import fingerprint
+        from runtime import JST, atomic
+        now = datetime(2026, 11, 20, 10, tzinfo=JST)
+        self.config.update(generationEnabled=False, socialGenerationEnabled=True,
+                           bufferSocialStartPeriod='2026-11-20')
+        job = self.runtime.ledger.create_candidate({'slug': 'published-buffer-ready'}, now=now)
+        with self.runtime.ledger._tx() as db:
+            job.update(stage='published', week='2026-11-20', revision='published-revision', social=None,
+                       bundle={'article': {'productIds': ['product-a']}},
+                       publication={'verified': True, 'url': 'https://camp-gear-lab.com/articles/published-buffer-ready'})
+            self.runtime.ledger._put(db, job, 'fixture')
+        key = fingerprint({'id': job['id'], 'revision': job['revision'], 'publication': job['publication']})
+        audit_path = self.runtime.root / 'post-publication-audits' / (key + '.json')
+        config_before = json.loads(json.dumps(self.config))
+        for audited in (False, True):
+            if audited:
+                atomic(audit_path, {'schemaVersion': 1, 'status': 'success', 'id': job['id'],
+                    'revision': job['revision'], 'auditKey': key, 'publication': job['publication'],
+                    'result': {'passed': True, 'status': 'passed', 'issues': [],
+                               'checks': [{'name': 'public_title', 'status': 'passed'}]}})
+            before = {p: p.read_bytes() for p in self.runtime.root.rglob('*') if p.is_file()}
+            with self.subTest(audited=audited), \
+                    patch('runtime.Runtime.__init__', side_effect=AssertionError('construction forbidden')), \
+                    patch('runtime.Runtime.make_social', side_effect=AssertionError('execution forbidden')), \
+                    patch('models.Models._call', side_effect=AssertionError('provider forbidden')):
+                result = operations.plan(self.runtime.root, self.config, now=now)
+            expected = [{'kind': 'make_social', 'jobId': job['id']}] if audited else []
+            self.assertEqual(expected, result['actions'])
+            self.assertEqual(before, {p: p.read_bytes() for p in self.runtime.root.rglob('*') if p.is_file()})
+            self.assertEqual(config_before, self.config)
+            self.assertFalse((self.runtime.root / 'runtime.flock').exists())
+
     def test_retry_stage_is_dry_run_by_default(self):
         output = StringIO()
         with redirect_stdout(output):
