@@ -172,6 +172,57 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
         self.assertEqual('verified', topics.reverify_bound_public_sources(self.request, feed['sources'][:3], now=NOW)['status'])
         self.assertEqual('nonproduct', topics.validate_nonproduct_bundle(nonproduct_bundle())['articleType'])
 
+    def test_tumbler_related_links_prioritize_published_category_without_body_leak(self):
+        feed = self.collect()
+        _, parts = self.candidates(feed)
+        parts['categoryId'] = 'tumbler'
+        theme = topics.bind_nonproduct_theme(parts, feed)
+        def article(slug, category='tent', status='published'):
+            return {'id': slug + '-id', 'slug': slug, 'title': slug + ' title',
+                    'categoryId': category, 'status': status, 'excerpt': slug + ' excerpt',
+                    'content': 'FULL_BODY_MUST_NOT_LEAK', 'internalMetadata': 'PRIVATE_METADATA'}
+        articles = [article('tent-' + str(i)) for i in range(6)] + [
+            article('bottle-second-name', 'tumbler'), article(theme['slug'], 'tumbler'),
+            article('bottle-first-name', 'tumbler'), article('draft-bottle', 'tumbler', 'draft')]
+        catalog = {'articles': articles, 'categories': [{'id': 'tumbler'}]}
+        before = copy.deepcopy(catalog)
+        gathered = topics.gather_nonproduct(theme, catalog)
+        rows = gathered['existingArticles']
+        self.assertEqual(['bottle-second-name', 'bottle-first-name', 'tent-0', 'tent-1', 'tent-2'],
+                         [r['slug'] for r in rows])
+        self.assertTrue(all(set(r) == {'title', 'slug', 'categoryId', 'excerpt'} for r in rows))
+        self.assertNotIn('FULL_BODY_MUST_NOT_LEAK', json.dumps(gathered))
+        self.assertNotIn('PRIVATE_METADATA', json.dumps(gathered))
+        self.assertEqual(before, catalog)
+        # No same-category articles: retain the original fallback ordering.
+        fallback = topics.gather_nonproduct(dict(theme, categoryId='other'), catalog)
+        self.assertEqual(['tent-' + str(i) for i in range(5)], [r['slug'] for r in fallback['existingArticles']])
+
+    def test_related_source_change_mints_new_key_but_same_regathered_image_clock_does_not(self):
+        from runtime import Runtime
+        from stage_journal import StageJournal
+        feed = self.collect()
+        _, parts = self.candidates(feed)
+        theme = topics.bind_nonproduct_theme(dict(parts, categoryId='tumbler'), feed)
+        articles = [{'status': 'published', 'slug': 'tent-' + str(i), 'categoryId': 'tent'} for i in range(5)]
+        articles += [{'status': 'published', 'slug': 'bottle', 'categoryId': 'tumbler'}]
+        catalog = {'articles': articles}
+        gathered = topics.gather_nonproduct(theme, catalog)
+        image = {'sha256': 'a' * 64, 'checkedAt': 'first', 'rendererEvidence': {'contentHash': 'b' * 64}}
+        gathered['images'] = [copy.deepcopy(image)]
+        gathered['evidence']['ownedIllustrations'] = [copy.deepcopy(image)]
+        def key(value):
+            return StageJournal.key('job', 'draft', {'dependencies': {'source': Runtime._source_dependencies(value)},
+                                                    'schemaVersion': {'stage': 1}})
+        repeated = topics.gather_nonproduct(theme, catalog)
+        repeated['images'] = [dict(image, checkedAt='second')]
+        repeated['evidence']['ownedIllustrations'] = [dict(image, checkedAt='second')]
+        self.assertEqual(key(gathered), key(repeated))
+        old = copy.deepcopy(gathered)
+        old['existingArticles'] = [{'title': a.get('title'), 'slug': a['slug'],
+            'categoryId': a['categoryId'], 'excerpt': a.get('excerpt')} for a in articles[:5]]
+        self.assertNotEqual(key(old), key(gathered))
+
     def test_nonproduct_validation_binds_new_scope_ids_and_receipts(self):
         feed = self.collect()
         _, parts = self.candidates(feed)

@@ -535,10 +535,12 @@ def gather_nonproduct(theme, catalog):
             or not _outline_scope_families(theme).issubset(
                 {_scope_family(item.get("scope")) for item in references})):
         raise TopicSelectionError("nonproduct_evidence_incomplete")
+    related = [article for article in catalog.get("articles", [])
+               if article.get("status") == "published" and article.get("slug") != theme.get("slug")]
+    related.sort(key=lambda article: article.get("categoryId") != theme.get("categoryId"))
     return {"theme": theme, "catalog": [], "products": [], "productIds": [],
             "existingArticles": [{key: article.get(key) for key in
-                ("id", "title", "slug", "categoryId", "excerpt")}
-                for article in catalog.get("articles", []) if article.get("status") == "published"][:5],
+                ("title", "slug", "categoryId", "excerpt")} for article in related[:5]],
             "categories": [category for category in catalog.get("categories", [])
                            if category.get("id") == theme.get("categoryId")],
             "merchantClicks": [], "references": references, "images": images,

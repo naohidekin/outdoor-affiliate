@@ -383,6 +383,36 @@ class DeterministicRuntimeTests(unittest.TestCase):
         self.assertNotEqual(key, self.runtime.stage_journal.key(
             'job', 'final_review', inputs(changed_card, same_preview)))
 
+    def test_draft_key_ignores_duplicate_illustration_clock_but_keeps_all_source_proofs(self):
+        image = {'id': 'illustration:owned', 'checkedAt': 'first', 'sha256': 'a' * 64,
+                 'compositionSha256': 'b' * 64, 'referenceIds': ['public:source'],
+                 'rendererEvidence': {'contentHash': 'c' * 64, 'sourceReceiptSha256': 'd' * 64,
+                                      'displayText': {'title': '固定タイトル'}, 'networkRequests': 0}}
+        source = {'images': [copy.deepcopy(image)], 'references': [{'url': 'https://maker.example/source',
+                  'checkedAt': 'first', 'excerpt': '固定された一次資料', 'receiptSha256': 'e' * 64}],
+                  'evidence': {'ownedIllustrations': [copy.deepcopy(image)]}}
+        before = copy.deepcopy(source)
+        def key(value):
+            return self.runtime.stage_journal.key('job', 'draft', {
+                'dependencies': {'source': self.runtime._source_dependencies(value)}, 'schemaVersion': {'stage': 1}})
+        original = key(source)
+        same = copy.deepcopy(source)
+        same['images'][0]['checkedAt'] = 'second'
+        same['evidence']['ownedIllustrations'][0]['checkedAt'] = 'second'
+        same['references'][0]['checkedAt'] = 'second'
+        self.assertEqual(original, key(same))
+        self.assertEqual(before, source)
+        changes = [lambda v: v['images'][0].update(sha256='f' * 64),
+                   lambda v: v['references'][0].update(excerpt='別の一次資料'),
+                   lambda v: v['references'][0].update(receiptSha256='f' * 64),
+                   lambda v: v['evidence']['ownedIllustrations'][0].update(compositionSha256='f' * 64),
+                   lambda v: v['evidence']['ownedIllustrations'][0]['rendererEvidence'].update(contentHash='f' * 64),
+                   lambda v: v['evidence']['ownedIllustrations'][0]['rendererEvidence'].update(sourceReceiptSha256='f' * 64)]
+        for change in changes:
+            changed = copy.deepcopy(same)
+            change(changed)
+            self.assertNotEqual(original, key(changed))
+
     def test_retry_review_checkpoint_refuses_unknown_effect_or_delivery(self):
         with patch.object(self.runtime, 'deliver', side_effect=ValueError('delivery failed')):
             self.runtime.produce(limit=1)

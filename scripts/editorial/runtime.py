@@ -1258,6 +1258,9 @@ class Runtime:
             if isinstance(item, dict):
                 item.pop('checkedAt', None)
         evidence = result.get('evidence', {}) if isinstance(result, dict) else {}
+        for image in evidence.get('ownedIllustrations', []) if isinstance(evidence, dict) else []:
+            if isinstance(image, dict):
+                image.pop('checkedAt', None)
         for product in evidence.get('products', []) if isinstance(evidence, dict) else []:
             if not isinstance(product, dict):
                 continue
