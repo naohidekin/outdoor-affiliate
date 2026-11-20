@@ -52,6 +52,10 @@ prepare/executeを使う。旧artifact・失敗・許可参照・manifestを固�
 32calls/記事・128calls/制作期間・96calls/batchの既存総枠、旧claim・履歴・実測利用量を維持し、枠を作り直さない。
 unknown/in_flight・provider/schema異常は停止して照合し、本文validation失敗を同入力で再試行しない。
 この権限を他記事・本人承認・公開・SNS予約／投稿へ流用せず、承認は対象版ごとに別途扱う。
+completionの`correction_path`は現polished本文＋FAQを含むarticle/hashと、限定path・old/new・出現回数を固定する。
+削除以外の全文候補は`mode='upper_editor_candidate'`と上位確認記録を必須とし、候補・執筆仕様・fresh research・source proofのhashへ結ぶ。
+新しい本文やFAQは上位編集候補であり、旧writerの新規出力とは扱わない。商品・出典・画像・identityと原writer briefは保持し、protected/facts等との衝突は別確認する。
+ローカル補正は`literal_correction`として記録し、writer再呼出しや架空のモデル利用量を作らず、実Gemini→独立QA→実Claude finalを既存総枠内で通す。
 
 ## 品質と承認を確認する
 

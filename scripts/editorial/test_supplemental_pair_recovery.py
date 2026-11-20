@@ -427,7 +427,7 @@ class CompletionRecoveryTests(SourceOnlyRecoveryTests):
         if receipt.get('planSha256'):
             namespace += receipt['planSha256'] + ':'
         records = self.journal.status(job_id=self.job['id'])['records']
-        draft = next(r for r in records if r['stage'] == namespace + 'draft')
+        draft = next(r for r in records if r['stage'] in (namespace + 'draft', namespace + 'literal_correction'))
         failed = next(r for r in records if r['stage'] == namespace + 'final_review')
         with self.ledger._tx() as db:
             draft = json.loads(db.execute('SELECT value FROM meta WHERE key=?', (draft['stageKey'],)).fetchone()[0])
@@ -463,6 +463,172 @@ class CompletionRecoveryTests(SourceOnlyRecoveryTests):
         grant = dict(reference=recovery.COMPLETION_AUTHORIZATION, answer=recovery.COMPLETION_ANSWER,
                      jobId=self.job['id'], manifestSha256=fingerprint(plan))
         return rt, plan, grant, request
+
+    def literal_fixture(self, mean=8, faq_only=False):
+        rt, first_plan, first_grant, request = self.completion_fixture(mean=6)
+        writer = json.loads(request.results[0]['content'][0]['text'])
+        writer['article']['content'] += '\n根拠のない保証を加えた説明です。'
+        writer['article']['faqs'][0]['answer'] += '仕様で保証されない説明です。'
+        request.results[0]['content'][0]['text'] = json.dumps(writer)
+        original_brief = copy.deepcopy(writer['brief'])
+        prior_brief = json.loads(self.proposed.read_text())['approvedWritingBrief']
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, first_plan, owner_grant=first_grant)
+        rt, _, _, next_request = self.next_completion(rt, 2, mean)
+        proposal = json.loads(self.proposed.read_text())
+        proposal['approvedWritingBrief'] = prior_brief  # A deletion need not rebrief the writer.
+        atomic(self.proposed, proposal)
+        proof = json.loads(self.proof.read_text())
+        proof['proposedCandidateSha256'] = hashlib.sha256(self.proposed.read_bytes()).hexdigest()
+        atomic(self.proof, proof)
+        pins = proof['historicalArtifacts']
+        artifact = self.root / 'research' / 'artifacts' / self.job['id'] / pins['directory']
+        article = json.loads((artifact / 'source.json').read_text())['bundle']['article']
+        article['content'] = json.loads((artifact / 'candidate.json').read_text())['candidate']['content']
+        replacements = [{'path': 'article.faqs.0.answer', 'old': '仕様で保証されない説明です。', 'new': '', 'count': 1}]
+        if not faq_only:
+            replacements.append({'path': 'article.content', 'old': '根拠のない保証を加えた説明です。', 'new': '', 'count': 1})
+        correction = {'jobId': self.job['id'], 'sourceBinding': self.job['sourceBinding'],
+            'candidateArtifactSha256': pins['candidate'], 'articleSha256': fingerprint(article),
+            'replacements': replacements}
+        self.correction = self.base / 'literal-correction.json'
+        atomic(self.correction, correction)
+        previous = self.ledger.get_job(self.job['id'])['error']['ownerRecoveryReceipt']
+        with self.ledger._tx() as db:
+            prior = json.loads(db.execute('SELECT value FROM meta WHERE key=?', (previous,)).fetchone()[0])
+        stage = 'owner_oneoff:' + recovery.COMPLETION_AUTHORIZATION + ':' + prior['planSha256'] + ':final_review'
+        key = next(r['stageKey'] for r in self.journal.status(job_id=self.job['id'])['records'] if r['stage'] == stage)
+        plan = recovery.prepare(self.config, self.job['id'], key, self.proposed, self.proof,
+            self.snapshot, self.fresh, phase='completion', correction_path=self.correction)
+        next_request.results.pop(0)  # No writer invocation is permitted in this mode.
+        grant = dict(reference=recovery.COMPLETION_AUTHORIZATION, answer=recovery.COMPLETION_ANSWER,
+                     jobId=self.job['id'], manifestSha256=fingerprint(plan))
+        return rt, plan, grant, next_request, original_brief, article
+
+    def test_source_bound_upper_editor_body_and_faq_use_no_new_writer(self):
+        rt, _, _, request, original_brief, article = self.literal_fixture()
+        correction = json.loads(self.correction.read_text())
+        changed = copy.deepcopy(article)
+        changed['content'] = article['content'].replace('根拠のない保証を加えた説明です。',
+                                                        '購入前に記載された選択肢を確認します。')
+        changed['faqs'][0]['answer'] = article['faqs'][0]['answer'].replace('仕様で保証されない説明です。', '')
+        binding = {'writingBriefSha256': fingerprint(json.loads(self.proposed.read_text())['approvedWritingBrief']),
+                   'freshResearchSha256': hashlib.sha256(self.fresh.read_bytes()).hexdigest(),
+                   'sourceProofSha256': hashlib.sha256(self.proof.read_bytes()).hexdigest()}
+        correction.update(mode='upper_editor_candidate', upperEditorReview=dict(binding,
+            reviewedBy='Astra', candidateArticleSha256=fingerprint(changed)), replacements=[
+                {'path': 'article.content', 'old': article['content'], 'new': changed['content'], 'count': 1},
+                {'path': 'article.faqs.0.answer', 'old': article['faqs'][0]['answer'],
+                 'new': changed['faqs'][0]['answer'], 'count': 1}])
+        atomic(self.correction, correction)
+        with self.ledger._tx() as db:
+            records = [json.loads(raw) for raw, in db.execute("SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'")]
+        final = next(r for r in records if r.get('stage', '').endswith(':final_review')
+                     and r.get('jobId') == self.job['id'] and r.get('stage', '').startswith(
+                         'owner_oneoff:' + recovery.COMPLETION_AUTHORIZATION))
+        plan = recovery.prepare(self.config, self.job['id'], final['stageKey'], self.proposed,
+            self.proof, self.snapshot, self.fresh, phase='completion', correction_path=self.correction)
+        grant = dict(reference=recovery.COMPLETION_AUTHORIZATION, answer=recovery.COMPLETION_ANSWER,
+                     jobId=self.job['id'], manifestSha256=fingerprint(plan))
+        before = copy.deepcopy(correction)
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(2, len(request.calls))
+        self.assertEqual(changed['content'], self.ledger.get_job(self.job['id'])['bundle']['article']['content'])
+        self.assertEqual(before, json.loads(self.correction.read_text()))
+        for field in ('writingBriefSha256', 'freshResearchSha256', 'sourceProofSha256'):
+            bad_binding = dict(binding, **{field: '0' * 64})
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'upper_editor_source_review_binding'):
+                recovery._literal_candidate(correction, self.job, article, original_brief,
+                    correction['candidateArtifactSha256'], upper_binding=bad_binding)
+        bad = copy.deepcopy(correction)
+        bad['replacements'][0]['old'] = '根拠のない保証を加えた説明です。'
+        with self.assertRaisesRegex(ValueError, 'whole_field_replacement'):
+            recovery._literal_candidate(bad, self.job, article, original_brief,
+                correction['candidateArtifactSha256'], upper_binding=binding)
+
+    def test_literal_repair_calls_only_real_gemini_and_final_preserving_writer_and_history(self):
+        rt, plan, grant, request, brief, article = self.literal_fixture()
+        with self.ledger._tx() as db:
+            before = dict(db.execute('SELECT key,value FROM meta'))
+            calls_before = db.execute('SELECT count(*) FROM model_budget_reservations').fetchone()[0]
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(2, len(request.calls))
+        archived = json.loads((self.root / 'manual-operations' / '20261120-pair-completion'
+                               / self.job['id'] / plan['planSha256'] / 'correction-input.json').read_text())
+        self.assertEqual(plan['sha256']['correction'], archived['inputSha256'])
+        self.assertEqual(json.loads(self.correction.read_text()), archived['plan'])
+        self.assertIn('gemini', request.calls[0][2]['model'])
+        self.assertIn('claude', request.calls[1][2]['model'])
+        saved = self.ledger.get_job(self.job['id'])['bundle']['article']
+        self.assertNotIn('根拠のない保証を加えた説明です。', saved['content'])
+        self.assertNotIn('仕様で保証されない説明です。', saved['faqs'][0]['answer'])
+        with self.ledger._tx() as db:
+            for key, value in before.items():
+                self.assertEqual(value, db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()[0])
+            self.assertEqual(calls_before + 2, db.execute('SELECT count(*) FROM model_budget_reservations').fetchone()[0])
+            local = [json.loads(v) for v, in db.execute("SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'")
+                     if json.loads(v).get('stage', '').endswith(':literal_correction')]
+        self.assertEqual(1, len(local))
+        self.assertEqual(brief, local[0]['output']['brief'])
+        self.assertEqual(0, local[0].get('responseReceiptCount', 0))
+        self.assertEqual(1, local[0]['attempts'])
+        self.assertIsNone(self.ledger.get_job(self.job['id'])['approval'])
+        with self.assertRaisesRegex(ValueError, 'already_claimed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+
+    def test_second_local_plan_preserves_original_writer_after_known_quality_failure(self):
+        rt, first, grant, request, _, _ = self.literal_fixture(mean=6)
+        with self.assertRaisesRegex(ValueError, 'final_review_failed'):
+            recovery.execute(rt, first, owner_grant=grant)
+        rt, proposed_plan, _, next_request = self.next_completion(rt, 3)
+        pins = proposed_plan['historicalArtifacts']
+        artifact = self.root / 'research' / 'artifacts' / self.job['id'] / pins['directory']
+        article = json.loads((artifact / 'source.json').read_text())['bundle']['article']
+        article['content'] = json.loads((artifact / 'candidate.json').read_text())['candidate']['content']
+        correction = {'jobId': self.job['id'], 'sourceBinding': self.job['sourceBinding'],
+            'candidateArtifactSha256': pins['candidate'], 'articleSha256': fingerprint(article),
+            'replacements': [{'path': 'article.content', 'old': '検証済みの説明です。' * 350,
+                              'new': '検証済みの説明です。' * 349, 'count': 1}]}
+        path = self.base / 'second-literal.json'
+        atomic(path, correction)
+        plan = recovery.prepare(self.config, self.job['id'], proposed_plan['oldFailedKey'], self.proposed,
+            self.proof, self.snapshot, self.fresh, phase='completion', correction_path=path)
+        self.assertEqual(first['writerProvenance'], plan['writerProvenance'])
+        next_request.results.pop(0)
+        grant = dict(reference=recovery.COMPLETION_AUTHORIZATION, answer=recovery.COMPLETION_ANSWER,
+                     jobId=self.job['id'], manifestSha256=fingerprint(plan))
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(2, len(next_request.calls))
+
+    def test_literal_faq_only_change_is_not_an_unchanged_article_reroll(self):
+        rt, plan, grant, request, _, article = self.literal_fixture(faq_only=True)
+        self.assertEqual('delivered', recovery.execute(rt, plan, owner_grant=grant)['status'])
+        self.assertEqual(article['content'], self.ledger.get_job(self.job['id'])['bundle']['article']['content'])
+        self.assertEqual(2, len(request.calls))
+
+    def test_literal_plan_wrong_counts_paths_hashes_and_new_claims_are_rejected(self):
+        rt, plan, grant, request, brief, article = self.literal_fixture()
+        correction = json.loads(self.correction.read_text())
+        for change in ('count', 'path', 'hash', 'new_fact', 'partial_number', 'brief_conflict'):
+            value = copy.deepcopy(correction)
+            if change == 'count':
+                value['replacements'][0]['count'] = 2
+            elif change == 'path':
+                value['replacements'][0]['path'] = 'products.0.name'
+            elif change == 'hash':
+                value['articleSha256'] = '0' * 64
+            elif change == 'new_fact':
+                value['replacements'][0]['new'] = '完全防水で安全です。'
+            elif change == 'partial_number':
+                value['replacements'] = [{'path': 'article.content', 'old': '159g', 'new': '59g', 'count': 1}]
+            else:
+                brief = dict(brief, protected=['仕様で保証されない説明です。'])
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                recovery._literal_candidate(value, self.job, article, brief, correction['candidateArtifactSha256'])
+        self.correction.write_text(self.correction.read_text() + ' ')
+        with self.assertRaisesRegex(ValueError, 'pinned_manifest_changed'):
+            recovery.execute(rt, plan, owner_grant=grant)
+        self.assertEqual([], request.calls)
 
     def test_completion_success_preserves_every_closed_claim_and_source_only_inputs(self):
         rt, plan, grant, request = self.completion_fixture()

@@ -18,6 +18,7 @@ article AND its shortcodes rather than fabricating a link or evidence.
 import ipaddress
 import os
 import re
+import unicodedata
 from datetime import datetime
 from urllib.parse import parse_qs, urlsplit
 
@@ -36,6 +37,77 @@ HEADING_PREFIX = r"(?:(?: {0,3}>[ \t]?)|(?: {0,3}(?:[-+*]|[0-9]+[.)])[ \t]+))* {
 
 def _text(value):
     return isinstance(value, str) and bool(value.strip())
+
+
+_MONTBELL_WEAR_CLAIMS = {
+    'average_origin': re.compile(r'(?:サイズ差|サイズによる個体差|個体差|サイズごと|サイズ別)'
+                                 r'.{0,24}?(?:均した|ならした|平均化した|平均を取った|平均した)'),
+    'weight_inference': re.compile(
+        r'\d+(?:\.\d+)?\s*(?:g|グラム)'
+        r'(?:(?:が|は|という(?:平均重量|重量|重さ|数値)(?:は|が|から))'
+        r'.{0,60}?(?:中間の厚み|厚み|厚さ|厚手|薄手|気温|温度|端境期|暖か|保温)'
+        r'|.{0,12}?(?:なので|だから|であるため|という重さから|という重量から)'
+        r'.{0,45}?(?:厚み|厚さ|厚手|薄手|気温|温度|端境期|暖か|保温))', re.I),
+    'all_combinations': re.compile(
+        r'(?:\d+色.{0,12}?\d+サイズ|\d+サイズ.{0,12}?\d+色)'
+        r'.{0,24}?(?:(?:全て|すべて).{0,30}?(?:選べ|購入でき|注文でき|揃|存在)'
+        r'|組み合わせが(?:存在|揃|成立|用意))'
+        r'|全\d+通り.{0,16}?(?:選べ|購入|揃|存在)'
+        r'|全色.{0,12}?全サイズ.{0,16}?(?:揃|選べ|購入)'),
+    'purchase_guarantee': re.compile(r'(?:これだけ守れば|これらを守れば|絶対に|必ず|確実に)'
+                                     r'.{0,20}?(?:失敗しません|失敗しない)'),
+    'internal_option_token': re.compile(
+        r'(?<![A-Za-z0-9])(?:selectable|fixed|optionState|merchantOptionState|merchantVariant|canonicalVariant)'
+        r'(?![A-Za-z0-9])', re.I),
+}
+_CLAIM_DENIAL = re.compile(
+    r'^[^、,;；]{0,35}?(?:とは(?:言え|確認でき|断定でき|判断でき)(?:ない|ません)'
+    r'|(?:説明|記載|根拠|情報|裏付け)(?:は|が)[^、,;；]{0,10}?(?:ない|ありません|確認できません)'
+    r'|(?:判断|断定|保証)でき(?:ない|ません)|推定はし(?:ない|ません)|保証してい(?:ない|ません)'
+    r'|(?:という意味|ということ|わけ|もの|値|数値|平均値|基準|目安)では(?:ない|ありません)'
+    r'|とは限(?:らない|りません))')
+
+
+def montbell_wear_claim_issues(article, products):
+    """Observed claim patterns only; no source inference, rewriting or approval.
+
+    Shared by the early writer gate and final bundle inspection. Only selected
+    Mont-bell 1107704/1114881 apparel activates this guard. References and FAQ
+    questions are deliberately outside its scope.
+    """
+    if not isinstance(article, dict) or not isinstance(products, list):
+        return []
+    selected = article.get('productIds')
+    targeted = False
+    for product in products:
+        if not isinstance(product, dict) or (isinstance(selected, list) and product.get('id') not in selected):
+            continue
+        specs = product.get('specs')
+        if (str(product.get('brand', '')).casefold() in ('mont-bell', 'montbell', 'モンベル')
+                and apparel_class(product) in ('base-layer', 'fleece') and isinstance(specs, dict)
+                and any(str(specs.get(key, '')) in ('1107704', '1114881')
+                        for key in ('model', 'modelNumber', '型番', '品番', 'モデル番号'))):
+            targeted = True
+            break
+    if not targeted:
+        return []
+    fields = [('content', article.get('content'))]
+    faqs = article.get('faqs')
+    if isinstance(faqs, list):
+        fields.extend((f'faqs[{index}].answer', faq.get('answer')) for index, faq in enumerate(faqs)
+                      if isinstance(faq, dict))
+    issues = []
+    for path, text in fields:
+        if not isinstance(text, str):
+            continue
+        normalized = unicodedata.normalize('NFKC', text)
+        normalized = re.sub(r'[*_`]', '', normalized)
+        sentences = re.split(r'[。！？!?\n]+', normalized)
+        for code, pattern in _MONTBELL_WEAR_CLAIMS.items():
+            if any(code == 'internal_option_token' or not _CLAIM_DENIAL.search(sentence[match.end():])
+                   for sentence in sentences for match in pattern.finditer(sentence)):
+                issues.append(f'montbell_wear_claim: {code} at {path}')
+    return issues
 
 
 def _checked(value):
@@ -360,6 +432,7 @@ def inspect_bundle(bundle):
             return []
         return value
     products, images, references = records("products"), records("images"), records("references")
+    failures.extend(montbell_wear_claim_issues(article, products))
     selected_products = [p for p in products if p.get('id') in (article.get('productIds') or [])]
     for issue in purchase_anchor_issues(content, selected_products):
         fail('affiliate', issue)

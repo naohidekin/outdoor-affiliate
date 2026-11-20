@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from model_inputs import project_model_input
 from wise_contract import load_policy, valid_scores, passes
-from quality import purchase_anchor_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
+from quality import purchase_anchor_issues, montbell_wear_claim_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -571,6 +571,8 @@ class Models:
         article = result["article"]
         if purchase_anchor_issues(article['content'], selected):
             raise ModelError('Purchase anchor must use exact selected canonical affiliate URLs')
+        if montbell_wear_claim_issues(article, selected):
+            raise ModelError('Unsupported Mont-bell apparel claim')
         if context.get("existingArticle"):
             if article.get("slug") != context["existingArticle"]["slug"]:
                 raise ModelError("Revision source URL changed")
@@ -748,6 +750,11 @@ class Models:
             "has actually been removed; a blanket assertion of scope compliance is not verification. "
             "Compare checks.sourceContent to the candidate for unchanged meaning and conclusions. "
             "Apply owner WISE-AS: Wit, Insight, Sincere, Empth, AI-free, Sense. Never redefine axes. "
+            "Do not impose an automatic score ceiling on Sincere or other axes merely because "
+            "verifiedAuthorFacts is empty or the article is a research guide. Sincere may be grounded "
+            "in verified evidence and concrete problem-awareness as well as genuine firsthand experience. "
+            "Evaluate the actual prose against the pinned anchors; this does not require a high score, "
+            "and generic or weakly grounded writing must still receive its earned low score. "
             "When checks.wisePolicy is supplied, use its pinned raw text as the scoring anchors and return "
             "wiseScores={w,i,s,e,ai,sense}, six independent 1-4 scores. Floors are 2,2,2,2,3,2. "
             "Keep this owner gate separate from factual, medical, SEO and affiliate checks. "

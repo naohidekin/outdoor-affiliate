@@ -696,7 +696,9 @@ class ModelTests(unittest.TestCase):
         self.assertFalse(result['passed'])
         prompt = fake.calls[0][2]['messages'][0]['content']
         for phrase in ('issues must contain ONLY required corrections or blockers', 'observations',
-                       'pending future human approval', 'unrounded mean', 'never round 7.4545 up'):
+                       'pending future human approval', 'unrounded mean', 'never round 7.4545 up',
+                       'Do not impose an automatic score ceiling', 'concrete problem-awareness',
+                       'does not require a high score'):
             self.assertIn(phrase, prompt)
         wire = fake.calls[0][2]['output_config']['format']
         self.assertEqual(wire, {'type': 'json_schema', 'schema': REVIEW_SCHEMA})

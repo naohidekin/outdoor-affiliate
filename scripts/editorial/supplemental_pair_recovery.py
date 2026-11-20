@@ -13,6 +13,15 @@ Each changed brief/plan gets a distinct claim and archive; each stage attempts
 once. Known final-review quality failures can lead to a new specification under
 the same standing grant. Same plans/briefs, historical candidate bodies, unknown
 work and exhausted existing budgets stop. Owner approval/publication stay separate.
+
+Optional correction_path pins the prior candidate article, exact replacement
+paths/counts and corrected article. Default mode only deletes/retains complete
+sentences. mode=upper_editor_candidate permits whole content/FAQ-field edits
+bound by an Astra upperEditorReview to candidateArticleSha256, writingBriefSha256,
+freshResearchSha256 and sourceProofSha256. Neither mode changes identity, products,
+references, images or the original writer brief. Brief literal conflicts stop.
+A local literal_correction journal records provenance without model usage;
+Gemini, independent QA and Claude final remain real, budgeted and mandatory.
 """
 import copy
 from datetime import datetime
@@ -99,9 +108,59 @@ def _completion_plan(proposed):
         key=lambda c: (c['target'], c['change']))})), fingerprint(_normalized(brief))
 
 
-def _completion_baseline(root, job, records, receipts, proposed, proof, old_failed_key):
+def _literal_candidate(plan, job, article, brief, candidate_sha, *, upper_binding=None):
+    """Apply pinned deletions or an explicitly source-bound upper-editor candidate."""
+    upper = plan.get('mode') == 'upper_editor_candidate'
+    extra = {'mode', 'upperEditorReview'} if upper else set()
+    _require(set(plan) - extra == {'jobId', 'sourceBinding', 'candidateArtifactSha256', 'articleSha256', 'replacements'}
+             and plan.get('jobId') == job['id'] and plan.get('sourceBinding') == job['sourceBinding']
+             and plan.get('candidateArtifactSha256') == candidate_sha
+             and plan.get('articleSha256') == fingerprint(article), 'literal_candidate_binding_required')
+    replacements = plan.get('replacements')
+    _require(isinstance(replacements, list) and 0 < len(replacements) <= 64, 'literal_replacements_required')
+    changed = copy.deepcopy(article)
+    for item in replacements:
+        _require(isinstance(item, dict) and set(item) == {'path', 'old', 'new', 'count'}
+                 and isinstance(item.get('path'), str)
+                 and re.fullmatch(r'article\.(?:content|faqs\.[0-4]\.(?:question|answer))', item['path'])
+                 and isinstance(item.get('old'), str) and item['old']
+                 and isinstance(item.get('new'), str) and item['new'] != item['old']
+                 and type(item.get('count')) is int and 0 < item['count'] <= 100,
+                 'bounded_literal_replacement_required')
+        old, new = item['old'], item['new']
+        start = old.find(new) if new else 0
+        _require(upper or not new or (start >= 0 and (start == 0 or old[start - 1] in '\n。！？')
+                 and (start + len(new) == len(old) or new[-1] in '\n。！？')),
+                 'literal_new_claim_or_partial_sentence_forbidden')
+        if item['path'] == 'article.content':
+            target, key = changed, 'content'
+        else:
+            index, key = item['path'].split('.')[2:]
+            _require(int(index) < len(changed.get('faqs', [])), 'literal_faq_index_required')
+            target = changed['faqs'][int(index)]
+        _require(isinstance(target.get(key), str) and target[key].count(old) == item['count'],
+                 'literal_occurrence_count_mismatch')
+        _require(not upper or (item['count'] == 1 and target[key] == old),
+                 'upper_editor_whole_field_replacement_required')
+        target[key] = target[key].replace(old, new)
+    _require(article != changed, 'literal_candidate_must_change')
+    before = '\n'.join([article['content']] + [f[k] for f in article.get('faqs', []) for k in ('question', 'answer')])
+    after = '\n'.join([changed['content']] + [f[k] for f in changed.get('faqs', []) for k in ('question', 'answer')])
+    if upper:
+        _require(isinstance(upper_binding, dict) and plan.get('upperEditorReview') == dict(upper_binding,
+                 reviewedBy='Astra', candidateArticleSha256=fingerprint(changed)),
+                 'upper_editor_source_review_binding_required')
+    for field in ('protected', 'requiredExpressions', 'facts', 'numbers'):
+        _require(all(not isinstance(value, str) or value not in before or value in after
+                     for value in brief.get(field, [])), 'literal_original_brief_conflict_requires_review')
+    return changed
+
+
+def _completion_baseline(root, job, records, receipts, proposed, proof, old_failed_key, literal_plan=None):
     job_id = job['id']
     plan_sha, brief_sha = _completion_plan(proposed)
+    if literal_plan is not None:
+        plan_sha = fingerprint({'completionPlan': plan_sha, 'literalPlan': literal_plan})
     _require(not any(r.get('jobId') == job_id and r.get('status') in ('in_flight', 'unknown')
                      for r in records.values()), 'completion_unknown_stage_requires_reconciliation')
     prefix = receipt_key(job_id, 'completion') + ':'
@@ -121,7 +180,8 @@ def _completion_baseline(root, job, records, receipts, proposed, proof, old_fail
     for key, value in receipts.items():
         if key.startswith(prefix):
             _require(value.get('status') == 'failed_known', 'completion_unknown_claim_requires_reconciliation')
-            _require(value.get('planSha256') != plan_sha and value.get('briefSha256') != brief_sha,
+            _require(value.get('planSha256') != plan_sha
+                     and (literal_plan is not None or value.get('briefSha256') != brief_sha),
                      'completion_same_plan_or_brief_forbidden')
     archive = root / 'manual-operations'
     if previous_phase == 'completion':
@@ -138,7 +198,7 @@ def _completion_baseline(root, job, records, receipts, proposed, proof, old_fail
              and prior_manifest.get('jobId') == job_id, 'previous_manifest_binding_required')
     prior_proposal, prior_sha = _read(prior_manifest['paths']['proposed'])
     _require(prior_sha == prior_manifest['sha256']['proposedCandidate'], 'previous_proposal_binding_required')
-    _require(fingerprint(_normalized(prior_proposal.get('approvedWritingBrief'))) != brief_sha,
+    _require(literal_plan is not None or fingerprint(_normalized(prior_proposal.get('approvedWritingBrief'))) != brief_sha,
              'completion_same_plan_or_brief_forbidden')
     pins = proof.get('historicalArtifacts', {})
     _require(isinstance(pins, dict) and set(pins) == {'directory', 'source', 'candidate'}
@@ -195,8 +255,9 @@ def _slot(job, snapshot, batch, jobs, now):
 
 
 def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snapshot_path,
-            fresh_research_path, *, now=None, phase='original'):
+            fresh_research_path, *, now=None, phase='original', correction_path=None):
     """Read-only manifest; fresh evidence is separate from immutable old research."""
+    _require(correction_path is None or phase == 'completion', 'literal_completion_only')
     now = now or datetime.now(JST)
     _require(now.utcoffset() is not None and now.astimezone(JST).date().isoformat() == OWNER_DATE,
              'owner_grant_date_required')
@@ -240,8 +301,9 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
         proposed, _ = _read(proposed_path)
         proof, _ = _read(proof_path)
         _require(job.get('id') == job_id, 'exact_failed_pair_job_required')
+        literal_plan = _read(correction_path)[0] if correction_path is not None else None
         dynamic, prior, completion_namespace, plan_sha, brief_sha = _completion_baseline(
-            root, job, records, receipts, proposed, proof, old_failed_key)
+            root, job, records, receipts, proposed, proof, old_failed_key, literal_plan)
         pins = dict(JOBS[job_id], **dynamic)
     _require(job.get('kind') == 'supplemental_article' and job.get('batchId') == BATCH
              and job.get('batchSlot') == pins['slot'] and job.get('batchCallCap') == 96
@@ -260,8 +322,14 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
              and not final.get('successorKey'), 'exact_failed_review_required')
     old = {}
     for stage in ('draft', 'polish'):
+        historical_stage = old_namespace + stage
+        if stage == 'draft' and phase == 'completion':
+            local = [r for r in records.values() if r.get('jobId') == job_id
+                     and r.get('stage') == old_namespace + 'literal_correction']
+            if local:
+                historical_stage = old_namespace + 'literal_correction'
         found = [r for r in records.values() if r.get('jobId') == job_id
-                 and r.get('stage') == old_namespace + stage and r.get('status') == 'succeeded'
+                 and r.get('stage') == historical_stage and r.get('status') == 'succeeded'
                  and (phase == 'original' or r.get('attempts') == r.get('maxAttempts') == 1)]
         _require(len(found) == 1, 'unique_successful_writer_polish_required')
         old[stage] = found[0]
@@ -315,15 +383,53 @@ def prepare(config_path, job_id, old_failed_key, proposed_path, proof_path, snap
     if phase == 'source_only':
         result.update(phase=phase, previousReceiptSha256=fingerprint(prior))
     if phase == 'completion':
-        candidate_hashes = []
+        candidate_hashes, article_hashes = [], []
         for record in records.values():
             if (record.get('jobId') == job_id and record.get('status') == 'succeeded'
                     and (record.get('stage') == 'polish' or record.get('stage', '').endswith(':polish'))):
                 output = _cached(record)
                 candidate_hashes.append(fingerprint(_normalized(output['polished']['content'])))
+                prefix = record['stage'][:-len('polish')]
+                writers = [r for r in records.values() if r.get('jobId') == job_id
+                           and r.get('status') == 'succeeded'
+                           and r.get('stage') in (prefix + 'draft', prefix + 'literal_correction')]
+                _require(len(writers) == 1, 'historical_candidate_writer_required')
+                prior_article = _cached(writers[0])['article']
+                article_hashes.append(fingerprint(_normalized({'content': output['polished']['content'],
+                                                               'faqs': prior_article['faqs']})))
         result.update(status='ready_for_budgeted_completion', phase=phase, previousReceiptSha256=fingerprint(prior),
                       planSha256=plan_sha, briefSha256=brief_sha, historicalArtifacts=pins,
-                      historicalCandidateBodyHashes=sorted(set(candidate_hashes)))
+                      historicalCandidateBodyHashes=sorted(set(candidate_hashes)),
+                      historicalCandidateArticleHashes=sorted(set(article_hashes)))
+    if correction_path is not None:
+        correction, correction_sha = _read(correction_path)
+        # Preserve the original model writer/brief across successive local repairs.
+        writer = old['draft']
+        if writer['stage'].endswith(':literal_correction'):
+            # Provenance is pinned in the prior manifest, not fabricated as model usage.
+            previous_plan = prior['planSha256']
+            previous_manifest, _ = _read(root / 'manual-operations' / '20261120-pair-completion'
+                                          / job_id / previous_plan / 'manifest.json')
+            provenance = previous_manifest['writerProvenance']
+            writer = records.get(provenance['stageKey'], {})
+            _require(fingerprint(writer) == provenance['recordSha256'], 'literal_writer_provenance_changed')
+        _require(writer.get('jobId') == job_id and writer.get('status') == 'succeeded' and (writer.get('stage') == 'draft'
+                 or writer.get('stage', '').endswith(':draft')), 'literal_original_writer_required')
+        original_writer = _cached(writer)
+        article = copy.deepcopy(source['bundle']['article'])
+        article['content'] = candidate['candidate']['content']
+        upper_binding = None
+        if correction.get('mode') == 'upper_editor_candidate':
+            upper_binding = {'writingBriefSha256': fingerprint(proposed['approvedWritingBrief']),
+                             'freshResearchSha256': fresh_sha, 'sourceProofSha256': proof_sha}
+            result['upperEditorBinding'] = upper_binding
+        corrected = _literal_candidate(correction, job, article, original_writer['brief'], candidate_sha,
+                                       upper_binding=upper_binding)
+        result['paths']['correction'] = str(correction_path)
+        result['sha256']['correction'] = correction_sha
+        result['literalCorrection'] = {'articleSha256': fingerprint(corrected)}
+        result['writerProvenance'] = {'stageKey': writer['stageKey'], 'recordSha256': fingerprint(writer),
+                                      'briefSha256': fingerprint(original_writer['brief'])}
     return result
 
 
@@ -358,14 +464,22 @@ class _PairRuntime(Runtime):
         _require(job['id'] == self._job_id and stage in order
                  and self._executed_stages == set(order[:order.index(stage)])
                  and not kwargs, 'owner_pair_stage_forbidden')
+        if stage == 'draft' and self._manifest.get('literalCorrection'):
+            return self._literal_draft(job, inputs)
         if stage == 'final_review':
             _require(all(inputs['dependencies']['qualityFlags'].values())
                      and inputs['dependencies']['structural'].get('passed') is True,
                      'independent_quality_gates_failed')
         if stage == 'final_review' and self._manifest.get('phase') == 'completion':
-            _require(fingerprint(_normalized(inputs['bundle']['article']['content']))
-                     not in self._manifest['historicalCandidateBodyHashes'],
-                     'completion_same_body_grader_reroll_forbidden')
+            article = inputs['bundle']['article']
+            if self._manifest.get('literalCorrection'):
+                _require(fingerprint(_normalized({'content': article['content'], 'faqs': article['faqs']}))
+                         not in self._manifest['historicalCandidateArticleHashes'],
+                         'completion_same_body_grader_reroll_forbidden')
+            else:
+                _require(fingerprint(_normalized(article['content']))
+                         not in self._manifest['historicalCandidateBodyHashes'],
+                         'completion_same_body_grader_reroll_forbidden')
         self._executed_stages.add(stage)
         reference, _, _ = _profile(self._manifest.get('phase', 'original'))
         namespace = 'owner_oneoff:' + reference + ':'
@@ -400,6 +514,55 @@ class _PairRuntime(Runtime):
                 usage = self._usage_slice(start, article_id=self._job_id, stage=namespace,
                     reason='initial', requested_model=requested_model)
                 self.stage_journal.record_usage(self._job_id, namespace, key, _usage_copy(usage))
+
+    def _literal_draft(self, job, inputs):
+        manifest = self._manifest
+        provenance = manifest['writerProvenance']
+        with self.ledger._tx() as db:
+            writer = json.loads(db.execute('SELECT value FROM meta WHERE key=?',
+                                (provenance['stageKey'],)).fetchone()[0])
+        _require(fingerprint(writer) == provenance['recordSha256'], 'literal_writer_provenance_changed')
+        pins = manifest['historicalArtifacts']
+        artifact = self.root / 'research' / 'artifacts' / self._job_id / pins['directory']
+        source, source_sha = _read(artifact / 'source.json')
+        candidate, candidate_sha = _read(artifact / 'candidate.json')
+        correction, correction_sha = _read(manifest['paths']['correction'])
+        _require(source_sha == pins['source'] and candidate_sha == pins['candidate']
+                 and correction_sha == manifest['sha256']['correction'], 'literal_pinned_files_changed')
+        original = _cached(writer)
+        article = copy.deepcopy(source['bundle']['article'])
+        article['content'] = candidate['candidate']['content']
+        corrected = _literal_candidate(correction, job, article, original['brief'], candidate_sha,
+                                       upper_binding=manifest.get('upperEditorBinding'))
+        _require(fingerprint(corrected) == manifest['literalCorrection']['articleSha256'], 'literal_result_changed')
+        gathered, _ = _read(self.root / 'research' / (self._job_id + '.json'))
+        live = self._source_dependencies(gathered)
+        expected = inputs['dependencies']['source']
+        _require(all(live.get(k) == expected.get(k) for k in
+                     ('products', 'catalog', 'references', 'images', 'checks', 'evidence')),
+                 'literal_fresh_source_binding_changed')
+        # Validate without a model invocation. Runtime attaches fresh verified
+        # records normally, so stale source evidence never becomes new evidence.
+        result = {'article': {k: copy.deepcopy(corrected[k]) for k in original['article']},
+                  'brief': copy.deepcopy(original['brief'])}
+        def operation():
+            validated = self.models._validate_draft(result, job['theme'], gathered)
+            _require(validated['article']['content'] == corrected['content']
+                     and validated['article']['faqs'] == corrected['faqs']
+                     and validated['brief'] == original['brief'], 'literal_validation_must_not_rewrite')
+            _require(all(validated['article'].get(k) == job['theme'][k]
+                         for k in ('productIds', 'slug', 'categoryId')), 'literal_identity_changed')
+            return validated
+        namespace = 'owner_oneoff:' + COMPLETION_AUTHORIZATION + ':' + manifest['planSha256'] + ':literal_correction'
+        bound = {'writerProvenance': provenance, 'correctionSha256': correction_sha,
+                 'sourceArtifactSha256': source_sha, 'candidateArtifactSha256': candidate_sha,
+                 'correctedArticleSha256': fingerprint(corrected), 'freshInputs': inputs,
+                 'ownerGrantManifestSha256': fingerprint(manifest),
+                 'dependencies': inputs['dependencies'],
+                 'schemaVersion': {'stage': 1, 'input': 'pinned-literal-plan', 'output': 'corrected-writer-candidate'}}
+        self._executed_stages.add('draft')
+        return self.stage_journal.run(self._job_id, namespace, bound, operation, max_attempts=1)
+
 
     def _stage_only(self, action, job):
         self._require_running()
@@ -455,7 +618,7 @@ def execute(runtime, manifest, *, owner_grant):
                      'owner_pair_already_claimed_requires_reconciliation')
         p = manifest['paths']
         current = prepare(p['config'], job_id, manifest['oldFailedKey'], p['proposed'], p['proof'],
-                          p['snapshot'], p['freshResearch'], phase=phase)
+                          p['snapshot'], p['freshResearch'], phase=phase, correction_path=p.get('correction'))
         _require(current == manifest and not current['blockers'], 'pinned_manifest_changed_or_blocked')
         _require(runtime.model_budget.config == budget_config(config.get('modelBudget'))
                  and isinstance(runtime.models, Models) and runtime.models.budget is runtime.model_budget,
@@ -482,6 +645,10 @@ def execute(runtime, manifest, *, owner_grant):
             historical, _ = _read(runtime.root / 'research' / (job_id + '.json'))
             atomic(archive / 'original-research.json', historical)
             atomic(archive / 'manifest.json', manifest)
+            if p.get('correction'):
+                correction, digest = _read(p['correction'])
+                _require(digest == manifest['sha256']['correction'], 'literal_pinned_files_changed')
+                atomic(archive / 'correction-input.json', {'inputSha256': digest, 'plan': correction})
             artifact_pins = manifest['historicalArtifacts'] if phase == 'completion' else phase_jobs[job_id]
             artifact = runtime.root / 'research' / 'artifacts' / job_id / artifact_pins['directory']
             candidate, _ = _read(artifact / 'candidate.json')
