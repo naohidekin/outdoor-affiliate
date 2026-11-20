@@ -14,7 +14,10 @@ from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 from model_inputs import project_model_input
+from writing_prompts import get_draft_specificity_prompt, get_polish_style_prompt
 from wise_contract import load_policy, valid_scores, passes
+from review_scoring import (CRITERIA_FIELDS, article_applicability, calculate as calculate_article_review,
+                            verdict as article_verdict)
 from quality import purchase_anchor_issues, montbell_wear_claim_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
@@ -72,8 +75,6 @@ SOCIAL_SCHEMA = {
     "type": "object", "additionalProperties": False, "required": ["text", "replyText"],
     "properties": {"text": {"type": "string"}, "replyText": {"type": "string"}}
 }
-CRITERIA_FIELDS = ("wise_w", "wise_i", "wise_s", "wise_e", "wise_ai", "wise_sense",
-                   "affiliate_links", "comparison_table", "internal_links", "faq", "word_count")
 REVIEW_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "required": ["passed", "score", *CATEGORIES, "evidence", "issues", "observations", "criteria", "wiseScores"],
@@ -96,6 +97,25 @@ REVIEW_SCHEMA = {
 SOCIAL_REVIEW_SCHEMA = copy.deepcopy(REVIEW_SCHEMA)
 SOCIAL_REVIEW_SCHEMA['required'].remove('criteria')
 SOCIAL_REVIEW_SCHEMA['properties'].pop('criteria')
+
+# Article-only wire contract: the provider evaluates applicable fields, never
+# computes an aggregate or decides program admission. SNS retains its old schema.
+ARTICLE_REVIEW_SCHEMA = copy.deepcopy(REVIEW_SCHEMA)
+for _field in ('passed', 'score'):
+    ARTICLE_REVIEW_SCHEMA['required'].remove(_field)
+    ARTICLE_REVIEW_SCHEMA['properties'].pop(_field)
+
+
+def article_review_schema(bundle):
+    applicability = article_applicability(bundle)
+    schema = copy.deepcopy(ARTICLE_REVIEW_SCHEMA)
+    active = [key for key in CRITERIA_FIELDS
+              if applicability[key]['applicability'] == 'applicable']
+    schema['properties']['criteria']['required'] = active
+    schema['properties']['criteria']['properties'] = {
+        key: {'type': 'number'} for key in active}
+    return schema
+
 
 SECRET = re.compile(
     r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,}|"
@@ -536,6 +556,7 @@ class Models:
             "exact numbers, links, immutable claims, disclosure, style, length, CTA and output format. "
             "Cite only supplied references and use supplied product URLs. "
             "Do not claim images, affiliate destinations or rendering are live-verified.")
+        instruction += '\n' + get_draft_specificity_prompt()
         theme, context = copy.deepcopy((theme, context))
         result, record = self._call(instruction,
             {"theme": theme, "context": context},
@@ -714,7 +735,8 @@ class Models:
             "Do not introduce ANY exact literal from brief.protected or brief.requiredExpressions into an eligible "
             "paragraph, even if natural. These forbiddenExpressions must remain ONLY in their original locked paragraphs. "
             "Do not move, copy or repeat them in edits. "
-            "Use edits:[] if no correction is needed. Do not grade or approve publication.",
+            "Use edits:[] if no correction is needed. Do not grade or approve publication.\n"
+            + get_polish_style_prompt(),
             {"source": source, "brief": brief, "forbiddenExpressions": list(dict.fromkeys(fixed)),
              "editable": [{"index": i, "text": paragraphs[i]} for i in eligible]},
             "gemini-3.8-flash", gemini=True)
@@ -739,6 +761,12 @@ class Models:
         return {"content": candidate, "model": usage["model"], "usage": usage}
 
     def review(self, bundle, checks):
+        article_review = (isinstance(checks, dict) and bool(checks.get('editorialRules'))
+                          and checks.get('reviewKind') != 'social')
+        try:
+            article_schema = article_review_schema(bundle) if article_review else None
+        except (ValueError, TypeError, KeyError):
+            raise ModelError('Valid article applicability required') from None
         if isinstance(checks, dict) and 'articleMeasurements' in checks:
             article = bundle.get('article') if isinstance(bundle, dict) else None
             brief = bundle.get('brief') if isinstance(bundle, dict) else None
@@ -761,7 +789,7 @@ class Models:
             policy = load_policy()
             if checks['wisePolicy'] != policy:
                 raise ModelError('Owner WISE policy mismatch')
-        result, usage = self._call(
+        review_prompt = (
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
             "When supplied, checks.articleMeasurements is the source of truth for body character count and format bounds; do not infer counts or manufacture scores from it. "
             "When bundle.inheritedPresentationContext exists, its clinicalReverified=false means unchanged template "
@@ -822,43 +850,57 @@ class Models:
             "Missing or contradictory independent evidence must still fail; never replace it with model opinion. "
             "For social proposals every claim must be supported by checks.factualSource; numeric/URL checks alone "
             "do not establish factual truth. Reject new claims, changed advertising disclosures or unsupported benefits. "
-            "Model assertions are opinions and cannot substitute for external evidence.",
+            "Model assertions are opinions and cannot substitute for external evidence.")
+        if article_review:
+            review_prompt = review_prompt.replace(
+                "Return {passed:boolean,score:number,facts:boolean,images:boolean,affiliate:boolean,medical:boolean,"
+                "render:boolean,evidence:object,issues:list,observations?:list}. Score 0-10; pass threshold 7.5. ",
+                "Return ONLY the supplied article schema. Never return score or passed. "
+                "Evaluate flags, issues, observations, wiseScores and applicable criteria independently. ")
+            review_prompt = review_prompt.replace("Mark facts false and passed false, with specific issues, whenever ",
+                                                  "Mark facts false with specific issues whenever ")
+            start = review_prompt.index("If checks.editorialRules is supplied for an article,")
+            end = review_prompt.index("When bundle.proposal is present,", start)
+            review_prompt = (review_prompt[:start] +
+                "For articles return criteria with exactly the applicable 0-10 fields required by the schema. "
+                "The program alone determines applicability, aggregate and admission. Omitted criteria are typed "
+                "not_applicable and unmeasured; never assign them 0, 5, 7.5 or 10, and do not compensate by changing "
+                "other scores. The program supplies neutral 7.5 only in its eleven-item aggregate. "
+                "wiseScores remain six independent 1-4 evaluations; never convert them to or from the six 0-10 criteria. "
+                "Include observations as a list and evidence as exactly {summary:string}. " + review_prompt[end:])
+        result, usage = self._call(
+            review_prompt,
             {"bundle": bundle, "checks": checks}, self.env.get("ARTICLE_REVIEW_MODEL") or "claude-sonnet-4-6",
             schema=(SOCIAL_REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('wisePolicy') and checks.get('reviewKind') == 'social'
-                    else REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None))
+                    else article_schema if article_review else
+                    REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None))
+        if article_review:
+            try:
+                if (set(result) != set(article_schema['required'])
+                        or not isinstance(result.get('evidence'), dict)
+                        or set(result['evidence']) != {'summary'}
+                        or not isinstance(result['evidence']['summary'], str)
+                        or not isinstance(result.get('observations'), list)
+                        or any(not isinstance(item, str) for item in result['observations'])):
+                    raise ValueError('Article wire contract mismatch')
+                if not valid_scores(result.get('wiseScores')):
+                    raise ModelError('Complete owner WISE-AS six scores required')
+                result.update(calculate_article_review(result.get('criteria'), bundle))
+                result['passed'] = article_verdict(result, result['calculation'])
+            except (ValueError, TypeError, KeyError):
+                raise ModelError('Invalid article review contract or applicable scores') from None
         _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
         if type(result["passed"]) is not bool or any(type(result[k]) is not bool for k in CATEGORIES) or (
                 type(result["score"]) not in (int, float) or not math.isfinite(result["score"]) or
                 not 0 <= result["score"] <= 10 or not isinstance(result["issues"], list) or
                 not isinstance(result["evidence"], dict)):
             raise ModelError("Invalid review result")
-        raw_verdict = {'passed': result['passed'], 'score': result['score']}
-        actual_mean = None
-        contract_issues = []
         supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
-        if isinstance(checks, dict) and checks.get('editorialRules') and checks.get('reviewKind') != 'social':
-            fields = CRITERIA_FIELDS
-            criteria = result.get('criteria', {})
-            if (set(result['evidence']) != {'summary'} or not isinstance(result['evidence']['summary'], str)
-                    or not isinstance(result.get('observations'), list)
-                    or any(not isinstance(v, str) for v in result['observations'])
-                    or not isinstance(result['issues'], list) or any(not isinstance(v, str) for v in result['issues'])
-                    or not isinstance(criteria, dict) or set(criteria) != set(fields)
-                    or any(type(criteria.get(k)) not in (int, float) or
-                    not math.isfinite(criteria[k]) or not 0 <= criteria[k] <= 10 for k in fields)):
-                raise ModelError('Complete WISE Supervisor scores required')
-            actual_mean = sum(criteria[k] for k in fields) / len(fields)
-            if result['score'] > actual_mean:
-                contract_issues.append('overall_score_exceeds_criteria_mean')
-            if result['passed'] and actual_mean < 7.5:
-                contract_issues.append('model_pass_below_criteria_threshold')
-            if result['passed'] and result['score'] < 7.5:
-                contract_issues.append('model_pass_below_score_threshold')
-            result['score'] = min(result['score'], actual_mean)
-        if policy is not None:
+        if policy is not None or article_review:
             if not valid_scores(result.get('wiseScores')):
                 raise ModelError('Complete owner WISE-AS six scores required')
-            result['wisePolicy'] = policy['id']
+            if policy is not None:
+                result['wisePolicy'] = policy['id']
             if not passes(result['wiseScores']):
                 result['issues'].append('Owner WISE-AS floor failed')
         supplied = supplied if isinstance(supplied, dict) else {}
@@ -877,21 +919,19 @@ class Models:
         offline_failed = not isinstance(checks, dict) or checks.get("passed") is False or bool(checks.get("failures"))
         if offline_failed:
             result["issues"].append("Independent offline checks failed")
-        result["passed"] = (result["passed"] and result["score"] >= 7.5 and not result["issues"]
-                            and all(result[k] is True for k in CATEGORIES) and not missing)
-        result["model"] = usage["model"]
-        if actual_mean is not None:
-            # Keep the provider artifact untouched. These local arithmetic facts
-            # explain a rejection without rerolling or raising any grade.
+        if article_review:
+            result['passed'] = article_verdict(result, result['calculation'])
             self.review_diagnostics.append({
-                'responseId': usage['responseId'],
-                'articleId': (bundle.get('article') or {}).get('id'),
-                'criteria': copy.deepcopy(result['criteria']),
-                'rawPassed': raw_verdict['passed'], 'rawScore': raw_verdict['score'],
-                'actualMean': actual_mean, 'normalizedPassed': result['passed'],
-                'normalizedScore': result['score'], 'contractIssues': contract_issues,
-                'issues': copy.deepcopy(result['issues']),
-                'observations': copy.deepcopy(result.get('observations', []))})
+                'responseId': usage['responseId'], 'articleId': (bundle.get('article') or {}).get('id'),
+                'scoringVersion': result['scoringVersion'], 'criteria': copy.deepcopy(result['criteria']),
+                'applicability': copy.deepcopy(result['applicability']),
+                'calculation': copy.deepcopy(result['calculation']),
+                'normalizedScore': result['score'], 'normalizedPassed': result['passed'],
+                'issues': copy.deepcopy(result['issues'])})
+        else:
+            result["passed"] = (result["passed"] and result["score"] >= 7.5 and not result["issues"]
+                                and all(result[k] is True for k in CATEGORIES) and not missing)
+        result["model"] = usage["model"]
         result["evidence"] = {"model": result["evidence"], "checks": copy.deepcopy(checks)}
         return result
 

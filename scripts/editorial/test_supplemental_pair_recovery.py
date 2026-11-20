@@ -150,7 +150,8 @@ class PairRecoveryTests(unittest.TestCase):
             productIds=[product['id']], title='Plasma source guide',
             content=data['article']['content'].replace('tent-a', product['id']))
         data['brief']['protected'] = ['{{product:' + product['id'] + '}}']
-        upper = dict(REVIEW, wiseScores=dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
+        upper = dict({key: value for key, value in REVIEW.items() if key not in ('score', 'passed')},
+                     wiseScores=dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
                      criteria=dict.fromkeys(CRITERIA_FIELDS, review_mean), observations=[], evidence={'summary': 'Checked'})
         answers = [writer_response(data), response({'edits': []}, gemini=True), response(upper)]
         for i, value in enumerate(answers):

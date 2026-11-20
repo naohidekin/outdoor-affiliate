@@ -204,7 +204,7 @@ class DeterministicRuntimeTests(unittest.TestCase):
         import hashlib
         from pathlib import Path
         expected_hashes = {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-                           for name in ('models.py', 'quality.py')}
+                           for name in ('models.py', 'quality.py', 'review_scoring.py', 'writing_prompts.py')}
         self.assertEqual(expected_hashes, draft_inputs['dependencies']['routes']['implementationHashes'])
         successor = next(r for r in records if r.get('predecessorKey') == old)
         dependencies = json.dumps(draft_inputs['dependencies'], sort_keys=True, ensure_ascii=False,

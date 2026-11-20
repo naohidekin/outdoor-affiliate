@@ -18,7 +18,8 @@ from urllib.parse import urlsplit
 
 from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
                     valid_social_images, valid_image_refresh, REFRESH_NOTICE)
-from models import Models, ARTICLE_LENGTHS
+from models import Models, ARTICLE_LENGTHS, article_review_schema
+from review_scoring import VERSION as ARTICLE_SCORING_VERSION, article_applicability
 from wise_contract import load_policy, require_current_review
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
@@ -918,6 +919,10 @@ class Runtime:
                           for k in ('title', 'slug', 'categoryId', 'productIds')}
                          if revision else None)
         nonproduct = bundle.get('article', {}).get('productIds') == []
+        bundle['articleReviewScoring'] = {'version': ARTICLE_SCORING_VERSION}
+        scoring_contract = {'version': ARTICLE_SCORING_VERSION,
+                            'applicability': article_applicability(bundle),
+                            'wireSchema': article_review_schema(bundle)}
         if self.config.get('socialCardsEnabled') is True and not nonproduct:
             if self.social_cards is None:
                 from social_cards import SocialCards
@@ -973,6 +978,7 @@ class Runtime:
                          'preview': preview, 'polishPreservation': preservation,
                          'editorialRules': context['editorialRules'],
                          'wisePolicy': context['wisePolicy'],
+                         'articleScoringContract': scoring_contract,
                          'medical': medical,
                          'sourceContent': source['article']['content'],
                          **({'existingArticle': public_source,
@@ -987,7 +993,8 @@ class Runtime:
                              'structural': checks,
                              'renderer': self._review_dependencies(preview),
                              'editorialRules': context['editorialRules']},
-            'schemaVersion': {'stage': 1, 'input': 'bundle+live-checks', 'output': 'final-review'},
+            'articleScoringContract': scoring_contract,
+            'schemaVersion': {'stage': 2, 'input': 'bundle+live-checks+scoring-contract', 'output': 'final-review'},
         }
         def review_operation():
             candidate = self.models.review(review_bundle, review_checks)
@@ -1243,7 +1250,7 @@ class Runtime:
         }
         routes['implementationHashes'] = {
             name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-            for name in ('models.py', 'quality.py')
+            for name in ('models.py', 'quality.py', 'review_scoring.py', 'writing_prompts.py')
         }
         return routes
 

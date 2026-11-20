@@ -26,6 +26,38 @@ class DispatcherTests(unittest.TestCase):
     def plan(self):
         return DeterministicDispatcher(self.runtime).plan(NOW)
 
+    def test_new_article_wire_review_delivers_but_waits_for_owner_before_publish(self):
+        from ledger import fingerprint
+        from manager import _review_ok
+        from models import Models
+        from review_scoring import VERSION
+        from test_models import ENV, FLAGS, Fake, article_review_value, bundle, response
+        from wise_contract import load_policy
+        policy = load_policy()
+        value = bundle()
+        value['wisePolicy'] = policy['id']
+        value['articleReviewScoring'] = {'version': VERSION}
+        job = self.runtime.ledger.create_candidate(
+            {'slug': value['article']['slug'], 'title': value['article']['title']}, now=NOW)
+        job = self.runtime.ledger.save_bundle(job['id'], value)
+        transport = Fake(response(article_review_value(value)))
+        review = Models(ENV, transport).review(value,
+            {'editorialRules': policy['text'], 'wisePolicy': policy, 'evidence': FLAGS})
+        review.update(fingerprint=fingerprint(value), evidence=dict(FLAGS),
+                      polish={'model': 'gemini-3.8-flash', 'validated': True})
+        job = self.runtime.ledger.record_review(job['id'], job['revision'], review)
+        self.assertTrue(_review_ok(job))
+        self.assertEqual([{'kind': 'deliver', 'jobId': job['id'], 'deliveryKind': 'article'}],
+                         self.plan()['actions'])
+        self.runtime.deliver(job['id'])
+        self.assertNotIn('publish', {action['kind'] for action in self.plan()['actions']})
+        self.assertIsNone(self.runtime.ledger.get_job(job['id'])['approval'])
+        self.assertEqual([], self.writes)
+        test_runtime.RuntimeTests.approve(self, job)
+        self.runtime.consume()
+        self.assertEqual([{'kind': 'publish', 'jobId': job['id']}], self.plan()['actions'])
+        self.assertEqual(1, len(transport.calls))
+
     def test_policy_is_opt_in_strict_and_defaults_exception_ai_off(self):
         self.assertIsNone(execution_policy({}))
         self.assertEqual(False, execution_policy({

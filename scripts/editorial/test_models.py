@@ -9,7 +9,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
-                    CRITERIA_FIELDS, SOCIAL_SCHEMA, SOCIAL_REVIEW_SCHEMA)
+                    CRITERIA_FIELDS, SOCIAL_SCHEMA, SOCIAL_REVIEW_SCHEMA, article_review_schema)
 from wise_contract import load_policy
 from model_inputs import restore_model_input
 from nonproduct_contract_fixture import fixture as nonproduct_fixture
@@ -37,6 +37,17 @@ def bundle():
                 products=[{"id": "tent-a", "specs": {"weight": "2kg"}, "imageUrl": "https://images.example/a.jpg"}],
                 brief=brief(), references=[{"url": "https://maker.example/tent"}],
                 images=[{"productId": "tent-a", "url": "https://images.example/a.jpg"}])
+
+
+def article_review_value(candidate=None, value=8, **changes):
+    candidate = candidate if candidate is not None else bundle()
+    active = article_review_schema(candidate)['properties']['criteria']['required']
+    result = dict(facts=True, images=True, affiliate=True, medical=True, render=True,
+                  evidence={'summary': 'Synthetic independent review'}, issues=[], observations=[],
+                  criteria=dict.fromkeys(active, value),
+                  wiseScores=dict(w=2, i=2, s=2, e=2, ai=3, sense=2))
+    result.update(changes)
+    return result
 
 
 def context():
@@ -600,12 +611,14 @@ class ModelTests(unittest.TestCase):
     def test_claude_review_wire_omits_unsupported_bounds_but_local_wise_gate_remains_strict(self):
         policy = load_policy()
         scores = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)
-        for kind, schema in (('article', REVIEW_SCHEMA), ('social', SOCIAL_REVIEW_SCHEMA)):
+        for kind, schema in (('article', article_review_schema(bundle())), ('social', SOCIAL_REVIEW_SCHEMA)):
             checks = dict(wisePolicy=policy, reviewKind=kind, evidence=FLAGS)
             if kind == 'article':
                 checks['editorialRules'] = policy['text']
             value = dict(REVIEW, wiseScores=scores, criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
                          observations=[], evidence={'summary': 'Synthetic reviewed claims'})
+            if kind == 'article':
+                value = article_review_value(wiseScores=scores)
             fake = Fake(response(value))
             self.assertTrue(Models(ENV, fake).review(bundle(), checks)['passed'])
             wire = fake.calls[0][2]['output_config']['format']['schema']
@@ -642,86 +655,129 @@ class ModelTests(unittest.TestCase):
         self.assertEqual([('hold-1', None, 'failed')], budget.settlements)
         self.assertEqual([], model.usage)
 
-    def test_editorial_rubric_requires_all_scores_and_caps_overall_mean(self):
+    def test_article_review_requires_applicable_scores_and_program_aggregate(self):
         checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
-        with self.assertRaises(ModelError):
-            Models(ENV, Fake(response(REVIEW))).review(bundle(), checks)
-        result = copy.deepcopy(REVIEW)
-        result['criteria'] = dict.fromkeys(('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
-            'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count'), 7)
-        result['evidence'] = {'summary': 'Reviewed all claims'}
-        result['observations'] = []
-        reviewed = Models(ENV, Fake(response(result))).review(bundle(), checks)
-        self.assertFalse(reviewed['passed'])
-        self.assertEqual(7, reviewed['score'])
+        raw = article_review_value(value=7)
+        result = Models(ENV, Fake(response(raw))).review(bundle(), checks)
+        self.assertFalse(result['passed'])
+        self.assertEqual(7, result['score'])
+        for invalid in (REVIEW, dict(raw, criteria={}), dict(raw, criteria=dict(raw['criteria'], unknown_criterion=10))):
+            with self.assertRaises(ModelError):
+                Models(ENV, Fake(response(invalid))).review(bundle(), checks)
 
-    def test_failed_review_keeps_arithmetic_diagnostic_without_grade_reroll(self):
-        checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
-        raw = dict(REVIEW, passed=True, score=7.6,
-                   criteria=dict.fromkeys(CRITERIA_FIELDS, 7),
-                   evidence={'summary': 'Claims reviewed'}, observations=[])
+    def test_failed_article_review_diagnostic_and_provider_artifact_stay_separate(self):
+        raw = article_review_value(value=7)
         provider_artifacts = []
         fake = Fake(response(raw))
         model = Models(ENV, fake, artifact_sink=provider_artifacts.append)
-        result = model.review(bundle(), checks)
+        result = model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})
         diagnostic, = model.review_diagnostics
         self.assertFalse(result['passed'])
-        self.assertEqual(7, diagnostic['actualMean'])
-        self.assertEqual(7.6, diagnostic['rawScore'])
-        self.assertTrue(diagnostic['rawPassed'])
-        self.assertFalse(diagnostic['normalizedPassed'])
-        self.assertEqual(['overall_score_exceeds_criteria_mean',
-                          'model_pass_below_criteria_threshold'], diagnostic['contractIssues'])
+        self.assertFalse(diagnostic['calculation']['thresholdMet'])
+        self.assertNotIn('rawPassed', diagnostic)
+        self.assertNotIn('score', raw)
         self.assertEqual(1, len(fake.calls))
         self.assertEqual(1, len(provider_artifacts))
+        self.assertEqual(raw, json.loads(provider_artifacts[0]['content']))
 
-    def test_review_reports_provider_pass_with_failing_overall_score(self):
-        raw = dict(REVIEW, passed=True, score=7.4,
-                   criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
-                   evidence={'summary': 'Claims reviewed'}, observations=[])
-        model = Models(ENV, Fake(response(raw)))
-        self.assertFalse(model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})['passed'])
-        self.assertEqual(['model_pass_below_score_threshold'],
-                         model.review_diagnostics[0]['contractIssues'])
+    def test_article_raw_aggregate_or_pass_is_contract_violation_without_retry(self):
+        raw = article_review_value()
+        for field, value in (('score', 7.4), ('passed', True), ('scoringVersion', 'forged')):
+            fake, budget = Fake(response(dict(raw, **{field: value}))), Budget()
+            model = Models(ENV, fake, budget=budget)
+            with self.assertRaises(ModelError):
+                model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})
+            self.assertEqual(1, len(fake.calls))
+            self.assertEqual(1, len(budget.holds))
+            self.assertEqual('success', budget.settlements[0][2])
 
-    def test_review_uses_unrounded_criteria_mean_and_keeps_model_issues(self):
+    def test_article_review_exact_mean_schema_and_issues(self):
         checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
-        fields = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
-                  'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
+        candidate = bundle(); candidate['brief']['format'] = 'comparison'
+        fields = CRITERIA_FIELDS
         low = dict(zip(fields, [8] * 5 + [7] * 6))
-        fake = Fake(response(dict(REVIEW, score=7.8, criteria=low, evidence={'summary': 'Reviewed claims'},
-                                  observations=['No medical claim'])))
-        result = Models(ENV, fake).review(bundle(), checks)
+        fake = Fake(response(article_review_value(candidate, criteria=low, observations=['No medical claim'])))
+        result = Models(ENV, fake).review(candidate, checks)
         self.assertEqual(result['score'], 82 / 11)
         self.assertFalse(result['passed'])
         prompt = fake.calls[0][2]['messages'][0]['content']
         for phrase in ('issues must contain ONLY required corrections or blockers', 'observations',
-                       'pending future human approval', 'unrounded mean', 'never round 7.4545 up',
-                       'Do not impose an automatic score ceiling', 'concrete problem-awareness',
-                       'does not require a high score'):
+                       'Never return score or passed', 'six independent 1-4',
+                       'Do not impose an automatic score ceiling', 'concrete problem-awareness'):
             self.assertIn(phrase, prompt)
+        schema = article_review_schema(candidate)
         wire = fake.calls[0][2]['output_config']['format']
-        self.assertEqual(wire, {'type': 'json_schema', 'schema': REVIEW_SCHEMA})
-        self.assertEqual(set(REVIEW_SCHEMA['required']), set(REVIEW_SCHEMA['properties']))
-        self.assertEqual(set(REVIEW_SCHEMA['properties']['criteria']['required']), set(CRITERIA_FIELDS))
-        for object_schema in (REVIEW_SCHEMA, REVIEW_SCHEMA['properties']['criteria'],
-                              REVIEW_SCHEMA['properties']['evidence']):
+        self.assertEqual(wire, {'type': 'json_schema', 'schema': schema})
+        self.assertNotIn('score', schema['properties']); self.assertNotIn('passed', schema['properties'])
+        self.assertEqual(set(schema['properties']['criteria']['required']), set(fields))
+        for object_schema in (schema, schema['properties']['criteria'], schema['properties']['evidence']):
             self.assertIs(object_schema['additionalProperties'], False)
-        self.assertEqual(REVIEW_SCHEMA['properties']['evidence']['required'], ['summary'])
-        flat = dict(REVIEW, score=7.8, evidence={'summary': 'Reviewed claims'}, observations=[], **low)
-        with self.assertRaisesRegex(ModelError, 'Complete WISE Supervisor scores required'):
-            Models(ENV, Fake(response(flat))).review(bundle(), checks)
-        high = dict(zip(fields, [8] * 6 + [7] * 5))
-        passing = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
-                                                  evidence={'summary': 'Reviewed claims'},
-                                                  observations=['No medical claim'])))).review(bundle(), checks)
-        self.assertTrue(passing['passed'])
-        self.assertEqual(passing['issues'], [])
-        blocked = Models(ENV, Fake(response(dict(REVIEW, score=7.8, criteria=high,
-                                                 evidence={'summary': 'Reviewed claims'}, observations=[],
-                                                 issues=['Unsupported claim'])))).review(bundle(), checks)
-        self.assertFalse(blocked['passed'])
-        self.assertEqual(blocked['issues'], ['Unsupported claim'])
+        for issues, expected in (([], True), (['Unsupported claim'], False)):
+            raw = article_review_value(candidate, issues=issues)
+            reviewed = Models(ENV, Fake(response(raw))).review(candidate, checks)
+            self.assertEqual(expected, reviewed['passed'])
+            self.assertEqual(issues, reviewed['issues'])
+
+    def test_article_required_flags_offline_checks_and_both_scales_remain_independent(self):
+        checks = dict(editorialRules='rubric', evidence=FLAGS)
+        for flag in FLAGS:
+            result = Models(ENV, Fake(response(article_review_value(**{flag: False})))).review(bundle(), checks)
+            self.assertFalse(result['passed'])
+            weakened = dict(checks, evidence=dict(FLAGS, **{flag: False}))
+            result = Models(ENV, Fake(response(article_review_value()))).review(bundle(), weakened)
+            self.assertFalse(result['passed'])
+        for offline in ({'passed': False}, {'failures': ['offline blocker']}):
+            result = Models(ENV, Fake(response(article_review_value()))).review(bundle(), dict(checks, **offline))
+            self.assertFalse(result['passed'])
+        # Strong Supervisor ratings cannot replace a failed owner six-axis floor.
+        raw = article_review_value(value=10, wiseScores=dict(w=4, i=4, s=4, e=4, ai=2, sense=4))
+        result = Models(ENV, Fake(response(raw))).review(bundle(), checks)
+        self.assertFalse(result['passed'])
+        self.assertEqual(raw['criteria'], result['criteria'])
+        # Full owner six-axis scores cannot replace a failed Supervisor mean.
+        raw = article_review_value(value=6, wiseScores=dict.fromkeys(raw['wiseScores'], 4))
+        self.assertFalse(Models(ENV, Fake(response(raw))).review(bundle(), checks)['passed'])
+
+    def test_unknown_article_format_is_held_before_provider_call(self):
+        subject = bundle(); subject['brief']['format'] = 'new-unapproved-format'
+        fake = Fake(response(article_review_value()))
+        with self.assertRaisesRegex(ModelError, 'Valid article applicability required'):
+            Models(ENV, fake).review(subject, dict(editorialRules='rubric', evidence=FLAGS))
+        self.assertEqual([], fake.calls)
+
+    def test_recorded_legacy_baselines_are_not_admitted_or_rescored_as_new_articles(self):
+        # Numeric-only samples from camp-scoring-baseline-20261121.json. Keep
+        # historic judgments untouched; reject this old wire shape, never convert it.
+        rows = [
+            (True, 7.5, [5,5,5,7,7,5,10,10,7,8,7]),
+            (True, 7, [5,5,5,7.5,7.5,5,10,10,7.5,8,8]),
+            (True, 7.5, [5,5,5,7,7,5,10,5,8,9,6]),
+            (False, 6.5, [5,5,5,5,5,5,10,10,8,8,8]),
+            (True, 7.6, [5,5,5,7.5,7.5,5,10,0,7.5,8,7.5]),
+        ]
+        checks = dict(editorialRules='rubric', evidence=FLAGS)
+        for passed, score, numbers in rows:
+            raw = article_review_value(passed=passed, score=score,
+                                       criteria=dict(zip(CRITERIA_FIELDS, numbers)))
+            before = copy.deepcopy(raw); fake = Fake(response(raw))
+            with self.assertRaises(ModelError): Models(ENV, fake).review(bundle(), checks)
+            self.assertEqual(before, raw)
+            self.assertEqual(1, len(fake.calls))
+
+    def test_article_nonproduct_wire_omits_na_and_rejects_fake_nonproduct_before_api(self):
+        subject = nonproduct_fixture()['bundle']; subject['brief'] = {'format': 'guide'}
+        raw = article_review_value(subject)
+        checks = dict(editorialRules='rubric', evidence=dict(FLAGS))
+        checks['evidence']['affiliate'] = nonproduct_fixture()['reviewAffiliateEvidence']
+        fake = Fake(response(raw))
+        result = Models(ENV, fake).review(subject, checks)
+        self.assertTrue(result['passed'])
+        self.assertNotIn('affiliate_links', raw['criteria'])
+        self.assertEqual(2, result['calculation']['naCount'])
+        subject['article']['content'] += '{{product:forged}}'
+        fake = Fake(response(raw))
+        with self.assertRaises(ModelError): Models(ENV, fake).review(subject, checks)
+        self.assertEqual([], fake.calls)
 
     def test_research_complete_evidence_headers_usage(self):
         ctx = context()

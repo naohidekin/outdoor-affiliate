@@ -166,7 +166,7 @@ class DeterministicDispatcher:
             stage = job['stage']
             if stage == 'review':
                 try:
-                    valid_review(job.get('review'), job.get('revision'))
+                    valid_review(job.get('review'), job.get('revision'), job.get('bundle'))
                     if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
                         valid_astra_review(job.get('astraReview'), job.get('revision'))
                 except ValueError:

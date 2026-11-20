@@ -181,7 +181,8 @@ def _code(value):
 def _review_ok(job, social=False):
     target = (job.get('social') or {}) if social else job
     try:
-        valid_review(target.get('review'), target.get('revision'))
+        valid_review(target.get('review'), target.get('revision'),
+                     target.get('proposal') if social else job.get('bundle'))
         if not social and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
             valid_astra_review(job.get('astraReview'), job.get('revision'))
         return True

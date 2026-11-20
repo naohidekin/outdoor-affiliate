@@ -33,9 +33,17 @@ class ModelsFake:
         return {'content': source + ('\n## 勝手な見出し' if self.fail_polish else ''), 'model': 'gemini-3.8-flash'}
 
     def review(self, b, checks):
-        return {'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [], 'evidence': checks,
+        result = {'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [], 'evidence': checks,
                 'wisePolicy': checks.get('wisePolicy', {}).get('id'),
                 'wiseScores': dict(w=3, i=3, s=3, e=3, ai=3, sense=3)}
+        if 'articleReviewScoring' in b:
+            from review_scoring import FLAGS, article_applicability, calculate, verdict
+            result.update({key: True for key in FLAGS})
+            result['criteria'] = {key: 8.5 for key, value in article_applicability(b).items()
+                                  if value['applicability'] == 'applicable'}
+            result.update(calculate(result['criteria'], b))
+            result['passed'] = verdict(result, result['calculation'])
+        return result
 
     def social(self, b, url):
         return {'text': '新記事です。', 'replyText': url, 'url': url, 'images': b['images'], 'platform': 'x'}
@@ -69,6 +77,25 @@ class SlackFake:
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_final_review_contract_is_bound_to_bundle_and_stage_input(self):
+        from ledger import valid_review
+        from review_scoring import VERSION
+        with patch.object(self.runtime, '_run_model_stage', wraps=self.runtime._run_model_stage) as stages:
+            self.runtime.produce(limit=1)
+        job = next(value for value in self.runtime.ledger.list_jobs() if value.get('bundle'))
+        self.assertEqual({'version': VERSION},
+                         job['bundle']['articleReviewScoring'])
+        inputs = next(call.args[2] for call in stages.call_args_list if call.args[1] == 'final_review')
+        self.assertEqual(2, inputs['schemaVersion']['stage'])
+        contract = inputs['articleScoringContract']
+        self.assertEqual(VERSION, contract['version'])
+        self.assertNotIn('passed', contract['wireSchema']['properties'])
+        self.assertNotIn('score', contract['wireSchema']['properties'])
+        stripped = copy.deepcopy(job['review'])
+        stripped.pop('scoringVersion')
+        with self.assertRaisesRegex(ValueError, 'bound article scoring version required'):
+            valid_review(stripped, job['revision'], job['bundle'])
+
     def test_final_reviewer_receives_measured_body_length_and_unchanged_format_bounds(self):
         from unittest.mock import patch
         from models import ARTICLE_LENGTHS

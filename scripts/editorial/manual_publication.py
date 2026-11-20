@@ -255,7 +255,7 @@ class ManualPublication(ManualReview):
                 or approval.get('revision') != target['revision']):
             raise ValueError('manual_publication_current_owner_approval_required')
         self._bound_authority(job, target)
-        valid_review(job.get('review'), target['revision'])
+        valid_review(job.get('review'), target['revision'], job.get('bundle'))
         valid_astra_review(job.get('astraReview'), target['revision'])
         if not self._runtime.ledger.claim_effect(job_id, 'publish'):
             raise ValueError('manual_publication_effect_requires_reconciliation')

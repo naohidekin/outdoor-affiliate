@@ -82,7 +82,7 @@ def verify(request, environ=None):
             require(job['revision'] == revision == fingerprint(job['bundle'])
                     and canonical(job['bundle']) == canonical(bundle), 'actual manifest mismatch')
             validate_bundle(job, bundle)
-            valid_review(job.get('review'), revision)
+            valid_review(job.get('review'), revision, job.get('bundle'))
             valid_astra_review(job.get('astraReview'), revision)
             approval = job['approval']
             require(isinstance(approval, dict) and approval.get('user_id') == owner

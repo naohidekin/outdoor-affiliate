@@ -9,7 +9,7 @@ import unittest
 
 from wise_contract import ROOT, load_policy, passes, require_current_review, valid_scores
 from models import Models, ModelError, SOCIAL_REVIEW_SCHEMA
-from test_models import ENV, FLAGS, REVIEW, Fake, response, bundle
+from test_models import ENV, FLAGS, REVIEW, Fake, response, bundle, article_review_value
 
 SCORES = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)
 
@@ -104,13 +104,12 @@ class WiseContractTests(unittest.TestCase):
         from models import CRITERIA_FIELDS
         policy = load_policy()
         checks = dict(wisePolicy=policy, editorialRules=policy['text'], evidence=FLAGS)
-        value = dict(REVIEW, wiseScores=SCORES, criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
-                     observations=[], evidence={'summary':'synthetic'})
+        value = article_review_value(wiseScores=SCORES)
         self.assertTrue(Models(ENV, Fake(response(value))).review(bundle(), checks)['passed'])
         self.assertFalse(Models(ENV, Fake(response(dict(value, wiseScores=dict(SCORES, sense=1))))).review(bundle(), checks)['passed'])
-        low = dict(zip(CRITERIA_FIELDS, [8] * 5 + [7] * 6))
+        low = dict.fromkeys(value['criteria'], 7)
         result = Models(ENV, Fake(response(dict(value, criteria=low)))).review(bundle(), checks)
-        self.assertFalse(result['passed']); self.assertEqual(82 / 11, result['score'])
+        self.assertFalse(result['passed']); self.assertEqual(7, result['score'])
         bad_policy = copy.deepcopy(policy); bad_policy['axes'][0] = 'Warm'
         fake = Fake(response(value))
         with self.assertRaises(ModelError):

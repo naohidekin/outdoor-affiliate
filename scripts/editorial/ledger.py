@@ -52,6 +52,15 @@ def require(condition, message):
 
 
 def valid_review(review, revision, bundle=None):
+    if isinstance(bundle, dict) and 'articleReviewScoring' in bundle:
+        from review_scoring import VERSION
+        require(bundle['articleReviewScoring'] == {'version': VERSION}
+                and isinstance(review, dict) and review.get('scoringVersion') == VERSION,
+                'bound article scoring version required')
+    if isinstance(review, dict) and any(key in review for key in
+                                        ('scoringVersion', 'calculation', 'applicability')):
+        from review_scoring import verify_review
+        verify_review(review, bundle)
     score = review.get('score') if isinstance(review, dict) else None
     require(isinstance(score, (int, float)) and not isinstance(score, bool)
             and math.isfinite(score) and score >= 7.5 and review.get('passed') is True, 'review failed')
