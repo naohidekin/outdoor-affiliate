@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 from dispatcher import DeterministicDispatcher, buffer_social_eligible, execution_policy
 from runtime import JST
@@ -212,6 +213,41 @@ class DispatcherTests(unittest.TestCase):
         self.runtime.deliver(reviewed['id'])
         self.assertEqual([{'kind':'produce_supplemental','jobId':None}],
                          DeterministicDispatcher(self.runtime).plan(due)['actions'])
+
+    def test_owner_waiting_keeps_one_regular_vacancy_actionable_through_tick(self):
+        test_runtime.RuntimeTests.configure_production_schedule(self)
+        due = datetime(2026, 11, 20, 9, tzinfo=JST)
+        from wise_contract import load_policy
+        policy = load_policy()
+        for index in range(2):
+            job = self.runtime.ledger.create_candidate({'slug': 'prior-wait-' + str(index)},
+                now='2026-11-13T09:00:00+09:00')
+            data = __import__('test_quality').bundle()
+            data['wisePolicy'] = policy['id']
+            job = self.runtime.ledger.save_bundle(job['id'], data)
+            self.runtime.ledger.record_review(job['id'], job['revision'], {
+                'passed': True, 'score': 8.5, 'model': 'upper', 'issues': [],
+                'wisePolicy': policy['id'], 'wiseScores': dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
+                'fingerprint': job['revision'],
+                'evidence': {key: True for key in ('facts','images','affiliate','medical','render')},
+                'polish': {'model': 'gemini-3.8-flash', 'validated': True}})
+            self.runtime.deliver(job['id'])
+        self.assertEqual([{'kind': 'produce', 'jobId': None}],
+                         DeterministicDispatcher(self.runtime).plan(due)['actions'])
+        self.config['publicationEnabled'] = False
+        self.assertEqual([], DeterministicDispatcher(self.runtime).plan(due)['actions'])
+        self.config['publicationEnabled'] = True
+        with patch('runtime.datetime') as clock, patch.object(self.runtime, 'produce',
+                return_value={'status': 'idle', 'articles': []}) as produce:
+            clock.now.return_value = due
+            self.runtime.tick()
+        produce.assert_called_once_with(limit=1)
+        held = self.runtime.ledger.create_candidate({'slug': 'uncertain-publication'},
+            now='2026-11-13T09:00:00+09:00')
+        with self.runtime.ledger._tx() as db:
+            held.update(stage='held', publication={'verified': False})
+            self.runtime.ledger._put(db, held, 'fixture')
+        self.assertEqual([], DeterministicDispatcher(self.runtime).plan(due)['actions'])
 
 
 if __name__ == '__main__':

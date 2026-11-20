@@ -87,6 +87,13 @@ production設定、launchd、Codex automationを有効化しない。
 報告は対象、観測結果、残る確認、必要な本人操作だけに絞る。
 実モデル・実測利用量・欠測・推定費用・実請求を区別し、キャッシュ利用を新規利用量に加算しない。
 
+審査済み記事のSlack送達だけが失敗した場合、本文生成・校正・審査を再実行しない。
+対象版と送信窓を固定して実GETと`slack-outbound`を照合し、旧verified receiptは上書きしない。
+再入防止はstateRoot配下の永続receiptとruntime.flockを使い、送達済み部分を再投稿せず、
+固定した未送信部分だけを配信する。写真の配信用ミラーは元画像とbytes・SHA・MIMEが一致するものだけを
+既存`delivery-image-aliases.json`へ登録できる。本文・画像・購入先の版を変えず、
+失効した承認要求は本人承認へ戻さず、新しい対象版確認カードとして配信する。
+
 ## Buffer経由のSNS
 
 [Buffer連携](../../docs/editorial-deterministic.md#buffer経由のsns) に従い、`buffer_x` の承認版と

@@ -282,8 +282,8 @@ class DeterministicDispatcher:
             base['actions'].append({'kind': 'produce_supplemental',
                                     'jobId': supplemental[0]['id']})
             return base
-        pending = [job for job in jobs if job.get('kind') != 'article_revision'
-                   and not job.get('publication') and job['stage'] != 'rejected']
+        from regular_backfill import pending as is_pending
+        pending = [job for job in jobs if is_pending(job)]
         # Owner waiting may fill the separately authorized batch, but cannot take
         # a slot from an incomplete regular production period.
         if article_waiting:
@@ -295,6 +295,10 @@ class DeterministicDispatcher:
                                    ('article_revision','supplemental_article')
                                    and job.get('week') == period for job in jobs)
                 regular_incomplete = period_count < 3
+            if (regular_incomplete and len(pending) < 3
+                    and self.runtime.config.get('publicationEnabled') is True):
+                base['actions'].append({'kind': 'produce', 'jobId': None})
+                return base
             if (not regular_incomplete and self.runtime.config.get('generationEnabled') is True
                     and len(pending) < 3 and self.runtime.supplemental_due(now)):
                 base['actions'].append({'kind':'produce_supplemental','jobId':None})
