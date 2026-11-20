@@ -394,6 +394,7 @@ class Runtime:
         context = self._context()
         if new_research:
             research_attempt = self.root / 'production-attempts' / (week + '.json')
+            research_repair = None
             if research_attempt.exists():
                 try:
                     prior_attempt = json.loads(research_attempt.read_text())
@@ -410,7 +411,11 @@ class Runtime:
                         and prior_attempt.get('status') == 'budget_hold_after_request'):
                     return {'status': 'blocked', 'reason': 'weekly_research_requires_reconciliation',
                             'articles': [], 'retryable': False}
-                raise ValueError('weekly_research_requires_reconciliation')
+                if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'retry_ready':
+                    from research_contract_recovery import consume
+                    research_repair = consume(self, week, prior_attempt)
+                else:
+                    raise ValueError('weekly_research_requires_reconciliation')
             atomic(research_attempt, {'status': 'in_flight', 'at': stamp()})
             try:
                 if mixed_period(week):
@@ -477,6 +482,16 @@ class Runtime:
             except BudgetHold as hold:
                 requested = self.model_budget.has_request_reservation(
                     hold.article_id, hold.stage, hold.period_key)
+                if research_repair:
+                    with self.ledger._tx() as db:
+                        requested = db.execute('SELECT count(*) FROM model_budget_reservations '
+                            'WHERE article_id=? AND stage=? AND period_key=?',
+                            ('research:' + week, 'research', week)).fetchone()[0] > 1
+                    atomic(research_attempt, {'status': 'repair_held', 'period': week,
+                        'reason': 'model_budget_hold', 'retryable': False,
+                        'requestMayHaveOccurred': requested})
+                    return {'status': 'blocked', 'reason': 'weekly_research_requires_reconciliation',
+                            'articles': [], 'retryable': False}
                 atomic(research_attempt, {
                     'status': 'budget_hold_after_request' if requested else 'budget_hold', 'at': stamp(),
                     'reason': hold.reason_code, 'budgetScope': hold.budget_scope,
@@ -488,8 +503,20 @@ class Runtime:
                         'reason': ('weekly_research_requires_reconciliation' if requested
                                    else 'model_budget_hold'),
                         'articles': [], 'retryable': not requested}
+            except Exception as error:
+                if research_repair:
+                    atomic(research_attempt, {'status': 'repair_held', 'period': week,
+                        'failureType': type(error).__name__,
+                        'reason': 'proposal_contract' if str(error) == 'proposal_contract' else type(error).__name__,
+                        'retryable': False})
+                raise
             finally:
-                self._save_usage()
+                try:
+                    self._save_usage()
+                finally:
+                    if research_repair:
+                        from research_contract_recovery import finish
+                        finish(self, json.loads(research_attempt.read_text()))
             if mixed_period(week) and selection['status'] == 'hold':
                 return {'status': 'blocked', 'reason': selection['holdReason'], 'articles': [],
                         'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled']}

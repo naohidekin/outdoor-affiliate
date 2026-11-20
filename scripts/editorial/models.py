@@ -46,6 +46,28 @@ WRITER_SCHEMA = {
                                  "externalSafe": {"type": "boolean"}}}}
 }
 CATEGORIES = ("facts", "images", "affiliate", "medical", "render")
+MIXED_RESEARCH_SCHEMA = {
+    'type': 'object', 'additionalProperties': False, 'required': ['proposals'],
+    'properties': {'proposals': {'type': 'array', 'items': {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['slug', 'title', 'categoryId', 'productIds', 'topicType', 'query',
+                     'readerQuestion', 'intent', 'outline', 'priority', 'overlapRationale',
+                     'selectionReason', 'sourceIds', 'proposedAction', 'overlapArticleIds', 'needsStatus'],
+        'properties': {
+            **{field: {'type': 'string'} for field in
+               ('slug', 'title', 'categoryId', 'query', 'readerQuestion', 'overlapRationale', 'selectionReason')},
+            **{field: {'type': 'array', 'items': {'type': 'string'}} for field in
+               ('productIds', 'outline', 'sourceIds', 'overlapArticleIds')},
+            'priority': {'type': 'integer'},
+            'topicType': {'type': 'string', 'enum': ['product', 'seasonal_problem', 'knowhow']},
+            'intent': {'type': 'string', 'enum': ['informational', 'commercial_investigation', 'transactional']},
+            'proposedAction': {'type': 'string', 'enum': ['new', 'existing_update', 'hold']},
+            'needsStatus': {'type': 'string', 'enum': ['not_applicable', 'measured_change', 'seasonal_hypothesis']},
+        },
+        # Ranges, lengths, membership and cross-field rules remain enforced by
+        # validate_proposals(); do not send unsupported Claude wire constraints.
+    }}},
+}
 SOCIAL_SCHEMA = {
     "type": "object", "additionalProperties": False, "required": ["text", "replyText"],
     "properties": {"text": {"type": "string"}, "replyText": {"type": "string"}}
@@ -378,6 +400,8 @@ class Models:
             "a title of at most 80 characters, 3-5 concise outline headings of at most 40 characters each, "
             "ordinal priority 1-100, "
             "overlapRationale, selectionReason and exact sourceIds. "
+            "intent is exactly informational, commercial_investigation or transactional, not free-text. "
+            "Do not normalize prior proposals or invent missing sourceIds, productIds or needsStatus. "
             "Use only a supplied categoryId. Set needsStatus=measured_change for seasonal_problem only with an exact "
             "gsc-change evidence ID; otherwise set seasonal_hypothesis. All other topic types use not_applicable. "
             "Do not claim semantic uniqueness. Compare reader question and outline with bounded existing summaries. "
@@ -386,7 +410,7 @@ class Models:
             "emergency and other high-stakes advice. Return ONLY {proposals:[...]}. Each proposal has exactly "
             "slug,title,categoryId,productIds,topicType,query,readerQuestion,intent,outline,priority,"
             "overlapRationale,selectionReason,sourceIds,proposedAction,overlapArticleIds,needsStatus.",
-            {"context": context}, "claude-sonnet-4-6")
+            {"context": context}, "claude-sonnet-4-6", schema=MIXED_RESEARCH_SCHEMA)
         if not isinstance(result, dict) or set(result) != {"proposals"}:
             raise ModelError("Invalid mixed research response")
         catalog_ids = {item["id"] for item in context.get("catalog", [])

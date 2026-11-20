@@ -57,6 +57,16 @@ completionの`correction_path`は現polished本文＋FAQを含むarticle/hashと
 新しい本文やFAQは上位編集候補であり、旧writerの新規出力とは扱わない。商品・出典・画像・identityと原writer briefは保持し、protected/facts等との衝突は別確認する。
 ローカル補正は`literal_correction`として記録し、writer再呼出しや架空のモデル利用量を作らず、実Gemini→独立QA→実Claude finalを既存総枠内で通す。
 
+2026-11-20通常企画の既知`proposal_contract`（6案すべてintent enum違反）だけは、
+`research_contract_recovery.py`のprepare/armで旧marker SHA・raw artifact SHA・固定response ID・settled予算を照合する。
+旧markerを別archiveへ保存し、first failure＋repair1 receiptを残して主markerを`retry_ready`へ進める。
+既存producerが新企画の呼出し前にrepair権を一度だけ消費し、同じ`research:<period>`予算で新schemaから企画する。
+旧案のintent分類・source/product IDsの補完・旧案の選考転用は禁止。失敗・unknown・予算停止で権利を戻さない。
+元artifactはnative実ファイルの固定SHAも必須とし、caller指定SHAだけで同response IDの改変を受け入れない。
+確認済みは6案のintent違反であり、唯一のエラーとは断定しない。元requestがない旧category/product/existing membershipは未確認のまま記録する。
+旧context適合証明を作らず、新企画はfresh contextの全validationを必須とする。
+通常週3本・共有pending3・既存総予算と、記事／SNSの本人別承認を維持し、設定再開や公開の権限にはしない。
+
 ## 品質と承認を確認する
 
 工程結果の再利用は執筆・校正・審査の重複呼出しを避ける手段に限る。
