@@ -303,6 +303,63 @@ def _validate_source(root, entry):
     return identity
 
 
+def _manual_audit(root, entry, evidence, identity, publication):
+    """Fixed-path operator proof; never advances or rewrites the audit runner."""
+    job_id, revision = entry['jobId'], entry['revision']
+    path = 'operator-reconciliations/' + job_id + '-' + revision + '-audit.json'
+    if (entry['recordType'] != 'post_publication_audit'
+            or len(PurePosixPath(path).parts) != 2
+            or identity != {'kind': 'json', 'path': path}):
+        raise ValueError('fixed manual audit proof required')
+    key = _hash({'id': job_id, 'revision': revision, 'publication': publication})
+    source, source_identity = _read_ref(root, entry['source'])
+    _standard_audit(source, source_identity, job_id, revision, publication, passed=False)
+    if (evidence.get('id') != job_id or evidence.get('revision') != revision
+            or evidence.get('publication') != publication or evidence.get('auditKey') != key
+            or evidence.get('sourceAuditSHA256') != entry['source']['sha256']
+            or evidence.get('readOnly') is not True):
+        raise ValueError('manual audit binding required')
+    result = evidence.get('result')
+    checks = result.get('checks') if isinstance(result, dict) else None
+    if (not isinstance(result, dict) or result.get('status') != 'passed' or result.get('passed') is not True
+            or result.get('issues') != [] or not isinstance(checks, list) or not checks
+            or any(not isinstance(check, dict) or check.get('status') != 'passed'
+                   or not isinstance(check.get('name'), str) or not check['name'] for check in checks)):
+        raise ValueError('complete passing manual audit required')
+    names = [check['name'] for check in checks]
+    job = _job_state(root, job_id)
+    bundle = job.get('bundle') or {}
+    products, images = bundle.get('products'), bundle.get('images')
+    if (not isinstance(products, list) or not 1 <= len(products) <= 20
+            or any(not isinstance(product, dict) for product in products)
+            or not isinstance(images, list) or not 1 <= len(images) <= 41):
+        raise ValueError('manual audit bundle required')
+    required = {'public_title', 'approved_body', 'desktop', 'mobile',
+                'desktop.binding', 'mobile.binding', 'desktop.prose', 'mobile.prose'}
+    required.update('image.' + str(index) for index in range(len(images)))
+    for index in range(len(products)):
+        required.add('product_image_binding.' + str(index))
+        for channel in ('rakuten', 'amazon'):
+            required.add(f'destination.{index}.{channel}')
+            for viewport in ('desktop', 'mobile'):
+                required.add(f'{viewport}.click.{index}.{channel}')
+        for viewport in ('desktop', 'mobile'):
+            required.add(f'{viewport}.product_image.{index}')
+    if ((bundle.get('article') or {}).get('generationMeta') or {}).get('socialCard'):
+        required.update(('social_manifest', 'social_metadata'))
+    # A fresh proof must cover every named original check, including failures;
+    # omitting a prior non-core failure must never make reconciliation pass.
+    required.update(check['name'] for check in (source.get('result') or {}).get('checks', [])
+                    if isinstance(check, dict) and isinstance(check.get('name'), str)
+                    and check['name'])
+    if len(names) != len(set(names)) or not required.issubset(names):
+        raise ValueError('manual audit core checks required')
+    observed = _aware_timestamp(evidence.get('completedAt') or evidence.get('checkedAt') or evidence.get('at'))
+    for before in (publication.get('at'), source.get('completedAt')):
+        if before is not None and observed < _aware_timestamp(before):
+            raise ValueError('manual audit must follow original observation')
+
+
 def _validate_proof(root, entry, proof):
     if not isinstance(proof, dict):
         raise ValueError('proof required')
@@ -372,8 +429,12 @@ def _validate_proof(root, entry, proof):
                     and isinstance(checks, list) and bool(checks)
                     and all(isinstance(check, dict) and check.get('status') == 'passed'
                             for check in checks))
+        manual = False
+        if identity.get('path') == 'operator-reconciliations/' + job_id + '-' + revision + '-audit.json':
+            _manual_audit(root, entry, evidence, identity, publication)
+            manual = True
         if (evidence.get('id') != job_id or evidence.get('revision') != revision
-                or not (standard or readonly)):
+                or not (standard or readonly or manual)):
             raise ValueError('same version passing audit required')
         _aware_timestamp(evidence.get('completedAt') or evidence.get('checkedAt') or evidence.get('at'))
     elif kind == 'same_version_indexed':

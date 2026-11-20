@@ -346,7 +346,9 @@ class BufferSocialCoreTests(unittest.TestCase):
         with unittest.mock.patch.object(self.slack, 'notice') as resend:
             self.assertEqual('requires_reconciliation', self.runtime._notify_buffer_scheduled(scheduled))
             resend.assert_not_called()
-        health = self.runtime.tick()
+        with unittest.mock.patch('runtime.datetime', wraps=datetime) as clock:
+            clock.now.return_value = NOW
+            health = self.runtime.tick()
         self.assertTrue(any(item.get('reason') == 'buffer_schedule_notice_requires_reconciliation'
                             for item in health['results']))
         self.assertEqual([], DeterministicDispatcher(self.runtime).plan(NOW + timedelta(minutes=30))['actions'])

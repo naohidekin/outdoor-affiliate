@@ -27,6 +27,8 @@ if __name__ == '__main__':
 from catalog import Catalog, _affiliate_route, _decode_html, _image_type, _model, _Page, model_matches, safe_url
 from audit_requests import AuditRequests
 from topic_selection import TopicSelectionError, validate_nonproduct_bundle
+from apparel_identity import (apparel_requested, binding_matches_product,
+                              inspect_apparel_page, public_binding)
 
 SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
@@ -177,6 +179,41 @@ def _audit_model(product):
 def _merchant_identity(product, model, title):
     from merchant_identity import inspect_merchant_identity
     return inspect_merchant_identity(product, model, title)['status'] == 'passed'
+
+
+def _apparel_merchant_identity(product, channel, page_url, html, references):
+    """A retained receipt is an expectation, never current identity evidence."""
+    refs = [ref for ref in references if isinstance(ref, dict)
+            and ref.get('kind') == 'purchase' and ref.get('productId') == product.get('id')
+            and ref.get('channel') == channel] if isinstance(references, list) else []
+    if len(refs) != 1:
+        return {'status': 'unverified', 'reason': 'approved_apparel_binding_missing'}, None
+    expected = refs[0].get('apparelBinding')
+    source_kind = channel + '-primary-product-dom'
+    approved, current = urlsplit(refs[0].get('url') or ''), urlsplit(page_url)
+    if channel == 'amazon':
+        asin = lambda path: re.search(r'/(?:dp|gp/product)/([A-Z0-9]{10})(?:/|$)', path)
+        old_asin, new_asin = asin(approved.path), asin(current.path)
+        same_page = (approved.hostname in ('amazon.co.jp', 'www.amazon.co.jp')
+                     and old_asin and new_asin and old_asin[1] == new_asin[1])
+    else:
+        same_page = (approved.hostname == current.hostname == 'item.rakuten.co.jp'
+                     and approved.path.rstrip('/') == current.path.rstrip('/'))
+    if (approved.scheme != 'https' or approved.username or approved.password or not same_page
+            or not binding_matches_product(expected, product, channel)
+            or expected.get('sourceKind') != source_kind):
+        return {'status': 'unverified', 'reason': 'approved_apparel_binding_invalid'}, None
+    actual = inspect_apparel_page(product, page_url, html, source_role='purchase', channel=channel)
+    if not actual or not binding_matches_product(actual, product, channel):
+        return {'status': 'unverified', 'reason': 'merchant_apparel_primary_unverified'}, None
+    def identity(binding):
+        # Compare the full retained identity, including product-scoped images;
+        # ordering of selectors or images alone does not change the binding.
+        return {key: sorted(value) if isinstance(value, list) else value
+                for key, value in public_binding(binding).items()}
+    if identity(actual) != identity(expected):
+        return {'status': 'failed', 'reason': 'merchant_apparel_binding_mismatch'}, actual
+    return {'status': 'passed', 'reason': 'merchant_apparel_primary_binding_verified'}, actual
 
 
 def _merchant_observation(name, product, model, title, final_url, route_matched):
@@ -505,22 +542,31 @@ class PostPublicationAudit:
                     if re.search(r'captcha|robot check|access denied|just a moment|ロボット', page.title, re.I):
                         checks.append(_check(name, 'unverified', 'merchant_challenge_unverified'))
                         continue
-                    from merchant_identity import inspect_merchant_identity
-                    decision = inspect_merchant_identity(product, model, page.title)
                     primary = None
-                    if channel == 'amazon' and same and decision['status'] == 'unverified':
-                        # The same narrow primary-node binding already used by
-                        # pre-publication research; never infer from reviews or ads.
-                        from primary_firepit import fixed_amazon_identity
-                        primary = fixed_amazon_identity(product['id'], model, response['url'],
-                                                        _decode_html(response['body'], kind), page.title)
-                    identity = decision['status'] == 'passed' or bool(primary)
-                    observations[-1]['primaryBindingVerified'] = bool(primary)
+                    if apparel_requested(product):
+                        decision, primary = (_apparel_merchant_identity(product, channel, response['url'],
+                            _decode_html(response['body'], kind), bundle.get('references')) if same else
+                            ({'status': 'failed', 'reason': 'merchant_destination_or_product_identity_mismatch'}, None))
+                        identity = decision['status'] == 'passed'
+                        if primary:
+                            observations[-1].update(primaryBinding=public_binding(primary),
+                                primaryResponseSHA256=hashlib.sha256(response['body']).hexdigest())
+                    else:
+                        from merchant_identity import inspect_merchant_identity
+                        decision = inspect_merchant_identity(product, model, page.title)
+                        if channel == 'amazon' and same and decision['status'] == 'unverified':
+                            # Existing non-apparel primary-node fallback remains unchanged.
+                            from primary_firepit import fixed_amazon_identity
+                            primary = fixed_amazon_identity(product['id'], model, response['url'],
+                                                            _decode_html(response['body'], kind), page.title)
+                        identity = decision['status'] == 'passed' or bool(primary)
+                    observations[-1]['primaryBindingVerified'] = bool(primary) and identity
                     observations[-1]['identityMatched'] = identity
                     if not same:
                         checks.append(_check(name, 'failed', 'merchant_destination_or_product_identity_mismatch'))
                     elif identity:
-                        checks.append(_check(name, 'passed', 'merchant_destination_and_title_model_verified'))
+                        checks.append(_check(name, 'passed', decision['reason'] if apparel_requested(product)
+                                             else 'merchant_destination_and_title_model_verified'))
                     else:
                         checks.append(_check(name, decision['status'], decision['reason']))
                 except Exception:
