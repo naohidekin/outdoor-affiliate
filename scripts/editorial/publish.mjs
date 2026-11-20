@@ -34,10 +34,19 @@ const sha = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const nonempty = v => typeof v === 'string' && v.trim().length > 0;
 const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const timestamp = () => new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T') + '+09:00';
-const PUBLIC_REFERENCE_URLS = new Set([
-  'https://www.coleman.co.jp/customersupport/faq/',
-  'https://www.snowpeak.co.jp/contents/campstarterbook/',
-  'https://www.montbell.jp/generalpage/disp.php?id=507',
+const PUBLIC_REFERENCE_CONTRACTS = new Map([
+  ['https://www.coleman.co.jp/customersupport/faq/',
+    { id: 'public:coleman-care', scope: 'tent-care' }],
+  ['https://www.snowpeak.co.jp/contents/campstarterbook/',
+    { id: 'public:snowpeak-care', scope: 'camp-care' }],
+  ['https://www.montbell.jp/generalpage/disp.php?id=507',
+    { id: 'public:montbell-layering', scope: 'layering-concept-only' }],
+  ['https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag',
+    { id: 'public:coleman-synthetic-wash', scope: 'coleman-synthetic-wash-decision' }],
+  ['https://www.thermos.jp/goods/pdpts',
+    { id: 'public:thermos-product-parts', scope: 'thermos-parts-lookup' }],
+  ['https://www.thermos.jp/goods/ptpds',
+    { id: 'public:thermos-parts-product', scope: 'thermos-parts-lookup' }],
 ]);
 const EDITORIAL_CONTEXT_KEYS = ['articleType', 'commerceApplicability', 'imageApplicability', 'imageProofIds',
   'schemaVersion', 'sourceApplicability', 'sourceIds', 'sourceReceiptSha256'].sort();
@@ -83,11 +92,13 @@ export function validateNonproductBundle(bundle) {
     bundle.references.every(record) && equal(bundle.references.map(item => item.id), context.sourceIds), 'nonproduct references invalid');
   for (const reference of bundle.references) {
     const rawId = typeof reference.id === 'string' && reference.id.startsWith('public:') ? reference.id.slice('public:'.length) : '';
+    const contract = PUBLIC_REFERENCE_CONTRACTS.get(reference.url);
     const receipt = { id: rawId, url: reference.url, canonicalUrl: reference.canonicalUrl, checkedAt: reference.checkedAt,
       httpStatus: reference.httpStatus, excerpt: reference.excerpt, claimScope: reference.claimScope };
-    requireValue(PUBLIC_REFERENCE_URLS.has(reference.url) && reference.canonicalUrl === reference.url && reference.kind === 'public-primary' &&
+    requireValue(contract && reference.id === contract.id && reference.scope === contract.scope && reference.claimScope === contract.scope &&
+      reference.canonicalUrl === reference.url && reference.kind === 'public-primary' &&
       reference.httpStatus === 200 && nonempty(reference.title) && nonempty(reference.excerpt) && reference.excerpt.length <= 500 &&
-      nonempty(reference.claimScope) && awareTimestamp(reference.checkedAt) && /^[a-f0-9]{64}$/.test(reference.receiptSha256 || '') &&
+      awareTimestamp(reference.checkedAt) && /^[a-f0-9]{64}$/.test(reference.receiptSha256 || '') &&
       reference.excerptSha256 === sha(reference.excerpt), 'nonproduct reference binding invalid');
     requireValue(nonempty(rawId) && reference.receiptSha256 === canonicalHash(receipt), 'nonproduct reference receipt invalid');
   }
@@ -97,7 +108,7 @@ export function validateNonproductBundle(bundle) {
     nonproductContentLinks(bundle.article.content).every(value => {
       try {
         const url = new URL(value, SITE);
-        return !merchantOrTrackingUrl(url.href) && (url.origin === SITE || PUBLIC_REFERENCE_URLS.has(url.href));
+        return !merchantOrTrackingUrl(url.href) && (url.origin === SITE || PUBLIC_REFERENCE_CONTRACTS.has(url.href));
       } catch { return false; }
     }), 'nonproduct commercial or unapproved link invalid');
   requireValue(Array.isArray(bundle.images) && bundle.images.length === 1 && context.imageProofIds.length === 1,

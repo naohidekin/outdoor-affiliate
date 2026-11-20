@@ -71,6 +71,31 @@ function nonproductBundle() {
   };
 }
 
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object')
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));
+  return value;
+}
+function canonicalHash(value) {
+  return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+}
+function bindNonproductReference(bundle, { id, url, scope, excerpt }) {
+  const reference = { id, kind: 'public-primary', url, canonicalUrl: url, title: id.slice('public:'.length), excerpt,
+    claimScope: scope, scope, checkedAt: '2026-11-20T10:00:00+09:00', httpStatus: 200,
+    excerptSha256: createHash('sha256').update(excerpt).digest('hex') };
+  reference.receiptSha256 = canonicalHash({ id: id.slice('public:'.length), url, canonicalUrl: url,
+    checkedAt: reference.checkedAt, httpStatus: 200, excerpt, claimScope: scope });
+  const sourceReceiptSha256 = canonicalHash([reference.receiptSha256]);
+  bundle.references = [reference];
+  bundle.article.generationMeta.editorialContext.sourceIds = [id];
+  bundle.article.generationMeta.editorialContext.sourceReceiptSha256 = sourceReceiptSha256;
+  bundle.images[0].referenceIds = [id];
+  bundle.images[0].rendererEvidence.sourceIds = [id];
+  bundle.images[0].rendererEvidence.sourceReceiptSha256 = sourceReceiptSha256;
+  return bundle;
+}
+
 function nonproductHtml(b, extra = '') {
   return `<main><article data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"><h1>${b.article.title}</h1>` +
     `<img src="${b.article.eyecatch}"><p>汚れを落とし、十分に乾かします。</p><a href="/categories/tent">テントの記事一覧</a>${extra}</article></main>`;
@@ -97,6 +122,35 @@ test('strict nonproduct contract is the only zero-product route and rejects prov
     .update(JSON.stringify(rewrittenExcerpt.references.map(reference => reference.receiptSha256))).digest('hex');
   assert.throws(() => validateBundle(rewrittenExcerpt), /reference receipt/);
   assert.equal(verifyPublicHTML(nonproductHtml(good, '<a href="https://www.amazon.co.jp/dp/B000000001">merchant</a>'), good), false);
+});
+
+test('expanded official references require exact URL, public ID and claim scope', () => {
+  const contracts = [
+    { id: 'public:coleman-synthetic-wash', url: 'https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag',
+      scope: 'coleman-synthetic-wash-decision', excerpt: 'ウォッシャブルアイコンと縫い付けラベルを確認します。' },
+    { id: 'public:thermos-product-parts', url: 'https://www.thermos.jp/goods/pdpts',
+      scope: 'thermos-parts-lookup', excerpt: '製品の品番・色名・JANコードの一部で検索できます。' },
+    { id: 'public:thermos-parts-product', url: 'https://www.thermos.jp/goods/ptpds',
+      scope: 'thermos-parts-lookup', excerpt: '交換用部品名・JANコードの一部で検索できます。' },
+  ];
+  for (const contract of contracts) {
+    const good = bindNonproductReference(nonproductBundle(), contract);
+    good.article.content += `\n\n[公式資料](${contract.url})`;
+    assert.doesNotThrow(() => validateBundle(good));
+    for (const mutate of [
+      bundle => {
+        bundle.references[0].id = 'public:forged';
+        bundle.article.generationMeta.editorialContext.sourceIds = ['public:forged'];
+        bundle.images[0].referenceIds = ['public:forged'];
+        bundle.images[0].rendererEvidence.sourceIds = ['public:forged'];
+      },
+      bundle => { bundle.references[0].scope = 'forged-scope'; bundle.references[0].claimScope = 'forged-scope'; },
+    ]) {
+      const forged = structuredClone(good);
+      mutate(forged);
+      assert.throws(() => validateBundle(forged), /reference binding/);
+    }
+  }
 });
 
 test('nonproduct stage and publish skip product DB lookup and record explicit merchant NA after public zero-link readback', async () => {
