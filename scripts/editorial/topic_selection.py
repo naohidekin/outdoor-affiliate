@@ -1,6 +1,6 @@
 """Bounded mixed-topic planning for regular production periods from 2026-11-20.
 
-It accepts the already-sanitized analytics projection and fetches only three
+It accepts the already-sanitized analytics projection and fetches only explicitly allowlisted
 fixed primary-source URLs through the caller's hardened request function.  It
 never receives raw GSC queries or arbitrary URLs.
 """
@@ -21,11 +21,25 @@ PUBLIC_SOURCE_ALLOWLIST = {
     "https://www.coleman.co.jp/customersupport/faq/": "tent-care",
     "https://www.snowpeak.co.jp/contents/campstarterbook/": "camp-care",
     "https://www.montbell.jp/generalpage/disp.php?id=507": "layering-concept-only",
+    "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash-decision",
+    "https://www.thermos.jp/goods/pdpts": "thermos-parts-lookup",
+    "https://www.thermos.jp/goods/ptpds": "thermos-parts-lookup",
+}
+SOURCE_IDS = {
+    "https://www.coleman.co.jp/customersupport/faq/": "coleman-care",
+    "https://www.snowpeak.co.jp/contents/campstarterbook/": "snowpeak-care",
+    "https://www.montbell.jp/generalpage/disp.php?id=507": "montbell-layering",
+    "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash",
+    "https://www.thermos.jp/goods/pdpts": "thermos-product-parts",
+    "https://www.thermos.jp/goods/ptpds": "thermos-parts-product",
 }
 SOURCE_KEYWORDS = {
     "https://www.coleman.co.jp/customersupport/faq/": ("乾燥",),
     "https://www.snowpeak.co.jp/contents/campstarterbook/": ("乾燥", "保管"),
     "https://www.montbell.jp/generalpage/disp.php?id=507": ("レイヤリング",),
+    "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": ("ウォッシャブル", "化繊", "ラベル"),
+    "https://www.thermos.jp/goods/pdpts": ("品番", "色名", "JAN"),
+    "https://www.thermos.jp/goods/ptpds": ("交換用部品名", "JAN"),
 }
 HIGH_RISK = re.compile(
     r"低体温|凍傷|雪山|登山安全|サバイバル|救命|応急処置|医療|治療|診断|服薬|一酸化炭素|死亡|極寒"
@@ -37,6 +51,23 @@ CLAIM_SCOPE_PATTERNS = {
     "tent-care": re.compile(r"テント|幕|乾燥|保管|汚れ|撤収"),
     "camp-care": re.compile(r"テント|幕|寝袋|シュラフ|乾燥|保管|汚れ|撤収"),
     "layering-concept-only": re.compile(r"レイヤリング|重ね着|肌着|中間着|上着|ウェア"),
+    "coleman-synthetic-wash-decision": re.compile(
+        r"(?=.*(?:コールマン|coleman))(?=.*(?:化繊|ウォッシャブル))"
+        r"(?=.*(?:寝袋|シュラフ))(?=.*(?:洗濯|洗える|洗う|手洗い|ラベル|ウォッシャブル))", re.I),
+    "thermos-parts-lookup": re.compile(
+        r"(?=.*(?:サーモス|thermos))(?=.*(?:部品|パーツ|パッキン))(?=.*(?:探|検索|品番|色名|JAN|適合))", re.I),
+}
+
+# These pages support a decision/lookup, not physical care/repair instructions.
+NARROW_SCOPE_EXCLUSIONS = {
+    "coleman-synthetic-wash-decision": re.compile(
+        r"ダウン|羽毛|水温|洗剤|乾燥機|乾かし方|乾燥手順|洗い方|(?:手洗い|洗濯)(?:の|する)?(?:実践|手順|方法|やり方)|耐寒|保温性能"),
+    "thermos-parts-lookup": re.compile(
+        r"漂白|洗剤|洗浄|分解|修理|互換|取り付け|取付け|(?:交換|取り外し)(?:の)?(?:手順|方法|やり方)|保温性能|保冷性能"),
+}
+NARROW_OUTLINE_FAMILIES = {
+    "wash": re.compile(r"ウォッシャブル|化繊|洗濯|手洗い|縫付|縫い付|ラベル|丸洗い"),
+    "parts": re.compile(r"部品|パーツ|パッキン|(?<![A-Za-z])(?:JAN|AND)(?![A-Za-z])|(?:品番|色名).*検索|検索.*(?:品番|色名)", re.I),
 }
 
 
@@ -91,8 +122,29 @@ class _Blocks(HTMLParser):
                 parts.append(data)
 
 
+def _primary_excerpt(url, blocks):
+    keywords = SOURCE_KEYWORDS[url]
+    anchor = next((b for b in blocks if 20 <= len(b) <= 500 and all(k in b for k in keywords)), None)
+    if PUBLIC_SOURCE_ALLOWLIST[url] == 'thermos-parts-lookup':
+        if anchor is None:
+            return None
+        selected = [anchor]
+        for block in blocks:
+            if (block not in selected and 10 <= len(block) <= 500 and len(selected) < 4
+                    and re.search(r"品番|色名|JAN|交換用部品|適合|AND|半角|全角|表記|スペース", block, re.I)
+                    and len("\n\n".join(selected + [block])) <= 500):
+                selected.append(block)
+        return "\n\n".join(selected)
+    if anchor is not None:
+        return anchor
+    # Preserve the existing bounded noncontiguous-paragraph extraction.
+    matches = [b for b in blocks if 20 <= len(b) <= 300 and any(k in b for k in keywords)]
+    selected = matches[:2]
+    return "\n\n".join(selected) if all(any(k in b for b in selected) for k in keywords) else None
+
+
 def collect_primary_sources(request, *, period, output_path, now=None):
-    """Fetch the three fixed primary pages once for a mixed research period."""
+    """Fetch each fixed allowlisted primary page once for a mixed period."""
     now = (now or datetime.now(JST)).astimezone(JST)
     if not mixed_period(period):
         raise TopicSelectionError("mixed_sources_before_effective_period")
@@ -103,7 +155,10 @@ def collect_primary_sources(request, *, period, output_path, now=None):
             status = response.get("status")
             final_url = response.get("url") or url
             content_type = (response.get("headers") or {}).get("content-type", "").split(";", 1)[0].lower()
-            body = response["body"].decode("utf-8")
+            raw_body = response["body"]
+            if not isinstance(raw_body, bytes) or len(raw_body) > 2 * 1024 * 1024:
+                raise ValueError("bounded HTML body required")
+            body = raw_body.decode("utf-8")
         except (KeyError, UnicodeError, OSError, ValueError, TypeError):
             failures.append({"url": url, "reason": "fetch_failed"})
             continue
@@ -116,20 +171,12 @@ def collect_primary_sources(request, *, period, output_path, now=None):
             continue
         parsed = _Blocks()
         parsed.feed(body)
-        keywords = SOURCE_KEYWORDS[url]
-        excerpt = next((block for block in parsed.blocks if 20 <= len(block) <= 500
-                        and all(keyword in block for keyword in keywords)), None)
-        if excerpt is None:
-            # Snow Peak may place the two bounded concepts in adjacent paragraphs.
-            matches = [block for block in parsed.blocks if 20 <= len(block) <= 300
-                       and any(keyword in block for keyword in keywords)]
-            excerpt = "\n\n".join(matches[:2]) if all(any(k in block for block in matches) for k in keywords) else None
+        excerpt = _primary_excerpt(url, parsed.blocks)
         if not excerpt or len(excerpt) > 500:
             failures.append({"url": url, "reason": "bounded_claim_not_found"})
             continue
         checked = now.isoformat()
-        source_id = ("coleman-care" if "coleman" in url else
-                     "snowpeak-care" if "snowpeak" in url else "montbell-layering")
+        source_id = SOURCE_IDS[url]
         receipt = {"id": source_id, "url": url, "canonicalUrl": final_url,
                    "checkedAt": checked, "httpStatus": 200, "excerpt": excerpt,
                    "claimScope": scope}
@@ -163,7 +210,10 @@ def reverify_bound_public_sources(request, references, *, now=None):
     observations = []
     for reference in references:
         url = reference.get("url") if isinstance(reference, dict) else None
-        if url not in PUBLIC_SOURCE_ALLOWLIST or reference.get("canonicalUrl") != url:
+        if (url not in PUBLIC_SOURCE_ALLOWLIST or reference.get("canonicalUrl") != url
+                or reference.get("scope") != PUBLIC_SOURCE_ALLOWLIST[url]
+                or reference.get("claimScope") != PUBLIC_SOURCE_ALLOWLIST[url]
+                or reference.get("id") != "public:" + SOURCE_IDS[url]):
             raise NonproductSourceHold("nonproduct_source_recheck_changed")
         try:
             response = request(url, {"Accept": "text/html", "Cache-Control": "no-cache"})
@@ -293,17 +343,29 @@ def _similar(left, right):
 def allowed_claim_scopes(proposal):
     """Primary topic only; outline text can never legitimize an unrelated source."""
     text = " ".join([str(proposal.get("title", "")), str(proposal.get("readerQuestion", ""))])
+    narrow = [scope for scope in NARROW_SCOPE_EXCLUSIONS if CLAIM_SCOPE_PATTERNS[scope].search(text)]
+    if narrow:
+        all_text = text + " " + " ".join(map(str, proposal.get("outline", [])))
+        if len(narrow) != 1 or NARROW_SCOPE_EXCLUSIONS[narrow[0]].search(all_text):
+            return []
+        return narrow
     return sorted(scope for scope, pattern in CLAIM_SCOPE_PATTERNS.items() if pattern.search(text))
 
 
 def _scope_family(scope):
-    return "layering" if scope == "layering-concept-only" else "care"
+    return {"layering-concept-only": "layering", "coleman-synthetic-wash-decision": "wash",
+            "thermos-parts-lookup": "parts"}.get(scope, "care")
 
 
 def _outline_scope_families(proposal):
     text = " ".join(str(item) for item in proposal.get("outline", []))
-    return {_scope_family(scope) for scope, pattern in CLAIM_SCOPE_PATTERNS.items()
-            if pattern.search(text)}
+    families = {_scope_family(scope) for scope, pattern in CLAIM_SCOPE_PATTERNS.items() if pattern.search(text)}
+    families.update(family for family, pattern in NARROW_OUTLINE_FAMILIES.items() if pattern.search(text))
+    primary = " ".join([str(proposal.get("title", "")), str(proposal.get("readerQuestion", ""))])
+    if (CLAIM_SCOPE_PATTERNS["coleman-synthetic-wash-decision"].search(primary)
+            and not re.search(r"テント|幕|乾燥|保管|汚れ|撤収", text)):
+        families.discard("care")  # The sleeping-bag noun alone is not a general-care claim.
+    return families
 
 
 def validate_proposals(raw, *, catalog_ids, existing_ids=(), category_ids=None):
@@ -536,6 +598,8 @@ def validate_nonproduct_bundle(bundle):
                 or item.get("canonicalUrl") != item.get("url") or item.get("httpStatus") != 200
                 or checked is None or item.get("kind") != "public-primary"
                 or item.get("scope") != PUBLIC_SOURCE_ALLOWLIST[item.get("url")]
+                or item.get("claimScope") != item.get("scope")
+                or item.get("id") != "public:" + SOURCE_IDS[item.get("url")]
                 or item.get("excerptSha256") != _sha(str(item.get("excerpt", "")))
                 or item.get("receiptSha256") != _sha(_canonical(receipt))):
             raise TopicSelectionError("nonproduct_reference_receipt_invalid")
