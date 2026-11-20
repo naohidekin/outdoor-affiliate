@@ -431,9 +431,23 @@ class Runtime:
                         output_path=self.root / 'public-sources' / (week + '.json'), now=now)
                     research_context = self._research_context(
                         context, feed=feed, existing_summaries=existing_index)
-                    proposals = self._measured_model_call(
+                    # Preserve the exact, secret-checked context before the API
+                    # boundary; a later repair must not erase the first input.
+                    public_checker = self.models if isinstance(self.models, Models) else Models(self.env)
+                    public_checker._safe_public(research_context)
+                    snapshot = self.root / 'research-contexts' / (week + '.json')
+                    if snapshot.exists():
+                        prior_context = json.loads(snapshot.read_text())
+                        public_checker._safe_public(prior_context)
+                        atomic(snapshot.with_name(week + '-' + fingerprint(prior_context) + '.json'), prior_context)
+                    atomic(snapshot, research_context)
+                    research_result = self._measured_model_call(
                         'research:' + week, 'research', 'claude-sonnet-4-6',
-                        lambda: self.models.research_mixed(research_context))['proposals']
+                        lambda: self.models.research_mixed(research_context))
+                    proposals = research_result['proposals']
+                    research_metadata = {key: copy.deepcopy(research_result[key]) for key in
+                        ('contractRejections', 'rawProposalCount', 'responseId') if key in research_result}
+                    research_metadata['researchContextSha256'] = fingerprint(research_context)
                     selection = select_proposals(
                         proposals, signals=research_context['editorialSignals'],
                         existing=existing_index, queued=context['queuedThemes'],
@@ -459,7 +473,7 @@ class Runtime:
                                'proposalCount': len(proposals), 'decisions': selection['decisions'],
                                'selectedSlugs': [theme['slug'] for theme in themes],
                                'sourceIds': [signal['id'] for signal in research_context['editorialSignals']],
-                               'genreCoverage': genre_coverage}
+                               'genreCoverage': genre_coverage, **research_metadata}
                     atomic(self.root / 'period-receipts' / (week + '.json'), receipt)
                     updates = [decision for decision in selection['decisions']
                                if decision['status'] == 'existing_update']
@@ -472,7 +486,7 @@ class Runtime:
                         'proposals': proposals, 'selection': selection['status'],
                         'holdReason': selection['holdReason'],
                         'eligibleCount': selection['eligibleCount'],
-                        'unfilled': selection['unfilled'], 'at': stamp()})
+                        'unfilled': selection['unfilled'], 'at': stamp(), **research_metadata})
                 else:
                     themes = self._measured_model_call(
                         'research:' + week, 'research', 'claude-sonnet-4-6',

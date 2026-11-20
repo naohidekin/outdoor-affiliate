@@ -387,8 +387,8 @@ class Models:
 
     def research_mixed(self, context):
         """One bounded research call; local code decides overlap and selection."""
-        from topic_selection import validate_proposals
-        result, _ = self._call(
+        from topic_selection import validate_proposals, TopicSelectionError, MAX_PROPOSALS
+        result, record = self._call(
             "Propose between one and nine regular-period Camp Gear Lab topics, preferably up to three for each "
             "topicType when evidence supports them; this is soft coverage, never a quota. This is proposal generation, "
             "not final selection. Use only supplied evidence IDs and never invent search volume, trend, clicks, "
@@ -419,9 +419,26 @@ class Models:
                         if isinstance(item, dict) and _text(item.get("id"))}
         category_ids = {item["id"] for item in context.get("categories", [])
                         if isinstance(item, dict) and _text(item.get("id"))}
-        return {"proposals": validate_proposals(result["proposals"], catalog_ids=catalog_ids,
-                                                  existing_ids=existing_ids,
-                                                  category_ids=category_ids)}
+        raw = result["proposals"]
+        if not isinstance(raw, list) or not 1 <= len(raw) <= MAX_PROPOSALS:
+            raise TopicSelectionError("one_to_nine_proposals_required")
+        valid, rejected, first_error = [], [], None
+        for index, proposal in enumerate(raw):
+            try:
+                valid.extend(validate_proposals([proposal], catalog_ids=catalog_ids,
+                    existing_ids=existing_ids, category_ids=category_ids))
+            except (TopicSelectionError, TypeError) as error:
+                if first_error is None:
+                    first_error = error
+                slug = proposal.get('slug') if isinstance(proposal, dict) else None
+                rejected.append({'index': index, 'slug': slug if isinstance(slug, str) and len(slug) <= 80 else None,
+                    'reason': str(error) if isinstance(error, TopicSelectionError) else 'proposal_contract_type'})
+        if not valid:
+            raise first_error
+        result = {'proposals': valid}
+        if rejected:
+            result.update(contractRejections=rejected, rawProposalCount=len(raw), responseId=record['responseId'])
+        return result
 
     def draft(self, theme, context):
         _require(context, ("catalog", "references"))
