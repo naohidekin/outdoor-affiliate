@@ -14,8 +14,8 @@ import { validateBundle } from './publish.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const merchant = { productId: 'preview-p1', productName: '検証用テント', store: 'amazon', href: 'https://www.amazon.co.jp/dp/B012345678/?tag=camp78-22' };
-function pythonContractFixture() {
-  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py'], {
+function pythonContractFixture(kind) {
+  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py', ...(kind ? [kind] : [])], {
     cwd: repo, encoding: 'utf8', env: { PATH: process.env.PATH || '/usr/bin:/bin', PYTHONPATH: 'scripts/editorial', TZ: 'Asia/Tokyo' },
   });
   assert.equal(result.status, 0, result.stderr);
@@ -126,6 +126,17 @@ test('Python-generated canonical nonproduct fixture passes the JS publisher and 
     sponsoredCtaCount: { desktop: 0, mobile: 0 }, allAnchorsVerified: true });
   assert.deepEqual(fixture.reviewAffiliateEvidence, { applicability: 'not_applicable', measured: false,
     provenanceFingerprint: fixture.reviewAffiliateEvidence.provenanceFingerprint });
+});
+
+test('Python Thermos enriched bundle reaches render input with exact sources and refuses fit mutations', () => {
+  const fixture = pythonContractFixture('thermos-enriched');
+  const input = { repo, outputDir: '/tmp/privateoutput', bundle: fixture.bundle };
+  assert.equal(validateInput(input).bundle.references.length, 4);
+  for (const mutate of [
+    b => { b.references[2].excerpt = b.references[2].excerpt.replace('4562344398367', '0000000000000'); },
+    b => { b.references[3].url += '&unbound=1'; },
+    b => { b.article.generationMeta.editorialContext.sourceIds.pop(); },
+  ]) { const forged = structuredClone(input); mutate(forged.bundle); assert.throws(() => validateInput(forged)); }
 });
 
 test('expected merchants keeps per-product identity and excludes unsafe hrefs', () => {
@@ -280,11 +291,11 @@ test('real nonproduct desktop/mobile verifies owned image, paragraph, internal l
     } finally { await fs.rm(temp, { recursive: true, force: true }); }
   });
 
-test('real preview consumes the Python-generated canonical bundle and actual PNG bytes',
+for (const fixtureKind of [undefined, 'thermos-enriched']) test(`real preview consumes Python ${fixtureKind || 'legacy'} bundle and actual PNG bytes`,
   { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {
     const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-python-contract-'));
     try {
-      const fixture = pythonContractFixture();
+      const fixture = pythonContractFixture(fixtureKind);
       const input = { repo, outputDir: path.join(temp, 'privateoutput'), bundle: fixture.bundle };
       if (process.env.RENDER_DEPS) input.dependenciesRoot = process.env.RENDER_DEPS;
       const bytes = Buffer.from(fixture.imageDataBase64, 'base64');

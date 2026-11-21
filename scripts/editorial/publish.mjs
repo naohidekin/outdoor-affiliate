@@ -47,6 +47,12 @@ const PUBLIC_REFERENCE_CONTRACTS = new Map([
     { id: 'public:thermos-product-parts', scope: 'thermos-parts-lookup' }],
   ['https://www.thermos.jp/goods/ptpds',
     { id: 'public:thermos-parts-product', scope: 'thermos-parts-lookup' }],
+  ['https://www.thermos.jp/goods/ptpdl?g=900067140990',
+    { id: 'public:thermos-jnls-gasket-fit', scope: 'thermos-parts-fit-example',
+      excerpt: '部品：JNL-Sパッキンセット（フタパッキン・せんパッキン各1個）\n\n部品JAN：4562344398367\n\n適合製品一覧：品番=JNL-S500；色名=BK-J （ブラックジェイド）；JANコード=4562344397339' }],
+  ['https://www.thermos.jp/goods/ptpdl?g=900068940990',
+    { id: 'public:thermos-jnls1000-gasket-fit', scope: 'thermos-parts-fit-example',
+      excerpt: '部品：JNL-S1000パッキンセット（フタパッキン・せんパッキン各1個）\n\n部品JAN：4562344404532\n\n適合製品一覧：品番=JNL-S1000；色名=MLGY （ミネラルグレー）；JANコード=4562344400664' }],
 ]);
 const EDITORIAL_CONTEXT_KEYS = ['articleType', 'commerceApplicability', 'imageApplicability', 'imageProofIds',
   'schemaVersion', 'sourceApplicability', 'sourceIds', 'sourceReceiptSha256'].sort();
@@ -99,7 +105,8 @@ export function validateNonproductBundle(bundle) {
       reference.canonicalUrl === reference.url && reference.kind === 'public-primary' &&
       reference.httpStatus === 200 && nonempty(reference.title) && nonempty(reference.excerpt) && reference.excerpt.length <= 500 &&
       awareTimestamp(reference.checkedAt) && /^[a-f0-9]{64}$/.test(reference.receiptSha256 || '') &&
-      reference.excerptSha256 === sha(reference.excerpt), 'nonproduct reference binding invalid');
+      reference.excerptSha256 === sha(reference.excerpt) &&
+      (!contract.excerpt || reference.excerpt === contract.excerpt), 'nonproduct reference binding invalid');
     requireValue(nonempty(rawId) && reference.receiptSha256 === canonicalHash(receipt), 'nonproduct reference receipt invalid');
   }
   requireValue(context.sourceReceiptSha256 === canonicalHash(bundle.references.map(item => item.receiptSha256)),

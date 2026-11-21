@@ -4,9 +4,11 @@ from datetime import datetime
 import hashlib
 import json
 import struct
+import sys
 import zlib
 
-from topic_selection import JST, editorial_context, nonproduct_affiliate_review
+from topic_selection import (JST, FIT_EXAMPLES, PUBLIC_SOURCE_ALLOWLIST, SOURCE_IDS, _fit_capsule,
+                             editorial_context, nonproduct_affiliate_review, validate_nonproduct_bundle)
 
 
 def _canonical(value):
@@ -80,5 +82,37 @@ def fixture():
                                 'allAnchorsVerified': True}}
 
 
+def thermos_enriched_fixture():
+    """Python-validated four-source Thermos bundle, with no network or model use."""
+    result = fixture()
+    bundle = result['bundle']
+    checked = bundle['references'][0]['checkedAt']
+    refs = []
+    lookups = {'https://www.thermos.jp/goods/pdpts': '製品の品番・色名・JANコードの一部から検索できます。',
+               'https://www.thermos.jp/goods/ptpds': '交換用部品名・JANコードの一部から検索できます。'}
+    for url in [*lookups, *FIT_EXAMPLES]:
+        excerpt = lookups[url] if url in lookups else _fit_capsule(url)
+        raw = {'id': SOURCE_IDS[url], 'url': url, 'canonicalUrl': url, 'checkedAt': checked,
+               'httpStatus': 200, 'excerpt': excerpt, 'claimScope': PUBLIC_SOURCE_ALLOWLIST[url]}
+        refs.append({**raw, 'id': 'public:' + raw['id'], 'title': raw['id'],
+                     'kind': 'public-primary', 'scope': raw['claimScope'],
+                     'receiptSha256': hashlib.sha256(_canonical(raw).encode()).hexdigest(),
+                     'excerptSha256': hashlib.sha256(excerpt.encode()).hexdigest()})
+    context = bundle['article']['generationMeta']['editorialContext']
+    context['sourceIds'] = [r['id'] for r in refs]
+    context['sourceReceiptSha256'] = hashlib.sha256(_canonical([r['receiptSha256'] for r in refs]).encode()).hexdigest()
+    bundle['references'] = refs
+    image = bundle['images'][0]
+    image['referenceIds'] = context['sourceIds'][:]
+    image['rendererEvidence'].update(sourceIds=context['sourceIds'][:],
+        sourceReceiptSha256=context['sourceReceiptSha256'])
+    bundle['article'].update(slug='thermos-parts-fit-fixture', categoryId='tumbler', title='サーモス水筒の品番から適合部品を探すには',
+        content='## 品番から確認する\n\n公式の検索と適合製品一覧を確認します。\n\n[ボトルの記事一覧](/categories/tumbler)')
+    image['rendererEvidence']['displayText'].update(title=bundle['article']['title'], heading='部品を確認する')
+    validate_nonproduct_bundle(bundle)
+    result['reviewAffiliateEvidence'] = nonproduct_affiliate_review(bundle)
+    return result
+
+
 if __name__ == '__main__':
-    print(_canonical(fixture()))
+    print(_canonical(thermos_enriched_fixture() if sys.argv[1:] == ['thermos-enriched'] else fixture()))

@@ -9,6 +9,10 @@ H2ごとに読者の場面を決め、実在する出典IDと確認済み事実�
 返却は既存の{article,brief}のみ。返却キーを増やさない。既存の字数・品質閾値・予算・承認を維持し、根拠のない文章で形式だけ満たさない。"""
 
 
+FACTUAL_SPECIFICITY_PROMPT = """出典の条件はそのまま保つ。「表示がない」と「表示が読めない」は別であり、読めない場合へ不存在の場合の結論を適用しない。表示場所は出典がその場所にあると明記した項目だけに結び、品番・色名の所在から本体JANなど別項目の所在や、全製品での見やすさを広げて断定しない。型番の数字から容量・数量・寸法を推定せず、明示された仕様だけを使う。
+公式資料の検索・照合・操作を読者の行動として案内する箇所には、提供された該当公式URLの完全一致リンクを本文にも置く。brief.linksやreferencesへの収録だけで本文リンクを置いた扱いにせず、未使用の資料数を埋めるためのリンク追加や未提供URLの生成はしない。"""
+
+
 POLISH_STYLE_PROMPT = """Geminiは上位確定仕様の意味を変えない校正だけを行う。eligibleの段落内の重複・迂言・定型接続を減らし、ギア男の自然な口調と文のリズムへ整える。
 構成・結論の変更、情報・例・条件の追加、数字・URL・CTAの変更は禁止。出典の限定や否定の意味も保持し、足りない根拠や論理をGeminiで補わない。公式引用・protectedは文体NGの置換対象外とし、既存の固定範囲を動かさない。
 返却は既存の{edits:[{index,text}]}のみ。変更不要ならedits:[]。採点・承認を行わない。"""
@@ -16,7 +20,7 @@ POLISH_STYLE_PROMPT = """Geminiは上位確定仕様の意味を変えない校�
 
 def get_draft_specificity_prompt():
     """Return the instruction appended to the existing upper-editor draft call."""
-    return DRAFT_SPECIFICITY_PROMPT
+    return DRAFT_SPECIFICITY_PROMPT + "\n" + FACTUAL_SPECIFICITY_PROMPT
 
 
 def get_polish_style_prompt():

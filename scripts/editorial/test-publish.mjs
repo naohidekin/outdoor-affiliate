@@ -31,8 +31,8 @@ function harness(b = bundle()) {
   return { b, state, deps, input: { bundle: b, revision: bundleHash(b) } };
 }
 function approval(revision) { return { revision, approverId: 'U-owner', evidence: { event: 'trusted-ledger-event' } }; }
-function pythonContractFixture() {
-  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py'], {
+function pythonContractFixture(kind) {
+  const result = spawnSync('python3', ['-B', 'scripts/editorial/nonproduct_contract_fixture.py', ...(kind ? [kind] : [])], {
     encoding: 'utf8', env: { PATH: process.env.PATH || '/usr/bin:/bin', PYTHONPATH: 'scripts/editorial', TZ: 'Asia/Tokyo' },
   });
   assert.equal(result.status, 0, result.stderr);
@@ -151,6 +151,46 @@ test('expanded official references require exact URL, public ID and claim scope'
       assert.throws(() => validateBundle(forged), /reference binding/);
     }
   }
+});
+
+function rebindReferences(b) {
+  for (const ref of b.references) {
+    ref.excerptSha256 = createHash('sha256').update(ref.excerpt).digest('hex');
+    ref.receiptSha256 = canonicalHash({ id: ref.id.slice('public:'.length), url: ref.url, canonicalUrl: ref.canonicalUrl,
+      checkedAt: ref.checkedAt, httpStatus: ref.httpStatus, excerpt: ref.excerpt, claimScope: ref.claimScope });
+  }
+  const c = b.article.generationMeta.editorialContext;
+  c.sourceIds = b.references.map(ref => ref.id);
+  c.sourceReceiptSha256 = canonicalHash(b.references.map(ref => ref.receiptSha256));
+  b.images[0].referenceIds = [...c.sourceIds];
+  Object.assign(b.images[0].rendererEvidence, { sourceIds: [...c.sourceIds], sourceReceiptSha256: c.sourceReceiptSha256 });
+}
+
+test('Python Thermos enrichment passes exact fit capsules and rejects fully rehashed forgeries', () => {
+  const b = pythonContractFixture('thermos-enriched').bundle;
+  assert.equal(b.references.length, 4);
+  assert.equal(b.references.filter(r => r.scope === 'thermos-parts-fit-example').length, 2);
+  assert.doesNotThrow(() => validateBundle(b));
+  for (const index of [2, 3]) {
+    for (const mutate of [
+      r => { r.excerpt = r.excerpt.replace(/部品JAN：\d+/, '部品JAN：0000000000000'); },
+      r => { r.excerpt = r.excerpt.replace(/JANコード=\d+/, 'JANコード=0000000000000'); },
+      r => { r.excerpt = r.excerpt.replace('色名=', '色名=別色'); },
+      r => { r.excerpt += '\n\n価格や在庫も確認済み'; },
+      r => { r.url += '&other=1'; r.canonicalUrl = r.url; },
+      r => { r.url = r.url.replace(/g=\d+/, 'g=000000000000'); r.canonicalUrl = r.url; },
+      r => { r.url = r.url.replace('www.thermos.jp', 'thermos.jp.example.com'); r.canonicalUrl = r.url; },
+      r => { r.id = 'public:unbound-fit'; },
+      r => { r.scope = r.claimScope = 'thermos-parts-lookup'; },
+    ]) {
+      const forged = structuredClone(b); mutate(forged.references[index]); rebindReferences(forged);
+      assert.throws(() => validateBundle(forged), /reference binding/);
+    }
+  }
+  const wrongCanonical = structuredClone(b); wrongCanonical.references[2].canonicalUrl += '&other=1'; rebindReferences(wrongCanonical);
+  assert.throws(() => validateBundle(wrongCanonical), /reference binding/);
+  const unbound = structuredClone(b); unbound.images[0].referenceIds.pop();
+  assert.throws(() => validateBundle(unbound), /owned illustration/);
 });
 
 test('nonproduct stage and publish skip product DB lookup and record explicit merchant NA after public zero-link readback', async () => {

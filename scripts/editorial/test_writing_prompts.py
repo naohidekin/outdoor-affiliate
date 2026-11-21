@@ -4,6 +4,7 @@ import unittest
 
 from writing_prompts import (
     DRAFT_SPECIFICITY_PROMPT,
+    FACTUAL_SPECIFICITY_PROMPT,
     POLISH_STYLE_PROMPT,
     get_draft_specificity_prompt,
     get_polish_style_prompt,
@@ -15,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class WritingPromptTests(unittest.TestCase):
     def test_getters_return_stable_nonempty_stage_specific_instructions(self):
-        self.assertEqual(DRAFT_SPECIFICITY_PROMPT, get_draft_specificity_prompt())
+        self.assertEqual(DRAFT_SPECIFICITY_PROMPT + "\n" + FACTUAL_SPECIFICITY_PROMPT, get_draft_specificity_prompt())
         self.assertEqual(POLISH_STYLE_PROMPT, get_polish_style_prompt())
         self.assertNotEqual(get_draft_specificity_prompt(), get_polish_style_prompt())
         for getter in (get_draft_specificity_prompt, get_polish_style_prompt):
@@ -32,6 +33,15 @@ class WritingPromptTests(unittest.TestCase):
         for constraint in ('数値根拠が必要', '数字や体験を強要しない', '反復', '免責',
                            '安全保証', '逆命題', 'protected', '文体NG', '不足'):
             self.assertIn(constraint, prompt)
+
+    def test_factual_specificity_preserves_conditions_fields_and_reader_links(self):
+        prompt = get_draft_specificity_prompt()
+        for term in ('「表示がない」と「表示が読めない」は別', '明記した項目だけ',
+                     '本体JAN', '全製品での見やすさ', '型番の数字から容量・数量・寸法を推定せず',
+                     '該当公式URLの完全一致リンクを本文にも', 'brief.linksやreferences',
+                     '未提供URLの生成はしない'):
+            self.assertIn(term, prompt)
+        self.assertNotIn(FACTUAL_SPECIFICITY_PROMPT, get_polish_style_prompt())
 
     def test_polish_cannot_take_over_editorial_decisions_or_change_sources(self):
         prompt = get_polish_style_prompt()
@@ -51,7 +61,7 @@ class WritingPromptTests(unittest.TestCase):
 
     def test_documentation_contains_exact_runtime_prompt_text(self):
         document = (ROOT / 'docs/editorial-writing-specificity.md').read_text()
-        for prompt in (get_draft_specificity_prompt(), get_polish_style_prompt()):
+        for prompt in (DRAFT_SPECIFICITY_PROMPT, POLISH_STYLE_PROMPT):
             self.assertIn('```text\n' + prompt + '\n```', document)
 
     def test_documentation_distinguishes_examples_and_hold_design_from_execution(self):
