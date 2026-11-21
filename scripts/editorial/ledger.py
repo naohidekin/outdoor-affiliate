@@ -630,6 +630,7 @@ class Ledger:
     def create_supplemental_candidate(self, theme, batch_id, slot, source_binding, *,
                                       social_eligible_period, now=None):
         """Create one immutable slot in the bounded batch without consuming regular 3/week."""
+        from supplemental_topics import approved_batch_binding
         now = timestamp(now)
         require(isinstance(theme, dict) and all(isinstance(theme.get(key), str)
                 and theme[key].strip() for key in
@@ -639,11 +640,16 @@ class Ledger:
         require(isinstance(ids, list) and ids and len(ids) == len(set(ids))
                 and all(isinstance(item, str) and item for item in ids),
                 'supplemental apparel product IDs required')
-        require(batch_id == 'apparel-2026-11-16' and type(slot) is int and 1 <= slot <= 3,
+        try:
+            binding = approved_batch_binding(batch_id)
+        except ValueError:
+            raise ValueError('invalid supplemental batch slot') from None
+        require(type(slot) is int and 1 <= slot <= binding['maxArticles'],
                 'invalid supplemental batch slot')
         require(isinstance(source_binding, str)
                 and re.fullmatch(r'[a-f0-9]{64}', source_binding), 'source binding required')
-        require(social_eligible_period == '2026-11-20', 'invalid supplemental social period')
+        require(social_eligible_period == binding['socialEligiblePeriod'],
+                'invalid supplemental social period')
         with self._tx() as db:
             jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
             existing = [job for job in jobs if job.get('kind') == 'supplemental_article'
@@ -654,7 +660,8 @@ class Ledger:
                         'supplemental slot conflict')
                 return existing[0]
             require(sum(job.get('kind') == 'supplemental_article'
-                        and job.get('batchId') == batch_id for job in jobs) < 3,
+                        and job.get('batchId') == batch_id for job in jobs)
+                    < binding['maxArticles'],
                     'supplemental batch cap reached')
             require(sum(job.get('kind') != 'article_revision' and not job.get('publication')
                         and job.get('stage') != 'rejected' for job in jobs) < 3,
@@ -665,7 +672,8 @@ class Ledger:
             require(week is not None, 'supplemental production period unavailable')
             job = dict(id='article-' + secrets.token_hex(12), kind='supplemental_article',
                        batchId=batch_id, batchSlot=slot, sourceBinding=source_binding,
-                       batchCallCap=96, socialEligiblePeriod=social_eligible_period,
+                       batchCallCap=binding['batchCallCap'],
+                       socialEligiblePeriod=social_eligible_period,
                        theme=json.loads(canonical(theme)),
                        week=week, stage='candidate', bundle=None, revision=None, review=None,
                        approval=None, publication=None, social=None, error=None,

@@ -733,7 +733,8 @@ class Runtime:
         from supplemental_topics import resolve_batch
         jobs = self.ledger.list_jobs()
         other_themes = [job['theme'] for job in jobs
-                        if job.get('kind') != 'supplemental_article']
+                        if (job.get('kind') != 'supplemental_article'
+                            or job.get('batchId') != manifest['batchId'])]
         resolved = resolve_batch(manifest, context, other_themes, now)
         bound = {job.get('batchSlot'): job for job in jobs
                  if job.get('kind') == 'supplemental_article'

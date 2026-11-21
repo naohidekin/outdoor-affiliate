@@ -448,9 +448,86 @@ class _MontbellProduct(HTMLParser):
             self.stack.pop()
 
 
+class _AmazonPrimaryFacts(HTMLParser):
+    """Extract facts only from Amazon's primary detail table ancestry."""
+    _VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+             'link', 'meta', 'param', 'source', 'track', 'wbr'}
+    _ANCESTORS = {'dp', 'dp-container', 'voyagerNorthstarBTF',
+                  'voyagerNorthstarATFData_feature_div'}
+
+    def __init__(self, source):
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.colors = []
+        self._table_depth = None
+        self._row_depth = None
+        self._label_depth = None
+        self._value_depth = None
+        self._label_parts = []
+        self._value_parts = []
+        self.feed(source)
+
+    @staticmethod
+    def _classes(attrs):
+        return set(str(attrs.get('class', '')).split())
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        path = self.stack + [(tag, attrs)]
+        depth = len(path)
+        if tag == 'table':
+            ids = {item.get('id') for _, item in path}
+            classes = self._classes(attrs)
+            if (self._ANCESTORS <= ids
+                    and {'a-keyvalue', 'voyager-ns-desktop-table'} <= classes):
+                self._table_depth = depth
+        elif tag == 'tr' and self._table_depth:
+            self._row_depth = depth
+            self._label_parts, self._value_parts = [], []
+        elif tag == 'th' and self._row_depth and 'voyager-ns-desktop-table-label' in self._classes(attrs):
+            self._label_depth = depth
+        elif tag == 'td' and self._row_depth and 'voyager-ns-desktop-table-value' in self._classes(attrs):
+            self._value_depth = depth
+        if tag not in self._VOID:
+            self.stack.append((tag, attrs))
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self._VOID:
+            self.handle_endtag(tag)
+
+    def handle_data(self, data):
+        if self._label_depth:
+            self._label_parts.append(data)
+        if self._value_depth:
+            self._value_parts.append(data)
+
+    def handle_endtag(self, tag):
+        depth = len(self.stack)
+        if tag == 'th' and self._label_depth == depth:
+            self._label_depth = None
+        if tag == 'td' and self._value_depth == depth:
+            self._value_depth = None
+        if tag == 'tr' and self._row_depth == depth:
+            label = ' '.join(' '.join(self._label_parts).split())
+            value = ' '.join(' '.join(self._value_parts).split())
+            if _norm(label) == _norm('カラー'):
+                self.colors.append(value)
+            self._row_depth = None
+            self._label_depth = None
+            self._value_depth = None
+            self._label_parts, self._value_parts = [], []
+        if tag == 'table' and self._table_depth == depth:
+            self._table_depth = None
+        index = next((i for i in range(len(self.stack) - 1, -1, -1)
+                      if self.stack[i][0] == tag), None)
+        if index is not None:
+            del self.stack[index:]
+
+
 class _MerchantProduct(HTMLParser):
     """Primary Amazon/Rakuten product projection; ignores recommendations."""
-    def __init__(self, source):
+    def __init__(self, source, *, amazon=False):
         super().__init__(convert_charrefs=True)
         self.stack = []
         self.title_parts = []
@@ -463,6 +540,7 @@ class _MerchantProduct(HTMLParser):
         self.hidden_asins = []
         self.options = {}
         self.twister_states = []
+        self.primary_color_facts = _AmazonPrimaryFacts(source).colors if amazon else []
         self._title_depth = None
         self._product_title_depth = None
         self._select_depth = None
@@ -579,7 +657,7 @@ def _inspect_merchant(product, page_url, html, channel):
     try:
         contract = apparel_contract(product)
         merchant = merchant_contract(product, channel)
-        page = _MerchantProduct(html)
+        page = _MerchantProduct(html, amazon=channel == "amazon")
         canonical = page.canonicals[0] if len(page.canonicals) == 1 else ""
         parsed = urlsplit(page_url)
         if channel == "amazon":
@@ -603,6 +681,10 @@ def _inspect_merchant(product, page_url, html, channel):
                 return None
             if merchant["merchantOptionState"] == "fixed":
                 dimensions = _amazon_selected_dimensions(page.twister_states, asin.group(1))
+                if dimensions is None:
+                    dimensions = _amazon_size_with_primary_color(
+                        page.twister_states, asin.group(1), page.primary_color_facts,
+                        merchant["merchantColor"])
                 if asin.group(1) != merchant["merchantVariant"]:
                     return None
                 if dimensions is None:
@@ -694,6 +776,29 @@ def _amazon_selected_dimensions(states, asin):
             return None
         result[target] = selected[0]["dimensionValueDisplayText"].strip()
     return result
+
+
+def _amazon_size_with_primary_color(states, asin, primary_colors, expected_color):
+    """Bind a size-only child ASIN to one independent primary-table color."""
+    if not isinstance(states, list) or len(states) != 1:
+        return None
+    dimensions = states[0].get("sortedDimValuesForAllDims")
+    if not isinstance(dimensions, dict) or set(dimensions) != {"size_name"}:
+        return None
+    values = dimensions["size_name"]
+    if not isinstance(values, list):
+        return None
+    selected = [item for item in values if isinstance(item, dict)
+                and item.get("dimensionValueState") == "SELECTED"]
+    if (len(selected) != 1 or selected[0].get("defaultAsin") != asin
+            or not isinstance(selected[0].get("dimensionValueDisplayText"), str)
+            or not selected[0]["dimensionValueDisplayText"].strip()
+            or not isinstance(primary_colors, list) or len(primary_colors) != 1
+            or not isinstance(primary_colors[0], str) or not primary_colors[0].strip()
+            or _norm(primary_colors[0]) != _norm(expected_color)):
+        return None
+    return {"color": primary_colors[0].strip(),
+            "size": selected[0]["dimensionValueDisplayText"].strip()}
 
 
 def _rakuten_variant_options(html):

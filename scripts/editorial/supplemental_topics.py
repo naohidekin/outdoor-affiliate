@@ -14,6 +14,14 @@ ROOT_FIELDS = {'schemaVersion', 'batchId', 'kind', 'notBefore', 'socialEligibleP
                'maxArticles', 'batchCallCap', 'status', 'apparelPolicy', 'slots'}
 SLOT_FIELDS = {'slot', 'productIds', 'slug', 'title', 'categoryId', 'query', 'selectionReason'}
 THEME_FIELDS = ('slug', 'title', 'categoryId', 'query', 'selectionReason')
+_APPROVED_BATCH_BINDINGS = {
+    'apparel-2026-11-16': {'batchId': 'apparel-2026-11-16', 'maxArticles': 3,
+                           'batchCallCap': 96,
+                           'socialEligiblePeriod': '2026-11-20'},
+    'apparel-2026-11-22': {'batchId': 'apparel-2026-11-22', 'maxArticles': 3,
+                           'batchCallCap': 96,
+                           'socialEligiblePeriod': '2026-11-20'},
+}
 
 
 def _canonical(value):
@@ -23,6 +31,16 @@ def _canonical(value):
 
 def _hash(value):
     return hashlib.sha256(_canonical(value).encode('utf-8')).hexdigest()
+
+
+def approved_batch_binding(batch_id):
+    """Return a copy of one explicitly owner-approved supplemental batch binding."""
+    if not isinstance(batch_id, str):
+        raise ValueError('invalid supplemental bounds')
+    binding = _APPROVED_BATCH_BINDINGS.get(batch_id)
+    if binding is None:
+        raise ValueError('invalid supplemental bounds')
+    return json.loads(_canonical(binding))
 
 
 def _theme_key(value):
@@ -40,10 +58,11 @@ def _aware(value):
 def validate_batch(value):
     if not isinstance(value, dict) or set(value) != ROOT_FIELDS:
         raise ValueError('invalid supplemental manifest')
+    binding = approved_batch_binding(value.get('batchId'))
     if (value.get('schemaVersion') != 1 or value.get('kind') != 'supplemental_article_batch'
-            or value.get('batchId') != 'apparel-2026-11-16'
-            or value.get('maxArticles') != 3 or value.get('batchCallCap') != 96
-            or value.get('socialEligiblePeriod') != '2026-11-20'):
+            or value.get('maxArticles') != binding['maxArticles']
+            or value.get('batchCallCap') != binding['batchCallCap']
+            or value.get('socialEligiblePeriod') != binding['socialEligiblePeriod']):
         raise ValueError('invalid supplemental bounds')
     _aware(value.get('notBefore'))
     policy = value.get('apparelPolicy')
