@@ -304,6 +304,15 @@ class Reporter:
                     metrics = read_snapshot(Path(source) / 'metrics' / 'latest.json') if source else None
                 statuses = [{'stage': j.get('stage')} for j in jobs[:1000]]
                 report = build_report(metrics, kind=kind, jobs=statuses, now=now)
+                learning = {'status': 'unavailable'}
+                try:
+                    from editorial_learning import build_receipt, store_receipt
+                    learning = store_receipt(self.root, build_receipt(
+                        kind, period, report['evidence'], jobs, now=now))
+                except Exception:
+                    # Learning is additive evidence only. It must never change an
+                    # existing report send/reconciliation outcome or trigger retry.
+                    pass
                 text = report['text']
                 unavailable = kind == 'monthly' and not all(report['evidence'].get(k) for k in ('current', 'ga4'))
                 text = editorial_report(jobs, now=now, rolling=kind == 'weekly', kind=kind) + '\n\n' + text
@@ -319,6 +328,7 @@ class Reporter:
             status = 'verified_unavailable' if unavailable else 'verified'
             _atomic(marker, {'status': status, 'kind': kind, 'period': period,
                              'at': now.isoformat(), 'receipt': receipt,
+                             **({'learning': learning} if kind in ('weekly', 'monthly') else {}),
                              **({'retryAfter': (now + timedelta(days=1)).isoformat()} if unavailable else {})})
             return {'kind': kind, 'period': period, 'status': 'data_pending' if unavailable else 'verified'}
         except Exception:

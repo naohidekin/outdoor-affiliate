@@ -2,10 +2,14 @@
 import copy
 import unittest
 
-from review_scoring import (CRITERIA_FIELDS, VERSION, article_applicability,
-                            calculate, verify_review)
+from review_scoring import (CRITERIA_FIELDS, VERSION_V1 as VERSION, VERSION as CURRENT_VERSION, article_applicability,
+                            calculate as current_calculate, verify_review)
 from nonproduct_contract_fixture import fixture
 from test_models import bundle
+
+
+def calculate(criteria, bundle):
+    return current_calculate(criteria, bundle, version=VERSION)
 
 
 class ReviewScoringTests(unittest.TestCase):
@@ -91,8 +95,9 @@ class LedgerArticleScoringTests(unittest.TestCase):
         from models import Models
         from test_models import ENV, Fake, response, article_review_value, FLAGS
         from ledger import fingerprint
+        b['articleReviewScoring']={'version':CURRENT_VERSION}
         value = Models(ENV, Fake(response(article_review_value(b)))).review(
-            b, dict(editorialRules='rubric', evidence=FLAGS))
+            b, dict(editorialRules='rubric', evidence=FLAGS, structural={'passed':True}))
         value.update(evidence=dict(FLAGS), fingerprint=fingerprint(b),
                      polish={'model': 'gemini-3.8-flash', 'validated': True})
         return value
@@ -129,7 +134,8 @@ class LedgerArticleScoringTests(unittest.TestCase):
     def test_ledger_near_threshold_display_pass_is_still_rejected(self):
         from ledger import valid_review, fingerprint
         b = bundle(); value = self.recorded_review(b)
-        value['criteria'] = dict.fromkeys(value['criteria'], 7.5)
+        b['articleReviewScoring']={'version':VERSION}
+        value['criteria'] = dict.fromkeys(CRITERIA_FIELDS, 7.5)
         value['criteria']['faq'] = 7.499999999999999
         value.update(calculate(value['criteria'], b))
         self.assertEqual(7.5, value['score'])
@@ -150,11 +156,11 @@ class LedgerArticleScoringTests(unittest.TestCase):
         from ledger import valid_review, fingerprint
         from models import Models
         from test_models import ENV, Fake, response, article_review_value, FLAGS
-        b = fixture()['bundle']; b['brief'] = {'format': 'guide'}
+        b = fixture()['bundle']; b['brief'] = {'format': 'guide'}; b['article']['content']+='\n\n'+'根拠のある説明。'*400; b['articleReviewScoring']={'version':CURRENT_VERSION}
         from topic_selection import nonproduct_affiliate_review
         evidence = dict(FLAGS, affiliate=nonproduct_affiliate_review(b))
         value = Models(ENV, Fake(response(article_review_value(b)))).review(
-            b, dict(editorialRules='rubric', evidence=evidence))
+            b, dict(editorialRules='rubric', evidence=evidence, structural={'passed':True}))
         value.update(evidence=evidence, fingerprint=fingerprint(b),
                      polish={'model': 'gemini-3.8-flash', 'validated': True})
         valid_review(value, fingerprint(b), b)

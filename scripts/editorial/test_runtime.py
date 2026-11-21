@@ -10,10 +10,22 @@ from unittest.mock import Mock, patch
 
 from runtime import Runtime, atomic, JST
 from model_budget import BudgetHold
-from test_quality import bundle
-from test_topic_selection import (feed as nonproduct_feed, nonproduct_bundle,
+from test_quality import bundle as quality_bundle
+from test_topic_selection import (feed as nonproduct_feed, nonproduct_bundle as source_nonproduct_bundle,
                                   proposal as nonproduct_proposal)
 from topic_selection import bind_nonproduct_theme
+
+
+def bundle():
+    value=quality_bundle()
+    value['article']['content']+='\n\n'+'確認済みの説明です。'*550
+    return value
+
+
+def nonproduct_bundle(*args, **kwargs):
+    value=source_nonproduct_bundle(*args, **kwargs)
+    value['article']['content']+='\n\n'+'根拠のある説明です。'*340
+    return value
 
 
 class ModelsFake:
@@ -29,7 +41,7 @@ class ModelsFake:
         b['brief']['externalSafe'] = True
         return b
 
-    def polish(self, source, brief):
+    def polish(self, source, brief, *, article=True):
         return {'content': source + ('\n## 勝手な見出し' if self.fail_polish else ''), 'model': 'gemini-3.8-flash'}
 
     def review(self, b, checks):
@@ -40,7 +52,8 @@ class ModelsFake:
             from review_scoring import FLAGS, article_applicability, calculate, verdict
             result.update({key: True for key in FLAGS})
             result['criteria'] = {key: 8.5 for key, value in article_applicability(b).items()
-                                  if value['applicability'] == 'applicable'}
+                                  if value['applicability'] == 'applicable' and key != 'word_count'}
+            result.update(improvementFeedback=[],hardChecks={'structure':checks['structural']['passed'] is True})
             result.update(calculate(result['criteria'], b))
             result['passed'] = verdict(result, result['calculation'])
         return result
@@ -86,7 +99,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual({'version': VERSION},
                          job['bundle']['articleReviewScoring'])
         inputs = next(call.args[2] for call in stages.call_args_list if call.args[1] == 'final_review')
-        self.assertEqual(2, inputs['schemaVersion']['stage'])
+        self.assertEqual(3, inputs['schemaVersion']['stage'])
         contract = inputs['articleScoringContract']
         self.assertEqual(VERSION, contract['version'])
         self.assertNotIn('passed', contract['wireSchema']['properties'])
@@ -95,6 +108,19 @@ class RuntimeTests(unittest.TestCase):
         stripped.pop('scoringVersion')
         with self.assertRaisesRegex(ValueError, 'bound article scoring version required'):
             valid_review(stripped, job['revision'], job['bundle'])
+
+    def test_partial_polish_provenance_reaches_reviewer_and_persisted_review(self):
+        original=self.models.polish
+        selection={'actualResponseId':'gemini-fixture','acceptedIndices':[0],
+                   'rejected':[{'index':1,'reason':'protected_content_introduced'}],
+                   'outcome':'partial','rawResponseAccepted':False}
+        def polish(source,brief):
+            return dict(original(source,brief),polishSelection=selection)
+        with patch.object(self.models,'polish',side_effect=polish),patch.object(self.models,'review',wraps=self.models.review) as review:
+            self.runtime.produce(limit=1)
+        job=next(j for j in self.runtime.ledger.list_jobs() if j.get('bundle'))
+        self.assertEqual(selection,job['review']['polish']['selection'])
+        self.assertEqual(selection,review.call_args.args[1]['polishPreservation']['selection'])
 
     def test_final_reviewer_receives_measured_body_length_and_unchanged_format_bounds(self):
         from unittest.mock import patch
@@ -172,6 +198,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertFalse((self.runtime.root / 'production-attempts').exists())
 
     def test_mixed_period_saves_three_and_backfills_one_free_slot_without_research(self):
+        from test_topic_selection_fit_sources import registered_reference
         self.configure_production_schedule()
         old = [self.runtime.ledger.create_candidate({'slug': f'carry-{i}'},
                f'2026-11-13T09:0{i}:00+09:00') for i in range(2)]
@@ -181,7 +208,11 @@ class RuntimeTests(unittest.TestCase):
         topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
                   ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
                   ('sleeping-bag-care', '寝袋を乾燥して保管するには？', ['汚れ確認', '乾燥', '保管'])]
-        public_ids = ['public:tent', 'public:layer', 'public:camp']
+        source_refs = [registered_reference(url, text) for url, text in (
+            ('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
+            ('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。'),
+            ('https://www.snowpeak.co.jp/contents/campstarterbook/', '寝袋を十分に乾燥させて汚れを確認し保管します。'))]
+        public_ids = [r['id'] for r in source_refs]
         for i, (slug, question, outline) in enumerate(topics):
             proposals.append({'slug': slug, 'title': question, 'categoryId': 'tent',
                 'productIds': [], 'topicType': 'knowhow', 'query': question,
@@ -190,11 +221,7 @@ class RuntimeTests(unittest.TestCase):
                 'overlapRationale': 'distinct', 'selectionReason': 'verified',
                 'sourceIds': ['gsc:fixture', public_ids[i]], 'proposedAction': 'new',
                 'overlapArticleIds': [], 'needsStatus': 'not_applicable'})
-        feed = {'status': 'verified', 'sources': [
-                {'id': 'public:tent', 'scope': 'tent-care', 'receiptSha256': 'a' * 64},
-                {'id': 'public:layer', 'scope': 'layering-concept-only', 'receiptSha256': 'b' * 64},
-                {'id': 'public:camp', 'scope': 'camp-care', 'receiptSha256': 'c' * 64}],
-                'illustrations': []}
+        feed = {'status': 'verified', 'sources': source_refs, 'illustrations': []}
         research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
             *[{'id': item['id'], 'kind': 'public_reference'} for item in feed['sources']]]}
         self.runtime.catalog.request = lambda *_args, **_kwargs: None
@@ -288,6 +315,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertIsNone(marker['requestOccurred'])
 
     def test_mixed_insufficient_pool_returns_same_known_hold_without_second_ai_call(self):
+        from test_topic_selection_fit_sources import registered_reference
         self.configure_production_schedule()
         proposals = [
             {'slug': 'tent-dry-hold', 'title': 'テントを乾燥して保管するには？',
@@ -295,22 +323,22 @@ class RuntimeTests(unittest.TestCase):
              'query': 'テント 乾燥 保管', 'readerQuestion': 'テントを乾燥して保管するには？',
              'intent': 'informational', 'outline': ['汚れ確認', '乾燥', '保管'],
              'priority': 90, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
-             'sourceIds': ['gsc:fixture', 'public:tent'], 'proposedAction': 'new',
+             'sourceIds': ['gsc:fixture', 'public:coleman-care'], 'proposedAction': 'new',
              'overlapArticleIds': [], 'needsStatus': 'not_applicable'},
             {'slug': 'layering-hold', 'title': '重ね着の順番は？',
              'categoryId': 'wear', 'productIds': [], 'topicType': 'knowhow',
              'query': '重ね着 順番', 'readerQuestion': '重ね着の順番は？',
              'intent': 'informational', 'outline': ['肌着', '中間着', '上着'],
              'priority': 89, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
-             'sourceIds': ['gsc:fixture', 'public:layer'], 'proposedAction': 'new',
+             'sourceIds': ['gsc:fixture', 'public:montbell-layering'], 'proposedAction': 'new',
              'overlapArticleIds': [], 'needsStatus': 'not_applicable'}]
         feed = {'status': 'verified', 'sources': [
-            {'id': 'public:tent', 'scope': 'tent-care', 'receiptSha256': 'a' * 64},
-            {'id': 'public:layer', 'scope': 'layering-concept-only', 'receiptSha256': 'b' * 64}],
+            registered_reference('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
+            registered_reference('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。')],
             'illustrations': []}
         research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
-            {'id': 'public:tent', 'kind': 'public_reference'},
-            {'id': 'public:layer', 'kind': 'public_reference'}], 'categories': []}
+            {'id': 'public:coleman-care', 'kind': 'public_reference'},
+            {'id': 'public:montbell-layering', 'kind': 'public_reference'}], 'categories': []}
         with patch('runtime.datetime') as clock, patch('runtime.require_fresh_daily_metrics'), \
                 patch('runtime.collect_primary_sources', return_value=feed) as collect, \
                 patch.object(self.runtime, '_research_context', return_value=research), \
@@ -1001,7 +1029,7 @@ class RuntimeTests(unittest.TestCase):
         job = self.published_job()
         health = self.runtime.tick()
         summary = next(a for a in health['articles'] if a['id'] == job['id'])
-        self.assertEqual({'model': 'upper', 'score': 8.5, 'passed': True}, summary['review'])
+        self.assertEqual({'model': 'upper', 'score': job['review']['score'], 'passed': True}, summary['review'])
         self.assertTrue(summary['publication']['verified'])
         self.assertEqual('approved', summary['approval']['action'])
         self.assertEqual('social_review', summary['social']['status'])

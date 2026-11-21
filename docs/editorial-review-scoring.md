@@ -1,5 +1,48 @@
 # 記事審査の評価と計算の分離
 
+## 現行 v2：品質判定とadvisory評価
+
+2026-11-21の本人選択により、新しい記事審査は`article-review-scoring-v2`を使う。
+`admissionMode=hard_checks_and_owner_floors`を保存し、事実・画像・商用導線の適用契約・医療・render・構造のhard検査、
+原義のWISE六軸floor（2,2,2,2,3,2）、criticalな`issues`が空であることを合格条件とする。
+Supervisor平均7.5はadvisoryであり、低い平均だけを理由に不合格やcritical issueにしない。
+高い評価や平均でhard検査・六軸floorを代替することもない。記事とSNSの本人承認は別のままで、SNSのschemaと既存gateは変更しない。
+
+0–10の各評価も実本文への独立した評価として保持する。1–4点を2.5倍する尺度ではない。
+目安は0–2=欠如・矛盾、3–4=薄い一般論、5–6=部分的、7–8=継続して具体的で有用、9–10=全体を通じて際立つ強み。
+Witは適切で記憶に残る表現、Insightは理解を変える根拠付きの区別、Sincereは根拠に根ざした具体的問題意識、
+Empthは簡潔に腹落ちし人へ説明できる内容、AI-freeは定型反復のない自然な文章、Senseは有用な半歩先の角度を見る。
+原本の六軸定義と1–4アンカーは変更しない。調査記事・真正な著者体験なしを理由にSincereを自動的に2点へ制限せず、
+実際の文章の不足や強みを示す。高評価を保証したり体験・数字を創作したりしない。
+
+`word_count`はAI wireから除外する。既存formatの本文字数範囲内ならprogramが10点を与え、範囲外はhard failとする。
+soft目標からの距離で加減点しない。本文の不足や反復は該当する文章評価で扱う。
+購入導線／比較表のtyped N/Aは従来どおりstrict nonproduct検証時だけ計算上7.5を寄与させる。
+11平均・activeMean・thresholdMetは説明用に厳密計算して保存し、平均の異なる適用範囲間比較や合否の代用にしない。
+
+審査の同じ応答で、最大6件の`improvementFeedback`を返す。wireは
+`{criterion, quote, anchor, nextAction}`のみで、AIへparagraph indexを数えさせない。
+quoteは1–240字、anchorは1–160字、nextActionは1–400字。programが本文の空行区切り段落／FAQ回答から唯一の完全一致を探し、
+保存時に`location={kind:paragraph|faq_answer,index:0始まり}`を付ける。不存在・複数一致・不明schema・AIがlocationを追加した場合は契約エラー。
+低いadvisory評価には、実際に低評価となった項目の少なくとも1つに対応する引用付き改善を要求する。commercialでは適用中のaffiliate_links/comparison_tableも対象にできるが、N/Aやprogram由来word_countは対象外とする。criticalな問題をfeedbackだけへ隠さない。
+原文全体の再送、追加AI工程、schema feedback loop、自動再試行は作らず、raw応答artifactも変更しない。
+
+v1の算術・7.5合格条件・保存記録検証はversion別の経路で保持する。v2導入で旧reviewを合格換算・上書きしない。
+通常Runtimeはbundle直下のversion markerとfinal入力version 3（wire schema／実装hashを含む）で旧cacheを分離する。
+本人指定の`evaluation_only`で旧本文をv2評価する場合も、別receiptへ評価結果を保存し、旧履歴・承認・admissionには使わない。
+
+## 通常polishの限定採否
+
+実Gemini応答のschema・型・重複／範囲外indexはfatalのまま。
+個々のeditがlocked段落、新しい保護literal／数値、段落境界変更などへ違反した場合は、そのedit全体を棄却して元段落を残す。
+他の実応答editだけで作った全候補を`inspect_polish`と既存format字数範囲で検査し、失敗なら採用候補editも全棄却して元sourceを保持する。
+通信異常・認証異常を元sourceで成功扱いにするfallbackではない。
+`acceptedIndices`・`rejected[{index,reason}]`・`outcome`・`actualResponseId`・`rawResponseAccepted`を候補へ付け、
+最終審査のpreservation証拠と保存reviewの`polish.selection`にも残す。`partial`や`no_changes_after_rejection`をraw応答全体の合格と呼ばない。
+新Gemini呼出し・架空usage・二重課金記録・counter resetはなく、既存の実呼出し／raw artifact／費用を保持する。
+
+以下は旧v1の経緯・保存互換仕様であり、v2の記事admissionへ旧7.5 gateを再適用しない。
+
 ## 実際に起きた不整合
 
 2026-11-20の保存済みClaude審査応答5件を読み取り照合した。以下は旧応答の観測値であり、新しい記事評価ではない。元artifact・台帳・利用量・承認は変更しない。
@@ -16,7 +59,7 @@
 
 これとは別に、実本文には説明の反復、定型表現、独自の切り口の弱さがあった。採点契約の修正で、この本文品質の問題まで解消したとは扱わない。主観的な項目評価のばらつきも、算術修正だけでゼロにはならない。
 
-## 新しい契約 `article-review-scoring-v1`
+## 保存互換の旧契約 `article-review-scoring-v1`
 
 AIは、適用される項目の0〜10評価、オーナー原義の六軸1〜4評価、事実等の必須検査、必須修正事項・所見だけを返す。記事用wire schemaには総合`score`と`passed`を持たせない。対象外項目も送受信の数値欄から外す。余分な総合点や対象外の0・5・7.5・10を返した場合は契約違反で停止する。自動再試行は追加しない。
 
@@ -46,3 +89,9 @@ final-reviewの入力versionは2とし、scoring version・applicability・wire 
 具体性の執筆promptは[出典に結びついた具体性](editorial-writing-specificity.md)に記載する。同じ上位執筆呼出しの中で節ごとの問いと出典を整理し、Geminiは確定した意味の校正に限定する。新しいAI工程や呼出しは追加しない。
 
 この修正だけで一次資料が十分になるわけではない。資料不足を文字数や資料数の恣意的な閾値で判断する新しい自動holdは作らず、出典・内容の既存検査と意味審査を残す。追加promptの接続と算術のoffline検証は、実モデルによる新本文の品質合格を保証しない。
+
+固定本文のprice/rating表示抑止は、`build_v2_fixed_candidate(job,candidate)`で明示的な新候補を作る。unmarked/v1からv2 markerとcurrent policyへの遷移だけを許可し、本文・brief・元CAS expectedRevisionは不変、新candidateRevisionを固定する。review関数内でmetadataを後付けしない。既存guardで実ledger保存後にfresh v2 review・独立QA・本人の新候補承認を必要とし、旧reviewを昇格させない。
+
+`editorialLearnings`は公開反応の実測と未検証仮説を含む編集参考であり、商品・著者の事実根拠や因果関係の証明ではない。research/draftへ短い同一注記を加えるだけで、入力の再掲・新AI工程を追加しない。
+
+SNS本文校正とhealth probeは明示的な非記事modeを使い、従来のstrict edit検証を維持する。記事字数boundsや部分採用をSNSへ転用しない。

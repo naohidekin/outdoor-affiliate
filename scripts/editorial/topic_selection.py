@@ -24,6 +24,8 @@ PUBLIC_SOURCE_ALLOWLIST = {
     "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash-decision",
     "https://www.thermos.jp/goods/pdpts": "thermos-parts-lookup",
     "https://www.thermos.jp/goods/ptpds": "thermos-parts-lookup",
+    "https://www.thermos.jp/goods/ptpdl?g=900067140990": "thermos-parts-fit-example",
+    "https://www.thermos.jp/goods/ptpdl?g=900068940990": "thermos-parts-fit-example",
 }
 SOURCE_IDS = {
     "https://www.coleman.co.jp/customersupport/faq/": "coleman-care",
@@ -32,7 +34,157 @@ SOURCE_IDS = {
     "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash",
     "https://www.thermos.jp/goods/pdpts": "thermos-product-parts",
     "https://www.thermos.jp/goods/ptpds": "thermos-parts-product",
+    "https://www.thermos.jp/goods/ptpdl?g=900067140990": "thermos-jnls-gasket-fit",
+    "https://www.thermos.jp/goods/ptpdl?g=900068940990": "thermos-jnls1000-gasket-fit",
 }
+FIT_EXAMPLES = {
+    "https://www.thermos.jp/goods/ptpdl?g=900067140990": {
+        "part": "JNL-Sパッキンセット（フタパッキン・せんパッキン各1個）",
+        "partJan": "4562344398367", "model": "JNL-S500",
+        "color": "BK-J （ブラックジェイド）", "productJan": "4562344397339"},
+    "https://www.thermos.jp/goods/ptpdl?g=900068940990": {
+        "part": "JNL-S1000パッキンセット（フタパッキン・せんパッキン各1個）",
+        "partJan": "4562344404532", "model": "JNL-S1000",
+        "color": "MLGY （ミネラルグレー）", "productJan": "4562344400664"},
+}
+
+
+def _fit_capsule(url):
+    item = FIT_EXAMPLES[url]
+    return ("部品：" + item["part"] + "\n\n部品JAN：" + item["partJan"] +
+            "\n\n適合製品一覧：品番=" + item["model"] + "；色名=" + item["color"] +
+            "；JANコード=" + item["productJan"])
+
+
+class _FitHTML(HTMLParser):
+    """Small tree for the fixed fit pages only; never use alt/script/price text."""
+    VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.root = {"tag": "root", "attrs": {}, "children": []}
+        self.stack = [self.root]
+        self.malformed = False
+
+    def handle_starttag(self, tag, attrs):
+        if len({key for key, _ in attrs}) != len(attrs):
+            self.malformed = True
+        node = {"tag": tag, "attrs": dict(attrs), "children": []}
+        self.stack[-1]["children"].append(node)
+        if tag not in self.VOID:
+            self.stack.append(node)
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self.VOID:
+            self.handle_endtag(tag)
+
+    def handle_endtag(self, tag):
+        if tag in self.VOID:
+            return
+        if len(self.stack) > 1 and self.stack[-1]["tag"] == tag:
+            self.stack.pop()
+        elif tag in {"main", "h1", "h2", "table", "tr", "td", "th"}:
+            self.malformed = True
+
+    def handle_data(self, data):
+        self.stack[-1]["children"].append(data)
+
+    @staticmethod
+    def hidden(node):
+        attrs = node["attrs"]
+        style = re.sub(r"\s+", "", attrs.get("style", "")).lower()
+        return (node["tag"] in ("script", "style", "noscript", "template") or
+                "hidden" in attrs or "inert" in attrs or attrs.get("aria-hidden", "").lower() == "true" or
+                bool(re.search(r"(?:display:none|visibility:hidden)", style)) or
+                bool(set(attrs.get("class", "").split()) & {"hidden", "d-none", "is-hidden"}))
+
+    @classmethod
+    def nodes(cls, node):
+        if cls.hidden(node):
+            return
+        yield node
+        for child in node["children"]:
+            if isinstance(child, dict):
+                yield from cls.nodes(child)
+
+    @classmethod
+    def text(cls, node, exclude=()):
+        if cls.hidden(node) or set(node["attrs"].get("class", "").split()) & set(exclude):
+            return ""
+        return "".join(child if isinstance(child, str) else cls.text(child, exclude)
+                       for child in node["children"])
+
+
+def fit_example_excerpt(url, html):
+    """Return only the registered part + exact same-row product, or omit."""
+    if url not in FIT_EXAMPLES:
+        return None
+    tree = _FitHTML()
+    try:
+        tree.feed(html)
+        tree.close()
+    except (ValueError, TypeError):
+        return None
+    if tree.malformed or len(tree.stack) != 1:
+        return None
+    norm = lambda value: " ".join(value.split())
+    roots = [n for n in tree.nodes(tree.root) if n["tag"] == "main"]
+    if len(roots) != 1:
+        return None
+    nodes = list(tree.nodes(roots[0]))
+    headings = [n for n in nodes if n["tag"] == "h1"]
+    item = FIT_EXAMPLES[url]
+    if len(headings) != 1 or norm(tree.text(headings[0], ("_price", "_code"))) != item["part"]:
+        return None
+    codes = [n for n in tree.nodes(headings[0]) if "_code" in n["attrs"].get("class", "").split()]
+    if len(codes) != 1 or norm(tree.text(codes[0])) != "JANコード：" + item["partJan"]:
+        return None
+    labels = [n for n in nodes if n["tag"] == "h2" and norm(tree.text(n)) == "適合製品一覧"]
+    areas = [n for n in nodes if n["attrs"].get("id") == "list_area"]
+    if len(labels) != 1 or len(areas) != 1 or nodes.index(labels[0]) > nodes.index(areas[0]):
+        return None
+    if any(n["tag"] in ("h1", "h2") for n in
+           nodes[nodes.index(labels[0]) + 1:nodes.index(areas[0])]):
+        return None
+    tables = [n for n in tree.nodes(areas[0]) if n["tag"] == "table"]
+    if len(tables) != 1:
+        return None
+    rows = [n for n in tree.nodes(tables[0]) if n["tag"] == "tr"]
+    extracted = []
+    for row in rows:
+        cells = [n for n in tree.nodes(row) if n["tag"] in ("td", "th")]
+        if (len(cells) != 3 or any(n["attrs"].get(k, "1") != "1"
+                                 for n in cells for k in ("colspan", "rowspan"))):
+            return None
+        extracted.append(([n["tag"] for n in cells], [norm(tree.text(n)) for n in cells]))
+    if not extracted or extracted[0] != (["th"] * 3, ["品番", "色名", "JANコード"]):
+        return None
+    if any(tags != ["td"] * 3 for tags, _ in extracted[1:]):
+        return None
+    matching = [values for _, values in extracted[1:]
+                if values[:2] == [item["model"], item["color"]]]
+    if matching != [[item["model"], item["color"], item["productJan"]]]:
+        return None
+    return _fit_capsule(url)
+
+
+def _lookup_blocks(url, html):
+    """Keep legacy blocks unchanged; pdpts has one visible div-only location note."""
+    parsed = _Blocks()
+    parsed.feed(html)
+    blocks = list(parsed.blocks)
+    if url == 'https://www.thermos.jp/goods/pdpts':
+        tree = _FitHTML()
+        tree.feed(html)
+        areas = [n for n in tree.nodes(tree.root) if n['attrs'].get('id') == 'list_area']
+        if not tree.malformed and len(areas) == 1:
+            matches = re.findall(
+                r'製品の品番・色名は[^。]{0,180}底面(?:シール|ラベル)[^。]{0,180}JANコード付近に記載されております。',
+                ' '.join(tree.text(areas[0]).split()))
+            if len(matches) == 1 and matches[0] not in blocks:
+                blocks.append(matches[0])
+    return blocks
 SOURCE_KEYWORDS = {
     "https://www.coleman.co.jp/customersupport/faq/": ("乾燥",),
     "https://www.snowpeak.co.jp/contents/campstarterbook/": ("乾燥", "保管"),
@@ -134,6 +286,12 @@ def _primary_excerpt(url, blocks):
                     and re.search(r"品番|色名|JAN|交換用部品|適合|AND|半角|全角|表記|スペース", block, re.I)
                     and len("\n\n".join(selected + [block])) <= 500):
                 selected.append(block)
+        if url == "https://www.thermos.jp/goods/pdpts":
+            location = next((b for b in blocks if b not in selected and
+                             re.search(r"底.{0,20}(?:ラベル|シール|品番)|ラベル.{0,20}品番", b) and
+                             10 <= len(b) <= 500 and len("\n\n".join(selected + [b])) <= 500), None)
+            if location:
+                selected.append(location)
         return "\n\n".join(selected)
     if anchor is not None:
         return anchor
@@ -169,9 +327,10 @@ def collect_primary_sources(request, *, period, output_path, now=None):
             failures.append({"url": url, "reason": "canonical_or_content_type_mismatch",
                              "httpStatus": status})
             continue
-        parsed = _Blocks()
-        parsed.feed(body)
-        excerpt = _primary_excerpt(url, parsed.blocks)
+        if url in FIT_EXAMPLES:
+            excerpt = fit_example_excerpt(url, body)
+        else:
+            excerpt = _primary_excerpt(url, _lookup_blocks(url, body))
         if not excerpt or len(excerpt) > 500:
             failures.append({"url": url, "reason": "bounded_claim_not_found"})
             continue
@@ -209,6 +368,10 @@ def reverify_bound_public_sources(request, references, *, now=None):
     checked_at = (now or datetime.now(JST)).astimezone(JST).isoformat()
     observations = []
     for reference in references:
+        try:
+            validate_public_reference(reference)
+        except TopicSelectionError:
+            raise NonproductSourceHold("nonproduct_source_recheck_changed") from None
         url = reference.get("url") if isinstance(reference, dict) else None
         if (url not in PUBLIC_SOURCE_ALLOWLIST or reference.get("canonicalUrl") != url
                 or reference.get("scope") != PUBLIC_SOURCE_ALLOWLIST[url]
@@ -228,17 +391,20 @@ def reverify_bound_public_sources(request, references, *, now=None):
             raise
         except (KeyError, UnicodeError, OSError, ValueError, TypeError):
             raise NonproductSourceHold("nonproduct_source_recheck_unavailable") from None
-        parsed = _Blocks()
-        try:
-            parsed.feed(html)
-        except (ValueError, TypeError):
-            raise NonproductSourceHold("nonproduct_source_recheck_unavailable") from None
-        visible_blocks = {" ".join(block.split()) for block in parsed.blocks if block.strip()}
         raw_excerpt = str(reference.get("excerpt", ""))
-        excerpt_parts = [" ".join(part.split()) for part in raw_excerpt.split("\n\n")
-                         if part.strip()]
-        if not excerpt_parts or any(part not in visible_blocks for part in excerpt_parts):
-            raise NonproductSourceHold("nonproduct_source_recheck_changed")
+        if url in FIT_EXAMPLES:
+            if fit_example_excerpt(url, html) != raw_excerpt:
+                raise NonproductSourceHold("nonproduct_source_recheck_changed")
+        else:
+            try:
+                blocks = _lookup_blocks(url, html)
+            except (ValueError, TypeError):
+                raise NonproductSourceHold("nonproduct_source_recheck_unavailable") from None
+            visible_blocks = {" ".join(block.split()) for block in blocks if block.strip()}
+            excerpt_parts = [" ".join(part.split()) for part in raw_excerpt.split("\n\n")
+                             if part.strip()]
+            if not excerpt_parts or any(part not in visible_blocks for part in excerpt_parts):
+                raise NonproductSourceHold("nonproduct_source_recheck_changed")
         observations.append({"sourceId": reference.get("id"), "url": url,
                              "checkedAt": checked_at, "httpStatus": 200,
                              "boundExcerptSha256": _sha(raw_excerpt),
@@ -348,13 +514,17 @@ def allowed_claim_scopes(proposal):
         all_text = text + " " + " ".join(map(str, proposal.get("outline", [])))
         if len(narrow) != 1 or NARROW_SCOPE_EXCLUSIONS[narrow[0]].search(all_text):
             return []
+        if (narrow == ["thermos-parts-lookup"] and
+                any(source in {"public:" + SOURCE_IDS[url] for url in FIT_EXAMPLES}
+                    for source in proposal.get("sourceIds", []))):
+            return narrow + ["thermos-parts-fit-example"]
         return narrow
     return sorted(scope for scope, pattern in CLAIM_SCOPE_PATTERNS.items() if pattern.search(text))
 
 
 def _scope_family(scope):
     return {"layering-concept-only": "layering", "coleman-synthetic-wash-decision": "wash",
-            "thermos-parts-lookup": "parts"}.get(scope, "care")
+            "thermos-parts-lookup": "parts", "thermos-parts-fit-example": "parts"}.get(scope, "care")
 
 
 def _outline_scope_families(proposal):
@@ -518,10 +688,61 @@ def bind_nonproduct_theme(theme, feed):
         "references": references, "images": [], "sourceReceiptSha256": receipt_sha,
         "allowedClaimScopes": scopes,
     }
+    validate_nonproduct_contract(bound)
     return bound
 
 
+def validate_public_reference(item):
+    """Validate the full fixed-registry receipt, never a caller's verified flag."""
+    fields = {"id", "url", "canonicalUrl", "checkedAt", "httpStatus", "excerpt", "claimScope",
+              "title", "excerptSha256", "receiptSha256", "kind", "scope"}
+    if not isinstance(item, dict) or set(item) != fields:
+        raise TopicSelectionError("nonproduct_reference_receipt_invalid")
+    url = item["url"]
+    if (not isinstance(url, str) or url not in PUBLIC_SOURCE_ALLOWLIST or
+            item["id"] != "public:" + SOURCE_IDS[url] or item["canonicalUrl"] != url or
+            type(item["httpStatus"]) is not int or item["httpStatus"] != 200 or
+            _aware(item["checkedAt"]) is None or item["kind"] != "public-primary" or
+            item["scope"] != PUBLIC_SOURCE_ALLOWLIST[url] or item["claimScope"] != item["scope"] or
+            not isinstance(item["title"], str) or not item["title"].strip() or
+            not isinstance(item["excerpt"], str) or not 1 <= len(item["excerpt"]) <= 500):
+        raise TopicSelectionError("nonproduct_reference_receipt_invalid")
+    receipt = {key: item[key] for key in
+               ("url", "canonicalUrl", "checkedAt", "httpStatus", "excerpt", "claimScope")}
+    receipt["id"] = SOURCE_IDS[url]
+    if (item["excerptSha256"] != _sha(item["excerpt"]) or
+            item["receiptSha256"] != _sha(_canonical(receipt)) or
+            (url in FIT_EXAMPLES and item["excerpt"] != _fit_capsule(url))):
+        raise TopicSelectionError("nonproduct_reference_receipt_invalid")
+    return item
+
+
+def validate_nonproduct_contract(theme):
+    contract = theme.get("nonProductContract") if isinstance(theme, dict) else None
+    fields = {"route", "commerce", "references", "images", "sourceReceiptSha256", "allowedClaimScopes"}
+    if (not isinstance(contract, dict) or set(contract) != fields or theme.get("productIds") != [] or
+            contract["route"] != "verified_public_sources" or contract["commerce"] != "not_applicable" or
+            contract["allowedClaimScopes"] != allowed_claim_scopes(theme)):
+        raise TopicSelectionError("nonproduct_contract_required")
+    refs = contract["references"]
+    if not isinstance(refs, list) or not refs or contract["images"] != []:
+        raise TopicSelectionError("nonproduct_evidence_incomplete")
+    for item in refs:
+        validate_public_reference(item)
+    ids = [item["id"] for item in refs]
+    source_ids = theme.get("sourceIds")
+    if (not isinstance(source_ids, list) or any(not isinstance(i, str) for i in source_ids) or
+            len(set(source_ids)) != len(source_ids) or len(set(ids)) != len(ids) or
+            set(ids) != {i for i in source_ids if i.startswith("public:")} or
+            any(item["scope"] not in contract["allowedClaimScopes"] for item in refs) or
+            contract["sourceReceiptSha256"] != _sha(_canonical([r["receiptSha256"] for r in refs])) or
+            not _outline_scope_families(theme).issubset({_scope_family(r["scope"]) for r in refs})):
+        raise TopicSelectionError("nonproduct_evidence_incomplete")
+    return contract
+
+
 def gather_nonproduct(theme, catalog):
+    validate_nonproduct_contract(theme)
     contract = theme.get("nonProductContract") if isinstance(theme, dict) else None
     if (theme.get("productIds") != [] or not isinstance(contract, dict)
             or contract.get("route") != "verified_public_sources"
@@ -585,12 +806,25 @@ def validate_nonproduct_bundle(bundle):
         raise TopicSelectionError("nonproduct_editorial_context_invalid")
     references = bundle.get("references")
     images = bundle.get("images")
+    if not isinstance(references, list) or not references:
+        raise TopicSelectionError("nonproduct_source_binding_invalid")
+    for item in references:
+        validate_public_reference(item)
+    if len({item['id'] for item in references}) != len(references):
+        raise TopicSelectionError("nonproduct_source_binding_invalid")
+    fit = any(r['scope'] == 'thermos-parts-fit-example' for r in references)
+    if fit:
+        effective_scopes = allowed_claim_scopes({'title': article.get('title', ''),
+            'sourceIds': [r['id'] for r in references], 'outline': []})
+        if (not effective_scopes or any(r['scope'] not in effective_scopes for r in references)):
+            raise TopicSelectionError("nonproduct_claim_scope_mismatch")
     if (not isinstance(references, list) or not references or
             [item.get("id") for item in references] != context["sourceIds"]
             or context["sourceReceiptSha256"] !=
             _sha(_canonical([item.get("receiptSha256") for item in references]))):
         raise TopicSelectionError("nonproduct_source_binding_invalid")
     for item in references:
+        validate_public_reference(item)
         receipt = {key: item.get(key) for key in
                    ("id", "url", "canonicalUrl", "checkedAt", "httpStatus", "excerpt", "claimScope")}
         checked = _aware(item.get("checkedAt"))
@@ -621,6 +855,16 @@ def validate_nonproduct_bundle(bundle):
         raise TopicSelectionError("nonproduct_image_binding_invalid")
     if article.get("eyecatch") != bound_images[0].get("url") or len(bound_images) != 1:
         raise TopicSelectionError("nonproduct_eyecatch_binding_invalid")
+    if fit:
+        image = bound_images[0]
+        renderer = image.get('rendererEvidence')
+        if (not isinstance(renderer, dict) or renderer.get('passed') is not True or
+                renderer.get('evidencePassed') is not True or renderer.get('networkRequests') != 0 or
+                renderer.get('sourceIds') != context['sourceIds'] or
+                renderer.get('sourceReceiptSha256') != context['sourceReceiptSha256'] or
+                renderer.get('contentHash') != image['compositionSha256'] or
+                renderer.get('pngSha256') != image['sha256']):
+            raise TopicSelectionError("nonproduct_image_binding_invalid")
     route = bundle.get("commercialRoute")
     expected = {"status": "not_applicable", "reason": "verified_nonproduct_article",
                 "verifiedBy": "deterministic_contract_v1"}

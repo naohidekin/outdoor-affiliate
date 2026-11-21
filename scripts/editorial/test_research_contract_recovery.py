@@ -14,6 +14,7 @@ from runtime import Runtime, atomic
 from test_models import ENV, Fake, response
 from test_runtime import CatalogFake, SlackFake
 from test_topic_selection import proposal
+from test_topic_selection_fit_sources import registered_reference
 
 NOW = datetime(2026, 11, 20, 10, tzinfo=JST)
 class Frozen(datetime):
@@ -42,11 +43,13 @@ class ResearchContractRecoveryTests(unittest.TestCase):
         topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
                   ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
                   ('sleeping-bag-care', '寝袋を乾燥して保管するには？', ['汚れ確認', '乾燥', '保管'])]
-        self.proposals = [proposal(slug, q, 90-i, outline=heads, sourceIds=['gsc:fixture', 'public:' + str(i)])
+        sources = [registered_reference(url, text, NOW) for url, text in (
+            ('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
+            ('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。'),
+            ('https://www.snowpeak.co.jp/contents/campstarterbook/', '寝袋を十分に乾燥させて汚れを確認し保管します。'))]
+        self.proposals = [proposal(slug, q, 90-i, outline=heads, sourceIds=['gsc:fixture', sources[i]['id']])
                           for i, (slug, q, heads) in enumerate(topics)]
-        self.feed = {'status': 'verified', 'sources': [dict(id='public:' + str(i),
-            scope=scope, receiptSha256=str(i) * 64) for i, scope in
-            enumerate(('tent-care', 'layering-concept-only', 'camp-care'))], 'illustrations': []}
+        self.feed = {'status': 'verified', 'sources': sources, 'illustrations': []}
         self.context = {'catalog': [], 'categories': [{'id': 'camp-howto'}], 'existingArticles': [],
             'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
                 *[{'id': s['id'], 'kind': 'public_reference'} for s in self.feed['sources']]]}

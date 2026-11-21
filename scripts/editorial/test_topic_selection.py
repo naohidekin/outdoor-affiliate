@@ -218,7 +218,7 @@ class TopicSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             result = collect_primary_sources(request, period='2026-11-20',
                 output_path=Path(root) / 'receipt.json', now=NOW)
-        self.assertEqual(('partial', 2, 4),
+        self.assertEqual(('partial', 2, 6),
                          (result['status'], len(result['sources']), len(result['sourceFailures'])))
 
     def test_primary_source_missing_or_non200_status_is_never_treated_as_verified(self):

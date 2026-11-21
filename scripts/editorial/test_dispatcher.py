@@ -42,7 +42,7 @@ class DispatcherTests(unittest.TestCase):
         job = self.runtime.ledger.save_bundle(job['id'], value)
         transport = Fake(response(article_review_value(value)))
         review = Models(ENV, transport).review(value,
-            {'editorialRules': policy['text'], 'wisePolicy': policy, 'evidence': FLAGS})
+            {'editorialRules': policy['text'], 'wisePolicy': policy, 'evidence': FLAGS, 'structural': {'passed': True}})
         review.update(fingerprint=fingerprint(value), evidence=dict(FLAGS),
                       polish={'model': 'gemini-3.8-flash', 'validated': True})
         job = self.runtime.ledger.record_review(job['id'], job['revision'], review)

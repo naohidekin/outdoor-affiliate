@@ -10,7 +10,7 @@ FLOORS = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)
 # Reviewed owner snapshot. A changed manifest alone cannot bless changed semantics.
 PINNED = {'wise-master.md': '7f3a5a347bca6ffb57eccf053b2eef5a4c40c79cae8032b6ad7dcb95a4cd6144', 'sense-master.md': '5099cf3df213c1a63f45aca9b28a1c3a858a0492fe6a4ae2c819f9f9fd85b2f8'}
 
-ARTIFACTS = {'SKILL.md': '6dcf364e2094d7714adbf281eb9a3f186f6e4fe13e040db39d386db0808b921a', 'docs/WISE-GEARMAN.md': '43a983ac458c006426a2d241e800b65cad539a94b6d6b6ea1c246b1b4bedc5e2', 'docs/sense-definition.md': 'e56ed9144bcaf544f1270fd4481fb77ad20351e98de364a065711fca82046c41'}
+ARTIFACTS = {'SKILL.md': 'bbe36130b55003ca8a35529bc68367f168cc565d075460acaca86849839d3dcc', 'docs/WISE-GEARMAN.md': '43a983ac458c006426a2d241e800b65cad539a94b6d6b6ea1c246b1b4bedc5e2', 'docs/sense-definition.md': 'e56ed9144bcaf544f1270fd4481fb77ad20351e98de364a065711fca82046c41'}
 
 def load_policy(repo=None):
     repo = Path(repo) if repo else ROOT

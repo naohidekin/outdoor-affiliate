@@ -48,6 +48,11 @@ SNSの待機は、公開済み記事の次の制作期を止めない。未公�
 Buffer経路は別のSNS対象版承認、接続確認、期間・共有API枠を満たす場合だけ使う。空キューを推定せず、
 直接X投稿の停止とBuffer経由の予約を混同しない。未接続・対象期間外では予約しない。
 
+WISEの説明artifactだけが変わり、owner原文hash・6軸・floorが不変な場合も、新しいSNS審査は
+常に現policyへ束縛する。例外は固定された旧policy IDで既に本人承認済みの同一SNS revisionに限り、
+投稿・Buffer予約・手動handoffでだけ互換確認できる。proposal、review、approval、revision、queueを
+書き換えず、記事審査、未承認SNS、未知policy ID、本文・画像変更へ互換性を広げない。
+
 ## 2026-11-20以降の通常企画
 
 通常制作期の調査は既存Claude callを1回だけ使い、`product`、`seasonal_problem`、`knowhow` を最大9案まで提案する。

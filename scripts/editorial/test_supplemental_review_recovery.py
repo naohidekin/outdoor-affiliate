@@ -224,8 +224,8 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
             content=data['article']['content'].replace('tent-a', product['id']))
         data['brief']['protected'] = ['{{product:' + product['id'] + '}}']
         upper = dict({key: value for key, value in REVIEW.items() if key not in ('score', 'passed')},
-                     wiseScores=dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
-                     criteria=dict.fromkeys(CRITERIA_FIELDS, review_mean), observations=[], evidence={'summary': 'Checked'})
+                     wiseScores=dict(w=3,i=3,s=3,e=3,ai=(3 if review_mean>=7.5 else 2),sense=3),
+                     criteria=dict.fromkeys([k for k in CRITERIA_FIELDS if k!='word_count'], review_mean), improvementFeedback=([{'criterion':'wise_s','quote':data['article']['content'].split('\n\n')[0][:20],'anchor':'evidence-grounded problem','nextAction':'Explain the concrete reader decision.'}] if review_mean<7.5 else []), observations=[], evidence={'summary': 'Checked'})
         answers = [writer_response(data), response({'edits': []}, gemini=True), response(upper)]
         for i, value in enumerate(answers):
             value['id'] = 'new-owner-response-' + str(i)
@@ -302,7 +302,7 @@ class SupplementalReviewRecoveryTests(unittest.TestCase):
             recovery.execute(runtime, plan, owner_grant=grant)
         self.assertEqual(1, len(request.calls))
 
-    def test_review_pass_assertion_cannot_bypass_local_eleven_score_mean(self):
+    def test_advisory_ratings_cannot_bypass_owner_wise_floor(self):
         import supplemental_review_recovery as recovery
         runtime, plan, grant, request = self.execution_fixture(review_mean=6)
         with self.assertRaises(ValueError):

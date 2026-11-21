@@ -3,8 +3,8 @@ import copy,json,tempfile,unittest
 from pathlib import Path
 from unittest.mock import Mock,patch
 from ledger import fingerprint
-from test_quality import bundle
-from fixed_price_review import validate_fixed_candidate, verify_polish_reuse, prepare_fixed_price_review
+from test_runtime import bundle
+from fixed_price_review import build_v2_fixed_candidate, validate_fixed_candidate, verify_polish_reuse, prepare_fixed_price_review
 
 class FixedPriceTests(unittest.TestCase):
  def setUp(self):
@@ -53,9 +53,38 @@ class FixedPriceTests(unittest.TestCase):
   rt._model_routes.return_value={'final_review':{'requested':'claude-sonnet-4-6'}}
   return rt
  def run_operator(self,rt):
-  path=self.root/'candidate.json';path.write_text(json.dumps(self.c))
+  path=self.root/'candidate.json';path.write_text(json.dumps(build_v2_fixed_candidate(self.job,self.c)))
   with patch('fixed_price_review.inspect_bundle',return_value={'passed':True}):
    return prepare_fixed_price_review(rt,'test-job',path,self.artifact(),{'products':self.c['bundle']['catalogCorrectionContext']['baseProducts'],'editorialRules':'rules'})
+ def test_explicit_v2_candidate_fresh_review_survives_real_ledger_cas(self):
+  from ledger import Ledger
+  from models import Models
+  from review_scoring import VERSION
+  from test_models import ENV, Fake, response, article_review_value
+  ledger=Ledger(self.root/'actual','U')
+  theme={k:self.b['article'][k] for k in ('title','slug','categoryId','productIds')}
+  job=ledger.create_candidate(theme)
+  ctx=self.b['catalogCorrectionContext'];raw={k:copy.deepcopy(ctx[k]) for k in ('baseProducts','candidateProducts','changeSummary')}
+  ledger.attach_catalog_correction(job['id'],raw);job=ledger.save_bundle(job['id'],self.b)
+  self.job=job;self.c.update(articleId=job['id'],expectedRevision=job['revision'])
+  prepared=build_v2_fixed_candidate(job,self.c)
+  self.assertEqual(job['revision'],prepared['expectedRevision']);self.assertEqual({'version':VERSION},prepared['bundle']['articleReviewScoring'])
+  self.assertEqual(self.b['article'],prepared['bundle']['article']);self.assertEqual(self.b['brief'],prepared['bundle']['brief'])
+  rt=self.runtime();model=Models(ENV,Fake(response(article_review_value(prepared['bundle']))))
+  rt.models.review.side_effect=model.review
+  result=self.run_operator(rt)
+  saved=ledger.suppress_unverified_product_display(job['id'],result['bundle'],expected_revision=job['revision'])
+  saved=ledger.record_review(job['id'],saved['revision'],result['review'])
+  self.assertIsNone(saved['approval']);self.assertIsNone(saved['publication']);self.assertIsNone(saved.get('astraReview'))
+  self.assertTrue(saved['review']['passed']);self.assertEqual(result['bundle'],saved['bundle'])
+  with self.assertRaises(ValueError):ledger.suppress_unverified_product_display(job['id'],result['bundle'],expected_revision=job['revision'])
+ def test_v2_builder_does_not_allow_body_or_marker_downgrade(self):
+  good=build_v2_fixed_candidate(self.job,self.c)
+  bad=copy.deepcopy(good);bad['bundle']['article']['content']+='changed';bad['candidateRevision']=fingerprint(bad['bundle'])
+  with self.assertRaises(ValueError):validate_fixed_candidate(self.job,bad)
+  source=copy.deepcopy(self.job);source['bundle']=copy.deepcopy(good['bundle']);source['revision']=fingerprint(source['bundle'])
+  bad=copy.deepcopy(good);bad['expectedRevision']=source['revision'];bad['bundle']['articleReviewScoring']={'version':'article-review-scoring-v1'};bad['candidateRevision']=fingerprint(bad['bundle'])
+  with self.assertRaises(ValueError):validate_fixed_candidate(source,bad)
  def test_fresh_operator_never_writes_drafts_or_reuses_review(self):
   rt=self.runtime();rt.ledger.get_job.return_value['theme']['selectionReason']='public reason EDITORIAL RECOVERY REQUIREMENTS private comment';result=self.run_operator(rt)
   self.assertTrue(result['requiresIndependentReview']);self.assertFalse(result['polishProof']['reused']);self.assertTrue(result['polishProof']['newModelCall'])

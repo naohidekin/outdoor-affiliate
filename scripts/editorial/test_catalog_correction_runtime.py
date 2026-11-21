@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from ledger import fingerprint
-from test_quality import bundle
+from test_runtime import bundle
 from test_revision_workflow import baseline, spec
 import test_runtime
 

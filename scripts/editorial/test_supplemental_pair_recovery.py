@@ -151,8 +151,8 @@ class PairRecoveryTests(unittest.TestCase):
             content=data['article']['content'].replace('tent-a', product['id']))
         data['brief']['protected'] = ['{{product:' + product['id'] + '}}']
         upper = dict({key: value for key, value in REVIEW.items() if key not in ('score', 'passed')},
-                     wiseScores=dict(w=3,i=3,s=3,e=3,ai=3,sense=3),
-                     criteria=dict.fromkeys(CRITERIA_FIELDS, review_mean), observations=[], evidence={'summary': 'Checked'})
+                     wiseScores=dict(w=3,i=3,s=3,e=3,ai=(3 if review_mean>=7.5 else 2),sense=3),
+                     criteria=dict.fromkeys([k for k in CRITERIA_FIELDS if k!='word_count'], review_mean), improvementFeedback=([{'criterion':'wise_s','quote':data['article']['content'].split('\n\n')[0][:20],'anchor':'evidence-grounded problem','nextAction':'Explain the concrete reader decision.'}] if review_mean<7.5 else []), observations=[], evidence={'summary': 'Checked'})
         answers = [writer_response(data), response({'edits': []}, gemini=True), response(upper)]
         for i, value in enumerate(answers):
             value['id'] = 'new-owner-response-' + str(i)
@@ -326,7 +326,9 @@ class SourceOnlyRecoveryTests(PairRecoveryTests):
         for i, answer in enumerate(answers):
             answer['id'] = 'source-only-response-' + str(i)
         upper = json.loads(answers[2]['content'][0]['text'])
-        upper['criteria'] = dict.fromkeys(CRITERIA_FIELDS, mean)
+        upper['criteria'] = dict.fromkeys([k for k in CRITERIA_FIELDS if k!='word_count'], mean)
+        upper['wiseScores']['ai'] = 3 if mean>=7.5 else 2
+        upper['improvementFeedback'] = ([{'criterion':'wise_s','quote':json.loads(answers[0]['content'][0]['text'])['article']['content'].split('\n\n')[0][:20],'anchor':'grounded concern','nextAction':'Explain the concrete source-bound choice.'}] if mean<7.5 else [])
         answers[2]['content'][0]['text'] = json.dumps(upper)
         request = Fake(*answers)
         rt.models.request = request
@@ -457,7 +459,9 @@ class CompletionRecoveryTests(SourceOnlyRecoveryTests):
         writer['article']['content'] += '\n新しい購入先の確認事項を説明します。' + str(sequence)
         answers[0]['content'][0]['text'] = json.dumps(writer)
         upper = json.loads(answers[2]['content'][0]['text'])
-        upper['criteria'] = dict.fromkeys(CRITERIA_FIELDS, mean)
+        upper['criteria'] = dict.fromkeys([k for k in CRITERIA_FIELDS if k!='word_count'], mean)
+        upper['wiseScores']['ai'] = 3 if mean>=7.5 else 2
+        upper['improvementFeedback'] = ([{'criterion':'wise_s','quote':json.loads(answers[0]['content'][0]['text'])['article']['content'].split('\n\n')[0][:20],'anchor':'grounded concern','nextAction':'Explain the concrete source-bound choice.'}] if mean<7.5 else [])
         answers[2]['content'][0]['text'] = json.dumps(upper)
         request = Fake(*answers)
         rt.models.request = request

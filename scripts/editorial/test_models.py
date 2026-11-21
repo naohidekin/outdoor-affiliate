@@ -43,11 +43,17 @@ def article_review_value(candidate=None, value=8, **changes):
     candidate = candidate if candidate is not None else bundle()
     active = article_review_schema(candidate)['properties']['criteria']['required']
     result = dict(facts=True, images=True, affiliate=True, medical=True, render=True,
-                  evidence={'summary': 'Synthetic independent review'}, issues=[], observations=[],
+                  evidence={'summary': 'Synthetic independent review'}, issues=[], observations=[], improvementFeedback=[],
                   criteria=dict.fromkeys(active, value),
                   wiseScores=dict(w=2, i=2, s=2, e=2, ai=3, sense=2))
     result.update(changes)
+    if any(type(v) in (int,float) and v < 7.5 for v in result['criteria'].values()) and 'improvementFeedback' not in changes:
+        result['improvementFeedback']=[{'criterion':next(k for k,v in result['criteria'].items() if type(v) in (int,float) and v<7.5),'quote':candidate['article']['content'].split('\n\n')[0][:20],'anchor':'grounded problem-awareness','nextAction':'Explain the documented reader decision more concretely.'}]
     return result
+
+
+def polish_source(text):
+    return text + '\n\n## ' + '補足根拠' * 800
 
 
 def context():
@@ -612,9 +618,10 @@ class ModelTests(unittest.TestCase):
         policy = load_policy()
         scores = dict(w=2, i=2, s=2, e=2, ai=3, sense=2)
         for kind, schema in (('article', article_review_schema(bundle())), ('social', SOCIAL_REVIEW_SCHEMA)):
-            checks = dict(wisePolicy=policy, reviewKind=kind, evidence=FLAGS)
+            checks = dict(wisePolicy=policy, reviewKind=kind, evidence=FLAGS, structural={'passed':True})
             if kind == 'article':
                 checks['editorialRules'] = policy['text']
+                checks['structural'] = {'passed': True}
             value = dict(REVIEW, wiseScores=scores, criteria=dict.fromkeys(CRITERIA_FIELDS, 8),
                          observations=[], evidence={'summary': 'Synthetic reviewed claims'})
             if kind == 'article':
@@ -656,11 +663,11 @@ class ModelTests(unittest.TestCase):
         self.assertEqual([], model.usage)
 
     def test_article_review_requires_applicable_scores_and_program_aggregate(self):
-        checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS}
+        checks = {'editorialRules': 'WISE Supervisor eleven criteria', 'evidence': FLAGS, 'structural': {'passed': True}}
         raw = article_review_value(value=7)
         result = Models(ENV, Fake(response(raw))).review(bundle(), checks)
-        self.assertFalse(result['passed'])
-        self.assertEqual(7, result['score'])
+        self.assertTrue(result['passed'])
+        self.assertEqual(80 / 11, result['score'])
         for invalid in (REVIEW, dict(raw, criteria={}), dict(raw, criteria=dict(raw['criteria'], unknown_criterion=10))):
             with self.assertRaises(ModelError):
                 Models(ENV, Fake(response(invalid))).review(bundle(), checks)
@@ -670,9 +677,9 @@ class ModelTests(unittest.TestCase):
         provider_artifacts = []
         fake = Fake(response(raw))
         model = Models(ENV, fake, artifact_sink=provider_artifacts.append)
-        result = model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})
+        result = model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS, 'structural': {'passed': True}})
         diagnostic, = model.review_diagnostics
-        self.assertFalse(result['passed'])
+        self.assertTrue(result['passed'])
         self.assertFalse(diagnostic['calculation']['thresholdMet'])
         self.assertNotIn('rawPassed', diagnostic)
         self.assertNotIn('score', raw)
@@ -686,20 +693,20 @@ class ModelTests(unittest.TestCase):
             fake, budget = Fake(response(dict(raw, **{field: value}))), Budget()
             model = Models(ENV, fake, budget=budget)
             with self.assertRaises(ModelError):
-                model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS})
+                model.review(bundle(), {'editorialRules': 'rubric', 'evidence': FLAGS, 'structural': {'passed': True}})
             self.assertEqual(1, len(fake.calls))
             self.assertEqual(1, len(budget.holds))
             self.assertEqual('success', budget.settlements[0][2])
 
     def test_article_review_exact_mean_schema_and_issues(self):
-        checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS}
-        candidate = bundle(); candidate['brief']['format'] = 'comparison'
-        fields = CRITERIA_FIELDS
+        checks = {'editorialRules': 'WISE Supervisor', 'evidence': FLAGS, 'structural': {'passed': True}}
+        candidate = bundle(); candidate['brief']['format'] = 'comparison'; candidate['article']['content'] += '確認済みの説明です。' * 200
+        fields = tuple(k for k in CRITERIA_FIELDS if k != 'word_count')
         low = dict(zip(fields, [8] * 5 + [7] * 6))
         fake = Fake(response(article_review_value(candidate, criteria=low, observations=['No medical claim'])))
         result = Models(ENV, fake).review(candidate, checks)
-        self.assertEqual(result['score'], 82 / 11)
-        self.assertFalse(result['passed'])
+        self.assertEqual(result['score'], 85 / 11)
+        self.assertTrue(result['passed'])
         prompt = fake.calls[0][2]['messages'][0]['content']
         for phrase in ('issues must contain ONLY required corrections or blockers', 'observations',
                        'Never return score or passed', 'six independent 1-4',
@@ -719,7 +726,7 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(issues, reviewed['issues'])
 
     def test_article_required_flags_offline_checks_and_both_scales_remain_independent(self):
-        checks = dict(editorialRules='rubric', evidence=FLAGS)
+        checks = dict(editorialRules='rubric', evidence=FLAGS, structural={'passed':True})
         for flag in FLAGS:
             result = Models(ENV, Fake(response(article_review_value(**{flag: False})))).review(bundle(), checks)
             self.assertFalse(result['passed'])
@@ -734,15 +741,15 @@ class ModelTests(unittest.TestCase):
         result = Models(ENV, Fake(response(raw))).review(bundle(), checks)
         self.assertFalse(result['passed'])
         self.assertEqual(raw['criteria'], result['criteria'])
-        # Full owner six-axis scores cannot replace a failed Supervisor mean.
+        # Low advisory ratings do not veto valid owner floors and hard checks.
         raw = article_review_value(value=6, wiseScores=dict.fromkeys(raw['wiseScores'], 4))
-        self.assertFalse(Models(ENV, Fake(response(raw))).review(bundle(), checks)['passed'])
+        self.assertTrue(Models(ENV, Fake(response(raw))).review(bundle(), checks)['passed'])
 
     def test_unknown_article_format_is_held_before_provider_call(self):
         subject = bundle(); subject['brief']['format'] = 'new-unapproved-format'
         fake = Fake(response(article_review_value()))
         with self.assertRaisesRegex(ModelError, 'Valid article applicability required'):
-            Models(ENV, fake).review(subject, dict(editorialRules='rubric', evidence=FLAGS))
+            Models(ENV, fake).review(subject, dict(editorialRules='rubric', evidence=FLAGS, structural={'passed':True}))
         self.assertEqual([], fake.calls)
 
     def test_recorded_legacy_baselines_are_not_admitted_or_rescored_as_new_articles(self):
@@ -755,7 +762,7 @@ class ModelTests(unittest.TestCase):
             (False, 6.5, [5,5,5,5,5,5,10,10,8,8,8]),
             (True, 7.6, [5,5,5,7.5,7.5,5,10,0,7.5,8,7.5]),
         ]
-        checks = dict(editorialRules='rubric', evidence=FLAGS)
+        checks = dict(editorialRules='rubric', evidence=FLAGS, structural={'passed':True})
         for passed, score, numbers in rows:
             raw = article_review_value(passed=passed, score=score,
                                        criteria=dict(zip(CRITERIA_FIELDS, numbers)))
@@ -765,9 +772,9 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(1, len(fake.calls))
 
     def test_article_nonproduct_wire_omits_na_and_rejects_fake_nonproduct_before_api(self):
-        subject = nonproduct_fixture()['bundle']; subject['brief'] = {'format': 'guide'}
+        subject = nonproduct_fixture()['bundle']; subject['brief'] = {'format': 'guide'}; subject['article']['content'] += '\n\n' + '根拠のある説明。' * 400
         raw = article_review_value(subject)
-        checks = dict(editorialRules='rubric', evidence=dict(FLAGS))
+        checks = dict(editorialRules='rubric', evidence=dict(FLAGS), structural={'passed':True})
         checks['evidence']['affiliate'] = nonproduct_fixture()['reviewAffiliateEvidence']
         fake = Fake(response(raw))
         result = Models(ENV, fake).review(subject, checks)
@@ -940,8 +947,8 @@ class ModelTests(unittest.TestCase):
         before = copy.deepcopy(b)
         fake = Fake(response({"edits": [{"index": 0, "text": "Polished"}]}, gemini=True))
         model = Models(ENV, fake)
-        result = model.polish("Original", b)
-        self.assertEqual(result["content"], "Polished")
+        result = model.polish(polish_source("Original"), b)
+        self.assertEqual(result["content"], polish_source("Polished"))
         self.assertEqual(result["model"], "gemini-3.8-flash")
         self.assertEqual(result["usage"]["output"], 9)
         self.assertEqual(result["usage"]["polishEditsApplied"], 1)
@@ -952,7 +959,7 @@ class ModelTests(unittest.TestCase):
         self.assertNotIn('output_config', fake.calls[0][2])
 
     def test_polish_only_eligible_paragraphs_and_preserves_exact_separators(self):
-        source = '## 見出し\n\n直せる文章です。\n \n重量は2kgです。\n\n広告を含む文章。\n\n別の文章です。'
+        source = polish_source('## 見出し\n\n直せる文章です。\n \n重量は2kgです。\n\n広告を含む文章。\n\n別の文章です。')
         fake = Fake(response({'edits': [{'index': 1, 'text': '読みやすい文章です。'}]}, gemini=True))
         result = Models(ENV, fake).polish(source, brief())
         self.assertEqual(result['content'], source.replace('直せる文章です。', '読みやすい文章です。'))
@@ -965,7 +972,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(empty['usage']['polishOutcome'], 'no_changes')
 
     def test_polish_rejects_immutable_new_numbers_duplicate_and_malformed_edits(self):
-        source = '## 見出し\n\n直せる文章です。\n\n重量は2kgです。'
+        source = polish_source('## 見出し\n\n直せる文章です。\n\n重量は2kgです。')
         bad = [
             {'edits': [{'index': 0, 'text': '見出し変更'}]},
             {'edits': [{'index': 2, 'text': '重量は3kgです。'}]},
@@ -976,19 +983,24 @@ class ModelTests(unittest.TestCase):
             {'content': '全文を書き直した'},
         ]
         for index, value in enumerate(bad):
-            with self.subTest(index=index), self.assertRaises(ModelError):
-                Models(ENV, Fake(response(value, gemini=True))).polish(source, brief())
+            if index in (0,1,2,5):
+                result = Models(ENV, Fake(response(value, gemini=True))).polish(source, brief())
+                self.assertEqual(source,result['content']);self.assertEqual('no_changes_after_rejection',result['polishSelection']['outcome'])
+            else:
+                with self.subTest(index=index), self.assertRaises(ModelError):
+                    Models(ENV, Fake(response(value, gemini=True))).polish(source, brief())
 
     def test_polish_prompt_forbids_fixed_literals_in_eligible_edits_and_collision_still_rejects(self):
         b = brief()
         b['requiredExpressions'].append('使用時と収納時を分けて確認')
         b['protected'].append('用途に合わせて選ぶ')
-        source = '## 寸法\n\n使用時と収納時を分けて確認してください。\n\n用途に合わせて選ぶ記事です。\n\n重量は2kgです。\n\n広告\n\n寸法を確かめる文章です。'
+        source = polish_source('## 寸法\n\n使用時と収納時を分けて確認してください。\n\n用途に合わせて選ぶ記事です。\n\n重量は2kgです。\n\n広告\n\n寸法を確かめる文章です。')
         original = copy.deepcopy(b)
         for literal in ('使用時と収納時を分けて確認', '用途に合わせて選ぶ'):
             fake = Fake(response({'edits': [{'index': 5, 'text': 'ツーバーナーの寸法は、必ず' + literal + 'してください。'}]}, gemini=True))
-            with self.subTest(literal=literal), self.assertRaisesRegex(ModelError, '^Invalid polish edits$'):
-                Models(ENV, fake).polish(source, b)
+            with self.subTest(literal=literal):
+                rejected = Models(ENV, fake).polish(source, b)
+                self.assertEqual(source,rejected['content']);self.assertFalse(rejected['polishSelection']['rawResponseAccepted'])
             self.assertEqual(len(fake.calls), 1)
             prompt = fake.calls[0][2]['messages'][0]['content']
             self.assertIn('Do not introduce ANY exact literal from brief.protected or brief.requiredExpressions', prompt)

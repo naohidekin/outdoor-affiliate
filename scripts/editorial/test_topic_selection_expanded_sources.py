@@ -34,6 +34,10 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
 
     def request(self, url, headers):
         self.calls.append(url)
+        if url in topics.FIT_EXAMPLES:
+            from test_topic_selection_fit_sources import fit_html
+            return {'status': 200, 'url': url, 'headers': {'content-type': 'text/html'},
+                    'body': fit_html(url).encode()}
         return {'status': 200, 'url': url, 'headers': {'content-type': 'text/html; charset=utf-8'},
                 'body': ('<html><script>品番 色名 JAN fake</script>' + ''.join('<p>' + b + '</p>'
                          for b in self.blocks[url]) + '</html>').encode()}
@@ -43,11 +47,11 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
             return topics.collect_primary_sources(request or self.request, period='2026-11-20',
                 output_path=Path(directory) / 'sources.json', now=NOW)
 
-    def test_six_exact_urls_have_unique_explicit_ids_and_unchanged_old_scopes(self):
+    def test_eight_exact_urls_have_unique_explicit_ids_and_unchanged_old_six_scopes(self):
         feed = self.collect()
         self.assertEqual('verified', feed['status'])
         self.assertEqual(set(topics.PUBLIC_SOURCE_ALLOWLIST), set(self.calls))
-        self.assertEqual(6, len(set(s['id'] for s in feed['sources'])))
+        self.assertEqual(8, len(set(s['id'] for s in feed['sources'])))
         by_url = {s['url']: s for s in feed['sources']}
         self.assertEqual('public:coleman-care', by_url['https://www.coleman.co.jp/customersupport/faq/']['id'])
         self.assertEqual('public:coleman-synthetic-wash', by_url[WASH]['id'])

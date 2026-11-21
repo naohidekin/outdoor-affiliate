@@ -121,12 +121,12 @@ host-local設定の `reportsEnabled: true` で報告を有効化し、`seoStateR
    Geminiは新事実・医学的助言・商品条件・結論を作らず、合否を決めない。privateなresearch/artifacts配下へsource.json/candidate.jsonを分離保存し、上位審査へ元本文と編集ルールも渡す。
    現在の校正応答は編集可能な段落への `{edits:[{index,text}]}` のみ。保護要素・必須表現を含む段落は変更不可とし、
    重複index・対象外段落・新しい保護要素を拒否する。編集なしも記録し、意味の同一性は別途上位審査する。
-5. `inspect_bundle` の構造検査後、実renderと**上位最終審査7.5/10以上**を通す。
+5. `inspect_bundle`の構造検査後、実renderと上位最終審査を通す。記事v2はhard検査・WISE六軸floor・critical issues空で合否を決め、Supervisor平均7.5はadvisoryとする。
    facts/images/affiliate/medical/renderの独立証跡を必要とし、モデルの「確認済み」だけで合格にしない。
    qualityが返す `mandatory_evidence` はpending。意味同一・事実完全性・実体験・医療・live/renderを自己認定しない。
    現runtimeは医療/子どもの安全に関する助言を自動選定から避け、検出時は保留する。
    editorial最終審査もnative JSON schemaで11項目のnested `criteria` を要求する。
-   未丸め平均と総合scoreの低いほうが7.5以上、全必須証拠が合格、必要修正の `issues` が空の場合だけ通過する。
+   記事v2は全必須証拠・構造と六軸floorが合格し、criticalな`issues`が空の場合だけ通過する。旧v1の7.5 gateは旧記録の検証だけに保持する。
    非阻害の観測は `observations` に分け、承認済テーマの制約と本文・抜粋・meta・FAQの主張も審査へ渡す。
 6. 審査済bundleを台帳に保存し、公開前のdraftだけをstageしてSlackへ配信する。
    本人のexact版公開承認を待って公開へ進む。
@@ -442,7 +442,7 @@ Wit / Insight / Sincere / Empth / AI-free / Sense を生成・推敲・審査へ
 `wise-contract.json` と Python/JavaScript の固定SHA256で出典・説明文の変更を検出する。
 
 現在の記事審査は六軸の `wiseScores`（各1–4点、下限2/2/2/2/3/2）と、既存の
-Supervisor 11項目（各0–10点、丸め前平均7.5以上）を別々に検査する。
+Supervisor 11項目（0–10点の独立評価、word_countはprogram由来）を保持する。記事v2の平均7.5はadvisoryで、六軸floorとhard検査の合格条件は[記事審査契約](editorial-review-scoring.md)に従う。
 SNSは原本の六軸を採点し、記事用の比較表・FAQ・字数条件を転用しない。
 事実・医療安全・広告・アフィリエイト・表示・URL検証は引き続き独立した必須検査。
 モデル・呼出し回数・修正回数・予算・時間上限は変更しない。

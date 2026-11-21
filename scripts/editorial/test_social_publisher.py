@@ -117,11 +117,11 @@ class SocialPublisherTests(unittest.TestCase):
     def test_legacy_unknown_main_readback_get_works_without_new_reply(self):
         self.legacy_policy()
         self.x.fail = 'read'
-        with patch('social_publisher.require_current_review'):
+        with patch('social_publisher.require_approved_social_review'):
             self.assertEqual('mainread', self.publisher.publish(self.job)['phase'])
         self.x.fail = None
         self.x.calls.clear()
-        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+        with self.assertRaisesRegex(ValueError, 'approved_social_policy_review_required'):
             self.publisher.publish(self.job)
         self.assertIn('read', [name for name, _ in self.x.calls])
         self.assertFalse({'upload', 'maincreate', 'replycreate'} & {name for name, _ in self.x.calls})
@@ -131,10 +131,22 @@ class SocialPublisherTests(unittest.TestCase):
 
     def test_legacy_new_approval_blocks_all_x_mutations(self):
         self.legacy_policy()
-        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+        with self.assertRaisesRegex(ValueError, 'approved_social_policy_review_required'):
             self.publisher.publish(self.job)
         self.assertFalse({'upload', 'maincreate', 'replycreate'} & {name for name, _ in self.x.calls})
         self.assertFalse(self.marker().exists())
+
+    def test_fixed_legacy_policy_publishes_exact_owner_approved_revision_without_mutation(self):
+        from social_policy_compat import LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social = self.job['social']
+        social['proposal']['wisePolicy'] = LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social['review']['wisePolicy'] = LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social['revision'] = fingerprint(social['proposal'])
+        social['review']['fingerprint'] = social['revision']
+        social['approval']['revision'] = social['revision']
+        before = copy.deepcopy(self.job)
+        self.assertEqual('verified', self.publisher.publish(self.job)['status'])
+        self.assertEqual(before, self.job)
 
     def test_exact_approved_text_image_reply_and_readback_once(self):
         result = self.publisher.publish(self.job)

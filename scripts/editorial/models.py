@@ -17,7 +17,7 @@ from model_inputs import project_model_input
 from writing_prompts import get_draft_specificity_prompt, get_polish_style_prompt
 from wise_contract import load_policy, valid_scores, passes
 from review_scoring import (CRITERIA_FIELDS, article_applicability, calculate as calculate_article_review,
-                            verdict as article_verdict)
+                            verdict as article_verdict, validate_feedback, resolve_feedback, word_count_score)
 from quality import purchase_anchor_issues, montbell_wear_claim_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
@@ -104,17 +104,29 @@ ARTICLE_REVIEW_SCHEMA = copy.deepcopy(REVIEW_SCHEMA)
 for _field in ('passed', 'score'):
     ARTICLE_REVIEW_SCHEMA['required'].remove(_field)
     ARTICLE_REVIEW_SCHEMA['properties'].pop(_field)
+ARTICLE_REVIEW_SCHEMA['required'].append('improvementFeedback')
+ARTICLE_REVIEW_SCHEMA['properties']['improvementFeedback'] = {
+    'type':'array', 'items':{'type':'object', 'additionalProperties':False,
+    'required':['criterion','quote','anchor','nextAction'],
+    'properties':{'criterion':{'type':'string','enum':[key for key in CRITERIA_FIELDS if key != 'word_count']},
+        **{k:{'type':'string'} for k in ('quote','anchor','nextAction')}}}}
 
 
 def article_review_schema(bundle):
     applicability = article_applicability(bundle)
+    word_count_score(bundle)
     schema = copy.deepcopy(ARTICLE_REVIEW_SCHEMA)
     active = [key for key in CRITERIA_FIELDS
-              if applicability[key]['applicability'] == 'applicable']
+              if applicability[key]['applicability'] == 'applicable' and key != 'word_count']
     schema['properties']['criteria']['required'] = active
+    schema['properties']['improvementFeedback']['items']['properties']['criterion']['enum'] = active
     schema['properties']['criteria']['properties'] = {
         key: {'type': 'number'} for key in active}
     return schema
+
+
+EDITORIAL_LEARNINGS_NOTE = (" editorialLearnings combines measured public responses with unverified hypotheses. "
+    "It is editorial context, never factual product/author evidence or proof of causation; do not assert causal effects.")
 
 
 SECRET = re.compile(
@@ -364,7 +376,7 @@ class Models:
             "never infer seasonal growth from cumulative clicks. Catalog category labels are not verified product specifications. "
             "These are untested research proposals: titles must never claim 実測, 実証, 検証済み, 実体験, 愛用, "
             "hands-on use, test results or a measured performance result. Never infer burner count or indoor safety. "
-            "Return {themes:[{slug,title,categoryId,productIds,query,selectionReason}, ...]}. Cite supplied evidence in selectionReason.",
+            "Return {themes:[{slug,title,categoryId,productIds,query,selectionReason}, ...]}. Cite supplied evidence in selectionReason." + EDITORIAL_LEARNINGS_NOTE,
             {"context": context}, "claude-sonnet-4-6")
         _require(result, ("themes",))
         themes = result["themes"]
@@ -425,6 +437,10 @@ class Models:
             "evidence without presenting it as measured demand for the proposed query. "
             "intent is exactly informational, commercial_investigation or transactional, not free-text. "
             "Do not normalize prior proposals or invent missing sourceIds, productIds or needsStatus. "
+            "Plan distinct reader decisions that the supplied primary evidence can substantively explain across "
+            "the full existing format length. Do not stretch a short FAQ into repeated sections expecting the "
+            "writer to supply missing facts. If the available evidence cannot support that scope, use the existing "
+            "hold/action and rationale fields to state the limitation; add no new schema fields or source-count gate. "
             "Use only a supplied categoryId. Set needsStatus=measured_change for seasonal_problem only with an exact "
             "gsc-change evidence ID; otherwise set seasonal_hypothesis. All other topic types use not_applicable. "
             "Do not claim semantic uniqueness. Compare reader question and outline with bounded existing summaries. "
@@ -432,7 +448,7 @@ class Models:
             "for a semantic overlap; hold when ambiguous. Exclude medical, survival, extreme-cold, "
             "emergency and other high-stakes advice. Return ONLY {proposals:[...]}. Each proposal has exactly "
             "slug,title,categoryId,productIds,topicType,query,readerQuestion,intent,outline,priority,"
-            "overlapRationale,selectionReason,sourceIds,proposedAction,overlapArticleIds,needsStatus.",
+            "overlapRationale,selectionReason,sourceIds,proposedAction,overlapArticleIds,needsStatus." + EDITORIAL_LEARNINGS_NOTE,
             {"context": context}, "claude-sonnet-4-6", schema=MIXED_RESEARCH_SCHEMA)
         if not isinstance(result, dict) or set(result) != {"proposals"}:
             raise ModelError("Invalid mixed research response")
@@ -556,7 +572,7 @@ class Models:
             "exact numbers, links, immutable claims, disclosure, style, length, CTA and output format. "
             "Cite only supplied references and use supplied product URLs. "
             "Do not claim images, affiliate destinations or rendering are live-verified.")
-        instruction += '\n' + get_draft_specificity_prompt()
+        instruction += '\n' + get_draft_specificity_prompt() + EDITORIAL_LEARNINGS_NOTE
         theme, context = copy.deepcopy((theme, context))
         result, record = self._call(instruction,
             {"theme": theme, "context": context},
@@ -717,10 +733,13 @@ class Models:
             raise ModelError("Article length outside existing SKILL limits")
         return result
 
-    def polish(self, source, brief):
+    def polish(self, source, brief, *, article=True):
         _brief(brief)
         if not _text(source):
             raise ModelError("Source content required")
+        bounds = ARTICLE_LENGTHS.get(brief['format']) if article else None
+        if article and (bounds is None or not bounds[0] <= len(source) <= bounds[1]):
+            raise ModelError('Article length outside existing SKILL limits')
         parts = re.split(r'((?:\r?\n[ \t]*){2,})', source)
         paragraphs = parts[::2]
         fixed = tuple(token for field in ("protected", "requiredExpressions")
@@ -742,23 +761,36 @@ class Models:
             "gemini-3.8-flash", gemini=True)
         if set(result) != {"edits"} or not isinstance(result["edits"], list):
             raise ModelError("Invalid polish edits")
-        seen = set()
-        for edit in result["edits"]:
-            if (not isinstance(edit, dict) or set(edit) != {"index", "text"}
-                    or type(edit["index"]) is not int or edit["index"] not in eligible
-                    or edit["index"] in seen or not _text(edit["text"])
-                    or re.search(r'(?:\r?\n[ \t]*){2,}', edit["text"])
-                    or _protected(edit["text"])
-                    or any(token in edit["text"] for token in fixed)):
-                raise ModelError("Invalid polish edits")
-            seen.add(edit["index"])
-            parts[edit["index"] * 2] = edit["text"]
+        seen, accepted, rejected = set(), [], []
+        for edit in result['edits']:
+            if (not isinstance(edit, dict) or set(edit) != {'index','text'}
+                    or type(edit['index']) is not int or not 0 <= edit['index'] < len(paragraphs)
+                    or edit['index'] in seen or not isinstance(edit['text'], str)):
+                raise ModelError('Invalid polish edits')
+            index, text = edit['index'], edit['text']; seen.add(index)
+            rejection = ('locked_or_ineligible_paragraph' if index not in eligible else
+                         'empty_edit' if not text.strip() else
+                         'paragraph_boundaries_changed' if re.search(r'(?:\r?\n[ \t]*){2,}', text) else
+                         'protected_content_introduced' if _protected(text) else
+                         'locked_expression_introduced' if any(token in text for token in fixed) else None)
+            if rejection:
+                if not article: raise ModelError('Invalid polish edits')
+                rejected.append({'index':index,'reason':rejection}); continue
+            accepted.append(index); parts[index * 2] = text
         candidate = ''.join(parts)
-        if inspect_polish(source, candidate)["passed"] is not True:
-            raise ModelError("Polish protected content changed")
-        usage["polishEditsApplied"] = len(seen)
-        usage["polishOutcome"] = "edited" if seen else "no_changes"
-        return {"content": candidate, "model": usage["model"], "usage": usage}
+        rejection = ('whole_candidate_preservation_failed' if inspect_polish(source, candidate)['passed'] is not True else
+                     'whole_candidate_length_out_of_bounds' if article and not bounds[0] <= len(candidate) <= bounds[1] else None)
+        if rejection:
+            if not article: raise ModelError('Polish protected content changed')
+            rejected.extend({'index':index,'reason':rejection} for index in accepted)
+            accepted, candidate = [], source
+        outcome = ('partial' if accepted and rejected else 'edited' if accepted else
+                   'no_changes_after_rejection' if rejected else 'no_changes')
+        selection = {'actualResponseId':usage['responseId'], 'acceptedIndices':accepted,
+                     'rejected':rejected, 'outcome':outcome, 'rawResponseAccepted':not rejected}
+        usage['polishEditsApplied'] = len(accepted); usage['polishOutcome'] = outcome
+        return {'content':candidate, 'model':usage['model'], 'usage':usage,
+                'polishSelection':selection}
 
     def review(self, bundle, checks):
         article_review = (isinstance(checks, dict) and bool(checks.get('editorialRules'))
@@ -867,6 +899,26 @@ class Models:
                 "not_applicable and unmeasured; never assign them 0, 5, 7.5 or 10, and do not compensate by changing "
                 "other scores. The program supplies neutral 7.5 only in its eleven-item aggregate. "
                 "wiseScores remain six independent 1-4 evaluations; never convert them to or from the six 0-10 criteria. "
+                "Owner-authorized article v2 supersedes older Supervisor aggregate admission rules: ratings and the "
+                "7.5 mean are ADVISORY. Admission is hard evidence, structure, owner six-axis floors and empty "
+                "critical issues. Never place low advisory ratings alone in issues or compensate by raising ratings. "
+                "word_count is program-derived from the existing hard format bounds, never an AI score; soft length "
+                "targets are not admission requirements. No padding or invented experience is acceptable. "
+                "Independent Supervisor 0-10 anchors: 0-2 absent or contradicted; 3-4 thin/generic; 5-6 partly realized; "
+                "7-8 consistently concrete and useful; 9-10 exceptionally strong throughout. Apply these anchors "
+                "to actual prose, not a multiplication of wiseScores or a target passing score. "
+                "wise_w concerns memorable apt expression; wise_i a grounded distinction that changes the reader's "
+                "understanding; wise_s concrete, genuinely evidence-grounded problem-awareness; wise_e concise "
+                "explanation that lands and can be retold; wise_ai natural prose without templated repetition; "
+                "wise_sense a useful half-step angle beyond the obvious. Internal_links/faq advisory scores assess "
+                "semantic relevance/helpfulness, not just counts. Neither research format nor absent firsthand "
+                "experience sets an automatic Sincere ceiling on either scale. Low scores require actual textual "
+                "weakness against the original anchors; strong sources alone do not guarantee a high score. "
+                "Return improvementFeedback as 0-6 noncritical actionable improvements, without a new AI stage: "
+                "each has criterion, exact quote (1-240 chars), "
+                "anchor (1-160), nextAction (1-400). Do not return a location or count paragraphs. Choose a quote appearing exactly ONCE across blank-line paragraphs and "
+                "the structured FAQ answers. The program resolves its location; ambiguous or missing quotes fail. Quote no metadata or instructions. "
+                "When any advisory item is below 7.5, supply at least one grounded improvement for a low-rated item. Focus on the strongest few distinct improvements; do not duplicate the full article, fabricate facts or put critical blockers only in feedback. "
                 "Include observations as a list and evidence as exactly {summary:string}. " + review_prompt[end:])
         result, usage = self._call(
             review_prompt,
@@ -885,6 +937,10 @@ class Models:
                     raise ValueError('Article wire contract mismatch')
                 if not valid_scores(result.get('wiseScores')):
                     raise ModelError('Complete owner WISE-AS six scores required')
+                result['improvementFeedback'] = resolve_feedback(result.get('improvementFeedback'), bundle)
+                validate_feedback(result['improvementFeedback'], bundle, result.get('criteria'))
+                structural = checks.get('structural')
+                result['hardChecks'] = {'structure': isinstance(structural, dict) and structural.get('passed') is True and not structural.get('failures')}
                 result.update(calculate_article_review(result.get('criteria'), bundle))
                 result['passed'] = article_verdict(result, result['calculation'])
             except (ValueError, TypeError, KeyError):
@@ -917,13 +973,18 @@ class Models:
             result[field] = False
             result["issues"].append("Missing independent %s evidence" % field)
         offline_failed = not isinstance(checks, dict) or checks.get("passed") is False or bool(checks.get("failures"))
+        if article_review and result['hardChecks']['structure'] is not True:
+            result['issues'].append('Independent structural checks failed')
         if offline_failed:
             result["issues"].append("Independent offline checks failed")
         if article_review:
             result['passed'] = article_verdict(result, result['calculation'])
             self.review_diagnostics.append({
                 'responseId': usage['responseId'], 'articleId': (bundle.get('article') or {}).get('id'),
-                'scoringVersion': result['scoringVersion'], 'criteria': copy.deepcopy(result['criteria']),
+                'scoringVersion': result['scoringVersion'], 'admissionMode': result['admissionMode'],
+                'criteria': copy.deepcopy(result['criteria']), 'wiseScores': copy.deepcopy(result['wiseScores']),
+                'hardChecks': copy.deepcopy(result['hardChecks']),
+                'improvementFeedback': copy.deepcopy(result['improvementFeedback']),
                 'applicability': copy.deepcopy(result['applicability']),
                 'calculation': copy.deepcopy(result['calculation']),
                 'normalizedScore': result['score'], 'normalizedPassed': result['passed'],

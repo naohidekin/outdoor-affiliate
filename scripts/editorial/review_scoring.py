@@ -6,17 +6,23 @@ No policy pins, historical reviews, model counters or provider artifacts are cha
 from fractions import Fraction
 import math
 import json
+import re
 
 from wise_contract import passes, valid_scores
 
-VERSION = 'article-review-scoring-v1'
+VERSION_V1 = 'article-review-scoring-v1'
+VERSION = 'article-review-scoring-v2'
+SUPPORTED_VERSIONS = (VERSION_V1, VERSION)
+ARTICLE_LENGTHS = {'ranking':(5000,8000), 'comparison':(5000,8000), 'guide':(3000,5000),
+                   'how-to':(3000,5000), 'review':(2000,3500)}
 CRITERIA_FIELDS = ('wise_w', 'wise_i', 'wise_s', 'wise_e', 'wise_ai', 'wise_sense',
                    'affiliate_links', 'comparison_table', 'internal_links', 'faq', 'word_count')
 FLAGS = ('facts', 'images', 'affiliate', 'medical', 'render')
 THRESHOLD = Fraction(15, 2)
 
 
-def article_applicability(bundle):
+def article_applicability(bundle, version=VERSION):
+    if version not in SUPPORTED_VERSIONS: raise ValueError('Unknown article scoring version')
     if not isinstance(bundle, dict):
         raise ValueError('Article bundle required for scoring')
     if not isinstance(bundle.get('brief'), dict) or not isinstance(bundle.get('article'), dict):
@@ -35,10 +41,13 @@ def article_applicability(bundle):
         nonproduct_affiliate_review(bundle)
         na['affiliate_links'] = 'validated_nonproduct_no_commerce'
         na['comparison_table'] = 'validated_nonproduct_no_product_comparison'
-    return {key: ({'applicability': 'not_applicable', 'measured': False,
+    result = {key: ({'applicability': 'not_applicable', 'measured': False,
                    'neutralScore': 7.5, 'reason': na[key]} if key in na else
                   {'applicability': 'applicable', 'evaluationRequired': True})
             for key in CRITERIA_FIELDS}
+    if version == VERSION:
+        result['word_count'] = {'applicability':'applicable', 'evaluationRequired':False, 'determinedBy':'program'}
+    return result
 
 
 def _number(value):
@@ -51,18 +60,85 @@ def _ratio(value):
     return {'numerator': value.numerator, 'denominator': value.denominator}
 
 
-def calculate(criteria, bundle):
-    applicability = article_applicability(bundle)
+def word_count_score(bundle):
+    content = bundle['article'].get('content')
+    if not isinstance(content, str): raise ValueError('Actual article content required')
+    format_name = bundle['brief']['format']; lower, upper = ARTICLE_LENGTHS[format_name]
+    if not lower <= len(content) <= upper: raise ValueError('Article length outside existing SKILL limits')
+    return {'score':10, 'contentCharacters':len(content), 'format':format_name,
+            'minimumCharacters':lower, 'maximumCharacters':upper,
+            'method':'python_len_decoded_article_content'}
+
+
+def _quote_locations(quote, bundle):
+    paragraphs = re.split(r'(?:\r?\n[ \t]*){2,}', bundle['article']['content'])
+    targets = [('paragraph', paragraphs), ('faq_answer', [q['answer'] for q in bundle['article'].get('faqs', [])])]
+    return [{'kind':kind, 'index':index} for kind, items in targets for index, text in enumerate(items)
+            for _ in range(text.count(quote))]
+
+
+def resolve_feedback(feedback, bundle):
+    if not isinstance(feedback, list) or len(feedback) > 6:
+        raise ValueError('At most six improvements required')
+    result = []
+    for item in feedback:
+        if (not isinstance(item, dict) or set(item) != {'criterion','quote','anchor','nextAction'}
+                or not isinstance(item['quote'], str) or not item['quote'].strip() or len(item['quote']) > 240):
+            raise ValueError('Feedback wire has no model-selected location')
+        locations = _quote_locations(item['quote'], bundle)
+        if len(locations) != 1: raise ValueError('Feedback quote must occur exactly once in article or FAQ answers')
+        result.append(dict(item, location=locations[0]))
+    validate_feedback(result, bundle)
+    return result
+
+
+def validate_feedback(feedback, bundle, criteria=None):
+    if not isinstance(feedback, list) or len(feedback) > 6:
+        raise ValueError('At most six evidence-bound improvements required')
+    if criteria is not None and not isinstance(criteria, dict): raise ValueError('Criterion object required')
+    if criteria is not None and any(_number(v) < THRESHOLD for v in criteria.values()) and not feedback:
+        raise ValueError('Low advisory ratings require grounded improvement feedback')
+    paragraphs = re.split(r'(?:\r?\n[ \t]*){2,}', bundle['article']['content'])
+    allowed = {key for key, value in article_applicability(bundle).items()
+               if value['applicability'] == 'applicable' and key != 'word_count'}
+    for item in feedback:
+        if (not isinstance(item, dict) or set(item) != {'criterion','location','quote','anchor','nextAction'}
+                or item['criterion'] not in allowed):
+            raise ValueError('Invalid improvement criterion or schema')
+        location = item['location']
+        if (not isinstance(location, dict) or set(location) != {'kind','index'}
+                or type(location['index']) is not int or location['index'] < 0
+                or location['kind'] not in ('paragraph','faq_answer')):
+            raise ValueError('Valid improvement location required')
+        targets = paragraphs if location['kind'] == 'paragraph' else [q['answer'] for q in bundle['article'].get('faqs', [])]
+        if location['index'] >= len(targets): raise ValueError('Improvement location outside article')
+        for key, limit in (('quote',240),('anchor',160),('nextAction',400)):
+            if not isinstance(item[key], str) or not item[key].strip() or len(item[key]) > limit:
+                raise ValueError('Bounded improvement text required')
+        if item['quote'] not in targets[location['index']] or _quote_locations(item['quote'], bundle) != [location]:
+            raise ValueError('Improvement quote must occur at the exact article location')
+    if criteria is not None:
+        low = {key for key,value in criteria.items() if _number(value) < THRESHOLD}
+        if low and not any(item['criterion'] in low for item in feedback):
+            raise ValueError('Feedback must address an actually low advisory criterion')
+    return feedback
+
+
+def calculate(criteria, bundle, version=VERSION):
+    applicability = article_applicability(bundle, version)
     active = [key for key in CRITERIA_FIELDS
               if applicability[key]['applicability'] == 'applicable']
-    if not isinstance(criteria, dict) or set(criteria) != set(active):
+    ai_fields = set(active) - ({'word_count'} if version == VERSION else set())
+    if not isinstance(criteria, dict) or set(criteria) != ai_fields:
         raise ValueError('Exactly applicable article criteria required; NA is unmeasured')
-    total = sum((_number(criteria[key]) for key in active), Fraction())
+    word_count = word_count_score(bundle) if version == VERSION else None
+    total = sum((_number(criteria[key]) for key in ai_fields), Fraction())
+    if word_count is not None: total += word_count['score']
     active_mean = total / len(active)
     na_count = len(CRITERIA_FIELDS) - len(active)
     total += na_count * THRESHOLD
     mean = total / len(CRITERIA_FIELDS)
-    return {'scoringVersion': VERSION, 'applicability': applicability,
+    result = {'scoringVersion': version, 'applicability': applicability,
             'score': float(mean),
             'calculation': {'method': 'neutral-na-mean-11', 'sum': _ratio(total),
                             'activeMean': _ratio(active_mean),
@@ -71,6 +147,10 @@ def calculate(criteria, bundle):
                             'threshold': _ratio(THRESHOLD),
                             'activeCount': len(active), 'naCount': na_count,
                             'thresholdMet': mean >= THRESHOLD}}
+    if version == VERSION:
+        result['admissionMode'] = 'hard_checks_and_owner_floors'
+        result['calculation'].update(aggregateRole='advisory', admission='hard_checks_and_owner_floors', wordCount=word_count)
+    return result
 
 
 def verdict(review, calculation):
@@ -79,17 +159,25 @@ def verdict(review, calculation):
             or not isinstance(review.get('issues'), list)
             or any(not isinstance(issue, str) for issue in review['issues'])):
         raise ValueError('Complete article flags, issues and owner WISE-AS scores required')
-    return (calculation['thresholdMet'] and passes(review['wiseScores'])
+    advisory = calculation.get('aggregateRole') == 'advisory'
+    hard = review.get('hardChecks')
+    if advisory and (not isinstance(hard, dict) or set(hard) != {'structure'} or hard['structure'] is not True): return False
+    return ((advisory or calculation['thresholdMet']) and passes(review['wiseScores'])
             and not review['issues'] and all(review[flag] for flag in FLAGS))
 
 
 def verify_review(review, bundle):
     """Recompute new persisted reviews; never upgrade a legacy review."""
-    if review.get('scoringVersion') != VERSION:
+    version = review.get('scoringVersion')
+    if version not in SUPPORTED_VERSIONS:
         raise ValueError('Unknown article scoring version')
-    expected = calculate(review.get('criteria'), bundle)
+    expected = calculate(review.get('criteria'), bundle, version)
+    if version == VERSION:
+        validate_feedback(review.get('improvementFeedback'), bundle, review.get('criteria'))
+        if not isinstance(review.get('hardChecks'), dict) or set(review['hardChecks']) != {'structure'} or type(review['hardChecks']['structure']) is not bool:
+            raise ValueError('Program structural evidence required')
     # Strict JSON equality also rejects bool-as-number mutations in calculations.
-    for field in ('scoringVersion', 'applicability', 'calculation', 'score'):
+    for field in ('scoringVersion', 'applicability', 'calculation', 'score') + (('admissionMode',) if version == VERSION else ()):
         if json.dumps(review.get(field), sort_keys=True, allow_nan=False) != json.dumps(
                 expected[field], sort_keys=True, allow_nan=False):
             raise ValueError('Article scoring calculation or applicability mismatch')

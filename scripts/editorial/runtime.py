@@ -21,6 +21,7 @@ from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_re
 from models import Models, ARTICLE_LENGTHS, article_review_schema
 from review_scoring import VERSION as ARTICLE_SCORING_VERSION, article_applicability
 from wise_contract import load_policy, require_current_review
+from social_policy_compat import require_approved_social_review
 from quality import inspect_bundle, inspect_polish
 from slack import Slack
 from attention_presentation import attention_text
@@ -272,6 +273,8 @@ class Runtime:
         data['existingArticles'] = data['articles']
         data['catalog'] = data.get('products', [])
         data['queuedThemes'] = [j['theme'] for j in self.ledger.list_jobs()]
+        from editorial_learning import load_editorial_learnings
+        data['editorialLearnings'] = load_editorial_learnings(self.root)
         policy = load_policy(repo)
         data['wisePolicy'] = policy
         data['editorialRules'] = policy['text'] + '\n\n' + '\n'.join((repo / p).read_text() for p in (
@@ -802,6 +805,7 @@ class Runtime:
             gathered['evidence']['ownedIllustrations'] = [image]
         else:
             gathered = self.catalog.gather(job['theme'], context)
+        gathered['editorialLearnings'] = copy.deepcopy(context.get('editorialLearnings', []))
         variant_disclosures = self._apparel_variant_disclosures(gathered)
         if variant_disclosures:
             gathered['apparelApprovalDisclosure'] = {
@@ -975,7 +979,8 @@ class Runtime:
                              'method': 'python_len_decoded_article_content'},
                          'source': gathered.get('evidence', {}),
                          'approvedTheme': job['theme'],
-                         'preview': preview, 'polishPreservation': preservation,
+                         'preview': preview, 'polishPreservation': (dict(preservation, selection=copy.deepcopy(polished['polishSelection']))
+                             if 'polishSelection' in polished else preservation),
                          'editorialRules': context['editorialRules'],
                          'wisePolicy': context['wisePolicy'],
                          'articleScoringContract': scoring_contract,
@@ -994,7 +999,7 @@ class Runtime:
                              'renderer': self._review_dependencies(preview),
                              'editorialRules': context['editorialRules']},
             'articleScoringContract': scoring_contract,
-            'schemaVersion': {'stage': 2, 'input': 'bundle+live-checks+scoring-contract', 'output': 'final-review'},
+            'schemaVersion': {'stage': 3, 'input': 'bundle+live-checks+scoring-contract', 'output': 'final-review'},
         }
         def review_operation():
             candidate = self.models.review(review_bundle, review_checks)
@@ -1006,6 +1011,8 @@ class Runtime:
         job = self.ledger.save_bundle(job['id'], bundle)
         review = dict(final, fingerprint=job['revision'], evidence=flags,
                       polish={'model': polished['model'], 'validated': True})
+        if 'polishSelection' in polished:
+            review['polish']['selection'] = copy.deepcopy(polished['polishSelection'])
         if revision:
             review.update(medicalScope='candidate_article_only', inheritedClinicalReverified=False,
                           inheritedAdviceDomSha256=bundle['inheritedPresentationContext']['domSha256'])
@@ -2218,7 +2225,7 @@ class Runtime:
         source = proposal['text']
         polished = self._measured_model_call(
             job['id'], 'social', self._model_routes()['polish']['requested'],
-            lambda: self.models.polish(source, bundle['brief']))
+            lambda: self.models.polish(source, bundle['brief'], article=False))
         if not inspect_polish(source, polished['content'])['passed']:
             raise ValueError('social_polish_changed_protected_content')
         proposal['text'] = polished['content']
@@ -2699,7 +2706,7 @@ class Runtime:
                      headings=[], facts=['設営前に部品を確認する'], numbers=[], links=[], requiredExpressions=[],
                      protected=[], style='ですます調', length='短文', cta='なし', format='Markdown', externalSafe=True)
         checked = self._measured_model_call('maintenance:preflight', 'preflight',
-            self._model_routes()['polish']['requested'], lambda: self.models.polish(probe, brief))
+            self._model_routes()['polish']['requested'], lambda: self.models.polish(probe, brief, article=False))
         preservation = inspect_polish(probe, checked['content'])
         if preservation.get('passed') is not True:
             raise ValueError('preflight_polish_preservation_failed')
@@ -2711,8 +2718,7 @@ class Runtime:
     def prepare_social_handoff(self, job):
         """Respect the established Gearman manual-post route; never revive old X API jobs."""
         self._require_running()
-        require_current_review((job.get('social') or {}).get('proposal'),
-                               (job.get('social') or {}).get('review'), self.config.get('repo'))
+        require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
         if job['social']['proposal'].get('deliveryMode', 'manual') != 'manual':
             raise ValueError('automatic_social_cannot_use_manual_handoff')
         marker = self.root / 'social-outbox' / (job['social']['revision'] + '.json')

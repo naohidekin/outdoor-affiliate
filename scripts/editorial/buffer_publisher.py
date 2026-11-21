@@ -12,8 +12,8 @@ from urllib.parse import urlparse
 import warnings
 
 from buffer_api import BufferAPI
-from wise_contract import require_current_review
 from ledger import fingerprint, valid_review, valid_social_images
+from social_policy_compat import require_approved_social_review
 from social_publisher import SocialPublisher, _atomic, _require
 from x_readback import exact_x_text
 
@@ -89,7 +89,7 @@ class BufferPublisher:
             _require(job['stage'] == 'social_approved' or marker.exists(),
                      'buffer_schedule_marker_required')
             if not marker.exists():
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
             state, existed = self._state(marker, revision, proposal, binding)
             if job['stage'] == 'social_scheduled':
                 _require(state.get('phase') in ('scheduled', 'unverified', 'verified')
@@ -118,7 +118,7 @@ class BufferPublisher:
                 state['preflightAt'] = now.isoformat()
                 _atomic(marker, state)
             if not state.get('postId'):
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 self._validate_images(proposal)
                 lookback = self.settings.get('dedupLookbackDays', 30)
                 _require(isinstance(lookback, int) and 1 <= lookback <= 90, 'buffer_dedup_policy_invalid')
@@ -144,7 +144,7 @@ class BufferPublisher:
                          'buffer_draft_readback_mismatch')
             post = self._buffer_call(marker, state, 'post', state['postId'])
             if post.get('status') == 'draft':
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 _require(self._matches_content(post, proposal), 'buffer_draft_readback_mismatch')
                 if not self._mutation_quota_ready():
                     return self._terminal_hold(marker, state, 'buffer_mutation_quota_hold')

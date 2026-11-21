@@ -17,7 +17,7 @@ from test_buffer_publisher import (ACCOUNT, ORG, BufferFake, Fetcher, XFake,
                                    approved_job)
 from test_catalog import PNG
 import test_runtime
-from test_quality import bundle
+from test_runtime import bundle
 
 
 NOW = datetime(2026, 11, 20, 10, tzinfo=JST)

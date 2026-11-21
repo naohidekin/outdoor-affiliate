@@ -53,17 +53,21 @@ def require(condition, message):
 
 def valid_review(review, revision, bundle=None):
     if isinstance(bundle, dict) and 'articleReviewScoring' in bundle:
-        from review_scoring import VERSION
-        require(bundle['articleReviewScoring'] == {'version': VERSION}
-                and isinstance(review, dict) and review.get('scoringVersion') == VERSION,
+        from review_scoring import SUPPORTED_VERSIONS
+        marker = bundle['articleReviewScoring']
+        require(isinstance(marker, dict) and set(marker) == {'version'} and marker['version'] in SUPPORTED_VERSIONS
+                and isinstance(review, dict) and review.get('scoringVersion') == marker['version'],
                 'bound article scoring version required')
     if isinstance(review, dict) and any(key in review for key in
-                                        ('scoringVersion', 'calculation', 'applicability')):
+                                        ('scoringVersion', 'calculation', 'applicability', 'admissionMode', 'hardChecks', 'improvementFeedback')):
         from review_scoring import verify_review
         verify_review(review, bundle)
+    from review_scoring import VERSION
+    v2 = isinstance(review, dict) and review.get('scoringVersion') == VERSION
+    if v2: require(isinstance(bundle, dict) and bundle.get('articleReviewScoring') == {'version': VERSION}, 'bound article v2 bundle required')
     score = review.get('score') if isinstance(review, dict) else None
     require(isinstance(score, (int, float)) and not isinstance(score, bool)
-            and math.isfinite(score) and score >= 7.5 and review.get('passed') is True, 'review failed')
+            and math.isfinite(score) and (0 <= score <= 10 if v2 else score >= 7.5) and review.get('passed') is True, 'review failed')
     evidence = review.get('evidence')
     require(isinstance(evidence, dict)
             and all(evidence.get(flag) is True for flag in FLAGS if flag != 'affiliate'),
@@ -204,11 +208,23 @@ def validate_display_suppression(previous, candidate):
     """Pure exact-diff check shared by offline preparation and atomic ledger save."""
     from catalog_corrections import validate_context
     from revisions import _aware
-    require(isinstance(previous, dict) and isinstance(candidate, dict)
-            and set(previous) == set(candidate), 'bundle fields changed')
+    require(isinstance(previous, dict) and isinstance(candidate, dict), 'bundle fields changed')
+    comparison = candidate
+    from review_scoring import VERSION, VERSION_V1
+    if candidate.get('articleReviewScoring') == {'version': VERSION} and previous.get('articleReviewScoring') != {'version': VERSION}:
+        from wise_contract import load_policy
+        current_policy = load_policy()['id']
+        require(('articleReviewScoring' not in previous or previous['articleReviewScoring'] == {'version': VERSION_V1})
+                and previous.get('wisePolicy') in (None, '6eeecd05024a54cd4b6ec7c4e781470caad7b0fc597bfbc20af0de3cc951491b', current_policy)
+                and candidate.get('wisePolicy') == current_policy, 'explicit fixed-body v2 metadata transition required')
+        comparison = dict(candidate)
+        for key in ('articleReviewScoring', 'wisePolicy'):
+            if key in previous: comparison[key] = previous[key]
+            else: comparison.pop(key, None)
+    require(set(previous) == set(comparison), 'bundle fields changed')
     for key in previous:
         if key not in ('products', 'catalogCorrectionContext'):
-            require(canonical(previous[key]) == canonical(candidate[key]), 'fixed bundle field changed: ' + key)
+            require(canonical(previous[key]) == canonical(comparison[key]), 'fixed bundle field changed: ' + key)
     old = validate_context(previous.get('catalogCorrectionContext'))
     new = validate_context(candidate.get('catalogCorrectionContext'))
     require(canonical(old['baseProducts']) == canonical(new['baseProducts']), 'original product baseline changed')
@@ -705,6 +721,11 @@ class Ledger:
             job.update(theme=theme, stage='candidate', error=None)
             self._invalidate(db, id)
             return self._put(db, job, 'candidate_theme_corrected')
+
+    def extend_nonproduct_sources(self, id, receipt):
+        """Apply a verified, CAS-bound source handoff without starting production."""
+        from source_enrichment import apply
+        return apply(self, id, receipt)
 
     def revise_candidate(self, id, title, selection_reason):
         require(isinstance(title, str) and title.strip() and isinstance(selection_reason, str) and selection_reason.strip(),

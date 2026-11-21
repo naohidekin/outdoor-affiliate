@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from runtime import JST
-from test_quality import bundle
+from test_runtime import bundle
 import test_runtime
 
 

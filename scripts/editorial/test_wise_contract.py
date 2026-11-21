@@ -103,13 +103,13 @@ class WiseContractTests(unittest.TestCase):
     def test_article_owner_floors_and_supervisor_mean_are_independent(self):
         from models import CRITERIA_FIELDS
         policy = load_policy()
-        checks = dict(wisePolicy=policy, editorialRules=policy['text'], evidence=FLAGS)
+        checks = dict(wisePolicy=policy, editorialRules=policy['text'], evidence=FLAGS, structural={'passed':True})
         value = article_review_value(wiseScores=SCORES)
         self.assertTrue(Models(ENV, Fake(response(value))).review(bundle(), checks)['passed'])
         self.assertFalse(Models(ENV, Fake(response(dict(value, wiseScores=dict(SCORES, sense=1))))).review(bundle(), checks)['passed'])
         low = dict.fromkeys(value['criteria'], 7)
-        result = Models(ENV, Fake(response(dict(value, criteria=low)))).review(bundle(), checks)
-        self.assertFalse(result['passed']); self.assertEqual(7, result['score'])
+        result = Models(ENV, Fake(response(article_review_value(wiseScores=SCORES, criteria=low)))).review(bundle(), checks)
+        self.assertTrue(result['passed']); self.assertEqual(80 / 11, result['score'])
         bad_policy = copy.deepcopy(policy); bad_policy['axes'][0] = 'Warm'
         fake = Fake(response(value))
         with self.assertRaises(ModelError):

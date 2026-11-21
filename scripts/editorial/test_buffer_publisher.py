@@ -173,7 +173,7 @@ class BufferPublisherTests(unittest.TestCase):
 
     def test_legacy_scheduled_intent_allows_get_without_new_create_or_edit(self):
         self.legacy_policy()
-        with patch('buffer_publisher.require_current_review'):
+        with patch('buffer_publisher.require_approved_social_review'):
             self.schedule()  # Synthetic historical intent created under its former policy.
         self.buffer.calls.clear()
         result = self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 12, 0, tzinfo=JST))
@@ -186,21 +186,33 @@ class BufferPublisherTests(unittest.TestCase):
 
     def test_legacy_draft_intent_allows_get_but_blocks_scheduling_patch(self):
         self.legacy_policy()
-        with patch('buffer_publisher.require_current_review'):
+        with patch('buffer_publisher.require_approved_social_review'):
             self.schedule()
         self.buffer.status = 'draft'
         self.buffer.calls.clear()
-        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+        with self.assertRaisesRegex(ValueError, 'approved_social_policy_review_required'):
             self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 12, 0, tzinfo=JST))
         self.assertIn('post', [name for name, _ in self.buffer.calls])
         self.assertFalse({'create_post', 'edit_post'} & {name for name, _ in self.buffer.calls})
 
     def test_legacy_new_approval_cannot_create_any_remote_intent(self):
         self.legacy_policy()
-        with self.assertRaisesRegex(ValueError, 'current_wise_policy'):
+        with self.assertRaisesRegex(ValueError, 'approved_social_policy_review_required'):
             self.schedule()
         self.assertEqual([], self.buffer.calls)
         self.assertFalse(self.marker().exists())
+
+    def test_fixed_legacy_policy_schedules_exact_owner_approved_revision_without_mutation(self):
+        from social_policy_compat import LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social = self.job['social']
+        social['proposal']['wisePolicy'] = LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social['review']['wisePolicy'] = LEGACY_APPROVED_SOCIAL_POLICY_ID
+        social['revision'] = fingerprint(social['proposal'])
+        social['review']['fingerprint'] = social['revision']
+        social['approval']['revision'] = social['revision']
+        before = copy.deepcopy(self.job)
+        self.assertEqual('scheduled', self.schedule()['status'])
+        self.assertEqual(before, self.job)
 
     def test_draft_exact_readback_then_minimal_add_to_queue(self):
         result = self.schedule()

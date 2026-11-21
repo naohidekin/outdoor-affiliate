@@ -12,8 +12,8 @@ import subprocess
 import time
 
 from catalog import Catalog, _image_type
-from wise_contract import require_current_review
 from ledger import fingerprint, valid_review, valid_social_images
+from social_policy_compat import require_approved_social_review
 from x_readback import exact_x_text
 
 JST = timezone(timedelta(hours=9))
@@ -150,7 +150,7 @@ class SocialPublisher:
                 if state.get('pending'):
                     return {'status': 'requires_reconciliation', 'phase': state['phase']}
             else:
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 state = {'revision': revision, 'account': account, 'proposalFingerprint': fingerprint(proposal),
                          'phase': 'upload', 'uploads': [], 'pending': None}
                 _atomic(marker, state)
@@ -164,7 +164,7 @@ class SocialPublisher:
             _require(not any(mime == 'image/gif' for _, mime in images) or len(proposal['images']) == 1,
                      'social_gif_must_be_single')
             for index in range(len(state['uploads']), len(proposal['images'])):
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 state.update(phase='upload', pending={'index': index})
                 _atomic(marker, state)
                 body, mime = images[index]
@@ -185,7 +185,7 @@ class SocialPublisher:
             media_ids = [u['mediaId'] for u in state['uploads']]
             media_keys = [u['mediaKey'] for u in state['uploads']]
             if not state.get('mainId'):
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 _require(all(datetime.fromisoformat(u['expiresAt']) > datetime.now(JST) + timedelta(minutes=1)
                              for u in state['uploads']), 'social_media_expired')
                 state.update(phase='maincreate', pending={'action': 'maincreate'})
@@ -207,7 +207,7 @@ class SocialPublisher:
             state.update(phase='mainread', mainReadback=post)
             _atomic(marker, state)
             if not state.get('replyId'):
-                require_current_review(proposal, job['social'].get('review'), self.config.get('repo'))
+                require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 state.update(phase='replycreate', pending={'action': 'replycreate'})
                 _atomic(marker, state)
                 try:

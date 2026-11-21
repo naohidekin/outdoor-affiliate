@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 from ledger import fingerprint
 from runtime import JST, atomic
 import test_runtime
-from test_quality import bundle
+from test_runtime import bundle
 from test_inherited_advice import context as inherited_context
 
 
@@ -205,6 +205,9 @@ class RevisionWorkflowTests(unittest.TestCase):
         current = self.runtime.ledger.save_bundle(j['id'], changed)
         self.assertIsNone(current.get('astraReview'))
         review = dict(job['review'], fingerprint=current['revision'])
+        # A fresh synthetic review must also recalculate the changed body measurement.
+        from review_scoring import calculate
+        review.update(calculate(review['criteria'], current['bundle']))
         self.runtime.ledger.record_review(j['id'], current['revision'], review)
         self.assertEqual('awaiting_astra_review', self.runtime.deliver(j['id'])['status'])
         with self.assertRaises(ValueError): self.runtime.ledger.create_request(j['id'])

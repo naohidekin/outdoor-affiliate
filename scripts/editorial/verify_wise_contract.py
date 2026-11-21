@@ -22,8 +22,8 @@ SURFACES = {
     'scripts/x/approve.mjs': ['requireWiseReview(post)'],
     'scripts/post-to-x.js': ['findWiseProof(text,'],
     'scripts/queue-to-sheets.js': ['findWiseProof(row[2], proofs)'],
-    'scripts/editorial/social_publisher.py': ["require_current_review(proposal, job['social'].get('review')"],
-    'scripts/editorial/buffer_publisher.py': ["require_current_review(proposal, job['social'].get('review')"],
+    'scripts/editorial/social_publisher.py': ["require_approved_social_review(job, self.config['slack']['user_id']"],
+    'scripts/editorial/buffer_publisher.py': ["require_approved_social_review(job, self.config['slack']['user_id']"],
 }
 WRONG_DEFINITION = re.compile(r'(?:\b[WISE]\s*[—（(]\s*(?:Body\s*Heat|Warm|Weight|Insider|Stickiness|Entry|Empathy|Science)\b|SincereScience)', re.I)
 

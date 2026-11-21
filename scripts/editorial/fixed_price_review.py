@@ -31,6 +31,23 @@ def validate_fixed_candidate(job, candidate):
     return bound
 
 
+def build_v2_fixed_candidate(job, candidate):
+    """Explicit new candidate, same body/brief; old CAS stays bound to old revision.
+
+    The caller must review/save this new candidate before fresh provider review.
+    No old review or approval is upgraded by this pure builder.
+    """
+    validate_fixed_candidate(job, candidate)
+    from review_scoring import VERSION
+    from wise_contract import load_policy
+    result = copy.deepcopy(candidate)
+    result['bundle']['articleReviewScoring'] = {'version': VERSION}
+    result['bundle']['wisePolicy'] = load_policy()['id']
+    result['candidateRevision'] = fingerprint(result['bundle'])
+    validate_fixed_candidate(job, result)
+    return result
+
+
 def _private_file(root, path, area):
     path = Path(path).resolve(); base = (Path(root) / area).resolve()
     require(base in path.parents and path.is_file(), 'private evidence path rejected')
@@ -91,8 +108,9 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
     bound = validate_fixed_candidate(job, candidate)
     bundle = copy.deepcopy(candidate['bundle'])
     context = runtime._wise_context(live_context)
-    bundle['wisePolicy'] = context['wisePolicy']['id']
-    bundle['brief']['style'] += '\n' + context['wisePolicy']['text']
+    from review_scoring import VERSION
+    require(bundle.get('articleReviewScoring') == {'version': VERSION}
+            and bundle.get('wisePolicy') == context['wisePolicy']['id'], 'explicit v2 fixed candidate required')
     validate_live_context(bound['catalogCorrectionContext'], context['products'])
     by_id = {p['id']: p for p in bundle['products']}
     context['products'] = [copy.deepcopy(by_id.get(p['id'], p)) for p in context['products']]
@@ -137,6 +155,8 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
         'contentSha256':hashlib.sha256(source_content.encode()).hexdigest(),
         'usage':copy.deepcopy(polished.get('usage', {})),
         'artifacts':[str(artifact_dir / 'polish-source.json'),str(artifact_dir / 'polish-output.json')]}
+    if 'polishSelection' in polished:
+        polish['selection'] = copy.deepcopy(polished['polishSelection'])
     _require_running(runtime)
     atomic(artifact_dir / 'polish-proof.json', polish)
     public = {k:v for k,v in bundle.items() if k not in ('catalogCorrectionContext','revisionContext')}
@@ -166,6 +186,7 @@ def prepare_fixed_price_review(runtime, id, candidate_path, polish_evidence, liv
         runtime._save_usage()
     require(review.get('passed') is True, 'fresh final review failed')
     require(runtime.ledger.get_job(id)['revision'] == job['revision'], 'fixed revision changed during review')
+    require(fingerprint(bundle) == candidate['candidateRevision'], 'fixed candidate changed during review')
     review = dict(review, fingerprint=fingerprint(bundle), evidence=flags, polish=polish)
     return {'expectedRevision':job['revision'],'bundle':bundle,'review':review,
             'gathered':gathered,'preview':preview,'medical':medical,'polishProof':polish,
