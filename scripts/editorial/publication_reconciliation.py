@@ -40,6 +40,12 @@ COLEMAN = 'article-8134a432c6dc7046618c6d7d'
 COLEMAN_GRANT = OWNER_GRANT
 COLEMAN_TOKEN = 'b36c37d9-a452-4a3b-8840-4291cf2b30f0'
 COLEMAN_PID = 41144
+THERMOS = 'article-98d3334c7e9afbfb222c19b1'
+THERMOS_TOKEN = 'e7fd3a44-b803-44fc-ba12-d6045829b676'
+THERMOS_PID = 50947
+THERMOS_REVISION = 'accbea7706f2bd2c5f91ad1b83cba527ae2d790981c3777a66190dd3c8fd8f51'
+PUBLISHED_STAGES = {'published', 'social_review', 'social_approved', 'social_held',
+                    'social_scheduled', 'social_posted', 'social_rejected'}
 FIELDS = dict(id='id', title='title', slug='slug', categoryId='category_id', content='content',
     excerpt='excerpt', productIds='product_ids', status='status', faqs='faqs',
     metaDescription='meta_description', tags='tags', createdAt='created_at', updatedAt='updated_at',
@@ -97,18 +103,20 @@ def _locks(ledger, seo_root, runtime_lock, seo_lock):
         yield root
 
 
-def _marker(root, second=False):
+def _marker(root, second=False, final=False):
+    token = THERMOS_TOKEN if final else COLEMAN_TOKEN if second else TOKEN
+    pid = THERMOS_PID if final else COLEMAN_PID if second else PID
     path = root / '.publication.in-flight.json'
     _need(not path.is_symlink(), 'symlink_marker')
     raw = path.read_bytes()
     value = json.loads(raw)
-    _need(value.get('schemaVersion') == 1 and value.get('token') == (COLEMAN_TOKEN if second else TOKEN) and
-          value.get('owner') == {'host': socket.gethostname(), 'pid': COLEMAN_PID if second else PID}, 'exact_marker_required')
-    if second:
-        _need(_time(value.get('createdAt')) == _time('2026-11-22T03:32:09+09:00'), 'exact_marker_required')
+    _need(value.get('schemaVersion') == 1 and value.get('token') == token and
+          value.get('owner') == {'host': socket.gethostname(), 'pid': pid}, 'exact_marker_required')
+    if second or final:
+        _need(_time(value.get('createdAt')) == _time('2026-11-22T03:38:45+09:00' if final else '2026-11-22T03:32:09+09:00'), 'exact_marker_required')
     _time(value.get('createdAt'))
     try:
-        os.kill(COLEMAN_PID if second else PID, 0)
+        os.kill(pid, 0)
     except ProcessLookupError:
         pass
     else:
@@ -131,23 +139,26 @@ def _snapshot(ledger, db=None):
     return result
 
 
-def _eligible(ledger, snapshots, second=False, expected_revision=None):
-    if second:
+def _eligible(ledger, snapshots, second=False, expected_revision=None, final=False):
+    target = THERMOS if final else COLEMAN
+    if final:
+        _need(expected_revision == THERMOS_REVISION, "exact_thermos_revision_required")
+    if second or final:
         _need(isinstance(expected_revision, str) and re.fullmatch(r"[a-f0-9]{64}", expected_revision) and
-              snapshots[COLEMAN]["job"]["revision"] == expected_revision, "exact_coleman_revision_required")
+              snapshots[target]["job"]["revision"] == expected_revision, "exact_coleman_revision_required")
     for jid, snap in snapshots.items():
         job = snap['job']; approval = job.get('approval') or {}
-        published = second and jid == POLE
-        _need(job['id'] == jid and job.get('stage') == ('published' if published else 'approved') and
+        published = (final and jid != THERMOS) or (second and jid == POLE)
+        _need(job['id'] == jid and (job.get('stage') in PUBLISHED_STAGES if published else job.get('stage') == 'approved') and
               bool(job.get('publication')) == published and
               job.get('kind') != 'article_revision' and job['bundle']['article']['slug'] == TARGETS[jid] and
               job['bundle']['article']['id'] == jid and fingerprint(job['bundle']) == job.get('revision') and
               approval.get('action') == 'approved' and approval.get('user_id') == ledger.owner_id and
               approval.get('revision') == job['revision'], 'exact_existing_owner_approval_required')
         data = json.loads(snap['effect']['data'])
-        if second and jid != COLEMAN:
+        if (second or final) and jid != target:
             status = 'success' if published else 'failed'
-            retry_blocked = not published and snap['effect']['status'] == 'unknown' and data.get('status') == 'unknown' and data.get('reason') == 'publication_requires_reconciliation'
+            retry_blocked = second and not published and snap['effect']['status'] == 'unknown' and data.get('status') == 'unknown' and data.get('reason') == 'publication_requires_reconciliation'
             _need((snap['effect']['status'] == status and data.get('status') == status) or retry_blocked, 'untouched_effect_required')
             if published:
                 publication = job['publication']
@@ -161,7 +172,7 @@ def _eligible(ledger, snapshots, second=False, expected_revision=None):
                   data.get('reason') == 'publication_requires_reconciliation', 'known_unknown_effect_required')
 
 
-def _proofs(snapshots, value, now, second=False):
+def _proofs(snapshots, value, now, second=False, final=False):
     _need(isinstance(value, dict) and set(value) == {'proofs'} and isinstance(value['proofs'], list) and
           len(value['proofs']) == 3 and {p.get('id') for p in value['proofs']} == set(TARGETS), 'exact_three_proofs_required')
     for proof in value['proofs']:
@@ -174,11 +185,14 @@ def _proofs(snapshots, value, now, second=False):
                     for key, wire in FIELDS.items()}
         expected['generation_meta'] = dict(article.get('generationMeta') or {},
             editorialRuntime={'revision': job['revision'], 'author': article.get('author')})
-        published = jid == POLE or (second and jid == COLEMAN)
+        published = final or jid == POLE or (second and jid == COLEMAN)
         _need(proof.get('kind') == ('exact_published' if published else 'exact_draft'), 'wrong_remote_outcome')
-        if second and jid == COLEMAN:
+        if (second or final) and jid == COLEMAN:
             _need(str(proof['xmin']) == '11784' and
                   _time(row.get('published_at')) == _time('2026-11-22T03:32:10+09:00'), 'exact_coleman_publication_required')
+        if final and jid == THERMOS:
+            _need(job['revision'] == THERMOS_REVISION and str(proof['xmin']) == '11785' and
+                  _time(row.get('published_at')) == _time('2026-11-22T03:38:46+09:00'), 'exact_thermos_publication_required')
         if published:
             expected.update(status='published', published_at=row.get('published_at'), updated_at=row.get('updated_at'))
             _need(_time(row.get('published_at')) == _time(row.get('updated_at')), 'published_timestamp_mismatch')
@@ -209,32 +223,32 @@ def _proofs(snapshots, value, now, second=False):
     return {p['id']: {k: v for k, v in p.items() if k != 'observedAt'} for p in value['proofs']}
 
 
-def _validate_plan(ledger, root, plan, second=False):
+def _validate_plan(ledger, root, plan, second=False, final=False):
     _need(plan.get('schemaVersion') == 1 and plan.get('ownerGrant') == (COLEMAN_GRANT if second else OWNER_GRANT) and
           plan.get('ledgerRoot') == str(Path(ledger.root).resolve()) and plan.get('seoRoot') == str(root) and
           plan.get('planHash') == fingerprint({k: v for k, v in plan.items() if k != 'planHash'}) and
           set(plan.get('snapshots', {})) == set(TARGETS), 'plan_binding_invalid')
     _need(_sha(plan['markerRaw'].encode()) == plan['marker']['sha256'] and
           json.loads(plan['markerRaw']) == plan['marker']['value'], 'marker_receipt_mismatch')
-    _eligible(ledger, plan['snapshots'], second, plan.get('expectedRevision'))
+    _eligible(ledger, plan['snapshots'], second, plan.get('expectedRevision'), final)
 
 
-def _check(ledger, root, plan, reader, now, second=False):
-    _validate_plan(ledger, root, plan, second)
-    marker, _ = _marker(root, second)
+def _check(ledger, root, plan, reader, now, second=False, final=False):
+    _validate_plan(ledger, root, plan, second, final)
+    marker, _ = _marker(root, second, final)
     _need(marker == plan['marker'] and _snapshot(ledger) == plan['snapshots'], 'snapshot_cas_conflict')
-    _need(_proofs(plan['snapshots'], reader(), _now(now), second) == plan['proofs'], 'remote_snapshot_changed')
+    _need(_proofs(plan['snapshots'], reader(), _now(now), second, final) == plan['proofs'], 'remote_snapshot_changed')
     return {'status': 'ready', 'planHash': plan['planHash']}
 
 
-def _prepare(ledger, seo_root, reader, *, runtime_lock=None, seo_lock=None, now=None, second=False, expected_revision=None):
+def _prepare(ledger, seo_root, reader, *, runtime_lock=None, seo_lock=None, now=None, second=False, expected_revision=None, final=False):
     with _locks(ledger, seo_root, runtime_lock, seo_lock) as root:
-        marker, raw = _marker(root, second); snapshots = _snapshot(ledger); _eligible(ledger, snapshots, second, expected_revision)
-        observed = reader(); at = _now(now); proofs = _proofs(snapshots, observed, at, second)
+        marker, raw = _marker(root, second, final); snapshots = _snapshot(ledger); _eligible(ledger, snapshots, second, expected_revision, final)
+        observed = reader(); at = _now(now); proofs = _proofs(snapshots, observed, at, second, final)
         plan = {'schemaVersion': 1, 'ownerGrant': COLEMAN_GRANT if second else OWNER_GRANT, 'ledgerRoot': str(Path(ledger.root).resolve()),
                 'seoRoot': str(root), 'preparedAt': at.isoformat(), 'marker': marker,
                 'markerRaw': raw.decode(), 'snapshots': snapshots, 'proofs': proofs}
-        if second:
+        if second or final:
             plan['expectedRevision'] = expected_revision
         plan['planHash'] = fingerprint(plan)
         return plan
@@ -254,31 +268,31 @@ def _immutable(path, raw):
         os.chmod(path, 0o600); out.write(raw); out.flush(); os.fsync(out.fileno())
 
 
-def _apply(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, seo_lock=None, now=None, second=False):
+def _apply(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, seo_lock=None, now=None, second=False, final=False):
     _need(owner_grant == (COLEMAN_GRANT if second else OWNER_GRANT), 'explicit_owner_grant_required')
     with _locks(ledger, seo_root, runtime_lock, seo_lock) as root:
-        _validate_plan(ledger, root, plan, second)
+        _validate_plan(ledger, root, plan, second, final)
         key = 'publication_reconciliation:' + plan['planHash']
         with sqlite3.connect(ledger.db_path) as read:
             prior = read.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
         if prior:
             committed = json.loads(prior[0])
             _need(_snapshot(ledger) == committed['postState'], 'post_state_changed')
-            _need(_proofs(plan['snapshots'], reader(), _now(now), second) == plan['proofs'], 'remote_snapshot_changed')
+            _need(_proofs(plan['snapshots'], reader(), _now(now), second, final) == plan['proofs'], 'remote_snapshot_changed')
         else:
-            _check(ledger, root, plan, reader, now, second)
-            _need(_proofs(plan['snapshots'], reader(), _now(now), second) == plan['proofs'], 'remote_snapshot_changed')
+            _check(ledger, root, plan, reader, now, second, final)
+            _need(_proofs(plan['snapshots'], reader(), _now(now), second, final) == plan['proofs'], 'remote_snapshot_changed')
             directory = Path(ledger.root) / 'publication-reconciliations'
             _need(not directory.is_symlink(), 'symlink_receipt'); directory.mkdir(mode=0o700, exist_ok=True)
             _immutable(directory / (plan['planHash'] + '.json'), (canonical(plan) + '\n').encode())
             with ledger._tx() as db:
-                _need(_snapshot(ledger, db) == plan['snapshots'] and _marker(root, second)[0] == plan['marker'], 'snapshot_cas_conflict')
+                _need(_snapshot(ledger, db) == plan['snapshots'] and _marker(root, second, final)[0] == plan['marker'], 'snapshot_cas_conflict')
                 view = copy.copy(ledger); view._tx = lambda: nullcontext(db)
-                affected = [jid for jid in TARGETS if jid == COLEMAN or plan['snapshots'][jid]['effect']['status'] == 'unknown'] if second else TARGETS
+                affected = [THERMOS] if final else [jid for jid in TARGETS if jid == COLEMAN or plan['snapshots'][jid]['effect']['status'] == 'unknown'] if second else TARGETS
                 for jid in affected:
                     ledger._event(db, jid, 'publication_reconciliation_original_unknown',
                                   {'planHash': plan['planHash'], 'original': plan['snapshots'][jid], 'proof': plan['proofs'][jid]})
-                    if jid == POLE or (second and jid == COLEMAN):
+                    if final or jid == POLE or (second and jid == COLEMAN):
                         job = view.record_publication(jid, plan['snapshots'][jid]['job']['revision'], plan['proofs'][jid]['publication'])
                         result = {'status': 'success', **plan['proofs'][jid]['publication'], 'reconciliationPlanHash': plan['planHash']}
                     else:
@@ -289,18 +303,18 @@ def _apply(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, se
                         (result['status'], canonical(result), jid, 'publish', effect['status'], effect['data'])).rowcount
                     _need(changed == 1, 'effect_cas_conflict')
                     job['error'] = None
-                    ledger._put(db, job, 'publication_reconciled' if jid == POLE or (second and jid == COLEMAN) else 'reconciled_no_write')
+                    ledger._put(db, job, 'publication_reconciled' if final or jid == POLE or (second and jid == COLEMAN) else 'reconciled_no_write')
                 committed = {'planHash': plan['planHash'], 'postState': _snapshot(ledger, db)}
                 db.execute('INSERT INTO meta VALUES (?,?)', (key, canonical(committed)))
         # DB commit precedes marker clearance: any earlier failure leaves the fence.
-        archive = root / ('publication-marker-' + (COLEMAN_TOKEN if second else TOKEN) + '.json')
+        archive = root / ('publication-marker-' + (THERMOS_TOKEN if final else COLEMAN_TOKEN if second else TOKEN) + '.json')
         raw = plan['markerRaw'].encode()
         _need(_sha(raw) == plan['marker']['sha256'], 'marker_receipt_mismatch')
         marker_path = root / '.publication.in-flight.json'
         if marker_path.exists():
-            _need(_marker(root, second)[0] == plan['marker'], 'marker_cas_conflict')
+            _need(_marker(root, second, final)[0] == plan['marker'], 'marker_cas_conflict')
             _immutable(archive, raw)
-            _need(_marker(root, second)[0] == plan['marker'], 'marker_cas_conflict')
+            _need(_marker(root, second, final)[0] == plan['marker'], 'marker_cas_conflict')
             marker_path.unlink()
             fd = os.open(root, os.O_RDONLY)
             try:
@@ -314,7 +328,7 @@ def _apply(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, se
             if not db.execute('SELECT 1 FROM meta WHERE key=?', (done,)).fetchone():
                 receipt = {'planHash': plan['planHash'], 'markerSha256': plan['marker']['sha256'], 'status': 'reconciled'}
                 db.execute('INSERT INTO meta VALUES (?,?)', (done, canonical(receipt)))
-                ledger._event(db, COLEMAN if second else POLE, 'publication_reconciliation_marker_archived', receipt)
+                ledger._event(db, THERMOS if final else COLEMAN if second else POLE, 'publication_reconciliation_marker_archived', receipt)
         return {'status': 'reconciled', 'planHash': plan['planHash'], 'markerArchive': str(archive)}
 
 
@@ -339,4 +353,20 @@ def check_coleman(ledger, seo_root, plan, reader, *, runtime_lock=None, seo_lock
 
 def apply_coleman(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, seo_lock=None, now=None):
     return _apply(ledger, seo_root, plan, reader, second=True, owner_grant=owner_grant,
+                  runtime_lock=runtime_lock, seo_lock=seo_lock, now=now)
+
+
+def prepare_thermos(ledger, seo_root, reader, *, runtime_lock=None, seo_lock=None, now=None):
+    """Final exact Thermos adoption; both published peers and all social state stay untouched."""
+    return _prepare(ledger, seo_root, reader, final=True, expected_revision=THERMOS_REVISION,
+                    runtime_lock=runtime_lock, seo_lock=seo_lock, now=now)
+
+
+def check_thermos(ledger, seo_root, plan, reader, *, runtime_lock=None, seo_lock=None, now=None):
+    with _locks(ledger, seo_root, runtime_lock, seo_lock) as root:
+        return _check(ledger, root, plan, reader, now, final=True)
+
+
+def apply_thermos(ledger, seo_root, plan, reader, *, owner_grant, runtime_lock=None, seo_lock=None, now=None):
+    return _apply(ledger, seo_root, plan, reader, final=True, owner_grant=owner_grant,
                   runtime_lock=runtime_lock, seo_lock=seo_lock, now=now)

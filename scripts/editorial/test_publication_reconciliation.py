@@ -293,5 +293,93 @@ class ColemanReconciliationTests(unittest.TestCase):
             if jid!=r.COLEMAN:self.assertEqual(before[jid],after[jid])
 
 
+class ThermosReconciliationTests(unittest.TestCase):
+    def setUp(self):
+        ColemanReconciliationTests.setUp(self)
+        second=r.prepare_coleman(self.ledger,self.seo,self.reader,expected_revision=self.revision,now=self.now)
+        r.apply_coleman(self.ledger,self.seo,second,self.reader,owner_grant=r.OWNER_GRANT,now=self.now)
+        self.second_receipt=self.root/'publication-reconciliations'/(second['planHash']+'.json')
+        self.second_bytes=self.second_receipt.read_bytes()
+        self.ledger.claim_effect(r.THERMOS,'publish')
+        self.ledger.finish_effect(r.THERMOS,'publish',{'status':'unknown','reason':'publication_requires_reconciliation','diagnostic':{'phase':'public_readback'}})
+        self.production_revision=r.THERMOS_REVISION
+        # Portable fixture cannot preimage a real bundle SHA; pin its exact SHA only inside this test.
+        revision=fingerprint(self.ledger.get_job(r.THERMOS)['bundle'])
+        pin=patch.object(r,'THERMOS_REVISION',revision);pin.start();self.addCleanup(pin.stop)
+        self.now+=timedelta(minutes=10)
+        self.marker_raw=(canonical({'schemaVersion':1,'token':r.THERMOS_TOKEN,
+            'owner':{'host':socket.gethostname(),'pid':r.THERMOS_PID},'createdAt':'2026-11-22T03:38:45+09:00'})+'\n').encode()
+        self.marker.write_bytes(self.marker_raw)
+        for proof in self.remote['proofs']:
+            proof['observedAt']=self.now.isoformat()
+            if proof['id']==r.THERMOS:
+                proof.update(kind='exact_published',xmin='11785')
+                proof['remoteRow'].update(status='published',published_at='2026-11-21T18:38:46Z',updated_at='2026-11-22T03:38:46+09:00')
+                publication=copy.deepcopy(self.remote['proofs'][0]['publication'])
+                publication.update(url='https://camp-gear-lab.com/articles/'+r.TARGETS[r.THERMOS],remoteUpdatedAt=proof['remoteRow']['updated_at'])
+                publication['readback']['fingerprint']=revision
+                proof['publication']=publication
+        # Normal downstream work is allowed on peers, but must be byte-preserved.
+        for jid in (r.POLE,r.COLEMAN):
+            with self.ledger._tx() as db:
+                job=self.ledger._get(db,jid)
+                job.update(stage='social_review',social={'proposal':{'text':'pending fixture'},'approval':None,'revision':'social-fixture'})
+                self.ledger._put(db,job,'social-fixture')
+
+    def plan(self):
+        return r.prepare_thermos(self.ledger,self.seo,self.reader,now=self.now)
+
+    def apply(self,plan):
+        return r.apply_thermos(self.ledger,self.seo,plan,self.reader,owner_grant=r.OWNER_GRANT,now=self.now)
+
+    def test_final_adopts_only_thermos_and_preserves_published_social_review_peers(self):
+        self.assertEqual('accbea7706f2bd2c5f91ad1b83cba527ae2d790981c3777a66190dd3c8fd8f51',self.production_revision)
+        before=r._snapshot(self.ledger);plan=self.plan()
+        self.assertEqual('ready',r.check_thermos(self.ledger,self.seo,plan,self.reader,now=self.now)['status'])
+        self.apply(plan);after=r._snapshot(self.ledger)
+        for jid in (r.POLE,r.COLEMAN):self.assertEqual(before[jid],after[jid])
+        self.assertEqual('published',after[r.THERMOS]['job']['stage']);self.assertEqual('success',after[r.THERMOS]['effect']['status'])
+        self.assertEqual(before[r.THERMOS]['job']['approval'],after[r.THERMOS]['job']['approval'])
+        self.assertEqual(self.second_bytes,self.second_receipt.read_bytes());self.assertEqual(self.first_bytes,self.first_receipt.read_bytes())
+        self.assertEqual(self.marker_raw,(self.seo/('publication-marker-'+r.THERMOS_TOKEN+'.json')).read_bytes())
+        self.assertFalse(self.marker.exists());self.assertEqual('reconciled',self.apply(plan)['status'])
+        for jid in r.TARGETS:self.assertFalse(self.ledger.claim_effect(jid,'publish'))
+
+    def test_final_fixed_marker_and_pid_and_live_process_refusal(self):
+        for mutate in [lambda m:m.update(token=r.COLEMAN_TOKEN),lambda m:m['owner'].update(pid=r.COLEMAN_PID),
+                       lambda m:m.update(createdAt='2026-11-22T03:38:44+09:00')]:
+            value=json.loads(self.marker_raw);mutate(value);self.marker.write_text(canonical(value))
+            with self.assertRaisesRegex(ValueError,'exact_marker'):self.plan()
+        self.marker.write_bytes(self.marker_raw);self.kill.side_effect=None
+        with self.assertRaisesRegex(ValueError,'still_alive'):self.plan()
+        self.kill.assert_called_with(r.THERMOS_PID,0)
+
+    def test_final_refuses_wrong_revision_xmin_dates_or_public_proof(self):
+        with patch.object(r,'THERMOS_REVISION','0'*64),self.assertRaises(ValueError):self.plan()
+        original=copy.deepcopy(self.remote)
+        for mutate in [lambda p:p.update(xmin='11786'),lambda p:p.update(kind='exact_draft'),
+                       lambda p:p['remoteRow'].update(published_at='2026-11-22T03:38:47+09:00'),
+                       lambda p:p['publication'].update(verified=False)]:
+            self.remote=copy.deepcopy(original);mutate(self.remote['proofs'][2])
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):self.plan()
+
+    def test_final_peer_social_change_after_plan_is_cas_conflict_not_dropped(self):
+        plan=self.plan()
+        with self.ledger._tx() as db:
+            job=self.ledger._get(db,r.POLE);job['social']['proposal']['text']='new pending fixture';self.ledger._put(db,job,'social-fixture')
+        with self.assertRaisesRegex(ValueError,'cas_conflict'):self.apply(plan)
+        self.assertTrue(self.marker.exists());self.assertEqual('unknown',r._snapshot(self.ledger)[r.THERMOS]['effect']['status'])
+
+    def test_final_archive_failure_resumes_same_plan_and_never_updates_peers(self):
+        plan=self.plan();before=r._snapshot(self.ledger);real=r._immutable
+        def fail_archive(path,raw):
+            if path.parent==self.seo.resolve():raise OSError('archive failed')
+            return real(path,raw)
+        with patch.object(r,'_immutable',side_effect=fail_archive):
+            with self.assertRaises(OSError):self.apply(plan)
+        self.assertTrue(self.marker.exists());self.apply(plan);after=r._snapshot(self.ledger)
+        for jid in (r.POLE,r.COLEMAN):self.assertEqual(before[jid],after[jid])
+
+
 if __name__ == '__main__':
     unittest.main()
