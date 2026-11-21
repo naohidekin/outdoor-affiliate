@@ -24,6 +24,7 @@ from apparel_identity import (ApparelIdentityError, apparel_class, apparel_contr
                               claim_binding as apparel_claim_binding,
                               inspect_apparel_page, official_domains as apparel_domains,
                               is_merchant_field,
+                              merchant_raster_candidate,
                               public_binding as public_apparel_binding)
 
 JST = timezone(timedelta(hours=9))
@@ -504,7 +505,7 @@ def _image_type(body):
     return None
 
 
-def _fully_decoded_image_type(body):
+def _fully_decoded_image_proof(body):
     """Bounded full raster decode for the one malformed official MIME header.
 
     Marker inspection is only a cheap prefilter. Sharp must decode ALL pixels;
@@ -541,9 +542,45 @@ def _fully_decoded_image_type(body):
         decoded_type = {'jpeg':'image/jpeg', 'png':'image/png'}.get(proof.get('format'))
         if decoded_type != marker_type or not all(type(proof.get(k)) is int and proof[k] > 0 for k in ('width','height')):
             return None
-        return decoded_type if proof['width'] * proof['height'] <= 16000000 else None
+        if proof['width'] * proof['height'] > 16000000:
+            return None
+        return {'contentType': decoded_type, 'width': proof['width'],
+                'height': proof['height']}
     except Exception:
         return None
+
+
+def _fully_decoded_image_type(body):
+    proof = _fully_decoded_image_proof(body)
+    return proof['contentType'] if proof else None
+
+
+def verify_apparel_merchant_raster(catalog, binding, page_url):
+    """Attach one decoded-byte proof to the bounded Rakuten primary-image route."""
+    if not isinstance(binding, dict) or 'imageIdentityMode' not in binding:
+        return binding
+    image_url = merchant_raster_candidate(binding, page_url)
+    if not image_url:
+        raise CatalogError('merchant image scope invalid')
+    try:
+        parsed, _ = safe_url(image_url, resolve=False)
+        response = catalog.request(image_url, {'Accept': 'image/*', 'Cache-Control': 'no-cache'},
+                                   allowed_domains=(parsed.hostname,), exact_domains=True)
+        content_type = response['headers'].get('content-type', '').split(';')[0].lower()
+        raster = _fully_decoded_image_proof(response['body'])
+        if (response['url'] != image_url or content_type not in ('image/jpeg', 'image/png')
+                or not raster or raster['contentType'] != content_type
+                or raster['width'] < 300 or raster['height'] < 300):
+            raise ValueError()
+        result = dict(binding)
+        result['merchantImageProof'] = {
+            'sourceUrl': image_url, 'finalUrl': response['url'],
+            'sha256': hashlib.sha256(response['body']).hexdigest(),
+            'size': len(response['body']), 'contentType': content_type,
+            'width': raster['width'], 'height': raster['height']}
+        return result
+    except Exception:
+        raise CatalogError('merchant image raster unavailable') from None
 
 
 def _affiliate_route(channel, url, env):
@@ -846,6 +883,10 @@ class Catalog:
                         product, res['url'], html,
                         product.get('imageUrl') if kind == 'manufacturer' else None,
                         source_role=kind, channel=channel)
+                    if (apparel_binding and kind == 'purchase'
+                            and apparel_binding.get('imageIdentityMode')):
+                        apparel_binding = verify_apparel_merchant_raster(
+                            self, apparel_binding, res['url'])
                     if apparel_binding:
                         apparel_sources[parsed] = apparel_binding
                 if kind == 'manufacturer':
@@ -1082,9 +1123,16 @@ class Catalog:
             item['affiliate'] = bool(item['destinations'] and all(d['verified'] for d in item['destinations']))
             details.append(item)
         checks = {key: all(d[key] for d in details) for key in ('facts', 'images', 'affiliate')}
+        published = [a for a in catalog.get('articles', [])
+                     if a.get('status') == 'published'
+                     and a.get('categoryId') == selected[0]['categoryId']
+                     and (not theme.get('slug') or a.get('slug') != theme['slug'])]
+        selected_ids = set(ids)
+        related = [a for a in published if isinstance(a.get('productIds'), list)
+                   and any(pid in selected_ids for pid in a['productIds'])]
+        unrelated = [a for a in published if a not in related]
         existing = [{k: a.get(k) for k in ('id', 'title', 'slug', 'categoryId', 'excerpt')}
-                    for a in catalog.get('articles', []) if a.get('status') == 'published'
-                    and a.get('categoryId') == selected[0]['categoryId']][:5]
+                    for a in (related + unrelated)[:5]]
         counts = {}
         for click in catalog.get('clicks', []):
             if click.get('productId') in ids:

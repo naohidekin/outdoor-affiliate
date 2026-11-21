@@ -1212,14 +1212,20 @@ class Runtime:
     def validate_corrected_retry(job, stage, input_key, records):
         """Read-only eligibility check shared by operator planning and execution."""
         allowed_errors = {
-            'Two to three distinct internal article links required',
-            'Article length outside existing SKILL limits',
+            'apparel-2026-11-16': {
+                'Two to three distinct internal article links required',
+                'Article length outside existing SKILL limits',
+            },
+            'apparel-2026-11-22': {
+                'Unknown or self internal article link',
+            },
         }
+        batch_id = job.get('batchId')
         if (stage != 'draft' or job.get('kind') != 'supplemental_article'
-                or job.get('batchId') != 'apparel-2026-11-16'
+                or batch_id not in allowed_errors
                 or job.get('batchCallCap') != 96 or job.get('stage') != 'error'
                 or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))
-                or (job.get('error') or {}).get('reason') not in allowed_errors):
+                or (job.get('error') or {}).get('reason') not in allowed_errors[batch_id]):
             raise ValueError('job_not_corrected_stage_retryable')
         record = next((r for r in records if r.get('stageKey') == input_key), None)
         if (len(records) != 1 or record is None or record.get('jobId') != job['id']
@@ -1229,7 +1235,7 @@ class Runtime:
             raise StageBlocked('exact corrected failed stage retry unavailable', stage_key=input_key)
 
     def retry_corrected_stage(self, id, stage, input_key):
-        """Operator-only recovery of an existing Nov16 supplemental draft.
+        """Operator-only recovery of an explicitly eligible supplemental draft.
 
         Caller holds runtime.flock. Keep error until the existing producer saves
         a reviewed bundle: a crash or source hold cannot enqueue a fresh attempt.
@@ -1238,6 +1244,8 @@ class Runtime:
         job = self.ledger.get_job(id)
         self.validate_corrected_retry(job, stage, input_key,
             self.stage_journal.status(job_id=id, stage=stage)['records'])
+        if job.get('batchId') == 'apparel-2026-11-22':
+            raise ValueError('local_contract_revalidation_required')
         self._explicit_stage_retry = {'jobId': id, 'stage': stage,
                                       'inputKey': input_key, 'corrected': True}
         try:

@@ -525,6 +525,51 @@ class _AmazonPrimaryFacts(HTMLParser):
             del self.stack[index:]
 
 
+class _RakutenPrimaryMetadata(HTMLParser):
+    """Keep each Rakuten Product scope intact and collect one page-level OG image."""
+    _VOID = _AmazonPrimaryFacts._VOID
+
+    def __init__(self, source):
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.active = []
+        self.products = []
+        self.og_images = []
+        self.feed(source)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        depth = len(self.stack) + 1
+        if ("itemscope" in attrs
+                and _norm(attrs.get("itemtype")).endswith("schema.org/product")):
+            self.active.append((depth, {"names": [], "skus": [], "images": []}))
+        if tag == "meta":
+            prop, content = _norm(attrs.get("itemprop")), attrs.get("content")
+            if self.active and prop in ("name", "sku", "image") and content:
+                self.active[-1][1][{"name": "names", "sku": "skus",
+                                    "image": "images"}[prop]].append(content.strip())
+            og = _norm(attrs.get("property") or attrs.get("name"))
+            if og == "og:image" and isinstance(content, str) and content.strip():
+                self.og_images.append(content.strip())
+        if tag not in self._VOID:
+            self.stack.append((tag, attrs))
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self._VOID:
+            self.handle_endtag(tag)
+
+    def handle_endtag(self, tag):
+        depth = len(self.stack)
+        while self.active and self.active[-1][0] == depth:
+            _, product = self.active.pop()
+            self.products.append(product)
+        index = next((i for i in range(len(self.stack) - 1, -1, -1)
+                      if self.stack[i][0] == tag), None)
+        if index is not None:
+            del self.stack[index:]
+
+
 class _MerchantProduct(HTMLParser):
     """Primary Amazon/Rakuten product projection; ignores recommendations."""
     def __init__(self, source, *, amazon=False):
@@ -738,12 +783,39 @@ def _inspect_merchant(product, page_url, html, channel):
                                         if any(token and token in _norm(value)
                                                for token in tokens)))
             if not images:
-                return None
+                metadata = _RakutenPrimaryMetadata(html)
+                page_parts = [part for part in urlsplit(canonical).path.split("/") if part]
+                if len(page_parts) != 2:
+                    return None
+                source_sku = page_parts[0] + ":" + page_parts[1]
+                nodes = [node for node in metadata.products
+                         if list(dict.fromkeys(node["skus"])) == [source_sku]]
+                if (len(nodes) != 1
+                        or list(dict.fromkeys(nodes[0]["names"])) != [title]):
+                    return None
+                og_images = list(dict.fromkeys(metadata.og_images))
+                og_assets = [_rakuten_shop_image(value, page_parts[0])
+                             for value in og_images]
+                if len(og_assets) != 1 or og_assets[0] is None:
+                    return None
+                node_images = list(dict.fromkeys(nodes[0]["images"]))
+                matched = [value for value in node_images
+                           if _rakuten_shop_image(value, page_parts[0]) == og_assets[0]]
+                if len(matched) != 1:
+                    return None
+                # Product metadata proves membership; the declared OG URL is
+                # the exact no-redirect fetch target retained in the proof.
+                images = [og_images[0]]
+                image_identity = {"imageIdentityMode": "rakuten-primary-og-raster-v1",
+                                  "merchantSourceSku": source_sku}
+            else:
+                image_identity = {}
             source_kind = "rakuten-primary-product-dom"
         else:
             return None
         return dict(contract, **merchant, colors=colors, sizes=sizes,
-                    imageUrls=images, sourceUrl=page_url, sourceKind=source_kind)
+                    imageUrls=images, sourceUrl=page_url, sourceKind=source_kind,
+                    **(image_identity if channel == "rakuten" else {}))
     except (ApparelIdentityError, TypeError, ValueError):
         return None
 
@@ -854,6 +926,41 @@ def _rakuten_product_page(url):
            for key, values in query.items()):
         return ""
     return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def _rakuten_shop_image(url, shop):
+    """Return one host-independent Rakuten shop asset key, or None."""
+    try:
+        parsed = urlsplit(url)
+        parts = [part for part in parsed.path.split("/") if part]
+        blocked = re.compile(r"(?:^|[/_.-])(no[-_]?image|dummy|placeholder|spacer|loading|blank|logo)(?:[/_.-]|$)", re.I)
+        if (parsed.scheme != "https"
+                or parsed.hostname not in ("shop.r10s.jp", "tshop.r10s.jp", "image.rakuten.co.jp")
+                or parsed.username is not None or parsed.password is not None
+                or parsed.port not in (None, 443) or parsed.query or parsed.fragment
+                or len(parts) < 3 or parts[0] != shop
+                or blocked.search(parsed.path)
+                or not re.search(r"\.(?:jpe?g|png|webp)$", parsed.path, re.I)):
+            return None
+        return "/".join(parts)
+    except (TypeError, ValueError):
+        return None
+
+
+def merchant_raster_candidate(binding, page_url):
+    """Validate metadata for the one Rakuten image route requiring byte proof."""
+    if not isinstance(binding, dict) or binding.get("imageIdentityMode") != "rakuten-primary-og-raster-v1":
+        return None
+    page = _rakuten_product_page(page_url)
+    parts = [part for part in urlsplit(page).path.split("/") if part]
+    images = binding.get("imageUrls")
+    if (len(parts) != 2 or binding.get("sourceKind") != "rakuten-primary-product-dom"
+            or binding.get("merchantChannel") != "rakuten"
+            or binding.get("merchantSourceSku") != parts[0] + ":" + parts[1]
+            or not isinstance(images, list) or len(images) != 1
+            or _rakuten_shop_image(images[0], parts[0]) is None):
+        return None
+    return images[0]
 
 
 MONTBELL_EXCERPT_LIMIT = 4000
@@ -1108,7 +1215,8 @@ def public_binding(binding):
     keys = ("class", "brand", "model", "gender", "fabric", "weight", "optionState",
             "canonicalVariant", "sourceVariant", "color", "size", "colors", "sizes", "sourceKind",
             "merchantChannel", "merchantOptionState", "merchantVariant",
-            "merchantColor", "merchantSize", "imageUrls")
+            "merchantColor", "merchantSize", "imageUrls", "imageIdentityMode",
+            "merchantSourceSku", "merchantImageProof")
     return {key: binding[key] for key in keys if key in binding}
 
 
@@ -1130,6 +1238,21 @@ def binding_matches_product(binding, product, channel=None):
         except ApparelIdentityError:
             return False
         if any(_norm(binding.get(key)) != _norm(value) for key, value in merchant.items()):
+            return False
+    mode = binding.get("imageIdentityMode")
+    if mode is not None:
+        proof = binding.get("merchantImageProof")
+        if (mode != "rakuten-primary-og-raster-v1" or channel != "rakuten"
+                or not isinstance(proof, dict)
+                or set(proof) != {"sourceUrl", "finalUrl", "sha256", "size",
+                                  "contentType", "width", "height"}
+                or binding.get("imageUrls") != [proof.get("sourceUrl")]
+                or proof.get("finalUrl") != proof.get("sourceUrl")
+                or not re.fullmatch(r"[a-f0-9]{64}", str(proof.get("sha256", "")))
+                or type(proof.get("size")) is not int or proof["size"] <= 0
+                or proof.get("contentType") not in ("image/jpeg", "image/png")
+                or type(proof.get("width")) is not int or proof["width"] < 300
+                or type(proof.get("height")) is not int or proof["height"] < 300):
             return False
     state = (binding.get("merchantOptionState") if channel is not None
              else contract["optionState"])

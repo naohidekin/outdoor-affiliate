@@ -418,6 +418,33 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(all('content' not in a for a in ctx['existingArticles']))
         self.assertEqual(ctx['merchantClicks'], [{'productId': 'p0', 'store': 'rakuten', 'clicks': 1}])
 
+    def test_gather_prioritizes_related_published_tail_without_body_or_self(self):
+        articles = [
+            {'id': 'other-' + str(i), 'slug': 'other-' + str(i), 'title': 'Other',
+             'categoryId': 'stove', 'status': 'published', 'productIds': ['unrelated'],
+             'content': 'FULL_BODY_MUST_NOT_LEAK'} for i in range(6)]
+        articles += [
+            {'id': 'related', 'slug': 'related-tail', 'title': 'Related',
+             'categoryId': 'stove', 'status': 'published', 'productIds': ['p1'],
+             'content': 'RELATED_BODY_MUST_NOT_LEAK'},
+            {'id': 'self', 'slug': 'new-theme', 'title': 'Self',
+             'categoryId': 'stove', 'status': 'published', 'productIds': ['p0']},
+        ]
+        cat = dict(products=products(), articles=articles)
+        gather = Catalog({}, lambda *a: response('')).gather
+        selected = gather({'slug': 'new-theme', 'productIds': ['p0', 'p1', 'p2']}, cat)
+        self.assertEqual(['related-tail', 'other-0', 'other-1', 'other-2', 'other-3'],
+                         [article['slug'] for article in selected['existingArticles']])
+        self.assertTrue(all(set(article) ==
+                            {'id', 'title', 'slug', 'categoryId', 'excerpt'}
+                            for article in selected['existingArticles']))
+        self.assertNotIn('MUST_NOT_LEAK', json.dumps(selected['existingArticles']))
+        unrelated = copy.deepcopy(cat)
+        unrelated['articles'] = articles[:6]
+        fallback = gather({'slug': 'new-theme', 'productIds': ['p0', 'p1', 'p2']}, unrelated)
+        self.assertEqual(['other-' + str(i) for i in range(5)],
+                         [article['slug'] for article in fallback['existingArticles']])
+
     def test_fake_image_headers_and_invalid_affiliate_account_fail(self):
         self.assertIsNone(_image_type(b'\x89PNG\r\n\x1a\n' + b'x' * 100))
         self.assertIsNone(_image_type(PNG[:-4] + b'fail'))

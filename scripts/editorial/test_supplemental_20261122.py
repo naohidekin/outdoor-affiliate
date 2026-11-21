@@ -193,6 +193,60 @@ class SupplementalRuntimeBatchIsolationTests(unittest.TestCase):
         self.assertEqual([{'id': job['id'], 'status': 'awaiting_approval'}],
                          result['articles'])
 
+    def test_new_batch_internal_link_failure_uses_one_existing_corrected_attempt(self):
+        from models import ModelError
+        value = manifest()
+        catalog = self._catalog(value)
+        first = resolve_batch(value, catalog, [], NOW)['slots'][0]
+        job = self.runtime.ledger.create_supplemental_candidate(
+            first['theme'], NEW, 1, first['sourceBinding'],
+            social_eligible_period=SOCIAL_PERIOD, now=NOW)
+        inputs = {'theme': job['theme'], 'dependencies': {'implementation': 'old'},
+                  'schemaVersion': 1}
+        with self.assertRaises(ModelError):
+            self.runtime.stage_journal.run(job['id'], 'draft', inputs,
+                lambda: (_ for _ in ()).throw(
+                    ModelError('Unknown or self internal article link')))
+        key = self.runtime.stage_journal.key(job['id'], 'draft', inputs)
+        self.runtime.ledger.set_stage(job['id'], 'error',
+            {'reason': 'Unknown or self internal article link'})
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        self.runtime.validate_corrected_retry(
+            self.runtime.ledger.get_job(job['id']), 'draft', key, records)
+        usage_before = copy.deepcopy(self.models.usage)
+        with self.assertRaisesRegex(ValueError, 'local_contract_revalidation_required'):
+            self.runtime.retry_corrected_stage(job['id'], 'draft', key)
+        self.assertEqual(usage_before, self.models.usage)
+        corrected = copy.deepcopy(inputs)
+        corrected['dependencies']['existingArticles'] = [{'slug': 'related-published'}]
+        result = self.runtime.stage_journal.retry_corrected_failed(
+            job['id'], 'draft', key, corrected,
+            lambda: {'validated': True, 'noNewModelCall': True})
+        self.assertEqual({'validated': True, 'noNewModelCall': True}, result)
+        records = self.runtime.stage_journal.status(job_id=job['id'], stage='draft')['records']
+        self.assertEqual([('failed', 1, 2), ('succeeded', 2, 2)],
+                         sorted((record['status'], record['attempts'], record['maxAttempts'])
+                                for record in records))
+        self.assertEqual(key, next(record for record in records
+                                   if record['attempts'] == 2)['predecessorKey'])
+        self.assertEqual(usage_before, self.models.usage)
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            self.assertEqual(0, db.execute(
+                'SELECT count(*) FROM model_budget_reservations').fetchone()[0])
+
+    def test_corrected_error_allowlists_remain_batch_specific(self):
+        record = {'stageKey': 'k', 'jobId': 'job', 'stage': 'draft',
+                  'status': 'failed', 'attempts': 1, 'maxAttempts': 2}
+        base = {'id': 'job', 'kind': 'supplemental_article', 'batchCallCap': 96,
+                'stage': 'error', 'bundle': None, 'approval': None, 'publication': None}
+        for batch, reason in (
+                (NEW, 'Article length outside existing SKILL limits'),
+                (OLD, 'Unknown or self internal article link')):
+            with self.subTest(batch=batch, reason=reason), self.assertRaises(ValueError):
+                self.runtime.validate_corrected_retry(
+                    dict(base, batchId=batch, error={'reason': reason}),
+                    'draft', 'k', [record])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -24,7 +24,8 @@ def _emit_result(value):
 
 if __name__ == '__main__':
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-from catalog import Catalog, _affiliate_route, _decode_html, _image_type, _model, _Page, model_matches, safe_url
+from catalog import (Catalog, _affiliate_route, _decode_html, _image_type, _model, _Page,
+                     model_matches, safe_url, verify_apparel_merchant_raster)
 from audit_requests import AuditRequests
 from topic_selection import TopicSelectionError, validate_nonproduct_bundle
 from apparel_identity import (apparel_requested, binding_matches_product,
@@ -181,7 +182,7 @@ def _merchant_identity(product, model, title):
     return inspect_merchant_identity(product, model, title)['status'] == 'passed'
 
 
-def _apparel_merchant_identity(product, channel, page_url, html, references):
+def _apparel_merchant_identity(product, channel, page_url, html, references, catalog):
     """A retained receipt is an expectation, never current identity evidence."""
     refs = [ref for ref in references if isinstance(ref, dict)
             and ref.get('kind') == 'purchase' and ref.get('productId') == product.get('id')
@@ -204,6 +205,11 @@ def _apparel_merchant_identity(product, channel, page_url, html, references):
             or expected.get('sourceKind') != source_kind):
         return {'status': 'unverified', 'reason': 'approved_apparel_binding_invalid'}, None
     actual = inspect_apparel_page(product, page_url, html, source_role='purchase', channel=channel)
+    if actual and actual.get('imageIdentityMode'):
+        try:
+            actual = verify_apparel_merchant_raster(catalog, actual, page_url)
+        except Exception:
+            actual = None
     if not actual or not binding_matches_product(actual, product, channel):
         return {'status': 'unverified', 'reason': 'merchant_apparel_primary_unverified'}, None
     def identity(binding):
@@ -545,7 +551,7 @@ class PostPublicationAudit:
                     primary = None
                     if apparel_requested(product):
                         decision, primary = (_apparel_merchant_identity(product, channel, response['url'],
-                            _decode_html(response['body'], kind), bundle.get('references')) if same else
+                            _decode_html(response['body'], kind), bundle.get('references'), catalog) if same else
                             ({'status': 'failed', 'reason': 'merchant_destination_or_product_identity_mismatch'}, None))
                         identity = decision['status'] == 'passed'
                         if primary:
