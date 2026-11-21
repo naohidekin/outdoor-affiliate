@@ -199,32 +199,13 @@ class RuntimeTests(unittest.TestCase):
         self.assertFalse((self.runtime.root / 'production-attempts').exists())
 
     def test_mixed_period_saves_three_and_backfills_one_free_slot_without_research(self):
-        from test_topic_selection_fit_sources import registered_reference
         self.configure_production_schedule()
         old = [self.runtime.ledger.create_candidate({'slug': f'carry-{i}'},
                f'2026-11-13T09:0{i}:00+09:00') for i in range(2)]
         for job in old:
             self.runtime.ledger.set_stage(job['id'], 'review')
-        proposals = []
-        topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
-                  ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
-                  ('sleeping-bag-care', '寝袋を乾燥して保管するには？', ['汚れ確認', '乾燥', '保管'])]
-        source_refs = [registered_reference(url, text) for url, text in (
-            ('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
-            ('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。'),
-            ('https://www.snowpeak.co.jp/contents/campstarterbook/', '寝袋を十分に乾燥させて汚れを確認し保管します。'))]
-        public_ids = [r['id'] for r in source_refs]
-        for i, (slug, question, outline) in enumerate(topics):
-            proposals.append({'slug': slug, 'title': question, 'categoryId': 'tent',
-                'productIds': [], 'topicType': 'knowhow', 'query': question,
-                'readerQuestion': question, 'intent': 'informational',
-                'outline': outline, 'priority': 90-i,
-                'overlapRationale': 'distinct', 'selectionReason': 'verified',
-                'sourceIds': ['gsc:fixture', public_ids[i]], 'proposedAction': 'new',
-                'overlapArticleIds': [], 'needsStatus': 'not_applicable'})
-        feed = {'status': 'verified', 'sources': source_refs, 'illustrations': []}
-        research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
-            *[{'id': item['id'], 'kind': 'public_reference'} for item in feed['sources']]]}
+        from test_research_contract_recovery import matched_selection_fixture
+        proposals, feed, research = matched_selection_fixture()
         self.runtime.catalog.request = lambda *_args, **_kwargs: None
         with patch('runtime.datetime') as clock, \
                 patch('runtime.collect_primary_sources', return_value=feed) as collect, \
@@ -316,30 +297,10 @@ class RuntimeTests(unittest.TestCase):
         self.assertIsNone(marker['requestOccurred'])
 
     def test_mixed_insufficient_pool_returns_same_known_hold_without_second_ai_call(self):
-        from test_topic_selection_fit_sources import registered_reference
         self.configure_production_schedule()
-        proposals = [
-            {'slug': 'tent-dry-hold', 'title': 'テントを乾燥して保管するには？',
-             'categoryId': 'tent', 'productIds': [], 'topicType': 'knowhow',
-             'query': 'テント 乾燥 保管', 'readerQuestion': 'テントを乾燥して保管するには？',
-             'intent': 'informational', 'outline': ['汚れ確認', '乾燥', '保管'],
-             'priority': 90, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
-             'sourceIds': ['gsc:fixture', 'public:coleman-care'], 'proposedAction': 'new',
-             'overlapArticleIds': [], 'needsStatus': 'not_applicable'},
-            {'slug': 'layering-hold', 'title': '重ね着の順番は？',
-             'categoryId': 'wear', 'productIds': [], 'topicType': 'knowhow',
-             'query': '重ね着 順番', 'readerQuestion': '重ね着の順番は？',
-             'intent': 'informational', 'outline': ['肌着', '中間着', '上着'],
-             'priority': 89, 'overlapRationale': 'distinct', 'selectionReason': 'verified',
-             'sourceIds': ['gsc:fixture', 'public:montbell-layering'], 'proposedAction': 'new',
-             'overlapArticleIds': [], 'needsStatus': 'not_applicable'}]
-        feed = {'status': 'verified', 'sources': [
-            registered_reference('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
-            registered_reference('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。')],
-            'illustrations': []}
-        research = {'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
-            {'id': 'public:coleman-care', 'kind': 'public_reference'},
-            {'id': 'public:montbell-layering', 'kind': 'public_reference'}], 'categories': []}
+        from test_research_contract_recovery import matched_selection_fixture
+        proposals, feed, research = matched_selection_fixture()
+        proposals = proposals[:2]
         with patch('runtime.datetime') as clock, patch('runtime.require_fresh_daily_metrics'), \
                 patch('runtime.collect_primary_sources', return_value=feed) as collect, \
                 patch.object(self.runtime, '_research_context', return_value=research), \

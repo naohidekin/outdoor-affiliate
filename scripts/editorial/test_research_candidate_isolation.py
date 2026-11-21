@@ -75,6 +75,11 @@ class CandidateIsolationRuntimeTests(unittest.TestCase):
         self.f.marker.unlink()
         self.artifacts = []
         self.f.rt.models.artifact_sink = self.artifacts.append
+        # Shared positive fixtures must carry matched PT query evidence, not a generic GSC token.
+        demand = [s for s in self.f.context['editorialSignals'] if s['kind'] == 'own_site_query_demand']
+        self.assertEqual(3, len(demand))
+        self.assertTrue(all(s['period']['dateBasis'] == 'America/Los_Angeles' for s in demand))
+        self.assertNotIn('synthetic-private-demand-canary', json.dumps(self.f.context))
 
     def set_response(self, proposals):
         value = response({'proposals': proposals})

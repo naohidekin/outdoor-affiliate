@@ -15,6 +15,8 @@ from test_models import ENV, Fake, response
 from test_runtime import CatalogFake, SlackFake
 from test_topic_selection import proposal
 from test_topic_selection_fit_sources import registered_reference
+from search_demand import classify_topic, project_search_demand
+from topic_selection import editorial_signals
 
 NOW = datetime(2026, 11, 20, 10, tzinfo=JST)
 class Frozen(datetime):
@@ -22,6 +24,35 @@ class Frozen(datetime):
     def now(cls, tz=None):
         value = cls(2026, 11, 20, 10, tzinfo=JST)
         return value if tz is None else value.astimezone(tz)
+
+
+def matched_selection_fixture():
+    """Three broad, distinct questions with exact public scopes and private local demand.
+
+    Shared ONLY by the recovery/isolation/mixed-period integration tests. Synthetic
+    raw samples stop at project_search_demand; the model context gets facets only.
+    """
+    topics = [
+        ('tent-dry', '雨撤収したテントを乾かして保管するには？', 'tent', ['汚れを落とす', '乾燥場所', '保管確認']),
+        ('layering', '冬のレイヤリングで肌着と中間着と上着をどう組み合わせる？', 'wear', ['肌着', '中間着', '上着']),
+        ('sleeping-bag-care', '寝袋の汚れと濡れを確認して乾燥・保管するには？', 'sleeping-bag', ['汚れ確認', '乾燥', '保管'])]
+    sources = [registered_reference(url, text, NOW) for url, text in (
+        ('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
+        ('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。'),
+        ('https://www.snowpeak.co.jp/contents/campstarterbook/', '寝袋を十分に乾燥させて汚れを確認し保管します。'))]
+    feed = {'status': 'verified', 'sources': sources, 'illustrations': []}
+    period = {'startDate': '2026-10-23', 'endDate': '2026-11-19', 'dateBasis': 'America/Los_Angeles'}
+    demand = project_search_demand([dict(query=q+' synthetic-private-demand-canary', clicks=10-i,
+        impressions=100-i*10, ctr=.1, position=8) for i, (_,q,_,_) in enumerate(topics)], period)
+    signals = editorial_signals({'evidence': {'current': dict(period, status='ok', searchDemand=demand)}}, feed)
+    demand_by_facets = {fingerprint(signal['facets']): signal for signal in signals
+                        if signal['kind'] == 'own_site_query_demand'}
+    proposals = [proposal(slug, q, 90-i, categoryId=category, outline=heads,
+        sourceIds=[demand_by_facets[fingerprint(classify_topic(q))]['id'], sources[i]['id']])
+        for i, (slug, q, category, heads) in enumerate(topics)]
+    context = {'catalog': [], 'categories': [{'id': category} for _,_,category,_ in topics],
+               'existingArticles': [], 'editorialSignals': signals}
+    return proposals, feed, context
 
 
 class ResearchContractRecoveryTests(unittest.TestCase):
@@ -40,19 +71,7 @@ class ResearchContractRecoveryTests(unittest.TestCase):
         Path(self.config['spoolDir']).mkdir()
         self.path = base / 'config.json'
         atomic(self.path, self.config)
-        topics = [('tent-dry', '雨撤収した幕を乾かすには？', ['汚れを落とす', '乾燥場所', '保管確認']),
-                  ('layering', '重ね着の順番は？', ['肌着', '中間着', '上着']),
-                  ('sleeping-bag-care', '寝袋を乾燥して保管するには？', ['汚れ確認', '乾燥', '保管'])]
-        sources = [registered_reference(url, text, NOW) for url, text in (
-            ('https://www.coleman.co.jp/customersupport/faq/', 'テントの土を落とし十分に乾燥して保管します。'),
-            ('https://www.montbell.jp/generalpage/disp.php?id=507', 'レイヤリングは肌着と中間着と上着を重ねる考え方です。'),
-            ('https://www.snowpeak.co.jp/contents/campstarterbook/', '寝袋を十分に乾燥させて汚れを確認し保管します。'))]
-        self.proposals = [proposal(slug, q, 90-i, outline=heads, sourceIds=['gsc:fixture', sources[i]['id']])
-                          for i, (slug, q, heads) in enumerate(topics)]
-        self.feed = {'status': 'verified', 'sources': sources, 'illustrations': []}
-        self.context = {'catalog': [], 'categories': [{'id': 'camp-howto'}], 'existingArticles': [],
-            'editorialSignals': [{'id': 'gsc:fixture', 'kind': 'gsc'},
-                *[{'id': s['id'], 'kind': 'public_reference'} for s in self.feed['sources']]]}
+        self.proposals, self.feed, self.context = matched_selection_fixture()
         answer = response({'proposals': self.proposals})
         answer['id'] = 'repaired-research-response'
         self.request = Fake(answer)

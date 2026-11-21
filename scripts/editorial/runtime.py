@@ -294,12 +294,39 @@ class Runtime:
                                  'override preference.')
         return data
 
+    @staticmethod
+    def _planning_products(products, classify_topic, limit=60):
+        """Keep verified apparel/brand alternatives visible within the existing input cap."""
+        wear, other = {}, []
+        for product in sorted(products, key=lambda item: str(item.get('id', ''))):
+            apparel = (product.get('categoryId') == 'wear'
+                       or bool(classify_topic(str(product.get('name', ''))).get('garments')))
+            if apparel:
+                brands = classify_topic(str(product.get('brand', ''))).get('brands') or []
+                brand = brands[0] if brands else str(product.get('brand', '')).casefold()
+                wear.setdefault(brand, []).append(product)
+            else:
+                other.append(product)
+        apparel = []
+        while any(wear.values()):
+            for brand in sorted(wear):
+                if wear[brand]:
+                    apparel.append(wear[brand].pop(0))
+        first = apparel[:limit // 2] + other[:limit // 2]
+        seen = {product['id'] for product in first}
+        return (first + [product for product in apparel + other if product['id'] not in seen])[:limit]
+
     def _research_context(self, context, feed=None, existing_summaries=None):
         from catalog import _model, MAKERS
         from supplemental_topics import apparel_policy, load_batch
         eligible = [p for p in context['products'] if _model(p) and p.get('brand', '').casefold() in MAKERS
                     and p.get('imageUrl') and p.get('affiliateUrl') and p.get('amazonUrl')]
-        products = [{k: p.get(k) for k in ('id', 'name', 'brand', 'categoryId', 'specs')} for p in eligible[:60]]
+        if feed is not None:
+            from search_demand import classify_topic
+            planning_products = self._planning_products(eligible, classify_topic)
+        else:
+            planning_products = eligible[:60]
+        products = [{k: p.get(k) for k in ('id', 'name', 'brand', 'categoryId', 'specs')} for p in planning_products]
         counts = {}
         observed_end = datetime.now(JST)
         observed_start = observed_end - timedelta(days=28)
@@ -316,7 +343,7 @@ class Runtime:
         owner_apparel_policy = context.get('apparelPolicy') or apparel_policy(
             load_batch(self.config.get('supplementalApparelBatchManifest')))
         result = {'wisePolicy': load_policy(self.config['repo']), 'apparelPolicy': owner_apparel_policy,
-                'catalog': products, 'existingArticles': (existing_summaries or context['articles']),
+                'catalog': products, 'existingArticles': (existing_summaries if existing_summaries is not None else context['articles']),
                 'categories': [{key: item.get(key) for key in ('id', 'name')}
                                for item in context.get('categories', [])
                                if isinstance(item, dict) and item.get('id')],
@@ -335,13 +362,52 @@ class Runtime:
                 'For every candidate provide reader question, intent, outline, priority, source IDs, '
                 'selection rationale and structured overlap action. Existing article summaries contain '
                 'title/slug/known query/excerpt/headings only. Deterministic code checks the complete article '
-                'index. Avoid medical, cold/survival, emergency and child-safety advice. ')
+                'index. Avoid medical, survival, emergency and child-safety advice. Ordinary seasonal '
+                'clothing comfort and product choice may be covered within verified factual sources. ')
             result['editorialSignals'] = editorial_signals(analytics, feed)
+            # Demand details are provided once under their selectable evidence IDs.
+            # Previous-only groups are not eligible current demand and never imply zero.
+            result['analytics'] = copy.deepcopy(analytics)
+            for name in ('current', 'previous'):
+                source = result['analytics'].get('evidence', {}).get(name)
+                if isinstance(source, dict) and isinstance(source.get('searchDemand'), dict):
+                    demand = source['searchDemand']
+                    groups = demand.pop('groups', [])
+                    demand.update(groupCount=len(groups) if isinstance(groups, list) else None, groupDetails='editorialSignals',
+                                  omittedPreviousGroups='unknown_not_zero')
             result['publicSources'] = copy.deepcopy(feed.get('sources', []))
             result['externalTrend'] = {'status': 'unconnected', 'records': [],
                                        'limitations': 'No external trend inference or Google Trends claim'}
             result['instructions'] += ('Own-site GSC/GA4 signals are not market demand; '
-                'seasonal_problem is a hypothesis unless an explicit measured comparison evidence ID is supplied.')
+                'seasonal_problem is a hypothesis unless an explicit measured comparison evidence ID is supplied. '
+                'Prioritize the owner-requested seasonal problems, apparel choices and meaningful brand comparisons '
+                'when relevant search evidence supports them. Cite topic-matching search demand IDs; an unrelated '
+                'high-traffic page is not evidence. Explain a distinct reader decision and usable conclusion, '
+                'not just an available source. Route small component-care, isolated label checks and parts lookup '
+                'to an appropriate existing article section/FAQ with proposedAction=existing_update; if a suitable '
+                'target is unknown, hold instead of inventing a target or stretching the topic. '
+                'Do not propose a new article whose reader decision is already covered by an existing section or FAQ. '
+                'Programmatic verified demand and distinctness outrank your ordinal priority; no genre quota. '
+                'Missing market search volume and external trends remain unknown.')
+            result['topicSelectionPolicy'] = {
+                'version': 'relevant-search-demand-v2', 'maxNewArticles': 3,
+                'preference': ['seasonal_problem', 'apparel_choice', 'brand_comparison'],
+                'narrowTopicRoute': 'existing_update_or_hold',
+                'rawSearchQueriesProvided': False, 'extraResearchCalls': 0,
+            }
+            result['catalogCoverage'] = {'eligibleProducts': len(eligible), 'providedProducts': len(products),
+                'maxProvidedProducts': 60, 'truncated': len(eligible) > len(products),
+                'policy': 'bounded_apparel_brand_coverage_not_an_article_quota'}
+            apparel_products = [product for product in planning_products if product.get('categoryId') == 'wear'
+                                or classify_topic(str(product.get('name', ''))).get('garments')]
+            apparel_brands = sorted({brand for product in apparel_products for brand in
+                (classify_topic(str(product.get('brand', ''))).get('brands')
+                 or [str(product.get('brand', '')).casefold()])})
+            result['catalogCoverage'].update(providedApparelProducts=len(apparel_products),
+                providedApparelBrands=apparel_brands,
+                brandComparisonReadiness=('multiple_catalog_brands_available' if len(apparel_brands) >= 2
+                                         else 'insufficient_apparel_brand_coverage'),
+                qualification='planning_inventory_only_final_primary_image_and_merchant_checks_still_required')
         return result
 
     @staticmethod
@@ -425,17 +491,13 @@ class Runtime:
             try:
                 if mixed_period(week):
                     raw_articles = self.catalog.catalog().get('articles', [])
-                    def bounded(article):
-                        return {**{key: article.get(key) for key in
-                                   ('id', 'slug', 'title', 'query', 'excerpt')},
-                                'headings': re.findall(r'(?m)^#{2,4}\s+(.+?)\s*$',
-                                                       str(article.get('content') or ''))[:8]}
-                    existing_index = [bounded(article) for article in raw_articles]
+                    from topic_index import build_article_index, compact_article_summaries
+                    existing_index = build_article_index(raw_articles)
                     feed = collect_primary_sources(
                         self.catalog.request, period=week,
                         output_path=self.root / 'public-sources' / (week + '.json'), now=now)
                     research_context = self._research_context(
-                        context, feed=feed, existing_summaries=existing_index)
+                        context, feed=feed, existing_summaries=compact_article_summaries(existing_index))
                     # Preserve the exact, secret-checked context before the API
                     # boundary; a later repair must not erase the first input.
                     public_checker = self.models if isinstance(self.models, Models) else Models(self.env)
@@ -460,6 +522,7 @@ class Runtime:
                     themes = [bind_nonproduct_theme(theme, feed) for theme in selection['selected']]
                     genre_coverage = {}
                     qualified_reasons = {'deterministic_priority_with_soft_variety',
+                                         'deterministic_relevant_need_rank',
                                          'insufficient_qualified_period_pool', 'period_selection_limit'}
                     for genre in sorted(TOPIC_TYPES):
                         rows = [decision for decision in selection['decisions']
@@ -473,6 +536,11 @@ class Runtime:
                             'unavailableReason': ('no_proposal' if not rows else
                                 'no_qualified_evidence' if not qualified else None)}
                     receipt = {'schemaVersion': 1, 'period': week, 'at': stamp(),
+                               'selectionPolicy': 'relevant-search-demand-v2',
+                               'existingIndex': {'articleCount': len(existing_index),
+                                   'fingerprint': fingerprint(existing_index),
+                                   'fullBodyCount': sum(row['bodyCoverage'] == 'full' for row in existing_index),
+                                   'modelProjection': 'bounded_summaries_only'},
                                'status': selection['status'], 'holdReason': selection['holdReason'],
                                'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled'],
                                'proposalCount': len(proposals), 'decisions': selection['decisions'],
@@ -482,8 +550,16 @@ class Runtime:
                     atomic(self.root / 'period-receipts' / (week + '.json'), receipt)
                     updates = [decision for decision in selection['decisions']
                                if decision['status'] == 'existing_update']
+                    indexed = {row['id']: row for row in existing_index}
+                    updates = [{**decision, 'baseArticleBinding': {
+                        key: indexed[decision['existingArticleId']].get(key) for key in
+                        ('id', 'slug', 'updatedAt', 'contentSha256', 'faqsSha256')},
+                        'nextStep': 'prepare_existing_revision_with_fresh_sources_and_separate_owner_approval'}
+                        for decision in updates if decision.get('existingArticleId') in indexed]
                     atomic(self.root / 'existing-update-proposals' / (week + '.json'),
                            {'schemaVersion': 1, 'period': week, 'private': True,
+                            'selectionPolicy': 'relevant-search-demand-v2',
+                            'status': 'awaiting_existing_update_planning' if updates else 'no_update_proposals',
                             'publication': 'prohibited', 'proposals': updates})
                     atomic(research_attempt, {
                         'status': ('selection_hold' if selection['status'] == 'hold' else 'generated'),

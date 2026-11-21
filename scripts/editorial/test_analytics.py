@@ -49,6 +49,42 @@ class AnalyticsTests(unittest.TestCase):
         for forbidden in ('private@example', 'secret', '?token', 'queries', 'fragment'):
             self.assertNotIn(forbidden, text)
 
+    def test_search_demand_current_and_previous_are_separate_sanitized_observations(self):
+        data=snapshot()
+        term='モンベル パタゴニア 冬 フリース 比較 private-person@example.invalid'
+        data['current']['queries']=[dict(query=term,clicks=4,impressions=100,ctr=.04,position=8)]
+        data['previous']['queries']=[dict(query=term,clicks=2,impressions=80,ctr=.025,position=10)]
+        context=load(data);current=context['evidence']['current']['searchDemand'];previous=context['evidence']['previous']['searchDemand']
+        self.assertEqual('available',current['status']);self.assertEqual('available',previous['status'])
+        self.assertEqual(current['groups'][0]['facetId'],previous['groups'][0]['facetId'])
+        self.assertNotEqual(current['groups'][0]['id'],previous['groups'][0]['id'])
+        self.assertEqual(100,current['groups'][0]['metrics']['impressions'])
+        self.assertEqual(80,previous['groups'][0]['metrics']['impressions'])
+        self.assertEqual('2026-10-01',current['period']['startDate']);self.assertEqual('2026-09-03',previous['period']['startDate'])
+        self.assertFalse(current['coverage']['marketDemand']);self.assertFalse(current['coverage']['trendVerified'])
+        self.assertNotIn('private-person',json.dumps(context));self.assertNotIn(term,json.dumps(context,ensure_ascii=False))
+        self.assertNotIn('private-person',build_report(data,now=NOW)['text'])
+
+    def test_search_demand_beyond_page_limit_and_no_query_pages_double_count(self):
+        data=snapshot()
+        data['current']['queries']=[dict(query='モンベル 冬 フリース',clicks=1,impressions=10,position=5)]*1500
+        data['current']['queries'].append(dict(query='パタゴニア 冬 ダウン',clicks=2,impressions=20,position=8))
+        data['current']['queryPages']=[dict(query='モンベル 冬 フリース',clicks=999,impressions=9999,position=1)]
+        demand=load(data)['evidence']['current']['searchDemand']
+        self.assertEqual(1501,demand['coverage']['processedRowCount'])
+        self.assertEqual(2,len(demand['groups']));self.assertEqual(30,sum(g['metrics']['impressions'] for g in demand['groups']))
+        self.assertEqual(2,sum(g['queryCount'] for g in demand['groups']))
+
+    def test_search_demand_missing_dataset_is_not_zero_or_previous_backfill(self):
+        data=snapshot();data['current'].pop('queries')
+        data['previous']['queries']=[dict(query='冬 フリース',clicks=0,impressions=10,position=8)]
+        context=load(data);current=context['evidence']['current']['searchDemand']
+        self.assertEqual('unavailable',current['status']);self.assertEqual([],current['groups'])
+        self.assertIsNone(current['coverage']['uniqueQueryCount'])
+        self.assertEqual('available',context['evidence']['previous']['searchDemand']['status'])
+        data['current']['status']='error'
+        self.assertIsNone(load(data)['evidence']['current'])
+
     def test_missing_future_and_stale_collection(self):
         for instant in (None, (NOW + timedelta(seconds=1)).isoformat(),
                         (NOW - timedelta(hours=72, seconds=1)).isoformat(), 'invalid'):

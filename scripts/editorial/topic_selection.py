@@ -7,9 +7,11 @@ never receives raw GSC queries or arbitrary URLs.
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
 
 
 JST = timezone(timedelta(hours=9))
@@ -479,12 +481,154 @@ def editorial_signals(analytics, feed):
                                     "kind": "own_site_gsc_period_comparison", "locator": row.get("url"),
                                     "status": "measured", "metrics": pairs,
                                     "limitations": "own-site page aggregate; not market demand or Google Trends"})
+    current_demand = current.get("searchDemand") if isinstance(current, dict) else None
+    previous_demand = previous.get("searchDemand") if isinstance(previous, dict) else None
+    if (isinstance(current_demand, dict) and current_demand.get("status") == "available"
+            and isinstance(current_demand.get("groups"), list)):
+        current_period = current_demand.get("period")
+        previous_period = previous_demand.get("period") if isinstance(previous_demand, dict) else None
+        safe_period = _demand_period(current_period)
+        if safe_period is None:
+            current_demand = None
+        comparable = (isinstance(previous_demand, dict)
+                      and previous_demand.get("status") == "available"
+                      and isinstance(previous_demand.get("groups"), list)
+                      and _comparable_periods(current_period, previous_period))
+        prior_groups = {}
+        if comparable:
+            for group in previous_demand.get("groups", []):
+                if isinstance(group, dict) and _controlled_facets(group.get("facets")) is not None:
+                    prior_groups[group.get("id")] = group
+                    facet_id = group.get("facetId")
+                    if isinstance(facet_id, str):
+                        prior_groups[facet_id] = group
+        for group in current_demand["groups"][:40] if current_demand else []:
+            if not isinstance(group, dict):
+                continue
+            facets = _controlled_facets(group.get("facets"))
+            metrics = _demand_metrics(group.get("metrics"))
+            query_count = group.get("queryCount")
+            signal_id = group.get("id")
+            if (facets is None or metrics is None or not isinstance(signal_id, str)
+                    or not re.fullmatch(r"gsc-demand:[a-f0-9]{64}", signal_id)
+                    or isinstance(query_count, bool)
+                    or not isinstance(query_count, int) or not 1 <= query_count <= 10000):
+                continue
+            old = prior_groups.get(group.get("facetId")) or prior_groups.get(signal_id)
+            previous_values = None
+            if (isinstance(old, dict) and _controlled_facets(old.get("facets")) == facets
+                    and _demand_metrics(old.get("metrics")) is not None):
+                old_count = old.get("queryCount")
+                if isinstance(old_count, int) and not isinstance(old_count, bool) and old_count >= 0:
+                    previous_values = {"queryCount": old_count,
+                                       "metrics": _demand_metrics(old["metrics"]),
+                                       "period": _demand_period(previous_period)}
+            records.append({"id": signal_id, "kind": "own_site_query_demand",
+                            "facets": facets, "queryCount": query_count, "metrics": metrics,
+                            "period": safe_period,
+                            "coverage": _demand_coverage(current_demand.get("coverage")),
+                            "previous": previous_values,
+                            "limitations": "own-site search sample; not market search volume"})
     for item in feed.get("sources", []):
         records.append({"id": item["id"], "kind": "public_reference", "url": item["url"],
                         "title": item["title"], "excerpt": item["excerpt"], "scope": item["scope"],
                         "checkedAt": item["checkedAt"], "receiptSha256": item["receiptSha256"],
                         "excerptSha256": item["excerptSha256"]})
     return sorted(records, key=lambda item: item["id"])
+
+
+FACET_KEYS = ("garments", "brands", "problems", "seasons", "intents", "gearTypes")
+TOPICAL_FACETS = ("garments", "brands", "problems", "gearTypes")
+
+
+def _controlled_facets(value):
+    if not isinstance(value, dict) or set(value) != set(FACET_KEYS):
+        return None
+    try:
+        from search_demand import ALIASES
+    except ImportError:
+        try:
+            from .search_demand import ALIASES
+        except (ImportError, ValueError):
+            return None
+    result = {}
+    for key in FACET_KEYS:
+        items = value.get(key)
+        if (not isinstance(items, list) or len(items) > 40
+                or any(not isinstance(item, str) or not item or len(item) > 80 for item in items)
+                or len(items) != len(set(items)) or any(item not in ALIASES[key] for item in items)):
+            return None
+        result[key] = list(items)
+    return result
+
+
+def _demand_metrics(value):
+    keys = ("clicks", "impressions", "ctr", "averagePosition")
+    if not isinstance(value, dict) or any(key not in value for key in keys):
+        return None
+    result = {}
+    for key in keys:
+        item = value.get(key)
+        if item is not None and (isinstance(item, bool) or not isinstance(item, (int, float))
+                                 or not math.isfinite(item) or not 0 <= item <= 2**53 - 1):
+            return None
+        result[key] = item
+    if (not isinstance(result["clicks"], (int, type(None)))
+            or not isinstance(result["impressions"], (int, type(None)))
+            or (result["clicks"] is not None and result["impressions"] is not None
+                and result["clicks"] > result["impressions"])
+            or (result["ctr"] is not None and result["ctr"] > 1)
+            or result["averagePosition"] == 0):
+        return None
+    return result
+
+
+def _demand_period(value):
+    # GSC's reporting dates are source-native Pacific dates.  They are evidence
+    # windows, not operational timestamps, and must never be relabelled as JST.
+    if (not isinstance(value, dict) or value.get("dateBasis") != "America/Los_Angeles"
+            or not _comparable_periods(value, value)):
+        return None
+    return {key: value[key] for key in ("startDate", "endDate", "dateBasis")}
+
+
+DEMAND_COVERAGE_FIELDS = {
+    "source", "scope", "marketDemand", "trendVerified", "positionAggregation",
+    "inputRowCount", "processedRowCount", "uniqueQueryCount", "classifiedQueryCount",
+    "unclassifiedQueryCount", "duplicateRowCount", "conflictingDuplicateCount",
+    "invalidRowCount", "missingMetricsQueryCount", "observedGroupCount", "exportedGroupCount",
+    "inputTruncated", "groupsTruncated", "observedRowsComplete", "status",
+}
+
+
+def _demand_coverage(value):
+    if not isinstance(value, dict):
+        return None
+    safe = {key: item for key, item in value.items()
+            if key in DEMAND_COVERAGE_FIELDS and
+            (item is None or isinstance(item, (int, bool))
+             or isinstance(item, float) and math.isfinite(item))}
+    enums = {"source": {"own_site_gsc_query_aggregates"},
+             "scope": {"observed_query_rows_only", "own_site_search_sample"},
+             "positionAggregation": {"impression_weighted"},
+             "status": {"available", "partial"}}
+    for key, allowed in enums.items():
+        if value.get(key) in allowed:
+            safe[key] = value[key]
+    return safe
+
+
+def _comparable_periods(current, previous):
+    if not isinstance(current, dict) or not isinstance(previous, dict):
+        return False
+    try:
+        current_days = (date.fromisoformat(current["endDate"]) -
+                        date.fromisoformat(current["startDate"])).days
+        previous_days = (date.fromisoformat(previous["endDate"]) -
+                         date.fromisoformat(previous["startDate"])).days
+    except (KeyError, TypeError, ValueError):
+        return False
+    return current_days == previous_days >= 0 and current.get("dateBasis") == previous.get("dateBasis")
 
 
 def _normal(value):
@@ -580,8 +724,255 @@ def validate_proposals(raw, *, catalog_ids, existing_ids=(), category_ids=None):
     return result
 
 
-def select_proposals(proposals, *, signals, existing, queued, feed, limit=3):
-    """Deterministic evidence/overlap gate with a soft, non-quota variety nudge."""
+def _topic_text(value):
+    return " ".join(str(value.get(key, "")) for key in ("title", "readerQuestion", "query"))
+
+
+def _facets(value, classifier):
+    try:
+        return _controlled_facets(classifier(value))
+    except (TypeError, ValueError, KeyError, AttributeError):
+        return None
+
+
+def _facet_matches(left, right):
+    return {key: sorted(set(left.get(key, [])) & set(right.get(key, [])))
+            for key in FACET_KEYS}
+
+
+def _related_match(left, right):
+    matches = _facet_matches(left, right)
+    for key in (*TOPICAL_FACETS, "intents"):
+        if left.get(key) and right.get(key) and not matches[key]:
+            return None
+    return matches if matches["garments"] or matches["gearTypes"] else None
+
+
+def _direct_match(candidate, demand):
+    matches = _related_match(candidate, demand)
+    if matches is None:
+        return None
+    for key in ("garments", "brands", "problems", "seasons", "gearTypes"):
+        if candidate.get(key) and not set(candidate[key]).issubset(demand.get(key, [])):
+            return None
+    if ("comparison" in candidate.get("intents", []) and len(candidate.get("brands", [])) >= 2
+            and ("comparison" not in demand.get("intents", [])
+                 or not set(candidate["brands"]).issubset(demand.get("brands", [])))):
+        return None
+    return matches
+
+
+def _has_observed_metric(value):
+    if not isinstance(value, dict):
+        return False
+    for item in value.values():
+        if isinstance(item, dict) and _has_observed_metric(item):
+            return True
+        if (isinstance(item, (int, float)) and not isinstance(item, bool)
+                and math.isfinite(item) and item >= 0):
+            return True
+    return False
+
+
+def _article_texts(article):
+    values = [article.get(key, "") for key in
+              ("slug", "title", "query", "readerQuestion", "excerpt", "conclusion")]
+    values.extend(article.get("headings") or [])
+    values.extend(article.get("faqQuestions") or [])
+    for faq in article.get("faqs") or []:
+        if isinstance(faq, dict):
+            values.extend((faq.get("question", ""), faq.get("answer", "")))
+    for section in article.get("sections") or []:
+        if isinstance(section, dict):
+            values.extend((section.get("heading", ""), section.get("text", "")))
+    return [str(value) for value in values if isinstance(value, str) and value.strip()]
+
+
+def _rich_overlap(proposal, articles, classifier):
+    candidate = [proposal.get(key, "") for key in ("title", "readerQuestion", "query")]
+    candidate_facets = _facets(_topic_text(proposal), classifier) or {key: [] for key in FACET_KEYS}
+    for article in articles:
+        if article.get("categoryId") != proposal.get("categoryId"):
+            continue
+        article_facets = _facets(" ".join(_article_texts(article)), classifier) or {
+            key: [] for key in FACET_KEYS}
+        shared = _related_match(candidate_facets, article_facets)
+        if ("comparison" in candidate_facets.get("intents", [])
+                and len(candidate_facets.get("brands", [])) >= 2
+                and not set(candidate_facets["brands"]).issubset(article_facets.get("brands", []))):
+            continue
+        if any(_similar(value, covered) for value in candidate for covered in _article_texts(article)):
+            if shared:
+                return article
+    return None
+
+
+def _article_for_signal(signal, existing):
+    locator = signal.get("locator")
+    if not isinstance(locator, str) or not locator:
+        return None
+    try:
+        parsed = urlsplit(locator)
+        port = parsed.port
+    except ValueError:
+        return None
+    if parsed.scheme:
+        if (parsed.scheme != "https" or parsed.hostname != "camp-gear-lab.com"
+                or port is not None or parsed.username is not None or parsed.password is not None
+                or parsed.query or parsed.fragment):
+            return None
+        path = parsed.path.rstrip("/")
+    else:
+        if not locator.startswith("/articles/") or "?" in locator or "#" in locator:
+            return None
+        path = locator.rstrip("/")
+    for article in existing:
+        slug = article.get("slug")
+        if isinstance(slug, str) and slug and path == "/articles/" + slug:
+            return article
+    return None
+
+
+def _need_evidence(proposal, signal_map, existing, classifier):
+    candidate = _facets(_topic_text(proposal), classifier)
+    unknown = {key: [] for key in FACET_KEYS}
+    if candidate is None:
+        return "unknown", unknown, [], []
+    direct, proxy = [], []
+    direct_matched = {key: set() for key in FACET_KEYS}
+    proxy_matched = {key: set() for key in FACET_KEYS}
+    for source_id in proposal.get("sourceIds", []):
+        signal = signal_map.get(source_id, {})
+        if signal.get("kind") == "own_site_query_demand":
+            demand_facets = _controlled_facets(signal.get("facets"))
+            query_count = signal.get("queryCount")
+            demand_metrics = _demand_metrics(signal.get("metrics"))
+            measured_need = (demand_metrics is not None and any(
+                isinstance(demand_metrics[key], (int, float)) and demand_metrics[key] > 0
+                for key in ("clicks", "impressions")))
+            shared = (_direct_match(candidate, demand_facets or {})
+                      if isinstance(query_count, int) and not isinstance(query_count, bool)
+                      and query_count > 0 and measured_need
+                      else None)
+            if shared:
+                direct.append(signal)
+                for key, values in shared.items():
+                    direct_matched[key].update(values)
+        elif signal.get("kind") in ("gsc", "ga4", "own_site_gsc_period_comparison"):
+            if not _has_observed_metric(signal.get("metrics")):
+                continue
+            article = _article_for_signal(signal, existing)
+            if article is None or article.get("categoryId") != proposal.get("categoryId"):
+                continue
+            article_facets = _facets(" ".join(_article_texts(article)), classifier)
+            shared = _related_match(candidate, article_facets or {})
+            if shared:
+                proxy.append(signal)
+                for key, values in shared.items():
+                    proxy_matched[key].update(values)
+    basis = "direct_matched_query_group" if direct else "related_page_proxy" if proxy else "unknown"
+    matched = direct_matched if direct else proxy_matched
+    return basis, {key: sorted(values) for key, values in matched.items()}, direct, proxy
+
+
+NARROW_TOPIC = re.compile(
+    r"(?:ソール|靴底).*(?:手入れ|洗|汚れ)|(?:洗濯表示|ケアラベル|ラベルだけ)|"
+    r"(?:部品|パーツ|パッキン).*(?:適合|品番|探|検索|確認)|(?:適合|品番).*(?:部品|パーツ|パッキン)|"
+    r"(?:ポール|ジョイント|グロメット).*(?:掃除|清掃|手入れ|汚れ)|"
+    r"(?:掃除|清掃|手入れ|汚れ).*(?:ポール|ジョイント|グロメット)|"
+    r"(?:洗濯表示|ケアラベル|ラベル).*(?:確認|読む|見方|判断)"
+)
+
+NARROW_FAMILIES = (
+    re.compile(r"ソール|靴底"), re.compile(r"洗濯表示|ケアラベル|ラベル"),
+    re.compile(r"部品|パーツ|パッキン|適合|品番"),
+    re.compile(r"ポール|ジョイント|グロメット"),
+)
+NARROW_TERMS = re.compile(
+    r"ソール|靴底|洗濯表示|ケアラベル|ラベル|部品|パーツ|パッキン|適合|品番|ポール|ジョイント|グロメット")
+
+
+def _narrow_target(proposal, existing, candidate_facets, classifier):
+    candidates = []
+    proposal_text = _topic_text(proposal)
+    families = [pattern for pattern in NARROW_FAMILIES if pattern.search(proposal_text)]
+    wanted_terms = set(NARROW_TERMS.findall(proposal_text))
+    for article in existing:
+        if article.get("categoryId") != proposal.get("categoryId"):
+            continue
+        article_text = " ".join(_article_texts(article))
+        if not families or not any(pattern.search(article_text) for pattern in families):
+            continue
+        article_facets = _facets(article_text, classifier)
+        article_facets = article_facets or {key: [] for key in FACET_KEYS}
+        if any(candidate_facets.get(key) and article_facets.get(key)
+               and not set(candidate_facets[key]) & set(article_facets[key])
+               for key in ("garments", "gearTypes")):
+            continue
+        shared = _related_match(candidate_facets, article_facets)
+        article_terms = set(NARROW_TERMS.findall(article_text))
+        term_matches = wanted_terms & article_terms
+        candidate_brands = set(candidate_facets.get("brands", []))
+        article_brands = set(article_facets.get("brands", []))
+        if candidate_brands and article_brands and not candidate_brands & article_brands:
+            continue
+        if shared or term_matches:
+            score = sum(len(values) for values in (shared or {}).values()) + len(term_matches)
+            candidates.append((-score, str(article.get("slug", "")), article))
+    candidates.sort(key=lambda value: (value[0], value[1]))
+    return candidates[0][2] if candidates else None
+
+
+def _update_record(record, article, reason):
+    record.update(status="existing_update", reason=reason,
+                  existingArticleId=article.get("id"), existingSlug=article.get("slug"),
+                  baseVersion=article.get("updatedAt"), contentHash=article.get("contentSha256"),
+                  existingCoverage={key: article.get(key) for key in
+                                    ("bodyCoverage", "contentSha256", "faqsSha256")},
+                  nextStep="queue_existing_update_proposal_only_for_separate_owner_approval")
+
+
+def _score_rationale(proposal, basis, matches, direct, proxy):
+    preference = []
+    if proposal.get("topicType") == "seasonal_problem" or matches.get("seasons"):
+        preference.append("seasonal")
+    if matches.get("garments"):
+        preference.append("apparel")
+    if len(matches.get("brands", [])) >= 2 and "comparison" in matches.get("intents", []):
+        preference.append("brand_comparison")
+    signals = direct or proxy
+    observed = []
+    for signal in signals:
+        metrics = signal.get("metrics") if isinstance(signal.get("metrics"), dict) else {}
+        observed.append({"sourceId": signal.get("id"), "queryCount": signal.get("queryCount"),
+                         "clicks": metrics.get("clicks"), "impressions": metrics.get("impressions")})
+    pairs = [(row["queryCount"] if isinstance(row.get("queryCount"), int) else -1,
+              row["impressions"] if isinstance(row.get("impressions"), (int, float)) else -1)
+             for row in observed]
+    strongest = max(pairs, default=(-1, -1))
+    strength = {"queryCount": strongest[0] if strongest[0] >= 0 else None,
+                "impressions": strongest[1] if strongest[1] >= 0 else None}
+    tier = 2 if basis == "direct_matched_query_group" else 1 if basis == "related_page_proxy" else 0
+    return {"needTier": tier,
+            "matchedFacets": matches, "observed": observed,
+            "observedStrength": strength, "preferenceReasons": preference,
+            "aiPriority": proposal.get("priority")}
+
+
+def select_proposals(proposals, *, signals, existing, queued, feed, limit=3,
+                     classify_topic=None):
+    """Deterministic relevant-need and full-index overlap gate."""
+    if classify_topic is None:
+        try:
+            from search_demand import classify_topic
+        except ImportError:
+            try:
+                from .search_demand import classify_topic
+            except (ImportError, ValueError):
+                classify_topic = lambda _text: {key: [] for key in FACET_KEYS}
+    signal_ids = [item.get("id") for item in signals if isinstance(item, dict)]
+    if len(signal_ids) != len(signals) or len(signal_ids) != len(set(signal_ids)):
+        raise TopicSelectionError("editorial_signal_identity_invalid")
     signal_map = {item["id"]: item for item in signals}
     public_ids = {item["id"] for item in feed.get("sources", [])}
     public_scopes = {item["id"]: item.get("scope") for item in feed.get("sources", [])}
@@ -590,44 +981,27 @@ def select_proposals(proposals, *, signals, existing, queued, feed, limit=3):
     seen = list(existing) + list(queued)
     for index, proposal in enumerate(proposals):
         record = {"proposal": proposal, "sourceIds": list(proposal["sourceIds"]),
-                  "status": "rejected", "reason": None}
+                  "status": "rejected", "reason": None, "needBasis": "unknown"}
         unknown = [source for source in proposal["sourceIds"] if source not in signal_map]
-        demand = [source for source in proposal["sourceIds"]
-                  if signal_map.get(source, {}).get("kind") in
-                  ("gsc", "ga4", "own_site_gsc_period_comparison")]
-        measured_change = [source for source in proposal["sourceIds"]
-                           if signal_map.get(source, {}).get("kind") == "own_site_gsc_period_comparison"]
         referenced_public = [source for source in proposal["sourceIds"] if source in public_ids]
         scopes = set(allowed_claim_scopes(proposal))
         source_families = {_scope_family(public_scopes[source]) for source in referenced_public}
-        overlap = next((item for item in seen if (
-            any(_similar(proposal[field], item.get(field, ""))
-                for field in ("slug", "title", "query", "readerQuestion"))
-            or _similar(proposal["readerQuestion"] + " " + " ".join(proposal["outline"]),
-                        str(item.get("readerQuestion", "")) + " " + " ".join(item.get("outline", []) or []))
-        )), None)
+        overlap = _rich_overlap(proposal, seen, classify_topic)
         structured_existing = next((item for item in existing
                                     if item.get("id") in proposal["overlapArticleIds"]), None)
+        need_basis, matches, direct, proxy = _need_evidence(
+            proposal, signal_map, existing, classify_topic)
+        record["needBasis"] = need_basis
+        record["scoreRationale"] = _score_rationale(
+            proposal, need_basis, matches, direct, proxy)
+        candidate_facets = _facets(_topic_text(proposal), classify_topic) or {
+            key: [] for key in FACET_KEYS}
+        narrow = bool(NARROW_TOPIC.search(_topic_text(proposal)))
+        narrow_target = _narrow_target(proposal, existing, candidate_facets, classify_topic) if narrow else None
         if unknown:
             record["reason"] = "unknown_evidence_id"
-        elif proposal["proposedAction"] == "hold":
-            record["reason"] = "semantic_overlap_ambiguous_hold"
-        elif proposal["proposedAction"] == "existing_update":
-            record.update(status="existing_update", reason="model_overlap_routed_to_existing_update",
-                          existingArticleId=structured_existing.get("id"),
-                          existingSlug=structured_existing.get("slug"))
-        elif not demand:
-            record["reason"] = "verified_gsc_or_ga4_required"
-        elif proposal["needsStatus"] == "measured_change" and not measured_change:
-            record["reason"] = "measured_change_evidence_required"
         elif HIGH_RISK.search(" ".join([proposal["title"], proposal["readerQuestion"], *proposal["outline"]])):
             record["reason"] = "high_stakes_nonproduct_excluded" if not proposal["productIds"] else "high_stakes_topic_excluded"
-        elif overlap is not None:
-            if overlap in existing:
-                record.update(status="existing_update", reason="overlaps_existing_article",
-                              existingArticleId=overlap.get("id"), existingSlug=overlap.get("slug"))
-            else:
-                record["reason"] = "overlaps_queued_theme"
         elif not proposal["productIds"] and (feed.get("status") not in ("verified", "partial")
                                               or not referenced_public):
             record["reason"] = "verified_nonproduct_source_route_required"
@@ -638,23 +1012,50 @@ def select_proposals(proposals, *, signals, existing, queued, feed, limit=3):
         elif not proposal["productIds"] and not _outline_scope_families(proposal).issubset(
                 source_families):
             record["reason"] = "nonproduct_outline_scope_uncovered"
+        elif proposal["proposedAction"] == "hold":
+            record.update(status="hold", reason="semantic_overlap_ambiguous_hold")
+        elif proposal["proposedAction"] == "existing_update":
+            if structured_existing is None:
+                record.update(status="hold", reason="existing_update_target_unknown")
+            else:
+                _update_record(record, structured_existing,
+                               "model_overlap_routed_to_existing_update")
+        elif overlap is not None:
+            if overlap in existing:
+                _update_record(record, overlap, "rich_existing_content_overlap")
+            else:
+                record["reason"] = "overlaps_queued_theme"
+        elif narrow:
+            if narrow_target is None:
+                record.update(status="hold", reason="narrow_topic_target_unknown")
+            else:
+                _update_record(record, narrow_target, "narrow_topic_routed_to_existing_update")
+        elif need_basis == "unknown":
+            record["reason"] = "relevant_search_need_required"
+        elif (proposal["needsStatus"] == "measured_change" and not any(
+                signal.get("kind") == "own_site_gsc_period_comparison" for signal in proxy)):
+            record["reason"] = "measured_change_evidence_required"
         else:
             record["status"] = "eligible"
-            record["reason"] = "evidence_and_overlap_checks_passed"
+            record["reason"] = "relevant_need_and_overlap_checks_passed"
             eligible.append((index, proposal, record))
         decisions.append(record)
         if record["status"] in ("eligible", "selected", "existing_update"):
             seen.append(proposal)
-    selected_types = []
-    # Priority remains primary.  Variety only breaks near-ties (<=5 points).
-    while eligible and len(selected_types) < min(limit, 3):
-        eligible.sort(key=lambda item: (-item[1]["priority"], item[1]["slug"], item[0]))
-        best_priority = eligible[0][1]["priority"]
-        near = [item for item in eligible if best_priority - item[1]["priority"] <= 5]
-        choice = next((item for item in near if item[1]["topicType"] not in selected_types), eligible[0])
-        eligible.remove(choice)
-        choice[2].update(status="selected", reason="deterministic_priority_with_soft_variety")
-        selected_types.append(choice[1]["topicType"])
+    def rank(item):
+        rationale = item[2]["scoreRationale"]
+        facet_count = min(3, sum(bool(values) for values in rationale["matchedFacets"].values()))
+        strength = rationale["observedStrength"]
+        query_count = strength["queryCount"] if strength["queryCount"] is not None else -1
+        impressions = strength["impressions"] if strength["impressions"] is not None else -1
+        preference = min(2, len(rationale["preferenceReasons"]))
+        return (-rationale["needTier"], -query_count, -impressions, -facet_count,
+                -preference, -item[1]["priority"], item[1]["slug"], item[0])
+    eligible.sort(key=rank)
+    chosen = eligible[:min(limit, 3)]
+    eligible = eligible[min(limit, 3):]
+    for _, _, record in chosen:
+        record.update(status="selected", reason="deterministic_relevant_need_rank")
     for _, _, record in eligible:
         record.update(status="rejected", reason="period_selection_limit")
     selected = [item["proposal"] for item in decisions if item["status"] == "selected"]

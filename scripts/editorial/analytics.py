@@ -15,6 +15,8 @@ import json
 import math
 import re
 
+from search_demand import project_search_demand
+
 JST = timezone(timedelta(hours=9))
 MAX_BYTES = 4 * 1024 * 1024
 MAX_ROWS = 1000
@@ -149,7 +151,8 @@ def _gsc(raw, now, warnings, label):
                 country=raw.get('country') if raw.get('country') in ('jpn', 'JPN') else 'unverified',
                 searchType=raw.get('searchType') if raw.get('searchType') in ('web', 'image', 'video', 'news') else 'unverified',
                 settledThrough=raw['settledThrough'], summary=_stats(raw.get('summary') or {}),
-                pages=ordered[:MAX_EVIDENCE], candidates=candidates[:MAX_EVIDENCE])
+                pages=ordered[:MAX_EVIDENCE], candidates=candidates[:MAX_EVIDENCE],
+                searchDemand=project_search_demand(raw.get('queries'), period))
 
 
 def _ai_referrals(raw):

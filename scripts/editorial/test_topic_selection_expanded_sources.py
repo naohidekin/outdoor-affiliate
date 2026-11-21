@@ -122,11 +122,13 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
         signals = [{'id': 'gsc:one', 'kind': 'gsc'}] + [{'id': s['id'], 'kind': 'public_reference'} for s in feed['sources']]
         return topics.select_proposals(candidates, signals=signals, existing=[], queued=[], feed=feed, limit=1)
 
-    def test_narrow_wash_and_parts_accept_their_sources_and_reject_cross_use(self):
+    def test_narrow_topics_hold_without_update_target_but_sources_keep_exact_scope(self):
         feed = self.collect()
         wash, parts = self.candidates(feed)
         for p in (wash, parts):
-            self.assertEqual('selected', self.select([p], feed)['status'])
+            selection = self.select([p], feed)
+            self.assertEqual('hold', selection['decisions'][0]['status'])
+            self.assertEqual('narrow_topic_target_unknown', selection['decisions'][0]['reason'])
             bound = topics.bind_nonproduct_theme(p, feed)
             self.assertCountEqual(p['sourceIds'][1:], [s['id'] for s in bound['nonProductContract']['references']])
             self.assertTrue(topics.gather_nonproduct(bound, {'articles': [], 'categories': []})['checks']['facts'])
@@ -149,7 +151,10 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
         broad_care = dict(wash, outline=wash['outline'] + ['乾燥と保管の手順'])
         self.assertEqual('nonproduct_outline_scope_uncovered', self.select([broad_care], feed)['decisions'][0]['reason'])
         excluded_only_in_rationale = dict(wash, selectionReason='ダウン、水温、洗剤、乾燥機の手順は扱わない判断ガイド')
-        self.assertEqual('selected', self.select([excluded_only_in_rationale], feed)['status'])
+        decision = self.select([excluded_only_in_rationale], feed)['decisions'][0]
+        self.assertEqual('narrow_topic_target_unknown', decision['reason'])
+        # Excluded words in rationale do not invalidate the verified claim contract.
+        topics.bind_nonproduct_theme(excluded_only_in_rationale, feed)
 
     def test_reverification_refuses_relabelled_new_scope_or_colliding_source_id(self):
         feed = self.collect()
