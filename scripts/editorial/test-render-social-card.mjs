@@ -86,6 +86,33 @@ test('two products: preserve both source hashes, names, whole subjects and photo
   }
 });
 
+test('two canonical Merino names expand the left column without clipping or lowering font floors', async t => {
+  const root = await setup(t);
+  const title = 'アウトドアのインナーは化繊かメリノか｜ジオラインとスーパーメリノウールの選び分け';
+  const names = [
+    "モンベル ジオライン M.W.ラウンドネックシャツ Men's",
+    "モンベル スーパーメリノウール M.W. ラウンドネックシャツ Men's",
+  ];
+  const products = await Promise.all(names.map(name => fixture(name)));
+  const result = await renderSocialCard({ title, heading: title.split('｜')[1],
+    products,
+    outputPath: path.join(root, 'merino.png') });
+  assert.deepEqual(result.displayText.productNames, names);
+  assert.equal(result.layout.renderedHeading, title.split('｜')[1]);
+  assert.ok(result.layout.productNameFontSize >= 20);
+  assert.ok(result.layout.headingFontSize >= 40);
+  assert.ok(result.layout.names.bottom <= result.layout.heading.y);
+  assert.ok(result.layout.heading.bottom <= result.layout.footer.y);
+  assert.equal(result.layout.modelTokens.map(token => token.text).join(''),
+    names.join('').replaceAll(' ', ''));
+  for (const token of result.layout.modelTokens) {
+    assert.ok(token.x >= result.layout.names.x && token.right <= result.layout.names.right);
+    assert.ok(token.y >= result.layout.names.y && token.bottom <= result.layout.names.bottom);
+  }
+  assert.equal(result.networkRequests, 0);
+  assert.deepEqual(result.sources.map(source => source.sha256), products.map(source => source.sha256));
+});
+
 test('actual GS pipeline name remains complete, model unbroken and title suffix verbatim', async t => {
   const root = await setup(t), p = await fixture('スノーピーク HOME&CAMP バーナー カーキ GS-600KH');
   const title = 'HOME&CAMP バーナー GS-600KH｜収納寸法・専用ガス・購入前の確認点';

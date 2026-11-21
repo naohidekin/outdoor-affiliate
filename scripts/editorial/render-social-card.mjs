@@ -145,23 +145,35 @@ export async function renderSocialCard(raw) {
     const layout = await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all([...document.images].map(img => img.decode()));
-      const heading = document.querySelector('#heading'), names = document.querySelector('#names');
+      const heading = document.querySelector('#heading'), names = document.querySelector('#names'), footer = document.querySelector('#footer');
+      const initialHeading = heading.getBoundingClientRect(), initialNames = names.getBoundingClientRect();
       const fits = el => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth &&
         [...el.children].every(child => child.getBoundingClientRect().right <= el.getBoundingClientRect().right);
+      let nameSize = parseInt(getComputedStyle(names).fontSize, 10);
+      while (!fits(names) && nameSize > 20) names.style.fontSize = --nameSize + 'px';
+      if (!fits(names)) {
+        const requiredNameHeight = Math.ceil(names.scrollHeight);
+        const headingTop = Math.max(initialHeading.y, initialNames.y + requiredNameHeight + 8);
+        if (headingTop >= initialHeading.bottom) throw Error('product_name_overflow');
+        names.style.height = requiredNameHeight + 'px';
+        heading.style.top = headingTop + 'px';
+        heading.style.height = initialHeading.bottom - headingTop + 'px';
+      }
+      if (!fits(names)) throw Error('product_name_overflow');
       let size = 58;
       while (!fits(heading) && size > 40) heading.style.fontSize = --size + 'px';
       if (!fits(heading)) heading.classList.add('wrap-long-phrases');
       if (!fits(heading)) throw Error('heading_overflow_requires_short_approved_input');
-      let nameSize = parseInt(getComputedStyle(names).fontSize, 10);
-      while (!fits(names) && nameSize > 20) names.style.fontSize = --nameSize + 'px';
-      if (!fits(names)) throw Error('product_name_overflow');
       const rect = el => {
         const r = el.getBoundingClientRect();
         return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom };
       };
       const photos = [...document.images].map(rect);
       if (photos.some(r => r.x < 580 || r.y < 0 || r.right > 1200 || r.bottom > 630)) throw Error('product_layout_overflow');
-      return { headingFontSize: size, productNameFontSize: nameSize, heading: rect(heading), photos,
+      const nameBox = rect(names), headingBox = rect(heading), footerBox = rect(footer);
+      if (nameBox.bottom > headingBox.y || headingBox.bottom > footerBox.y) throw Error('left_column_overlap');
+      return { headingFontSize: size, productNameFontSize: nameSize, heading: headingBox,
+        names: nameBox, footer: footerBox, photos,
         headingPhrases: [...heading.children].map(el => ({ text: el.textContent, ...rect(el) })),
         modelTokens: [...names.querySelectorAll('.model-token')].map(el => ({ text: el.textContent, ...rect(el) })),
         renderedHeading: heading.textContent, renderedNames: [...names.children].map(el => el.textContent) };
