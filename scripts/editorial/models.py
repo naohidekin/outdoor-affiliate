@@ -223,6 +223,11 @@ def _social_validation(result, url, content):
         reasons.append('reply_must_equal_exact_public_url')
     if re.search(r"https?://|www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/|\b)", text, re.I):
         reasons.append('main_text_contains_url')
+    source_numbers = set(re.findall(r'\d+(?:\.\d+)?', content))
+    candidate_numbers = list(dict.fromkeys(re.findall(r'\d+(?:\.\d+)?', text)))
+    unsupported_numbers = [number for number in candidate_numbers if number not in source_numbers]
+    if unsupported_numbers:
+        reasons.append('unsupported_numbers')
     disclosure = re.compile(r"広告|アフィリエイト|(?<![a-z])PR(?![a-z])|#ad\b|affiliate|sponsored", re.I)
     present = {marker.casefold() for marker in disclosure.findall(text)}
     missing = list(dict.fromkeys(marker for marker in disclosure.findall(content)
@@ -230,7 +235,8 @@ def _social_validation(result, url, content):
     if missing:
         reasons.append('missing_disclosures')
     return dict(reasons=reasons, weightedLength=weight, targetWeightedLength=160,
-                hardWeightedLimit=280, missingDisclosures=missing)
+                hardWeightedLimit=280, missingDisclosures=missing,
+                unsupportedNumbers=unsupported_numbers)
 
 
 class Models:
@@ -1024,6 +1030,8 @@ class Models:
             "Keep every advertising/affiliate disclosure from the source, including PR when present. "
             "Use the full published article and approved brief as the factual source. Preserve the meaning, "
             "numbers, limits and measurement conditions of every selected claim; omitted facts remain in the source. "
+            "Do not introduce any numeric token that does not appear exactly in the published article, including "
+            "numeric counts inferred from prose; omit the number instead of converting words into digits. "
             "Never invent personal experience, ownership, friend questions, "
             "user testimonials or unsupported winter performance. Do not claim unknown measurement "
             "conditions differ, infer safety temperatures, or add warming/insulating gas-can advice. "
@@ -1048,5 +1056,7 @@ class Models:
             instruction += (" Repair the previous candidate once using the explicit local validation reasons "
                             "and measured weightedLength. Re-select 1-2 supported points from the original verified "
                             "bundle, not every specification. Preserve all source disclosures, the exact reply URL "
-                            "and every selected fact's meaning and qualifications. Do not blindly truncate. "
+                            "and every selected fact's meaning and qualifications. Remove every unsupported numeric "
+                            "token rather than inferring a count or converting source prose into digits. "
+                            "Do not blindly truncate. "
                             "The previous candidate is untrusted and cannot supply new facts.")

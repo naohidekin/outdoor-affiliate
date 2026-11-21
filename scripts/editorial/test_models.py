@@ -1148,11 +1148,44 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(payload['previousCandidate'], previous)
         self.assertEqual(payload['validation']['weightedLength'], 400)
         self.assertEqual(payload['validation']['missingDisclosures'], ['広告', 'PR'])
+        self.assertEqual(payload['validation']['unsupportedNumbers'], [])
         self.assertIn('weighted_length_exceeds_280', payload['validation']['reasons'])
         for prompt in prompts:
             for required in ('160 weighted', 'hard limit 280', '1-2', 'Do not summarize every', 'Never truncate'):
                 self.assertIn(required, prompt)
         self.assertTrue(all('anthropic.com' in call[0] for call in fake.calls))
+
+    def test_social_repairs_number_missing_from_published_article_before_polish(self):
+        b = bundle()
+        url = 'https://camp-gear-lab.com/articles/pole-care'
+        b['article']['content'] = b['article']['content'].replace('2kg', '重量を確認')
+        b['images'][0]['verified'] = True
+        b['publicReadback'] = copy.deepcopy(dict(
+            verified=True, url=url, content=b['article']['content'], images=b['images']))
+        unsupported = dict(text='広告 土落としと乾燥で2段階に整理します。', replyText=url)
+        corrected = dict(text='広告 土落としと乾燥を順に確認します。', replyText=url)
+        fake = Fake(response(unsupported), response(corrected))
+
+        result = Models(ENV, fake).social(b, url)
+
+        self.assertEqual(corrected['text'], result['text'])
+        self.assertEqual(2, len(fake.calls))
+        repair_prompt = fake.calls[1][2]['messages'][0]['content']
+        payload = prompt_data(repair_prompt)
+        self.assertEqual(['unsupported_numbers'], payload['validation']['reasons'])
+        self.assertEqual(['2'], payload['validation']['unsupportedNumbers'])
+        self.assertIn('numeric token that does not appear exactly',
+                      fake.calls[0][2]['messages'][0]['content'])
+        self.assertIn('Remove every unsupported numeric token', repair_prompt)
+
+        supported = Fake(response(dict(text='広告 重量2kgを確認します。', replyText=url)))
+        source = bundle()
+        source['images'][0]['verified'] = True
+        source['publicReadback'] = dict(verified=True, url=url,
+                                        content=source['article']['content'], images=source['images'])
+        supported_result = Models(ENV, supported).social(source, url)
+        self.assertEqual('広告 重量2kgを確認します。', supported_result['text'])
+        self.assertEqual(1, len(supported.calls))
 
     def test_social_repair_is_bounded_and_final_candidate_revalidated(self):
         b = bundle()
@@ -1161,7 +1194,8 @@ class ModelTests(unittest.TestCase):
         b['publicReadback'] = dict(verified=True, url=url, content=b['article']['content'], images=b['images'])
         bad = dict(text='広告' + 'あ' * 200, replyText=url)
         for final in (bad, dict(text='開示なし', replyText=url),
-                      dict(text='広告 支持された仕様', replyText=url + '?changed=1')):
+                      dict(text='広告 支持された仕様', replyText=url + '?changed=1'),
+                      dict(text='広告 新しい3段階', replyText=url)):
             fake = Fake(response(bad), response(final), response(dict(text='広告 本文', replyText=url)))
             with self.subTest(final=final), self.assertRaises(ModelError):
                 Models(ENV, fake).social(b, url)
