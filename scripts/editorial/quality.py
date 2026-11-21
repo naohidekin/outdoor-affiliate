@@ -510,7 +510,14 @@ def inspect_bundle(bundle):
                         and binding_matches_product(ref.get("apparelBinding"), product, channel)]
             if len(merchant) != 1:
                 fail("apparel", f"{pid}: {channel} destination lacks exact apparel binding")
-    if apparel_classes and (len(apparel_classes) != len(product_map)
+    materials_guide = False
+    from materials_guide_contract import FIELD, validate_materials_guide_contract
+    if FIELD in bundle:
+        try:
+            materials_guide = validate_materials_guide_contract(bundle)
+        except (ValueError, TypeError, KeyError, AttributeError) as error:
+            fail('materials_guide', str(error))
+    if not materials_guide and apparel_classes and (len(apparel_classes) != len(product_map)
                             or len(set(apparel_classes)) != 1):
         fail("apparel", "comparison must contain apparel of one explicit position only")
 

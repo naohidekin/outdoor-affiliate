@@ -24,6 +24,8 @@ from review_scoring import VERSION as ARTICLE_SCORING_VERSION, article_applicabi
 from wise_contract import load_policy, require_current_review
 from social_policy_compat import require_approved_social_review
 from quality import inspect_bundle, inspect_polish
+from materials_guide_contract import (FIELD as MATERIALS_GUIDE_FIELD,
+                                     bind_materials_guide_contract)
 from slack import Slack
 from attention_presentation import attention_text
 from dispatcher import (DeterministicDispatcher, buffer_social_eligible,
@@ -920,6 +922,8 @@ class Runtime:
         bundle = self._run_model_stage(job, 'draft', draft_inputs,
             lambda: self.models.draft(job['theme'], gathered),
             self._model_routes()['draft']['requested'])
+        if MATERIALS_GUIDE_FIELD in bundle:
+            raise ValueError('model_materials_guide_contract_not_allowed')
         if any(text not in bundle.get('article',{}).get('content','') for text in variant_disclosures):
             raise ValueError('apparel_variant_disclosure_missing')
         if variant_disclosures:
@@ -1001,6 +1005,7 @@ class Runtime:
                           for k in ('title', 'slug', 'categoryId', 'productIds')}
                          if revision else None)
         nonproduct = bundle.get('article', {}).get('productIds') == []
+        bind_materials_guide_contract(job, gathered, bundle)
         bundle['articleReviewScoring'] = {'version': ARTICLE_SCORING_VERSION}
         scoring_contract = {'version': ARTICLE_SCORING_VERSION,
                             'applicability': article_applicability(bundle),
