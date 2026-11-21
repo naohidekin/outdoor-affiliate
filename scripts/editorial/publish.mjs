@@ -391,7 +391,9 @@ export async function executeNewArticle(input, deps = {}) {
   const lock = deps.lock || (action => withPublicationLock(seoRoot(), action));
   const db = deps.db;
   requireValue(db, 'database required');
-  return lock(async () => {
+  let phase = 'execution'; // All pre-write checks; no DB mutation attempted yet.
+  try {
+  return await lock(async () => {
     // Recheck revision while the shared publication lease is owned.
     requireValue(revision === bundleHash(bundle, { rawRequest: deps.rawRequest }), 'bundle revision changed');
     await assertProducts(db, bundle.products);
@@ -400,11 +402,17 @@ export async function executeNewArticle(input, deps = {}) {
       if (rows.length) assertDraft(rows, expected);
       else {
         try {
+          phase = 'article_update';
           await db.insertDraft(expected);
+          phase = 'article_readback';
           rows = await db.findArticles(expected.id, expected.slug);
           assertDraft(rows, expected);
           await assertProducts(db, bundle.products);
-        } catch { throw new Error('unknown: draft mutation requires reconciliation'); }
+        } catch (error) {
+          const failure = new Error('unknown: draft mutation requires reconciliation');
+          failure.diagnostic = safeDiagnostic({ ...error?.diagnostic, phase });
+          throw failure;
+        }
       }
       return { status: 'draft', revision, articleId: expected.id, remoteUpdatedAt: rows[0].updated_at };
     }
@@ -413,17 +421,22 @@ export async function executeNewArticle(input, deps = {}) {
     const at = (deps.now || timestamp)();
     const patch = { status: 'published', published_at: at, updated_at: at };
     try {
+      phase = 'article_update';
       const changed = await db.publishCAS(before, patch);
       requireValue(Array.isArray(changed) && changed.length === 1, 'draft CAS failed');
       const published = normalizeTimestamps({ ...expected, ...patch });
+      phase = 'article_readback';
       const readback = await db.findArticles(expected.id, expected.slug);
       requireValue(readback.length === 1 && equal(selectedRow(readback[0], articleFields), published), 'published DB readback mismatch');
       await assertProducts(db, bundle.products);
       requireValue(revision === bundleHash(bundle, { rawRequest: deps.rawRequest }), 'bundle revision changed');
+      phase = 'cache_revalidation';
       await deps.revalidate(expected.slug, expected.category_id);
       const url = `${SITE}/articles/${expected.slug}`;
+      phase = 'public_readback';
       const html = await deps.publicGet(url);
       requireValue(verifyPublicHTML(html, bundle), 'public HTML verification failed');
+      phase = 'image_readback';
       await verifyApprovedImages(bundle, deps.imageDigest || secureImageDigest);
       // No true until DB, cache and public page all agree with the approved bytes.
       const commercialRoute = bundle.article.productIds.length === 0 ? { status: 'not_applicable', measured: false, sponsoredCtaCount: 0,
@@ -434,8 +447,19 @@ export async function executeNewArticle(input, deps = {}) {
           imageProofs: bundle.images.filter(image => bundle.article.generationMeta.editorialContext.imageProofIds.includes(image.id))
             .map(image => ({ id: image.id, url: image.url, sha256: image.sha256, size: image.size, contentType: image.contentType })) } : {}),
           ...(bundle.article.generationMeta?.socialCard ? { socialCard: bundle.article.generationMeta.socialCard } : {}) } };
-    } catch { throw new Error('unknown: publication requires reconciliation'); }
+    } catch (error) {
+      const failure = new Error('unknown: publication requires reconciliation');
+      failure.diagnostic = safeDiagnostic({ ...error?.diagnostic, phase });
+      throw failure;
+    }
   });
+  } catch (error) {
+    // Preserve existing failure semantics; expose only the established allowlist.
+    const diagnostic = safeDiagnostic({ ...error?.diagnostic, phase });
+    if (error instanceof Error) { error.diagnostic = diagnostic; throw error; }
+    const failure = new Error('publication execution failed');
+    failure.diagnostic = diagnostic; throw failure;
+  }
 }
 
 export function parseArguments(argv) {

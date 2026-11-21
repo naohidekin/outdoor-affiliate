@@ -372,6 +372,52 @@ test('CAS misses, DB drift, failed cache clear and stale HTML fail closed', asyn
   }
 });
 
+test('draft insert and readback failures preserve their phase without replay', async () => {
+  for (const failAt of ['insert', 'readback']) {
+    const h = harness(); let inserts = 0;
+    const insert = h.deps.db.insertDraft;
+    h.deps.db.insertDraft = async (...args) => {
+      inserts++;
+      if (failAt === 'insert') throw Error('secret transport');
+      await insert(...args); h.deps.db.findArticles = async () => { throw Error('secret readback'); };
+    };
+    await assert.rejects(execute({ ...h.input, action: 'stage' }, h.deps), error => {
+      assert.match(error.message, /unknown: draft mutation requires reconciliation/);
+      assert.deepEqual(error.diagnostic, { phase: failAt === 'insert' ? 'article_update' : 'article_readback' });
+      return true;
+    });
+    assert.equal(inserts, 1);
+  }
+});
+
+test('new article failures retain bounded phase diagnostics without retrying writes or reads', async () => {
+  const phases = { prewrite: 'execution', cas: 'article_update', db: 'article_readback',
+    cache: 'cache_revalidation', html: 'public_readback', image: 'image_readback' };
+  for (const [mode, phase] of Object.entries(phases)) {
+    const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps); h.state.html = html(h.b);
+    const secret = new Error('SECRET URL https://private.example/?token=secret');
+    secret.diagnostic = { phase: 'subprocess', httpStatus: 503, operation: 'db_read_articles',
+      dbCode: 'XX000', body: 'secret', url: 'secret', headers: { Authorization: 'secret' } };
+    let reads = 0, cacheCalls = 0, images = 0;
+    const publicGet = h.deps.publicGet; h.deps.publicGet = async (...args) => { reads++; return publicGet(...args); };
+    const revalidate = h.deps.revalidate; h.deps.revalidate = async (...args) => { cacheCalls++; if (mode === 'cache') throw secret; return revalidate(...args); };
+    const imageDigest = h.deps.imageDigest; h.deps.imageDigest = async (...args) => { images++; if (mode === 'image' && images === 2) throw secret; return imageDigest(...args); };
+    if (mode === 'prewrite') h.deps.db.findArticles = async () => { throw secret; };
+    if (mode === 'cas') h.deps.db.publishCAS = async () => { throw secret; };
+    if (mode === 'db') { const publish = h.deps.db.publishCAS; h.deps.db.publishCAS = async (...args) => { const result = await publish(...args); h.state.rows[0].tags = ['drift']; return result; }; }
+    if (mode === 'html') h.state.html = '<h1>stale</h1>';
+    await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), error => {
+      assert.equal(error.diagnostic.phase, phase);
+      assert.ok(!JSON.stringify(error.diagnostic).includes('secret'));
+      assert.ok(!('url' in error.diagnostic) && !('body' in error.diagnostic) && !('headers' in error.diagnostic));
+      if (['prewrite', 'cas', 'cache', 'image'].includes(mode)) assert.equal(error.diagnostic.httpStatus, 503);
+      return true;
+    });
+    assert.ok(h.state.writes.filter(w => w === 'patch').length <= 1);
+    assert.ok(reads <= 1 && cacheCalls <= 1 && images <= 2);
+  }
+});
+
 test('HTML proof requires real attributes and title, never script strings', () => {
   const b = bundle(); assert.equal(verifyPublicHTML(html(b), b), true);
   for (const text of [html(b).replace('<a href=', '<a data-href='), html(b).replace(b.article.title, 'wrong'),

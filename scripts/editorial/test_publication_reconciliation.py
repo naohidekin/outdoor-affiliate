@@ -190,5 +190,108 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError),self.ledger._tx() as db:db.execute('DELETE FROM events')
 
 
+class ColemanReconciliationTests(unittest.TestCase):
+    def setUp(self):
+        ReconciliationTests.setUp(self)
+        first = r.prepare(self.ledger, self.seo, self.reader, now=NOW)
+        r.apply(self.ledger, self.seo, first, self.reader, owner_grant=r.OWNER_GRANT, now=NOW)
+        self.first_receipt = self.root/'publication-reconciliations'/(first['planHash']+'.json')
+        self.first_bytes = self.first_receipt.read_bytes()
+        self.revision = self.ledger.get_job(r.COLEMAN)['revision']
+        self.ledger.claim_effect(r.COLEMAN, 'publish')
+        self.ledger.finish_effect(r.COLEMAN, 'publish', {'status':'unknown','reason':'publication_requires_reconciliation'})
+        self.now = NOW + timedelta(minutes=10)
+        self.marker_raw = (canonical({'schemaVersion':1,'token':r.COLEMAN_TOKEN,
+            'owner':{'host':socket.gethostname(),'pid':r.COLEMAN_PID},'createdAt':'2026-11-22T03:32:09+09:00'})+'\n').encode()
+        self.marker.write_bytes(self.marker_raw)
+        for proof in self.remote['proofs']:
+            proof['observedAt'] = self.now.isoformat()
+            if proof['id'] == r.COLEMAN:
+                proof.update(kind='exact_published',xmin='11784')
+                proof['remoteRow'].update(status='published',published_at='2026-11-21T18:32:10Z',updated_at='2026-11-22T03:32:10+09:00')
+                publication=copy.deepcopy(self.remote['proofs'][0]['publication'])
+                publication.update(url='https://camp-gear-lab.com/articles/'+r.TARGETS[r.COLEMAN],remoteUpdatedAt=proof['remoteRow']['updated_at'])
+                publication['readback']['fingerprint']=self.revision
+                proof['publication']=publication
+
+    def plan(self):
+        return r.prepare_coleman(self.ledger,self.seo,self.reader,expected_revision=self.revision,now=self.now)
+
+    def apply(self,plan):
+        return r.apply_coleman(self.ledger,self.seo,plan,self.reader,owner_grant=r.COLEMAN_GRANT,now=self.now)
+
+    def test_second_only_adopts_coleman_with_failed_draft_peer_byte_unchanged(self):
+        before=r._snapshot(self.ledger);plan=self.plan()
+        self.assertEqual('ready',r.check_coleman(self.ledger,self.seo,plan,self.reader,now=self.now)['status'])
+        self.apply(plan);after=r._snapshot(self.ledger)
+        for jid in r.TARGETS:
+            if jid!=r.COLEMAN:self.assertEqual(before[jid],after[jid])
+        self.assertEqual('published',after[r.COLEMAN]['job']['stage'])
+        self.assertEqual('success',after[r.COLEMAN]['effect']['status'])
+        self.assertEqual(before[r.COLEMAN]['job']['approval'],after[r.COLEMAN]['job']['approval'])
+        self.assertEqual(self.first_bytes,self.first_receipt.read_bytes())
+        self.assertEqual(self.marker_raw,(self.seo/('publication-marker-'+r.COLEMAN_TOKEN+'.json')).read_bytes())
+        self.assertEqual('reconciled',self.apply(plan)['status'])
+        self.assertFalse(self.ledger.claim_effect(r.COLEMAN,'publish'))
+
+    def test_guard_reblocked_thermos_unknown_is_archived_then_explicitly_failed(self):
+        thermos=next(j for j in r.TARGETS if j not in (r.POLE,r.COLEMAN))
+        self.assertTrue(self.ledger.claim_effect(thermos,'publish'))
+        self.ledger.finish_effect(thermos,'publish',{'status':'unknown','reason':'publication_requires_reconciliation','guardBlocked':True})
+        before=r._snapshot(self.ledger);plan=self.plan();self.apply(plan);after=r._snapshot(self.ledger)
+        self.assertEqual(before[r.POLE],after[r.POLE])
+        self.assertEqual('failed',after[thermos]['effect']['status'])
+        self.assertEqual('reconciled_no_write',json.loads(after[thermos]['effect']['data'])['reason'])
+        self.assertEqual(before[thermos]['job']['approval'],after[thermos]['job']['approval'])
+        receipt=json.loads((self.root/'publication-reconciliations'/(plan['planHash']+'.json')).read_text())
+        self.assertEqual(before[thermos]['effect'],receipt['snapshots'][thermos]['effect'])
+        with sqlite3.connect(self.ledger.db_path) as db:
+            events=[json.loads(row[0]) for row in db.execute("SELECT data FROM events WHERE job_id=? AND kind='publication_reconciliation_original_unknown'",(thermos,))]
+        self.assertEqual(before[thermos]['effect'],events[-1]['original']['effect'])
+
+    def test_second_rejects_wrong_revision_xmin_publication_time_or_unverified(self):
+        with self.assertRaisesRegex(ValueError,'exact_coleman_revision'):
+            r.prepare_coleman(self.ledger,self.seo,self.reader,expected_revision='0'*64,now=self.now)
+        original=copy.deepcopy(self.remote)
+        for mutate in [lambda p:p.update(xmin='11785'),lambda p:p.update(kind='exact_draft'),
+                       lambda p:p['remoteRow'].update(published_at='2026-11-22T03:32:11+09:00'),
+                       lambda p:p['publication'].update(verified=False)]:
+            self.remote=copy.deepcopy(original);mutate(self.remote['proofs'][1])
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):self.plan()
+
+    def test_second_marker_exact_pid_token_and_owner_death_required(self):
+        for mutate in [lambda m:m.update(token=r.TOKEN),lambda m:m['owner'].update(pid=r.PID),
+                       lambda m:m.update(createdAt='2026-11-22T03:32:08+09:00')]:
+            value=json.loads(self.marker_raw);mutate(value);self.marker.write_text(canonical(value))
+            with self.assertRaisesRegex(ValueError,'exact_marker'):self.plan()
+        self.marker.write_bytes(self.marker_raw);self.kill.side_effect=None
+        with self.assertRaisesRegex(ValueError,'still_alive'):self.plan()
+        self.kill.assert_called_with(r.COLEMAN_PID,0)
+
+    def test_second_refuses_peer_change_after_plan_and_other_unknown_reasons(self):
+        plan=self.plan();thermos=next(j for j in r.TARGETS if j not in (r.POLE,r.COLEMAN))
+        self.ledger.claim_effect(thermos,'publish')
+        self.ledger.finish_effect(thermos,'publish',{'status':'unknown','reason':'other_unknown'})
+        with self.assertRaisesRegex(ValueError,'cas_conflict'):self.apply(plan)
+        with self.assertRaises(ValueError):self.plan()
+        self.assertTrue(self.marker.exists())
+
+    def test_second_db_rollback_and_archive_failure_resume_preserve_peers(self):
+        plan=self.plan();before=r._snapshot(self.ledger)
+        with patch.object(Ledger,'record_publication',side_effect=ValueError('reject')):
+            with self.assertRaisesRegex(ValueError,'reject'):self.apply(plan)
+        self.assertEqual(before,r._snapshot(self.ledger));self.assertTrue(self.marker.exists())
+        real=r._immutable
+        def fail_archive(path,raw):
+            if path.parent==self.seo.resolve():raise OSError('archive failed')
+            return real(path,raw)
+        with patch.object(r,'_immutable',side_effect=fail_archive):
+            with self.assertRaises(OSError):self.apply(plan)
+        self.assertTrue(self.marker.exists());self.apply(plan)
+        after=r._snapshot(self.ledger)
+        for jid in r.TARGETS:
+            if jid!=r.COLEMAN:self.assertEqual(before[jid],after[jid])
+
+
 if __name__ == '__main__':
     unittest.main()
