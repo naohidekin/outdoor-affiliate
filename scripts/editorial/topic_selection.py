@@ -756,7 +756,14 @@ def _related_match(left, right):
 def _direct_match(candidate, demand):
     matches = _related_match(candidate, demand)
     if matches is None:
-        return None
+        matches = _facet_matches(candidate, demand)
+        no_explicit_subject = not any(
+            candidate.get(key) or demand.get(key) for key in ("garments", "gearTypes"))
+        contradiction = any(candidate.get(key) and demand.get(key) and not matches[key]
+                            for key in ("brands", "problems", "seasons", "intents"))
+        if (not no_explicit_subject or contradiction
+                or not matches["problems"] or not matches["seasons"]):
+            return None
     for key in ("garments", "brands", "problems", "seasons", "gearTypes"):
         if candidate.get(key) and not set(candidate[key]).issubset(demand.get(key, [])):
             return None

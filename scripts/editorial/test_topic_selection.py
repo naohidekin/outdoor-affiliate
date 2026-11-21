@@ -177,6 +177,69 @@ class TopicSelectionTests(unittest.TestCase):
                          chosen['scoreRationale']['preferenceReasons'])
         self.assertEqual(1, chosen['scoreRationale']['aiPriority'])
 
+    def test_subjectless_seasonal_problem_can_match_same_problem_and_season(self):
+        from search_demand import classify_topic
+        demand = demand_signal('demand:winter-cold', classify_topic(
+            '冬キャンプの寒さ対策'))
+        item = proposal(
+            'winter-camp-cold', '冬キャンプの寒さ対策を整理する',
+            categoryId='seasonal', productIds=['winter-one'],
+            topicType='seasonal_problem', query='冬キャンプ 寒い',
+            readerQuestion='冬キャンプの寒さにはどう備える？',
+            sourceIds=['demand:winter-cold'], needsStatus='seasonal_hypothesis')
+
+        result = select_proposals([item], signals=[demand], existing=[], queued=[],
+                                  feed=feed(), limit=1)
+
+        self.assertEqual(['winter-camp-cold'], [row['slug'] for row in result['selected']])
+        self.assertEqual('direct_matched_query_group', result['decisions'][0]['needBasis'])
+        self.assertIn('seasonal', result['decisions'][0]['scoreRationale']['preferenceReasons'])
+
+    def test_seasonal_fallback_rejects_one_facet_and_explicit_subject_conflict(self):
+        from search_demand import classify_topic
+        no_season = demand_signal('demand:cold-only', classify_topic('キャンプの寒さ対策'))
+        subjectless = proposal(
+            'winter-cold-without-season-demand', '冬キャンプの寒さ対策を整理する',
+            categoryId='seasonal', productIds=['winter-one'],
+            topicType='seasonal_problem', query='冬キャンプ 寒い',
+            readerQuestion='冬キャンプの寒さにはどう備える？',
+            sourceIds=['demand:cold-only'], needsStatus='seasonal_hypothesis')
+        stove = demand_signal('demand:winter-stove', classify_topic('冬 ストーブ 寒い'))
+        fleece = proposal(
+            'winter-fleece-from-stove', '冬のフリースで寒さ対策をする',
+            categoryId='wear', productIds=['fleece-one'], topicType='seasonal_problem',
+            query='冬 フリース 寒い', readerQuestion='冬のフリースをどう選ぶ？',
+            sourceIds=['demand:winter-stove'], needsStatus='seasonal_hypothesis')
+
+        for item, evidence in ((subjectless, no_season), (fleece, stove)):
+            with self.subTest(slug=item['slug']):
+                result = select_proposals([item], signals=[evidence], existing=[], queued=[],
+                                          feed=feed(), limit=1)
+                self.assertEqual('relevant_search_need_required',
+                                 result['decisions'][0]['reason'])
+                self.assertEqual('unknown', result['decisions'][0]['needBasis'])
+
+    def test_subjectless_seasonal_fallback_never_applies_to_page_proxy(self):
+        page = {'id': 'gsc:cold-page', 'kind': 'gsc',
+                'locator': 'https://camp-gear-lab.com/articles/cold-basics',
+                'metrics': {'clicks': 10, 'impressions': 100, 'ctr': .1,
+                            'averagePosition': 8}}
+        existing = [{'id': 'article-cold', 'slug': 'cold-basics',
+                     'title': 'キャンプの寒さ対策', 'categoryId': 'seasonal',
+                     'headings': [], 'faqQuestions': [], 'conclusion': '', 'sections': []}]
+        item = proposal(
+            'winter-cold-from-page', '冬キャンプの寒さ対策を整理する',
+            categoryId='seasonal', productIds=['winter-one'],
+            topicType='seasonal_problem', query='冬キャンプ 寒い',
+            readerQuestion='冬キャンプの寒さにはどう備える？',
+            sourceIds=['gsc:cold-page'], needsStatus='seasonal_hypothesis')
+
+        result = select_proposals([item], signals=[page], existing=existing, queued=[],
+                                  feed=feed(), limit=1)
+
+        self.assertEqual('relevant_search_need_required', result['decisions'][0]['reason'])
+        self.assertEqual('unknown', result['decisions'][0]['needBasis'])
+
     def test_hidden_faq_duplicate_routes_exact_existing_update(self):
         existing = [{
             'id': 'article-hidden-answer', 'slug': 'tent-maintenance',
