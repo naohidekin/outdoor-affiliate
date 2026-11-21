@@ -49,11 +49,12 @@ class ModelsFake:
                 'wisePolicy': checks.get('wisePolicy', {}).get('id'),
                 'wiseScores': dict(w=3, i=3, s=3, e=3, ai=3, sense=3)}
         if 'articleReviewScoring' in b:
-            from review_scoring import FLAGS, article_applicability, calculate, verdict
+            from review_scoring import FLAGS, article_applicability, calculate, verdict, select_feedback
             result.update({key: True for key in FLAGS})
             result['criteria'] = {key: 8.5 for key, value in article_applicability(b).items()
                                   if value['applicability'] == 'applicable' and key != 'word_count'}
             result.update(improvementFeedback=[],hardChecks={'structure':checks['structural']['passed'] is True})
+            result['improvementFeedback'], result['feedbackValidation'] = select_feedback([], b, result['criteria'])
             result.update(calculate(result['criteria'], b))
             result['passed'] = verdict(result, result['calculation'])
         return result

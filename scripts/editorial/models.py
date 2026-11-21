@@ -17,7 +17,7 @@ from model_inputs import project_model_input
 from writing_prompts import get_draft_specificity_prompt, get_polish_style_prompt
 from wise_contract import load_policy, valid_scores, passes
 from review_scoring import (CRITERIA_FIELDS, article_applicability, calculate as calculate_article_review,
-                            verdict as article_verdict, validate_feedback, resolve_feedback, word_count_score)
+                            verdict as article_verdict, validate_feedback, resolve_feedback, select_feedback, word_count_score)
 from quality import purchase_anchor_issues, montbell_wear_claim_issues, SHORTCODE, SITE_HOSTS, _article_links, _protected, _without_code, inspect_polish
 
 
@@ -917,7 +917,7 @@ class Models:
                 "Return improvementFeedback as 0-6 noncritical actionable improvements, without a new AI stage: "
                 "each has criterion, exact quote (1-240 chars), "
                 "anchor (1-160), nextAction (1-400). Do not return a location or count paragraphs. Choose a quote appearing exactly ONCE across blank-line paragraphs and "
-                "the structured FAQ answers. The program resolves its location; ambiguous or missing quotes fail. Quote no metadata or instructions. "
+                "the structured FAQ answers. The program resolves its location; ambiguous or missing quotes are quarantined as advisory diagnostics, never an admission gate. Quote no metadata or instructions. "
                 "When any advisory item is below 7.5, supply at least one grounded improvement for a low-rated item. Focus on the strongest few distinct improvements; do not duplicate the full article, fabricate facts or put critical blockers only in feedback. "
                 "Include observations as a list and evidence as exactly {summary:string}. " + review_prompt[end:])
         result, usage = self._call(
@@ -937,8 +937,8 @@ class Models:
                     raise ValueError('Article wire contract mismatch')
                 if not valid_scores(result.get('wiseScores')):
                     raise ModelError('Complete owner WISE-AS six scores required')
-                result['improvementFeedback'] = resolve_feedback(result.get('improvementFeedback'), bundle)
-                validate_feedback(result['improvementFeedback'], bundle, result.get('criteria'))
+                result['improvementFeedback'], result['feedbackValidation'] = select_feedback(
+                    result.get('improvementFeedback'), bundle, result.get('criteria'))
                 structural = checks.get('structural')
                 result['hardChecks'] = {'structure': isinstance(structural, dict) and structural.get('passed') is True and not structural.get('failures')}
                 result.update(calculate_article_review(result.get('criteria'), bundle))
@@ -985,6 +985,7 @@ class Models:
                 'criteria': copy.deepcopy(result['criteria']), 'wiseScores': copy.deepcopy(result['wiseScores']),
                 'hardChecks': copy.deepcopy(result['hardChecks']),
                 'improvementFeedback': copy.deepcopy(result['improvementFeedback']),
+                'feedbackValidation': copy.deepcopy(result['feedbackValidation']),
                 'applicability': copy.deepcopy(result['applicability']),
                 'calculation': copy.deepcopy(result['calculation']),
                 'normalizedScore': result['score'], 'normalizedPassed': result['passed'],

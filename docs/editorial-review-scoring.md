@@ -23,8 +23,8 @@ soft目標からの距離で加減点しない。本文の不足や反復は該�
 審査の同じ応答で、最大6件の`improvementFeedback`を返す。wireは
 `{criterion, quote, anchor, nextAction}`のみで、AIへparagraph indexを数えさせない。
 quoteは1–240字、anchorは1–160字、nextActionは1–400字。programが本文の空行区切り段落／FAQ回答から唯一の完全一致を探し、
-保存時に`location={kind:paragraph|faq_answer,index:0始まり}`を付ける。不存在・複数一致・不明schema・AIがlocationを追加した場合は契約エラー。
-低いadvisory評価には、実際に低評価となった項目の少なくとも1つに対応する引用付き改善を要求する。commercialでは適用中のaffiliate_links/comparison_tableも対象にできるが、N/Aやprogram由来word_countは対象外とする。criticalな問題をfeedbackだけへ隠さない。
+保存時に`location={kind:paragraph|faq_answer,index:0始まり}`を付ける。不存在・複数一致の引用は項目単位で隔離し、有効な引用だけを保存する。不明schema・型違反・AIによるlocation追加は引き続き契約エラー。
+低いadvisory評価には、その項目に対応する引用付き改善を求めるが、不足は入稿拒否条件にしない。`feedbackValidation`はrawItems・acceptedIndices・rejected（index/criterion/reason）・missingLowCriteriaとvalid/partial/rejected状態を保持し、保存review検証時に同じ選択を再計算する。commercialでは適用中のaffiliate_links/comparison_tableも対象にできるが、N/Aやprogram由来word_countは対象外とする。criticalな問題をfeedbackだけへ隠さない。
 原文全体の再送、追加AI工程、schema feedback loop、自動再試行は作らず、raw応答artifactも変更しない。
 
 v1の算術・7.5合格条件・保存記録検証はversion別の経路で保持する。v2導入で旧reviewを合格換算・上書きしない。

@@ -96,8 +96,6 @@ def validate_feedback(feedback, bundle, criteria=None):
     if not isinstance(feedback, list) or len(feedback) > 6:
         raise ValueError('At most six evidence-bound improvements required')
     if criteria is not None and not isinstance(criteria, dict): raise ValueError('Criterion object required')
-    if criteria is not None and any(_number(v) < THRESHOLD for v in criteria.values()) and not feedback:
-        raise ValueError('Low advisory ratings require grounded improvement feedback')
     paragraphs = re.split(r'(?:\r?\n[ \t]*){2,}', bundle['article']['content'])
     allowed = {key for key, value in article_applicability(bundle).items()
                if value['applicability'] == 'applicable' and key != 'word_count'}
@@ -117,11 +115,34 @@ def validate_feedback(feedback, bundle, criteria=None):
                 raise ValueError('Bounded improvement text required')
         if item['quote'] not in targets[location['index']] or _quote_locations(item['quote'], bundle) != [location]:
             raise ValueError('Improvement quote must occur at the exact article location')
-    if criteria is not None:
-        low = {key for key,value in criteria.items() if _number(value) < THRESHOLD}
-        if low and not any(item['criterion'] in low for item in feedback):
-            raise ValueError('Feedback must address an actually low advisory criterion')
     return feedback
+
+
+def select_feedback(feedback, bundle, criteria):
+    """Quarantine unbound advisory quotes; malformed wire remains fatal."""
+    if not isinstance(feedback, list) or len(feedback) > 6:
+        raise ValueError('At most six improvements required')
+    allowed = {key for key, value in article_applicability(bundle).items()
+               if value['applicability'] == 'applicable' and key != 'word_count'}
+    selected, rejected, accepted = [], [], []
+    for index, item in enumerate(feedback):
+        if (not isinstance(item, dict) or set(item) != {'criterion','quote','anchor','nextAction'}
+                or not isinstance(item['criterion'], str) or item['criterion'] not in allowed):
+            raise ValueError('Invalid improvement wire schema or criterion')
+        for key, limit in (('quote',240),('anchor',160),('nextAction',400)):
+            if not isinstance(item[key], str) or not item[key].strip() or len(item[key]) > limit:
+                raise ValueError('Bounded improvement text required')
+        locations = _quote_locations(item['quote'], bundle)
+        if len(locations) != 1:
+            rejected.append({'index':index, 'criterion':item['criterion'],
+                             'reason':'quote_missing' if not locations else 'quote_ambiguous'})
+            continue
+        selected.append(dict(item, location=locations[0])); accepted.append(index)
+    validate_feedback(selected, bundle)
+    low = {key for key, value in criteria.items() if _number(value) < THRESHOLD}
+    return selected, {'status':('partial' if selected else 'rejected') if rejected else 'valid',
+                      'rawItems':feedback, 'acceptedIndices':accepted, 'rejected':rejected,
+                      'missingLowCriteria':sorted(low - {item['criterion'] for item in selected})}
 
 
 def calculate(criteria, bundle, version=VERSION):
@@ -174,6 +195,12 @@ def verify_review(review, bundle):
     expected = calculate(review.get('criteria'), bundle, version)
     if version == VERSION:
         validate_feedback(review.get('improvementFeedback'), bundle, review.get('criteria'))
+        metadata = review.get('feedbackValidation')
+        if not isinstance(metadata, dict): raise ValueError('Feedback selection metadata required')
+        selected, expected_metadata = select_feedback(metadata.get('rawItems'), bundle, review['criteria'])
+        if (json.dumps(metadata, sort_keys=True, allow_nan=False) != json.dumps(expected_metadata, sort_keys=True, allow_nan=False)
+                or selected != review['improvementFeedback']):
+            raise ValueError('Feedback selection mismatch')
         if not isinstance(review.get('hardChecks'), dict) or set(review['hardChecks']) != {'structure'} or type(review['hardChecks']['structure']) is not bool:
             raise ValueError('Program structural evidence required')
     # Strict JSON equality also rejects bool-as-number mutations in calculations.
