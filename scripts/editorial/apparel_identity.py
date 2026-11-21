@@ -370,6 +370,9 @@ def inspect_apparel_page(product, page_url, html, image_url=None, source_role="m
 
 class _MontbellProduct(HTMLParser):
     """Extract only Mont-bell's primary product DOM, excluding related cards."""
+    _VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+             'link', 'meta', 'param', 'source', 'track', 'wbr'}
+
     def __init__(self, source):
         super().__init__(convert_charrefs=True)
         self.stack = []
@@ -390,8 +393,9 @@ class _MontbellProduct(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        self.stack.append((tag, attrs))
-        depth = len(self.stack)
+        depth = len(self.stack) + 1
+        if tag not in self._VOID:
+            self.stack.append((tag, attrs))
         classes = set(attrs.get("class", "").split())
         if tag == "h2" and "ttlType01" in classes:
             self._title_depth = depth
@@ -421,6 +425,11 @@ class _MontbellProduct(HTMLParser):
         if tag == "br" and self._spec_depth:
             self.spec_parts.append("\n")
 
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self._VOID:
+            self.handle_endtag(tag)
+
     def handle_data(self, data):
         depth = len(self.stack)
         if self._title_depth and depth >= self._title_depth:
@@ -433,19 +442,17 @@ class _MontbellProduct(HTMLParser):
             self.spec_parts.append(data)
 
     def handle_endtag(self, tag):
-        depth = len(self.stack)
-        if self._title_depth == depth and tag == "h2":
-            self._title_depth = None
-        if self._select_depth == depth and tag == "select":
-            self._select_depth = None
-        if self._spec_heading_depth == depth and tag == "h4":
-            self._spec_heading_depth = None
-        if self._spec_depth == depth and tag == "p":
-            self._spec_depth = None
-        if self._main_depth == depth and tag == "div":
-            self._main_depth = None
-        if self.stack:
-            self.stack.pop()
+        index = next((i for i in range(len(self.stack) - 1, -1, -1)
+                      if self.stack[i][0] == tag), None)
+        if index is None:
+            return
+        closed_depth = index + 1
+        for field in ('_title_depth', '_select_depth', '_spec_heading_depth',
+                      '_spec_depth', '_main_depth'):
+            active_depth = getattr(self, field)
+            if active_depth is not None and active_depth >= closed_depth:
+                setattr(self, field, None)
+        del self.stack[index:]
 
 
 class _AmazonPrimaryFacts(HTMLParser):

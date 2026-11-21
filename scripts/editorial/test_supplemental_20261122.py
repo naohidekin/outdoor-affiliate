@@ -8,7 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ledger import Ledger
+from apparel_identity import apparel_contract
+from ledger import Ledger, fingerprint
 from model_budget import DEFAULTS, ModelBudget
 from production_schedule import ProductionSchedule
 from supplemental_topics import approved_batch_binding, resolve_batch, validate_batch
@@ -56,6 +57,35 @@ def theme(slug):
     return {'slug': slug, 'title': slug, 'categoryId': 'wear',
             'query': slug, 'selectionReason': 'verified owner-authorized batch',
             'productIds': ['apparel-' + slug]}
+
+
+def source_projection(value):
+    projected = [{key: value.get(key) for key in
+                  ('id', 'name', 'brand', 'categoryId', 'specs', 'imageUrl',
+                   'affiliateUrl', 'amazonUrl')}]
+    projected[0]['apparelContract'] = apparel_contract(value)
+    return projected
+
+
+def name_correction_receipt(article_id, old_source, new_source):
+    return {
+        'kind': 'supplemental_source_name_correction_v1',
+        'articleId': article_id,
+        'batchId': NEW,
+        'oldSource': old_source,
+        'newSource': new_source,
+        'sourceProof': {
+            'verified': True,
+            'kind': 'manufacturer_primary_name_correction',
+            'productId': 'apparel-montbell-1107654',
+            'canonicalName': "モンベル スーパーメリノウール M.W. ラウンドネックシャツ Men's",
+            'model': '1107654',
+            'gender': "Men's",
+            'sourceUrl': 'https://webshop.montbell.jp/goods/disp.php?product_id=1107654',
+            'sourceSha256': 'a' * 64,
+            'nameCorrectionReceiptSha256': 'b' * 64,
+        },
+    }
 
 
 class Supplemental20261122Tests(unittest.TestCase):
@@ -146,6 +176,85 @@ class Supplemental20261122Tests(unittest.TestCase):
             new = budget._batch_call_scope(db, {'articleId': 'new-budget'})
         self.assertEqual({'id': OLD, 'cap': 96, 'calls': 0}, old)
         self.assertEqual({'id': NEW, 'cap': 96, 'calls': 0}, new)
+
+    def _name_correction_job(self, *, batch=NEW):
+        old_product = product('apparel-montbell-1107654', '1107654')
+        old_product['name'] = 'Malformed manufacturer title plus navigation'
+        old_product['specs']['gender'] = "Men's"
+        old_source = source_projection(old_product)
+        corrected = copy.deepcopy(old_product)
+        corrected['name'] = ("モンベル スーパーメリノウール M.W. "
+                             "ラウンドネックシャツ Men's")
+        new_source = source_projection(corrected)
+        job_theme = theme('merino-name-correction')
+        job_theme['productIds'] = [old_product['id']]
+        job = self.ledger.create_supplemental_candidate(
+            job_theme, batch, 1, fingerprint(old_source),
+            social_eligible_period=SOCIAL_PERIOD, now=NOW)
+        job = self.ledger.set_stage(job['id'], 'error', {'reason': 'source name malformed'})
+        return job, old_source, new_source
+
+    def test_name_correction_rebinds_only_untouched_new_batch_source(self):
+        job, old_source, new_source = self._name_correction_job()
+        before = copy.deepcopy(job)
+        receipt = name_correction_receipt(job['id'], old_source, new_source)
+
+        changed = self.ledger.rebind_supplemental_source_for_name_correction(
+            job['id'], fingerprint(old_source), fingerprint(new_source), receipt)
+
+        self.assertEqual(fingerprint(new_source), changed['sourceBinding'])
+        self.assertEqual([{'kind': receipt['kind'],
+                           'oldSourceBinding': fingerprint(old_source),
+                           'newSourceBinding': fingerprint(new_source),
+                           'receiptFingerprint': fingerprint(receipt)}],
+                         changed['sourceBindingHistory'])
+        ignored = {'sourceBinding', 'sourceBindingHistory', 'updated_at'}
+        self.assertEqual({key: value for key, value in before.items() if key not in ignored},
+                         {key: value for key, value in changed.items() if key not in ignored})
+        with sqlite3.connect(self.ledger.db_path) as db:
+            events = [json.loads(row[0]) for row in db.execute(
+                "SELECT data FROM events WHERE job_id=? AND kind='name_source_correction'",
+                (job['id'],))]
+        self.assertEqual(1, len(events))
+        self.assertEqual(fingerprint(old_source), events[0]['sourceBindingHistory'][0]['oldSourceBinding'])
+
+    def test_name_correction_rebind_rejects_wrong_scope_or_proof(self):
+        cases = ('old_batch', 'changed_product_field', 'binding_conflict',
+                 'unverified_proof', 'request_exists')
+        for case in cases:
+            with self.subTest(case=case):
+                root = Path(self.tmp.name) / case
+                ledger = Ledger(root, 'owner')
+                old_product = product('apparel-montbell-1107654', '1107654')
+                old_product.update(name='Malformed manufacturer title plus navigation')
+                old_product['specs']['gender'] = "Men's"
+                old_source = source_projection(old_product)
+                corrected = copy.deepcopy(old_product)
+                corrected['name'] = ("モンベル スーパーメリノウール M.W. "
+                                     "ラウンドネックシャツ Men's")
+                new_source = source_projection(corrected)
+                batch = OLD if case == 'old_batch' else NEW
+                job_theme = theme('merino-' + case)
+                job_theme['productIds'] = [old_product['id']]
+                job = ledger.create_supplemental_candidate(
+                    job_theme, batch, 1, fingerprint(old_source),
+                    social_eligible_period=SOCIAL_PERIOD, now=NOW)
+                job = ledger.set_stage(job['id'], 'error', {'reason': 'source name malformed'})
+                receipt = name_correction_receipt(job['id'], old_source, new_source)
+                expected = fingerprint(old_source)
+                if case == 'changed_product_field':
+                    receipt['newSource'][0]['brand'] = 'changed-brand'
+                elif case == 'binding_conflict':
+                    expected = 'c' * 64
+                elif case == 'unverified_proof':
+                    receipt['sourceProof']['verified'] = False
+                elif case == 'request_exists':
+                    with sqlite3.connect(ledger.db_path) as db:
+                        db.execute('INSERT INTO requests VALUES (?,?,?,?)',
+                                   ('request', job['id'], 'article', '{}'))
+                with self.assertRaises(ValueError):
+                    ledger.rebind_supplemental_source_for_name_correction(
+                        job['id'], expected, fingerprint(new_source), receipt)
 
 
 class SupplementalRuntimeBatchIsolationTests(unittest.TestCase):

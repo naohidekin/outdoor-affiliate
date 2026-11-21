@@ -680,6 +680,89 @@ class Ledger:
                        created_at=now.isoformat())
             return self._put(db, job, 'supplemental_candidate')
 
+    def rebind_supplemental_source_for_name_correction(
+            self, id, expected_binding, new_binding, receipt):
+        """CAS one verified catalog-name-only correction into an untouched 11/22 job."""
+        sha = r'[a-f0-9]{64}'
+        require(isinstance(expected_binding, str) and re.fullmatch(sha, expected_binding)
+                and isinstance(new_binding, str) and re.fullmatch(sha, new_binding)
+                and new_binding != expected_binding, 'distinct source bindings required')
+        require(isinstance(receipt, dict) and set(receipt) == {
+            'kind', 'articleId', 'batchId', 'oldSource', 'newSource', 'sourceProof'},
+            'name correction receipt invalid')
+        require(receipt.get('kind') == 'supplemental_source_name_correction_v1'
+                and receipt.get('articleId') == id
+                and receipt.get('batchId') == 'apparel-2026-11-22',
+                'name correction receipt scope invalid')
+        old_source, new_source = receipt['oldSource'], receipt['newSource']
+        require(isinstance(old_source, list) and old_source
+                and isinstance(new_source, list) and len(new_source) == len(old_source)
+                and fingerprint(old_source) == expected_binding
+                and fingerprint(new_source) == new_binding,
+                'name correction source binding invalid')
+        old_ids = [item.get('id') if isinstance(item, dict) else None
+                   for item in old_source]
+        new_ids = [item.get('id') if isinstance(item, dict) else None
+                   for item in new_source]
+        require(all(isinstance(item, str) and item for item in old_ids)
+                and len(old_ids) == len(set(old_ids)) and new_ids == old_ids,
+                'name correction product order invalid')
+        changed = []
+        for index, (old, new) in enumerate(zip(old_source, new_source)):
+            require(isinstance(old, dict) and isinstance(new, dict)
+                    and set(old) == set(new), 'name correction product shape invalid')
+            delta = {key for key in old if canonical(old[key]) != canonical(new[key])}
+            require(delta in (set(), {'name'}), 'only canonical product name may change')
+            if delta:
+                require(isinstance(old['name'], str) and old['name']
+                        and isinstance(new['name'], str) and new['name']
+                        and old['name'] != new['name'], 'canonical product name required')
+                changed.append(index)
+        require(len(changed) == 1, 'exactly one canonical product name must change')
+        proof = receipt['sourceProof']
+        require(isinstance(proof, dict) and set(proof) == {
+            'verified', 'kind', 'productId', 'canonicalName', 'model', 'gender',
+            'sourceUrl', 'sourceSha256', 'nameCorrectionReceiptSha256'},
+            'manufacturer name proof invalid')
+        target = new_source[changed[0]]
+        contract = target.get('apparelContract') if isinstance(target, dict) else None
+        require(proof.get('verified') is True
+                and proof.get('kind') == 'manufacturer_primary_name_correction'
+                and proof.get('productId') == target.get('id') == 'apparel-montbell-1107654'
+                and proof.get('canonicalName') == target.get('name') ==
+                "モンベル スーパーメリノウール M.W. ラウンドネックシャツ Men's"
+                and isinstance(contract, dict)
+                and proof.get('model') == contract.get('model') == '1107654'
+                and proof.get('gender') == contract.get('gender') == "Men's"
+                and proof.get('sourceUrl') ==
+                'https://webshop.montbell.jp/goods/disp.php?product_id=1107654'
+                and re.fullmatch(sha, str(proof.get('sourceSha256', '')))
+                and re.fullmatch(sha, str(proof.get('nameCorrectionReceiptSha256', ''))),
+                'verified manufacturer name proof required')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(job.get('kind') == 'supplemental_article'
+                    and job.get('batchId') == 'apparel-2026-11-22'
+                    and job.get('stage') == 'error' and isinstance(job.get('error'), dict)
+                    and all(job.get(key) is None for key in
+                            ('bundle', 'revision', 'review', 'astraReview', 'approval',
+                             'publication', 'social')),
+                    'only untouched errored 11/22 supplemental candidate can be rebound')
+            require(job.get('sourceBinding') == expected_binding,
+                    'supplemental source binding conflict')
+            require((job.get('theme') or {}).get('productIds') == old_ids,
+                    'supplemental source product order mismatch')
+            require(not job.get('sourceBindingHistory')
+                    and not db.execute('SELECT 1 FROM requests WHERE job_id=?', (id,)).fetchone()
+                    and not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone(),
+                    'candidate side effects require reconciliation')
+            history = {'kind': receipt['kind'],
+                       'oldSourceBinding': expected_binding,
+                       'newSourceBinding': new_binding,
+                       'receiptFingerprint': fingerprint(receipt)}
+            job.update(sourceBinding=new_binding, sourceBindingHistory=[history])
+            return self._put(db, job, 'name_source_correction')
+
     def request_revision(self, specification, now=None):
         from revisions import validated_context, TARGETS, _aware
         context = validated_context(specification)
