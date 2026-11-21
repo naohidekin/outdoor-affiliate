@@ -17,7 +17,8 @@ import time
 from urllib.parse import urlsplit
 
 from ledger import (Ledger, canonical, fingerprint, valid_review, valid_astra_review, valid_social_mode,
-                    valid_social_images, valid_image_refresh, REFRESH_NOTICE)
+                    valid_social_images, valid_image_refresh, owned_article_social_image,
+                    REFRESH_NOTICE)
 from models import Models, ARTICLE_LENGTHS, article_review_schema
 from review_scoring import VERSION as ARTICLE_SCORING_VERSION, article_applicability
 from wise_contract import load_policy, require_current_review
@@ -2175,12 +2176,13 @@ class Runtime:
         if not social_feature_enabled(self.config, 'socialGenerationEnabled'):
             raise ValueError('social_generation_disabled')
         buffer_start = buffer_social_start(self.config)
+        buffer_image_route = None
         if buffer_start is not None:
             if not buffer_social_eligible(job, self.config):
                 raise ValueError('buffer_social_period_ineligible')
             if not self._social_audit_success(job):
                 raise ValueError('buffer_social_requires_successful_public_audit')
-            self._valid_buffer_social_card(job)
+            buffer_image_route = self._valid_buffer_social_card(job)
             if buffer_social_outstanding(self.ledger.list_jobs()) >= 3:
                 raise ValueError('buffer_social_outstanding_cap')
             settings = self.config.get('buffer')
@@ -2221,6 +2223,10 @@ class Runtime:
             proposal['images'] = copy.deepcopy(cards)
         elif cards:
             raise ValueError('social_card_manifest_missing')
+        elif (isinstance(buffer_image_route, dict)
+              and buffer_image_route.get('kind') == 'owned_article_image'):
+            proposal['images'] = [copy.deepcopy(buffer_image_route['image'])]
+            proposal['supplementalArticleImage'] = copy.deepcopy(buffer_image_route['binding'])
         # The announcement receives its own prose polish and final review.
         source = proposal['text']
         polished = self._measured_model_call(
@@ -2347,6 +2353,12 @@ class Runtime:
         article = bundle.get('article') or {}
         manifest = (article.get('generationMeta') or {}).get('socialCard')
         images = bundle.get('images')
+        if manifest is None:
+            try:
+                image, binding = owned_article_social_image(job)
+            except (KeyError, TypeError, ValueError):
+                raise ValueError('buffer_social_card_binding_invalid') from None
+            return {'kind': 'owned_article_image', 'image': image, 'binding': binding}
         if not isinstance(manifest, dict) or not isinstance(images, list):
             raise ValueError('buffer_social_card_binding_invalid')
         digest = manifest.get('sha256')

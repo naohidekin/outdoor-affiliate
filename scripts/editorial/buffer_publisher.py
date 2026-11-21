@@ -12,7 +12,8 @@ from urllib.parse import urlparse
 import warnings
 
 from buffer_api import BufferAPI
-from ledger import fingerprint, valid_review, valid_social_images
+from ledger import (fingerprint, valid_review, valid_social_images,
+                    owned_article_social_image)
 from social_policy_compat import require_approved_social_review
 from social_publisher import SocialPublisher, _atomic, _require
 from x_readback import exact_x_text
@@ -219,6 +220,15 @@ class BufferPublisher:
 
     @staticmethod
     def _validate_immutable_social_card(job, proposal):
+        if proposal.get('supplementalArticleImage') is not None:
+            try:
+                image, binding = owned_article_social_image(job)
+                valid = (proposal.get('supplementalArticleImage') == binding
+                         and proposal.get('images') == [image])
+            except (KeyError, TypeError, ValueError):
+                valid = False
+            _require(valid, 'social_card_immutable_binding_invalid')
+            return
         bundle = job.get('bundle') or {}
         article = bundle.get('article') or {}
         manifest = (article.get('generationMeta') or {}).get('socialCard')

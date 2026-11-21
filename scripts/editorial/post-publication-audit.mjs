@@ -334,12 +334,20 @@ export async function auditPublicPage(input, { browser: suppliedBrowser, fetcher
                   /\/(?:affiliate|tracking|track-click|click)(?:\/|$)/i.test(u.pathname);
               } catch { return true; }
             }).length;
-            return { paragraphs, internalLinks, commercialLinks };
+            const reading = root.querySelector('#article-reading-content') || root.querySelector('.article-body');
+            const bodyLinks = [...(reading || root).querySelectorAll('a[href]')].filter(a => a.getClientRects().length)
+              .map(a => new URL(a.getAttribute('href'), location.href).href);
+            return { paragraphs, internalLinks, commercialLinks, bodyLinks };
           });
           const expectedInternal = [...bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\((\/[^\s)]+)(?:\s+["'][^"']*["'])?\)/g)].map(match => match[1]);
           add('paragraphs', contentEvidence.paragraphs > 0, 'visible_paragraphs_rendered', 'visible_paragraphs_missing');
           add('internal_links', expectedInternal.every(link => contentEvidence.internalLinks.includes(link)),
             'approved_internal_links_rendered', 'approved_internal_links_missing');
+          const expectedLinks = [...bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\(([^\s)]+)(?:\s+["'][^"']*["'])?\)/g)]
+            .map(match => new URL(match[1], input.url).href);
+          add('approved_links', expectedLinks.every(link =>
+            contentEvidence.bodyLinks.filter(actual => actual === link).length === expectedLinks.filter(expected => expected === link).length),
+            'approved_body_links_exact', 'approved_body_link_missing_or_changed');
           checks.push(check(`${name}.merchant`, contentEvidence.commercialLinks === 0 ? 'not_applicable' : 'failed',
             contentEvidence.commercialLinks === 0 ? 'verified_nonproduct_article' : 'commercial_link_present'));
         }

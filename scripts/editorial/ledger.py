@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 import secrets
 import sqlite3
+from urllib.parse import urlsplit
 from x_readback import exact_x_text
 from production_schedule import ProductionSchedule
 
@@ -23,6 +24,7 @@ JST = timezone(timedelta(hours=9))
 SCOPE = ('team_id', 'app_id', 'user_id', 'channel_id', 'thread_ts')
 FLAGS = ('facts', 'images', 'affiliate', 'medical', 'render')
 REFRESH_NOTICE = '旧画像版は投稿済み。今回の承認で新画像版を新規投稿します。'
+OWNED_ARTICLE_IMAGE_KIND = 'verified_owned_article_image_v1'
 
 
 def canonical(value):
@@ -120,10 +122,76 @@ def valid_social_mode(proposal):
                 and not proposal.get('buffer'), 'manual social target must be absent')
 
 
+def owned_article_social_image(job):
+    """Return one immutable, published nonproduct eyecatch and its SNS-only binding."""
+    bundle = job.get('bundle') if isinstance(job, dict) else None
+    from topic_selection import validate_nonproduct_bundle
+    context = validate_nonproduct_bundle(bundle)
+    publication = job.get('publication') or {}
+    readback = publication.get('readback') or {}
+    expected_public_url = ('https://camp-gear-lab.com/articles/'
+                           + str(bundle['article'].get('slug', '')))
+    try:
+        public_url = urlsplit(publication.get('url'))
+        valid_public_url = (public_url.scheme == 'https' and bool(public_url.hostname)
+                            and public_url.username is None and public_url.password is None
+                            and public_url.port is None and not public_url.query
+                            and not public_url.fragment
+                            and publication.get('url') == expected_public_url)
+    except (AttributeError, TypeError, ValueError):
+        valid_public_url = False
+    require(job.get('revision') == fingerprint(bundle)
+            and publication.get('verified') is True
+            and publication.get('revision') == job['revision']
+            and valid_public_url
+            and readback.get('verified') is True
+            and readback.get('fingerprint') == job['revision'],
+            'owned article image publication binding invalid')
+    proof_ids = context['imageProofIds']
+    images = [item for item in bundle.get('images', [])
+              if isinstance(item, dict) and item.get('id') in proof_ids]
+    require(len(images) == 1 and proof_ids == [images[0].get('id')]
+            and not (bundle['article'].get('generationMeta') or {}).get('socialCard')
+            and not any(isinstance(item, dict) and item.get('role') == 'social-card'
+                        for item in bundle.get('images', [])),
+            'owned article image route ambiguous')
+    image = images[0]
+    expected_proofs = [{key: image.get(key) for key in
+                        ('id', 'url', 'sha256', 'size', 'contentType')}]
+    expected_route = {'status': 'not_applicable', 'measured': False,
+                      'sponsoredCtaCount': 0, 'reason': 'verified_nonproduct_article',
+                      'verifiedBy': 'deterministic_contract_v1'}
+    require(readback.get('productIds') == []
+            and readback.get('editorialContext') == context
+            and readback.get('commercialRoute') == expected_route
+            and readback.get('imageProofs') == expected_proofs
+            and image.get('role') == 'eyecatch'
+            and image.get('ownership') == 'owned_editorial_illustration'
+            and image.get('depictsRealProduct') is False
+            and image.get('contentType') == 'image/png'
+            and image.get('width') == 1200 and image.get('height') == 630
+            and image.get('url') == image.get('finalUrl'),
+            'owned article image evidence invalid')
+    binding = {
+        'kind': OWNED_ARTICLE_IMAGE_KIND,
+        'articleId': job.get('id'),
+        'articleRevision': job['revision'],
+        'publicationUrl': publication['url'],
+        'sourceReceiptSha256': context['sourceReceiptSha256'],
+        'imageProofIds': proof_ids,
+        'imageSha256s': [image['sha256']],
+        'imageUrls': [image['url']],
+    }
+    return image, binding
+
+
 def valid_social_images(job, proposal):
     """SNS-only derivatives bind to the immutable published revision, never OG readback."""
     approved = job['bundle'].get('images') or []
     supplement = proposal.get('supplementalCard')
+    article_image = proposal.get('supplementalArticleImage')
+    require(not (supplement is not None and article_image is not None),
+            'multiple supplemental image routes invalid')
     if supplement is not None:
         publication = job.get('publication') or {}
         require(isinstance(supplement, dict) and supplement.get('articleId') == job.get('id')
@@ -169,6 +237,12 @@ def valid_social_images(job, proposal):
         card = dict(manifest, role='social-card', verified=True)
         require(proposal.get('images') == [card], 'supplemental card mismatch')
         approved = [card]
+    elif article_image is not None:
+        image, binding = owned_article_social_image(job)
+        require(proposal.get('deliveryMode') == 'buffer_x'
+                and article_image == binding and proposal.get('images') == [image],
+                'owned article image supplemental binding invalid')
+        approved = [image]
     images = proposal.get('images')
     require(isinstance(images, list) and 1 <= len(images) <= 4 and all(
         isinstance(i, dict) and i.get('verified') is True and i in approved

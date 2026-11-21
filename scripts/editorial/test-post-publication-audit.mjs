@@ -164,6 +164,20 @@ test('nonproduct audit rejects forged metadata or merchant links instead of omit
   } finally { await browser.close(); }
 });
 
+test('nonproduct audit rejects an official link whose visible text stayed unchanged', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const input = nonproductFixture();
+    input.bundle.article.content += '\n\n[公式FAQ](https://www.coleman.co.jp/customersupport/faq/)';
+    input.html = input.html.replace(/data-review-content-sha256="[^"]+"/,
+      `data-review-content-sha256="${createHash('sha256').update(input.bundle.article.content).digest('hex')}"`)
+      .replace('</div></div>', '<p><a href="https://www.coleman.co.jp/wrong/">公式FAQ</a></p></div></div>');
+    const result = await auditPublicPage(input, { browser, fetcher: async url => ({ body: png, contentType: 'image/png', url }) });
+    for (const viewport of ['desktop', 'mobile'])
+      assert.equal(result.checks.find(c => c.name === `${viewport}.approved_links`)?.status, 'failed');
+  } finally { await browser.close(); }
+});
+
 test('offline Chromium fails hidden body, absent headings, tags and overflow', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
