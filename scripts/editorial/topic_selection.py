@@ -598,6 +598,10 @@ DEMAND_COVERAGE_FIELDS = {
     "unclassifiedQueryCount", "duplicateRowCount", "conflictingDuplicateCount",
     "invalidRowCount", "missingMetricsQueryCount", "observedGroupCount", "exportedGroupCount",
     "inputTruncated", "groupsTruncated", "observedRowsComplete", "status",
+    "selectionPolicy", "preferredGroupLimit", "preferredGroupCount", "globalFillGroupCount",
+    "observedSeasonalGroupCount", "exportedSeasonalGroupCount",
+    "observedApparelGroupCount", "exportedApparelGroupCount",
+    "observedBrandComparisonGroupCount", "exportedBrandComparisonGroupCount",
 }
 
 
@@ -608,7 +612,8 @@ def _demand_coverage(value):
             if key in DEMAND_COVERAGE_FIELDS and
             (item is None or isinstance(item, (int, bool))
              or isinstance(item, float) and math.isfinite(item))}
-    enums = {"source": {"own_site_gsc_query_aggregates"},
+    enums = {"selectionPolicy": {"preferred_context_round_robin_then_global_v1"},
+             "source": {"own_site_gsc_query_aggregates"},
              "scope": {"observed_query_rows_only", "own_site_search_sample"},
              "positionAggregation": {"impression_weighted"},
              "status": {"available", "partial"}}
@@ -934,7 +939,7 @@ def _update_record(record, article, reason):
 
 def _score_rationale(proposal, basis, matches, direct, proxy):
     preference = []
-    if proposal.get("topicType") == "seasonal_problem" or matches.get("seasons"):
+    if matches.get("seasons"):
         preference.append("seasonal")
     if matches.get("garments"):
         preference.append("apparel")
@@ -1049,8 +1054,8 @@ def select_proposals(proposals, *, signals, existing, queued, feed, limit=3,
         query_count = strength["queryCount"] if strength["queryCount"] is not None else -1
         impressions = strength["impressions"] if strength["impressions"] is not None else -1
         preference = min(2, len(rationale["preferenceReasons"]))
-        return (-rationale["needTier"], -query_count, -impressions, -facet_count,
-                -preference, -item[1]["priority"], item[1]["slug"], item[0])
+        return (-rationale["needTier"], -preference, -query_count, -impressions,
+                -facet_count, -item[1]["priority"], item[1]["slug"], item[0])
     eligible.sort(key=rank)
     chosen = eligible[:min(limit, 3)]
     eligible = eligible[min(limit, 3):]

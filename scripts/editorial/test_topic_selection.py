@@ -153,6 +153,30 @@ class TopicSelectionTests(unittest.TestCase):
         self.assertEqual(('rejected', 'relevant_search_need_required', 'unknown'),
                          (first['status'], first['reason'], first['needBasis']))
 
+    def test_verified_seasonal_apparel_preference_precedes_observed_strength_and_ai_priority(self):
+        general = demand_signal('demand:general-tent', topic_facets(
+            'テントを乾燥する手順'), query_count=100, clicks=100, impressions=1000)
+        preferred = demand_signal('demand:autumn-layer', topic_facets(
+            '秋のウェア重ね着を確認する方法'), query_count=1, clicks=1, impressions=10)
+        high_priority = proposal(
+            'general-high-count', 'テントを乾かす手順は？', 100,
+            sourceIds=['demand:general-tent', 'public:coleman-care'])
+        owner_preferred = proposal(
+            'autumn-apparel', '秋のウェア重ね着を確認する方法は？', 1,
+            categoryId='wear', productIds=['wear-one'], topicType='seasonal_problem',
+            query='秋 ウェア 重ね着', readerQuestion='秋の重ね着をどう確認する？',
+            sourceIds=['demand:autumn-layer'], needsStatus='seasonal_hypothesis')
+
+        result = choose([high_priority, owner_preferred],
+                        evidence=[general, preferred, signals()[-2]], limit=1)
+
+        self.assertEqual(['autumn-apparel'], [item['slug'] for item in result['selected']])
+        chosen = next(row for row in result['decisions']
+                      if row['proposal']['slug'] == 'autumn-apparel')
+        self.assertEqual(['seasonal', 'apparel'],
+                         chosen['scoreRationale']['preferenceReasons'])
+        self.assertEqual(1, chosen['scoreRationale']['aiPriority'])
+
     def test_hidden_faq_duplicate_routes_exact_existing_update(self):
         existing = [{
             'id': 'article-hidden-answer', 'slug': 'tent-maintenance',

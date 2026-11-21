@@ -151,16 +151,71 @@ class SearchDemandTests(unittest.TestCase):
         mixed=d.project_search_demand([None,{'query':' '},row('unclassified-private'),row('冬')],PERIOD)
         self.assertEqual(2,mixed['coverage']['invalidRowCount']);self.assertEqual(1,mixed['coverage']['unclassifiedQueryCount'])
         self.assertEqual(1,mixed['coverage']['classifiedQueryCount'])
-    def test_top40_discloses_truncation_even_when_low_traffic_apparel_is_outside_export(self):
-        rows=[row(f'{brand} {season} {problem}') for brand in ('montbell','patagonia','mammut','coleman')
-              for season in ('winter','summer','autumn','spring') for problem in ('cold','rain','wind')]
-        rows.append(row('冬 フリース',1,0,5))
+    def test_many_strong_seasonal_groups_do_not_crowd_out_tail_apparel_or_comparison(self):
+        rows=[row(f'{brand} {season} {problem}',1000-i,10,8)
+              for i,(brand,season,problem) in enumerate((b,s,p)
+              for b in ('montbell','patagonia','mammut','coleman')
+              for s in ('winter','summer','autumn','spring') for p in ('cold','rain','wind'))]
+        rows += [row('冬 フリース private-apparel-tail',1,0,5),
+                 row('モンベル パタゴニア テント 比較 private-comparison-tail',2,0,8)]
+        before=copy.deepcopy(rows);out=d.project_search_demand(rows,PERIOD)
+        self.assertEqual(before,rows);self.assertEqual(out,d.project_search_demand(list(reversed(rows)),PERIOD))
+        self.assertEqual(40,len(out['groups']));self.assertEqual(40,len({g['id'] for g in out['groups']}))
+        self.assertTrue(out['coverage']['groupsTruncated']);self.assertEqual(50,out['coverage']['observedGroupCount'])
+        apparel=[g for g in out['groups'] if g['facets']['garments']]
+        comparison=[g for g in out['groups'] if len(g['facets']['brands'])>=2 and 'comparison' in g['facets']['intents']]
+        self.assertEqual(1,len(apparel));self.assertEqual(1,apparel[0]['metrics']['impressions']);self.assertEqual(0,apparel[0]['metrics']['clicks'])
+        self.assertEqual(1,len(comparison));self.assertEqual(2,comparison[0]['metrics']['impressions'])
+        coverage=out['coverage']
+        self.assertEqual('preferred_context_round_robin_then_global_v1',coverage['selectionPolicy'])
+        self.assertEqual(20,coverage['preferredGroupCount']);self.assertEqual(20,coverage['globalFillGroupCount'])
+        self.assertEqual(1,coverage['observedApparelGroupCount']);self.assertEqual(1,coverage['exportedApparelGroupCount'])
+        self.assertEqual(1,coverage['observedBrandComparisonGroupCount']);self.assertEqual(1,coverage['exportedBrandComparisonGroupCount'])
+        self.assertEqual(49,coverage['observedSeasonalGroupCount'])
+        full=self._all_observed_groups(rows)
+        for group in out['groups']:self.assertEqual(full[group['id']],group)
+        preferred=out['groups'][:coverage['preferredGroupCount']];global_fill=out['groups'][coverage['preferredGroupCount']:]
+        self.assertEqual(preferred,sorted(preferred,key=self._strength))
+        self.assertEqual(global_fill,sorted(global_fill,key=self._strength))
+        wanted=sorted([g for g in full.values() if g['id'] not in {p['id'] for p in preferred}],key=self._strength)[:20]
+        self.assertEqual(wanted,global_fill)
+        for term in ('private-apparel-tail','private-comparison-tail'):self.assertNotIn(term,json.dumps(out))
+
+    @staticmethod
+    def _strength(group):
+        return (-group['metrics']['impressions'],-group['metrics']['clicks'],group['facetId'])
+
+    @staticmethod
+    def _all_observed_groups(rows):
+        # One-row projections reconstruct observed groups without defeating the export cap.
+        return {g['id']:g for source in rows for g in d.project_search_demand([source],PERIOD)['groups']}
+
+    def test_scarce_or_no_preferred_groups_fill_all_available_slots_from_global_strength(self):
+        rows=[row(f'{brand} {gear} {problem}',500-i,5,8)
+              for i,(brand,gear,problem) in enumerate((b,g,p)
+              for b in ('montbell','patagonia','mammut','coleman')
+              for g in ('tent','stove','chair','bottle') for p in ('cold','rain','wind'))]
+        no_preferred=d.project_search_demand(rows,PERIOD)
+        self.assertEqual(0,no_preferred['coverage']['preferredGroupCount'])
+        self.assertEqual(40,no_preferred['coverage']['globalFillGroupCount'])
+        self.assertEqual(sorted(self._all_observed_groups(rows).values(),key=self._strength)[:40],no_preferred['groups'])
+        scarce=d.project_search_demand(rows+[row('冬 フリース',1,0,5)],PERIOD)
+        self.assertEqual(1,scarce['coverage']['preferredGroupCount']);self.assertEqual(39,scarce['coverage']['globalFillGroupCount'])
+        self.assertEqual(40,len(scarce['groups']));self.assertTrue(scarce['groups'][0]['facets']['garments'])
+        small=d.project_search_demand(rows[:5],PERIOD)
+        self.assertEqual(5,len(small['groups']));self.assertFalse(small['coverage']['groupsTruncated'])
+
+    def test_preferred_overlap_is_deduplicated_and_limited_to_twenty_with_remaining_global_fill(self):
+        rows=[row(f'{brand} 冬 フリース 比較 {problem}',100-i,5,8)
+              for i,(brand,problem) in enumerate((b,p) for b in ('montbell','patagonia','mammut','coleman','uniqlo','workman')
+              for p in ('cold','rain','wind','washing'))]
         out=d.project_search_demand(rows,PERIOD)
-        self.assertEqual(40,len(out['groups']));self.assertTrue(out['coverage']['groupsTruncated'])
-        self.assertEqual(49,out['coverage']['observedGroupCount']);self.assertEqual(40,out['coverage']['exportedGroupCount'])
-        self.assertFalse(any(g['facets']['garments'] for g in out['groups']))
-        # An omitted apparel group is unknown to a selector, never a zero-demand row.
-        self.assertEqual([], [g for g in out['groups'] if g['facets']['garments']])
+        self.assertEqual(24,len(out['groups']));self.assertEqual(24,len({g['facetId'] for g in out['groups']}))
+        self.assertEqual(20,out['coverage']['preferredGroupCount']);self.assertEqual(4,out['coverage']['globalFillGroupCount'])
+        self.assertEqual(24,out['coverage']['exportedApparelGroupCount']);self.assertEqual(24,out['coverage']['exportedSeasonalGroupCount'])
+        self.assertEqual([],d.project_search_demand([],PERIOD)['groups'])
+        missing=d.project_search_demand(None,PERIOD)['coverage']
+        self.assertIsNone(missing['preferredGroupCount']);self.assertIsNone(missing['exportedApparelGroupCount'])
 
 
 if __name__=='__main__':

@@ -16,6 +16,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 MAX_ROWS = 10000
 MAX_GROUPS = 40
+MAX_PREFERRED_GROUPS = 20
+GROUP_SELECTION_POLICY = 'preferred_context_round_robin_then_global_v1'
+PREFERRED_CONTEXTS = ('seasonal', 'apparel', 'brand_comparison')
 MAX_QUERY_LENGTH = 512
 MAX_SAFE = 2**53 - 1
 FACET_KEYS = ('garments', 'brands', 'problems', 'seasons', 'intents', 'gearTypes')
@@ -169,6 +172,44 @@ def _aggregate(rows):
     return result
 
 
+
+def _contexts(group):
+    facets = group['facets']
+    return dict(seasonal=bool(facets['seasons']),
+        apparel=bool(facets['garments']) or 'apparel' in facets['gearTypes'],
+        brand_comparison=len(facets['brands']) >= 2 and 'comparison' in facets['intents'])
+
+
+def _represented_groups(groups):
+    """Input is globally strongest-first. Reserve <=20 distinct observed contexts.
+
+    Round-robin prevents numerous strong seasonal gear groups from eliminating
+    apparel/comparison representation. Re-sort the reserved pool by strength;
+    fill every remaining slot from global strength. This is context coverage,
+    never an article quota, an invented signal, or a change to any metric/ID.
+    """
+    pools = [iter([g for g in groups if _contexts(g)[kind]]) for kind in PREFERRED_CONTEXTS]
+    preferred_ids = set()
+    while len(preferred_ids) < MAX_PREFERRED_GROUPS:
+        added = False
+        for pool in pools:
+            candidate = next((g for g in pool if g['facetId'] not in preferred_ids), None)
+            if candidate is not None:
+                preferred_ids.add(candidate['facetId']); added = True
+                if len(preferred_ids) == MAX_PREFERRED_GROUPS:
+                    break
+        if not added:
+            break
+    preferred = [g for g in groups if g['facetId'] in preferred_ids]
+    remaining = [g for g in groups if g['facetId'] not in preferred_ids][:MAX_GROUPS-len(preferred)]
+    selected = preferred + remaining
+    coverage = dict(preferredGroupLimit=MAX_PREFERRED_GROUPS, preferredGroupCount=len(preferred),
+                    globalFillGroupCount=len(remaining))
+    for name in PREFERRED_CONTEXTS:
+        coverage['observed' + ''.join(part.title() for part in name.split('_')) + 'GroupCount'] = sum(_contexts(g)[name] for g in groups)
+        coverage['exported' + ''.join(part.title() for part in name.split('_')) + 'GroupCount'] = sum(_contexts(g)[name] for g in selected)
+    return selected, coverage
+
 def project_search_demand(rows, period):
     """Project ONE period's raw query aggregates. queryPages are never combined.
 
@@ -184,7 +225,12 @@ def project_search_demand(rows, period):
         processedRowCount=None, uniqueQueryCount=None, classifiedQueryCount=None,
         unclassifiedQueryCount=None, duplicateRowCount=None, conflictingDuplicateCount=None,
         invalidRowCount=None, missingMetricsQueryCount=None, observedGroupCount=None,
-        exportedGroupCount=None, inputTruncated=False, groupsTruncated=False, observedRowsComplete=False)
+        exportedGroupCount=None, inputTruncated=False, groupsTruncated=False, observedRowsComplete=False,
+        selectionPolicy=GROUP_SELECTION_POLICY, preferredGroupLimit=MAX_PREFERRED_GROUPS,
+        preferredGroupCount=None, globalFillGroupCount=None,
+        observedSeasonalGroupCount=None, exportedSeasonalGroupCount=None,
+        observedApparelGroupCount=None, exportedApparelGroupCount=None,
+        observedBrandComparisonGroupCount=None, exportedBrandComparisonGroupCount=None)
     out = dict(schemaVersion=1, status='available' if available else 'unavailable', period=period,
                coverage=coverage, groups=[])
     if not available:
@@ -226,5 +272,6 @@ def project_search_demand(rows, period):
         observedGroupCount=len(groups), exportedGroupCount=min(len(groups), MAX_GROUPS),
         inputTruncated=len(rows)>MAX_ROWS, groupsTruncated=len(groups)>MAX_GROUPS,
         observedRowsComplete=len(rows)<=MAX_ROWS and not invalid and not conflicts)
-    out['groups'] = groups[:MAX_GROUPS]
+    out['groups'], representation = _represented_groups(groups)
+    coverage.update(representation)
     return out

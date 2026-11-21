@@ -57,6 +57,9 @@ class TopicRuntimeInputTests(unittest.TestCase):
         self.assertNotIn('groups', result['analytics']['evidence']['current']['searchDemand'])
         self.assertEqual(1, len([s for s in result['editorialSignals'] if s['kind'] == 'own_site_query_demand']))
         self.assertEqual(1, len(analytics['evidence']['current']['searchDemand']['groups']))
+        projected = next(s for s in result['editorialSignals'] if s['kind'] == 'own_site_query_demand')
+        self.assertEqual('preferred_context_round_robin_then_global_v1', projected['coverage']['selectionPolicy'])
+        self.assertEqual(1, projected['coverage']['exportedApparelGroupCount'])
 
 
 if __name__ == '__main__':
