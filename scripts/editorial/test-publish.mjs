@@ -17,15 +17,15 @@ function harness(b = bundle()) {
   const db = {
     async findArticles(id, slug) { return structuredClone(state.rows.filter(r => r.id === id || r.slug === slug)); },
     async getProducts() { return structuredClone(state.products); },
-    async insertDraft(row) { state.writes.push('insert'); state.rows.push(structuredClone(row)); },
+    async insertDraft(row) { state.writes.push('insert'); state.rows.push({ ...structuredClone(row), xmin: '100' }); },
     async publishCAS(row, patch) {
       state.writes.push('patch');
       const found = state.rows.find(r => r.id === row.id && r.status === 'draft' && r.updated_at === row.updated_at);
       if (!found) return [];
-      Object.assign(found, patch); return [structuredClone(found)];
+      Object.assign(found, patch, { xmin: '101' }); return [structuredClone(found)];
     },
   };
-  const deps = { db, imageDigest: async () => ({ sha256: createHash('sha256').update('approved-image-bytes').digest('hex'), size: 20, contentType: 'image/png' }), lock: async action => action(), now: () => '2026-11-03T12:01:00+09:00',
+  const deps = { db, publicReadbackDelays: [0, 0, 0], imageDigest: async () => ({ sha256: createHash('sha256').update('approved-image-bytes').digest('hex'), size: 20, contentType: 'image/png' }), lock: async action => action(), now: () => '2026-11-03T12:01:00+09:00',
     async revalidate() { state.cleared = true; },
     async publicGet() { return state.html; } };
   return { b, state, deps, input: { bundle: b, revision: bundleHash(b) } };
@@ -372,6 +372,67 @@ test('CAS misses, DB drift, failed cache clear and stale HTML fail closed', asyn
   }
 });
 
+test('public GET HTTP failure retains status only, never response headers or body', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 404,
+    url: 'https://camp-gear-lab.com/articles/not-yet-visible',
+    headers: new Headers({ 'content-type': 'text/html', 'x-secret': 'secret' }),
+    text: async () => 'secret response body' }));
+  const deps = productionDependencies({ SUPABASE_URL: 'https://db.example', SUPABASE_SERVICE_ROLE_KEY: 'test-only' });
+  await assert.rejects(deps.publicGet('https://camp-gear-lab.com/articles/not-yet-visible'), error => {
+    assert.deepEqual(error.diagnostic, { httpStatus: 404 });
+    assert.equal(error.message, 'public readback invalid');
+    return true;
+  });
+});
+
+test('publication visibility retries only reads, pins row and xmin, and stops after three', async () => {
+  for (const mode of ['second', 'third', 'always', 'body', 'xmin', 'missing-xmin']) {
+    const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps);
+    let publicReads = 0, dbReads = 0, revalidations = 0;
+    const find = h.deps.db.findArticles;
+    h.deps.db.findArticles = async (...args) => { dbReads++; return find(...args); };
+    h.deps.revalidate = async () => { revalidations++; if (mode === 'missing-xmin') delete h.state.rows[0].xmin; };
+    h.deps.publicGet = async () => {
+      publicReads++;
+      if (mode === 'body') h.state.rows[0].content = 'unapproved changed body';
+      if (mode === 'xmin') h.state.rows[0].xmin = '102';
+      if ((mode === 'second' && publicReads === 2) || (mode === 'third' && publicReads === 3)) return html(h.b);
+      return '<h1>not yet visible</h1>';
+    };
+    const request = { ...h.input, action: 'publish', approval: approval(h.input.revision) };
+    if (['second', 'third'].includes(mode)) assert.equal((await execute(request, h.deps)).verified, true);
+    else await assert.rejects(execute(request, h.deps), error => {
+      assert.equal(error.diagnostic.phase, mode === 'always' ? 'public_readback' : 'article_readback');
+      return true;
+    });
+    assert.equal(publicReads, mode === 'missing-xmin' ? 0 : ['body', 'xmin'].includes(mode) ? 1 : mode === 'second' ? 2 : 3);
+    assert.equal(revalidations, 1); assert.deepEqual(h.state.writes, ['insert', 'patch']);
+    assert.ok(dbReads >= publicReads + 2); // Initial draft + committed row, then fresh DB before every public GET.
+  }
+});
+
+test('valid HTML cannot mask a DB change during GET and never triggers a retry', async () => {
+  for (const field of ['content', 'revision', 'xmin']) {
+    const h = harness(); await execute({ ...h.input, action: 'stage' }, h.deps);
+    let gets = 0, invalidations = 0;
+    h.deps.revalidate = async () => { invalidations++; };
+    h.deps.publicGet = async () => {
+      gets++;
+      if (field === 'content') h.state.rows[0].content = 'concurrent unapproved body';
+      if (field === 'revision') h.state.rows[0].generation_meta.editorialRuntime.revision = '0'.repeat(64);
+      if (field === 'xmin') h.state.rows[0].xmin = '102';
+      return html(h.b);
+    };
+    await assert.rejects(execute({ ...h.input, action: 'publish', approval: approval(h.input.revision) }, h.deps), error => {
+      assert.match(error.message, /unknown: publication requires reconciliation/);
+      assert.equal(error.diagnostic.phase, 'article_readback');
+      return true;
+    });
+    assert.equal(gets, 1); assert.equal(invalidations, 1);
+    assert.deepEqual(h.state.writes, ['insert', 'patch']);
+  }
+});
+
 test('draft insert and readback failures preserve their phase without replay', async () => {
   for (const failAt of ['insert', 'readback']) {
     const h = harness(); let inserts = 0;
@@ -414,7 +475,7 @@ test('new article failures retain bounded phase diagnostics without retrying wri
       return true;
     });
     assert.ok(h.state.writes.filter(w => w === 'patch').length <= 1);
-    assert.ok(reads <= 1 && cacheCalls <= 1 && images <= 2);
+    assert.ok(reads <= 3 && cacheCalls <= 1 && images <= 2);
   }
 });
 

@@ -358,6 +358,56 @@ export async function verifyApprovedImages(bundle, imageDigest = secureImageDige
   }
 }
 
+// Only publication visibility reads may repeat; the published transaction is fixed.
+async function verifyNewArticlePublicReadback(bundle, revision, publishedRow, deps, url, setPhase) {
+  setPhase('article_readback');
+  const version = String(publishedRow.xmin ?? '');
+  requireValue(/^[0-9]{1,10}$/.test(version) && BigInt(version) <= 4294967295n,
+    'published database row version required');
+  const delays = deps.publicReadbackDelays ?? [0, 1000, 2000];
+  requireValue(Array.isArray(delays) && delays.length > 0 && delays.length <= 3 &&
+    delays.every(n => Number.isInteger(n) && n >= 0 && n <= 5000), 'invalid public readback delays');
+  const deadline = performance.now() + 180000;
+  const bounded = async operation => {
+    const remaining = deadline - performance.now();
+    const timeout = new Error('public readback deadline exceeded');
+    timeout.diagnostic = { timedOut: true };
+    if (remaining <= 0) throw timeout;
+    let timer;
+    try { return await Promise.race([Promise.resolve().then(operation),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(timeout), remaining); })]); }
+    finally { clearTimeout(timer); }
+  };
+  const verifyDatabase = async () => {
+    setPhase('article_readback');
+    const rows = await bounded(() => deps.db.findArticles(bundle.article.id, bundle.article.slug));
+    requireValue(rows.length === 1 && String(rows[0].xmin ?? '') === version &&
+      equal(selectedRow(rows[0], articleFields), selectedRow(publishedRow, articleFields)) &&
+      rows[0].status === 'published' && rows[0].generation_meta?.editorialRuntime?.revision === revision,
+      'published database changed during public readback');
+  };
+  let last;
+  for (const delay of delays) {
+    if (delay) await bounded(() => new Promise(resolve => setTimeout(resolve, delay)));
+    await verifyDatabase();
+    setPhase('public_readback');
+    let html;
+    try {
+      html = await bounded(() => deps.publicGet(url));
+      requireValue(verifyPublicHTML(html, bundle), 'public HTML verification failed');
+    } catch (error) {
+      last = error;
+      if (error?.diagnostic?.timedOut || performance.now() >= deadline) throw error;
+      continue;
+    }
+    // A matching page cannot bless a concurrent DB edit during its GET.
+    // Keep this outside the visibility catch: DB drift must never be retried.
+    await verifyDatabase();
+    return html;
+  }
+  throw last;
+}
+
 /** Dependencies are injected in tests. The production lock always uses seoRoot(). */
 export async function execute(input, deps = {}) {
   if (record(input) && input.action === 'publish-corrected') {
@@ -434,8 +484,12 @@ export async function executeNewArticle(input, deps = {}) {
       await deps.revalidate(expected.slug, expected.category_id);
       const url = `${SITE}/articles/${expected.slug}`;
       phase = 'public_readback';
-      const html = await deps.publicGet(url);
-      requireValue(verifyPublicHTML(html, bundle), 'public HTML verification failed');
+      if (corrected) {
+        const html = await deps.publicGet(url);
+        requireValue(verifyPublicHTML(html, bundle), 'public HTML verification failed');
+      } else {
+        await verifyNewArticlePublicReadback(bundle, revision, readback[0], deps, url, value => { phase = value; });
+      }
       phase = 'image_readback';
       await verifyApprovedImages(bundle, deps.imageDigest || secureImageDigest);
       // No true until DB, cache and public page all agree with the approved bytes.
@@ -532,7 +586,11 @@ export function productionDependencies(env) {
       let response;
       try { response = await fetch(url, { redirect: 'error', headers: { 'Cache-Control': 'no-cache', Accept: 'text/html' }, signal: AbortSignal.timeout(25000) }); }
       catch { throw new Error('public readback failed'); }
-      requireValue(response.ok && response.url === url && response.headers.get('content-type')?.includes('text/html'), 'public readback invalid');
+      if (!(response.ok && response.url === url && response.headers.get('content-type')?.includes('text/html'))) {
+        const failure = new Error('public readback invalid');
+        failure.diagnostic = safeDiagnostic({ httpStatus: response.status });
+        throw failure;
+      }
       const bytes = await response.arrayBuffer();
       requireValue(bytes.byteLength <= 8 * 1024 * 1024, 'public page too large');
       return new TextDecoder().decode(bytes);
