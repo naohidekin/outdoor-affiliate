@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "batchId": "apparel-2026-11-22",
+  "kind": "supplemental_article_batch",
+  "notBefore": "2026-11-22T05:19:30.962570+09:00",
+  "socialEligiblePeriod": "2026-11-20",
+  "maxArticles": 3,
+  "batchCallCap": 96,
+  "status": "awaiting_verified_source",
+  "apparelPolicy": {
+    "version": 1,
+    "requirements": [
+      "exact live catalog product",
+      "strict apparel identity and variant binding",
+      "verified manufacturer facts",
+      "verified product image identity",
+      "verified affiliate and Amazon destinations"
+    ],
+    "missingEvidence": "hold",
+    "researchScope": {
+      "classes": [
+        "down",
+        "hardshell",
+        "active-layer",
+        "heavy-layer",
+        "fleece",
+        "base-layer"
+      ],
+      "comparison": [
+        "cross-brand",
+        "same-position"
+      ],
+      "claims": "Owner-authorized camping, outdoor, hiking movement and rest contexts; verify manufacturer applicability separately. No invented field use, warmth rankings or temperature guarantees. Existing overlapping basics are linked or sent to existing update proposals."
+    }
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "productIds": [
+        "apparel-montbell-1106832",
+        "apparel-patagonia-40275"
+      ],
+      "slug": "active-fleece-climaair-light-r1-air-outdoor-comparison",
+      "title": "行動用フリース2ブランド比較｜クリマエアライトとR1エアを登山・キャンプで選ぶ",
+      "categoryId": "wear",
+      "query": "クリマエアライト R1エア 行動用フリース 比較",
+      "selectionReason": "Owner authorized these additional three articles on 2026-11-22 for Slack review only. Audience includes outdoor activities and hiking movement/rest, not camping alone. Mandatory verified primary facts/photos/exact merchant variants, real Gemini polish, independent QA and Claude final/WISE gates. Preserve article32/period128/batch96 and token caps. No owner approval/publication/SNS authorization is inferred. Distinct active midlayer decision; existing classic four-brand article covers openings/pockets/buying conditions, not these active models. Avoid repeating it; reference /articles/autumn-camp-classic-fleece-comparison . Need source applicability, ventilation and layer roles, no warmth inference from119gvs340g. Specific-model search volume and field experience remain unverified."
+    },
+    {
+      "slot": 2,
+      "productIds": [
+        "apparel-montbell-1107704",
+        "apparel-montbell-1107654"
+      ],
+      "slug": "synthetic-merino-base-layer-outdoor-comparison",
+      "title": "アウトドアのインナーは化繊かメリノか｜ジオラインとスーパーメリノウールの選び分け",
+      "categoryId": "wear",
+      "query": "ジオライン スーパーメリノウール M.W. 比較 アウトドア",
+      "selectionReason": "Owner authorized these additional three articles on 2026-11-22 for Slack review only. Audience includes outdoor activities and hiking movement/rest, not camping alone. Mandatory verified primary facts/photos/exact merchant variants, real Gemini polish, independent QA and Claude final/WISE gates. Preserve article32/period128/batch96 and token caps. No owner approval/publication/SNS authorization is inferred. Compare material-selection decisions and manufacturer-described activity applicability using same M.W. naming; M.W. labels do not prove equal physical thickness, warmth or temperature. Existing single-product detail is /articles/zeoline-mw-1107704-guide ; link rather than reproduce its long sizing/purchase discussion. Distinguish resting/activity plans from verified product performance; no firsthand narrative. Material-specific search demand unconfirmed; related apparel-selection GSC evidence only."
+    },
+    {
+      "slot": 3,
+      "productIds": [
+        "apparel-montbell-1101493",
+        "apparel-montbell-1101539"
+      ],
+      "slug": "down-synthetic-insulation-outdoor-comparison",
+      "title": "アウトドアの保温着はダウンか化繊中綿か｜登山の行動・休憩とキャンプで選ぶ",
+      "categoryId": "wear",
+      "query": "ダウン 化繊中綿 保温着 比較 登山 キャンプ",
+      "selectionReason": "Owner authorized these additional three articles on 2026-11-22 for Slack review only. Audience includes outdoor activities and hiking movement/rest, not camping alone. Mandatory verified primary facts/photos/exact merchant variants, real Gemini polish, independent QA and Claude final/WISE gates. Preserve article32/period128/batch96 and token caps. No owner approval/publication/SNS authorization is inferred. Clothing material/type decision, not sleeping bag inference or a winter survival guide. Concrete examples are verified Plasma1000 1101493 and U.L.Thermawrap1101539; refinements within the approved down/synthetic topic. Use each manufacturer documented roles and carrying data separately, no equal-warmth assumption. Link existing single-product /articles/plasma1000-1101493-layering-guide rather than duplicate it. Setup/seated clothing-adjustment basics are existing article-043 update territory, not a fourth new article."
+    }
+  ]
+}
