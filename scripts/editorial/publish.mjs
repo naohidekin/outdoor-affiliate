@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
+import htmlParser from 'next/dist/compiled/node-html-parser/index.js';
 import { withPublicationLock, seoRoot } from '../seo/article-guard.mjs';
 import { detectMedicalRisks } from '../../src/lib/medical-review-gate.mjs';
 
@@ -267,13 +268,28 @@ export function verifyPublicHTML(html, bundle) {
   if (typeof html !== 'string') return false;
   // Attribute/text evidence must be actual HTML, not embedded hydration JSON.
   html = html.replace(/<!--[\s\S]*?-->|<(script|style|template)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
-  const tags = [...html.matchAll(/<[a-z][^>]*>/gi)].map(m => ({ name: m[0].match(/^<([a-z0-9]+)/i)[1].toLowerCase(), attrs: attributes(m[0]) }));
+  const parseTags = text => [...text.matchAll(/<[a-z][^>]*>/gi)].map(m => ({ name: m[0].match(/^<([a-z0-9]+)/i)[1].toLowerCase(), attrs: attributes(m[0]) }));
+  let tags = parseTags(html);
   const card = bundle.article.generationMeta?.socialCard;
   if (card && !['og:image', 'twitter:image'].every(key => {
     const values = tags.filter(t => t.name === 'meta' && (t.attrs.property === key || t.attrs.name === key)).map(t => t.attrs.content);
     return values.length === 1 && values[0] === card.url;
   })) return false;
   const digest = sha(bundle.article.content);
+  if (bundle.article.productIds?.length === 0) {
+    // Match the actual page's unique revision-bound article, not shared author,
+    // navigation or footer links. Use a DOM parser so nested markup cannot end
+    // the boundary early; malformed/missing/duplicate bindings fail closed.
+    try {
+      const document = htmlParser.parse(html);
+      const markers = document.querySelectorAll('[data-review-content-sha256]');
+      const articles = document.querySelectorAll('main article[data-review-content-sha256]');
+      if (markers.length !== 1 || articles.length !== 1 || markers[0] !== articles[0] ||
+          articles[0].getAttribute('data-review-content-sha256') !== digest) return false;
+      html = articles[0].outerHTML;
+      tags = parseTags(html);
+    } catch { return false; }
+  }
   if (!tags.some(t => t.attrs['data-review-content-sha256'] === digest)) return false;
   const titles = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1\s*>/gi)].map(m => decodeHTML(m[1].replace(/<[^>]*>/g, '')).trim());
   if (titles.length !== 1 || titles[0] !== bundle.article.title) return false;

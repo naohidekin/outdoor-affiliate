@@ -124,6 +124,29 @@ test('strict nonproduct contract is the only zero-product route and rejects prov
   assert.equal(verifyPublicHTML(nonproductHtml(good, '<a href="https://www.amazon.co.jp/dp/B000000001">merchant</a>'), good), false);
 });
 
+test('nonproduct public verification scopes commerce to the unique bound article DOM', () => {
+  const b = nonproductBundle();
+  const affiliate = '<a href="https://room.rakuten.co.jp/room_naomaru/items" rel="noopener noreferrer nofollow sponsored">AuthorBio</a>';
+  const good = nonproductHtml(b, '<div><section><p>本文</p></section></div>');
+  assert.equal(verifyPublicHTML(good.replace('</article>', '</article><aside>' + affiliate + '</aside>'), b), true);
+  assert.equal(verifyPublicHTML(affiliate + good + affiliate, b), true);
+  for (const link of [affiliate, '<a href="https://www.amazon.co.jp/dp/B000000001">purchase</a>',
+    '<a href="https://item.rakuten.co.jp/shop/item/">purchase</a>', '<a href="/local" rel="sponsored">sponsor</a>']) {
+    assert.equal(verifyPublicHTML(nonproductHtml(b, '<div><section>' + link + '</section></div>'), b), false);
+  }
+  for (const invalid of [
+    good.replace(/data-review-content-sha256="[^"]+"/, ''),
+    good.replace(/data-review-content-sha256="[^"]+"/, 'data-review-content-sha256="wrong"'),
+    good + good,
+    good.replace('<main>', '<div>').replace('</main>', '</div>'),
+    good.replace('</article>', '</article><article data-review-content-sha256="wrong"></article>'),
+  ]) assert.equal(verifyPublicHTML(invalid, b), false);
+  // A correct hash elsewhere cannot bless an unbound article or hide its links.
+  const moved = good.replace(/data-review-content-sha256="([^"]+)"/, '') +
+    `<div data-review-content-sha256="${bundleHash(b.article.content, { contentOnly: true })}"></div>`;
+  assert.equal(verifyPublicHTML(moved, b), false);
+});
+
 test('expanded official references require exact URL, public ID and claim scope', () => {
   const contracts = [
     { id: 'public:coleman-synthetic-wash', url: 'https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag',
