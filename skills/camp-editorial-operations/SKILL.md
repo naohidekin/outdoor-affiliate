@@ -69,6 +69,15 @@ completionの`correction_path`は現polished本文＋FAQを含むarticle/hashと
 
 ## 品質と承認を確認する
 
+2026-11-23の本人指定で、肌着比較`article-b1059cbd51d84cee93adbdc6`だけは
+`skin_insertion_recovery.py`のdiagnose/prepare/executeで限定復旧する。
+保存済みClaude出力の挿入差分を上位確認し、既存本文・数値を固定して再利用する。
+旧draftの失敗2回・実測利用量を残し、同じ記事・制作週・batch予算で実Gemini校正と
+Claude最終審査を各1要求だけ実施する。執筆の再呼出し・枠の初期化・別記事への流用は禁止。
+fresh source、本人の復旧指示、選択挿入文、対象版、実装hashをprepareで固定してから
+runtime.flock内で一度だけclaimする。送達不明・中断・不合格は照合待ちで止める。
+この復旧指示は記事承認でもSNS承認でもなく、公開・予約は本人の別承認を待つ。
+
 工程結果の再利用は執筆・校正・審査の重複呼出しを避ける手段に限る。
 現在の公式情報・商品写真・購入先、PC/スマホ表示、既存品質基準を確認する。
 本人の記事対象版承認とSNS対象版承認は別。モデル審査や送達を本人承認にしない。

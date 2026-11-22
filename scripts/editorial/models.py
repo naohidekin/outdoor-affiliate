@@ -48,6 +48,12 @@ WRITER_SCHEMA = {
                                     if field not in LIST_BRIEF_FIELDS + ("externalSafe",)},
                                  "externalSafe": {"type": "boolean"}}}}
 }
+LENGTH_INSERTION_SCHEMA = {
+    'type': 'object', 'additionalProperties': False, 'required': ['insertions'],
+    'properties': {'insertions': {'type': 'array', 'items': {
+        'type': 'object', 'additionalProperties': False, 'required': ['after', 'text'],
+        'properties': {'after': {'type': 'string'}, 'text': {'type': 'string'}}}}},
+}
 CATEGORIES = ("facts", "images", "affiliate", "medical", "render")
 MIXED_RESEARCH_SCHEMA = {
     'type': 'object', 'additionalProperties': False, 'required': ['proposals'],
@@ -148,8 +154,36 @@ class ModelError(RuntimeError):
 
 class ModelOutcomeUnknown(ModelError):
     """A request may have reached the provider but no safe outcome was observed."""
-
     outcome_unknown = True
+
+
+def apply_length_insertions(source, patch):
+    """Insert at unique original paragraph anchors; original text is immutable.
+
+    This proves preservation only. Full source/schema/length checks and upper
+    fact/meaning review remain mandatory; inserted prose is never new evidence.
+    """
+    if (not _text(source) or not isinstance(patch, dict) or set(patch) != {'insertions'}
+            or not isinstance(patch['insertions'], list) or not 1 <= len(patch['insertions']) <= 8):
+        raise ModelError('Invalid length insertion plan')
+    positions = {}
+    for item in patch['insertions']:
+        if (not isinstance(item, dict) or set(item) != {'after', 'text'}
+                or not _text(item['after']) or not _text(item['text'])
+                or len(item['text']) > 4000 or _protected(item['text'])
+                or source.count(item['after']) != 1):
+            raise ModelError('Invalid length insertion anchor or protected addition')
+        end = source.index(item['after']) + len(item['after'])
+        if end in positions or (end < len(source) and not source[end:].startswith('\n\n')):
+            raise ModelError('Length insertion must use a unique paragraph boundary')
+        positions[end] = item['text']
+    result = source
+    for offset in sorted(positions, reverse=True):
+        result = result[:offset] + positions[offset] + result[offset:]
+    if inspect_polish(source, result)['passed'] is not True:
+        raise ModelError('Length insertion changed protected content')
+    return result
+
 
 
 def _strict_json(text):
@@ -600,6 +634,14 @@ class Models:
             return result
         previous = {key: copy.deepcopy(result[key]) for key in ('article', 'brief')}
         feedback = dict(format=result['brief']['format'], actualCharacters=count, minimum=lower, maximum=upper)
+        expansion = count < lower
+        repair_output = (
+            'Return ONLY {"insertions":[{"after":"exact unique source paragraph ending",'
+            '"text":"additional explanatory prose"}]}. Use at most eight insertions. '
+            'Each after must be copied verbatim from previousCandidate.article.content, occur exactly once, '
+            'and end at a paragraph boundary or the end of the source. Include paragraph separators in text. '
+            'The program inserts locally into the immutable original; do not return or paraphrase article/brief. '
+            if expansion else 'Return the same article and brief, changing ONLY article.content. ')
         repaired, repaired_record = self._call(
             instruction + "\nOne length-only repair: article.content has " + str(count) +
             " characters; the unchanged brief.format requires " + str(lower) + "-" + str(upper) +
@@ -608,7 +650,7 @@ class Models:
             " characters. These deltas reach the hard boundary only; aim for the format's interior target above. "
             "Plan the net change across existing sections and check the final decoded body character count; "
             "a small partial expansion that remains below the minimum fails. "
-            "Return the same article and brief, changing ONLY article.content. "
+            + repair_output +
             "Do not change brief.format or any other brief field, article identity or metadata. "
             "Do not add new facts, numbers, links, headings, claims or experiences. "
             "Keep verified author sentences and protected facts verbatim. Explain the existing verified facts "
@@ -622,7 +664,18 @@ class Models:
             "Do not pad with repeated text or specifications. Do not reclassify the format. "
             "This is the only repair attempt; count ONLY article.content and satisfy the original hard range.",
             dict(theme=theme, context=context, previousCandidate=previous, validation=feedback),
-            record['model'], schema=WRITER_SCHEMA)  # Same resolved Claude; no fallback or third generation.
+            record['model'], schema=LENGTH_INSERTION_SCHEMA if expansion else WRITER_SCHEMA)
+        # Same resolved Claude; no fallback or third generation. Saved legacy
+        # full responses are accepted only when they literally append to source.
+        if expansion:
+            if set(repaired) == {'insertions'}:
+                content = apply_length_insertions(previous['article']['content'], repaired)
+                repaired = copy.deepcopy(previous)
+                repaired['article']['content'] = content
+            elif (not isinstance(repaired.get('article'), dict)
+                  or not isinstance(repaired['article'].get('content'), str)
+                  or not repaired['article']['content'].startswith(previous['article']['content'])):
+                raise ModelError('Length repair must preserve the immutable original')
         repaired = self._validate_draft(repaired, theme, context)
         literals = context.get('verifiedAuthorFacts', []) + previous['brief']['facts'] + previous['brief']['protected']
         if (repaired_record['model'] != record['model'] or repaired['brief'] != previous['brief']

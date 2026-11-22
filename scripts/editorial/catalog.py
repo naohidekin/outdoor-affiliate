@@ -40,6 +40,14 @@ MAKERS = {'soto': ('soto.shinfuji.co.jp',), 'snow peak': ('snowpeak.co.jp',),
           'ロゴス': ('logos.ne.jp',), 'nanga': ('nanga.jp',), 'mont-bell': ('montbell.jp', 'montbell.com')}
 MAX_BYTES = 8 * 1024 * 1024
 
+# Primary manufacturer hosts for the existing winter-heating catalogue.
+MAKERS.update({'paseco': ('paseco.jp',), 'パセコ': ('paseco.jp',),
+               'alpaca plus': ('alpaca-japan.co.jp',), 'アルパカプラス': ('alpaca-japan.co.jp',),
+               'toyotomi': ('toyotomi.jp',), 'トヨトミ': ('toyotomi.jp',),
+               'koizumi': ('koizumiseiki.jp',), 'コイズミ': ('koizumiseiki.jp',),
+               'yamazen': ('book.yamazen.co.jp',), '山善': ('book.yamazen.co.jp',),
+               'corona': ('corona.co.jp',), 'コロナ': ('corona.co.jp',)})
+
 MAKERS.update({'primus': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-i-collect.com'),
                'プリムス': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-i-collect.com'),
                'msr': ('e-mot.co.jp', 'cascadedesigns.com', 'msrgear.com'),
@@ -640,10 +648,17 @@ class Catalog:
                 if (p.hostname, p.path) in {
                         ('arcteryx.jp', '/products/beta-jacket-m'),
                         ('arcteryx.jp', '/products/beta-sl-jacket-m'),
-                        ('www.millet.jp', '/products/miv01248'),
-                        ('www.millet.jp', '/collections/activities/products/miv01248')}:
+                        ('www.goldwin.co.jp', '/ap/item/i/m/NA62650')}:
                     headers.setdefault('User-Agent', 'Mozilla/5.0')
                     headers.setdefault('Accept', 'text/html')
+                if (p.hostname, p.path) in {
+                        ('www.millet.jp', '/products/miv01248'),
+                        ('www.millet.jp', '/collections/activities/products/miv01248')}:
+                    headers.setdefault('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                                       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
+                    headers.setdefault('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                                       'image/avif,image/webp,*/*;q=0.8')
+                    headers.setdefault('Accept-Language', 'ja-JP,ja;q=0.9')
                 if (p.hostname, p.path) in {
                         ('soto.shinfuji.co.jp', '/products/st-233/'),
                         ('www.iwatani-primus.co.jp', '/products/primus/support/')}:
@@ -990,6 +1005,11 @@ class Catalog:
                     decision = inspect_merchant_identity(product, model, parsed.title)
                     match = decision['status'] == 'passed' or bool(
                         fixed_purchase_identity and decision['status'] != 'failed')
+                # Negative authority must run after every positive matcher.
+                if kind in ('purchase', 'mall') and not apparel_mode:
+                    from heater_purchase_identity import is_accessory_destination
+                    if is_accessory_destination(pid, parsed.title, res['url']):
+                        match = False
                 # Store evidence of exact comparisons, never user review text.
                 if match:
                     reference = {'productId': pid, 'kind': kind, 'url': res['url'],

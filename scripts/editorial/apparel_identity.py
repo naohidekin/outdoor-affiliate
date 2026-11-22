@@ -315,6 +315,9 @@ def inspect_apparel_page(product, page_url, html, image_url=None, source_role="m
         return None
     if source_role == "purchase":
         return _inspect_merchant(product, page_url, html, channel)
+    if contract['model'] == 'NA62650':
+        from goldwin_na62650 import inspect_goldwin_na62650
+        return inspect_goldwin_na62650(product, page_url, html, image_url)
     if contract['model'].upper() in ('MIV01248', 'X000010878', 'X000010854'):
         from official_shopify_apparel import inspect_official_shopify
         return inspect_official_shopify(product, page_url, html, image_url)
@@ -1530,12 +1533,21 @@ def binding_matches_product(binding, product, channel=None):
         contract = apparel_contract(product)
     except ApparelIdentityError:
         return False
-    allowed = ("json-ld-product", "montbell-product-dom", "finetrack-primary-productgroup-dom", "official-shopify-product") if channel is None else (
+    allowed = ("json-ld-product", "montbell-product-dom", "finetrack-primary-productgroup-dom", "official-shopify-product", "goldwin-na62650-primary-dom") if channel is None else (
         "amazon-primary-product-dom", "rakuten-primary-product-dom")
     if not isinstance(binding, dict) or binding.get("sourceKind") not in allowed:
         return False
     if any(_norm(binding.get(key)) != _norm(value) for key, value in contract.items()):
         return False
+    if binding.get('sourceKind') == 'goldwin-na62650-primary-dom':
+        from goldwin_na62650 import FABRIC, WEIGHT, retained_options_match
+        if (channel is not None or contract['model'] != 'NA62650'
+                or contract['class'] != 'fleece' or contract['optionState'] != 'selectable'
+                or _norm(contract['brand']) not in ('the north face', 'thenorthface', 'ザ・ノース・フェイス', 'ザノースフェイス')
+                or _norm(contract['gender']) not in ("men's", 'メンズ', 'male')
+                or binding.get('fabric') != FABRIC or binding.get('weight') != WEIGHT
+                or not retained_options_match(binding)):
+            return False
     if ('imageScope' in binding or 'imageScopeUrl' in binding
             or (isinstance(binding.get('imageUrls'), list)
                 and _FINETRACK_WEARING_IMAGE in binding['imageUrls'])):

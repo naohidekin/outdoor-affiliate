@@ -48,6 +48,18 @@ def page(c, r, title=None):
 
 
 class OfficialShopifyTests(unittest.TestCase):
+    def test_actual_arc_legacy_sku_families_in_one_primary_root_remain_held(self):
+        # Both legacy SKU families were observed inside the actual ProductJson,
+        # not scraped from a recommendation card. Do not cherry-pick current rows.
+        for c, legacy in ((CASES[0], 'X00001000417140'), (CASES[1], 'X00001044404140')):
+            p,r=fixture(c)
+            old=copy.deepcopy(r['variants'][0])
+            old.update(id=old['id']+1,sku=legacy)
+            r['variants'].append(old)
+            self.assertIsNone(inspect(p,c[1],page(c,r)))
+            p['specs'].update(optionState='fixed',color=c[6],size=c[7])
+            self.assertIsNone(inspect(p,c[1],page(c,r)))
+
     def test_public_entrypoint_and_retained_binding_integration(self):
         from apparel_identity import inspect_apparel_page, binding_matches_product, public_binding
         for c in CASES:
@@ -106,7 +118,8 @@ class OfficialShopifyTests(unittest.TestCase):
             if url == p['imageUrl']:
                 return response(PNG, 'image/png')
             self.assertEqual(c[1], url)
-            self.assertEqual('Mozilla/5.0', headers.get('User-Agent'))
+            self.assertIn('Chrome/', headers.get('User-Agent', ''))
+            self.assertEqual('ja-JP,ja;q=0.9', headers.get('Accept-Language'))
             return response(page(c, r))
         result = Catalog({}, fetch, {p['id']: [c[1]]}).gather(
             {'productIds': [p['id']]}, {'products': [p]})
