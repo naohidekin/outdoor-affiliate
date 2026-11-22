@@ -1227,11 +1227,25 @@ class Runtime:
             },
         }
         batch_id = job.get('batchId')
+        # One authorized prompt-change recovery; never authorize this error for
+        # a whole batch. The old failed lineage still owns its remaining attempt.
+        prompt_change_retry = (
+            batch_id == 'winter-depth-2026-11-22'
+            and job.get('id') == 'article-b1059cbd51d84cee93adbdc6'
+            and input_key == 'stage_journal:v1:aa5d8885296281a0a41b548269e72fe7d44a44e47797cdd5c20bc505d80d6710'
+            and (job.get('error') or {}).get('reason') == 'exact failed stage inputs changed')
+        if prompt_change_retry:
+            try:
+                prompt_hash = hashlib.sha256(Path(__file__).with_name('models.py').read_bytes()).hexdigest()
+            except OSError:
+                raise ValueError('prompt_change_recovery_inputs_unavailable') from None
+            if prompt_hash != '144fcbca061d8ebd8be8c67c8241a40b53c0ba1f27dc1d52f885c88eb081bf44':
+                raise ValueError('prompt_change_recovery_inputs_changed')
         if (stage != 'draft' or job.get('kind') != 'supplemental_article'
-                or batch_id not in allowed_errors
+                or (not prompt_change_retry and (batch_id not in allowed_errors
+                    or (job.get('error') or {}).get('reason') not in allowed_errors[batch_id]))
                 or job.get('batchCallCap') != 96 or job.get('stage') != 'error'
-                or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))
-                or (job.get('error') or {}).get('reason') not in allowed_errors[batch_id]):
+                or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))):
             raise ValueError('job_not_corrected_stage_retryable')
         record = next((r for r in records if r.get('stageKey') == input_key), None)
         if (len(records) != 1 or record is None or record.get('jobId') != job['id']

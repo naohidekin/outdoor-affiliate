@@ -61,7 +61,7 @@ class PostAuditRuntimeTests(unittest.TestCase):
     def due(self):
         for path in self.receipts():
             value = json.loads(path.read_text())
-            value['nextAttemptAt'] = (datetime.now(JST) - timedelta(seconds=1)).isoformat()
+            value['nextAttemptAt'] = (test_runtime.LegacyFixtureDateTime.now(JST) - timedelta(seconds=1)).isoformat()
             atomic(path, value)
 
     def test_disabled_by_default_and_constructor_injection(self):

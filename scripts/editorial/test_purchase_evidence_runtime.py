@@ -20,7 +20,7 @@ class PurchaseEvidenceRuntimeTests(unittest.TestCase):
         product['amazonUrl'] = ''
         evidence = [{'productId': product['id'], 'channel': 'amazon', 'status': 'NA',
                      'reason': '購入先商品の同一性を確認できないため非表示',
-                     'reviewedBy': 'Astra', 'checkedAt': datetime.now(JST).isoformat()}]
+                     'reviewedBy': 'Astra', 'checkedAt': test_runtime.LegacyFixtureDateTime.now(JST).isoformat()}]
         gathered = {'catalog': candidate['products'], 'references': candidate['references'],
                     'images': candidate['images'], 'purchaseEvidence': evidence,
                     'checks': {key: True for key in ('facts', 'images', 'affiliate')}}

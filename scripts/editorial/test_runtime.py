@@ -16,6 +16,14 @@ from test_topic_selection import (feed as nonproduct_feed, nonproduct_bundle as 
 from topic_selection import bind_nonproduct_theme
 
 
+class LegacyFixtureDateTime(datetime):
+    """Keep legacy fake research before mixed rollout; explicit clocks override."""
+    @classmethod
+    def now(cls, tz=None):
+        fixed = cls(2026, 11, 22, 10, tzinfo=JST)
+        return fixed.astimezone(tz) if tz is not None else fixed.replace(tzinfo=None)
+
+
 def bundle():
     value=quality_bundle()
     value['article']['content']+='\n\n'+'確認済みの説明です。'*550
@@ -135,6 +143,16 @@ class RuntimeTests(unittest.TestCase):
                          (measurement['minimumCharacters'], measurement['maximumCharacters']))
 
     def setUp(self):
+        clock = patch('runtime.datetime', LegacyFixtureDateTime)
+        clock.start()
+        self.addCleanup(clock.stop)
+        # Candidate/request defaults must share the runner's fixture clock too.
+        from ledger import timestamp
+        import runtime
+        ledger_clock = patch('ledger.timestamp', side_effect=lambda now=None:
+            timestamp(now if now is not None else runtime.datetime.now(JST)))
+        ledger_clock.start()
+        self.addCleanup(ledger_clock.stop)
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(self.tmp.name)
         self.env = base / 'env'
@@ -863,7 +881,7 @@ class RuntimeTests(unittest.TestCase):
         job, old = self.slack.deliveries[-1]
         with sqlite3.connect(self.runtime.ledger.db_path) as db:
             row = json.loads(db.execute('SELECT data FROM requests WHERE id=?', (old['request_id'],)).fetchone()[0])
-            row['expires_at'] = (datetime.now(JST) - timedelta(seconds=1)).isoformat()
+            row['expires_at'] = (LegacyFixtureDateTime.now(JST) - timedelta(seconds=1)).isoformat()
             db.execute('UPDATE requests SET data=? WHERE id=?', (json.dumps(row), old['request_id']))
         self.assertEqual('delivered', self.runtime.deliver(job['id'])['status'])
         new = self.slack.deliveries[-1][1]
