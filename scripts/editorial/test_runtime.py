@@ -411,8 +411,8 @@ class RuntimeTests(unittest.TestCase):
         disclosures = self.runtime._apparel_variant_disclosures(gathered)
         self.assertEqual(1,len(disclosures))
         self.assertIn('楽天市場はカラー・サイズ選択式',disclosures[0])
-        self.assertIn('Amazonは確認済みの固定バリエーション',disclosures[0])
-        self.assertIn('同じカラー・サイズとは限らない',disclosures[0])
+        self.assertIn('Amazonは初期選択で確認したバリエーション',disclosures[0])
+        self.assertIn('各販売先の全選択肢を示すものではありません',disclosures[0])
 
     def test_tick_executes_one_supplemental_dispatch_action_once(self):
         self.config['supplementalApparelEnabled'] = True

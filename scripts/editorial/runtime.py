@@ -431,11 +431,11 @@ class Runtime:
             if set(states.values()) != {'fixed','selectable'}:
                 continue
             details = '、'.join(labels[channel]+'は'+('カラー・サイズ選択式' if state == 'selectable'
-                                  else '確認済みの固定バリエーション')
+                                  else '初期選択で確認したバリエーション')
                                for channel,state in sorted(states.items()))
             name = products.get(evidence.get('productId')) or evidence.get('productId') or '対象商品'
-            disclosures.append(f'{name}は販売先で選択条件が異なります。{details}です。'
-                               '同じカラー・サイズとは限らないため、購入画面で選択内容を確認してください。')
+            disclosures.append(f'{name}について、この記事のリンク先で確認した選択内容は販売先で異なります。{details}です。'
+                               'これは各販売先の全選択肢を示すものではありません。購入画面でカラー・サイズと選択肢を確認してください。')
         return list(dict.fromkeys(disclosures))
 
     def produce(self, limit=3):
