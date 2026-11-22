@@ -30,6 +30,48 @@ export function projectThreadReadback(rootResult, timeline) {
   return { main: projectReadback(root), replies: replies.map(projectReadback), media };
 }
 
+function dayBounds(payload) {
+  const { accountId, start, end } = payload;
+  const from = Date.parse(start), to = Date.parse(end);
+  const utcSeconds = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+  if (typeof accountId !== 'string' || !/^[1-9][0-9]*$/.test(accountId) ||
+      typeof start !== 'string' || typeof end !== 'string' || !utcSeconds.test(start) || !utcSeconds.test(end) ||
+      !Number.isFinite(from) || !Number.isFinite(to) || to <= from || to - from > 2 * 86400000 ||
+      new Date(from).toISOString().replace('.000Z', 'Z') !== start ||
+      new Date(to).toISOString().replace('.000Z', 'Z') !== end ||
+      (from + 9 * 3600000) % 86400000 !== 0) throw Error('daybounds');
+  return { from, to };
+}
+
+export function projectDayRoots(response, payload) {
+  const { from, to } = dayBounds(payload);
+  if (!response || typeof response !== 'object' || Array.isArray(response) ||
+      !response.meta || typeof response.meta !== 'object' || Array.isArray(response.meta) ||
+      Object.hasOwn(response.meta, 'next_token') ||
+      (Object.hasOwn(response, 'errors') && (!Array.isArray(response.errors) || response.errors.length !== 0)) ||
+      (response.data !== undefined && !Array.isArray(response.data))) throw Error('incomplete');
+  const posts = response.data ?? [];
+  if (posts.length > 100 || !Number.isInteger(response.meta.result_count) ||
+      response.meta.result_count !== posts.length) throw Error('incomplete');
+  const seen = new Set(), roots = [];
+  for (const post of posts) {
+    if (!post || typeof post !== 'object' || Array.isArray(post)) throw Error('post');
+    const created = Date.parse(post.created_at);
+    if (typeof post.id !== 'string' || !/^[1-9][0-9]*$/.test(post.id) ||
+        post.author_id !== payload.accountId || seen.has(post.id) ||
+        !Number.isFinite(created) || created < from || created >= to ||
+        (post.referenced_tweets !== undefined && !Array.isArray(post.referenced_tweets))) throw Error('post');
+    seen.add(post.id);
+    const refs = post.referenced_tweets ?? [];
+    if (refs.some(ref => !ref || !['replied_to', 'retweeted', 'quoted'].includes(ref.type) ||
+        !/^[1-9][0-9]*$/.test(ref.id ?? ''))) throw Error('reference');
+    if (!refs.some(ref => ['replied_to', 'retweeted'].includes(ref.type))) {
+      roots.push({ id: post.id, createdAt: post.created_at });
+    }
+  }
+  return { accountId: payload.accountId, start: payload.start, end: payload.end, complete: true, roots };
+}
+
 async function main() {
 try {
   let raw = '';
@@ -39,7 +81,7 @@ try {
   }
   const request = JSON.parse(raw);
   const { action, payload } = request;
-  if (!['preflight', 'upload', 'maincreate', 'replycreate', 'read', 'threadread'].includes(action) ||
+  if (!['preflight', 'dayroots', 'upload', 'maincreate', 'replycreate', 'read', 'threadread'].includes(action) ||
       !payload || typeof payload !== 'object' || Array.isArray(payload)) throw Error('action');
   const names = ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET'];
   if (names.some(name => !process.env[name])) throw Error('auth');
@@ -50,6 +92,16 @@ try {
     const result = await client.v2.me();
     if (!/^\d+$/.test(result?.data?.id ?? '')) throw Error('identity');
     output = { userId: result.data.id };
+  } else if (action === 'dayroots') {
+    dayBounds(payload);
+    // Preserve the caller's cutoff: subtracting a lag would leave an uncounted
+    // interval while claiming complete=true. Provider rejection must fail closed.
+    const timeline = await client.v2.userTimeline(payload.accountId, {
+      start_time: payload.start, end_time: payload.end, max_results: 100,
+      'tweet.fields': 'author_id,created_at,referenced_tweets',
+    });
+    // One page only. Missing/partial data never becomes an empty account day.
+    output = projectDayRoots(timeline.data, payload);
   } else if (action === 'upload') {
     if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(payload.mime) ||
         typeof payload.data !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(payload.data)) throw Error('media');

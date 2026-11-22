@@ -108,7 +108,8 @@ def safe_publication_diagnostic(value):
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
                  analytics=None, reporter=None, social_publisher=None, buffer_publisher=None,
-                 social_cards=None, post_auditor=None):
+                 social_cards=None, post_auditor=None, clock=None):
+        self.clock = clock or (lambda: datetime.now(JST))
         self.execution_policy = execution_policy(config)
         for feature in ('socialGenerationEnabled', 'socialReviewEnabled'):
             social_feature_enabled(config, feature)
@@ -2605,7 +2606,8 @@ class Runtime:
     def publish_buffer_social(self, job, *, now=None):
         """Schedule or verify one exact approved Buffer proposal; direct X stays disabled."""
         self._require_running()
-        now = now or datetime.now(JST)
+        now = (self.clock() if (self.config.get('buffer') or {}).get('dailyRootLimit') == 3
+               else now or self.clock())
         if self.config.get('bufferPostingEnabled') is not True:
             raise ValueError('buffer_posting_disabled')
         if self.config.get('socialPostingEnabled') is not False:
@@ -2632,6 +2634,12 @@ class Runtime:
         if (approval.get('action') != 'approved' or approval.get('revision') != social['revision']
                 or approval.get('user_id') != self.config['slack']['user_id']):
             raise ValueError('current_social_owner_approval_required')
+        before = self._buffer_request_snapshot(social['revision'])
+        if before.get('phase') == 'deferred':
+            from buffer_publisher import deferred_result
+            waiting = deferred_result(before, now)
+            if waiting:
+                return waiting
         if self.buffer_publisher is None:
             buffer_env = dict(self.env)
             path = self.config.get('bufferEnvFile')
@@ -2640,11 +2648,10 @@ class Runtime:
                 if candidate.is_file() and not candidate.is_symlink():
                     buffer_env.update(env_file(candidate))
             from buffer_publisher import BufferPublisher
-            self.buffer_publisher = BufferPublisher(self.config, buffer_env, fetcher=self.catalog)
-        before = self._buffer_request_snapshot(social['revision'])
+            self.buffer_publisher = BufferPublisher(self.config, buffer_env, fetcher=self.catalog, clock=self.clock)
         schedule = social.get('bufferSchedule') or {}
         if (before.get('pending')
-                or before.get('phase') not in (None, 'scheduled', 'verified')
+                or before.get('phase') not in (None, 'deferred', 'scheduled', 'verified')
                 or current.get('stage') == 'social_scheduled'
                 and before.get('phase') not in ('scheduled', 'verified')
                 or current.get('stage') == 'social_scheduled'
@@ -2698,6 +2705,12 @@ class Runtime:
             raise caught
         if not isinstance(result, dict):
             raise ValueError('buffer_publication_requires_reconciliation')
+        if result.get('status') == 'deferred' and result.get('verified') is False:
+            from buffer_publisher import deferred_result
+            if (current['stage'] != 'social_approved' or after.get('phase') != 'deferred'
+                    or deferred_result(after, now) != result):
+                raise ValueError('buffer_publication_requires_reconciliation')
+            return result
         if result.get('status') in ('scheduled', 'pending') and result.get('verified') is False:
             interval = settings.get('duePollIntervalSeconds', 1800)
             scheduled = self.ledger.record_buffer_social_schedule(
@@ -2730,7 +2743,8 @@ class Runtime:
         return {'requestCount': state.get('bufferRequests', 0),
                 'rateLimits': copy.deepcopy(state.get('sharedRateLimits', [])),
                 'retryAfter': state.get('retryAfter'), 'phase': state.get('phase'),
-                'pending': copy.deepcopy(state.get('pending'))}
+                'pending': copy.deepcopy(state.get('pending')),
+                'revision': revision, 'result': copy.deepcopy(state.get('result'))}
 
     def _notify_buffer_scheduled(self, job):
         social = job.get('social') or {}

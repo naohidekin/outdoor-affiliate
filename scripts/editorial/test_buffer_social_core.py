@@ -576,6 +576,44 @@ class BufferSocialCoreTests(unittest.TestCase):
         self.assertEqual(900, state['lastObservation']['retryAfterSeconds'])
         self.assertEqual('buffer_rate_limit_429', state['holdReason'])
 
+    def test_deferred_capacity_wait_preserves_stage_budget_and_dispatches_no_error(self):
+        job = self._published_for_period()
+        self.runtime.make_social(job)
+        job = self.runtime.ledger.get_job(job['id'])
+        self.approve(job)
+        self.runtime.consume()
+        job = self.runtime.ledger.get_job(job['id'])
+        original = copy.deepcopy(job)
+        result = {'status': 'deferred', 'verified': False,
+                  'fingerprint': job['social']['revision'], 'bufferPostId': None,
+                  'dueAt': None, 'bufferStatus': 'not_created',
+                  'reason': 'buffer_daily_root_limit',
+                  'nextEligibleAt': (NOW + timedelta(days=1)).isoformat()}
+        class Adapter:
+            calls = 0
+            def schedule_or_check(inner, current, now=None):
+                inner.calls += 1
+                atomic(self.runtime.root / 'buffer-publications' /
+                       (job['social']['revision'] + '.json'), {
+                    'revision': job['social']['revision'], 'phase': 'deferred',
+                    'pending': None, 'bufferRequests': 0, 'result': result})
+                return copy.deepcopy(result)
+        adapter = Adapter()
+        self.runtime.buffer_publisher = adapter
+        self.config['bufferPostingEnabled'] = True
+        self.assertEqual(result, self.runtime.publish_buffer_social(job, now=NOW))
+        self.assertEqual(original, self.runtime.ledger.get_job(job['id']))
+        self.assertEqual(result, self.runtime.publish_buffer_social(job, now=NOW))
+        self.assertEqual(1, adapter.calls)
+        plan = DeterministicDispatcher(self.runtime).plan(NOW)
+        self.assertFalse(any(item.get('jobId') == job['id'] for item in plan['blocked']))
+        self.assertFalse(any(item.get('jobId') == job['id'] for item in plan['actions']))
+        period = self.runtime.ledger.production_schedule.period_key(NOW)
+        self.assertEqual(0, self.runtime.ledger.inspect_buffer_requests(period)['used'])
+        plan = DeterministicDispatcher(self.runtime).plan(NOW + timedelta(days=1))
+        self.assertTrue(any(item.get('kind') == 'publish_buffer_social'
+                            and item.get('jobId') == job['id'] for item in plan['actions']))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 """Small bounded GraphQL transport for Buffer's public API."""
 import json
 import re
+from datetime import datetime
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -120,6 +121,7 @@ class BufferAPI:
           account { organizations(filter: $organization) { id } }
           channel(input: $channel) {
             id organizationId name service serviceId isDisconnected isLocked isQueuePaused
+            timezone postingSchedule { day paused times }
             linkShortening { isEnabled }
           }
         }""", {'organization': {'organizationId': organization_id},
@@ -183,6 +185,56 @@ class BufferAPI:
           post(input: $input) { %s }
         }""" % POST_FIELDS, {'input': {'id': post_id}})
         return data.get('post')
+
+    def pending_posts(self, organization_id, channel_id):
+        """All outstanding reservations, including old-created/custom posts."""
+        if any(not isinstance(value, str) or not value.strip()
+               for value in (organization_id, channel_id)):
+            raise ValueError('buffer_binding_mismatch')
+        data = self.execute("""query BufferPendingPosts($input: PostsInput!) {
+          posts(input: $input, first: 100) {
+            edges { node { %s } } pageInfo { hasNextPage }
+          }
+        }""" % POST_FIELDS, {'input': {'organizationId': organization_id, 'filter': {
+            'channelIds': [channel_id], 'status': ['draft', 'scheduled', 'sending']}}})
+        result = data.get('posts')
+        if (not isinstance(result, dict)
+                or not isinstance(result.get('pageInfo'), dict)
+                or result['pageInfo'].get('hasNextPage') is not False):
+            raise ValueError('buffer_pending_posts_incomplete')
+        edges = result.get('edges')
+        if (not isinstance(edges, list) or len(edges) > 100
+                or any(not isinstance(edge, dict) or not isinstance(edge.get('node'), dict)
+                       for edge in edges)):
+            raise ValueError('buffer_pending_posts_invalid')
+        posts, seen = [], set()
+        for edge in edges:
+            post = edge['node']
+            post_id = post.get('id')
+            status = post.get('status')
+            if (not isinstance(post_id, str) or not post_id.strip() or post_id in seen
+                    or post.get('channelId') != channel_id
+                    or post.get('channelService') != 'twitter'
+                    or status not in ('draft', 'scheduled', 'sending')):
+                raise ValueError('buffer_pending_posts_invalid')
+            due_at = post.get('dueAt')
+            if status in ('scheduled', 'sending') or due_at is not None:
+                # An unknown sending time is not an empty reservation. Surface
+                # uncertainty to the publisher; never synthesize a timestamp.
+                if (not isinstance(due_at, str) or not re.fullmatch(
+                        r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?'
+                        r'(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)', due_at)
+                        or due_at.endswith('-00:00')):
+                    raise ValueError('buffer_pending_posts_invalid')
+                try:
+                    parsed = datetime.fromisoformat(due_at.replace('Z', '+00:00'))
+                    if parsed.utcoffset() is None:
+                        raise ValueError
+                except ValueError:
+                    raise ValueError('buffer_pending_posts_invalid') from None
+            seen.add(post_id)
+            posts.append(post)
+        return posts
 
     def create_post(self, value):
         data = self.execute("""mutation BufferCreatePost($input: CreatePostInput!) {

@@ -8,6 +8,7 @@ from io import BytesIO
 import os
 from pathlib import Path
 import re
+import time
 from urllib.parse import urlparse
 import warnings
 
@@ -41,16 +42,33 @@ def _iso(value):
     return value.astimezone(UTC).isoformat().replace('+00:00', 'Z')
 
 
+def deferred_result(state, now):
+    """Return a known deferral while waiting; unknown effects never use this phase."""
+    if state.get('phase') != 'deferred':
+        return None
+    result = state.get('result')
+    _require(state.get('pending') is None and isinstance(result, dict)
+             and result.get('status') == 'deferred' and result.get('verified') is False
+             and result.get('fingerprint') == state.get('revision')
+             and isinstance(result.get('reason'), str)
+             and result.get('dueAt') is None, 'buffer_defer_marker_invalid')
+    eligible = result.get('nextEligibleAt')
+    if eligible is None or now < _aware(eligible, 'buffer_defer_marker_invalid'):
+        return copy.deepcopy(result)
+    return None
+
+
 class BufferPublisher:
     """Schedules one approved X thread and later verifies the actual X posts."""
 
-    def __init__(self, config, env, *, client=None, fetcher=None, x_client=None):
+    def __init__(self, config, env, *, client=None, fetcher=None, x_client=None, clock=None):
         self.config, self.env = dict(config), dict(env)
         self.settings = dict(config.get('buffer') or {})
         self.root = Path(config['stateRoot'])
         self.client = client or BufferAPI(self.env.get('BUFFER_API_KEY'))
         self.image_reader = SocialPublisher(config, env, client=lambda *_: None, fetcher=fetcher)
         self.x_client = x_client or self.image_reader._node
+        self.clock = clock or (lambda: datetime.now(JST))
 
     def preflight(self):
         _require(self.config.get('bufferPostingEnabled') is True, 'buffer_posting_disabled')
@@ -74,8 +92,37 @@ class BufferPublisher:
         return self.schedule_or_check(job, now=now)
 
     def schedule_or_check(self, job, now=None):
+        limit = self.settings.get('dailyRootLimit')
+        _require(limit is None or type(limit) is int and limit == 3, 'buffer_daily_root_limit_invalid')
+        if limit is None:
+            return self._schedule_or_check(job, now)
+        binding = self._binding()
+        gap = self.settings.get('minimumRootGapMinutes', 120)
+        _require(type(gap) is int and gap >= 120, 'buffer_minimum_root_gap_invalid')
+        _require(re.fullmatch(r'[1-9][0-9]*', binding['xAccountId']) is not None,
+                 'buffer_binding_mismatch')
+        self._private_root()
+        folder = self.root / 'buffer-publications'
+        folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+        _require(folder.stat().st_mode & 0o777 == 0o700, 'buffer_journal_not_private')
+        path = folder / ('account-' + binding['xAccountId'] + '.flock')
+        fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(fd, 'w') as lock:
+            _require(os.fstat(lock.fileno()).st_mode & 0o777 == 0o600, 'buffer_account_lock_invalid')
+            lock_started = time.monotonic()
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if now is not None:
+                now = _aware(now, 'buffer_now_invalid') + timedelta(seconds=time.monotonic() - lock_started)
+            return self._schedule_or_check(job, now)
+
+    def _schedule_or_check(self, job, now=None):
         _require(self.config.get('bufferPostingEnabled') is True, 'buffer_posting_disabled')
-        now = _aware(now or datetime.now(JST), 'buffer_now_invalid')
+        guarded = self.settings.get('dailyRootLimit') == 3
+        now = _aware(self.clock() if guarded else now or self.clock(), 'buffer_now_invalid')
+        started = time.monotonic()
+        def effective_now():
+            elapsed = now + timedelta(seconds=time.monotonic() - started)
+            return max(elapsed, _aware(self.clock(), 'buffer_now_invalid')) if guarded else elapsed
         proposal, revision = self._validate(job)
         binding = self._binding()
         self._private_root()
@@ -103,6 +150,16 @@ class BufferPublisher:
                 return copy.deepcopy(state['result'])
             if state.get('pending'):
                 return self._unverified(state, 'buffer_effect_result_unknown')
+            waiting = deferred_result(state, now)
+            if waiting:
+                return waiting
+            needs_schedule = not state.get('dueAt')
+            # Normal scheduling costs at most eight calls; each due poll can
+            # require one daily preflight plus one post read. X/media readback
+            # makes no Buffer calls. Rollback's ten-call branch also fits.
+            verification_calls = 2 * self._poll_policy()[0] if guarded else 0
+            if guarded and needs_schedule and not self._request_room(state, max(10, 8 + verification_calls)):
+                return self._defer(marker, state, 'buffer_daily_guard_budget_hold')
             next_check = _aware(state['nextCheckAt'], 'buffer_poll_marker_invalid') if state.get('nextCheckAt') else None
             if next_check and now < next_check:
                 return self._result('pending', state, verified=False)
@@ -112,12 +169,39 @@ class BufferPublisher:
             due_for_poll = _aware(state['dueAt'], 'buffer_due_at_invalid') if state.get('dueAt') else None
             if due_for_poll and now >= due_for_poll:
                 self._reserve_due_attempt(marker, state, now)
-            if self._preflight_due(state, now):
+            channel = None
+            if self._preflight_due(state, now) or guarded and needs_schedule:
                 channel = self._buffer_call(marker, state, 'preflight', binding['organizationId'],
                                             binding['channelId'])
                 self._check_channel(channel, binding)
                 state['preflightAt'] = now.isoformat()
                 _atomic(marker, state)
+            if guarded and needs_schedule:
+                try:
+                    slots = self._guard_slots(channel, effective_now())
+                except ValueError:
+                    return self._defer(marker, state, 'buffer_posting_schedule_unverified')
+                wait = self._slot_wait(slots, effective_now())
+                if wait:
+                    return self._defer(marker, state, 'buffer_due_guard_time', next_eligible=wait)
+                try:
+                    count, observed, occupied = self._day_roots(
+                        marker, state, binding, now.astimezone(JST).date(),
+                        effective_now(), exclude_id=state.get('postId'))
+                except Exception:
+                    return self._terminal_hold(marker, state, 'buffer_daily_capacity_unverified')
+                if count >= 3:
+                    return self._defer(marker, state, 'buffer_daily_root_limit', now)
+                checked_now = effective_now()
+                if checked_now.astimezone(JST).date() != now.astimezone(JST).date():
+                    return self._defer(marker, state, 'buffer_capacity_day_changed',
+                                       next_eligible=checked_now + timedelta(seconds=90))
+                candidate = next((slot for slot in slots if slot >= checked_now and slot not in occupied), None)
+                if candidate is None:
+                    return self._defer(marker, state, 'buffer_posting_schedule_no_free_slot')
+                if self._gap_conflict(candidate, observed):
+                    return self._defer(marker, state, 'buffer_minimum_root_gap',
+                                       next_eligible=candidate + timedelta(seconds=90))
             if not state.get('postId'):
                 require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 self._validate_images(proposal)
@@ -130,6 +214,13 @@ class BufferPublisher:
                     return self._terminal_hold(marker, state, 'buffer_duplicate_post_hold')
                 if not self._mutation_quota_ready():
                     return self._terminal_hold(marker, state, 'buffer_mutation_quota_hold')
+                if guarded:
+                    wait = self._slot_wait(slots, effective_now())
+                    if effective_now().astimezone(JST).date() != now.astimezone(JST).date():
+                        return self._defer(marker, state, 'buffer_capacity_day_changed',
+                                           next_eligible=effective_now() + timedelta(seconds=90))
+                    if wait:
+                        return self._defer(marker, state, 'buffer_due_guard_time', next_eligible=wait)
                 state.update(phase='create_draft', pending={'action': 'createPost'})
                 _atomic(marker, state)
                 try:
@@ -145,8 +236,20 @@ class BufferPublisher:
                          'buffer_draft_readback_mismatch')
             post = self._buffer_call(marker, state, 'post', state['postId'])
             if post.get('status') == 'draft':
+                if guarded and not needs_schedule:
+                    return self._terminal_hold(marker, state, 'buffer_scheduled_post_became_draft')
                 require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
                 _require(self._matches_content(post, proposal), 'buffer_draft_readback_mismatch')
+                if guarded and (not self._request_room(state, max(5, 3 + verification_calls))
+                                or not self._guard_quota_ready(5)):
+                    return self._defer(marker, state, 'buffer_daily_guard_quota_or_budget_hold')
+                if guarded:
+                    wait = self._slot_wait(slots, effective_now())
+                    if effective_now().astimezone(JST).date() != now.astimezone(JST).date():
+                        return self._defer(marker, state, 'buffer_capacity_day_changed',
+                                           next_eligible=effective_now() + timedelta(seconds=90))
+                    if wait:
+                        return self._defer(marker, state, 'buffer_due_guard_time', next_eligible=wait)
                 if not self._mutation_quota_ready():
                     return self._terminal_hold(marker, state, 'buffer_mutation_quota_hold')
                 state.update(phase='schedule', pending={'action': 'editPost'})
@@ -155,13 +258,39 @@ class BufferPublisher:
                     edited = self._buffer_call(marker, state, 'edit_post',
                                                self._edit_input(state['postId']), mutation=True)
                     _require(self._matches_scheduled(edited, proposal), 'buffer_schedule_readback_mismatch')
+                    if guarded:
+                        _require(edited.get('id') == state['postId'], 'buffer_schedule_identity_mismatch')
                     post = self._buffer_call(marker, state, 'post', state['postId'])
                     _require(self._matches_scheduled(post, proposal), 'buffer_schedule_readback_mismatch')
+                    if guarded:
+                        _require(post.get('id') == state['postId'] and post.get('dueAt') == edited.get('dueAt'),
+                                 'buffer_schedule_readback_mismatch')
                 except Exception:
                     if state.get('phase') == 'unverified' and isinstance(state.get('result'), dict):
                         return copy.deepcopy(state['result'])
                     return self._unverified(state, 'buffer_schedule_result_unknown')
                 due = _aware(post.get('dueAt'), 'buffer_due_at_invalid')
+                if guarded:
+                    state.update(phase='capacity_check', pending={'action': 'capacity_check'},
+                                 rejectedDueAt=_iso(due))
+                    _atomic(marker, state)
+                    if due not in slots:
+                        return self._rollback_to_draft(marker, state, proposal, post,
+                                                       'buffer_due_schedule_mismatch', effective_now())
+                    try:
+                        count, actual_observed, _ = self._day_roots(
+                            marker, state, binding, due.astimezone(JST).date(),
+                            effective_now(), exclude_id=state['postId'])
+                        reason = ('buffer_daily_root_limit' if count >= 3 else
+                                  'buffer_due_guard_time' if due - effective_now() < timedelta(seconds=90)
+                                  else 'buffer_minimum_root_gap' if self._gap_conflict(
+                                      due, observed + actual_observed)
+                                  else None)
+                    except Exception:
+                        reason = 'buffer_daily_capacity_unverified'
+                    if reason:
+                        return self._rollback_to_draft(marker, state, proposal, post, reason,
+                                                       effective_now())
                 state.update(phase='scheduled', pending=None, dueAt=_iso(due), nextCheckAt=_iso(due),
                              scheduledReadback=post)
                 _atomic(marker, state)
@@ -175,6 +304,144 @@ class BufferPublisher:
             if now < due:
                 return self._result('pending', state, verified=False)
             return self._poll_sent(marker, state, post, proposal, due, binding, now)
+
+    def _request_room(self, state, needed):
+        maximum = self.settings.get('maxBufferRequestsPerPost', 18)
+        _require(type(maximum) is int and 1 <= maximum <= 18, 'buffer_request_budget_invalid')
+        return maximum - state.get('bufferRequests', 0) >= needed
+
+    @staticmethod
+    def _guard_slots(channel, now):
+        _require(isinstance(channel, dict) and channel.get('timezone') == 'Asia/Tokyo',
+                 'buffer_posting_timezone_invalid')
+        rows = channel.get('postingSchedule')
+        weekdays = ('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun')
+        _require(isinstance(rows, list) and len(rows) == 7, 'buffer_posting_schedule_invalid')
+        by_day = {}
+        for row in rows:
+            _require(isinstance(row, dict) and row.get('day') in weekdays
+                     and row['day'] not in by_day and type(row.get('paused')) is bool
+                     and isinstance(row.get('times'), list) and len(row['times']) <= 100
+                     and all(isinstance(value, str) and re.fullmatch(r'(?:[01][0-9]|2[0-3]):[0-5][0-9]', value)
+                             for value in row['times']), 'buffer_posting_schedule_invalid')
+            by_day[row['day']] = row
+        midnight = datetime.combine(now.astimezone(JST).date(), datetime.min.time(), tzinfo=JST)
+        slots = []
+        for offset in range(-1, 8):
+            day = midnight + timedelta(days=offset)
+            row = by_day[weekdays[day.weekday()]]
+            if not row['paused']:
+                for value in row['times']:
+                    hour, minute = map(int, value.split(':'))
+                    slots.append(day.replace(hour=hour, minute=minute))
+        _require(any(slot >= now for slot in slots), 'buffer_posting_schedule_empty')
+        return sorted(set(slots))
+
+    @staticmethod
+    def _slot_wait(slots, now):
+        nearby = [slot for slot in slots if now - timedelta(seconds=90) < slot <= now + timedelta(seconds=90)]
+        return max(nearby) + timedelta(seconds=90) if nearby else None
+
+    def _gap_conflict(self, candidate, observed):
+        gap = timedelta(minutes=self.settings.get('minimumRootGapMinutes', 120))
+        return any(abs(candidate - value) < gap for value in observed)
+
+    def _guard_quota_ready(self, needed):
+        return (self._mutation_quota_ready() and all(
+            item['remaining'] >= self.settings.get('mutationRemainingFloor', 5) + needed
+            for item in self.client.rate_limits))
+
+    def _day_roots(self, marker, state, binding, day, now, *, exclude_id=None):
+        today = now.astimezone(JST).date()
+        _require(day >= today, 'buffer_capacity_day_past')
+        start = datetime.combine(day, datetime.min.time(), tzinfo=JST)
+        end = start + timedelta(days=1)
+        roots, observed, occupied = [], [], set()
+        if day == today:
+            identity = self.x_client('preflight', {})
+            _require(isinstance(identity, dict) and identity.get('userId') == binding['xAccountId'],
+                     'buffer_native_binding_mismatch')
+            # X end_time accepts whole-second UTC only. This snapshot is complete
+            # through that exact exclusive cutoff, with subsecond freshness.
+            cutoff = now.replace(microsecond=0)
+            native_start = start - timedelta(days=1)
+            query = {'accountId': binding['xAccountId'], 'start': _iso(native_start), 'end': _iso(cutoff)}
+            native = self.x_client('dayroots', query)
+            _require(isinstance(native, dict) and native.get('complete') is True
+                     and all(native.get(key) == value for key, value in query.items()),
+                     'buffer_native_day_incomplete')
+            roots = native.get('roots')
+            _require(isinstance(roots, list) and len(roots) <= 100, 'buffer_native_day_incomplete')
+            ids = set()
+            for item in roots:
+                _require(isinstance(item, dict) and isinstance(item.get('id'), str)
+                         and re.fullmatch(r'[1-9][0-9]*', item['id']) is not None
+                         and item['id'] not in ids, 'buffer_native_day_invalid')
+                created = _aware(item.get('createdAt'), 'buffer_native_day_invalid')
+                _require(native_start <= created < cutoff, 'buffer_native_day_invalid')
+                ids.add(item['id'])
+                observed.append(created)
+        posts = self._buffer_call(marker, state, 'pending_posts', binding['organizationId'], binding['channelId'])
+        _require(isinstance(posts, list) and len(posts) <= 100, 'buffer_pending_posts_invalid')
+        reservations, ids = 0, set()
+        for post in posts:
+            _require(isinstance(post, dict) and isinstance(post.get('id'), str) and post['id']
+                     and post['id'] not in ids and post.get('channelId') == binding['channelId']
+                     and post.get('channelService') == 'twitter'
+                     and post.get('status') in ('draft', 'scheduled', 'sending'),
+                     'buffer_pending_posts_invalid')
+            ids.add(post['id'])
+            if post['status'] == 'draft':
+                continue
+            due = _aware(post.get('dueAt'), 'buffer_pending_due_invalid')
+            _require(post['status'] != 'sending' and due >= now, 'buffer_pending_sending_unknown')
+            if post['id'] != exclude_id and start <= due < end:
+                reservations += 1
+            if post['id'] != exclude_id:
+                observed.append(due)
+                if post.get('isCustomScheduled') is False and post.get('shareMode') == 'addToQueue':
+                    occupied.add(due)
+        native_count = sum(start <= value < end for value in observed[:len(roots)])
+        return native_count + reservations, observed, occupied
+
+    def _defer(self, marker, state, reason, now=None, *, next_eligible=None):
+        eligible = next_eligible.isoformat() if next_eligible else None
+        if now is not None:
+            eligible = (datetime.combine(now.astimezone(JST).date(), datetime.min.time(), tzinfo=JST)
+                        + timedelta(days=1)).isoformat()
+        result = dict(self._result('deferred', state, False), reason=reason,
+                      dueAt=None, bufferStatus='draft' if state.get('postId') else 'not_created',
+                      nextEligibleAt=eligible)
+        state.update(phase='deferred', pending=None, dueAt=None, nextCheckAt=None, result=result)
+        _atomic(marker, state)
+        return result
+
+    def _rollback_to_draft(self, marker, state, proposal, post, reason, now):
+        # Official EditPostInput.saveToDraft moves a scheduled post back to draft:
+        # https://developers.buffer.com/types/EditPostInput.html
+        _require(post['id'] == state['postId'] and self._matches_scheduled(post, proposal),
+                 'buffer_rollback_target_invalid')
+        state.update(phase='rollback_draft', pending={'action': 'saveToDraft'})
+        _atomic(marker, state)
+        value = dict(self._edit_input(state['postId']), saveToDraft=True)
+        try:
+            edited = self._buffer_call(marker, state, 'edit_post', value, mutation=True)
+            _require(edited.get('id') == state['postId'] and edited.get('status') == 'draft'
+                     and self._matches_content(edited, proposal),
+                     'buffer_rollback_readback_mismatch')
+            actual = self._buffer_call(marker, state, 'post', state['postId'])
+            _require(actual.get('id') == state['postId'] and actual.get('status') == 'draft'
+                     and self._matches_content(actual, proposal), 'buffer_rollback_readback_mismatch')
+        except Exception:
+            # Retain pending intent even for an uncertain readback; never replay.
+            return self._unverified(state, 'buffer_rollback_result_unknown')
+        state['rollbackReadback'] = actual
+        if reason in ('buffer_daily_capacity_unverified', 'buffer_due_schedule_mismatch'):
+            return self._terminal_hold(marker, state, reason)
+        if reason in ('buffer_due_guard_time', 'buffer_minimum_root_gap'):
+            return self._defer(marker, state, reason,
+                               next_eligible=_aware(post['dueAt'], 'buffer_due_at_invalid') + timedelta(seconds=90))
+        return self._defer(marker, state, reason, now)
 
     def _binding(self):
         result = {key: self.settings.get(key) for key in ('organizationId', 'channelId', 'xAccountId')}

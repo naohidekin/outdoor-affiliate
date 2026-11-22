@@ -215,8 +215,20 @@ class DeterministicDispatcher:
                   and ((job.get('social') or {}).get('proposal') or {}).get('deliveryMode') == 'buffer_x'
                   and self.runtime.config.get('bufferPostingEnabled') is True):
                 journal = self._buffer_journal(job)
+                if journal and journal.get('phase') == 'deferred' and not journal.get('pending'):
+                    from buffer_publisher import deferred_result
+                    try:
+                        waiting = deferred_result(journal, now)
+                    except ValueError:
+                        base['blocked'].append({'jobId': job['id'],
+                                                'reason': 'buffer_defer_marker_invalid'})
+                        continue
+                    if waiting:
+                        if waiting.get('nextEligibleAt') is None:
+                            base['blocked'].append({'jobId': job['id'], 'reason': waiting['reason']})
+                        continue
                 if journal and (journal.get('pending')
-                                or journal.get('phase') not in ('scheduled', 'verified')):
+                                or journal.get('phase') not in ('deferred', 'scheduled', 'verified')):
                     base['blocked'].append({'jobId': job['id'],
                                             'reason': 'buffer_publication_requires_reconciliation'})
                 else:
