@@ -616,6 +616,9 @@ class Models:
             "Preserve the exact text, occurrence count and order of all headings, numbers, URLs, link destinations, "
             "tables, code, product IDs, shortcodes and disclosure lines. Do not duplicate, move or remove these protected "
             "elements while expanding prose; do not repeat protected literals in added explanations. "
+            "Kanji numeral occurrences are protected too, including ordinary wording such as 一方, 一枚 and 二つ. "
+            "Write added explanations without new Arabic digits or Kanji numerals; use natural nonnumeric wording "
+            "such as ただし, 肌着 and 両者. Do not restate existing material percentages in added paragraphs. "
             "Do not pad with repeated text or specifications. Do not reclassify the format. "
             "This is the only repair attempt; count ONLY article.content and satisfy the original hard range.",
             dict(theme=theme, context=context, previousCandidate=previous, validation=feedback),
