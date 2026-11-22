@@ -314,8 +314,12 @@ class ModelBudget:
                 if member.get('batchCallCap') != cap:
                     raise ValueError('supplemental batch budget conflict')
                 members.append(member_id)
-        if context['articleId'] not in members or len(members) > 3:
+        if context['articleId'] not in members:
             raise ValueError('invalid supplemental batch membership')
+        from supplemental_reselection import BATCH, active_jobs, receipt
+        if len(members) > 3 or (batch_id == BATCH and receipt(db) is not None):
+            jobs = [json.loads(raw) for raw, in db.execute('SELECT data FROM jobs')]
+            active_jobs(db, jobs, batch_id)
         placeholders = ','.join('?' for _ in members)
         calls = db.execute('SELECT count(*) FROM model_budget_reservations WHERE article_id IN ('
                            + placeholders + ')', members).fetchone()[0]

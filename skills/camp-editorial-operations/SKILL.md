@@ -51,6 +51,14 @@ in_flight/unknown、公開・投稿・送達結果が不明の場合は、既存
 今後の必要販路欠落は既存display gate後・writer前に明示NAの対象・理由・確認者・鮮度を検査し、
 不足ならモデルを呼ばず保留する。詳細なCLI引数と検証条件は上記の運用文書を参照する。
 
+2026-11-23の肌着保留とMontbell中心の3枠再選定は`supplemental_reselection.prepare/apply`を使う。
+本人指示・既存owner-skin-hold.json・新旧manifest SHAを結び、同batch／notBefore／3slot／batch96を維持する。
+3テーマ確定後、差替slot2だけsource-readyを必須とし、未制作1／3の証拠待ちは通常producerに残せる。
+applyはrunner lease内で再照合し、旧skinのrejected／decided／本文／usageを変えず別IDのslot2を作る。
+今回の旧skin IDに束縛したreceipt以外でrejectedを集計除外しない。旧版の制作・承認・送達・公開・SNSはholdで拒否する。
+新jobは旧skinのarticle32を共有し、period128・batch96・pending3も維持。reportの新job実API費用と旧分込み共有残量を分ける。
+候補未確定の適用・有料制作・旧不可視draftの削除／公開・本人承認代行は禁止。詳細は運用文書を参照する。
+
 11/16追加3記事のdraft文字数・内部リンク違反を修正版で直す場合だけ、
 `operations.py retry-corrected-stage`へ旧失敗のexact input keyを指定する。
 まずdry-runで対象を照合し、本人の修正指示がある場合だけ`--execute`を使う。

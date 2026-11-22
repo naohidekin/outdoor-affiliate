@@ -249,6 +249,7 @@ def _budget_snapshot(root, config, now):
                               ('calls', 'inputTokens', 'outputTokens')}
         return value
     return {'status': 'read_only', 'periodKey': raw['periodKey'],
+            'articleLimits': copy.deepcopy(raw['limits']['article']),
             'period': projected(raw['period'], raw['limits']['period']),
             'articles': {article: projected(value, raw['limits']['article'])
                          for article, value in raw['articles'].items()},
@@ -445,11 +446,33 @@ def usage_cost_report(root, config, kind='weekly', now=None, period_key=None,
                                     'knownCalls': known, 'totalCalls': total_calls,
                                     'complete': known == total_calls}
     budget = _budget_snapshot(root, config, now)
-    if article_ids is not None and budget.get('status') == 'read_only':
-        budget['articles'] = {key: value for key, value in budget['articles'].items()
-                              if key in article_ids}
-        budget['articleLabels'] = {key: value for key, value in budget['articleLabels'].items()
-                                   if key in article_ids}
+    from supplemental_reselection import report_aliases
+    alias_error = False
+    try:
+        aliases, batch_members = report_aliases(root, article_ids)
+    except (ValueError, TypeError, KeyError, sqlite3.Error):
+        aliases, batch_members = {}, None
+        alias_error = True
+        budget = {'status': 'requires_reconciliation', 'reason': 'replacement_budget_alias_invalid'}
+    budget_ids = sorted({aliases.get(id, id) for id in article_ids}) if article_ids is not None else None
+    if budget.get('status') == 'read_only':
+        if article_ids is not None:
+            budget['articles'] = {key: value for key, value in budget['articles'].items()
+                                  if key in budget_ids}
+            budget['articleLabels'] = {key: value for key, value in budget['articleLabels'].items()
+                                       if key in budget_ids}
+        for old in set(aliases.values()):
+            if old not in budget['articles']:
+                limits = budget['articleLimits']
+                budget['articles'][old] = {**{key: 0 for key in limits},
+                    'ratios': {key: 0 for key in limits}, 'remaining': copy.deepcopy(limits)}
+        labels = _article_labels(root, list(aliases))
+        budget['sharedArticleBudgets'] = {
+            new: {'budgetArticleId': old, 'articleLabel': labels.get(new, new),
+                  'includesPriorRejectedUsage': True, 'totals': copy.deepcopy(budget['articles'].get(old))}
+            for new, old in aliases.items()}
+        for new, old in aliases.items():
+            budget['articleLabels'][old] = labels.get(new, new) + '（旧保留記事分を含む共有予算）'
     codex_task = _codex_task_usage(root, now)
     return {
         'kind': kind,
@@ -470,9 +493,11 @@ def usage_cost_report(root, config, kind='weekly', now=None, period_key=None,
                                    'qualification': 'rough_estimate_at_current_configured_rates'},
                   'unknownModels': sorted(unknown_models)},
         'articleFilter': article_ids,
-        'batchBudget': _batch_budget(root, article_ids, batch_call_cap),
+        'budgetAliases': aliases,
+        'batchBudget': ({'status': 'requires_reconciliation'} if alias_error
+                        else _batch_budget(root, batch_members or budget_ids, batch_call_cap)),
         'reservations': {'unknownCalls': _unknown_reservations(
-                             root, budget.get('periodKey'), article_ids)
+                             root, budget.get('periodKey'), budget_ids)
                          if budget.get('periodKey') else None,
                          'label': 'reserved_not_measured'},
         'budget': budget,
@@ -552,6 +577,13 @@ def usage_cost_summary(root, config, kind='weekly', now=None, period_key=None,
             label = budget['articleLabels'].get(article, '記事scope')
             lines.append(f'・記事予算 {label}: calls {value["ratios"]["calls"]:.1%}／'
                          f'入力 {value["ratios"]["inputTokens"]:.1%}／出力 {value["ratios"]["outputTokens"]:.1%}')
+        for new_id, shared in budget.get('sharedArticleBudgets', {}).items():
+            remaining = (shared.get('totals') or {}).get('remaining', {}).get('calls')
+            attribution = ('指定した記事IDの記録のみ' if article_ids is not None
+                           else '各呼出しの元job ID帰属のまま集計（旧分を新jobへ付け替えない）')
+            lines.append(f'・置換記事 {shared["articleLabel"]}（実API job {new_id}／共有予算ID {shared["budgetArticleId"]}）: '
+                         f'実API量・費用は{attribution}。'
+                         f'記事32の予算は旧保留記事分を含む共有枠、残calls {remaining}')
         if len(budget['articles']) > 5:
             lines.append(f'・記事予算は残り{len(budget["articles"]) - 5}件省略')
     else:

@@ -210,6 +210,18 @@ writer／polishの再呼出し、旧キャッシュ依存の偽装、試行・32
 claim後の失敗・unknownは再開せず照合待ち。今後の必要販路欠落は既存display gate後、writer前に
 型付きNAの対象・代替販路・理由・確認者・6時間以内の鮮度を検査し、不足ならモデルを呼ばず保留する。
 
+2026-11-23のMontbell中心への再選定は`supplemental_reselection.prepare/apply`の限定operator APIを使う。
+`prepare(runtime, new_manifest_path, actor, evidence)`は読取専用で、本人指示と既存
+`research/winter-depth-20261123-reselection/owner-skin-hold.json`、新旧manifestのSHAを固定する。
+同じwinter-depth batch・notBefore・3slot・batch96を維持し、新3テーマ確定と差替slot2のsource-readyを必須とする。
+未制作slot1／3は証拠待ちを許し、通常producerが各枠のfresh sourceを確認してから進める。
+`apply(runtime, plan)`はruntime.flock内で再照合し、旧skinをrejected／decidedのまま別IDのslot2候補を作る。
+Supabaseの旧不可視draft・旧job・決定・usageを変更せず、今回のskin ID／batch／slot2に束縛したreceiptだけを
+現行3slot集計へ反映する。他のrejectedを一般除外しない。holdは旧版の制作・再承認・送達・公開・SNSを拒否する。
+新slot2は旧skin予算IDを継承し、article32・batch96・period128・pending3を保持する。
+実API量／費用のreportは新job帰属を保ち、共有article32残量は旧消費込みと明示する。累積・増分を混同しない。
+候補未確定の適用・有料制作・公開／SNSの本人承認の代行には使わない。
+
 同じ入力で失敗した工程を通常のtickで繰り返さない。既知の失敗のみ、対象を限定した
 明示的な再試行を初回に加えて1回まで許す。上限到達後は停止理由を報告する。
 途中停止・結果不明・壊れた記録は照合待ちとし、入力変更でも迂回しない。

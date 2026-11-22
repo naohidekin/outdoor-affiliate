@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import sqlite3
 
 from production_verification import verified_article_deliveries
 from reporting import _atomic
@@ -105,6 +106,11 @@ def verify_supplemental_batch(root,jobs,batch_id,scope,send,*,now=None,not_befor
     selected = sorted([job for job in jobs if isinstance(job,dict)
                        and job.get('kind') == 'supplemental_article'
                        and job.get('batchId') == batch_id],key=lambda job:job.get('batchSlot',99))
+    db_path = Path(root) / 'ledger.sqlite3'
+    if db_path.is_file():
+        from supplemental_reselection import active_jobs
+        with sqlite3.connect(db_path) as db:
+            selected = sorted(active_jobs(db, jobs, batch_id), key=lambda job: job['batchSlot'])
     if (len(selected) > 3 or len({job.get('batchSlot') for job in selected}) != len(selected)
             or any(job.get('batchSlot') not in (1,2,3) for job in selected)
             or any(re.fullmatch(r'[a-f0-9]{64}',str(job.get('revision',''))) is None

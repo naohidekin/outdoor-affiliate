@@ -1,10 +1,12 @@
 """One owner-bound materials guide never grants a general mixed-apparel route."""
 import copy
+from pathlib import Path
+import tempfile
 import unittest
 from urllib.parse import quote
 
 from apparel_identity import apparel_contract, public_binding
-from ledger import fingerprint
+from ledger import Ledger, fingerprint
 from quality import inspect_bundle
 from test_quality import bundle as base_bundle
 from materials_guide_contract import (ARTICLE_ID, FIELD, REQUIRED_STATEMENT,
@@ -138,6 +140,9 @@ class MaterialsGuideTests(unittest.TestCase):
             if wrong_job:
                 job['id'] = 'other'
             runtime = object.__new__(Runtime)
+            state = tempfile.TemporaryDirectory()
+            self.addCleanup(state.cleanup)
+            runtime.ledger = Ledger(Path(state.name) / 'state', 'owner')
             runtime.config = {'socialCardsEnabled': False}
             runtime._require_running = lambda: None
             runtime._wise_context = lambda context: context

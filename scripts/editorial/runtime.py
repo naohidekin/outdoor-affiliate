@@ -652,21 +652,21 @@ class Runtime:
 
     def _supplemental_manifest(self):
         from supplemental_topics import load_batch
-        return load_batch(self.config.get('supplementalApparelBatchManifest'))
+        from supplemental_reselection import effective_manifest
+        return effective_manifest(self.ledger, load_batch(self.config.get('supplementalApparelBatchManifest')))
 
     def supplemental_due(self, now):
         if self.config.get('supplementalApparelEnabled') is not True:
             return False
         manifest = self._supplemental_manifest()
         not_before = datetime.fromisoformat(manifest['notBefore'])
-        complete = sum(job.get('kind') == 'supplemental_article'
-                       and job.get('batchId') == manifest['batchId']
-                       for job in self.ledger.list_jobs()) >= manifest['maxArticles']
+        active = self.ledger.active_supplemental_jobs(manifest['batchId'])
+        complete = len(active) >= manifest['maxArticles']
         if now.astimezone(JST) < not_before or complete:
             return False
         candidates = any(job.get('kind') == 'supplemental_article'
                          and job.get('batchId') == manifest['batchId']
-                         and job.get('stage') == 'candidate' for job in self.ledger.list_jobs())
+                         and job.get('stage') == 'candidate' for job in active)
         if candidates:
             return True
         marker = self.root / 'supplemental-batches' / (manifest['batchId'] + '.json')
@@ -739,9 +739,8 @@ class Runtime:
                         if (job.get('kind') != 'supplemental_article'
                             or job.get('batchId') != manifest['batchId'])]
         resolved = resolve_batch(manifest, context, other_themes, now)
-        bound = {job.get('batchSlot'): job for job in jobs
-                 if job.get('kind') == 'supplemental_article'
-                 and job.get('batchId') == manifest['batchId']}
+        active = self.ledger.active_supplemental_jobs(manifest['batchId'], jobs)
+        bound = {job.get('batchSlot'): job for job in active}
         state = {'schemaVersion': 1, 'batchId': manifest['batchId'],
                  'manifestFingerprint': resolved['manifestFingerprint'],
                  'sourceStateFingerprint': resolved['stateFingerprint'],
@@ -769,7 +768,8 @@ class Runtime:
                 from usage_cost_report import usage_cost_summary
                 period = self.ledger.production_schedule.period_key(now)
                 cost = usage_cost_summary(self.root,self.config,kind='production',
-                    period_key=period,now=now,article_ids=sorted(job['id'] for job in bound.values()),
+                    period_key=period,now=now,article_ids=sorted(job['id'] for job in jobs
+                        if job.get('kind') == 'supplemental_article' and job.get('batchId') == manifest['batchId']),
                     batch_call_cap=manifest['batchCallCap'],article_since=manifest['notBefore'])
             except Exception:
                 cost = '追加batchの使用量・費用・予算残量: 未取得'
@@ -795,7 +795,7 @@ class Runtime:
         retry = getattr(self, '_explicit_stage_retry', None)
         corrected_id = (retry['jobId'] if retry and retry.get('corrected')
                         and retry['jobId'] == job_id else None)
-        candidates = [job for job in jobs if job.get('kind') == 'supplemental_article'
+        candidates = [job for job in active if job.get('kind') == 'supplemental_article'
                       and job.get('batchId') == manifest['batchId']
                       and (job['stage'] == 'candidate'
                            or (job['id'] == corrected_id and job['stage'] == 'error'))]
@@ -835,6 +835,7 @@ class Runtime:
 
     def _make_article(self, job, context):
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         context = self._wise_context(context)
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
@@ -1001,6 +1002,7 @@ class Runtime:
     def _finish_article_review(self, job, context, gathered, bundle, source,
                                preservation, polished, source_dependencies):
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         context = self._wise_context(context)
         revision = job.get('kind') == 'article_revision'
         corrected = 'catalogCorrectionContext' in job
@@ -1522,6 +1524,7 @@ class Runtime:
     def _run_model_stage(self, job, stage, inputs, operation, requested_model,
                          *, explicit_retry=False):
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         key = self.stage_journal.key(job['id'], stage, inputs)
         retry = getattr(self, '_explicit_stage_retry', None)
         if retry and retry['jobId'] == job['id']:
@@ -1601,7 +1604,9 @@ class Runtime:
         except (KeyError, ValueError):
             return job_id
         if job.get('kind') == 'supplemental_article':
-            return job_id
+            from supplemental_reselection import budget_article_id
+            self.ledger.active_supplemental_jobs(job['batchId'])
+            return budget_article_id(self.ledger, job)
         slug = ((job.get('revisionContext') or {}).get('baseArticle') or {}).get('slug')
         slug = slug or (job.get('theme') or {}).get('slug')
         return 'article:' + fingerprint({'slug': slug}) if isinstance(slug, str) and slug else job_id
@@ -1672,6 +1677,7 @@ class Runtime:
 
     def deliver(self, id, kind='article'):
         self._require_running()
+        self.ledger.assert_not_owner_held(id)
         if kind == 'social' and not self._social_review_allowed(id):
             raise ValueError('social_review_disabled')
         job = self.ledger.get_job(id)
@@ -2363,6 +2369,7 @@ class Runtime:
 
     def make_social(self, job):
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         if not social_feature_enabled(self.config, 'socialGenerationEnabled'):
             raise ValueError('social_generation_disabled')
         buffer_start = buffer_social_start(self.config)
@@ -2583,6 +2590,7 @@ class Runtime:
                               prior_main_readback=None, deliver=False):
         """Operator-only image refresh; no article mutation or X action. Caller holds runtime.flock."""
         self._require_running()
+        self.ledger.assert_not_owner_held(id)
         job = self.ledger.get_job(id)
         old = job.get('social') or {}
         if old.get('revision') != expected_social_revision or old.get('publication'):
@@ -2662,6 +2670,7 @@ class Runtime:
 
     def enable_social_autopost(self, id, target_id):
         self._require_running()
+        self.ledger.assert_not_owner_held(id)
         if target_id != self.config.get('targetAccountId'):
             raise ValueError('social_target_mismatch')
         return self.ledger.enable_social_autopost(id, target_id)
@@ -2677,6 +2686,7 @@ class Runtime:
     def publish_social(self, job):
         """The publisher journal owns X retries; do not globally claim a social effect."""
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         if self.config.get('socialPostingEnabled') is not True:
             raise ValueError('social_posting_disabled')
         current = self.ledger.get_job(job['id'])
@@ -2705,6 +2715,7 @@ class Runtime:
     def publish_buffer_social(self, job, *, now=None):
         """Schedule or verify one exact approved Buffer proposal; direct X stays disabled."""
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         now = (self.clock() if (self.config.get('buffer') or {}).get('dailyRootLimit') == 3
                else now or self.clock())
         if self.config.get('bufferPostingEnabled') is not True:
@@ -2884,6 +2895,7 @@ class Runtime:
 
     def notify_social_posted(self, job):
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         publication = (job.get('social') or {}).get('publication') or {}
         if job.get('stage') != 'social_posted' or publication.get('verified') is not True:
             raise ValueError('social_posted_readback_required')
@@ -2933,6 +2945,7 @@ class Runtime:
     def prepare_social_handoff(self, job):
         """Respect the established Gearman manual-post route; never revive old X API jobs."""
         self._require_running()
+        self.ledger.assert_not_owner_held(job['id'])
         require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
         if job['social']['proposal'].get('deliveryMode', 'manual') != 'manual':
             raise ValueError('automatic_social_cannot_use_manual_handoff')

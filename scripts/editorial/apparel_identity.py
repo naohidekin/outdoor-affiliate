@@ -1436,6 +1436,100 @@ def _montbell_details(html, page_url, model):
     return result[:4]
 
 
+_MONTBELL_FULL_MATERIAL_MODELS = {'1101606': 'down', '1128733': 'hardshell'}
+_MONTBELL_MATERIAL_LINKS = {
+    '1101606': {'maker09': 'バリスティック®', 'maker41': 'EXダウン'},
+    '1128733': {'maker09': 'バリスティック®', 'maker86': 'スーパー ドライテック'},
+}
+
+
+def _montbell_full_material_facts(html, model):
+    """Observed primary 仕様/p only; retain all material lines and qualifiers.
+
+    The two selected models use a complete 【素材】 block, unlike the legacy
+    first-material contract. Never recover this block from related/detail DOM.
+    """
+    from official_shopify_apparel import _Page, _walk, _text, _one
+
+    def visible(node):
+        attrs = node['attrs']
+        return not (node['tag'] in ('script', 'style', 'template', 'aside', 'nav')
+                    or 'hidden' in attrs or attrs.get('aria-hidden') == 'true'
+                    or re.search(r'display\s*:\s*none|visibility\s*:\s*hidden',
+                                 attrs.get('style', ''), re.I)
+                    or re.search(r'related|recommend|product-tile', attrs.get('class', ''), re.I))
+
+    def visible_walk(node):
+        if visible(node):
+            yield node
+            for child in node['children']:
+                if isinstance(child, dict):
+                    yield from visible_walk(child)
+
+    document = _Page(html).root
+    contents = _one([n for n in _walk(document) if n['attrs'].get('id') == 'contents'])
+    if not any(n is contents for n in visible_walk(document)):
+        return None
+    children = [n for n in contents['children'] if isinstance(n, dict)]
+    primary = _one([i for i, n in enumerate(children) if n['attrs'].get('id') == 'maindataCont'])
+    start = _one([i for i, n in enumerate(children)
+                  if n['tag'] == 'h3' and _text(n).strip() == '商品情報'])
+    end = next((i for i in range(start + 1, len(children)) if children[i]['tag'] == 'h3'), None)
+    if primary >= start or end is None or not visible(children[primary]) or not visible(children[start]):
+        return None
+    paragraphs = []
+    for column in children[start + 1:end]:
+        if (column['tag'] != 'div' or not visible(column)
+                or not {'column1', 'type01'} <= set(column['attrs'].get('class', '').split())):
+            continue
+        for inner in column['children']:
+            if (not isinstance(inner, dict) or inner['tag'] != 'div' or not visible(inner)
+                    or 'innerCont' not in inner['attrs'].get('class', '').split()):
+                continue
+            local = [n for n in inner['children'] if isinstance(n, dict)]
+            headings = [i for i, n in enumerate(local) if n['tag'] == 'h4'
+                        and 'ttlType03' in n['attrs'].get('class', '').split()
+                        and _text(n).strip() == '仕様']
+            for i in headings:
+                if (not visible(local[i]) or i + 1 >= len(local) or local[i + 1]['tag'] != 'p'
+                        or not visible(local[i + 1])):
+                    return None
+                paragraph = local[i + 1]
+                parts = []
+                for n in paragraph['children']:
+                    if isinstance(n, str):
+                        parts.append(n)
+                    elif n['tag'] == 'br' and visible(n):
+                        parts.append('\n')
+                    elif n['tag'] == 'a' and visible(n):
+                        a = n['attrs']
+                        labels = {'/material/aboutmaterial/maker/' + code + '.html': label
+                                  for code, label in _MONTBELL_MATERIAL_LINKS[model].items()}
+                        if (a.get('href') not in labels or a.get('class') != 'fancy_material'
+                                or a.get('data-fancybox') != 'iframe_material'
+                                or a.get('data-type') != 'iframe' or a.get('data-custom-class') != 'material'
+                                or set(a) != {'href', 'class', 'data-fancybox', 'data-type', 'data-custom-class', 'title'}
+                                or any(not isinstance(c, str) for c in n['children'])
+                                or _text(n) != labels[a['href']] or a.get('title') != labels[a['href']]):
+                            return None
+                        parts.append(_text(n))  # Visible label only; never fetch the glossary.
+                    else:
+                        return None
+                text = ''.join(parts)
+                paragraphs.append('\n'.join(s.strip() for s in text.splitlines() if s.strip()))
+    specs = _one(paragraphs)
+    if (len(specs) > 8000 or any(token != model for token in re.findall(r'(?<!\d)\d{7}(?!\d)', specs))):
+        return None
+    headings = list(re.finditer(r'【([^】\r\n]+)】', specs))
+    material = _one([i for i, h in enumerate(headings) if h.group(1) == '素材'])
+    weight = _one([i for i, h in enumerate(headings) if h.group(1) in ('重量', '平均重量')])
+    if material + 1 >= len(headings) or weight + 1 >= len(headings):
+        return None
+    fabric = specs[headings[material].end():headings[material + 1].start()].strip()
+    weight_value = specs[headings[weight].end():headings[weight + 1].start()].strip()
+    return {'fabric': fabric, 'weight': weight_value} if fabric and weight_value else None
+
+
 def _inspect_montbell(product, page_url, html, image_url):
     try:
         contract = apparel_contract(product)
@@ -1456,12 +1550,21 @@ def _inspect_montbell(product, page_url, html, image_url):
                 or contract["model"] not in title + " #" + contract["model"]):
             return None
         gender = "Men's" if "Men's" in title else "Women's" if "Women's" in title else ""
+        full_material = contract['model'] in _MONTBELL_FULL_MATERIAL_MODELS
+        if full_material:
+            facts = _montbell_full_material_facts(html, contract['model'])
+            if (contract['class'] != _MONTBELL_FULL_MATERIAL_MODELS[contract['model']]
+                    or not facts or any(key not in contract or _norm(contract[key]) != _norm(facts[key])
+                                        for key in ('fabric', 'weight'))):
+                return None
         material = re.search(r"【素材】(.+?)(?=\n(?:【|保温材))", specs)
         weight = re.search(r"【(?:平均)?重量】([^\n]+)", specs)
         if (not _brand_matches("モンベル", contract["brand"])
                 or _norm(gender) != _norm(contract["gender"])
-                or ("fabric" in contract and (not material or _norm(material.group(1)) != _norm(contract["fabric"])))
-                or ("weight" in contract and (not weight or _norm(weight.group(1)) != _norm(contract["weight"])))):
+                or (not full_material and "fabric" in contract
+                    and (not material or _norm(material.group(1)) != _norm(contract["fabric"])))
+                or (not full_material and "weight" in contract
+                    and (not weight or _norm(weight.group(1)) != _norm(contract["weight"])))):
             return None
         available_colors = page.color_sets[0] if len(page.color_sets) == 1 else []
         available_sizes = list(dict.fromkeys(page.sizes))

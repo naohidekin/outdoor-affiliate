@@ -527,6 +527,8 @@ class Ledger:
                    (timestamp(now).isoformat(), id, kind, canonical(data)))
 
     def _put(self, db, job, kind):
+        from supplemental_reselection import assert_not_held
+        assert_not_held(self.root, db, job['id'])
         if job.get('kind') != 'article_revision' and not job['publication'] and job['stage'] != 'rejected':
             others = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs WHERE id!=?', (job['id'],))]
             require(sum(other.get('kind') != 'article_revision' and not other['publication'] and other['stage'] != 'rejected' for other in others) < 3, 'pending cap reached')
@@ -544,6 +546,7 @@ class Ledger:
                 db.execute('UPDATE requests SET data=? WHERE id=?', (canonical(request), request_id))
 
     def _current(self, job):
+        self.assert_not_owner_held(job['id'])
         require(job['bundle'] is not None and fingerprint(job['bundle']) == job['revision'], 'bundle fingerprint changed')
         if job.get('kind') == 'article_revision':
             from revisions import validate_revision_bundle
@@ -627,6 +630,17 @@ class Ledger:
                        created_at=now.isoformat())
             return self._put(db, job, 'candidate')
 
+    def assert_not_owner_held(self, id):
+        from supplemental_reselection import assert_not_held
+        with sqlite3.connect(self.db_path) as db:
+            assert_not_held(self.root, db, id)
+
+    def active_supplemental_jobs(self, batch_id, jobs=None):
+        from supplemental_reselection import active_jobs
+        jobs = self.list_jobs() if jobs is None else jobs
+        with sqlite3.connect(self.db_path) as db:
+            return active_jobs(db, jobs, batch_id)
+
     def create_supplemental_candidate(self, theme, batch_id, slot, source_binding, *,
                                       social_eligible_period, now=None):
         """Create one immutable slot in the bounded batch without consuming regular 3/week."""
@@ -652,16 +666,15 @@ class Ledger:
                 'invalid supplemental social period')
         with self._tx() as db:
             jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
-            existing = [job for job in jobs if job.get('kind') == 'supplemental_article'
-                        and job.get('batchId') == batch_id and job.get('batchSlot') == slot]
+            from supplemental_reselection import active_jobs
+            active = active_jobs(db, jobs, batch_id)
+            existing = [job for job in active if job.get('batchSlot') == slot]
             if existing:
                 require(len(existing) == 1 and existing[0].get('theme') == theme
                         and existing[0].get('sourceBinding') == source_binding,
                         'supplemental slot conflict')
                 return existing[0]
-            require(sum(job.get('kind') == 'supplemental_article'
-                        and job.get('batchId') == batch_id for job in jobs)
-                    < binding['maxArticles'],
+            require(len(active) < binding['maxArticles'],
                     'supplemental batch cap reached')
             require(sum(job.get('kind') != 'article_revision' and not job.get('publication')
                         and job.get('stage') != 'rejected' for job in jobs) < 3,
@@ -907,6 +920,7 @@ class Ledger:
             return self._get(db, id)
 
     def save_bundle(self, id, bundle, expected_revision=None):
+        self.assert_not_owner_held(id)
         require(isinstance(bundle, dict) and all(k in bundle for k in ('article', 'products', 'images', 'brief', 'references')), 'complete bundle required')
         revision = fingerprint(bundle)
         with self._tx() as db:

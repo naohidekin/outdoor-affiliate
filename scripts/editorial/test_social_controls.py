@@ -58,7 +58,7 @@ class SocialControlTests(unittest.TestCase):
         self.config['executionPolicy'] = {'mode': 'deterministic', 'suspended': False}
         with patch.object(self.models, 'social') as generate:
             with self.assertRaisesRegex(ValueError, 'social_generation_disabled'):
-                self.runtime.make_social({})
+                self.runtime.make_social({'id': 'social-generation-fixture'})
             generate.assert_not_called()
         self.assertFalse(social_feature_enabled(self.config, 'socialGenerationEnabled'))
         self.config['socialGenerationEnabled'] = True

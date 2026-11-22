@@ -24,7 +24,7 @@ def historical_validation(*args):
 
 
 def job_fixture():
-    return dict(id=JOB, kind='supplemental_article', batchId=BATCH,
+    return dict(id=JOB, kind='supplemental_article', batchId=BATCH, batchSlot=2,
                 batchCallCap=96, stage='error', bundle=None, approval=None,
                 publication=None, error={'reason': ERROR})
 

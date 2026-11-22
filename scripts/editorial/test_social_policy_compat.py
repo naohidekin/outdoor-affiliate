@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from ledger import fingerprint
+from ledger import Ledger, fingerprint
 from runtime import Runtime
 from social_policy_compat import (LEGACY_APPROVED_SOCIAL_POLICY_ID,
                                   require_approved_social_review)
@@ -80,6 +80,7 @@ class SocialPolicyCompatibilityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Runtime.__new__(Runtime)
             runtime.root = Path(tmp)
+            runtime.ledger = Ledger(runtime.root, 'owner')
             runtime.config = {'slack': {'user_id': 'owner'}}
             runtime._require_running = lambda: None
             notices = []
