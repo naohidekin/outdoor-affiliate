@@ -42,6 +42,15 @@ in_flight/unknown、公開・投稿・送達結果が不明の場合は、既存
 進行中manager、関連する照合待ち、範囲不明の記録は停止条件。無関係と確認できる
 過去のmanager記録は変更せず、当該記事の復旧を妨げない。
 
+焚き火台改訂`revision-752f932fa6927ba5852ada4e`の既知Amazon NA証拠欠落だけは、
+`resume-revision-review-after-purchase-na`へ対象job・型付きNA JSON・今回の指示参照を明示する。
+固定sourceと成功済みdraft2/2・polish1/2のSHA、旧lineage、未開始final、fresh source／公開ベースを照合し、
+本文等を保持したmetadata-only receiptから通常の最終審査へ一度だけ進む。writer／polish再呼出し、
+旧記録や試行・共有予算の初期化、NAから欠品・販売終了の推定は禁止。失敗・unknownは照合待ち。
+既定dry-run、実行はruntime.flock内の`--execute`。記事／SNSは別途本人承認を待つ。
+今後の必要販路欠落は既存display gate後・writer前に明示NAの対象・理由・確認者・鮮度を検査し、
+不足ならモデルを呼ばず保留する。詳細なCLI引数と検証条件は上記の運用文書を参照する。
+
 11/16追加3記事のdraft文字数・内部リンク違反を修正版で直す場合だけ、
 `operations.py retry-corrected-stage`へ旧失敗のexact input keyを指定する。
 まずdry-runで対象を照合し、本人の修正指示がある場合だけ`--execute`を使う。

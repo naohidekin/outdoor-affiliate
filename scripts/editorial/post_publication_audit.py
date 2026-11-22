@@ -30,6 +30,7 @@ from audit_requests import AuditRequests
 from topic_selection import TopicSelectionError, validate_nonproduct_bundle
 from apparel_identity import (apparel_requested, binding_matches_product,
                               inspect_apparel_page, public_binding)
+from heater_purchase_identity import is_accessory_destination
 
 SITE = 'https://camp-gear-lab.com'
 LIMIT = 8 * 1024 * 1024
@@ -177,8 +178,10 @@ def _audit_model(product):
     return ''
 
 
-def _merchant_identity(product, model, title):
+def _merchant_identity(product, model, title, final_url=''):
     from merchant_identity import inspect_merchant_identity
+    if is_accessory_destination(product.get('id'), title, final_url):
+        return False
     return inspect_merchant_identity(product, model, title)['status'] == 'passed'
 
 
@@ -232,7 +235,7 @@ def _merchant_observation(name, product, model, title, final_url, route_matched)
             'routeMatched': route_matched is True,
             'modelFound': model_matches(model, title),
             'brandFound': bool(product.get('brand')) and compact(product['brand']) in compact(title),
-            'identityMatched': _merchant_identity(product, model, title)}
+            'identityMatched': _merchant_identity(product, model, title, final_url)}
 
 
 def _with_merchant_observations(result, observations):
@@ -566,6 +569,12 @@ class PostPublicationAudit:
                             primary = fixed_amazon_identity(product['id'], model, response['url'],
                                                             _decode_html(response['body'], kind), page.title)
                         identity = decision['status'] == 'passed' or bool(primary)
+                    # Same negative authority as Catalog, after every positive
+                    # title/primary matcher. Compatibility is not body identity.
+                    if (not apparel_requested(product)
+                            and is_accessory_destination(product.get('id'), page.title, response['url'])):
+                        decision = {'status': 'failed', 'reason': 'merchant_accessory_only'}
+                        identity, primary = False, None
                     observations[-1]['primaryBindingVerified'] = bool(primary) and identity
                     observations[-1]['identityMatched'] = identity
                     if not same:

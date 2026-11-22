@@ -43,6 +43,15 @@ def _channel_url(channel, value):
                     'transition.afl.rakuten.co.jp', 'item.rakuten.co.jp', 'm.rakuten.co.jp'}
 
 
+def require_prewrite_purchase_evidence(gathered, now):
+    """Missing required channels must be explained before paid writing begins."""
+    products = gathered.get('products', gathered.get('catalog', []))
+    if any(p.get(field) in (None, '') for p in products for field in CHANNEL_FIELDS.values()):
+        validate_purchase_evidence({'products': products}, gathered.get('purchaseEvidence'), now)
+    elif gathered.get('purchaseEvidence'):
+        raise ValueError('purchase evidence does not match a missing channel')
+
+
 def validate_purchase_evidence(bundle, evidence, now):
     """Return a copied bundle with fresh, exact, caller-supplied NA evidence attached."""
     _require(isinstance(now, datetime) and now.tzinfo is not None and now.utcoffset() is not None,

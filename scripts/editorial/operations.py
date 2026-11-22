@@ -99,9 +99,11 @@ def main(argv=None):
     parser.add_argument('--job-id')
     parser.add_argument('--stage', choices=('draft', 'polish', 'final_review'))
     parser.add_argument('--input-key')
+    parser.add_argument('--purchase-na-json')
+    parser.add_argument('--operator-reference')
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('command', choices=('status', 'records', 'plan', 'retry-stage',
-                                               'retry-corrected-stage'))
+                                               'retry-corrected-stage', 'resume-revision-review-after-purchase-na'))
     args = parser.parse_args(argv)
     root = _root(args.state_root)
     if args.command == 'status':
@@ -115,7 +117,19 @@ def main(argv=None):
         if args.command == 'plan':
             value = plan(root, config)
         else:
-            if not args.job_id or not args.stage or not args.input_key:
+            na_resume = args.command == 'resume-revision-review-after-purchase-na'
+            if na_resume:
+                from revision_purchase_na_resume import JOB, SOURCE, read
+                from purchase_evidence import validate_purchase_evidence
+                if args.job_id != JOB or not args.purchase_na_json or not args.operator_reference:
+                    raise ValueError('exact job purchase evidence and operator reference required')
+                evidence = json.loads(Path(args.purchase_na_json).read_text())
+                source = read(root / 'research' / 'artifacts' / JOB / SOURCE / 'source.json')['bundle']
+                from ledger import fingerprint
+                if fingerprint(source) != SOURCE:
+                    raise ValueError('revision_purchase_na_source_binding')
+                validate_purchase_evidence(source, evidence, datetime.now(JST))
+            elif not args.job_id or not args.stage or not args.input_key:
                 raise ValueError('job stage and exact input key required')
             if Path(config['stateRoot']).resolve() != root:
                 raise ValueError('config state root mismatch')
@@ -145,9 +159,13 @@ def main(argv=None):
                     else:
                         runtime = Runtime(config)
                         try:
-                            retry = (runtime.retry_corrected_stage
-                                     if args.command == 'retry-corrected-stage' else runtime.retry_stage)
-                            value = retry(args.job_id, args.stage, args.input_key)
+                            if na_resume:
+                                value = runtime.resume_revision_review_after_purchase_na(
+                                    args.job_id, evidence, args.operator_reference)
+                            else:
+                                retry = (runtime.retry_corrected_stage
+                                         if args.command == 'retry-corrected-stage' else runtime.retry_stage)
+                                value = retry(args.job_id, args.stage, args.input_key)
                         finally:
                             runtime._save_usage()
     print(json.dumps(value, ensure_ascii=False, allow_nan=False))

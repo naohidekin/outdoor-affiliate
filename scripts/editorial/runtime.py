@@ -908,6 +908,9 @@ class Runtime:
                 if not path.exists():
                     atomic(path, plan)
                 raise ValueError('prewrite_display_correction_required')
+        if not nonproduct:
+            from purchase_evidence import require_prewrite_purchase_evidence
+            require_prewrite_purchase_evidence(gathered, datetime.now(JST))
         gathered.update({'wisePolicy': context['wisePolicy'], 'CLAUDE': context['editorialRules'], 'SKILL': (Path(self.config['repo']) / 'SKILL.md').read_text()})
         source_dependencies = self._source_dependencies(gathered)
         draft_inputs = {
@@ -1185,6 +1188,10 @@ class Runtime:
             db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)',
                        ('runtime_retry_candidate', id))
         return {'status': 'candidate', 'id': id, 'sameWeeklySlot': True}
+
+    def resume_revision_review_after_purchase_na(self, id, evidence, operator_reference):
+        from revision_purchase_na_resume import resume
+        return resume(self, id, evidence, operator_reference)
 
     def retry_stage(self, id, stage, input_key):
         """Explicitly execute the one remaining attempt for an exact failed input."""

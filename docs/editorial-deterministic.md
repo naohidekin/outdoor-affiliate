@@ -198,6 +198,18 @@ AI呼出し前に予約を保存し、正常完了後に出力ハッシュを保
 商品のベース版、改訂context、最新の公式情報・画像・購入先を再照合する。
 モデル呼出し前の停止と、実際の未知結果・試行消費を区別して受領情報を保存する。
 
+焚き火台改訂`revision-752f932fa6927ba5852ada4e`のAmazon NA証拠欠落だけは、
+`operations.py resume-revision-review-after-purchase-na`でmetadata-onlyの最終審査を一度だけ継続できる。
+`--job-id`、型付きNA配列の`--purchase-na-json`、今回の指示参照`--operator-reference`を指定し、
+既定はdry-run、実行は`--execute`でruntime.flock内に限定する。固定source／成功済みdraft2/2・polish1/2の
+キーとpayload SHA、旧失敗lineage、未開始final、fresh sourceと公開ベースCASを再照合する。
+本文・brief・商品・画像・出典は保持し、明示NAだけを検証して別receiptへ旧成功とfresh proofを結ぶ。
+NAは「今回の検証済みAmazonリンクなし」を示し、欠品・販売終了の証拠にはしない。
+writer／polishの再呼出し、旧キャッシュ依存の偽装、試行・32calls/記事・128calls/期間予算の初期化は禁止。
+通常の構造・表示・医療表現・Claude最終審査・独立レビューを通し、記事／SNS承認は別途本人が行う。
+claim後の失敗・unknownは再開せず照合待ち。今後の必要販路欠落は既存display gate後、writer前に
+型付きNAの対象・代替販路・理由・確認者・6時間以内の鮮度を検査し、不足ならモデルを呼ばず保留する。
+
 同じ入力で失敗した工程を通常のtickで繰り返さない。既知の失敗のみ、対象を限定した
 明示的な再試行を初回に加えて1回まで許す。上限到達後は停止理由を報告する。
 途中停止・結果不明・壊れた記録は照合待ちとし、入力変更でも迂回しない。
