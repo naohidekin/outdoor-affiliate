@@ -568,6 +568,8 @@ class Models:
             "Preserve every supplied verifiedAuthorFacts statement exactly; never infer ownership or experience from legacy prose. "
             "Use the existing length rules even if the legacy source is much longer. Keep ALL selected products and "
             "documented decision topics; accessories are not extra ranked main models. Do not invent a selection count. "
+            "Copy theme.productIds verbatim into article.productIds in the exact supplied array order; "
+            "do not reorder that array to match prose or comparison-table order. "
             "As upper editor return ONLY {article,brief}. Do not repeat products, references, or images; "
             "those verified records are assembled locally. article must contain slug,title,"
             "categoryId,content,excerpt (at least 20 characters),metaDescription (50-160 characters),faqs (3-5 "
@@ -618,15 +620,33 @@ class Models:
             "Cite only supplied references and use supplied product URLs. "
             "Do not claim images, affiliate destinations or rendering are live-verified.")
         instruction += '\n' + get_draft_specificity_prompt() + EDITORIAL_LEARNINGS_NOTE
+        from fleece_revision_recovery import TARGETS as FLEECE_TARGETS
+        fleece_comparison = (theme.get('productIds') == FLEECE_TARGETS
+            and (context.get('existingArticle') or {}).get('slug') == 'autumn-camp-classic-fleece-comparison')
+        if fleece_comparison:
+            instruction += ('\nThis two-product fleece revision must keep brief.format="comparison". '
+                            'Return 6000-7000 characters in decoded article.content only; '
+                            'metadata, structured FAQs and brief do not count. Do not reclassify as guide '
+                            'or add unsupported facts to reach the target.')
         theme, context = copy.deepcopy((theme, context))
         result, record = self._call(instruction,
             {"theme": theme, "context": context},
             self.env.get("ARTICLE_WRITER_MODEL") or "claude-opus-4-8",
             fallback=self.env.get("ARTICLE_WRITER_FALLBACK_MODEL") or "claude-sonnet-4-6",
             schema=WRITER_SCHEMA)
+        if fleece_comparison and result.get('brief', {}).get('format') != 'comparison':
+            raise ModelError('Fleece revision must remain comparison')
         # Run EVERY non-length check first: source/schema/format errors are never
         # disguised as repairable length failures. _call already preserved the raw
         # first artifact and usage before this local validation.
+        # Ordering is metadata, not editorial selection. Never repair a changed set.
+        declared = result.get('article', {}).get('productIds') if isinstance(result.get('article'), dict) else None
+        selected = theme.get('productIds')
+        if (isinstance(declared, list) and isinstance(selected, list)
+                and all(isinstance(pid, str) and pid for pid in declared + selected)
+                and len(declared) == len(set(declared)) == len(selected) == len(set(selected))
+                and set(declared) == set(selected)):
+            result['article']['productIds'] = list(selected)
         result = self._validate_draft(result, theme, context, check_length=False)
         lower, upper = ARTICLE_LENGTHS[result['brief']['format']]
         count = len(result['article']['content'])

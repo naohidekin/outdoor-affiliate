@@ -1230,14 +1230,18 @@ class Runtime:
     def validate_corrected_retry(job, stage, input_key, records, *, reselection_receipt=None):
         """Read-only eligibility check shared by operator planning and execution."""
         revision_retry = False
+        fleece_retry = False
         if job.get('kind') == 'article_revision':
             from revisions import validate_context
+            from fleece_revision_recovery import eligible as fleece_eligible
             binding = validate_context(job.get('revisionContext'))
             revision_retry = (
                 (job.get('error') or {}).get('reason') == 'Article length outside existing SKILL limits'
                 and job.get('review') is None
                 and job.get('theme', {}).get('slug') == binding['baseArticle']['slug']
                 and job.get('theme', {}).get('productIds') == binding['targetProductIds'])
+            fleece_retry = fleece_eligible(job, input_key, binding)
+            revision_retry = revision_retry or fleece_retry
         allowed_errors = {
             'apparel-2026-11-16': {
                 'Two to three distinct internal article links required',
@@ -1290,6 +1294,10 @@ class Runtime:
                 or record.get('attempts') != 1 or record.get('maxAttempts') != 2
                 or record.get('successorKey') or record.get('predecessorKey')):
             raise StageBlocked('exact corrected failed stage retry unavailable', stage_key=input_key)
+        if fleece_retry:
+            if (record.get('failureType') != 'ModelError' or record.get('responseReceiptCount') != 1
+                    or record.get('missingUsage') is not False):
+                raise ValueError('fleece_recovery_old_response_changed')
 
     def retry_saved_reselection_draft(self, id, input_key):
         from reselection_saved_draft import SavedOutputLocalRevalidation
@@ -1381,10 +1389,20 @@ class Runtime:
         return related['id'] == base['id'] or theme['slug'] == base['slug']
 
     def _retry_revision_stage(self, job, stage, input_key, *, corrected=False):
+        recovery_proof = {}
         if corrected:
             records = self.stage_journal.status(job_id=job['id'])['records']
             self.validate_corrected_retry(job, stage, input_key,
                 [r for r in records if r.get('stage') == stage])
+            from fleece_revision_recovery import JOB as FLEECE_JOB, load_proof, require_old_response
+            if job['id'] == FLEECE_JOB:
+                # Exact paid response/source proof is retained in the finite retry receipt.
+                with sqlite3.connect(self.ledger.db_path) as db:
+                    row = db.execute('SELECT value FROM meta WHERE key=?', (input_key,)).fetchone()
+                if row is None:
+                    raise ValueError('fleece_recovery_old_response_changed')
+                require_old_response(json.loads(row[0]))
+                recovery_proof = {'recoveryEvidence': load_proof(self.root, job, input_key)}
             with sqlite3.connect(self.ledger.db_path) as db:
                 effects = db.execute("SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
                                      (job['id'],)).fetchone()
@@ -1405,7 +1423,9 @@ class Runtime:
             receipt = json.loads(marker.read_text())
             if not isinstance(receipt, dict) or receipt.get('status') != 'blocked':
                 raise ValueError()
-            if corrected and receipt.get('reason') != 'Article length outside existing SKILL limits':
+            expected_reason = (job['error']['reason'] if recovery_proof
+                               else 'Article length outside existing SKILL limits')
+            if corrected and receipt.get('reason') != expected_reason:
                 raise ValueError()
         except (OSError, ValueError, TypeError):
             raise ValueError('revision_production_requires_reconciliation') from None
@@ -1414,7 +1434,7 @@ class Runtime:
         if retry_marker.exists() or (corrected and retry_marker.is_symlink()):
             raise ValueError('revision_stage_retry_requires_reconciliation')
         atomic(retry_marker, {'status': 'in_flight', 'at': stamp(),
-                              'stage': stage, 'inputKey': input_key})
+                              'stage': stage, 'inputKey': input_key, **recovery_proof})
         self._explicit_stage_retry = {'jobId': job['id'], 'stage': stage,
                                       'inputKey': input_key}
         if corrected:
@@ -1426,7 +1446,7 @@ class Runtime:
             current = self.ledger.get_job(job['id'])
             delivery = self._make_article(current, self._context())
             atomic(retry_marker, {'status': 'completed', 'at': stamp(),
-                                  'stage': stage, 'inputKey': input_key})
+                                  'stage': stage, 'inputKey': input_key, **recovery_proof})
             status = ('awaiting_astra_review' if isinstance(delivery, dict)
                       and delivery.get('status') == 'awaiting_astra_review'
                       else 'awaiting_approval')
@@ -1437,7 +1457,7 @@ class Runtime:
                 detail['originalFailure'] = copy.deepcopy(job['error'])
             self.ledger.set_stage(job['id'], 'error', detail)
             atomic(retry_marker, {'status': 'unknown', 'at': stamp(),
-                                  'stage': stage, 'inputKey': input_key})
+                                  'stage': stage, 'inputKey': input_key, **recovery_proof})
             return {'status': 'attention', 'reason': reason(error)}
         except Exception as error:
             detail = {'reason': reason(error), 'at': stamp()}
@@ -1446,7 +1466,7 @@ class Runtime:
             self.ledger.set_stage(job['id'], 'error', detail)
             atomic(retry_marker, {'status': 'blocked', 'at': stamp(),
                                   'stage': stage, 'inputKey': input_key,
-                                  'reason': reason(error)})
+                                  'reason': reason(error), **recovery_proof})
             return {'status': 'attention', 'reason': reason(error)}
         finally:
             self._explicit_stage_retry = None
