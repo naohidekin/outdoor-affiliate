@@ -924,6 +924,9 @@ class Runtime:
             },
             'schemaVersion': {'stage': 1, 'input': 'theme+verified-source', 'output': 'article+brief'},
         }
+        local = (getattr(self, '_explicit_stage_retry', None) or {}).get('savedOutputLocalRevalidation')
+        if local is not None:
+            local.bind(job, gathered, draft_inputs)
         bundle = self._run_model_stage(job, 'draft', draft_inputs,
             lambda: self.models.draft(job['theme'], gathered),
             self._model_routes()['draft']['requested'])
@@ -1224,7 +1227,7 @@ class Runtime:
             self._explicit_stage_retry = None
 
     @staticmethod
-    def validate_corrected_retry(job, stage, input_key, records):
+    def validate_corrected_retry(job, stage, input_key, records, *, reselection_receipt=None):
         """Read-only eligibility check shared by operator planning and execution."""
         revision_retry = False
         if job.get('kind') == 'article_revision':
@@ -1245,6 +1248,22 @@ class Runtime:
             },
         }
         batch_id = job.get('batchId')
+        reselection_retry = False
+        if reselection_receipt is not None:
+            from supplemental_reselection import BATCH, SKIN
+            plan = reselection_receipt.get('plan') or {}
+            reselection_retry = (
+                reselection_receipt.get('status') == 'applied'
+                and fingerprint(plan) == reselection_receipt.get('planSha256')
+                and reselection_receipt.get('newJobId') == job.get('id')
+                and job.get('id') != SKIN and batch_id == BATCH
+                and plan.get('oldJobId') == SKIN and plan.get('slot') == 2
+                and job.get('batchSlot') == 2 and job.get('budgetArticleId') == SKIN
+                and job.get('replacesJobId') == SKIN
+                and job.get('theme') == (plan.get('replacement') or {}).get('theme')
+                and job.get('sourceBinding') == (plan.get('replacement') or {}).get('sourceBinding')
+                and job.get('review') is None
+                and (job.get('error') or {}).get('reason') == 'Unknown or self internal article link')
         # One authorized prompt-change recovery; never authorize this error for
         # a whole batch. The old failed lineage still owns its remaining attempt.
         prompt_change_retry = (
@@ -1260,7 +1279,7 @@ class Runtime:
             if prompt_hash != '144fcbca061d8ebd8be8c67c8241a40b53c0ba1f27dc1d52f885c88eb081bf44':
                 raise ValueError('prompt_change_recovery_inputs_changed')
         if (stage != 'draft' or (not revision_retry and (job.get('kind') != 'supplemental_article'
-                or (not prompt_change_retry and (batch_id not in allowed_errors
+                or (not prompt_change_retry and not reselection_retry and (batch_id not in allowed_errors
                     or (job.get('error') or {}).get('reason') not in allowed_errors[batch_id]))
                 or job.get('batchCallCap') != 96)) or job.get('stage') != 'error'
                 or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))):
@@ -1272,7 +1291,12 @@ class Runtime:
                 or record.get('successorKey') or record.get('predecessorKey')):
             raise StageBlocked('exact corrected failed stage retry unavailable', stage_key=input_key)
 
-    def retry_corrected_stage(self, id, stage, input_key):
+    def retry_saved_reselection_draft(self, id, input_key):
+        from reselection_saved_draft import SavedOutputLocalRevalidation
+        return self.retry_corrected_stage(id, 'draft', input_key,
+            saved_output_local_revalidation=SavedOutputLocalRevalidation(self, id, input_key))
+
+    def retry_corrected_stage(self, id, stage, input_key, *, saved_output_local_revalidation=None):
         """Operator-only recovery of an explicitly eligible remaining draft.
 
         Caller holds runtime.flock. Keep error until the existing producer saves
@@ -1280,14 +1304,28 @@ class Runtime:
         """
         self._require_running()
         job = self.ledger.get_job(id)
+        from supplemental_reselection import corrected_link_retry_receipt
+        with sqlite3.connect(self.ledger.db_path) as db:
+            reselection = corrected_link_retry_receipt(db, self.ledger.list_jobs(), job)
         self.validate_corrected_retry(job, stage, input_key,
-            self.stage_journal.status(job_id=id, stage=stage)['records'])
+            self.stage_journal.status(job_id=id, stage=stage)['records'],
+            **({'reselection_receipt': reselection} if reselection is not None else {}))
         if job.get('kind') == 'article_revision':
             return self._retry_revision_stage(job, stage, input_key, corrected=True)
         if job.get('batchId') == 'apparel-2026-11-22':
             raise ValueError('local_contract_revalidation_required')
+        if saved_output_local_revalidation is not None:
+            from reselection_saved_draft import SavedOutputLocalRevalidation
+            if (not isinstance(saved_output_local_revalidation, SavedOutputLocalRevalidation)
+                    or reselection is None or stage != 'draft'
+                    or saved_output_local_revalidation.runtime is not self
+                    or saved_output_local_revalidation.id != id or saved_output_local_revalidation.key != input_key):
+                raise ValueError('saved_output_local_revalidation_scope')
+            saved_output_local_revalidation.claim()
         self._explicit_stage_retry = {'jobId': id, 'stage': stage,
                                       'inputKey': input_key, 'corrected': True}
+        if saved_output_local_revalidation is not None:
+            self._explicit_stage_retry['savedOutputLocalRevalidation'] = saved_output_local_revalidation
         try:
             return self.produce_supplemental(limit=1, job_id=id)
         finally:
@@ -1299,6 +1337,8 @@ class Runtime:
                     detail['originalFailure'] = copy.deepcopy(job['error'])
                 detail['correctedRetry'] = 'no_review_progress_requires_explicit_recovery'
                 self.ledger.set_stage(id, 'error', detail)
+            if saved_output_local_revalidation is not None:
+                saved_output_local_revalidation.finish(bool(current.get('bundle')))
             self._save_usage()
 
     def _revision_manager_blocks(self, raw, job):
@@ -1551,6 +1591,12 @@ class Runtime:
             with self.model_budget.scope(self._budget_article_id(job['id']), stage):
                 return operation()
         try:
+            if explicit_retry and retry and retry.get('savedOutputLocalRevalidation') is not None:
+                try:
+                    return self.stage_journal.retry_corrected_failed(job['id'], stage, retry['inputKey'], inputs,
+                        retry['savedOutputLocalRevalidation'].operation)
+                finally:
+                    self._explicit_stage_retry = None
             if explicit_retry and retry and retry.get('corrected'):
                 return self.stage_journal.retry_corrected_failed(
                     job['id'], stage, retry['inputKey'], inputs, measured)

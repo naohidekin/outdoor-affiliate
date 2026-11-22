@@ -59,6 +59,13 @@ applyはrunner lease内で再照合し、旧skinのrejected／decided／本文�
 新jobは旧skinのarticle32を共有し、period128・batch96・pending3も維持。reportの新job実API費用と旧分込み共有残量を分ける。
 候補未確定の適用・有料制作・旧不可視draftの削除／公開・本人承認代行は禁止。詳細は運用文書を参照する。
 
+明示内部リンクはCatalogで実在published・同category・非自己参照へ照合し、要約上限5件内で最大3件を優先する。
+今回の置換down新job`article-42e59288744a55545f896d2d`の既知リンク違反は保存出力を優先し、
+`retry-saved-reselection-draft`へ対象job・draft・旧keyを明示する。固定artifact／旧sourceとfresh contextを照合し、
+navigation以外の本文・brief・商品・画像・出典を変更せず純validatorで再検証する。残り1試行を継承し、
+writer APIなしを`savedOutputLocalRevalidation`へ明記する。旧失敗・paid usageは保持、Gemini／Claude以降は通常経路。
+既定dry-run、実行はrunner lease内の`--execute`。未知・source drift・枠消費済みは停止し、本人承認は別途待つ。
+
 11/16追加3記事のdraft文字数・内部リンク違反を修正版で直す場合だけ、
 `operations.py retry-corrected-stage`へ旧失敗のexact input keyを指定する。
 まずdry-runで対象を照合し、本人の修正指示がある場合だけ`--execute`を使う。

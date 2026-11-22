@@ -222,6 +222,16 @@ Supabaseの旧不可視draft・旧job・決定・usageを変更せず、今回�
 実API量／費用のreportは新job帰属を保ち、共有article32残量は旧消費込みと明示する。累積・増分を混同しない。
 候補未確定の適用・有料制作・公開／SNSの本人承認の代行には使わない。
 
+明示した`selectionReason`の`/articles/slug`は最大3件を実在published・同category・非自己参照へ厳密照合し、
+既存記事要約5件の中で優先する。対象欠落・曖昧・非canonicalはwriter前に保留し、writerの未知リンク検査は維持する。
+今回の置換slot2の既知リンク違反は、reselection receiptのexact新job・draft失敗1/2だけcorrected retry対象にできる。
+保存済みOpus出力がある`article-42e59288744a55545f896d2d`は`operations.py retry-saved-reselection-draft`を優先する。
+対象job・draft・旧input keyを明示し、既定dry-run、実行は`--execute`。固定response／artifact SHAと旧sourceを保存し、
+fresh sourceの差分はnavigation要約と既知確認時刻だけに限定して現validatorを全適用する。
+article／briefは変更せず、子stage2/2へ`savedOutputLocalRevalidation`のusage_referenceを残す。
+writer APIは呼ばず、旧paid usageを新呼出しとして複製しない。Gemini／Claude最終審査と共有予算・本人承認は通常経路。
+source drift・未知結果・上限到達は保留し、receiptの削除や新キーでの枠作成は行わない。
+
 同じ入力で失敗した工程を通常のtickで繰り返さない。既知の失敗のみ、対象を限定した
 明示的な再試行を初回に加えて1回まで許す。上限到達後は停止理由を報告する。
 途中停止・結果不明・壊れた記録は照合待ちとし、入力変更でも迂回しない。

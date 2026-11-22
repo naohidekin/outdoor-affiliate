@@ -103,7 +103,8 @@ def main(argv=None):
     parser.add_argument('--operator-reference')
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('command', choices=('status', 'records', 'plan', 'retry-stage',
-                                               'retry-corrected-stage', 'resume-revision-review-after-purchase-na'))
+                                               'retry-corrected-stage', 'retry-saved-reselection-draft',
+                                               'resume-revision-review-after-purchase-na'))
     args = parser.parse_args(argv)
     root = _root(args.state_root)
     if args.command == 'status':
@@ -137,14 +138,23 @@ def main(argv=None):
             if policy is not None and policy.suspended:
                 value = {'status': 'suspended', 'mode': 'deterministic'}
             elif not args.execute:
-                if args.command == 'retry-corrected-stage':
+                if args.command in ('retry-corrected-stage', 'retry-saved-reselection-draft'):
                     from runtime import Runtime
                     job = next((job for job in _rows(_database(root))
                                 if job['id'] == args.job_id), None)
                     if job is None:
                         raise ValueError('job_not_found')
+                    from supplemental_reselection import corrected_link_retry_receipt
+                    with sqlite3.connect('file:' + str(_database(root)) + '?mode=ro', uri=True) as db:
+                        reselection = corrected_link_retry_receipt(db, _rows(_database(root)), job)
                     Runtime.validate_corrected_retry(job, args.stage, args.input_key,
-                        read_status(_database(root), job_id=args.job_id, stage=args.stage)['records'])
+                        read_status(_database(root), job_id=args.job_id, stage=args.stage)['records'],
+                        **({'reselection_receipt': reselection} if reselection is not None else {}))
+                    if args.command == 'retry-saved-reselection-draft':
+                        from reselection_saved_draft import load
+                        if args.stage != 'draft':
+                            raise ValueError('saved_output_local_revalidation_scope')
+                        load(root, args.job_id, args.input_key)
                 value = {'status': 'planned', 'operation': args.command,
                          'jobId': args.job_id, 'stage': args.stage,
                          'inputKey': args.input_key, 'executed': False}
@@ -162,6 +172,10 @@ def main(argv=None):
                             if na_resume:
                                 value = runtime.resume_revision_review_after_purchase_na(
                                     args.job_id, evidence, args.operator_reference)
+                            elif args.command == 'retry-saved-reselection-draft':
+                                if args.stage != 'draft':
+                                    raise ValueError('saved_output_local_revalidation_scope')
+                                value = runtime.retry_saved_reselection_draft(args.job_id, args.input_key)
                             else:
                                 retry = (runtime.retry_corrected_stage
                                          if args.command == 'retry-corrected-stage' else runtime.retry_stage)

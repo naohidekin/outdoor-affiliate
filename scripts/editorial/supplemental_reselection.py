@@ -119,6 +119,26 @@ def report_aliases(root, article_ids):
         return aliases, budget_ids
 
 
+def corrected_link_retry_receipt(db, jobs, job):
+    if (job.get('kind') != 'supplemental_article' or job.get('batchId') != BATCH
+            or (job.get('error') or {}).get('reason') != 'Unknown or self internal article link'):
+        return None
+    value = receipt(db)
+    if value is None or value['newJobId'] != job['id']:
+        return None
+    active_jobs(db, jobs, BATCH)
+    records = [json.loads(raw) for raw, in db.execute("SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'")]
+    require(not any(r.get('jobId') == job['id'] and r.get('stage') != 'draft' for r in records), 'retry_stage_scope')
+    require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status!='failed'", (job['id'],)).fetchone()
+            and not db.execute('SELECT 1 FROM requests WHERE job_id=?', (job['id'],)).fetchone()
+            and not db.execute("SELECT 1 FROM model_budget_reservations WHERE article_id=? "
+                               "AND status IN ('reserved','in_flight','unknown')", (SKIN,)).fetchone(), 'retry_unresolved')
+    targets = {s['slug'] for s in value['plan']['newManifest']['slots']}
+    managers = [json.loads(raw) for raw, in db.execute("SELECT value FROM meta WHERE key LIKE 'editorial_manager:%'")]
+    require(not any(_manager_blocks(db, r, targets) for r in managers), 'manager')
+    return value
+
+
 def _manager_blocks(db, record, target_slugs):
     if not isinstance(record, dict) or not isinstance(record.get('status'), str):
         return True

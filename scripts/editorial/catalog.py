@@ -787,6 +787,34 @@ class Catalog:
         result['blocked'] = not all(result['checks'].values())
         return self._public(result)
 
+    @staticmethod
+    def _existing_article_summaries(theme, articles, selected):
+        published = [a for a in articles if a.get('status') == 'published'
+                     and a.get('categoryId') == selected[0]['categoryId']
+                     and (not theme.get('slug') or a.get('slug') != theme['slug'])]
+        reason = theme.get('selectionReason')
+        paths = list(dict.fromkeys(re.findall(
+            r'''(?<![\w:/.-])/articles/[^\s<>"'`()\[\]{}、。，；;]*''',
+            reason if isinstance(reason, str) else '')))
+        if len(paths) > 3:
+            raise CatalogError('explicit internal article links exceed three')
+        priority = []
+        for path in paths:
+            if not re.fullmatch(r'/articles/[^/\s?#]+', path):
+                raise CatalogError('explicit internal article link is not canonical')
+            slug = path[len('/articles/'):]
+            matches = [a for a in published if a.get('slug') == slug]
+            if slug == theme.get('slug') or len(matches) != 1:
+                raise CatalogError('explicit internal article link requires one published same-category target')
+            priority.append(matches[0])
+        selected_ids = {p['id'] for p in selected}
+        related = [a for a in published if isinstance(a.get('productIds'), list)
+                   and any(pid in selected_ids for pid in a['productIds'])]
+        ordered = priority + [a for a in related if a not in priority]
+        ordered += [a for a in published if a not in ordered]
+        return [{k: a.get(k) for k in ('id', 'title', 'slug', 'categoryId', 'excerpt')}
+                for a in ordered[:5]]
+
     def gather(self, theme, catalog):
         """Return immutable catalogue claims plus observed evidence; never infer specs.
 
@@ -808,6 +836,7 @@ class Catalog:
         selected = json.loads(json.dumps([by_id[pid] for pid in ids], ensure_ascii=False, allow_nan=False))
         if len({p.get('categoryId') for p in selected}) != 1 or not selected[0].get('categoryId'):
             raise CatalogError('products must share one category')
+        existing = self._existing_article_summaries(theme, catalog.get('articles', []), selected)
         references, images, details = [], [], []
         checked_at = datetime.now(JST).isoformat()
         for product in selected:
@@ -1156,16 +1185,6 @@ class Catalog:
             item['affiliate'] = bool(item['destinations'] and all(d['verified'] for d in item['destinations']))
             details.append(item)
         checks = {key: all(d[key] for d in details) for key in ('facts', 'images', 'affiliate')}
-        published = [a for a in catalog.get('articles', [])
-                     if a.get('status') == 'published'
-                     and a.get('categoryId') == selected[0]['categoryId']
-                     and (not theme.get('slug') or a.get('slug') != theme['slug'])]
-        selected_ids = set(ids)
-        related = [a for a in published if isinstance(a.get('productIds'), list)
-                   and any(pid in selected_ids for pid in a['productIds'])]
-        unrelated = [a for a in published if a not in related]
-        existing = [{k: a.get(k) for k in ('id', 'title', 'slug', 'categoryId', 'excerpt')}
-                    for a in (related + unrelated)[:5]]
         counts = {}
         for click in catalog.get('clicks', []):
             if click.get('productId') in ids:
