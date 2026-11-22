@@ -273,6 +273,9 @@ class DeterministicDispatcher:
                 else:
                     base['actions'].append({'kind': 'notify_social', 'jobId': job['id']})
 
+        # Social generation is a model stage, not a publication/delivery effect.
+        social_actions = [action for action in base['actions'] if action['kind'] == 'make_social']
+        base['actions'] = [action for action in base['actions'] if action['kind'] != 'make_social']
         # Complete an already actionable side effect before starting a model stage.
         if base['actions']:
             return base
@@ -314,6 +317,7 @@ class DeterministicDispatcher:
             if (not regular_incomplete and self.runtime.config.get('generationEnabled') is True
                     and len(pending) < 3 and self.runtime.supplemental_due(now)):
                 base['actions'].append({'kind':'produce_supplemental','jobId':None})
+            base['actions'] = base['actions'] or social_actions
             return base
         if (self.runtime.config.get('generationEnabled') is True
                 and self.runtime.ledger.production_schedule.is_due(now)):
@@ -327,4 +331,5 @@ class DeterministicDispatcher:
         if (self.runtime.config.get('generationEnabled') is True and len(pending) < 3
                 and self.runtime.supplemental_due(now)):
             base['actions'].append({'kind': 'produce_supplemental', 'jobId': None})
+        base['actions'] = base['actions'] or social_actions
         return base
