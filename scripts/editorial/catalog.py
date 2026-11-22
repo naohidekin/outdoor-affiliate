@@ -53,6 +53,10 @@ MAKERS.update({'primus': ('iwatani-primus.jp', 'iwatani-primus.co.jp', 'iwatani-
                'ソロストーブ': ('store.upioutdoor.com', 'solostove.com')})
 
 # Apparel additions are deliberately bounded to configured, verified primary hosts.
+MAKERS.update({"arc'teryx": ('arcteryx.jp',), "arc’teryx": ('arcteryx.jp',),
+               'arcteryx': ('arcteryx.jp',), 'アークテリクス': ('arcteryx.jp',),
+               'millet': ('millet.jp',), 'ミレー': ('millet.jp',),
+               'finetrack': ('finetrack.com',), 'ファイントラック': ('finetrack.com',)})
 MAKERS.update({'columbia': ('columbiasports.co.jp',), 'コロンビア': ('columbiasports.co.jp',),
                'patagonia': ('patagonia.jp',), 'パタゴニア': ('patagonia.jp',),
                'the north face': ('goldwin.co.jp',), 'thenorthface': ('goldwin.co.jp',),
@@ -631,6 +635,15 @@ class Catalog:
                 # redirects still discard headers and revalidate destinations.
                 if p.hostname == 'www.iwatani.co.jp':
                     headers.setdefault('User-Agent', 'Mozilla/5.0')
+                # Verified public apparel pages require an ordinary compatibility UA.
+                # This is deliberately exact-page scoped; redirect checks remain unchanged.
+                if (p.hostname, p.path) in {
+                        ('arcteryx.jp', '/products/beta-jacket-m'),
+                        ('arcteryx.jp', '/products/beta-sl-jacket-m'),
+                        ('www.millet.jp', '/products/miv01248'),
+                        ('www.millet.jp', '/collections/activities/products/miv01248')}:
+                    headers.setdefault('User-Agent', 'Mozilla/5.0')
+                    headers.setdefault('Accept', 'text/html')
                 if (p.hostname, p.path) in {
                         ('soto.shinfuji.co.jp', '/products/st-233/'),
                         ('www.iwatani-primus.co.jp', '/products/primus/support/')}:

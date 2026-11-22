@@ -8,7 +8,12 @@ import {fileURLToPath} from 'node:url';
 import {templateHashes,validatePresentation,assertTemplateFiles,assertPublicAdvice} from './template-context.mjs';
 const REPO=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 
-const TARGETS = { 'article-024':'firepit-beginner-guide', 'article-005':'single-burner-ranking', 'article-002':'landlock-vs-landnest-shelter' };
+const TARGETS = { 'article-024':'firepit-beginner-guide', 'article-005':'single-burner-ranking', 'article-002':'landlock-vs-landnest-shelter',
+  '3082b43c-a612-4ae0-926e-8bd86c6ab84e':'autumn-camp-classic-fleece-comparison',
+  'winter-camp-heating-comparison-p1':'winter-camp-heating-comparison',
+  'camp-kerosene-stove-8xzl2p':'camp-kerosene-stove-comparison',
+  'article-010':'rainwear-ranking',
+  'article-043':'autumn-camp-clothing-layering-guide' };
 const EDIT = new Set(['title','content','excerpt','metaDescription','faqs','tags','productIds','author','generationMeta']);
 const PRODUCT_EDIT = new Set(['name','brand','specs','imageUrl','affiliateUrl','amazonUrl','price','description','rating','availability','updatedAt','yahooUrl']);
 const record = v => v && typeof v === 'object' && !Array.isArray(v);

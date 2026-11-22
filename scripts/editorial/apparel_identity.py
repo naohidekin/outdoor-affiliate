@@ -11,6 +11,7 @@ colour and size options.  A fixed purchasable variant instead requires exact
 variant, colour and size values.  Missing evidence is a hold, never a pass.
 """
 from html.parser import HTMLParser
+from html import unescape
 import hashlib
 import json
 import re
@@ -35,6 +36,14 @@ BROAD_APPAREL_CATEGORIES = {"wear", "apparel", "clothing", "ウェア"}
 # Configured, bounded primary-domain allowlist.  Additions require a separately
 # verified official source; do not infer domains from merchant/search results.
 OFFICIAL_DOMAINS = {
+    "arc'teryx": ("arcteryx.jp",),
+    "arc’teryx": ("arcteryx.jp",),
+    "arcteryx": ("arcteryx.jp",),
+    "アークテリクス": ("arcteryx.jp",),
+    "millet": ("millet.jp",),
+    "ミレー": ("millet.jp",),
+    "finetrack": ("finetrack.com",),
+    "ファイントラック": ("finetrack.com",),
     "columbia": ("columbiasports.co.jp",),
     "コロンビア": ("columbiasports.co.jp",),
     "mont-bell": ("montbell.jp", "montbell.com"),
@@ -247,16 +256,21 @@ def _brand(node):
     return _scalar(value)
 
 
+_NEW_BRAND_ALIAS_GROUPS = (
+    ("finetrack", "ファイントラック"), ("millet", "ミレー"),
+    ("arc'teryx", "arc’teryx", "arcteryx", "アークテリクス"),
+)
+_BRAND_ALIAS_GROUPS = (
+    ("mont-bell", "montbell", "モンベル"),
+    ("the north face", "thenorthface", "ザ・ノース・フェイス", "ザノースフェイス"),
+    ("columbia", "コロンビア"), ("patagonia", "パタゴニア"), ("nanga", "ナンガ"),
+) + _NEW_BRAND_ALIAS_GROUPS
+
+
 def _brand_matches(actual, expected):
-    groups = (
-        {"mont-bell", "montbell", "モンベル"},
-        {"the north face", "thenorthface", "ザ・ノース・フェイス", "ザノースフェイス"},
-        {"columbia", "コロンビア"}, {"patagonia", "パタゴニア"},
-        {"nanga", "ナンガ"},
-    )
     left, right = _norm(actual), _norm(expected)
     return left == right or any(left in {_norm(v) for v in group}
-                                and right in {_norm(v) for v in group} for group in groups)
+                                and right in {_norm(v) for v in group} for group in _BRAND_ALIAS_GROUPS)
 
 
 def _field(node, keys):
@@ -301,6 +315,12 @@ def inspect_apparel_page(product, page_url, html, image_url=None, source_role="m
         return None
     if source_role == "purchase":
         return _inspect_merchant(product, page_url, html, channel)
+    if contract['model'].upper() in ('MIV01248', 'X000010878', 'X000010854'):
+        from official_shopify_apparel import inspect_official_shopify
+        return inspect_official_shopify(product, page_url, html, image_url)
+    if (_norm(contract['brand']) in ('finetrack', 'ファイントラック')
+            and contract['model'] == 'FUM0422'):
+        return _inspect_finetrack(product, page_url, html, image_url)
     product_nodes = [node for document in _JsonLd(html).documents for node in _nodes(document)
                      if isinstance(node, dict) and _types(node) & {"product", "productmodel"}]
     matches = []
@@ -366,6 +386,272 @@ def inspect_apparel_page(product, page_url, html, image_url=None, source_role="m
     if len(matches) == 1:
         return matches[0]
     return _inspect_montbell(product, page_url, html, image_url) if source_role == "manufacturer" else None
+
+
+_FINETRACK_PAGE = ('https://www.finetrack.com/c/wear-drylayer/'
+                   'wear-drylayer-basic/wear-drylayer-basic-men/FUM0422')
+_FINETRACK_WEARING_IMAGE = ('https://finetrack.itembox.cloud/product/005/000000000524/'
+                          '000000000524-11.jpg?size=l&w=NTUw&t=20240321151606')
+# Observed on the exact page, not computed from SKU/title or a merchant listing.
+_FINETRACK_GTINS = {
+    '524h1v1': '4573406384235', '524h2v1': '4573406384242',
+    '524h3v1': '4573406384259', '524h4v1': '4573406384266',
+    '524h5v1': '4573406384273', '524h1v2': '4573406384280',
+    '524h2v2': '4573406384297', '524h3v2': '4573406384303',
+    '524h4v2': '4573406384310', '524h5v2': None,
+}
+
+
+class _FinetrackDOM(HTMLParser):
+    """Small page tree; facts are read only from explicit primary containers."""
+    _VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+             'link', 'meta', 'param', 'source', 'track', 'wbr'}
+
+    def __init__(self, source):
+        super().__init__(convert_charrefs=True)
+        self.nodes = []
+        self.stack = []
+        self.feed(source)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = {key: value or '' for key, value in attrs}
+        parent = self.stack[-1] if self.stack else None
+        hidden = (bool(parent and parent['hidden']) or tag in
+                  ('script', 'style', 'template', 'nav', 'aside', 'footer')
+                  or 'hidden' in attrs or attrs.get('aria-hidden') == 'true'
+                  or bool(re.search(r'(?:display\s*:\s*none|visibility\s*:\s*hidden)',
+                                    attrs.get('style', ''), re.I)))
+        node = dict(tag=tag, attrs=attrs, parent=parent, children=[], text=[],
+                    hidden=hidden, closed=tag in self._VOID)
+        self.nodes.append(node)
+        if parent is not None:
+            parent['children'].append(node)
+        if tag not in self._VOID:
+            self.stack.append(node)
+
+    def handle_endtag(self, tag):
+        index = next((i for i in range(len(self.stack) - 1, -1, -1)
+                      if self.stack[i]['tag'] == tag), None)
+        if index is not None:
+            self.stack[index]['closed'] = True
+            del self.stack[index:]
+
+    def handle_data(self, data):
+        for node in self.stack:
+            if not node['hidden']:
+                node['text'].append(data if not self.stack[-1]['hidden'] else '')
+
+
+def _ft_class(node, name):
+    return name in (node['attrs'].get('class') or '').split()
+
+
+def _ft_inside(node, parent):
+    current = node['parent']
+    while current is not None:
+        if current is parent:
+            return True
+        current = current['parent']
+    return False
+
+
+def _ft_text(node):
+    return ' '.join(''.join(node['text']).split())
+
+
+def _ft_image(value):
+    """Decode entities and query ordering only; no guessed CDN transformations."""
+    if not isinstance(value, str) or re.search(r'[\s\\\x00-\x1f\x7f]', value):
+        return None
+    decoded = unescape(value)
+    if re.search(r'[\s\\\x00-\x1f\x7f]', decoded):
+        return None
+    parsed = urlsplit(decoded)
+    if (parsed.scheme != 'https' or parsed.netloc != 'finetrack.itembox.cloud'
+            or parsed.fragment or not re.fullmatch(
+                r'/product/005/000000000524/000000000524-\d{2}\.jpg', parsed.path)):
+        return None
+    return parsed.path, tuple(sorted(parsed.query.split('&')))
+
+
+def _ft_gallery_visible(node, layout):
+    while node is not layout:
+        attrs = node['attrs']
+        if ('hidden' in attrs or node['tag'] in ('nav', 'aside', 'template')
+                or re.search(r'display\s*:\s*none|visibility\s*:\s*hidden', attrs.get('style', ''), re.I)
+                or (attrs.get('aria-hidden') == 'true'
+                    and not _ft_class(node, 'fs-c-productCarouselMainImage__image'))):
+            return False
+        node = node['parent']
+    return True
+
+
+def _inspect_finetrack(product, page_url, html, image_url):
+    """FUM0422 only: primary DOM facts plus same-page ProductGroup children."""
+    try:
+        contract = apparel_contract(product)
+        if (page_url != _FINETRACK_PAGE or contract['model'] != 'FUM0422'
+                or contract['class'] != 'base-layer'
+                or _norm(contract['brand']) not in ('finetrack', 'ファイントラック')):
+            return None
+        page = _FinetrackDOM(html)
+        canonicals = [n['attrs'].get('href') for n in page.nodes
+                      if n['tag'] == 'link' and n['attrs'].get('rel') == 'canonical']
+        bodies = [n for n in page.nodes if n['tag'] == 'body']
+        layouts = [n for n in page.nodes if _ft_class(n, 'fs-l-productLayout')]
+        outlines = [n for n in page.nodes if _ft_class(n, 'pro-detailOutline')]
+        forms = [n for n in page.nodes if n['attrs'].get('id') == 'fs_form']
+        if (canonicals != [_FINETRACK_PAGE] or len(bodies) != 1 or len(layouts) != 1
+                or len(outlines) != 1 or len(forms) != 1):
+            return None
+        body, layout, outline, form = bodies[0], layouts[0], outlines[0], forms[0]
+        if (body['attrs'].get('id') != 'fs_ProductDetails'
+                or not _ft_class(body, 'fs-body-product-FUM0422')
+                or any(n['hidden'] or not n['closed'] for n in (layout, outline, form))
+                or not _ft_inside(layout, form) or not _ft_inside(form, body)
+                or not _ft_inside(outline, body) or _ft_inside(outline, layout)
+                or layout['attrs'].get('data-product-id') != '524'):
+            return None
+
+        def texts(container, cls):
+            return [_ft_text(n) for n in page.nodes if _ft_inside(n, container)
+                    and _ft_class(n, cls) and not n['hidden'] and n['closed']]
+
+        if (texts(layout, 'fs-c-productNumber__number') != ['FUM0422']
+                or texts(layout, 'c-label--mens') != ["MEN'S"]
+                or _norm(contract['gender']) != _norm("Men's")
+                or texts(outline, 'pro-detailHeading') != ['商品詳細']):
+            return None
+        titles = texts(layout, 'fs-c-productNameHeading__name')
+        if len(titles) != 1 or not titles[0]:
+            return None
+        facts = {}
+        summaries = [n for n in outline['children'] if n['tag'] == 'div']
+        if not summaries or summaries[0]['hidden'] or not summaries[0]['closed']:
+            return None
+        for n in page.nodes:
+            if not _ft_inside(n, summaries[0]) or n['hidden'] or n['tag'] != 'div':
+                continue
+            children = n['children']
+            if len(children) == 2 and _ft_text(children[0]) in ('素材', '重量'):
+                label, value = map(_ft_text, children)
+                if label in facts or any(c['hidden'] or not c['closed'] for c in children):
+                    return None
+                facts[label] = value
+        if facts != {'素材': 'ポリエステル100%', '重量': '46g'}:
+            return None
+        if any(_norm(contract[k]) != _norm(facts[label]) for k, label in
+               (('fabric', '素材'), ('weight', '重量')) if k in contract):
+            return None
+        roots = [n for d in _JsonLd(html).documents for n in _nodes(d)
+                 if isinstance(n, dict) and 'productgroup' in _types(n)]
+        if len(roots) != 1:
+            return None
+        root = roots[0]
+        if (root.get('@id') != page_url or root.get('url') != page_url
+                or root.get('productGroupID') != '524' or root.get('name') != titles[0]
+                or _brand(root) != 'finetrack'):
+            return None
+        if any(any(k in root for k in keys) and _norm(_field(root, keys)) != _norm(expected)
+                   for keys, expected in ((('model', 'mpn'), 'FUM0422'),
+                       (('gender', 'suggestedGender'), "Men's"),
+                       (('material', 'fabric'), facts['素材']), (('weight',), facts['重量']))):
+            return None
+        variants = root.get('hasVariant')
+        if not isinstance(variants, list) or not variants or len(variants) > 20:
+            return None
+        galleries = [n for n in page.nodes if n['attrs'].get('id') == 'fs_productCarouselMainImage']
+        if (len(galleries) != 1 or not _ft_inside(galleries[0], layout)
+                or galleries[0]['hidden'] or not galleries[0]['closed']):
+            return None
+        gallery = [n for n in page.nodes if n['tag'] == 'img' and _ft_inside(n, galleries[0])
+                   and _ft_gallery_visible(n, layout)]
+        rows, seen_skus, seen_gtins, seen_ids, seen_options = [], set(), set(), set(), set()
+        for child in variants:
+            if not isinstance(child, dict) or _types(child) != {'product'}:
+                return None
+            sku, gtin, ident = (child.get(k) for k in ('sku', 'gtin13', '@id'))
+            color, size = (_field(child, (k,)) for k in ('color', 'size'))
+            prefix = {'S': 'S', 'M': 'M', 'L': 'L', 'XL': 'XL', 'XXL': 'XX'}.get(size)
+            fragment = ident[len(page_url) + 1:] if isinstance(ident, str) and ident.startswith(page_url + '#') else ''
+            code = fragment[len(prefix):] if prefix and fragment.startswith(prefix) else ''
+            if (not isinstance(sku, str) or not re.fullmatch(r'524h[1-5]v[12]', sku)
+                    or child.get('productID') != sku
+                    or gtin != _FINETRACK_GTINS.get(sku)
+                    or ('gtin13' in child and (not isinstance(gtin, str)
+                        or not re.fullmatch(r'\d{13}', gtin) or
+                        sum(int(v) * (1 if i % 2 == 0 else 3) for i, v in enumerate(gtin)) % 10))
+                    or not color or code not in ('BK', 'PA')
+                    or color != {'BK': 'ブラック', 'PA': 'ペイルグレー'}[code]
+                    or sku in seen_skus or (gtin is not None and gtin in seen_gtins) or ident in seen_ids
+                    or (color, size) in seen_options or child.get('hasVariant') or child.get('isVariantOf')):
+                return None
+            if (sku != '524h' + str(('S', 'M', 'L', 'XL', 'XXL').index(size) + 1)
+                    + 'v' + {'BK': '1', 'PA': '2'}[code]
+                    or child.get('name') != titles[0] + ' ' + size + ' ' + color):
+                return None
+            if ('url' in child and child['url'] != page_url) or ('brand' in child and _brand(child) != 'finetrack'):
+                return None
+            for keys, expected in ((('model', 'mpn'), 'FUM0422'),
+                                   (('gender', 'suggestedGender'), "Men's"),
+                                   (('material', 'fabric'), facts['素材']), (('weight',), facts['重量'])):
+                if any(k in child for k in keys) and _norm(_field(child, keys)) != _norm(expected):
+                    return None
+            child_image = _ft_image(child.get('image'))
+            if not child_image or child_image[0] == urlsplit(_FINETRACK_WEARING_IMAGE).path:
+                return None
+            images = [unescape(child['image'])]
+            images += [n['attrs']['src'] for n in gallery
+                       if n['attrs'].get('alt') == 'FUM0422-' + code
+                       and _ft_image(n['attrs'].get('src'))
+                       and _ft_image(n['attrs']['src'])[0] == child_image[0]]
+            if len(images) < 2:
+                return None
+            row = dict(sku=sku, color=color, size=size, imageUrls=images)
+            if gtin is not None:
+                row['gtin13'] = gtin
+            else:
+                row['missingFields'] = ['gtin13']
+            rows.append(row)
+            seen_skus.add(sku)
+            seen_gtins.add(gtin)
+            seen_ids.add(ident)
+            seen_options.add((color, size))
+        if contract['optionState'] == 'fixed':
+            rows = [r for r in rows if _norm(r['color']) == _norm(contract['color'])
+                    and _norm(r['size']) == _norm(contract['size'])]
+            if len(rows) != 1:
+                return None
+        images = list(dict.fromkeys(v for r in rows for v in r['imageUrls']))
+        wearing_example = False
+        if image_url is not None:
+            if image_url == _FINETRACK_WEARING_IMAGE:
+                if (contract['optionState'] != 'selectable'
+                        or sum(n['attrs'].get('src') == _FINETRACK_WEARING_IMAGE for n in gallery) != 1):
+                    return None
+                wearing_example = True
+            else:
+                image_key = _ft_image(image_url)
+                if image_key is None or not any(_ft_image(v) == image_key for v in images):
+                    return None
+            images.append(image_url)  # Retain only after source membership is proved.
+        result = dict(contract, fabric=facts['素材'], weight=facts['重量'],
+                      colors=sorted({r['color'] for r in rows}), sizes=sorted({r['size'] for r in rows}),
+                      imageUrls=list(dict.fromkeys(images)), manufacturerVariants=rows,
+                      sourceUrl=page_url, sourceKind='finetrack-primary-productgroup-dom')
+        if wearing_example:
+            # Product-level wearing example; not evidence of a selected colour/size.
+            result.update(imageScope='primary-product-wearing-example', imageScopeUrl=image_url)
+        if contract['optionState'] == 'fixed':
+            result['sourceVariant'] = rows[0]['sku']
+        excerpt = '商品番号 FUM0422\n' + titles[0] + " MEN'S\n重量 " + facts['重量'] + '\n素材 ' + facts['素材']
+        result['manufacturerExcerpt'] = dict(text=excerpt, sourceUrl=page_url, model='FUM0422',
+            excerptSHA256=hashlib.sha256(excerpt.encode('utf-8')).hexdigest(),
+            scope='primary product number/name/mark and 商品詳細 weight/material rows',
+            conditions=['Public primary manufacturer facts, not personal experience.'])
+        return result
+    except (ApparelIdentityError, TypeError, ValueError, KeyError):
+        return None
 
 
 class _MontbellProduct(HTMLParser):
@@ -705,6 +991,19 @@ def _gender_matches(text, expected):
     return wanted is not None and detected == {wanted}
 
 
+def _amazon_primary_model_matches(text, contract):
+    """One observed label separator; never a general slash/model boundary."""
+    if _exact_token(text, contract['model']):
+        return True
+    if (contract['model'] != 'FUM0422'
+            or _norm(contract['brand']) not in ('finetrack', 'ファイントラック')
+            or _norm(contract['gender']) != _norm("Men's")
+            or not isinstance(text, str)):
+        return False
+    normalized = unicodedata.normalize('NFKC', text)
+    return bool(re.search(r'\(メンズ\)/FUM0422(?![A-Za-z0-9._/-])', normalized, re.I))
+
+
 def _inspect_merchant(product, page_url, html, channel):
     try:
         contract = apparel_contract(product)
@@ -725,11 +1024,11 @@ def _inspect_merchant(product, page_url, html, channel):
                     or len(page.primary_images) != 1 or not title
                     or selected_asins != {asin.group(1)}
                     or not _brand_matches_in_text(title, contract["brand"])
-                    or not _exact_token(title, contract["model"])
+                    or not _amazon_primary_model_matches(title, contract)
                     or not _gender_matches(title, contract["gender"])):
                 return None
             image = page.primary_images[0]
-            if not _exact_token(image.get("alt", ""), contract["model"]):
+            if not _amazon_primary_model_matches(image.get("alt", ""), contract):
                 return None
             if merchant["merchantOptionState"] == "fixed":
                 dimensions = _amazon_selected_dimensions(page.twister_states, asin.group(1))
@@ -828,13 +1127,11 @@ def _inspect_merchant(product, page_url, html, channel):
 
 
 def _brand_matches_in_text(text, expected):
-    groups = (
-        ("mont-bell", "montbell", "モンベル"),
-        ("the north face", "thenorthface", "ザ・ノース・フェイス", "ザノースフェイス"),
-        ("columbia", "コロンビア"), ("patagonia", "パタゴニア"), ("nanga", "ナンガ"),
-    )
     wanted = _norm(expected)
-    aliases = next((group for group in groups if wanted in {_norm(v) for v in group}), (expected,))
+    aliases = next((group for group in _BRAND_ALIAS_GROUPS if wanted in {_norm(v) for v in group}), (expected,))
+    if aliases in _NEW_BRAND_ALIAS_GROUPS:
+        return any(re.search(r"(?<![\w.'’/-])" + re.escape(_norm(alias))
+                             + r"(?![\w.'’/-])", _norm(text)) for alias in aliases)
     return any(_exact_token(text, alias) for alias in aliases)
 
 
@@ -1223,7 +1520,7 @@ def public_binding(binding):
             "canonicalVariant", "sourceVariant", "color", "size", "colors", "sizes", "sourceKind",
             "merchantChannel", "merchantOptionState", "merchantVariant",
             "merchantColor", "merchantSize", "imageUrls", "imageIdentityMode",
-            "merchantSourceSku", "merchantImageProof")
+            "merchantSourceSku", "merchantImageProof", "imageScope", "imageScopeUrl")
     return {key: binding[key] for key in keys if key in binding}
 
 
@@ -1233,12 +1530,24 @@ def binding_matches_product(binding, product, channel=None):
         contract = apparel_contract(product)
     except ApparelIdentityError:
         return False
-    allowed = ("json-ld-product", "montbell-product-dom") if channel is None else (
+    allowed = ("json-ld-product", "montbell-product-dom", "finetrack-primary-productgroup-dom", "official-shopify-product") if channel is None else (
         "amazon-primary-product-dom", "rakuten-primary-product-dom")
     if not isinstance(binding, dict) or binding.get("sourceKind") not in allowed:
         return False
     if any(_norm(binding.get(key)) != _norm(value) for key, value in contract.items()):
         return False
+    if ('imageScope' in binding or 'imageScopeUrl' in binding
+            or (isinstance(binding.get('imageUrls'), list)
+                and _FINETRACK_WEARING_IMAGE in binding['imageUrls'])):
+        if (channel is not None or contract['model'] != 'FUM0422'
+                or _norm(contract['brand']) not in ('finetrack', 'ファイントラック')
+                or contract['optionState'] != 'selectable'
+                or binding.get('sourceKind') != 'finetrack-primary-productgroup-dom'
+                or binding.get('imageScope') != 'primary-product-wearing-example'
+                or binding.get('imageScopeUrl') != _FINETRACK_WEARING_IMAGE
+                or not isinstance(binding.get('imageUrls'), list)
+                or _FINETRACK_WEARING_IMAGE not in binding['imageUrls']):
+            return False
     if channel is not None:
         try:
             merchant = merchant_contract(product, channel)

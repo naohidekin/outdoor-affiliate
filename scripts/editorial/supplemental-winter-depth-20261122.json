@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "batchId": "winter-depth-2026-11-22",
+  "kind": "supplemental_article_batch",
+  "notBefore": "2026-11-22T23:27:15.342746+09:00",
+  "socialEligiblePeriod": "2026-11-20",
+  "maxArticles": 3,
+  "batchCallCap": 96,
+  "status": "awaiting_verified_source",
+  "apparelPolicy": {
+    "version": 1,
+    "requirements": [
+      "exact live catalog product",
+      "strict apparel identity and variant binding",
+      "verified manufacturer facts",
+      "verified product image identity",
+      "verified affiliate and Amazon destinations"
+    ],
+    "missingEvidence": "hold",
+    "researchScope": {
+      "classes": [
+        "down",
+        "hardshell",
+        "active-layer",
+        "heavy-layer",
+        "fleece",
+        "base-layer"
+      ],
+      "comparison": [
+        "cross-brand",
+        "same-position"
+      ],
+      "claims": "Owner-authorized camping, outdoor, hiking movement and rest contexts; verify manufacturer applicability separately. No invented field use, warmth rankings or temperature guarantees. Existing overlapping basics are linked or sent to existing update proposals."
+    }
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "productIds": [
+        "apparel-montbell-1106832",
+        "apparel-patagonia-40275"
+      ],
+      "slug": "active-fleece-climaair-light-r1-air-outdoor-comparison",
+      "title": "行動用フリース2ブランド比較｜クリマエアライトとR1エアを登山・キャンプで選ぶ",
+      "categoryId": "wear",
+      "query": "クリマエアライト R1エア 行動用フリース 比較",
+      "selectionReason": "Owner authorized these additional three articles on 2026-11-22 for Slack review only. Audience includes outdoor activities and hiking movement/rest, not camping alone. Mandatory verified primary facts/photos/exact merchant variants, real Gemini polish, independent QA and Claude final/WISE gates. Preserve article32/period128/batch96 and token caps. No owner approval/publication/SNS authorization is inferred. Distinct active midlayer decision; existing classic four-brand article covers openings/pockets/buying conditions, not these active models. Avoid repeating it; reference /articles/autumn-camp-classic-fleece-comparison . Need source applicability, ventilation and layer roles, no warmth inference from119gvs340g. Specific-model search volume and field experience remain unverified. This uncreated R1/ClimaAir slot is reused from the earlier supplemental proposal, not an additional duplicate. Owner prioritizes researching Montbell and is considering a purchase; no purchase or firsthand use is verified. Keep brand recommendations evidence based."
+    },
+    {
+      "slot": 2,
+      "productIds": [
+        "apparel-millet-miv01248",
+        "apparel-finetrack-fum0422"
+      ],
+      "slug": "drynamic-mesh-drylayer-basic-outdoor-comparison",
+      "title": "ミレーとfinetrackの肌側レイヤー比較｜冬の登山でどう重ねるか",
+      "categoryId": "wear",
+      "query": "ドライナミックメッシュ ドライレイヤーベーシック 冬 比較",
+      "selectionReason": "Owner authorized this exact winter-depth topic on 2026-11-22. Distinct skin-side additional layer, not repetition of Geoline/Merino base-layer comparison. Verify each manufacturer layer role, exact model/gender/photo and both merchant destinations separately. No temperature/safety/performance guarantee or firsthand use. Montbell is a priority research brand but Geoline is not an interchangeable skin-side product; refer to existing base-layer article. Preserve article32/period128/batch96, shared pending3 and all mandatory quality gates. Article and SNS are separate owner approvals; no public or Buffer action before each exact approval."
+    },
+    {
+      "slot": 3,
+      "productIds": [
+        "apparel-arcteryx-x000010878",
+        "apparel-arcteryx-x000010854"
+      ],
+      "slug": "arcteryx-beta-beta-sl-hardshell-comparison",
+      "title": "アークテリクス ベータとベータSLの違い｜登山・街着で選ぶハードシェル",
+      "categoryId": "wear",
+      "query": "アークテリクス ベータ ベータSL 違い ハードシェル",
+      "selectionReason": "Owner authorized this exact winter-depth topic on 2026-11-22. Brand family selection, not repetition of general rainwear ranking. Bind current primary model/gender/version/variants and exact merchant images; never mix Beta LT/AR/SL generations or claim shell insulation. Mention verified Montbell rainwear as a separately scoped existing article, not an unverified equal product or added comparison SKU. Preserve article32/period128/batch96, shared pending3, mandatory Gemini/Claude/WISE and mechanical checks. Exact article and SNS owner approvals remain separate; no publication or Buffer reservation is inferred."
+    }
+  ]
+}

@@ -15,6 +15,8 @@ ROOT_FIELDS = {'schemaVersion', 'batchId', 'kind', 'notBefore', 'socialEligibleP
 SLOT_FIELDS = {'slot', 'productIds', 'slug', 'title', 'categoryId', 'query', 'selectionReason'}
 THEME_FIELDS = ('slug', 'title', 'categoryId', 'query', 'selectionReason')
 _APPROVED_BATCH_BINDINGS = {
+    'winter-depth-2026-11-22': {'batchId': 'winter-depth-2026-11-22', 'maxArticles': 3,
+                              'batchCallCap': 96, 'socialEligiblePeriod': '2026-11-20'},
     'apparel-2026-11-16': {'batchId': 'apparel-2026-11-16', 'maxArticles': 3,
                            'batchCallCap': 96,
                            'socialEligiblePeriod': '2026-11-20'},

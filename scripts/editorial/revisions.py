@@ -4,7 +4,12 @@ import re
 from ledger import fingerprint, require, timestamp
 
 TARGETS = {'article-024': 'firepit-beginner-guide', 'article-005': 'single-burner-ranking',
-           'article-002': 'landlock-vs-landnest-shelter'}
+           'article-002': 'landlock-vs-landnest-shelter',
+           '3082b43c-a612-4ae0-926e-8bd86c6ab84e': 'autumn-camp-classic-fleece-comparison',
+           'winter-camp-heating-comparison-p1': 'winter-camp-heating-comparison',
+           'camp-kerosene-stove-8xzl2p': 'camp-kerosene-stove-comparison',
+           'article-010': 'rainwear-ranking',
+           'article-043': 'autumn-camp-clothing-layering-guide'}
 PRODUCT_PATCH_FIELDS = {'name', 'brand', 'specs', 'imageUrl', 'affiliateUrl', 'amazonUrl', 'price',
                         'description', 'rating', 'availability', 'updatedAt', 'yahooUrl'}
 EDIT_FIELDS = ('title', 'content', 'excerpt', 'metaDescription', 'faqs', 'tags')
