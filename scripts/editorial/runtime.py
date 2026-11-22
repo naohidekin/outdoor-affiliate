@@ -1217,6 +1217,15 @@ class Runtime:
     @staticmethod
     def validate_corrected_retry(job, stage, input_key, records):
         """Read-only eligibility check shared by operator planning and execution."""
+        revision_retry = False
+        if job.get('kind') == 'article_revision':
+            from revisions import validate_context
+            binding = validate_context(job.get('revisionContext'))
+            revision_retry = (
+                (job.get('error') or {}).get('reason') == 'Article length outside existing SKILL limits'
+                and job.get('review') is None
+                and job.get('theme', {}).get('slug') == binding['baseArticle']['slug']
+                and job.get('theme', {}).get('productIds') == binding['targetProductIds'])
         allowed_errors = {
             'apparel-2026-11-16': {
                 'Two to three distinct internal article links required',
@@ -1241,10 +1250,10 @@ class Runtime:
                 raise ValueError('prompt_change_recovery_inputs_unavailable') from None
             if prompt_hash != '144fcbca061d8ebd8be8c67c8241a40b53c0ba1f27dc1d52f885c88eb081bf44':
                 raise ValueError('prompt_change_recovery_inputs_changed')
-        if (stage != 'draft' or job.get('kind') != 'supplemental_article'
+        if (stage != 'draft' or (not revision_retry and (job.get('kind') != 'supplemental_article'
                 or (not prompt_change_retry and (batch_id not in allowed_errors
                     or (job.get('error') or {}).get('reason') not in allowed_errors[batch_id]))
-                or job.get('batchCallCap') != 96 or job.get('stage') != 'error'
+                or job.get('batchCallCap') != 96)) or job.get('stage') != 'error'
                 or any(job.get(field) is not None for field in ('bundle', 'approval', 'publication'))):
             raise ValueError('job_not_corrected_stage_retryable')
         record = next((r for r in records if r.get('stageKey') == input_key), None)
@@ -1255,7 +1264,7 @@ class Runtime:
             raise StageBlocked('exact corrected failed stage retry unavailable', stage_key=input_key)
 
     def retry_corrected_stage(self, id, stage, input_key):
-        """Operator-only recovery of an explicitly eligible supplemental draft.
+        """Operator-only recovery of an explicitly eligible remaining draft.
 
         Caller holds runtime.flock. Keep error until the existing producer saves
         a reviewed bundle: a crash or source hold cannot enqueue a fresh attempt.
@@ -1264,6 +1273,8 @@ class Runtime:
         job = self.ledger.get_job(id)
         self.validate_corrected_retry(job, stage, input_key,
             self.stage_journal.status(job_id=id, stage=stage)['records'])
+        if job.get('kind') == 'article_revision':
+            return self._retry_revision_stage(job, stage, input_key, corrected=True)
         if job.get('batchId') == 'apparel-2026-11-22':
             raise ValueError('local_contract_revalidation_required')
         self._explicit_stage_retry = {'jobId': id, 'stage': stage,
@@ -1281,7 +1292,63 @@ class Runtime:
                 self.ledger.set_stage(id, 'error', detail)
             self._save_usage()
 
-    def _retry_revision_stage(self, job, stage, input_key):
+    def _revision_manager_blocks(self, raw, job):
+        import revisions
+        try:
+            record = json.loads(raw)
+        except (ValueError, TypeError):
+            return True
+        if not isinstance(record, dict) or not isinstance(record.get('status'), str):
+            return True
+        if record['status'] in ('evaluating', 'executing'):
+            return True
+        if record['status'] != 'requires_reconciliation':
+            return False
+        action = record.get('action')
+        if not isinstance(action, dict):
+            return True
+        ids = [action[k] for k in ('job_id', 'jobId') if k in action]
+        if (not ids or any(not isinstance(i, str) or not i.strip() for i in ids)
+                or len(set(ids)) != 1):
+            return True
+        base = job['revisionContext']['baseArticle']
+        if ids[0] in (job['id'], base['id'], base['slug']):
+            return True
+        try:
+            related = self.ledger.get_job(ids[0])
+        except (ValueError, TypeError):
+            return True
+        if not isinstance(related, dict) or not related:
+            return True  # An unresolvable target is not proof of unrelated scope.
+        if related.get('kind') == 'article_revision':
+            try:
+                article = revisions.validate_context(related.get('revisionContext'))['baseArticle']
+            except (ValueError, TypeError, KeyError):
+                return True
+            return article['id'] == base['id'] or article['slug'] == base['slug']
+        theme = related.get('theme')
+        if not isinstance(theme, dict) or not isinstance(theme.get('slug'), str) or not theme['slug']:
+            return True
+        return related['id'] == base['id'] or theme['slug'] == base['slug']
+
+    def _retry_revision_stage(self, job, stage, input_key, *, corrected=False):
+        if corrected:
+            records = self.stage_journal.status(job_id=job['id'])['records']
+            self.validate_corrected_retry(job, stage, input_key,
+                [r for r in records if r.get('stage') == stage])
+            with sqlite3.connect(self.ledger.db_path) as db:
+                effects = db.execute("SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
+                                     (job['id'],)).fetchone()
+                manager = db.execute("SELECT value FROM meta WHERE key LIKE 'editorial_manager:%'").fetchall()
+            if (effects or any(self._revision_manager_blocks(row[0], job) for row in manager)
+                    or any(r.get('status') in ('in_flight', 'unknown') for r in records)):
+                raise ValueError('revision_retry_requires_reconciliation')
+            with sqlite3.connect(self.ledger.db_path) as db:
+                if (db.execute('SELECT 1 FROM requests WHERE job_id=?', (job['id'],)).fetchone()
+                        or db.execute("SELECT 1 FROM model_budget_reservations WHERE article_id IN (?,?) "
+                                      "AND status IN ('reserved','in_flight','unknown')",
+                                      (job['id'], self._budget_article_id(job['id']))).fetchone()):
+                    raise ValueError('revision_retry_requires_reconciliation')
         marker = self.root / 'revision-production-attempts' / (job['id'] + '.json')
         try:
             if marker.is_symlink() or marker.stat().st_mode & 0o777 != 0o600:
@@ -1289,18 +1356,23 @@ class Runtime:
             receipt = json.loads(marker.read_text())
             if not isinstance(receipt, dict) or receipt.get('status') != 'blocked':
                 raise ValueError()
+            if corrected and receipt.get('reason') != 'Article length outside existing SKILL limits':
+                raise ValueError()
         except (OSError, ValueError, TypeError):
             raise ValueError('revision_production_requires_reconciliation') from None
         retry_marker = (self.root / 'revision-stage-retries' / job['id'] /
                         (hashlib.sha256(input_key.encode()).hexdigest() + '.json'))
-        if retry_marker.exists():
+        if retry_marker.exists() or (corrected and retry_marker.is_symlink()):
             raise ValueError('revision_stage_retry_requires_reconciliation')
         atomic(retry_marker, {'status': 'in_flight', 'at': stamp(),
                               'stage': stage, 'inputKey': input_key})
         self._explicit_stage_retry = {'jobId': job['id'], 'stage': stage,
                                       'inputKey': input_key}
-        self.ledger.set_stage(job['id'], 'draft')
-        self.ledger.set_stage(job['id'], 'candidate')
+        if corrected:
+            self._explicit_stage_retry['corrected'] = True
+        else:
+            self.ledger.set_stage(job['id'], 'draft')
+            self.ledger.set_stage(job['id'], 'candidate')
         try:
             current = self.ledger.get_job(job['id'])
             delivery = self._make_article(current, self._context())
@@ -1311,12 +1383,18 @@ class Runtime:
                       else 'awaiting_approval')
             return {'status': 'completed', 'articles': [{'id': job['id'], 'status': status}]}
         except StageUnknown as error:
-            self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+            detail = {'reason': reason(error), 'at': stamp()}
+            if corrected:
+                detail['originalFailure'] = copy.deepcopy(job['error'])
+            self.ledger.set_stage(job['id'], 'error', detail)
             atomic(retry_marker, {'status': 'unknown', 'at': stamp(),
                                   'stage': stage, 'inputKey': input_key})
             return {'status': 'attention', 'reason': reason(error)}
         except Exception as error:
-            self.ledger.set_stage(job['id'], 'error', {'reason': reason(error), 'at': stamp()})
+            detail = {'reason': reason(error), 'at': stamp()}
+            if corrected:
+                detail['originalFailure'] = copy.deepcopy(job['error'])
+            self.ledger.set_stage(job['id'], 'error', detail)
             atomic(retry_marker, {'status': 'blocked', 'at': stamp(),
                                   'stage': stage, 'inputKey': input_key,
                                   'reason': reason(error)})
