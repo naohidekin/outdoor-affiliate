@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import warnings
 
 from buffer_api import BufferAPI
+from account_fence import AccountFence
 from ledger import (fingerprint, valid_review, valid_social_images,
                     owned_article_social_image)
 from social_policy_compat import require_approved_social_review
@@ -27,6 +28,10 @@ X_UNVERIFIED_REASONS = frozenset({
     'x_media_sha_mismatch', 'x_media_url_invalid', 'x_readback_mismatch',
     'x_reply_readback_mismatch',
 })
+GEARMAN_BINDING = {'organizationId': '6adf7fbb37d17051a678fba0',
+                   'channelId': '6adfd45e2f1f5ed648e05a86',
+                   'xAccountId': '1343879420470206464'}
+GEARMAN_STATE_ROOT = Path('/Users/yuueikaiakabaneshounikakurinikku/Library/Application Support/CampGearLabCodex/editorial')
 
 
 def _aware(value, code):
@@ -94,9 +99,13 @@ class BufferPublisher:
     def schedule_or_check(self, job, now=None):
         limit = self.settings.get('dailyRootLimit')
         _require(limit is None or type(limit) is int and limit == 3, 'buffer_daily_root_limit_invalid')
+        binding = self._binding()
+        gearman = binding == GEARMAN_BINDING or self.root == GEARMAN_STATE_ROOT
+        if gearman:
+            _require(binding == GEARMAN_BINDING and limit == 3,
+                     'gearman_daily_guard_configuration_required')
         if limit is None:
             return self._schedule_or_check(job, now)
-        binding = self._binding()
         gap = self.settings.get('minimumRootGapMinutes', 120)
         _require(type(gap) is int and gap >= 120, 'buffer_minimum_root_gap_invalid')
         _require(re.fullmatch(r'[1-9][0-9]*', binding['xAccountId']) is not None,
@@ -154,11 +163,18 @@ class BufferPublisher:
             if waiting:
                 return waiting
             needs_schedule = not state.get('dueAt')
+            try:
+                fence = self._account_fence(binding) if guarded else None
+            except (OSError, ValueError):
+                return self._terminal_hold(marker, state, 'buffer_daily_capacity_unverified')
             # Normal scheduling costs at most eight calls; each due poll can
             # require one daily preflight plus one post read. X/media readback
             # makes no Buffer calls. Rollback's ten-call branch also fits.
             verification_calls = 2 * self._poll_policy()[0] if guarded else 0
-            if guarded and needs_schedule and not self._request_room(state, max(10, 8 + verification_calls)):
+            schedule_attempt = state.get('scheduleAttempt', 1)
+            required = (max(10, 8 + verification_calls) if schedule_attempt == 1
+                        else 6 + verification_calls)
+            if guarded and needs_schedule and not self._request_room(state, required):
                 return self._defer(marker, state, 'buffer_daily_guard_budget_hold')
             next_check = _aware(state['nextCheckAt'], 'buffer_poll_marker_invalid') if state.get('nextCheckAt') else None
             if next_check and now < next_check:
@@ -187,7 +203,7 @@ class BufferPublisher:
                 try:
                     count, observed, occupied = self._day_roots(
                         marker, state, binding, now.astimezone(JST).date(),
-                        effective_now(), exclude_id=state.get('postId'))
+                        effective_now(), exclude_id=state.get('postId'), fence=fence)
                 except Exception:
                     return self._terminal_hold(marker, state, 'buffer_daily_capacity_unverified')
                 if count >= 3:
@@ -221,11 +237,15 @@ class BufferPublisher:
                                            next_eligible=effective_now() + timedelta(seconds=90))
                     if wait:
                         return self._defer(marker, state, 'buffer_due_guard_time', next_eligible=wait)
+                create_input = self._create_input(proposal, binding)
+                create_operation = 'camp:create:' + revision
+                if fence is not None:
+                    fence.intent(self._fence_intent(create_operation, binding, create_input))
                 state.update(phase='create_draft', pending={'action': 'createPost'})
                 _atomic(marker, state)
                 try:
                     post = self._buffer_call(marker, state, 'create_post',
-                                             self._create_input(proposal, binding), mutation=True)
+                                             create_input, mutation=True)
                 except Exception:
                     if state.get('phase') == 'unverified' and isinstance(state.get('result'), dict):
                         return copy.deepcopy(state['result'])
@@ -234,6 +254,8 @@ class BufferPublisher:
                 _atomic(marker, state)
                 _require(self._matches_content(post, proposal) and post.get('status') == 'draft',
                          'buffer_draft_readback_mismatch')
+                if fence is not None:
+                    fence.reject(create_operation, post['id'])
             post = self._buffer_call(marker, state, 'post', state['postId'])
             if post.get('status') == 'draft':
                 if guarded and not needs_schedule:
@@ -252,11 +274,20 @@ class BufferPublisher:
                         return self._defer(marker, state, 'buffer_due_guard_time', next_eligible=wait)
                 if not self._mutation_quota_ready():
                     return self._terminal_hold(marker, state, 'buffer_mutation_quota_hold')
-                state.update(phase='schedule', pending={'action': 'editPost'})
+                edit_input = self._edit_input(state['postId'])
+                attempt = state.get('scheduleAttempt', 1)
+                _require(type(attempt) is int and 1 <= attempt <= 100,
+                         'buffer_schedule_attempt_invalid')
+                schedule_operation = ('camp:schedule:' + revision if attempt == 1 else
+                                      'camp:schedule:' + revision + ':attempt:' + str(attempt))
+                if fence is not None:
+                    fence.intent(self._fence_intent(schedule_operation, binding, edit_input))
+                state.update(phase='schedule', pending={'action': 'editPost'},
+                             scheduleOperation=schedule_operation, scheduleAttempt=attempt)
                 _atomic(marker, state)
                 try:
                     edited = self._buffer_call(marker, state, 'edit_post',
-                                               self._edit_input(state['postId']), mutation=True)
+                                               edit_input, mutation=True)
                     _require(self._matches_scheduled(edited, proposal), 'buffer_schedule_readback_mismatch')
                     if guarded:
                         _require(edited.get('id') == state['postId'], 'buffer_schedule_identity_mismatch')
@@ -265,6 +296,7 @@ class BufferPublisher:
                     if guarded:
                         _require(post.get('id') == state['postId'] and post.get('dueAt') == edited.get('dueAt'),
                                  'buffer_schedule_readback_mismatch')
+                        fence.accept(schedule_operation, post['id'], post['dueAt'])
                 except Exception:
                     if state.get('phase') == 'unverified' and isinstance(state.get('result'), dict):
                         return copy.deepcopy(state['result'])
@@ -280,7 +312,8 @@ class BufferPublisher:
                     try:
                         count, actual_observed, _ = self._day_roots(
                             marker, state, binding, due.astimezone(JST).date(),
-                            effective_now(), exclude_id=state['postId'])
+                            effective_now(), exclude_id=state['postId'], fence=fence,
+                            known_post=post)
                         reason = ('buffer_daily_root_limit' if count >= 3 else
                                   'buffer_due_guard_time' if due - effective_now() < timedelta(seconds=90)
                                   else 'buffer_minimum_root_gap' if self._gap_conflict(
@@ -303,7 +336,7 @@ class BufferPublisher:
                 return self._terminal_hold(marker, state, 'buffer_due_at_changed')
             if now < due:
                 return self._result('pending', state, verified=False)
-            return self._poll_sent(marker, state, post, proposal, due, binding, now)
+            return self._poll_sent(marker, state, post, proposal, due, binding, now, fence=fence)
 
     def _request_room(self, state, needed):
         maximum = self.settings.get('maxBufferRequestsPerPost', 18)
@@ -351,7 +384,8 @@ class BufferPublisher:
             item['remaining'] >= self.settings.get('mutationRemainingFloor', 5) + needed
             for item in self.client.rate_limits))
 
-    def _day_roots(self, marker, state, binding, day, now, *, exclude_id=None):
+    def _day_roots(self, marker, state, binding, day, now, *, exclude_id=None,
+                   fence=None, known_post=None):
         today = now.astimezone(JST).date()
         _require(day >= today, 'buffer_capacity_day_past')
         start = datetime.combine(day, datetime.min.time(), tzinfo=JST)
@@ -401,8 +435,58 @@ class BufferPublisher:
                 observed.append(due)
                 if post.get('isCustomScheduled') is False and post.get('shareMode') == 'addToQueue':
                     occupied.add(due)
+        if fence is not None:
+            by_id = {post['id']: post for post in posts}
+            if isinstance(known_post, dict) and known_post.get('id') == exclude_id:
+                by_id[exclude_id] = known_post
+            for entry in fence.load()['entries']:
+                if entry['phase'] in ('pending_intent', 'pending_rollback'):
+                    raise ValueError('gearman_shared_outcome_unknown')
+                if entry['phase'] == 'accepted':
+                    matched = by_id.get(entry.get('bufferPostId'))
+                    _require(matched is not None and matched.get('status') in ('scheduled', 'sending')
+                             and matched.get('dueAt') == entry.get('dueAt'),
+                             'gearman_shared_fence_readback_mismatch')
+                if entry['phase'] == 'terminal_posted':
+                    stamp = _aware(entry.get('actualAt'), 'gearman_shared_fence_readback_mismatch')
+                    if day == today and native_start <= stamp < cutoff:
+                        actual = next((root for root in roots
+                                       if root['id'] == entry.get('publicPostId')), None)
+                        _require(actual is not None, 'gearman_shared_fence_readback_mismatch')
+                    elif day == today:
+                        _require(stamp < native_start, 'gearman_shared_fence_readback_mismatch')
+                    elif day > today:
+                        _require(stamp <= now, 'gearman_shared_fence_readback_mismatch')
+                        observed.append(stamp)
+                if entry['phase'] == 'terminal_buffer_reported_sent':
+                    stamp = _aware(entry.get('sentAt'), 'gearman_shared_fence_readback_mismatch')
+                    if day == today and native_start <= stamp < cutoff:
+                        _require(any(root['id'] == entry.get('reportedPostId') for root in roots),
+                                 'gearman_shared_fence_readback_mismatch')
+                    elif day == today:
+                        _require(stamp < native_start, 'gearman_shared_fence_readback_mismatch')
+                    else:
+                        _require(stamp <= now, 'gearman_shared_fence_readback_mismatch')
+                        observed.append(stamp)
         native_count = sum(start <= value < end for value in observed[:len(roots)])
         return native_count + reservations, observed, occupied
+
+    def _account_fence(self, binding):
+        fence = AccountFence(self.root / 'buffer-publications' /
+                             ('account-' + binding['xAccountId'] + '.cross-route.json'), binding)
+        value = fence.load()
+        _require(not any(row['phase'] in ('pending_intent', 'pending_rollback')
+                         for row in value['entries']),
+                 'gearman_shared_outcome_unknown')
+        return fence
+
+    @staticmethod
+    def _fence_intent(operation_id, binding, request):
+        digest = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True,
+                                           separators=(',', ':')).encode()).hexdigest()
+        return {'operationId': operation_id, 'route': 'camp', 'account': 'camp_gear_lab',
+                'channelId': binding['channelId'], 'parentCount': 1, 'dueAt': None,
+                'requestHash': digest}
 
     def _defer(self, marker, state, reason, now=None, *, next_eligible=None):
         eligible = next_eligible.isoformat() if next_eligible else None
@@ -421,6 +505,11 @@ class BufferPublisher:
         # https://developers.buffer.com/types/EditPostInput.html
         _require(post['id'] == state['postId'] and self._matches_scheduled(post, proposal),
                  'buffer_rollback_target_invalid')
+        fence = self._account_fence(state['binding'])
+        operation = state.get('scheduleOperation')
+        _require(isinstance(operation, str) and operation,
+                 'gearman_shared_fence_intent_required')
+        fence.begin_rollback(operation, post['id'])
         state.update(phase='rollback_draft', pending={'action': 'saveToDraft'})
         _atomic(marker, state)
         value = dict(self._edit_input(state['postId']), saveToDraft=True)
@@ -435,6 +524,8 @@ class BufferPublisher:
         except Exception:
             # Retain pending intent even for an uncertain readback; never replay.
             return self._unverified(state, 'buffer_rollback_result_unknown')
+        fence.rolled_back(operation, actual['id'])
+        state['scheduleAttempt'] = state.get('scheduleAttempt', 1) + 1
         state['rollbackReadback'] = actual
         if reason in ('buffer_daily_capacity_unverified', 'buffer_due_schedule_mismatch'):
             return self._terminal_hold(marker, state, reason)
@@ -683,7 +774,7 @@ class BufferPublisher:
         state['nextCheckAt'] = (now + timedelta(seconds=interval)).isoformat()
         _atomic(marker, state)
 
-    def _poll_sent(self, marker, state, post, proposal, due, binding, now):
+    def _poll_sent(self, marker, state, post, proposal, due, binding, now, fence=None):
         state['lastStatus'] = post.get('status')
         _atomic(marker, state)
         if post.get('status') in ('scheduled', 'sending'):
@@ -694,6 +785,10 @@ class BufferPublisher:
             state.update(phase='unverified', result=result)
             _atomic(marker, state)
             return result
+        if fence is not None:
+            operation = state.get('scheduleOperation') or 'camp:schedule:' + state['revision']
+            fence.posted(operation, post['id'], result['mainId'],
+                         _iso(_aware(post.get('sentAt'), 'buffer_sent_at_invalid')))
         state.update(phase='verified', pending=None, result=result)
         _atomic(marker, state)
         return result

@@ -7,6 +7,7 @@ import json
 import unittest
 
 from buffer_api import BufferAPI
+from account_fence import AccountFence
 from buffer_publisher import BufferPublisher, JST
 from test_buffer_api import Transport
 import test_buffer_publisher as fixtures
@@ -20,6 +21,13 @@ class DailyGuardTests(unittest.TestCase):
     def setUp(self):
         fixtures.BufferPublisherTests.setUp(self)
         self.publisher.settings['dailyRootLimit'] = 3
+        self.fence_path = (self.root / 'buffer-publications' /
+                           ('account-' + ACCOUNT + '.cross-route.json'))
+        self.fence_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.fence_path.write_text(json.dumps({'version': 1, 'binding': {
+            'organizationId': fixtures.ORG, 'channelId': CHANNEL,
+            'xAccountId': ACCOUNT}, 'entries': []}) + '\n')
+        self.fence_path.chmod(0o600)
         self.native_calls = []
         self.roots = []
         self.pending = []
@@ -93,6 +101,13 @@ class DailyGuardTests(unittest.TestCase):
         self.assertEqual(result, self.schedule())
         self.assertEqual(calls, (len(self.buffer.calls), len(self.native_calls),
                                 json.loads(self.marker().read_text())['bufferRequests']))
+
+    def test_real_gear_target_cannot_disable_the_guard_by_omitting_limit(self):
+        self.publisher.settings.update(organizationId='6adf7fbb37d17051a678fba0')
+        self.publisher.settings.pop('dailyRootLimit')
+        with self.assertRaisesRegex(ValueError, 'gearman_daily_guard_configuration_required'):
+            self.publisher.schedule_or_check(self.job, datetime(2026, 11, 16, 11, tzinfo=JST))
+        self.assertEqual([], self.buffer.calls)
 
     def test_mixed_native_manual_custom_thread_roots_and_jst(self):
         self.roots = [self.native_root(1, '2026-11-15T15:00:00Z')]
@@ -247,6 +262,53 @@ class DailyGuardTests(unittest.TestCase):
         self.assertEqual('2026-11-16T03:17:00Z', state['rejectedDueAt'])
         self.assertEqual(0, state['polls'])
         self.assertIsNone(state['pending'])
+        self.assertEqual(2, state['scheduleAttempt'])
+        fence = json.loads(self.fence_path.read_text())
+        schedule = next(row for row in fence['entries'] if row['operationId'].startswith('camp:schedule:'))
+        self.assertEqual('terminal_rolled_back', schedule['phase'])
+
+    def test_future_day_accepts_only_past_terminal_history_without_native_query(self):
+        proposal, revision = self.publisher._validate(self.job)
+        binding = self.publisher._binding()
+        folder = self.root / 'buffer-publications'; folder.mkdir(mode=0o700, exist_ok=True)
+        marker = folder / (revision + '.json')
+        state, _ = self.publisher._state(marker, revision, proposal, binding)
+        fence = self.publisher._account_fence(binding)
+        intent = {'operationId': 'camp:past', 'route': 'camp', 'account': 'camp_gear_lab',
+                  'channelId': CHANNEL, 'parentCount': 1, 'dueAt': None,
+                  'requestHash': 'a' * 64}
+        fence.intent(intent); fence.accept('camp:past', 'past-buffer', '2026-11-16T00:00:00Z')
+        fence.posted('camp:past', 'past-buffer', '123', '2026-11-16T00:00:00Z')
+        count, observed, _ = self.publisher._day_roots(
+            marker, state, binding, datetime(2026, 11, 17, tzinfo=JST).date(),
+            datetime(2026, 11, 16, 11, tzinfo=JST), fence=fence)
+        self.assertEqual(0, count)
+        self.assertIn(datetime(2026, 11, 16, 9, tzinfo=JST), observed)
+        self.assertEqual([], self.native_calls)
+
+    def test_today_skips_old_buffer_terminal_and_uses_native_time_for_current_id(self):
+        proposal, revision = self.publisher._validate(self.job); binding = self.publisher._binding()
+        folder = self.root / 'buffer-publications'; folder.mkdir(mode=0o700, exist_ok=True)
+        marker = folder / (revision + '.json'); state, _ = self.publisher._state(marker, revision, proposal, binding)
+        base = {'operationId': 'normal:old', 'route': 'normal', 'account': 'camp_gear_lab',
+                'channelId': CHANNEL, 'parentCount': 1, 'requestHash': 'a' * 64,
+                'phase': 'terminal_buffer_reported_sent', 'bufferPostId': 'old-buffer',
+                'dueAt': '2026-11-14T00:00:00Z', 'reportedPostId': '900',
+                'sentAt': '2026-11-14T00:00:00Z',
+                'publicUrl': 'https://x.com/camp_gear_lab/status/900'}
+        current = dict(base, operationId='normal:current', bufferPostId='current-buffer',
+                       reportedPostId='901', dueAt='2026-11-16T00:00:00Z',
+                       sentAt='2026-11-16T00:00:00Z',
+                       publicUrl='https://x.com/camp_gear_lab/status/901')
+        self.fence_path.write_text(json.dumps({'version': 1, 'binding': binding,
+                                               'entries': [base, current]}) + '\n')
+        self.fence_path.chmod(0o600); self.roots = [self.native_root('901', '2026-11-16T00:00:07Z')]
+        count, observed, _ = self.publisher._day_roots(
+            marker, state, binding, datetime(2026, 11, 16, tzinfo=JST).date(),
+            datetime(2026, 11, 16, 11, tzinfo=JST), fence=self.publisher._account_fence(binding))
+        self.assertEqual(1, count)
+        self.assertIn(datetime(2026, 11, 16, 9, 0, 7, tzinfo=JST), observed)
+        self.assertNotIn(datetime(2026, 11, 16, 9, 0, tzinfo=JST), observed)
 
     def test_short_guard_time_rolls_back_and_unknown_is_never_replayed(self):
         original = self.buffer._post
@@ -264,9 +326,42 @@ class DailyGuardTests(unittest.TestCase):
             return edit(value)
         self.buffer.edit_post = unknown
         self.assertEqual('buffer_rollback_result_unknown', self.schedule()['reason'])
+        schedule = next(row for row in json.loads(self.fence_path.read_text())['entries']
+                        if row['operationId'].startswith('camp:schedule:'))
+        self.assertEqual('pending_rollback', schedule['phase'])
         calls = copy.deepcopy(self.buffer.calls)
         self.assertEqual('buffer_effect_result_unknown', self.schedule()['reason'])
         self.assertEqual(calls, self.buffer.calls)
+
+    def test_verified_rollback_attempt_two_schedules_and_posts_its_own_operation(self):
+        self.publisher.settings['maxDuePolls'] = 1
+        original_pending = self.buffer.pending_posts
+        def full(*args):
+            result = original_pending(*args)
+            if self.buffer.status == 'scheduled':
+                result += [self.reservation(str(i)) for i in range(3)]
+            return result
+        self.buffer.pending_posts = full
+        self.assertEqual('deferred', self.schedule()['status'])
+        self.buffer.pending_posts = original_pending
+        original_post = self.buffer._post
+        def next_day(status=None):
+            value = original_post(status)
+            if value['status'] != 'draft': value['dueAt'] = '2026-11-17T03:17:00Z'
+            if value['status'] == 'sent': value['sentAt'] = '2026-11-17T03:17:03Z'
+            return value
+        self.buffer._post = next_day
+        self.assertEqual('scheduled', self.at(self.job, datetime(2026, 11, 17, 11, tzinfo=JST))['status'])
+        self.buffer.status = 'sent'; self.buffer.external = 'https://x.com/camp/status/111'
+        native = self.publisher.x_client; xread = fixtures.XFake()
+        self.publisher.x_client = lambda action, payload: (xread(action, payload)
+                                                            if action == 'threadread'
+                                                            else native(action, payload))
+        self.assertEqual('verified', self.at(self.job, datetime(2026, 11, 17, 12, 18, tzinfo=JST))['status'])
+        rows = json.loads(self.fence_path.read_text())['entries']
+        self.assertEqual('terminal_rolled_back', next(r for r in rows if ':attempt:' not in r['operationId'] and r['operationId'].startswith('camp:schedule:'))['phase'])
+        second = next(r for r in rows if r['operationId'].endswith(':attempt:2'))
+        self.assertEqual(('terminal_posted', '111'), (second['phase'], second['publicPostId']))
 
     def test_due_day_tomorrow_uses_reservations_and_not_future_native(self):
         original = self.buffer._post
@@ -410,6 +505,22 @@ class DailyGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'buffer_daily_root_limit_invalid'):
             self.schedule()
         self.assertEqual([], self.buffer.calls)
+
+    def test_missing_shared_fence_blocks_before_provider_or_mutation(self):
+        self.fence_path.unlink()
+        result = self.schedule()
+        self.assertEqual('buffer_daily_capacity_unverified', result['reason'])
+        self.assertFalse({'create_post', 'edit_post'} & {x[0] for x in self.buffer.calls})
+
+    def test_cross_route_pending_intent_blocks_new_camp_mutation(self):
+        AccountFence(self.fence_path, {'organizationId': fixtures.ORG,
+                     'channelId': CHANNEL, 'xAccountId': ACCOUNT}).intent({
+            'operationId': 'normal:x-approval:' + 'a' * 64, 'route': 'normal',
+            'account': 'camp_gear_lab', 'channelId': CHANNEL, 'parentCount': 1,
+            'dueAt': '2026-11-16T03:15:00Z', 'requestHash': 'b' * 64})
+        result = self.schedule()
+        self.assertEqual('buffer_daily_capacity_unverified', result['reason'])
+        self.assertFalse({'create_post', 'edit_post'} & {x[0] for x in self.buffer.calls})
 
 
 class PendingReaderTests(unittest.TestCase):
