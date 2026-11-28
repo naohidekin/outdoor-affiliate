@@ -33,11 +33,11 @@ from dispatcher import (DeterministicDispatcher, buffer_social_eligible,
                         execution_policy, social_feature_enabled)
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 from model_budget import BudgetHold, ModelBudget
-from daily_metrics import collect_daily_metrics, require_fresh_daily_metrics
+from daily_metrics import collect_daily_metrics, daily_metrics_due, require_fresh_daily_metrics
 from topic_selection import (bind_nonproduct_theme, collect_primary_sources, editorial_context,
                              editorial_signals, gather_nonproduct, mixed_period,
                              nonproduct_affiliate_review, reverify_bound_public_sources,
-                             select_proposals, NonproductSourceHold, TOPIC_TYPES)
+                             select_proposals, NonproductSourceHold, ResearchProposalsRejected, TOPIC_TYPES)
 
 JST = timezone(timedelta(hours=9))
 
@@ -458,6 +458,12 @@ class Runtime:
         if current and saved_themes is None and not candidates:
             return {'status': 'idle', 'articles': []}
         new_research = not current and saved_themes is None and len(pending) < 3
+        if new_research and self.config.get('dailyMetricsEnabled') is True and not daily_metrics_due(now):
+            # Before the collector's normal start, wait for fresh research inputs.
+            # Candidates selected previously can still proceed.
+            if not candidates:
+                return {'status': 'waiting', 'reason': 'daily_metrics_not_due', 'articles': []}
+            new_research = False
         if new_research:
             try:
                 require_fresh_daily_metrics(self.config, now)
@@ -477,6 +483,9 @@ class Runtime:
                 if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'budget_hold':
                     return {'status': 'blocked', 'reason': 'model_budget_hold', 'articles': [],
                             'retryable': prior_attempt.get('retryable') is True}
+                if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'research_contract_rejected':
+                    return {'status': 'blocked', 'reason': 'research_contract_rejected',
+                            'articles': [], 'retryable': False}
                 if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'selection_hold':
                     return {'status': 'blocked', 'reason': prior_attempt.get('holdReason'),
                             'articles': [], 'eligibleCount': prior_attempt.get('eligibleCount'),
@@ -602,6 +611,14 @@ class Runtime:
                                    else 'model_budget_hold'),
                         'articles': [], 'retryable': not requested}
             except Exception as error:
+                if isinstance(error, ResearchProposalsRejected) and not research_repair:
+                    atomic(research_attempt, {'status': 'research_contract_rejected', 'period': week,
+                        'at': stamp(), 'reason': str(error), 'retryable': False,
+                        'requestOccurred': True, 'responseId': error.response_id,
+                        'rawProposalCount': error.count, 'contractRejections': error.rejections,
+                        'researchContextSha256': fingerprint(research_context)})
+                    return {'status': 'blocked', 'reason': 'research_contract_rejected',
+                            'articles': [], 'retryable': False}
                 if research_repair:
                     atomic(research_attempt, {'status': 'repair_held', 'period': week,
                         'failureType': type(error).__name__,

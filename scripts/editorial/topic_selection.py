@@ -229,6 +229,16 @@ class TopicSelectionError(ValueError):
     pass
 
 
+class ResearchProposalsRejected(TopicSelectionError):
+    """A received response contained no contract-valid research proposals."""
+
+    def __init__(self, reason, *, response_id, count, rejections):
+        super().__init__(reason)
+        self.response_id = response_id
+        self.count = count
+        self.rejections = rejections
+
+
 class NonproductSourceHold(TopicSelectionError):
     pass
 

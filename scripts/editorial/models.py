@@ -459,7 +459,8 @@ class Models:
 
     def research_mixed(self, context):
         """One bounded research call; local code decides overlap and selection."""
-        from topic_selection import validate_proposals, TopicSelectionError, MAX_PROPOSALS
+        from topic_selection import (validate_proposals, TopicSelectionError,
+                                     ResearchProposalsRejected, MAX_PROPOSALS)
         result, record = self._call(
             "Propose between one and nine regular-period Camp Gear Lab topics, preferably up to three for each "
             "topicType when evidence supports them; this is soft coverage, never a quota. This is proposal generation, "
@@ -471,7 +472,8 @@ class Models:
             "For every proposal return readerQuestion, intent, "
             "a title of at most 80 characters, 3-5 concise outline headings of at most 40 characters each, "
             "ordinal priority 1-100, "
-            "overlapRationale, selectionReason and exact sourceIds. "
+            "overlapRationale, selectionReason and exact sourceIds. Keep query, readerQuestion, "
+            "overlapRationale and selectionReason each under 300 characters; the hard local limit is 500 each. "
             "Every new proposal must cite directly relevant supplied own-site query-demand or GSC/GA4 signal IDs; "
             "public references alone cannot qualify a new topic. Explain relevance and the limits of page-level "
             "evidence without presenting it as measured demand for the proposed query or market search volume. "
@@ -490,7 +492,10 @@ class Models:
             "gsc-change evidence ID; otherwise set seasonal_hypothesis. All other topic types use not_applicable. "
             "Do not claim semantic uniqueness. Compare reader question and outline with bounded existing summaries. "
             "Set proposedAction=new with overlapArticleIds:[] only when distinct; existing_update with known article IDs "
-            "for a semantic overlap; hold when ambiguous. Exclude medical, survival, extreme-cold, "
+            "for a semantic overlap. Every overlapArticleId must exactly match an ID in supplied existingArticles; "
+            "never use a URL, slug, inferred ID or ID not in that list. existing_update requires at least one "
+            "listed ID. If no supplied ID can be confirmed, use hold with an empty overlapArticleIds list. "
+            "Exclude medical, survival, extreme-cold, "
             "emergency and other high-stakes advice. Return ONLY {proposals:[...]}. Each proposal has exactly "
             "slug,title,categoryId,productIds,topicType,query,readerQuestion,intent,outline,priority,"
             "overlapRationale,selectionReason,sourceIds,proposedAction,overlapArticleIds,needsStatus." + EDITORIAL_LEARNINGS_NOTE,
@@ -515,10 +520,30 @@ class Models:
                 if first_error is None:
                     first_error = error
                 slug = proposal.get('slug') if isinstance(proposal, dict) else None
-                rejected.append({'index': index, 'slug': slug if isinstance(slug, str) and len(slug) <= 80 else None,
+                rejected.append({'index': index, 'slug': slug if isinstance(slug, str)
+                    and re.fullmatch(r'[a-z0-9][a-z0-9-]{2,79}', slug) else None,
                     'reason': str(error) if isinstance(error, TopicSelectionError) else 'proposal_contract_type'})
         if not valid:
-            raise first_error
+            for rejection, proposal in zip(rejected, raw):
+                if not isinstance(proposal, dict):
+                    continue
+                details = []
+                for field in ('query', 'readerQuestion', 'overlapRationale', 'selectionReason'):
+                    value = proposal.get(field)
+                    if isinstance(value, str) and len(value) > 500:
+                        details.append(field + '_over_500')
+                overlap = proposal.get('overlapArticleIds')
+                if isinstance(overlap, list):
+                    if any(not isinstance(ref, str) or ref not in existing_ids for ref in overlap):
+                        details.append('overlap_id_not_in_supplied_articles')
+                    if overlap and proposal.get('proposedAction') == 'new':
+                        details.append('new_has_overlap')
+                    if not overlap and proposal.get('proposedAction') == 'existing_update':
+                        details.append('update_has_no_target')
+                if details:
+                    rejection['details'] = details
+            raise ResearchProposalsRejected(rejected[0]['reason'], response_id=record['responseId'],
+                                            count=len(raw), rejections=rejected) from first_error
         result = {'proposals': valid}
         if rejected:
             result.update(contractRejections=rejected, rawProposalCount=len(raw), responseId=record['responseId'])

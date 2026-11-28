@@ -40,6 +40,22 @@ class AttentionPresentationTests(unittest.TestCase):
         self.assertIn('\n\n\n2. 二つ目', text)
         self.assertNotIn('\n\n\n\n2.', text)
 
+    def test_only_social_result_is_not_reported_as_article_stop(self):
+        social = {'title': '公開済原稿', 'error': {'reason': 'buffer_publication_requires_reconciliation'}}
+        text = attention_text([social], {})
+        self.assertIn('【X投稿の確認】', text)
+        self.assertNotIn('記事制作が止まっています', text)
+        self.assertIn('記事は公開済み', text)
+        self.assertIn('本人の操作は不要', text)
+
+    def test_social_and_article_failures_have_separate_sections(self):
+        social = {'title': '公開済原稿', 'error': {'reason': 'buffer_publication_requires_reconciliation'}}
+        article = {'title': '未公開原稿', 'error': {'reason': 'weekly_research_requires_reconciliation'}}
+        text = attention_text([social, article], {})
+        self.assertLess(text.index('未公開原稿'), text.index('【X投稿の確認】'))
+        self.assertLess(text.index('【X投稿の確認】'), text.index('公開済原稿', text.index('【X投稿の確認】')))
+        self.assertNotIn('具体的な原因はまだ', text)
+
     def test_no_active_title_markup(self):
         text=attention_text([{'title':'<!channel>\nhello','error':{}}],{})
         self.assertNotIn('<!channel>',text)
