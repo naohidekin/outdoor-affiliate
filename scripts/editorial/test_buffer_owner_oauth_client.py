@@ -15,6 +15,7 @@ from buffer_owner_oauth_client import (
     CHANNEL_ID,
     ENTRYPOINT,
     NODE,
+    NODE_ARGUMENTS,
     ORGANIZATION_ID,
     OWNER_HOME,
     SERVICE_ID,
@@ -84,7 +85,7 @@ def failure(method, outcome="refused", code="buffer_api_http_401", context=CONTE
 
 def completed(value, returncode=0, stderr=b""):
     return subprocess.CompletedProcess(
-        [NODE, ENTRYPOINT], returncode, json.dumps(value, separators=(",", ":")).encode(), stderr
+        [NODE, *NODE_ARGUMENTS, ENTRYPOINT], returncode, json.dumps(value, separators=(",", ":")).encode(), stderr
     )
 
 
@@ -181,7 +182,7 @@ class BufferOwnerOAuthClientTests(unittest.TestCase):
                 json.dump(state, stream)
 
             def owner_cli(command, **kwargs):
-                self.assertEqual(command, [NODE, ENTRYPOINT])
+                self.assertEqual(command, [NODE, *NODE_ARGUMENTS, ENTRYPOINT])
                 saved = json.loads(marker.read_text())
                 request = json.loads(kwargs["input"])
                 self.assertEqual(saved["bufferRequests"], 1)
@@ -209,7 +210,7 @@ class BufferOwnerOAuthClientTests(unittest.TestCase):
         self.assertEqual(client.rate_limits, limits())
         self.assertIsNone(client.retry_after)
         args, kwargs = run.call_args
-        self.assertEqual(args[0], [NODE, ENTRYPOINT])
+        self.assertEqual(args[0], [NODE, *NODE_ARGUMENTS, ENTRYPOINT])
         self.assertEqual(kwargs["env"], {"HOME": OWNER_HOME, "LANG": "C.UTF-8", "TZ": "UTC"})
         self.assertEqual(kwargs["cwd"], "/")
         self.assertEqual(kwargs["timeout"], 120)
@@ -265,7 +266,7 @@ class BufferOwnerOAuthClientTests(unittest.TestCase):
 
     @patch("buffer_owner_oauth_client.subprocess.run")
     def test_timeout_consumes_context_once_and_never_retries(self, run):
-        run.side_effect = subprocess.TimeoutExpired([NODE, ENTRYPOINT], 120)
+        run.side_effect = subprocess.TimeoutExpired([NODE, *NODE_ARGUMENTS, ENTRYPOINT], 120)
         client = self.client()
         with self.assertRaisesRegex(BufferOwnerOAuthError, "buffer_owner_transport_unknown"):
             client.pending_posts(ORGANIZATION_ID, CHANNEL_ID)
@@ -461,7 +462,7 @@ class BufferOwnerOAuthClientTests(unittest.TestCase):
 
     @patch("buffer_owner_oauth_client.subprocess.run")
     def test_bounded_output_and_response_binding_are_unknown_without_leaks(self, run):
-        run.return_value = subprocess.CompletedProcess([NODE, ENTRYPOINT], 0, b"x" * (2 * 1024 * 1024 + 1), b"")
+        run.return_value = subprocess.CompletedProcess([NODE, *NODE_ARGUMENTS, ENTRYPOINT], 0, b"x" * (2 * 1024 * 1024 + 1), b"")
         with self.assertRaises(BufferOwnerOAuthError) as raised:
             self.client().pending_posts(ORGANIZATION_ID, CHANNEL_ID)
         self.assertNotIn("xxx", str(raised.exception))

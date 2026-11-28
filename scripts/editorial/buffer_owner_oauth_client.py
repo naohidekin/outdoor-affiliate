@@ -8,6 +8,7 @@ import subprocess
 
 
 NODE = "/usr/local/bin/node"
+NODE_ARGUMENTS = ("--dns-result-order=ipv4first", "--disable-warning=ExperimentalWarning")
 ENTRYPOINT = ("/Users/yuueikaiakabaneshounikakurinikku/x-auto-poster/"
               ".local/camp-oauth-transport-v1/execute-camp-buffer.mjs")
 OWNER_HOME = "/Users/yuueikaiakabaneshounikakurinikku"
@@ -154,7 +155,7 @@ class BufferOwnerOAuthClient:
                          separators=(",", ":"), allow_nan=False).encode()
         try:
             completed = subprocess.run(
-                [NODE, ENTRYPOINT], input=raw, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                [NODE, *NODE_ARGUMENTS, ENTRYPOINT], input=raw, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 env={"HOME": OWNER_HOME, "LANG": "C.UTF-8", "TZ": "UTC"}, cwd="/",
                 timeout=TIMEOUT_SECONDS, check=False, close_fds=True)
         except (OSError, subprocess.SubprocessError):
