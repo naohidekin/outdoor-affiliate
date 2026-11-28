@@ -1376,6 +1376,11 @@ class Runtime:
         from revision_purchase_na_resume import resume
         return resume(self, id, evidence, operator_reference)
 
+    def retry_revision_source_hold(self, id, expected_spec_hash, owner_grant, *, now=None):
+        """Explicit one-time recovery for a revision stopped before model work."""
+        from revision_source_hold_recovery import execute
+        return execute(self, id, expected_spec_hash, owner_grant, now=now)
+
     def retry_stage(self, id, stage, input_key):
         """Explicitly execute the one remaining attempt for an exact failed input."""
         self._require_running()

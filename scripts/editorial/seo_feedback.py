@@ -124,13 +124,18 @@ def _lineage(job, owner_id):
         if theme.get("productIds") == []:
             refs = contract.get("references") if isinstance(contract, dict) else None
             receipt = contract.get("sourceReceiptSha256") if isinstance(contract, dict) else None
-            if (not isinstance(refs, list) or not refs or not HASH.fullmatch(str(receipt or ""))
-                    or [item.get("id") for item in refs] !=
-                       [item for item in source_ids if item.startswith("public:")]
+            public_ids = [item for item in source_ids if item.startswith("public:")]
+            valid_refs = (isinstance(refs, list) and bool(refs)
+                          and all(isinstance(item, dict) and isinstance(item.get("id"), str)
+                                  for item in refs))
+            reference_ids = [item["id"] for item in refs] if valid_refs else []
+            if (not valid_refs or not HASH.fullmatch(str(receipt or ""))
+                    or len(reference_ids) != len(set(reference_ids))
+                    or sorted(reference_ids) != sorted(public_ids)
                     or any(not HASH.fullmatch(str(item.get("receiptSha256", ""))) for item in refs)):
                 return None, "lineage_binding_invalid"
             theme_evidence["nonProductSourceReceiptSha256"] = receipt
-            theme_evidence["publicSourceIds"] = [item["id"] for item in refs]
+            theme_evidence["publicSourceIds"] = sorted(reference_ids)
         try:
             theme_evidence = _canonical_hash(theme_evidence)
         except (TypeError, ValueError, OverflowError):

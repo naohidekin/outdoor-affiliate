@@ -234,6 +234,30 @@ class SeoFeedbackTests(unittest.TestCase):
         self.assertNotIn("analysisMetricsSourceId", result["sourceEvidence"])
         self.assertNotIn("private-person", json.dumps(result))
 
+    def test_nonproduct_reference_order_is_semantic_set_but_receipts_remain_required(self):
+        def nonproduct(value):
+            value.pop("revisionContext")
+            value.pop("kind")
+            value["theme"].update(productIds=[], sourceIds=["public:second", "public:first", "gsc:bound"],
+                                  nonProductContract={
+                                      "sourceReceiptSha256": "4" * 64,
+                                      "references": [
+                                          {"id": "public:first", "receiptSha256": "5" * 64},
+                                          {"id": "public:second", "receiptSha256": "6" * 64}]})
+        result = self.run_assessment(mutate_job=nonproduct)
+        self.assertNotEqual("lineage_binding_invalid", result["reason"])
+        for corrupt in (
+                lambda refs: refs.append(copy.deepcopy(refs[0])),
+                lambda refs: refs[0].update(receiptSha256="invalid"),
+                lambda refs: refs[0].update(id="public:other")):
+            def invalid(value, operation=corrupt):
+                nonproduct(value)
+                operation(value["theme"]["nonProductContract"]["references"])
+            with self.subTest(corrupt=corrupt):
+                failed = self.run_assessment(mutate_job=invalid)
+                self.assertEqual("requires_reconciliation", failed["status"])
+                self.assertEqual("lineage_binding_invalid", failed["reason"])
+
     def test_new_content_mixed_period_or_missing_page_stays_waiting(self):
         def new_content(value):
             value.pop("revisionContext")
