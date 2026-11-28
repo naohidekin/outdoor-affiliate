@@ -22,6 +22,14 @@ AUTHORIZED = {
         'ownerGrantHash': '7971cd7bfcbb89a599920c58d56b40ae99c57d595e6e7984e462bf26a581325e',
         'instructionReceiptSha256': '6caee83229eba9ae01f7ebebadff2d3b8fd0d4331a29fe9bae7974198454b602',
         'productionPeriod': '2026-11-27',
+        'existingImportedBudgetReceipts': [
+            {'reservationId': 'import-36c431b98d286279052f76fff1e3c6d796f20d4614239b074a88292fa0b0947d',
+             'dataHash': '0fa769c0a5245a7c30f33eff8b81fcb0c2f51ac6ee1167c7a840ab9b82867290'},
+            {'reservationId': 'import-5af2f52c9fd56fdda9c40f893382a55b40ee2cb507578b418eef5ac7411534ed',
+             'dataHash': '6404226d86e28baa371be4e88cf98f9bc096f640fd0ff0cbea8f1fd1003c54aa'},
+            {'reservationId': 'import-e24d655021388dc3584b462a33d4bccf067cea37ca1f061a4baf8ee39ece374e',
+             'dataHash': '0aa402f2e30be51382e8cf102e170e3c20a548f429d77b5c87f5a9fa76b4d529'},
+        ],
     },
 }
 
@@ -103,6 +111,27 @@ def _failed_source(value, product_ids):
             for pid in product_ids]
 
 
+def _imported_budget_receipts(db, job_id, budget_id, expected):
+    cursor = db.execute(
+        'SELECT * FROM model_budget_reservations WHERE article_id IN (?,?) '
+        'ORDER BY reservation_id', (job_id, budget_id))
+    columns = [item[0] for item in cursor.description]
+    rows = [dict(zip(columns, values)) for values in cursor.fetchall()]
+    _require(not any(row['article_id'] == job_id for row in rows),
+             'current_job_model_attempt_exists')
+    shared = [row for row in rows if row['article_id'] == budget_id]
+    expected_map = {item.get('reservationId'): item.get('dataHash')
+                    for item in expected if isinstance(item, dict)}
+    actual_map = {row['reservation_id']: fingerprint(row) for row in shared}
+    _require(len(expected_map) == len(expected) == 3
+             and set(row['stage'] for row in shared)
+                 == {'draft', 'polish', 'final_review'}
+             and all(row['status'] == 'imported' for row in shared)
+             and actual_map == expected_map,
+             'shared_budget_receipts_changed')
+    return copy.deepcopy(expected)
+
+
 def _eligibility(runtime, id, expected_spec_hash, owner_grant,
                  expected_current_period, now):
     runtime._require_running()
@@ -152,11 +181,10 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant,
     _require(records == [], 'model_stage_already_started')
     with sqlite3.connect(runtime.ledger.db_path) as db:
         _require(not db.execute('SELECT 1 FROM requests WHERE job_id=?', (id,)).fetchone()
-                 and not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone()
-                 and not db.execute(
-                     'SELECT 1 FROM model_budget_reservations WHERE article_id IN (?,?)',
-                     (id, budget_id)).fetchone(),
-                 'side_effect_or_model_attempt_exists')
+                 and not db.execute('SELECT 1 FROM effects WHERE job_id=?', (id,)).fetchone(),
+                 'side_effect_exists')
+        imported = _imported_budget_receipts(
+            db, id, budget_id, authorized.get('existingImportedBudgetReceipts'))
     attempt_path = runtime.root / 'revision-source-hold-recovery-attempts' / (id + '.json')
     result_path = runtime.root / 'revision-source-hold-recovery-results' / (id + '.json')
     _require(not attempt_path.exists() and not attempt_path.is_symlink()
@@ -171,6 +199,7 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant,
         'legacyJobWeek': job['week'], 'productionPeriod': budget_period,
         'specHash': spec_hash, 'budgetArticleId': budget_id,
         'budgetCaps': {'articleCalls': 32, 'periodCalls': 128},
+        'existingImportedBudgetReceipts': imported,
         'ownerGrant': grant,
         'productionMarkerSha256': hashlib.sha256(marker_raw).hexdigest(),
         'failedSourceSha256': source_sha,
@@ -178,6 +207,24 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant,
         'failedImageProof': failed_images, 'claimedAt': now.isoformat(),
     }
     return job, attempt_path, result_path, archive_path, source_raw, attempt
+
+
+def prepare(runtime, id, expected_spec_hash, owner_grant, *,
+            expected_current_period, now=None):
+    """Run the exact execution guard without creating archive or claim files."""
+    job, _, _, _, _, attempt = _eligibility(
+        runtime, id, expected_spec_hash, owner_grant,
+        expected_current_period, now)
+    return {
+        'status': 'ready', 'action': ACTION, 'jobId': job['id'],
+        'specHash': attempt['specHash'],
+        'productionPeriod': attempt['productionPeriod'],
+        'budgetArticleId': attempt['budgetArticleId'],
+        'existingImportedReservationIds': [
+            item['reservationId']
+            for item in attempt['existingImportedBudgetReceipts']],
+        'failedSourceSha256': attempt['failedSourceSha256'],
+    }
 
 
 def execute(runtime, id, expected_spec_hash, owner_grant, *,

@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+import sqlite3
 import unittest
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -65,12 +66,14 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         self.failed_source_bytes = (self.runtime.root / 'research' /
                                     (self.job['id'] + '.json')).read_bytes()
         self.grant = self.owner_grant()
+        self.imported = self.add_imported_budget_baseline()
         self.authorization = patch.dict(recovery.AUTHORIZED, {self.job['id']: {
             'action': recovery.ACTION,
             'specHash': fingerprint(self.job['revisionContext']),
             'ownerGrantHash': fingerprint(self.grant),
             'instructionReceiptSha256': self.grant['instructionReceiptSha256'],
             'productionPeriod': self.production_period,
+            'existingImportedBudgetReceipts': self.imported,
         }})
         self.authorization.start()
         self.addCleanup(self.authorization.stop)
@@ -105,6 +108,33 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
             row['images'] = True
         return value
 
+    def add_imported_budget_baseline(self):
+        budget_id = self.runtime._budget_article_id(self.job['id'])
+        stages = ('draft', 'polish', 'final_review')
+        rows = []
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            for index, stage in enumerate(stages, 1):
+                values = (
+                    'import-fixture-' + stage, 'response-fixture-' + stage,
+                    'source-' + stage, budget_id, stage, '2026-11-13',
+                    'fixture-model', 'imported', 0, 0, 100 * index, 10 * index,
+                    'success', '2026-11-20T00:00:00+09:00',
+                    '2026-11-20T00:00:00+09:00')
+                db.execute('''INSERT INTO model_budget_reservations
+                    (reservation_id,response_id,source_hash,article_id,stage,period_key,
+                     model,status,reserved_input_tokens,reserved_output_tokens,
+                     actual_input_tokens,actual_output_tokens,outcome,created_at,settled_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', values)
+            cursor = db.execute(
+                'SELECT * FROM model_budget_reservations WHERE article_id=? ORDER BY reservation_id',
+                (budget_id,))
+            columns = [item[0] for item in cursor.description]
+            for values in cursor.fetchall():
+                row = dict(zip(columns, values))
+                rows.append({'reservationId': row['reservation_id'],
+                             'dataHash': fingerprint(row)})
+        return rows
+
     def retry(self):
         return self.runtime.retry_revision_source_hold(
             self.job['id'], fingerprint(self.job['revisionContext']),
@@ -113,6 +143,15 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
     def test_exact_source_hold_runs_normal_pipeline_once_and_preserves_old_marker(self):
         self.runtime.catalog.gather_revision.return_value = self.fresh_source()
         self.runtime.catalog.gather_revision.reset_mock()
+
+        dry = self.runtime.prepare_revision_source_hold_retry(
+            self.job['id'], fingerprint(self.job['revisionContext']), self.grant,
+            expected_current_period=self.production_period, now=NOW)
+        self.assertEqual(('ready', self.production_period, 3),
+                         (dry['status'], dry['productionPeriod'],
+                          len(dry['existingImportedReservationIds'])))
+        self.assertFalse((self.runtime.root / 'revision-source-hold-recovery-attempts' /
+                          (self.job['id'] + '.json')).exists())
 
         result = self.retry()
 
@@ -132,6 +171,13 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         self.assertEqual(0o600, archive.stat().st_mode & 0o777)
         self.assertEqual(hashlib.sha256(self.failed_source_bytes).hexdigest(),
                          attempt_value['failedSourceSha256'])
+        self.assertEqual(self.imported,
+                         attempt_value['existingImportedBudgetReceipts'])
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            old = db.execute(
+                "SELECT count(*) FROM model_budget_reservations WHERE status='imported' "
+                "AND article_id=?", (self.runtime._budget_article_id(self.job['id']),)).fetchone()[0]
+        self.assertEqual(3, old)
         self.assertEqual(('claimed', 'completed'),
                          (attempt_value['status'],
                           json.loads(result_path.read_text())['status']))
@@ -175,6 +221,35 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         self.runtime.catalog.gather_revision.assert_not_called()
         self.assertFalse((self.runtime.root / 'revision-source-hold-recovery-attempts' /
                           (self.job['id'] + '.json')).exists())
+
+    def test_new_unknown_or_additional_shared_budget_row_rejects_before_claim(self):
+        budget_id = self.runtime._budget_article_id(self.job['id'])
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            db.execute('''INSERT INTO model_budget_reservations
+                (reservation_id,response_id,source_hash,article_id,stage,period_key,
+                 model,status,reserved_input_tokens,reserved_output_tokens,
+                 actual_input_tokens,actual_output_tokens,outcome,created_at,settled_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                ('unexpected', None, None, budget_id, 'draft', self.production_period,
+                 'fixture', 'unknown', 0, 0, None, None, 'unknown',
+                 NOW.isoformat(), NOW.isoformat()))
+        with self.assertRaisesRegex(ValueError, 'shared_budget_receipts_changed'):
+            self.retry()
+        self.assertFalse((self.runtime.root / 'revision-source-hold-recovery-attempts' /
+                          (self.job['id'] + '.json')).exists())
+
+    def test_any_current_job_budget_row_rejects_before_claim(self):
+        with sqlite3.connect(self.runtime.ledger.db_path) as db:
+            db.execute('''INSERT INTO model_budget_reservations
+                (reservation_id,response_id,source_hash,article_id,stage,period_key,
+                 model,status,reserved_input_tokens,reserved_output_tokens,
+                 actual_input_tokens,actual_output_tokens,outcome,created_at,settled_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                ('current-job-attempt', None, None, self.job['id'], 'draft',
+                 self.production_period, 'fixture', 'unknown', 0, 0, None, None,
+                 'unknown', NOW.isoformat(), NOW.isoformat()))
+        with self.assertRaisesRegex(ValueError, 'current_job_model_attempt_exists'):
+            self.retry()
 
 
 if __name__ == '__main__':

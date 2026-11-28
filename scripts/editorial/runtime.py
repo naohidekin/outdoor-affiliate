@@ -1387,6 +1387,13 @@ class Runtime:
         return execute(self, id, expected_spec_hash, owner_grant,
                        expected_current_period=expected_current_period, now=now)
 
+    def prepare_revision_source_hold_retry(self, id, expected_spec_hash, owner_grant, *,
+                                           expected_current_period, now=None):
+        """Read-only preflight for the exact source-hold recovery claim."""
+        from revision_source_hold_recovery import prepare
+        return prepare(self, id, expected_spec_hash, owner_grant,
+                       expected_current_period=expected_current_period, now=now)
+
     def retry_stage(self, id, stage, input_key):
         """Explicitly execute the one remaining attempt for an exact failed input."""
         self._require_running()
