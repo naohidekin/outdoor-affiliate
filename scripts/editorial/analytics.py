@@ -211,6 +211,15 @@ def _ga4(raw, now, warnings, label='GA4'):
                 coverageVerified=verified, aiReferrals=_ai_referrals(raw), revenue='未接続')
 
 
+def protected_winner_urls(current):
+    """Protect measured positive-click leaders in the same bounded page evidence."""
+    pages = [row for row in (current or {}).get('pages', [])
+             if isinstance(row, dict) and isinstance(row.get('clicks'), (int, float))
+             and not isinstance(row.get('clicks'), bool) and row['clicks'] > 0]
+    return [row['url'] for row in sorted(pages,
+            key=lambda row: (-row['clicks'], row.get('url', '')))[:3] if row.get('url')]
+
+
 def _opportunities(current, ga4):
     if not current:
         return []
@@ -218,11 +227,12 @@ def _opportunities(current, ga4):
     landing = {p['path']: p for p in ga4['landingPages']} if match else {}
     options = []
     seen = set()
+    winners = set(protected_winner_urls(current))
     for page in current['pages'] + current['candidates']:
         impressions, position = page['impressions'], page['position']
         if impressions is None or position is None or impressions < 30 or not 3 < position <= 20:
             continue
-        if page['url'] in seen or not urlsplit(page['url']).path.startswith('/articles/'):
+        if page['url'] in winners or page['url'] in seen or not urlsplit(page['url']).path.startswith('/articles/'):
             continue
         seen.add(page['url'])
         options.append(dict(action='improve_existing', url=page['url'],

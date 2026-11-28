@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from ledger import fingerprint, require, timestamp
 from revisions import ANALYSIS_KIND, validated_context
+from analytics import protected_winner_urls
 
 JST = timezone(timedelta(hours=9))
 MAX_CANDIDATES = 3
@@ -174,12 +175,7 @@ def _selection(context, live_catalog, now):
     candidates = [item for item in opportunities[:MAX_CANDIDATES]
                   if isinstance(item, dict) and item.get('action') == 'improve_existing']
     pages = [item for item in current.get('pages', []) if isinstance(item, dict)]
-    click_pages = [item for item in pages
-                   if isinstance(item.get('clicks'), (int, float))
-                   and not isinstance(item.get('clicks'), bool)]
-    winners = [item.get('url') for item in sorted(
-        click_pages, key=lambda item: (-item['clicks'], item.get('url', '')))[:3]
-        if _canonical_article_url(item.get('url'))]
+    winners = protected_winner_urls(current)
     page_by_url = {item.get('url'): item for item in pages}
     articles = live_catalog.get('articles') if isinstance(live_catalog, dict) else None
     products = live_catalog.get('products') if isinstance(live_catalog, dict) else None

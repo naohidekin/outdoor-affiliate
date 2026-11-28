@@ -35,6 +35,15 @@ def load(data, now=NOW):
 
 
 class AnalyticsTests(unittest.TestCase):
+    def test_protects_winners_before_bounding_growth_opportunities(self):
+        data = snapshot()
+        data['current']['pages'] = [dict(url=URL + str(i), clicks=100-i,
+            impressions=1000-i, ctr=.1, position=8) for i in range(6)]
+        context = load(data)
+        self.assertEqual([URL + str(i) for i in (3,4,5)],
+                         [row['url'] for row in context['opportunities']])
+        self.assertEqual(6, len(context['evidence']['current']['pages']))
+
     def test_real_shape_sanitized_and_matched(self):
         data = snapshot()
         data['current']['pages'][0]['url'] += '?token=secret#fragment'
