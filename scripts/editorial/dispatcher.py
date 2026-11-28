@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 import json
 import sqlite3
 
-from ledger import timestamp, valid_astra_review, valid_review
+from ledger import fingerprint, timestamp, valid_astra_review, valid_review
 from catalog_corrections import publication_dependency_hash
 from reporting import read_snapshot
 
@@ -34,6 +34,38 @@ def _correction_publish_probe_allowed(runtime, job, jobs, now):
     except (TypeError, ValueError):
         return True
     return not timedelta(0) <= age < timedelta(minutes=30)
+
+
+def _current_independent_review_rejected(runtime, job):
+    """Recognize only an intact, succeeded negative receipt for this revision."""
+    with sqlite3.connect(runtime.ledger.db_path) as db:
+        rows = db.execute(
+            "SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'").fetchall()
+    for raw, in rows:
+        try:
+            record = json.loads(raw)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(record, dict):
+            continue
+        output = record.get('output')
+        try:
+            output_hash_valid = (isinstance(output, dict)
+                                 and record.get('outputHash') == fingerprint(output))
+        except (TypeError, ValueError):
+            continue
+        if (record.get('jobId') != job.get('id')
+                or record.get('stage') != 'independent_review'
+                or record.get('status') != 'succeeded'
+                or not output_hash_valid
+                or output.get('kind') != 'independent_article_review_v1'
+                or output.get('fingerprint') != job.get('revision')
+                or output.get('passed') is not False
+                or not isinstance(output.get('issues'), list)
+                or not output['issues']):
+            continue
+        return True
+    return False
 
 
 def social_feature_enabled(config, feature):
@@ -201,6 +233,12 @@ class DeterministicDispatcher:
                             valid_astra_review(job.get('astraReview'), job.get('revision'))
                         except ValueError:
                             if self.runtime.config.get('independentReviewEnabled') is True:
+                                if _current_independent_review_rejected(self.runtime, job):
+                                    base['blocked'].append({
+                                        'jobId': job['id'],
+                                        'reason': 'independent_review_requires_correction',
+                                    })
+                                    continue
                                 base['actions'].append({'kind': 'deliver', 'jobId': job['id'],
                                                         'deliveryKind': 'article'})
                             article_waiting = True
