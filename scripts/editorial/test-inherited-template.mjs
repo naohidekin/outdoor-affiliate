@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
-import {templateHashes,captureInheritedAdvice,adviceEvidence,assertPublicAdvice,assertTemplateFiles} from './template-context.mjs';
+import {templateHashes,captureInheritedAdvice,adviceEvidence,assertPublicAdvice,assertTemplateFiles,
+  medicalAdviceKind,staticMedicalAdviceSlugs,validatePresentation} from './template-context.mjs';
 import {childEnvironment} from './render-preview.mjs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -38,6 +39,43 @@ test('DOM evidence cannot come from script, template or an unscoped sidebar',()=
  for(const html of ['<script>'+advice+'</script>','<template>'+advice+'</template>',advice])
   assert.throws(()=>adviceEvidence(html,{fullPage:true}));
  assert.equal(adviceEvidence(advice).domSha256,adviceEvidence(pageHTML(advice),{fullPage:true}).domSha256);
+});
+
+test('static medical map proves typed absence on both viewports and rejects advice injection',async()=>{
+ const slug='montbell-light-alpine-down-parka-1101606-guide';
+ assert.equal(await medicalAdviceKind(repo,slug),'no_inherited_medical_advice');
+ const files=await templateHashes(repo),browser=await chromium.launch({headless:true,env:childEnvironment(process.env.TMPDIR||'/tmp')});
+ try {
+  let first;
+  for(const width of [1280,390]){
+   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
+   await context.route('**/*',route=>route.abort());const page=await context.newPage();
+   await page.setContent(pageHTML('<p>医学情報を追加しない既存記事です。</p>'));
+   const observed=await captureInheritedAdvice(page,slug,files,'no_inherited_medical_advice');
+   assert.equal(observed.matchCount,0);assert.equal(observed.clinicalReverified,false);
+   assert.equal(observed.medicalAdviceMapSha256,files['src/lib/medicalAdviceData.ts']);
+   assert.deepEqual(validatePresentation(observed,slug),observed);
+   assertPublicAdvice(observed,pageHTML('<p>医学情報を追加しない既存記事です。</p>'));
+   assert.throws(()=>assertPublicAdvice(observed,pageHTML(advice)));
+   assert.throws(()=>assertTemplateFiles(observed,{...files,'src/lib/medicalAdviceData.ts':'0'.repeat(64)}));
+   await page.setContent(pageHTML(advice));
+   await assert.rejects(captureInheritedAdvice(page,slug,files,'no_inherited_medical_advice'));
+   if(first)assert.deepEqual(observed,first);first=observed;await context.close();
+  }
+ } finally { await browser.close(); }
+});
+
+test('medical advice map proof accepts only one static literal object map',()=>{
+ const literal='export const MEDICAL_ADVICE_MAP: Record<string, unknown> = {"a": {title:"t",body:"b",bullets:["x"]}};';
+ assert.deepEqual(staticMedicalAdviceSlugs(literal),['a']);
+ for(const source of [
+  'const row={title:"t"}; export const MEDICAL_ADVICE_MAP={"a":row};',
+  'const prior={}; export const MEDICAL_ADVICE_MAP={...prior};',
+  'const key="a"; export const MEDICAL_ADVICE_MAP={[key]:{title:"t"}};',
+  'const MEDICAL_ADVICE_MAP={"a":{title:"t"}};',
+  'export const MEDICAL_ADVICE_MAP={"a":{title:"t"}}; MEDICAL_ADVICE_MAP.a={title:"changed"};',
+  'export const MEDICAL_ADVICE_MAP={"a":{title:"t"}}; export const MEDICAL_ADVICE_MAP={};',
+ ]) assert.throws(()=>staticMedicalAdviceSlugs(source));
 });
 
 test('all three actual unchanged MedicalAdvice components retain their complete rendered text on both viewports',async()=>{

@@ -1,7 +1,7 @@
 """Offline inherited-template binding, including visible disclaimer and DOM drift."""
 import copy
 import unittest
-from inherited_advice import advice_evidence, validate_presentation
+from inherited_advice import ADVICE_SELECTOR, advice_evidence, advice_state, validate_presentation
 
 ADVICE = '<aside aria-label="医師からのアドバイス" class="unchanged"><h3>医師から一言：既存の注意</h3><p>既存の安全情報。</p><ul><li>既存の注意事項</li></ul><p>※一般的な医学情報です。症状がある場合は医療機関を受診してください。</p></aside>'
 FILES = {'src/app/articles/[slug]/page.tsx':'a'*64,'src/components/MedicalAdvice.tsx':'b'*64,'src/lib/medicalAdviceData.ts':'c'*64}
@@ -11,6 +11,14 @@ def context(slug='firepit-beginner-guide'):
     observed=advice_evidence(ADVICE)
     return dict(schemaVersion=1,kind='unchanged_medical_advice',slug=slug,html=ADVICE,
                 domSha256=observed['domSha256'],renderedText=observed['text'],
+                templateFiles=FILES,clinicalReverified=False,unchanged=True)
+
+
+def absent_context(slug='montbell-light-alpine-down-parka-1101606-guide'):
+    return dict(schemaVersion=1,kind='no_inherited_medical_advice',slug=slug,
+                selector=ADVICE_SELECTOR,matchCount=0,
+                medicalAdviceMapStatus='slug_absent_from_static_literal_map',
+                medicalAdviceMapSha256=FILES['src/lib/medicalAdviceData.ts'],
                 templateFiles=FILES,clinicalReverified=False,unchanged=True)
 
 
@@ -34,6 +42,21 @@ class InheritedAdviceTests(unittest.TestCase):
         self.assertEqual(advice_evidence(ADVICE)['domSha256'],advice_evidence(html,full_page=True)['domSha256'])
         self.assertEqual(advice_evidence(ADVICE)['text'],advice_evidence(html,full_page=True)['text'])
         with self.assertRaises(ValueError):advice_evidence(html.replace('article-reading-content','other'),full_page=True)
+
+    def test_typed_absence_is_strict_and_does_not_weaken_present_advice(self):
+        value=absent_context()
+        self.assertEqual(value,validate_presentation(value,value['slug']))
+        self.assertEqual({'matchCount':0},advice_state(
+            '<main><article><div id="article-reading-content"><p>本文</p></div></article></main>',
+            full_page=True))
+        for key,replacement in (
+                ('matchCount',1),('medicalAdviceMapStatus','unknown'),
+                ('medicalAdviceMapSha256','0'*64),('clinicalReverified',True)):
+            changed=copy.deepcopy(value);changed[key]=replacement
+            with self.assertRaises(ValueError):validate_presentation(changed,value['slug'])
+        with self.assertRaises(ValueError):advice_state(
+            '<main><article><div id="article-reading-content">'+ADVICE+ADVICE+'</div></article></main>',
+            full_page=True)
 
 
 if __name__=='__main__':unittest.main()

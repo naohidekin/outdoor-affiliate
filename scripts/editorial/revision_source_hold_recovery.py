@@ -21,6 +21,7 @@ AUTHORIZED = {
         'specHash': '04f89ebac8194b33a8ea3c05ee430027b76279fbe5b1f14823e6968b98372ae0',
         'ownerGrantHash': '7971cd7bfcbb89a599920c58d56b40ae99c57d595e6e7984e462bf26a581325e',
         'instructionReceiptSha256': '6caee83229eba9ae01f7ebebadff2d3b8fd0d4331a29fe9bae7974198454b602',
+        'productionPeriod': '2026-11-27',
     },
 }
 
@@ -102,7 +103,8 @@ def _failed_source(value, product_ids):
             for pid in product_ids]
 
 
-def _eligibility(runtime, id, expected_spec_hash, owner_grant, now):
+def _eligibility(runtime, id, expected_spec_hash, owner_grant,
+                 expected_current_period, now):
     runtime._require_running()
     now = timestamp(now)
     authorized = AUTHORIZED.get(id)
@@ -129,7 +131,9 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant, now):
                  'categoryId': binding['baseArticle']['categoryId'],
                  'productIds': binding['targetProductIds']},
              'spec_changed')
-    _require(runtime.ledger.production_schedule.period_key(now) == job.get('week'),
+    budget_period = runtime.model_budget._period_key(now)
+    _require(expected_current_period == authorized.get('productionPeriod')
+             and budget_period == expected_current_period,
              'period_changed')
     limits = _config(runtime.config.get('modelBudget'))
     _require(limits['article']['calls'] == 32 and limits['period']['calls'] == 128,
@@ -163,7 +167,8 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant, now):
                     (source_sha + '.json'))
     attempt = {
         'schemaVersion': SCHEMA, 'kind': 'revision_source_hold_recovery',
-        'action': ACTION, 'status': 'claimed', 'jobId': id, 'week': job['week'],
+        'action': ACTION, 'status': 'claimed', 'jobId': id,
+        'legacyJobWeek': job['week'], 'productionPeriod': budget_period,
         'specHash': spec_hash, 'budgetArticleId': budget_id,
         'budgetCaps': {'articleCalls': 32, 'periodCalls': 128},
         'ownerGrant': grant,
@@ -175,10 +180,12 @@ def _eligibility(runtime, id, expected_spec_hash, owner_grant, now):
     return job, attempt_path, result_path, archive_path, source_raw, attempt
 
 
-def execute(runtime, id, expected_spec_hash, owner_grant, *, now=None):
+def execute(runtime, id, expected_spec_hash, owner_grant, *,
+            expected_current_period, now=None):
     """Caller holds runtime.flock; claim once, then use the unchanged pipeline."""
     job, attempt_path, result_path, archive_path, source_raw, attempt = _eligibility(
-        runtime, id, expected_spec_hash, owner_grant, now)
+        runtime, id, expected_spec_hash, owner_grant,
+        expected_current_period, now)
     _archive_exact(archive_path, source_raw)
     attempt_hash = _write_once(attempt_path, attempt)
     try:

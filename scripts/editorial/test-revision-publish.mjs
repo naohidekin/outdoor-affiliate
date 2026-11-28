@@ -2,15 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { bundleHash, productRow, execute } from './publish.mjs';
-import {adviceEvidence,TEMPLATE_FILES} from './template-context.mjs';
+import {ADVICE_SELECTOR,adviceEvidence,TEMPLATE_FILES} from './template-context.mjs';
 
-function harness({ patched = true, count = 1 } = {}) {
+function harness({ patched = true, count = 1, absent = false } = {}) {
   const adviceHtml='<aside aria-label="医師からのアドバイス"><h3>既存の注意</h3><p>既存の安全情報。</p><p>※一般的な医学情報で、個別の診療ではありません。</p></aside>';
   const observed=adviceEvidence(adviceHtml), files=Object.fromEntries(TEMPLATE_FILES.map(f=>[f,'a'.repeat(64)]));
   const ids = Array.from({length:count},(_,i)=>'p'+i);
   const baseArticle = {id:'article-024',slug:'firepit-beginner-guide',title:'旧記事',content:'旧本文',categoryId:'firepit',
     productIds:ids,status:'published',createdAt:'2026-01-01T00:00:00+09:00',publishedAt:'2026-02-01T00:00:00+09:00',
     updatedAt:'2026-09-01T00:00:00+09:00',excerpt:'旧要約',faqs:[],tags:[],generationMeta:{legacy:'keep'},author:'ギア男'};
+  if(absent){baseArticle.id='article-42e59288744a55545f896d2d';baseArticle.slug='montbell-light-alpine-down-parka-1101606-guide';}
   const baseProducts=ids.map(id=>({id,name:'SOTO ST-310',brand:'SOTO',categoryId:'firepit',specs:{weight:'wrong'},
     imageUrl:'https://images.example/item.png',affiliateUrl:'https://item.rakuten.co.jp/a/b/',amazonUrl:'',
     updatedAt:'2026-09-01T00:00:00+09:00'}));
@@ -23,10 +24,16 @@ function harness({ patched = true, count = 1 } = {}) {
   const binding={kind:'article_revision',baseArticle,baseHash:bundleHash(baseArticle),changeSummary:'根拠を整理',
     editorialCorrectionInstructions:'未確認医療主張を削除',verifiedAuthorFacts:[],targetProductIds:ids,productRemovalReasons:{},baseProducts,candidateProducts,productPatches};
   const b={article:{...structuredClone(baseArticle),title:'改訂記事',content:'## 改訂本文\n広告'},products:candidateProducts,
-    images:candidateProducts.map(p=>({productId:p.id,url:p.imageUrl,verified:true,sha256:createHash('sha256').update('image').digest('hex'),size:5})),revisionContext:binding,inheritedPresentationContext:{schemaVersion:1,kind:'unchanged_medical_advice',slug:baseArticle.slug,html:adviceHtml,
-      domSha256:observed.domSha256,renderedText:observed.text,templateFiles:files,clinicalReverified:false,unchanged:true}};
+    images:candidateProducts.map(p=>({productId:p.id,url:p.imageUrl,verified:true,sha256:createHash('sha256').update('image').digest('hex'),size:5})),revisionContext:binding,
+    inheritedPresentationContext:(absent
+      ?{schemaVersion:1,kind:'no_inherited_medical_advice',slug:baseArticle.slug,selector:ADVICE_SELECTOR,
+        matchCount:0,medicalAdviceMapStatus:'slug_absent_from_static_literal_map',
+        medicalAdviceMapSha256:files['src/lib/medicalAdviceData.ts'],templateFiles:files,
+        clinicalReverified:false,unchanged:true}
+      :{schemaVersion:1,kind:'unchanged_medical_advice',slug:baseArticle.slug,html:adviceHtml,
+        domSha256:observed.domSha256,renderedText:observed.text,templateFiles:files,clinicalReverified:false,unchanged:true})};
   const fieldMap={id:'id',slug:'slug',title:'title',content:'content',categoryId:'category_id',productIds:'product_ids',status:'status',createdAt:'created_at',publishedAt:'published_at',updatedAt:'updated_at',excerpt:'excerpt',faqs:'faqs',tags:'tags',generationMeta:'generation_meta'};
-  const state={adviceHtml,files,article:Object.fromEntries(Object.entries(fieldMap).map(([l,r])=>[r,structuredClone(baseArticle[l])])),products:baseProducts.map(p=>({...productRow(p),xmin:'10'})),writes:[],readbacks:0};
+  const state={adviceHtml:absent?'':adviceHtml,files,article:Object.fromEntries(Object.entries(fieldMap).map(([l,r])=>[r,structuredClone(baseArticle[l])])),products:baseProducts.map(p=>({...productRow(p),xmin:'10'})),writes:[],readbacks:0};
   const db={findProductArticles:async()=>[],findArticles:async()=>[structuredClone(state.article)],getProducts:async ids=>structuredClone(state.products.filter(p=>ids.includes(p.id))),
     insertDraft:async()=>{throw Error('no draft write');},
     patchProductCAS:async(before,patch)=>{state.writes.push('product:'+before.id);Object.assign(state.products.find(p=>p.id===before.id),patch);return [structuredClone(state.products.find(p=>p.id===before.id))];},
@@ -283,6 +290,19 @@ test('missing inherited context, changed template bytes or public advice blocks 
   if(mode==='dom')h.state.adviceHtml=h.state.adviceHtml.replace('既存の安全情報','changed public advice');
   await assert.rejects(execute(h.input,h.deps),/inherited/);assert.deepEqual(h.state.writes,[]);
  }
+});
+test('typed absence is map-grounded, keeps medical display strict and returns no fake DOM hash',async()=>{
+ const h=harness({absent:true});const result=await execute(h.input,h.deps);
+ assert.equal(result.verified,true);assert.equal(result.readback.inheritedAdviceApplicability,'not_applicable');
+ assert.equal('inheritedAdviceDomSha256' in result.readback,false);
+ const unexpected=harness({absent:true});unexpected.state.adviceHtml=unexpected.state.adviceHtml
+   +'<aside aria-label="医師からのアドバイス"><p>unexpected</p></aside>';
+ await assert.rejects(execute(unexpected.input,unexpected.deps),/inherited|reconciliation/);
+ assert.deepEqual(unexpected.state.writes,[]);
+ const forged=harness();forged.input.bundle.inheritedPresentationContext=harness({absent:true}).input.bundle.inheritedPresentationContext;
+ forged.input.bundle.inheritedPresentationContext.slug=forged.input.bundle.article.slug;
+ forged.input.revision=bundleHash(forged.input.bundle);forged.input.approval.revision=forged.input.revision;
+ await assert.rejects(execute(forged.input,forged.deps),/applicability/);assert.deepEqual(forged.state.writes,[]);
 });
 test('inherited context drift during product writes blocks article CAS and requires reconciliation',async()=>{
  const h=harness();const patch=h.deps.db.patchProductCAS;

@@ -1281,8 +1281,12 @@ class Runtime:
         if 'polishSelection' in polished:
             review['polish']['selection'] = copy.deepcopy(polished['polishSelection'])
         if revision:
-            review.update(medicalScope='candidate_article_only', inheritedClinicalReverified=False,
-                          inheritedAdviceDomSha256=bundle['inheritedPresentationContext']['domSha256'])
+            review.update(medicalScope='candidate_article_only', inheritedClinicalReverified=False)
+            inherited = bundle['inheritedPresentationContext']
+            if inherited['kind'] == 'unchanged_medical_advice':
+                review['inheritedAdviceDomSha256'] = inherited['domSha256']
+            else:
+                review['inheritedAdviceApplicability'] = 'not_applicable'
         self.ledger.record_review(job['id'], job['revision'], review)
         if (revision or corrected) and self.config.get('independentReviewEnabled') is True:
             from independent_article_review import ensure_review
@@ -1376,10 +1380,12 @@ class Runtime:
         from revision_purchase_na_resume import resume
         return resume(self, id, evidence, operator_reference)
 
-    def retry_revision_source_hold(self, id, expected_spec_hash, owner_grant, *, now=None):
+    def retry_revision_source_hold(self, id, expected_spec_hash, owner_grant, *,
+                                   expected_current_period, now=None):
         """Explicit one-time recovery for a revision stopped before model work."""
         from revision_source_hold_recovery import execute
-        return execute(self, id, expected_spec_hash, owner_grant, now=now)
+        return execute(self, id, expected_spec_hash, owner_grant,
+                       expected_current_period=expected_current_period, now=now)
 
     def retry_stage(self, id, stage, input_key):
         """Explicitly execute the one remaining attempt for an exact failed input."""
@@ -1769,6 +1775,15 @@ class Runtime:
         self._require_running()
         self.ledger.assert_not_owner_held(job['id'])
         key = self.stage_journal.key(job['id'], stage, inputs)
+        cache_only = getattr(self, '_cache_only_stage_keys', None)
+        cached_stage = isinstance(cache_only, dict) and stage in cache_only
+        if cached_stage:
+            records = self.stage_journal.status(job_id=job['id'], stage=stage)['records']
+            if key != cache_only[stage] or not any(
+                    item.get('stageKey') == key and item.get('status') == 'succeeded'
+                    for item in records):
+                raise StageBlocked('exact paid stage cache required after render recovery',
+                                   stage_key=key, status='changed')
         retry = getattr(self, '_explicit_stage_retry', None)
         if retry and retry['jobId'] == job['id']:
             order = ('draft', 'polish', 'final_review')
@@ -1790,6 +1805,9 @@ class Runtime:
         reason_name = 'explicit_retry' if explicit_retry else 'initial'
         def measured():
             nonlocal called
+            if cached_stage:
+                raise StageBlocked('paid stage model call forbidden during render recovery',
+                                   stage_key=key, status='changed')
             called = True
             with self.model_budget.scope(self._budget_article_id(job['id']), stage):
                 return operation()

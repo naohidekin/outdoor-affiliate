@@ -311,9 +311,10 @@ class Slack:
         if job.get('kind') == 'article_revision':
             from inherited_advice import validate_presentation
             inherited = validate_presentation(bundle.get('inheritedPresentationContext'), article['slug'])
-            label = '既存の「医師から一言」（変更なし・今回の再検証対象外）'
-            for part in chunks(label + '\n' + inherited['renderedText']):
-                parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part, 'emoji': False}}]))
+            if inherited['kind'] == 'unchanged_medical_advice':
+                label = '既存の「医師から一言」（変更なし・今回の再検証対象外）'
+                for part in chunks(label + '\n' + inherited['renderedText']):
+                    parts.append(self.post(label, [{'type': 'section', 'text': {'type': 'plain_text', 'text': part, 'emoji': False}}]))
         values = {k: request[k] for k in ('request_id', 'article_id', 'manifest_hash', 'nonce')}
         revision = job.get('kind') == 'article_revision'
         approve_label = ('再開後の公開を承認' if revision and self.execution_suspended else

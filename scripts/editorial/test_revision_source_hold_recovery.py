@@ -32,8 +32,9 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         self.runtime.renderer = renderer
         self.base = baseline()
         self.job = self.runtime.ledger.request_revision(spec(self.base), now=NOW)
+        self.production_period = '2026-11-27'
         self.runtime.ledger.production_schedule.period_key = Mock(
-            return_value=self.job['week'])
+            return_value=self.production_period)
         context = self.runtime._context()
         context['articles'] = [self.base]
         context['revisionArticles'] = [self.base]
@@ -69,6 +70,7 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
             'specHash': fingerprint(self.job['revisionContext']),
             'ownerGrantHash': fingerprint(self.grant),
             'instructionReceiptSha256': self.grant['instructionReceiptSha256'],
+            'productionPeriod': self.production_period,
         }})
         self.authorization.start()
         self.addCleanup(self.authorization.stop)
@@ -106,7 +108,7 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
     def retry(self):
         return self.runtime.retry_revision_source_hold(
             self.job['id'], fingerprint(self.job['revisionContext']),
-            self.grant, now=NOW)
+            self.grant, expected_current_period=self.production_period, now=NOW)
 
     def test_exact_source_hold_runs_normal_pipeline_once_and_preserves_old_marker(self):
         self.runtime.catalog.gather_revision.return_value = self.fresh_source()
@@ -115,6 +117,7 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         result = self.retry()
 
         self.assertEqual('completed', result['status'])
+        self.assertNotEqual(self.job['week'], self.production_period)
         self.runtime.catalog.gather_revision.assert_called_once()
         self.models.draft.assert_called_once()
         saved = self.runtime.ledger.get_job(self.job['id'])
@@ -153,10 +156,22 @@ class RevisionSourceHoldRecoveryTests(unittest.TestCase):
         bad = self.owner_grant('A different valid task instruction must not authorize this recovery.')
         with self.assertRaises(ValueError):
             self.runtime.retry_revision_source_hold(
-                self.job['id'], fingerprint(self.job['revisionContext']), bad, now=NOW)
+                self.job['id'], fingerprint(self.job['revisionContext']), bad,
+                expected_current_period=self.production_period, now=NOW)
         with self.assertRaises(ValueError):
             self.runtime.retry_revision_source_hold(
-                self.job['id'], '0' * 64, self.grant, now=NOW)
+                self.job['id'], '0' * 64, self.grant,
+                expected_current_period=self.production_period, now=NOW)
+        self.runtime.catalog.gather_revision.assert_not_called()
+        self.assertFalse((self.runtime.root / 'revision-source-hold-recovery-attempts' /
+                          (self.job['id'] + '.json')).exists())
+
+    def test_stale_expected_production_period_rejects_before_claim(self):
+        self.runtime.catalog.gather_revision.reset_mock()
+        with self.assertRaisesRegex(ValueError, 'period_changed'):
+            self.runtime.retry_revision_source_hold(
+                self.job['id'], fingerprint(self.job['revisionContext']), self.grant,
+                expected_current_period='2026-11-20', now=NOW)
         self.runtime.catalog.gather_revision.assert_not_called()
         self.assertFalse((self.runtime.root / 'revision-source-hold-recovery-attempts' /
                           (self.job['id'] + '.json')).exists())

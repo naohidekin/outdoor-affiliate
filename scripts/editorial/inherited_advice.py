@@ -7,6 +7,7 @@ import sys
 
 TEMPLATE_FILES = ('src/app/articles/[slug]/page.tsx', 'src/components/MedicalAdvice.tsx',
                   'src/lib/medicalAdviceData.ts')
+ADVICE_SELECTOR = 'main article #article-reading-content aside[aria-label="医師からのアドバイス"]'
 VOID = {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
 BLOCK = {'aside','h3','p','ul','li','div','br'}
 
@@ -66,12 +67,14 @@ class AdviceParser(HTMLParser):
                 children.append(data)
 
 
-def advice_evidence(html, full_page=False):
+def advice_state(html, full_page=False):
     _check(isinstance(html, str) and 0 < len(html.encode()) <= 8*1024*1024)
     parser = AdviceParser(full_page)
     parser.feed(html)
     parser.close()
-    _check(len(parser.roots) == 1 and not any(node is not None for _, _, node in parser.stack))
+    _check(len(parser.roots) <= 1 and not any(node is not None for _, _, node in parser.stack))
+    if not parser.roots:
+        return {'matchCount': 0}
     tree = parser.roots[0]
     def text(node):
         if isinstance(node, str):
@@ -81,26 +84,45 @@ def advice_evidence(html, full_page=False):
     rendered = '\n'.join(_space(line) for line in text(tree).splitlines() if _space(line))
     _check(bool(rendered))
     canonical = json.dumps(tree, ensure_ascii=False, separators=(',', ':'))
-    return {'domSha256': hashlib.sha256(canonical.encode()).hexdigest(), 'text': rendered}
+    return {'matchCount': 1, 'domSha256': hashlib.sha256(canonical.encode()).hexdigest(),
+            'text': rendered}
+
+
+def advice_evidence(html, full_page=False):
+    result = advice_state(html, full_page)
+    _check(result['matchCount'] == 1)
+    return {key: result[key] for key in ('domSha256', 'text')}
 
 
 def validate_presentation(value, slug):
-    _check(isinstance(value, dict) and set(value) == {'schemaVersion','kind','slug','html','domSha256',
-            'renderedText','templateFiles','clinicalReverified','unchanged'})
-    _check(value['schemaVersion'] == 1 and value['kind'] == 'unchanged_medical_advice'
-           and value['slug'] == slug and value['clinicalReverified'] is False and value['unchanged'] is True)
+    _check(isinstance(value, dict))
+    common = {'schemaVersion','kind','slug','templateFiles','clinicalReverified','unchanged'}
+    present = common | {'html','domSha256','renderedText'}
+    absent = common | {'selector','matchCount','medicalAdviceMapStatus','medicalAdviceMapSha256'}
+    _check(set(value) in (present, absent))
+    _check(value['schemaVersion'] == 1 and value['slug'] == slug
+           and value['clinicalReverified'] is False and value['unchanged'] is True)
     _check(isinstance(value['templateFiles'], dict) and set(value['templateFiles']) == set(TEMPLATE_FILES)
            and all(isinstance(v, str) and re.fullmatch(r'[a-f0-9]{64}', v) for v in value['templateFiles'].values()))
-    observed = advice_evidence(value['html'])
-    _check(value['domSha256'] == observed['domSha256'] and isinstance(value['renderedText'], str)
-           and _space(value['renderedText']) == _space(observed['text']))
+    if value['kind'] == 'unchanged_medical_advice':
+        _check(set(value) == present)
+        observed = advice_evidence(value['html'])
+        _check(value['domSha256'] == observed['domSha256'] and isinstance(value['renderedText'], str)
+               and _space(value['renderedText']) == _space(observed['text']))
+    else:
+        _check(value['kind'] == 'no_inherited_medical_advice' and set(value) == absent
+               and value['selector'] == ADVICE_SELECTOR and value['matchCount'] == 0
+               and value['medicalAdviceMapStatus'] == 'slug_absent_from_static_literal_map'
+               and value['medicalAdviceMapSha256'] ==
+                   value['templateFiles']['src/lib/medicalAdviceData.ts'])
     return value
 
 
 if __name__ == '__main__':
     try:
         payload = json.loads(sys.stdin.buffer.read(9*1024*1024))
-        result = advice_evidence(payload['html'], payload.get('fullPage') is True)
+        operation = advice_state if payload.get('allowAbsent') is True else advice_evidence
+        result = operation(payload['html'], payload.get('fullPage') is True)
         print(json.dumps(result, ensure_ascii=False))
     except Exception:
         sys.exit(1)  # Never print page contents, provider errors or credentials.

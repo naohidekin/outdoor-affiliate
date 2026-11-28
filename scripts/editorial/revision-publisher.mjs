@@ -5,7 +5,7 @@ import { withPublicationLock, seoRoot } from '../seo/article-guard.mjs';
 import { detectMedicalRisks } from '../../src/lib/medical-review-gate.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {templateHashes,validatePresentation,assertTemplateFiles,assertPublicAdvice} from './template-context.mjs';
+import {templateHashes,validatePresentation,assertTemplateFiles,assertPublicAdvice,medicalAdviceKind} from './template-context.mjs';
 const REPO=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 
 const TARGETS = { 'article-024':'firepit-beginner-guide', 'article-005':'single-burner-ranking', 'article-002':'landlock-vs-landnest-shelter',
@@ -182,6 +182,8 @@ async function verifyInheritedPresentation(input,deps,html) {
   const context=validatePresentation(input.bundle.inheritedPresentationContext,input.bundle.article.slug);
   const files=await (deps.currentTemplateHashes ? deps.currentTemplateHashes() : templateHashes(REPO));
   assertTemplateFiles(context,files);
+  check(await medicalAdviceKind(REPO,input.bundle.article.slug)===context.kind,
+    'inherited medical advice applicability changed');
   const currentHTML=html ?? await deps.publicGet('https://camp-gear-lab.com/articles/'+input.bundle.article.slug);
   assertPublicAdvice(context,currentHTML);
 }
@@ -237,8 +239,12 @@ export async function executeRevision(input,deps) {
       await verifyRevisionPublicReadback(input,deps,url);
       phase='image_readback';
       await verifyApprovedImages(input.bundle,deps.imageDigest);
+      const inherited=input.bundle.inheritedPresentationContext;
+      const inheritedReadback=inherited.kind==='unchanged_medical_advice'
+        ?{inheritedAdviceDomSha256:inherited.domSha256}
+        :{inheritedAdviceApplicability:'not_applicable'};
       return {verified:true,url,contentHash:sha(input.bundle.article.content),remoteUpdatedAt:readback[0].updated_at,
-        readback:{verified:true,fingerprint:input.revision,inheritedAdviceDomSha256:input.bundle.inheritedPresentationContext.domSha256,...(input.bundle.article.generationMeta?.socialCard?{socialCard:input.bundle.article.generationMeta.socialCard}:{})}};
+        readback:{verified:true,fingerprint:input.revision,...inheritedReadback,...(input.bundle.article.generationMeta?.socialCard?{socialCard:input.bundle.article.generationMeta.socialCard}:{})}};
     } catch (error) {
       const failure=Error('unknown: revision product/article publication requires reconciliation');
       failure.diagnostic={phase,...error?.diagnostic};throw failure;
