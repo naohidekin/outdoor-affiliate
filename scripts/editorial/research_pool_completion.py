@@ -127,6 +127,12 @@ def _source_readiness(runtime, products, correction, now):
         suffix = '-candidate-source.json' if product_id in changed else '-source.json'
         proof, _, digest = _read(folder / (product_id + suffix),
                                  'research_pool_completion_product_source_required')
+        if product_id in changed and proof.get('kind') == 'candidate_catalog_source':
+            require(set(proof) == {'createdAt', 'kind', 'productId', 'schemaVersion', 'source'}
+                    and proof.get('schemaVersion') == 1 and proof.get('productId') == product_id
+                    and isinstance(proof.get('source'), dict),
+                    'research_pool_completion_candidate_source_binding')
+            proof = proof['source']
         require(proof.get('productIds') == [product_id] and proof.get('products') == [product]
                 and proof.get('blocked') is False
                 and proof.get('checks') == {'facts': True, 'images': True, 'affiliate': True},

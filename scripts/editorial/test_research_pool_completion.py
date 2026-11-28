@@ -283,6 +283,14 @@ class ResearchPoolCompletionTests(unittest.TestCase):
         raw = self.correction()
         candidate_products = self.catalog['products'][:2] + raw['candidateProducts']
         self.write_source_proofs(products=candidate_products, candidate_ids={DOWN[1]})
+        path = self.runtime.root / 'planning-completions' / self.completion.SOURCE_FOLDER / (DOWN[1] + '-candidate-source.json')
+        proof = json.loads(path.read_text())
+        wrapper = {'createdAt': NOW.isoformat(), 'kind': 'candidate_catalog_source',
+                   'productId': DOWN[1], 'schemaVersion': 1, 'source': proof}
+        atomic(path, dict(wrapper, productId=DOWN[0]))
+        with self.assertRaisesRegex(ValueError, 'candidate_source_binding'):
+            self.prepare(catalog_correction=raw)
+        atomic(path, wrapper)
         manifest = self.prepare(catalog_correction=raw)
         bound = manifest['catalogCorrectionContext']
         self.assertEqual(DOWN, [item['id'] for item in bound['baseProducts']])
