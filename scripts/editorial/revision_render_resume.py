@@ -1,7 +1,7 @@
 """One explicit guide continuation after a deterministic render fix.
 
-Draft and polish must be exact successful StageJournal cache hits.  Only the
-ordinary final-review path may make a new paid call.  Caller holds runtime.flock.
+Draft and polish must be exact successful StageJournal cache hits. Both the
+ordinary final-review and independent-review paths may make new paid calls.  Caller holds runtime.flock.
 """
 import copy
 import hashlib
@@ -137,7 +137,7 @@ def prepare(runtime, owner_proof):
                                                 ("id", "stage", "error", "revisionContext")}),
                 "cachedStages": {"draft": {"stageKey": DRAFT_KEY, "outputHash": DRAFT_OUTPUT},
                                  "polish": {"stageKey": POLISH_KEY, "outputHash": POLISH_OUTPUT}},
-                "artifacts": artifacts, "newPaidStagesAllowed": ["final_review"],
+                "artifacts": artifacts, "newPaidStagesAllowed": ["final_review", "independent_review"],
                 "ownerApprovalGranted": False, "publicationAllowed": False}
     return {**manifest, "manifestSha256": fingerprint(manifest)}
 
