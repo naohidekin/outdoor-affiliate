@@ -3,7 +3,7 @@ import copy
 import unittest
 
 from review_scoring import (CRITERIA_FIELDS, VERSION_V1 as VERSION, VERSION as CURRENT_VERSION, article_applicability,
-                            calculate as current_calculate, verify_review)
+                            calculate as current_calculate, select_feedback, verify_review)
 from nonproduct_contract_fixture import fixture
 from test_models import bundle
 
@@ -13,6 +13,54 @@ def calculate(criteria, bundle):
 
 
 class ReviewScoringTests(unittest.TestCase):
+    def test_optional_feedback_anchor_160_is_valid_but_161_is_quarantined(self):
+        b = bundle()
+        b['article']['content'] += '\n\n境界確認用の固有引用。\n\n隔離確認用の固有引用。\n\n将来境界用の固有引用。'
+        criteria = {key: 8 for key in CRITERIA_FIELDS if key != 'word_count'}
+        valid = {'criterion':'faq', 'quote':'境界確認用の固有引用。',
+                 'anchor':'あ' * 160, 'nextAction':'読み手向けに明確化する。'}
+        over = {'criterion':'internal_links', 'quote':'隔離確認用の固有引用。',
+                'anchor':'い' * 161, 'nextAction':'関連記事との関係を明確化する。'}
+        further_over = {'criterion':'wise_w', 'quote':'将来境界用の固有引用。',
+                        'anchor':'う' * 162, 'nextAction':'表現を明確化する。'}
+
+        selected, metadata = select_feedback([valid, over, further_over], b, criteria)
+
+        self.assertEqual([dict(valid, location={'kind':'paragraph', 'index':1})], selected)
+        self.assertEqual([0], metadata['acceptedIndices'])
+        self.assertEqual([
+            {'index':1, 'criterion':'internal_links', 'reason':'anchor_over_limit',
+             'actualCharacters':161, 'maxCharacters':160},
+            {'index':2, 'criterion':'wise_w', 'reason':'anchor_over_limit',
+             'actualCharacters':162, 'maxCharacters':160}], metadata['rejected'])
+        self.assertEqual([valid, over, further_over], metadata['rawItems'])
+
+    def test_optional_feedback_anchor_nonstring_remains_fatal(self):
+        b = bundle(); criteria = {key: 8 for key in CRITERIA_FIELDS if key != 'word_count'}
+        malformed = {'criterion':'faq', 'quote':'Weight 2kg', 'anchor':['not', 'text'],
+                     'nextAction':'読み手向けに明確化する。'}
+        with self.assertRaisesRegex(ValueError, 'Bounded improvement text required'):
+            select_feedback([malformed], b, criteria)
+
+    def test_quarantined_optional_anchor_replays_without_changing_admission(self):
+        b = bundle(); b['article']['content'] += '\n\n再検証用の固有引用。'
+        criteria = {key: 8 for key in CRITERIA_FIELDS if key != 'word_count'}
+        raw = [{'criterion':'faq', 'quote':'再検証用の固有引用。', 'anchor':'あ' * 161,
+                'nextAction':'FAQの読みやすさを改善する。'}]
+        selected, metadata = select_feedback(raw, b, criteria)
+        value = dict(current_calculate(criteria, b), criteria=criteria, passed=True,
+                     wiseScores=dict(w=2, i=2, s=2, e=2, ai=3, sense=2), issues=[],
+                     facts=True, images=True, affiliate=True, medical=True, render=True,
+                     hardChecks={'structure':True}, improvementFeedback=selected,
+                     feedbackValidation=metadata)
+
+        expected_score = value['score']
+        verify_review(value, b)
+
+        self.assertEqual([], value['improvementFeedback'])
+        self.assertEqual(expected_score, value['score'])
+        self.assertTrue(value['passed'])
+
     def test_commercial_guide_cannot_avoid_comparison_by_format_change(self):
         b = bundle()
         for format_name in ('guide', 'how-to', 'review', 'ranking', 'comparison'):

@@ -129,13 +129,20 @@ def select_feedback(feedback, bundle, criteria):
         if (not isinstance(item, dict) or set(item) != {'criterion','quote','anchor','nextAction'}
                 or not isinstance(item['criterion'], str) or item['criterion'] not in allowed):
             raise ValueError('Invalid improvement wire schema or criterion')
-        for key, limit in (('quote',240),('anchor',160),('nextAction',400)):
+        for key, limit in (('quote',240),('nextAction',400)):
             if not isinstance(item[key], str) or not item[key].strip() or len(item[key]) > limit:
                 raise ValueError('Bounded improvement text required')
+        if not isinstance(item['anchor'], str) or not item['anchor'].strip():
+            raise ValueError('Bounded improvement text required')
         locations = _quote_locations(item['quote'], bundle)
         if len(locations) != 1:
             rejected.append({'index':index, 'criterion':item['criterion'],
                              'reason':'quote_missing' if not locations else 'quote_ambiguous'})
+            continue
+        if len(item['anchor']) > 160:
+            rejected.append({'index':index, 'criterion':item['criterion'],
+                             'reason':'anchor_over_limit',
+                             'actualCharacters':len(item['anchor']), 'maxCharacters':160})
             continue
         selected.append(dict(item, location=locations[0])); accepted.append(index)
     validate_feedback(selected, bundle)

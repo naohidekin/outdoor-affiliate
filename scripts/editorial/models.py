@@ -246,6 +246,117 @@ def _require(value, fields):
         raise ModelError("Missing required response fields")
 
 
+def _review_validation_context(bundle, checks):
+    article_review = (isinstance(checks, dict) and bool(checks.get('editorialRules'))
+                      and checks.get('reviewKind') != 'social')
+    try:
+        article_schema = article_review_schema(bundle) if article_review else None
+    except (ValueError, TypeError, KeyError):
+        raise ModelError('Valid article applicability required') from None
+    if isinstance(checks, dict) and 'articleMeasurements' in checks:
+        article = bundle.get('article') if isinstance(bundle, dict) else None
+        brief = bundle.get('brief') if isinstance(bundle, dict) else None
+        content = article.get('content') if isinstance(article, dict) else None
+        format_name = brief.get('format') if isinstance(brief, dict) else None
+        if not isinstance(content, str) or not isinstance(format_name, str) or format_name not in ARTICLE_LENGTHS:
+            raise ModelError('Invalid article measurement source')
+        lower, upper = ARTICLE_LENGTHS[format_name]
+        measured = dict(format=format_name, contentCharacters=len(content), minimumCharacters=lower,
+                        maximumCharacters=upper, method='python_len_decoded_article_content')
+        supplied = checks['articleMeasurements']
+        if (not isinstance(supplied, dict) or supplied != measured or any(
+                type(supplied.get(key)) is not int
+                for key in ('contentCharacters', 'minimumCharacters', 'maximumCharacters'))):
+            raise ModelError('Article measurements do not match actual content and format')
+        if not lower <= len(content) <= upper:
+            raise ModelError('Article length outside existing SKILL limits')
+    policy = None
+    if isinstance(checks, dict) and checks.get('wisePolicy'):
+        policy = load_policy()
+        if checks['wisePolicy'] != policy:
+            raise ModelError('Owner WISE policy mismatch')
+    return article_review, article_schema, policy
+
+
+def validate_review_result(result, usage, bundle, checks):
+    """Validate a saved provider result without a model call or input mutation."""
+    result = copy.deepcopy(result)
+    article_review, article_schema, policy = _review_validation_context(bundle, checks)
+    if article_review:
+        try:
+            if (set(result) != set(article_schema['required'])
+                    or not isinstance(result.get('evidence'), dict)
+                    or set(result['evidence']) != {'summary'}
+                    or not isinstance(result['evidence']['summary'], str)
+                    or not isinstance(result.get('observations'), list)
+                    or any(not isinstance(item, str) for item in result['observations'])):
+                raise ValueError('Article wire contract mismatch')
+            if not valid_scores(result.get('wiseScores')):
+                raise ModelError('Complete owner WISE-AS six scores required')
+            result['improvementFeedback'], result['feedbackValidation'] = select_feedback(
+                result.get('improvementFeedback'), bundle, result.get('criteria'))
+            structural = checks.get('structural')
+            result['hardChecks'] = {'structure': isinstance(structural, dict) and structural.get('passed') is True and not structural.get('failures')}
+            result.update(calculate_article_review(result.get('criteria'), bundle))
+            result['passed'] = article_verdict(result, result['calculation'])
+        except (ValueError, TypeError, KeyError):
+            raise ModelError('Invalid article review contract or applicable scores') from None
+    _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
+    if type(result["passed"]) is not bool or any(type(result[k]) is not bool for k in CATEGORIES) or (
+            type(result["score"]) not in (int, float) or not math.isfinite(result["score"]) or
+            not 0 <= result["score"] <= 10 or not isinstance(result["issues"], list) or
+            not isinstance(result["evidence"], dict)):
+        raise ModelError("Invalid review result")
+    supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
+    if policy is not None or article_review:
+        if not valid_scores(result.get('wiseScores')):
+            raise ModelError('Complete owner WISE-AS six scores required')
+        if policy is not None:
+            result['wisePolicy'] = policy['id']
+        if not passes(result['wiseScores']):
+            result['issues'].append('Owner WISE-AS floor failed')
+    supplied = supplied if isinstance(supplied, dict) else {}
+    affiliate_na = False
+    if isinstance(supplied.get('affiliate'), dict):
+        try:
+            from topic_selection import nonproduct_affiliate_review
+            affiliate_na = supplied['affiliate'] == nonproduct_affiliate_review(bundle)
+        except (ValueError, TypeError, KeyError):
+            affiliate_na = False
+    missing = [k for k in CATEGORIES
+               if supplied.get(k) is not True and not (k == 'affiliate' and affiliate_na)]
+    for field in missing:
+        result[field] = False
+        result["issues"].append("Missing independent %s evidence" % field)
+    offline_failed = not isinstance(checks, dict) or checks.get("passed") is False or bool(checks.get("failures"))
+    if article_review and result['hardChecks']['structure'] is not True:
+        result['issues'].append('Independent structural checks failed')
+    if offline_failed:
+        result["issues"].append("Independent offline checks failed")
+    if article_review:
+        result['passed'] = article_verdict(result, result['calculation'])
+    else:
+        result["passed"] = (result["passed"] and result["score"] >= 7.5 and not result["issues"]
+                            and all(result[k] is True for k in CATEGORIES) and not missing)
+    result["model"] = usage["model"]
+    result["evidence"] = {"model": result["evidence"], "checks": copy.deepcopy(checks)}
+    return result
+
+
+def _article_review_diagnostic(result, usage, bundle):
+    return {
+        'responseId': usage['responseId'], 'articleId': (bundle.get('article') or {}).get('id'),
+        'scoringVersion': result['scoringVersion'], 'admissionMode': result['admissionMode'],
+        'criteria': copy.deepcopy(result['criteria']), 'wiseScores': copy.deepcopy(result['wiseScores']),
+        'hardChecks': copy.deepcopy(result['hardChecks']),
+        'improvementFeedback': copy.deepcopy(result['improvementFeedback']),
+        'feedbackValidation': copy.deepcopy(result['feedbackValidation']),
+        'applicability': copy.deepcopy(result['applicability']),
+        'calculation': copy.deepcopy(result['calculation']),
+        'normalizedScore': result['score'], 'normalizedPassed': result['passed'],
+        'issues': copy.deepcopy(result['issues'])}
+
+
 def _text(value):
     return isinstance(value, str) and bool(value.strip())
 
@@ -941,34 +1052,7 @@ class Models:
                 'polishSelection':selection}
 
     def review(self, bundle, checks):
-        article_review = (isinstance(checks, dict) and bool(checks.get('editorialRules'))
-                          and checks.get('reviewKind') != 'social')
-        try:
-            article_schema = article_review_schema(bundle) if article_review else None
-        except (ValueError, TypeError, KeyError):
-            raise ModelError('Valid article applicability required') from None
-        if isinstance(checks, dict) and 'articleMeasurements' in checks:
-            article = bundle.get('article') if isinstance(bundle, dict) else None
-            brief = bundle.get('brief') if isinstance(bundle, dict) else None
-            content = article.get('content') if isinstance(article, dict) else None
-            format_name = brief.get('format') if isinstance(brief, dict) else None
-            if not isinstance(content, str) or not isinstance(format_name, str) or format_name not in ARTICLE_LENGTHS:
-                raise ModelError('Invalid article measurement source')
-            lower, upper = ARTICLE_LENGTHS[format_name]
-            measured = dict(format=format_name, contentCharacters=len(content), minimumCharacters=lower,
-                            maximumCharacters=upper, method='python_len_decoded_article_content')
-            supplied = checks['articleMeasurements']
-            if (not isinstance(supplied, dict) or supplied != measured or any(
-                    type(supplied.get(key)) is not int
-                    for key in ('contentCharacters', 'minimumCharacters', 'maximumCharacters'))):
-                raise ModelError('Article measurements do not match actual content and format')
-            if not lower <= len(content) <= upper:
-                raise ModelError('Article length outside existing SKILL limits')
-        policy = None
-        if isinstance(checks, dict) and checks.get('wisePolicy'):
-            policy = load_policy()
-            if checks['wisePolicy'] != policy:
-                raise ModelError('Owner WISE policy mismatch')
+        article_review, article_schema, _ = _review_validation_context(bundle, checks)
         review_prompt = (
             "Final upper-model review using supplied full bundle, brief, references and independent checks. "
             "When supplied, checks.articleMeasurements is the source of truth for body character count and format bounds; do not infer counts or manufacture scores from it. "
@@ -1074,75 +1158,9 @@ class Models:
             schema=(SOCIAL_REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('wisePolicy') and checks.get('reviewKind') == 'social'
                     else article_schema if article_review else
                     REVIEW_SCHEMA if isinstance(checks, dict) and checks.get('editorialRules') else None))
+        result = validate_review_result(result, usage, bundle, checks)
         if article_review:
-            try:
-                if (set(result) != set(article_schema['required'])
-                        or not isinstance(result.get('evidence'), dict)
-                        or set(result['evidence']) != {'summary'}
-                        or not isinstance(result['evidence']['summary'], str)
-                        or not isinstance(result.get('observations'), list)
-                        or any(not isinstance(item, str) for item in result['observations'])):
-                    raise ValueError('Article wire contract mismatch')
-                if not valid_scores(result.get('wiseScores')):
-                    raise ModelError('Complete owner WISE-AS six scores required')
-                result['improvementFeedback'], result['feedbackValidation'] = select_feedback(
-                    result.get('improvementFeedback'), bundle, result.get('criteria'))
-                structural = checks.get('structural')
-                result['hardChecks'] = {'structure': isinstance(structural, dict) and structural.get('passed') is True and not structural.get('failures')}
-                result.update(calculate_article_review(result.get('criteria'), bundle))
-                result['passed'] = article_verdict(result, result['calculation'])
-            except (ValueError, TypeError, KeyError):
-                raise ModelError('Invalid article review contract or applicable scores') from None
-        _require(result, ("passed", "score", "evidence", "issues") + CATEGORIES)
-        if type(result["passed"]) is not bool or any(type(result[k]) is not bool for k in CATEGORIES) or (
-                type(result["score"]) not in (int, float) or not math.isfinite(result["score"]) or
-                not 0 <= result["score"] <= 10 or not isinstance(result["issues"], list) or
-                not isinstance(result["evidence"], dict)):
-            raise ModelError("Invalid review result")
-        supplied = checks.get("evidence", checks) if isinstance(checks, dict) else {}
-        if policy is not None or article_review:
-            if not valid_scores(result.get('wiseScores')):
-                raise ModelError('Complete owner WISE-AS six scores required')
-            if policy is not None:
-                result['wisePolicy'] = policy['id']
-            if not passes(result['wiseScores']):
-                result['issues'].append('Owner WISE-AS floor failed')
-        supplied = supplied if isinstance(supplied, dict) else {}
-        affiliate_na = False
-        if isinstance(supplied.get('affiliate'), dict):
-            try:
-                from topic_selection import nonproduct_affiliate_review
-                affiliate_na = supplied['affiliate'] == nonproduct_affiliate_review(bundle)
-            except (ValueError, TypeError, KeyError):
-                affiliate_na = False
-        missing = [k for k in CATEGORIES
-                   if supplied.get(k) is not True and not (k == 'affiliate' and affiliate_na)]
-        for field in missing:
-            result[field] = False
-            result["issues"].append("Missing independent %s evidence" % field)
-        offline_failed = not isinstance(checks, dict) or checks.get("passed") is False or bool(checks.get("failures"))
-        if article_review and result['hardChecks']['structure'] is not True:
-            result['issues'].append('Independent structural checks failed')
-        if offline_failed:
-            result["issues"].append("Independent offline checks failed")
-        if article_review:
-            result['passed'] = article_verdict(result, result['calculation'])
-            self.review_diagnostics.append({
-                'responseId': usage['responseId'], 'articleId': (bundle.get('article') or {}).get('id'),
-                'scoringVersion': result['scoringVersion'], 'admissionMode': result['admissionMode'],
-                'criteria': copy.deepcopy(result['criteria']), 'wiseScores': copy.deepcopy(result['wiseScores']),
-                'hardChecks': copy.deepcopy(result['hardChecks']),
-                'improvementFeedback': copy.deepcopy(result['improvementFeedback']),
-                'feedbackValidation': copy.deepcopy(result['feedbackValidation']),
-                'applicability': copy.deepcopy(result['applicability']),
-                'calculation': copy.deepcopy(result['calculation']),
-                'normalizedScore': result['score'], 'normalizedPassed': result['passed'],
-                'issues': copy.deepcopy(result['issues'])})
-        else:
-            result["passed"] = (result["passed"] and result["score"] >= 7.5 and not result["issues"]
-                                and all(result[k] is True for k in CATEGORIES) and not missing)
-        result["model"] = usage["model"]
-        result["evidence"] = {"model": result["evidence"], "checks": copy.deepcopy(checks)}
+            self.review_diagnostics.append(_article_review_diagnostic(result, usage, bundle))
         return result
 
     def social(self, bundle, url):

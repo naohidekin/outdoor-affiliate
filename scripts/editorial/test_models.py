@@ -9,7 +9,8 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 from models import (Models, ModelError, ModelOutcomeUnknown, WRITER_SCHEMA, REVIEW_SCHEMA,
-                    CRITERIA_FIELDS, SOCIAL_SCHEMA, SOCIAL_REVIEW_SCHEMA, article_review_schema)
+                    CRITERIA_FIELDS, SOCIAL_SCHEMA, SOCIAL_REVIEW_SCHEMA, article_review_schema,
+                    validate_review_result)
 from wise_contract import load_policy
 from model_inputs import restore_model_input
 from nonproduct_contract_fixture import fixture as nonproduct_fixture
@@ -671,6 +672,31 @@ class ModelTests(unittest.TestCase):
         for invalid in (REVIEW, dict(raw, criteria={}), dict(raw, criteria=dict(raw['criteria'], unknown_criterion=10))):
             with self.assertRaises(ModelError):
                 Models(ENV, Fake(response(invalid))).review(bundle(), checks)
+
+    def test_saved_article_review_validation_is_pure_and_matches_live_validation(self):
+        candidate = bundle()
+        checks = {'editorialRules':'rubric', 'evidence':FLAGS, 'structural':{'passed':True}}
+        raw = article_review_value(candidate)
+        usage = {'responseId':'saved-review-1', 'model':'claude-sonnet-4-6',
+                 'input':63755, 'output':2408, 'usage':{'input_tokens':63755, 'output_tokens':2408}}
+        before = copy.deepcopy((raw, usage, candidate, checks))
+
+        saved = validate_review_result(raw, usage, candidate, checks)
+        live = Models(ENV, Fake(response(raw))).review(candidate, checks)
+
+        self.assertEqual(live, saved)
+        self.assertEqual(before, (raw, usage, candidate, checks))
+
+    def test_saved_review_validation_repeats_preflight_without_provider(self):
+        candidate = bundle()
+        checks = {'editorialRules':'rubric', 'evidence':FLAGS, 'structural':{'passed':True},
+                  'articleMeasurements':dict(format='guide', contentCharacters=1,
+                      minimumCharacters=3000, maximumCharacters=5000,
+                      method='python_len_decoded_article_content')}
+        with self.assertRaisesRegex(ModelError, 'Article measurements do not match actual content and format'):
+            validate_review_result(article_review_value(candidate),
+                                   {'responseId':'saved-review-1', 'model':'claude-sonnet-4-6'},
+                                   candidate, checks)
 
     def test_failed_article_review_diagnostic_and_provider_artifact_stay_separate(self):
         raw = article_review_value(value=7)
