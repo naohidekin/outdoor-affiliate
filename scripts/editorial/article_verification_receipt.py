@@ -109,6 +109,13 @@ def _social_card(bundle):
     evidence = manifest.get("rendererEvidence")
     require(isinstance(evidence, dict) and isinstance(evidence.get("displayText"), dict)
             and isinstance(evidence.get("sourceCrops"), list), "social_card_renderer")
+    from social_cards import _heading
+    shown = evidence["displayText"]
+    require(isinstance(article.get("title"), str) and article["title"]
+            and shown.get("title") == article["title"]
+            and shown.get("heading") == _heading(article["title"])
+            and shown.get("brand") == "Camp Gear Lab"
+            and isinstance(shown.get("label"), str), "social_card_text")
     sources = [{key: copy.deepcopy(item.get(key)) for key in ("productId", "sha256")}
                for item in manifest.get("sources", []) if isinstance(item, dict)]
     crops = [{key: copy.deepcopy(item.get(key)) for key in
@@ -277,7 +284,9 @@ def validate(receipt, job_id, revision):
                 {"title", "heading", "productNames", "label", "brand"}
                 and display.get("productNames") == expected_names
                 and all(isinstance(display.get(key), str) and display[key]
-                        for key in ("title", "heading", "label", "brand"))
+                        for key in ("title", "heading"))
+                and display.get("brand") == "Camp Gear Lab"
+                and isinstance(display.get("label"), str)
                 and re.fullmatch(r"[a-f0-9]{64}", str(renderer.get("contentHash", "")))
                 and isinstance(renderer.get("renderEngine"), str) and renderer["renderEngine"],
                 "social_card_text")

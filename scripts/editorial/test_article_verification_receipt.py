@@ -12,8 +12,8 @@ import article_verification_receipt as proof
 def bundle():
     source_sha = "a" * 64
     renderer = {"contentHash": "b" * 64,
-                "displayText": {"brand": "Camp Gear Lab", "label": "比較ガイド", "heading": "選び方",
-                                "productNames": ["製品A"], "title": "製品Aの選び方"},
+                "displayText": {"brand": "Camp Gear Lab", "label": "", "heading": "選び方",
+                                "productNames": ["製品A"], "title": "製品Aの選び方｜選び方"},
                 "renderEngine": "Chrome/test", "sourceCrops": [{"productId": "p1",
                     "sha256": source_sha, "displaySha256": "c" * 64,
                     "originalWidth": 500, "originalHeight": 500}]}
@@ -22,7 +22,7 @@ def bundle():
             "width": 1200, "height": 630, "templateVersion": "card-v1",
             "sources": [{"productId": "p1", "sha256": source_sha}],
             "rendererEvidence": renderer}
-    return {"article": {"id": "article", "slug": "candidate", "title": "Candidate",
+    return {"article": {"id": "article", "slug": "candidate", "title": "製品Aの選び方｜選び方",
                         "content": "[春の服装](/articles/spring-guide)", "productIds": ["p1"],
                         "generationMeta": {"socialCard": copy.deepcopy(card)}},
             "products": [{"id": "p1", "name": "製品A", "imageUrl": "https://maker.example/p.png",
@@ -136,6 +136,25 @@ class ReceiptTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaisesRegex(
                     ValueError, "social_card_sources"):
                 proof.validate(receipt, "job", receipt["revision"])
+
+    def test_social_card_empty_label_is_valid_but_type_and_rendered_text_are_bound(self):
+        receipt = self.make()
+        display = receipt["checks"]["images"]["socialCard"]["renderer"]["displayText"]
+        self.assertEqual("", display["label"])
+        proof.validate(receipt, "job", receipt["revision"])
+        changed = copy.deepcopy(receipt)
+        changed["checks"]["images"]["socialCard"]["renderer"]["displayText"]["label"] = None
+        with self.assertRaisesRegex(ValueError, "social_card_text"):
+            proof.validate(changed, "job", changed["revision"])
+
+        value = bundle()
+        value["article"]["generationMeta"]["socialCard"]["rendererEvidence"]["displayText"]["title"] = "別タイトル"
+        value["images"][-1] = dict(value["article"]["generationMeta"]["socialCard"],
+                                   role="social-card", verified=True)
+        with self.assertRaisesRegex(ValueError, "social_card_text"):
+            proof.build({"id": "job"}, value,
+                {"checks": {"facts": True, "images": True, "affiliate": True}}, preview(),
+                {"passed": True, "risks": []}, {"passed": True}, {"source": "bound"}, Request())
 
     def test_social_card_two_source_ids_are_unique_counted_and_ordered(self):
         receipt = self.make(); second_sha = "e" * 64
