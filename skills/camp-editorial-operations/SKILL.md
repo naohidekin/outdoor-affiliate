@@ -172,6 +172,13 @@ production設定、launchd、Codex automationを有効化しない。
 Bufferがsentでも、Xの本文・画像・返信の証拠が不足すれば未確認とする。画像の近似一致を合格にしない。
 接続キーの入力は専用ローカル画面へ本人が行い、キーをチャットや引継ぎへ記載しない。
 
+本人が明示した今回の2改稿だけは、`revision_social_opt_in.prepare/arm`でexact job・記事版・公開readback・
+成功済み公開後監査・current sitemap・実施済みGSC URL検査・owner指示を固定し、既存SNS制作へ有限に渡す。
+これは通常の`article_revision`へSNSを自動追加する設定ではない。既存の3モデル、slug共有記事予算・制作期128、
+未完了Buffer SNS最大3、SlackでのSNS別承認、Buffer共有枠を維持し、同じattemptを再実行しない。
+旧2案の優先退役は`prepare_retirement/apply_retirement`でremote writeなしを証明できる場合だけ行い、元本文・画像・
+approval・request・journalを履歴保存する。実投稿・pending・intent・unknown effectがあれば退役せず照合待ちにする。
+
 ## ウェアと本人指定の追加3本
 2026-11-22の冬物深掘りは`winter-depth-2026-11-22`の固定3案。R1/クリマエアの未制作案は同じslugを再利用し、旧公開2件と予算・履歴を保持する。`supplemental-winter-depth-20261122.json`の登録だけで制作・配備・商品照合完了とは扱わない。
 新ブランドは`apparel_identity.py`と`official_shopify_apparel.py`の公式主商品照合を使う。別モデルSKUが混在する主商品、親ASINだけのURL、未確認の色サイズは保留する。検索結果だけで商品同一性を認めない。

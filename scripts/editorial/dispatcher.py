@@ -93,14 +93,16 @@ def buffer_social_start(config):
 
 def buffer_social_eligible(job, config, now=None):
     start = buffer_social_start(config)
+    if job.get('kind') == 'article_revision':
+        from revision_social_opt_in import authorized
+        return start is not None and authorized(job)
     if job.get('kind') == 'supplemental_article':
         current = now or datetime.now(timezone(timedelta(hours=9)))
         if current.tzinfo is None or current.utcoffset() is None:
             raise ValueError('aware buffer eligibility time required')
         return (start is not None and job.get('socialEligiblePeriod') == start
                 and current.astimezone(timezone(timedelta(hours=9))).date() >= date.fromisoformat(start))
-    return (start is not None and job.get('kind') != 'article_revision'
-            and isinstance(job.get('week'), str) and job['week'] >= start)
+    return (start is not None and isinstance(job.get('week'), str) and job['week'] >= start)
 
 
 def buffer_social_outstanding(jobs):
@@ -271,16 +273,25 @@ class DeterministicDispatcher:
                 base['actions'].append({'kind': 'publish', 'jobId': job['id']})
             elif stage == 'approved':
                 article_waiting = True
-            elif (stage == 'published' and job.get('kind') != 'article_revision'
-                  and not job.get('social')
+            elif (stage == 'published' and not job.get('social')
+                  and (job.get('kind') != 'article_revision'
+                       or job.get('revisionSocialOptIn') is not None)
                   and social_feature_enabled(self.runtime.config, 'socialGenerationEnabled')):
                 start = buffer_social_start(self.runtime.config)
                 if start is None:
-                    base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
+                    if job.get('kind') != 'article_revision':
+                        base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
                 elif (buffer_social_eligible(job, self.runtime.config, now)
                       and buffer_social_outstanding(jobs) < 3
                       and self.runtime._social_audit_success(job)):
-                    base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
+                    try:
+                        if job.get('kind') == 'article_revision':
+                            self.runtime._revision_social_ready(job)
+                    except ValueError:
+                        base['blocked'].append({'jobId': job['id'],
+                                                'reason': 'revision_social_opt_in_invalid'})
+                    else:
+                        base['actions'].append({'kind': 'make_social', 'jobId': job['id']})
             elif (stage == 'social_review'
                   and social_feature_enabled(self.runtime.config, 'socialReviewEnabled')):
                 start = buffer_social_start(self.runtime.config)

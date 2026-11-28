@@ -2581,9 +2581,13 @@ class Runtime:
                             'blocked', 'failed', 'unknown', 'budget_hold', 'stale'):
                         results.append({'id': job['id'], 'status': 'attention',
                                         'reason': 'independent_quality_review_' + delivered['qualityStatus']})
-                elif job.get('kind') != 'article_revision' and job['stage'] == 'published' and not job.get('social'):
+                elif (job['stage'] == 'published' and not job.get('social')
+                      and (job.get('kind') != 'article_revision'
+                           or job.get('revisionSocialOptIn') is not None)):
                     if dispatch is not None and ('make_social', job['id'], None) not in actions:
                         continue
+                    if job.get('kind') == 'article_revision':
+                        self._revision_social_ready(job)
                     marker = self.root / 'social-attempts' / (job['id'] + '.json')
                     if marker.exists():
                         raise ValueError('social_generation_requires_reconciliation')
@@ -2798,6 +2802,8 @@ class Runtime:
     def make_social(self, job):
         self._require_running()
         self.ledger.assert_not_owner_held(job['id'])
+        if job.get('kind') == 'article_revision':
+            self._revision_social_ready(job)
         if not social_feature_enabled(self.config, 'socialGenerationEnabled'):
             raise ValueError('social_generation_disabled')
         buffer_start = buffer_social_start(self.config)
@@ -2971,6 +2977,12 @@ class Runtime:
                             for proof in item.get('proofs', []))):
                 return True
         return False
+
+    def _revision_social_ready(self, job):
+        from revision_social_opt_in import require_ready
+        if not buffer_social_eligible(job, self.config):
+            raise ValueError('revision_social_opt_in_buffer_ineligible')
+        return require_ready(self, job)
 
     @staticmethod
     def _valid_buffer_social_card(job):

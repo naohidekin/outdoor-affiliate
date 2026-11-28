@@ -1881,7 +1881,11 @@ class Ledger:
         with self._tx() as db:
             job = self._get(db, id)
             self._current(job)
-            require(job.get('kind') != 'article_revision', 'revision has no automatic social workflow')
+            revision_opt_in = False
+            if job.get('kind') == 'article_revision':
+                from revision_social_opt_in import eligible
+                revision_opt_in = eligible(job)
+                require(revision_opt_in, 'revision has no automatic social workflow')
             require(job['publication'] and job['publication'].get('verified') is True, 'verified publication required')
             require(not (job.get('social') or {}).get('publication'), 'posted social is immutable')
             if job['social'] and job['social']['revision'] == revision:
@@ -1899,7 +1903,78 @@ class Ledger:
             self._invalidate(db, id, 'social')
             job.update(social=dict(proposal=json.loads(canonical(proposal)), revision=revision,
                                    review=json.loads(canonical(review)), approval=None), stage='social_review')
+            if revision_opt_in:
+                job['revisionSocialOptInResult'] = {
+                    'status': 'consumed', 'socialRevision': revision,
+                    'at': timestamp().isoformat(),
+                    'manifestSha256': fingerprint(job['revisionSocialOptIn'])}
             return self._put(db, job, 'social')
+
+    def arm_revision_social_opt_in(self, manifest):
+        """Arm one exact published revision; this grants no article or SNS approval."""
+        from revision_social_opt_in import TARGETS, validate_manifest
+        manifest = validate_manifest(manifest)
+        with self._tx() as db:
+            job = self._get(db, manifest['jobId'])
+            publication = job.get('publication') or {}
+            readback = publication.get('readback') or {}
+            require(job.get('kind') == 'article_revision' and job.get('stage') == 'published'
+                    and TARGETS.get(job['id']) == job.get('revision') == manifest['revision']
+                    and publication.get('verified') is True
+                    and publication.get('revision') == job['revision']
+                    and readback.get('verified') is True
+                    and readback.get('fingerprint') == job['revision']
+                    and fingerprint(publication) == manifest['publicationSha256']
+                    and not job.get('social') and not job.get('revisionSocialOptInResult'),
+                    'revision social opt-in state changed')
+            previous = job.get('revisionSocialOptIn')
+            if previous is not None:
+                require(previous == manifest, 'revision social opt-in conflict')
+                return job
+            require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND kind='social'", (job['id'],)).fetchone(),
+                    'revision social effect requires reconciliation')
+            job['revisionSocialOptIn'] = json.loads(canonical(manifest))
+            return self._put(db, job, 'revision_social_opt_in_armed')
+
+    def retire_social_priority(self, manifest, owner_grant):
+        """Retire two exact unwritten queue entries while preserving all old evidence."""
+        from revision_social_opt_in import (_owner_grant, _retirement_state, RETIREMENT_KIND,
+                                            RETIREMENT_SCOPE, validate_retirement_manifest)
+        manifest = validate_retirement_manifest(manifest)
+        owner_grant = _owner_grant(owner_grant, manifest['jobId'], manifest['revision'],
+                                   RETIREMENT_KIND, RETIREMENT_SCOPE)
+        require(manifest['ownerGrantSha256'] == fingerprint(owner_grant),
+                'social retirement owner grant changed')
+        manifest_sha = fingerprint(manifest)
+        with self._tx() as db:
+            job = self._get(db, manifest['jobId'])
+            prior = job.get('socialRetirement')
+            if prior is not None:
+                require(job.get('stage') == 'social_rejected' and job.get('social') is None
+                        and prior.get('manifestSha256') == manifest_sha,
+                        'social retirement replay conflict')
+                return job
+            state = _retirement_state(self, job, db)
+            require(state == manifest.get('state'), 'social retirement state changed')
+            original = json.loads(canonical(job['social']))
+            history = {
+                'kind': RETIREMENT_KIND,
+                'reason': 'owner_priority_retirement',
+                'ownerInstructionReference': owner_grant['instructionReference'],
+                'ownerGrantSha256': fingerprint(owner_grant),
+                'social': original,
+                'requests': copy.deepcopy(state['requests']),
+                'sourceEffects': copy.deepcopy(state['sourceEffects']),
+                'bufferJournal': copy.deepcopy(state['bufferJournal']),
+                'at': timestamp().isoformat(),
+            }
+            job.setdefault('socialHistory', []).append(history)
+            self._invalidate(db, job['id'], 'social')
+            job.update(social=None, stage='social_rejected', socialRetirement={
+                'kind': RETIREMENT_KIND, 'reason': 'owner_priority_retirement',
+                'revision': manifest['revision'], 'manifestSha256': manifest_sha,
+                'ownerGrantSha256': fingerprint(owner_grant), 'at': history['at']})
+            return self._put(db, job, 'social_priority_retirement')
 
     def hold_social_refresh(self, id, *, expected_social_revision):
         """Invalidate old buttons without discarding the original approval/effect evidence."""
