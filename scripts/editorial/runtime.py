@@ -1024,7 +1024,7 @@ class Runtime:
         return {'status': 'completed' if results else resolved['status'], 'articles': results,
                 'batchId': manifest['batchId']}
 
-    def _make_article(self, job, context):
+    def _make_article(self, job, context, *, prepared_revision_source=None):
         self._require_running()
         self.ledger.assert_not_owner_held(job['id'])
         context = self._wise_context(context)
@@ -1050,7 +1050,12 @@ class Runtime:
             live_products = {p['id']: p for p in context['products']}
             if any(live_products.get(p['id']) != p for p in binding['baseProducts']):
                 raise ValueError('revision_live_product_baseline_changed')
-            gathered = self.catalog.gather_revision(job['theme'], context, binding)
+            if prepared_revision_source is None:
+                gathered = self.catalog.gather_revision(job['theme'], context, binding)
+            else:
+                from revision_prepared_source_resume import consume_prepared_source
+                gathered = consume_prepared_source(
+                    prepared_revision_source, self, job, context, binding)
             # Legacy prose stays private in the immutable CAS baseline; models receive identity only.
             public_source = {k: copy.deepcopy(base.get(k)) for k in ('title', 'slug', 'categoryId', 'productIds')}
             gathered['existingArticles'] = [
