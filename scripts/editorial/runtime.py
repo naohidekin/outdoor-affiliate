@@ -193,12 +193,15 @@ class Runtime:
         from reporting import read_snapshot
         feedback = read_snapshot(self.root / 'seo-feedback' / 'latest.json')
         if isinstance(feedback, dict) and isinstance(feedback.get('rows'), list):
+            planning_rows = (feedback['planningRows']
+                             if isinstance(feedback.get('planningRows'), list)
+                             else feedback['rows'])
             context['priorPublicationFeedback'] = {
                 'summary': feedback.get('summary'),
                 'rows': [{key: row.get(key) for key in
                           ('jobId', 'revision', 'targetUrl', 'status', 'reason',
                            'workflow', 'measurement', 'sourceEvidence')}
-                         for row in feedback['rows'][:3]],
+                         for row in planning_rows[:3] if isinstance(row, dict)],
                 'causalAttribution': False,
             }
         if self.config.get('seoStateRoot'):
@@ -1256,6 +1259,35 @@ class Runtime:
         else:
             clicks_ok = bool(click_results.get('desktop')) and bool(click_results.get('mobile')) if isinstance(click_results, dict) else click_results is True
         flags.update(medical=medical['passed'], render=preview.get('passed') is True and clicks_ok)
+        verification_revision = verification_sha = verification_projection = None
+        if (revision or corrected) and self.config.get('independentReviewEnabled') is True:
+            from article_verification_receipt import build as build_verification_receipt
+            from article_verification_receipt import projection as project_verification_receipt
+            from article_verification_receipt import write_once as write_verification_receipt
+            from article_verification_receipt import write_source_once as write_verification_source
+            selected_product_ids = set(bundle['article'].get('productIds', []))
+            verification_source = {
+                'normalizedSource': copy.deepcopy(source_dependencies),
+                'products': [copy.deepcopy(item) for item in bundle.get('products', [])
+                             if item.get('id') in selected_product_ids],
+                'references': copy.deepcopy(bundle.get('references', [])),
+                'images': [copy.deepcopy(item) for item in bundle.get('images', [])
+                           if item.get('productId') in selected_product_ids],
+            }
+            source_sha = fingerprint(verification_source)
+            source_path = (self.root / 'article-verification-sources' / job['id'] /
+                           (source_sha + '.json'))
+            if write_verification_source(source_path, verification_source) != source_sha:
+                raise ValueError('article_verification_source_write_mismatch')
+            verification_receipt = build_verification_receipt(
+                job, bundle, gathered, preview, medical, checks, verification_source,
+                self.catalog.request)
+            verification_revision = fingerprint(bundle)
+            verification_path = (self.root / 'article-verification-receipts' / job['id'] /
+                                 (verification_revision + '.json'))
+            verification_sha = write_verification_receipt(verification_path, verification_receipt)
+            verification_projection = project_verification_receipt(
+                verification_receipt, job['id'], verification_revision)
         model_flags = dict(flags)
         if nonproduct:
             # The reviewer schema remains boolean; the persisted ledger evidence below
@@ -1282,6 +1314,8 @@ class Runtime:
                          **({'existingArticle': public_source,
                              'editorialCorrectionInstructions': binding['editorialCorrectionInstructions'],
                              'verifiedAuthorFacts': binding['verifiedAuthorFacts']} if revision else {})}
+        if verification_projection is not None:
+            review_checks['programVerification'] = verification_projection
         review_inputs = {
             'bundle': self._source_dependencies(review_bundle),
             'checks': self._review_dependencies(review_checks),
@@ -1294,6 +1328,8 @@ class Runtime:
             'articleScoringContract': scoring_contract,
             'schemaVersion': {'stage': 3, 'input': 'bundle+live-checks+scoring-contract', 'output': 'final-review'},
         }
+        if verification_projection is not None:
+            review_inputs['dependencies']['programVerificationReceiptSha256'] = verification_sha
         def review_operation():
             candidate = self.models.review(review_bundle, review_checks)
             if candidate.get('passed') is not True:
@@ -1302,8 +1338,15 @@ class Runtime:
         final = self._run_model_stage(job, 'final_review', review_inputs, review_operation,
                                       self._model_routes()['final_review']['requested'])
         job = self.ledger.save_bundle(job['id'], bundle)
+        if verification_revision is not None and job['revision'] != verification_revision:
+            raise ValueError('article_verification_receipt_revision_changed')
         review = dict(final, fingerprint=job['revision'], evidence=flags,
                       polish={'model': polished['model'], 'validated': True})
+        if verification_sha is not None:
+            review['programVerification'] = {'schemaVersion': 1,
+                'kind': 'article_verification_receipt_v1',
+                'revision': job['revision'], 'receiptSha256': verification_sha,
+                'sourceDependenciesSha256': source_sha}
         if 'polishSelection' in polished:
             review['polish']['selection'] = copy.deepcopy(polished['polishSelection'])
         if revision:

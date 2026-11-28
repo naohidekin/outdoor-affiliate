@@ -84,6 +84,24 @@ export function verifyFaqVisibility(faqs, visibleSegments, viewport) {
   });
 }
 
+export function verifyProductPresentation(products, evidence, viewport) {
+  const failures = [];
+  if (!Array.isArray(evidence) || evidence.length !== products.length) return [`${viewport}: product presentation evidence incomplete`];
+  for (const product of products) {
+    const item = evidence.find(value => value?.productId === product.id);
+    if (!item || item.componentCount < 1) { failures.push(`${viewport}: product component missing: ${product.id}`); continue; }
+    if (!(product.price > 0) && (!item.merchantCheckDisplayed || item.zeroPriceDisplayed))
+      failures.push(`${viewport}: zero price presentation invalid: ${product.id}`);
+    if (!(product.rating > 0) && item.ratingClaimDisplayed)
+      failures.push(`${viewport}: zero rating presentation invalid: ${product.id}`);
+    const availability = typeof product.availability === 'string' ? product.availability.trim().toLowerCase() : product.availability;
+    if ((availability == null || ['', 'unknown', '不明', '未確認', '未確認です', '記載なし', 'n/a'].includes(availability))
+        && item.availabilityClaimDisplayed)
+      failures.push(`${viewport}: unknown availability presentation invalid: ${product.id}`);
+  }
+  return failures;
+}
+
 export async function privateOutputDirectory(repo, outputDir) {
   // Resolve the nearest existing ancestor before mkdir, including symlinked
   // parents. Reject public destinations without modifying the source tree.
@@ -349,6 +367,25 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       }).length,
       articleAnchors: [...document.querySelectorAll('main article a[href]')].filter(a => a.getClientRects().length).map(a => a.href),
     }));
+    const productPresentation = await page.evaluate(products => products.map(product => {
+      const links = [...document.querySelectorAll('main article a[rel~="sponsored"][aria-label]')]
+        .filter(link => link.getClientRects().length && (link.getAttribute('aria-label') || '').startsWith(`${product.name}の価格・在庫を`));
+      const scopes = [...new Set(links.map(link => link.closest('.product-card, td, section[aria-label="商品スペック比較"] > div'))
+        .filter(Boolean))];
+      const text = scopes.map(scope => scope.innerText).join('\n');
+      return { productId: product.id, componentCount: scopes.length,
+        priceInput: Number.isFinite(product.price) ? product.price : null,
+        ratingInput: Number.isFinite(product.rating) ? product.rating : null,
+        availabilityInput: typeof product.availability === 'string' ? product.availability : null,
+        merchantCheckDisplayed: /販売店で(?:価格・在庫を)?確認/.test(text),
+        zeroPriceDisplayed: /(?:¥|￥)\s*0(?:\D|$)/.test(text),
+        ratingClaimDisplayed: /(?:評価|レビュー)\s*[:：]?\s*0(?:\.0)?(?:\D|$)/.test(text),
+        availabilityClaimDisplayed: /(?:在庫あり|在庫切れ|残り\s*\d+)/.test(text) };
+    }), input.bundle.products.filter(product => input.bundle.article.productIds.includes(product.id)));
+    result.productPresentation[name] = productPresentation;
+    result.failures.push(...verifyProductPresentation(
+      input.bundle.products.filter(product => input.bundle.article.productIds.includes(product.id)),
+      productPresentation, name));
     const visibleFaqSegments = await page.evaluate(() => {
       const segments = [];
       const body = document.querySelector('.article-body');
@@ -410,8 +447,19 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       for (const popup of context.pages()) if (popup !== page) await popup.close();
     }
     for (const e of expected) if (!seen.has(`${e.productId}/${e.store}`)) result.failures.push(`${name}: missing verified merchant CTA: ${e.productId}/${e.store}`);
+    const expectedInternal = [...input.bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\((\/[^\s)]+)(?:\s+["'][^"']*["'])?\)/g)].map(match => match[1]);
+    const allowedReferences = new Set((input.bundle.references || []).map(reference => reference.url));
+    const allowedMerchants = new Set(expected.map(item => new URL(item.href).href));
+    const allAnchorsVerified = observations.articleAnchors.every(source => {
+      const url = new URL(source, origin);
+      return url.origin === origin || allowedReferences.has(url.href) || allowedMerchants.has(url.href);
+    });
+    result.viewportEvidence[name] = { paragraphCount: observations.paragraphCount,
+      internalLinks: [...new Set(observations.internalLinks)].sort(), allAnchorsVerified };
+    result.sponsoredCtaCount[name] = observations.sponsoredCtaCount;
+    if (!expectedInternal.every(link => observations.internalLinks.includes(link))) result.failures.push(`${name}: internal link missing`);
+    if (!allAnchorsVerified) result.failures.push(`${name}: unapproved anchor present`);
     if (isStrictNonproductBundle(input.bundle)) {
-      const expectedInternal = [...input.bundle.article.content.matchAll(/(?<!!)\[[^\]]*\]\((\/[^\s)]+)(?:\s+["'][^"']*["'])?\)/g)].map(match => match[1]);
       const imageSources = await page.locator('main article img').evaluateAll(images => images.filter(i => i.getClientRects().length && i.complete && i.naturalWidth > 0)
         .map(i => i.currentSrc || i.src));
       const proof = input.bundle.images.find(image => input.bundle.article.generationMeta.editorialContext.imageProofIds.includes(image.id));
@@ -422,19 +470,10 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
       };
       const stagedProof = new URL(`/editorial-proof-${proof.sha256}.png`, origin).href;
       const ownedEyecatchRendered = imageSources.map(normalizeImage).some(source => source === proof.url || source === stagedProof);
-      const allowedReferences = new Set(input.bundle.references.map(reference => reference.url));
-      const allAnchorsVerified = observations.articleAnchors.every(source => {
-        const url = new URL(source, origin);
-        return url.origin === origin || allowedReferences.has(url.href);
-      });
-      result.viewportEvidence[name] = { paragraphCount: observations.paragraphCount,
-        internalLinks: [...new Set(observations.internalLinks)].sort(), ownedEyecatchRendered, allAnchorsVerified };
-      result.sponsoredCtaCount[name] = observations.sponsoredCtaCount;
+      result.viewportEvidence[name].ownedEyecatchRendered = ownedEyecatchRendered;
       if (observations.paragraphCount < 1) result.failures.push(`${name}: visible paragraph missing`);
-      if (!expectedInternal.every(link => observations.internalLinks.includes(link))) result.failures.push(`${name}: internal link missing`);
       if (!ownedEyecatchRendered) result.failures.push(`${name}: owned eyecatch not rendered`);
       if (observations.sponsoredCtaCount !== 0) result.failures.push(`${name}: commercial link present on nonproduct route`);
-      if (!allAnchorsVerified) result.failures.push(`${name}: unapproved anchor present`);
     }
     result.clicksVerified[name] = checked;
     result.failures.push(...errors.map(e => `${name}: browser error: ${e}`));
@@ -443,7 +482,7 @@ async function inspectViewport(browser, origin, input, name, width, result, imag
 
 export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {}) {
   const result = { passed: false, desktop: null, mobile: null, failures: [], clicksVerified: { desktop: [], mobile: [] }, status: 'failed',
-    imageReadback: [], sponsoredCtaCount: { desktop: 0, mobile: 0 }, viewportEvidence: {}, allAnchorsVerified: false };
+    imageReadback: [], sponsoredCtaCount: { desktop: 0, mobile: 0 }, viewportEvidence: {}, productPresentation: {}, allAnchorsVerified: false };
   let temp, server, browser;
   try {
     const input = validateInput(raw);
@@ -493,7 +532,7 @@ export async function renderPreview(raw, { imageFetcher = fetchPublicImage } = {
       if (!result.inheritedPresentationContext) throw new Error('inherited_advice_preview_missing');
       assertTemplateFiles(result.inheritedPresentationContext, await templateHashes(input.repo));
     }
-    if (isStrictNonproductBundle(input.bundle)) result.allAnchorsVerified = ['desktop', 'mobile']
+    result.allAnchorsVerified = ['desktop', 'mobile']
       .every(name => result.viewportEvidence[name]?.allAnchorsVerified === true);
     result.passed = result.failures.length === 0 && !!result.desktop && !!result.mobile;
     result.status = result.passed ? 'passed' : 'failed';

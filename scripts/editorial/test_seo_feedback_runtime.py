@@ -7,6 +7,9 @@ import unittest
 from analytics import _context
 from test_analytics import snapshot, NOW
 import test_runtime
+from seo_feedback import build_feedback
+from test_seo_feedback import (NOW as FEEDBACK_NOW, OWNER,
+                               analytics as feedback_analytics, job, receipts)
 
 
 class SeoFeedbackRuntimeTests(unittest.TestCase):
@@ -83,6 +86,76 @@ class SeoFeedbackRuntimeTests(unittest.TestCase):
         self.assertEqual(original, handed)
         self.assertLessEqual(len(source.read_bytes()), 65536)
         self.assertEqual([], exported['evidence']['current']['searchDemand']['groups'])
+
+    @staticmethod
+    def _published(index):
+        value = job()
+        url = 'https://camp-gear-lab.com/articles/target-' + str(index)
+        value['id'] = 'revision-' + str(index).zfill(2)
+        value['theme']['slug'] = 'target-' + str(index)
+        value['publication']['url'] = url
+        value['revisionContext']['baseArticle']['slug'] = 'target-' + str(index)
+        value['revisionContext']['analysisBinding']['targetUrl'] = url
+        return value
+
+    def test_eleventh_published_target_outside_legacy_projection_is_measured(self):
+        jobs = [self._published(index) for index in range(11)]
+        for value in jobs:
+            _, index_key = receipts(self.runtime.root, value)
+            index_path = self.runtime.root / 'index-tracking' / (index_key + '.json')
+            index_receipt = json.loads(index_path.read_text())
+            index_receipt['url'] = value['publication']['url']
+            index_path.write_text(json.dumps(index_receipt))
+        projected = feedback_analytics()
+        leaders = [{"url": 'https://camp-gear-lab.com/articles/leader-' + str(index),
+                    "clicks": 10, "impressions": 1000 - index,
+                    "ctr": .01, "position": 3.0} for index in range(30)]
+        projected['evidence']['current']['pages'] = copy.deepcopy(leaders)
+        projected['evidence']['previous']['pages'] = copy.deepcopy(leaders)
+        raw = {'schemaVersion': 1, 'collectedAt': projected['collectedAt'],
+               'current': copy.deepcopy(projected['evidence']['current']),
+               'previous': copy.deepcopy(projected['evidence']['previous'])}
+        target = jobs[-1]['publication']['url']
+        raw['current']['pages'].append(
+            {'url': target, 'clicks': 5, 'impressions': 125, 'ctr': .04, 'position': 7.0})
+        raw['previous']['pages'].append(
+            {'url': target, 'clicks': 2, 'impressions': 100, 'ctr': .02, 'position': 7.0})
+
+        feedback = build_feedback(jobs, self.runtime.root, projected, FEEDBACK_NOW,
+                                  owner_id=OWNER, metrics_snapshot=raw)
+
+        self.assertEqual(10, len(feedback['rows']))
+        self.assertTrue(all(row['status'] == 'waiting' for row in feedback['rows']))
+        self.assertEqual('revision-10', feedback['planningRows'][0]['jobId'])
+        self.assertEqual('postchange_performance_measured',
+                         feedback['planningRows'][0]['status'])
+
+    def test_three_waiting_report_rows_do_not_hide_measured_planning_row(self):
+        waiting = [{'jobId': 'waiting-' + str(index), 'revision': 'a' * 64,
+                    'targetUrl': 'https://camp-gear-lab.com/articles/waiting-' + str(index),
+                    'status': 'waiting', 'reason': 'page_measurement_missing',
+                    'workflow': {'status': 'publication_observed'},
+                    'measurement': {'status': 'waiting'}, 'sourceEvidence': {}}
+                   for index in range(3)]
+        measured = {'jobId': 'measured', 'revision': 'b' * 64,
+                    'targetUrl': 'https://camp-gear-lab.com/articles/measured',
+                    'status': 'postchange_performance_measured',
+                    'reason': 'complete_nonoverlapping_page_periods',
+                    'workflow': {'status': 'reanalysis_observed'},
+                    'measurement': {'status': 'measured_postchange_performance',
+                                    'effect': 'not_causally_attributed'},
+                    'sourceEvidence': {}}
+        path = self.runtime.root / 'seo-feedback/latest.json'
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({'summary': {}, 'rows': waiting + [measured],
+                                    'planningRows': [measured]}))
+        self.prepare()
+
+        handed = self.runtime._analytics_context()
+
+        self.assertEqual(['measured'], [row['jobId'] for row in
+                                        handed['priorPublicationFeedback']['rows']])
+        self.assertFalse(handed['priorPublicationFeedback']['causalAttribution'])
 
 
 if __name__ == '__main__':

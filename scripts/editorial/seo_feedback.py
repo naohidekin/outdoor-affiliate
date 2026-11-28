@@ -498,10 +498,11 @@ def _measurement_analytics(jobs, metrics_snapshot, analytics, owner_id, now):
 def build_feedback(jobs, root, analytics, now=None, *, owner_id, metrics_snapshot=None):
     """Build at most ten safe rows for Runtime persistence and planning context."""
     now = now or datetime.now(JST)
-    measurement_analytics = _measurement_analytics(
-        jobs, metrics_snapshot, analytics, owner_id, now) if metrics_snapshot is not None else analytics
     rows = []
     for job in (jobs if isinstance(jobs, list) else [])[:1000]:
+        measurement_analytics = (_measurement_analytics(
+            [job], metrics_snapshot, analytics, owner_id, now)
+            if metrics_snapshot is not None else analytics)
         row = assess(job, root, measurement_analytics, owner_id, now)
         if row["status"] != "not_applicable":
             rows.append(row)
@@ -509,6 +510,11 @@ def build_feedback(jobs, root, analytics, now=None, *, owner_id, metrics_snapsho
                 "postchange_performance_measured": 2}
     rows.sort(key=lambda row: (priority.get(row["status"], 3),
                                row.get("publicationAt", ""), row.get("jobId") or ""))
+    planning_rows = [row for row in rows
+                     if row["status"] == "postchange_performance_measured"]
+    waiting_rows = [row for row in rows if row["status"] == "waiting"]
+    planning_rows = (planning_rows[:3] if planning_rows
+                     else waiting_rows[:3] if waiting_rows else rows[:3])
     rows = rows[:10]
     summary = {
         "reanalysisObserved": sum(row["workflow"]["status"] == "reanalysis_observed" for row in rows),
@@ -521,7 +527,8 @@ def build_feedback(jobs, root, analytics, now=None, *, owner_id, metrics_snapsho
             row["measurement"]["status"] == "measured_new_content_performance" for row in rows),
         "requiresReconciliation": sum(row["status"] == "requires_reconciliation" for row in rows),
     }
-    semantic = {"schemaVersion": 1, "summary": summary, "rows": rows}
+    semantic = {"schemaVersion": 1, "summary": summary, "rows": rows,
+                "planningRows": planning_rows}
     return {**semantic, "generatedAt": now.astimezone(JST).isoformat(),
             "semanticSha256": _canonical_hash(semantic)}
 

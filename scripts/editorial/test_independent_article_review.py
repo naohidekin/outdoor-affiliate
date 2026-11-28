@@ -5,6 +5,7 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -13,6 +14,8 @@ from unittest.mock import patch
 import independent_article_review as review_adapter
 from dispatcher import DeterministicDispatcher
 from ledger import fingerprint
+from article_verification_receipt import write_once as write_verification_receipt
+from article_verification_receipt import write_source_once as write_verification_source
 from model_budget import BudgetHold
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 import test_catalog_correction_runtime as correction_fixture
@@ -114,12 +117,51 @@ class JournalLedger:
 
 class FakeRuntime:
     def __init__(self, job):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
         self.config = {
             'independentReviewEnabled': True,
             'editorialManager': {'command': ['pinned-managed-command']},
             'repo': '/not/read/in/tests',
         }
         self.ledger = FakeLedger(job)
+        bound = {'products': copy.deepcopy(job['bundle']['products']),
+                 'images': copy.deepcopy(job['bundle']['images']),
+                 'references': copy.deepcopy(job['bundle']['references'])}
+        source = {**copy.deepcopy(bound), 'normalizedSource': copy.deepcopy(bound)}
+        source_sha = write_verification_source(
+            self.root / 'article-verification-sources' / job['id'] / (fingerprint(source) + '.json'), source)
+        image_sha = 'e' * 64; url_sha = 'f' * 64
+        presentation = [{'productId': 'p1', 'componentCount': 1, 'priceInput': None,
+                         'ratingInput': None, 'availabilityInput': None,
+                         'merchantCheckDisplayed': True, 'zeroPriceDisplayed': False,
+                         'ratingClaimDisplayed': False, 'availabilityClaimDisplayed': False}]
+        receipt = {'schemaVersion': 1, 'kind': 'article_verification_receipt_v1',
+                   'jobId': job['id'], 'revision': job['revision'],
+                   'bundleSha256': job['revision'], 'sourceDependenciesSha256': source_sha,
+                   'productBindings': [{'productId': 'p1', 'name': 'Item', 'price': None,
+                       'rating': None, 'availability': None, 'imageUrlSha256': url_sha,
+                       'imageSha256': image_sha, 'channels': []}],
+                   'checks': {'facts': {'passed': True},
+                       'images': {'passed': True, 'readback': [{'productId': 'p1',
+                           'urlSha256': url_sha, 'sha256': image_sha, 'size': 1}],
+                           'socialCard': {'status': 'not_present'}},
+                       'affiliate': {'passed': True, 'viewports': {name: {'count': 0,
+                           'bindings': [], 'destinationObservationsSha256': 'd' * 64}
+                           for name in ('desktop', 'mobile')}},
+                       'medical': {'passed': True, 'riskCount': 0},
+                       'render': {'passed': True, 'previewSha256': 'c' * 64,
+                           'viewports': {name: {
+                           'internalLinks': [], 'allAnchorsVerified': True,
+                           'productPresentation': copy.deepcopy(presentation)}
+                           for name in ('desktop', 'mobile')}}},
+                   'internalTargets': []}
+        sha = write_verification_receipt(
+            self.root / 'article-verification-receipts' / job['id'] / (job['revision'] + '.json'), receipt)
+        self.ledger.job['review']['programVerification'] = {
+            'schemaVersion': 1, 'kind': 'article_verification_receipt_v1',
+            'revision': job['revision'], 'receiptSha256': sha,
+            'sourceDependenciesSha256': source_sha}
         self.stage_journal = FakeJournal()
         self.model_budget = FakeBudget()
         self.flushes = 0
@@ -211,6 +253,36 @@ class IndependentReviewTests(unittest.TestCase):
                          ['independentReview']['outputCapEnforced'])
         self.assertNotIn('approval', self.runtime.ledger.job['astraReview'])
         self.assertNotIn('raw summary', json.dumps(self.runtime.ledger.job['astraReview']))
+
+    def test_cached_valid_review_does_not_require_new_projection_contract(self):
+        with patch.object(review_adapter.manager_cli, 'call', return_value=response(self.job)) as call:
+            first = review_adapter.ensure_review(self.runtime, self.job)
+            pointer = self.runtime.ledger.job['review']['programVerification']
+            (self.runtime.root / 'article-verification-receipts' / self.job['id'] /
+             (pointer['revision'] + '.json')).unlink()
+            second = review_adapter.ensure_review(self.runtime, self.job)
+        self.assertEqual(('passed', 'passed'), (first['status'], second['status']))
+        call.assert_called_once()
+
+    def test_projection_contract_hashes_actual_implementations_and_missing_proof_never_calls(self):
+        contract = review_adapter.proof_contract()
+        expected = {name: hashlib.sha256(
+            Path(review_adapter.__file__).with_name(name).read_bytes()).hexdigest()
+            for name in ('article_verification_receipt.py',
+                         'independent_article_review.py', 'render-preview.mjs')}
+        self.assertEqual(review_adapter.PROJECTION_VERSION, contract['projectionVersion'])
+        self.assertEqual(expected, contract['implementations'])
+        self.assertEqual(fingerprint({'projectionVersion': review_adapter.PROJECTION_VERSION,
+                                      'implementations': expected}),
+                         contract['contractSha256'])
+        pointer = self.runtime.ledger.job['review']['programVerification']
+        (self.runtime.root / 'article-verification-receipts' / self.job['id'] /
+         (pointer['revision'] + '.json')).unlink()
+        with patch.object(review_adapter.manager_cli, 'call') as call:
+            result = review_adapter.ensure_review(self.runtime, self.job)
+        self.assertEqual(('blocked', 'program_verification_receipt_missing'),
+                         (result['status'], result['reason']))
+        call.assert_not_called()
 
     def test_known_failure_is_cached_and_never_grants_owner_approval(self):
         issue = {'code': 'unsupported_claim', 'location': 'article.content',
@@ -316,7 +388,20 @@ class IndependentReviewTests(unittest.TestCase):
         if not path.exists():
             self.skipTest('local reviewed fixture unavailable')
         job = json.loads(path.read_text())
-        snapshot = review_adapter._public_snapshot(job)
+        current = copy.deepcopy(job)
+        current['review']['programVerification'] = {
+            'schemaVersion': 1, 'kind': 'article_verification_receipt_v1',
+            'revision': current['revision'], 'receiptSha256': 'a' * 64,
+            'sourceDependenciesSha256': 'b' * 64}
+        projected = {'schemaVersion': 1, 'kind': 'article_verification_public_projection_v1',
+                     'jobId': current['id'], 'revision': current['revision'],
+                     'receiptSha256': 'a' * 64, 'checks': {}, 'internalTargets': []}
+        with patch.object(review_adapter, 'load_verification_receipt', return_value={
+                'sourceDependenciesSha256': 'b' * 64}), \
+                patch.object(review_adapter, 'load_verification_source'), \
+                patch.object(review_adapter, 'project_verification_receipt',
+                             return_value=projected):
+            snapshot = review_adapter._public_snapshot(current, self.runtime.root)
         public = snapshot['publicBundle']
         self.assertEqual(job['bundle']['brief']['reader'], public['brief']['reader'])
         self.assertEqual(job['bundle']['brief']['style'], public['brief']['style'])
@@ -343,10 +428,74 @@ class RuntimeIntegrationTests(unittest.TestCase):
     attach = correction_fixture.CatalogCorrectionRuntimeTests.attach
     context = correction_fixture.CatalogCorrectionRuntimeTests.context
     produce = correction_fixture.CatalogCorrectionRuntimeTests.produce
+    configure_production_schedule = correction_fixture.test_runtime.RuntimeTests.configure_production_schedule
+    approve = correction_fixture.test_runtime.RuntimeTests.approve
+
+    def test_ordinary_new_nonproduct_does_not_enter_revision_proof_scope(self):
+        import test_runtime
+        self.config['independentReviewEnabled'] = True
+        with patch('article_verification_receipt.build',
+                   side_effect=AssertionError('ordinary nonproduct must not build revision proof')):
+            test_runtime.RuntimeTests.test_nonproduct_actual_make_article_requires_separate_article_and_social_approval(self)
 
     def configure_independent_review(self):
         self.config['independentReviewEnabled'] = True
         self.config['editorialManager'] = {'command': ['synthetic-managed-astra']}
+        original = self.runtime.renderer
+        def render(bundle, job):
+            result = original(bundle, job)
+            internal_links = re.findall(r'\]\((/articles/[a-z0-9][a-z0-9-]*)\)',
+                                        bundle['article'].get('content', ''))
+            products = [item for item in bundle['products']
+                        if item['id'] in bundle['article']['productIds']]
+            clicks = []
+            presentation = []
+            readback = []
+            for product in products:
+                for channel, field in (('rakuten', 'affiliateUrl'),
+                                       ('amazon', 'amazonUrl'), ('yahoo', 'yahooUrl')):
+                    if isinstance(product.get(field), str) and product[field].startswith('https://'):
+                        clicks.append({'productId': product['id'], 'store': channel,
+                                       'href': product[field], 'placement': 'product_card'})
+                presentation.append({'productId': product['id'], 'componentCount': 1,
+                    'priceInput': product.get('price'), 'ratingInput': product.get('rating'),
+                    'availabilityInput': product.get('availability'),
+                    'merchantCheckDisplayed': True, 'zeroPriceDisplayed': False,
+                    'ratingClaimDisplayed': False, 'availabilityClaimDisplayed': False})
+                image = next(item for item in bundle['images']
+                             if item.get('productId') == product['id']
+                             and item.get('url') == product.get('imageUrl'))
+                readback.append({'url': image['url'], 'sha256': image['sha256'],
+                                 'size': image['size'], 'verified': True})
+            result.update(failures=[], imageReadback=readback,
+                clicksVerified={name: copy.deepcopy(clicks) for name in ('desktop', 'mobile')},
+                viewportEvidence={name: {'internalLinks': copy.deepcopy(internal_links),
+                                         'allAnchorsVerified': True}
+                                  for name in ('desktop', 'mobile')},
+                productPresentation={name: copy.deepcopy(presentation)
+                                     for name in ('desktop', 'mobile')})
+            return result
+        self.runtime.renderer = render
+        def request(url, _headers, **_kwargs):
+            title = '公開済み関連記事'
+            body = ("<html><head><title>" + title + "</title>"
+                    "<meta name='description' content='公開済みの確認用説明'>"
+                    "<link rel='canonical' href='" + url + "'></head>"
+                    "<body><h1>" + title + "</h1><h2>確認事項</h2></body></html>").encode()
+            return {'url': url, 'status': 200,
+                    'headers': {'content-type': 'text/html; charset=utf-8'}, 'body': body}
+        self.runtime.catalog.request = request
+        original_gather = self.runtime.catalog.gather
+        def gather(theme, context):
+            result = original_gather(theme, context)
+            candidate = correction_fixture.bundle()
+            result['catalog'] = copy.deepcopy(context['products'])
+            result['products'] = copy.deepcopy(context['products'])
+            result['references'] = copy.deepcopy(candidate['references'])
+            result['images'] = copy.deepcopy(candidate['images'])
+            result['images'][0].update(sha256='a' * 64, size=10)
+            return result
+        self.runtime.catalog.gather = gather
 
     @staticmethod
     def source_complete_bundle(original):

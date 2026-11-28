@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { childEnvironment, validateInput, expectedMerchants, verifyClick, verifyFaqVisibility, prepareApp, renderPreview, privateOutputDirectory, fetchPublicImage, createRequestHandler, IMAGE_HELPER } from './render-preview.mjs';
+import { childEnvironment, validateInput, expectedMerchants, verifyClick, verifyFaqVisibility, verifyProductPresentation, prepareApp, renderPreview, privateOutputDirectory, fetchPublicImage, createRequestHandler, IMAGE_HELPER } from './render-preview.mjs';
 import { validateBundle } from './publish.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -167,6 +167,40 @@ test('FAQ visibility requires each expected question and answer together in rend
   assert.deepEqual(verifyFaqVisibility(faqs, ['Q. 収納は 簡単 ですか？\n▼\n説明書を確認します。',
     '### 重さは？\n\n2kgです。'], 'mobile'), []);
 });
+
+test('product presentation proof rejects invented zero price rating or stock without broad text inference', () => {
+  const product = { id: 'p1', price: 0, rating: 0, availability: null };
+  const good = [{ productId: 'p1', componentCount: 2, merchantCheckDisplayed: true,
+    zeroPriceDisplayed: false, ratingClaimDisplayed: false, availabilityClaimDisplayed: false }];
+  assert.deepEqual(verifyProductPresentation([product], good, 'desktop'), []);
+  for (const change of [{ merchantCheckDisplayed: false }, { zeroPriceDisplayed: true },
+    { ratingClaimDisplayed: true }, { availabilityClaimDisplayed: true }, { componentCount: 0 }])
+    assert.ok(verifyProductPresentation([product], [{ ...good[0], ...change }], 'desktop').length);
+  assert.ok(verifyProductPresentation([product], [], 'desktop').length);
+});
+
+test('real product components produce bounded zero-value proof on desktop and mobile',
+  { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {
+    const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'render-product-proof-'));
+    try {
+      const input = request(path.join(temp, 'privateoutput'));
+      input.bundle.products[0].price = 0;
+      input.bundle.products[0].rating = 0;
+      input.bundle.products[0].availability = null;
+      if (process.env.RENDER_DEPS) input.dependenciesRoot = process.env.RENDER_DEPS;
+      const result = await renderPreview(input);
+      assert.equal(result.passed, true, JSON.stringify(result));
+      for (const viewport of ['desktop', 'mobile']) {
+        assert.equal(result.viewportEvidence[viewport].allAnchorsVerified, true);
+        assert.equal(result.productPresentation[viewport].length, 1);
+        assert.deepEqual(result.productPresentation[viewport][0], {
+          productId: 'preview-p1', componentCount: result.productPresentation[viewport][0].componentCount,
+          priceInput: 0, ratingInput: 0, availabilityInput: null, merchantCheckDisplayed: true,
+          zeroPriceDisplayed: false, ratingClaimDisplayed: false, availabilityClaimDisplayed: false });
+        assert.ok(result.productPresentation[viewport][0].componentCount >= 2);
+      }
+    } finally { await fs.rm(temp, { recursive: true, force: true }); }
+  });
 
 test('real FAQ render catches empty body heading and accepts structured or inline Q&A on both viewports',
   { skip: process.env.RUN_RENDER_TESTS !== '1', timeout: 300000 }, async () => {

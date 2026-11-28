@@ -5,10 +5,16 @@ runtime lock nor grants owner approval.  It sends only an allow-listed public
 projection through the host-pinned manager CLI transport.
 """
 import copy
+import hashlib
 import json
+from pathlib import Path
 
 from ledger import fingerprint, valid_astra_review, valid_review
 import manager_cli
+from article_verification_receipt import load as load_verification_receipt
+from article_verification_receipt import load_source as load_verification_source
+from article_verification_receipt import MAX_PROJECTION_BYTES
+from article_verification_receipt import projection as project_verification_receipt
 from model_budget import BudgetHold
 from stage_journal import StageBlocked, StageUnknown
 from wise_contract import require_current_review
@@ -21,6 +27,7 @@ TIMEOUT_SECONDS = 180
 # established conservative per-call bound instead of pretending 2,048 is hard.
 RESERVED_OUTPUT_TOKENS = 16384
 MAX_SNAPSHOT_BYTES = 131072
+PROJECTION_VERSION = 'independent-review-public-proof-v2'
 
 _ARTICLE_FIELDS = (
     'id', 'slug', 'title', 'content', 'excerpt', 'metaDescription', 'faqs',
@@ -61,6 +68,19 @@ class _StaleReview(ValueError):
     pass
 
 
+class _ProgramProofMissing(ValueError):
+    pass
+
+
+def proof_contract():
+    files = {name: Path(__file__).with_name(name) for name in
+             ('article_verification_receipt.py', 'independent_article_review.py', 'render-preview.mjs')}
+    implementations = {name: hashlib.sha256(path.read_bytes()).hexdigest()
+                       for name, path in files.items()}
+    core = {'projectionVersion': PROJECTION_VERSION, 'implementations': implementations}
+    return {**core, 'contractSha256': fingerprint(core)}
+
+
 def _project(value, fields):
     if not isinstance(value, dict):
         return {}
@@ -88,13 +108,37 @@ def _purchase_evidence(value):
     return []
 
 
-def _public_snapshot(job):
+def _public_snapshot(job, root=None):
     bundle = job['bundle']
     review = job['review']
     source_flags = review.get('evidence') if isinstance(review.get('evidence'), dict) else {}
     source_flags = {key: copy.deepcopy(source_flags.get(key)) for key in _QUALITY_FLAGS}
     if any(value is False or value is None for value in source_flags.values()):
         raise ValueError('independent_review_quality_flags_incomplete')
+    pointer = review.get('programVerification')
+    if (root is None or not isinstance(pointer, dict)
+            or pointer.get('kind') != 'article_verification_receipt_v1'
+            or pointer.get('schemaVersion') != 1 or pointer.get('revision') != job['revision']
+            or not isinstance(pointer.get('receiptSha256'), str)
+            or not isinstance(pointer.get('sourceDependenciesSha256'), str)):
+        raise _ProgramProofMissing('independent_review_program_verification_receipt_missing')
+    try:
+        receipt = load_verification_receipt(
+            root / 'article-verification-receipts' / job['id'] / (job['revision'] + '.json'),
+            job['id'], job['revision'], pointer['receiptSha256'])
+        if receipt['sourceDependenciesSha256'] != pointer['sourceDependenciesSha256']:
+            raise ValueError('source pointer mismatch')
+        load_verification_source(
+            root / 'article-verification-sources' / job['id'] /
+            (receipt['sourceDependenciesSha256'] + '.json'),
+            receipt['sourceDependenciesSha256'], bundle)
+        program_proof = project_verification_receipt(receipt, job['id'], job['revision'])
+        program_proof['contract'] = proof_contract()
+        if len(json.dumps(program_proof, ensure_ascii=False, sort_keys=True,
+                          separators=(',', ':')).encode()) > MAX_PROJECTION_BYTES:
+            raise ValueError('program proof projection too large')
+    except (KeyError, TypeError, ValueError, OSError) as error:
+        raise _ProgramProofMissing('independent_review_program_verification_receipt_invalid') from error
 
     # A routine revision carries a compact, already-verified source receipt in
     # its private context.  Export only its booleans, never the context/base.
@@ -131,6 +175,7 @@ def _public_snapshot(job):
             'actualSourceFlags': actual_source_flags,
             'originalReviewFingerprint': review.get('fingerprint'),
             'originalReviewPassed': review.get('passed') is True,
+            'programVerification': program_proof,
         },
     }
     references = snapshot['publicBundle']['references']
@@ -143,6 +188,11 @@ def _public_snapshot(job):
     if len(encoded) > MAX_SNAPSHOT_BYTES:
         raise ValueError('independent_review_input_too_large')
     return snapshot
+
+
+def load_public_snapshot(job, root):
+    """Load and rebind the immutable program proof without invoking a model."""
+    return _public_snapshot(job, root)
 
 
 def _schema():
@@ -187,15 +237,19 @@ def _schema():
 
 
 PROMPT = """Perform one independent, read-only semantic QA of the supplied corrected article.
-Use only the supplied public bundle, source brief, evidence, and checks. Do not use tools,
-browse, rewrite, edit, suggest replacement prose, or infer missing evidence. Check every
-factual claim against its source support and check item/model/variant identity, destination
-links, and image evidence for consistency. All original quality flags remain mandatory;
-never replace or weaken them. A pass requires specific passing evidence for all five check
-categories and no issue. Unknown or insufficient evidence is not a pass. This review can
-never grant, imply, request, or record owner approval, publication approval, or permission
-to publish. Return exactly one quality_review action in the required schema. Set jobId and
-revision to the supplied exact values. Record every mismatch as a bounded issue."""
+Use only the supplied public bundle, source brief, references, bindings, and checks. Do not
+use tools, browse, rewrite, edit, suggest replacement prose, or infer missing evidence.
+Validate factual claims against supplied references and check item/model/variant, retailer,
+destination, and image bindings for semantic consistency. The typed programVerification
+receipt is authoritative only for its exact revision-bound deterministic checks: rendered
+DOM presence, click payload/navigation, image byte/hash readback, social-card renderer
+metadata, and the medical program gate. Do not demand screenshots, live DOM, or a second
+visual audit for those passed checks, and never claim that you visually inspected anything.
+A missing, invalid, failed, or mismatched binding is not a pass. All five program checks
+remain mandatory and cannot be replaced or weakened. This review can never grant, imply,
+request, or record owner approval, publication approval, or permission to publish. Return
+exactly one quality_review action in the required schema. Set jobId and revision to the
+supplied exact values. Record every semantic mismatch as a bounded issue."""
 
 
 def _configuration(runtime):
@@ -282,7 +336,7 @@ def ensure_review(runtime, job):
             return {'status': 'passed', 'cached': True,
                     'revision': current['revision'], 'called': False}
 
-        snapshot = _public_snapshot(current)
+        snapshot = load_public_snapshot(current, runtime.root)
         inputs = {
             'reviewKind': snapshot['reviewKind'],
             'revision': current['revision'],
@@ -387,6 +441,9 @@ def ensure_review(runtime, job):
                 'stageStatus': error.status, 'called': provider_called}
     except _StaleReview:
         return {'status': 'stale', 'reason': 'expected_revision_changed',
+                'called': False}
+    except _ProgramProofMissing:
+        return {'status': 'blocked', 'reason': 'program_verification_receipt_missing',
                 'called': False}
     except (KeyError, TypeError, ValueError):
         return {'status': 'blocked', 'reason': 'invalid_or_stale_review_state',
