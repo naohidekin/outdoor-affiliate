@@ -9,6 +9,12 @@ description: Camp Gear Lab編集台帳の状態確認、次工程の確認、停
 [通常進行・工程復旧](../../docs/editorial-deterministic.md) の必要な節だけを読む。
 台帳は既存SQLite、実行主体は既存runner一つ。スキル自体は定期実行を作らない。
 
+Bufferの`buffer.transport=owner_oauth_v1`は既存の所有者OAuth・共通通信台帳へ接続する。
+この経路では旧PATファイルを読まず、接続失敗時にもPATへ戻さない。Xの読戻し認証は別途維持する。
+各通信は保存済みの本人SNS承認版・記事ID・工程・呼出し通番へ結び、既存の予約journalと共有fenceを使う。
+認証拒否・結果不明・既に試行済みの操作を再送せず、元の受領情報を照合する。記事承認をSNS承認へ流用しない。
+接続確認の受領と実予約・X親投稿／記事URL返信の照合を分け、読み取り成功だけで投稿完了にしない。
+
 分析から通常制作・既存記事改善への接続は[SEO循環](../../docs/seo-feedback-loop.md)を参照する。
 版別の循環状況は`seo-feedback/latest.json`、最新の数値本文は`analytics/seo/latest.json`を読む。
 同じ証拠でAIを反復起動せず、再分析の実行と公開後の効果計測を区別する。

@@ -121,6 +121,22 @@ class BufferFake:
         return self._post()
 
 
+class ContextBufferFake(BufferFake):
+    def __init__(self, job, marker):
+        super().__init__(job)
+        self.marker = marker
+        self.contexts = []
+
+    def set_call_context(self, context):
+        saved = json.loads(self.marker.read_text())
+        self.contexts.append(copy.deepcopy(context))
+        if (saved.get('bufferRequests') != context.get('ordinal')
+                or saved.get('phase') != context.get('phase')
+                or saved.get('jobId') != context.get('jobId')
+                or saved.get('approvalRequestId') != context.get('approvalRequestId')):
+            raise AssertionError('context was not durably saved before hook')
+
+
 class XFake:
     def __call__(self, action, payload):
         if action != 'threadread':
@@ -156,6 +172,17 @@ class BufferPublisherTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_falsey_injected_client_never_falls_back_to_pat_api(self):
+        class FalseyClient:
+            def __bool__(self):
+                return False
+
+        client = FalseyClient()
+        with patch('buffer_publisher.BufferAPI', side_effect=AssertionError('PAT fallback')):
+            publisher = BufferPublisher(self.config, {}, client=client,
+                                        fetcher=self.fetcher, x_client=XFake())
+        self.assertIs(client, publisher.client)
+
     def marker(self):
         return self.root / 'buffer-publications' / (self.job['social']['revision'] + '.json')
 
@@ -170,6 +197,36 @@ class BufferPublisherTests(unittest.TestCase):
         social['revision'] = fingerprint(social['proposal'])
         social['review']['fingerprint'] = social['revision']
         social['approval']['revision'] = social['revision']
+
+    def test_optional_client_context_uses_schema_fields_after_durable_ordinal(self):
+        self.job['id'] = 'article-' + 'a' * 24
+        self.job['social']['approval']['request_id'] = 'camp-' + 'b' * 24
+        marker = self.marker()
+        client = ContextBufferFake(self.job, marker)
+        publisher = BufferPublisher(self.config, {}, client=client,
+                                    fetcher=self.fetcher, x_client=XFake())
+        result = publisher.schedule_or_check(
+            self.job, datetime(2026, 11, 16, 11, 0, tzinfo=JST))
+        self.assertEqual('scheduled', result['status'])
+        self.assertEqual(list(range(1, len(client.contexts) + 1)),
+                         [item['ordinal'] for item in client.contexts])
+        self.assertEqual({'jobId', 'revision', 'approvalRequestId', 'phase', 'ordinal'},
+                         set(client.contexts[0]))
+        self.assertEqual(self.job['id'], client.contexts[0]['jobId'])
+        self.assertEqual(self.job['social']['revision'], client.contexts[0]['revision'])
+        self.assertEqual(self.job['social']['approval']['request_id'],
+                         client.contexts[0]['approvalRequestId'])
+        self.assertEqual('dedup', client.contexts[0]['phase'])
+        state = json.loads(marker.read_text())
+        self.assertEqual(len(client.contexts), state['bufferRequests'])
+        self.assertEqual(self.job['id'], state['jobId'])
+        self.assertEqual(self.job['social']['approval']['request_id'], state['approvalRequestId'])
+
+    def test_client_without_context_hook_keeps_legacy_marker_shape(self):
+        self.schedule()
+        state = json.loads(self.marker().read_text())
+        self.assertNotIn('jobId', state)
+        self.assertNotIn('approvalRequestId', state)
 
     def test_legacy_scheduled_intent_allows_get_without_new_create_or_edit(self):
         self.legacy_policy()

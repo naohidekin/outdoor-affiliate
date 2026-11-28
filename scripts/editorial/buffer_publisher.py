@@ -70,7 +70,7 @@ class BufferPublisher:
         self.config, self.env = dict(config), dict(env)
         self.settings = dict(config.get('buffer') or {})
         self.root = Path(config['stateRoot'])
-        self.client = client or BufferAPI(self.env.get('BUFFER_API_KEY'))
+        self.client = client if client is not None else BufferAPI(self.env.get('BUFFER_API_KEY'))
         self.image_reader = SocialPublisher(config, env, client=lambda *_: None, fetcher=fetcher)
         self.x_client = x_client or self.image_reader._node
         self.clock = clock or (lambda: datetime.now(JST))
@@ -147,7 +147,12 @@ class BufferPublisher:
                      'buffer_schedule_marker_required')
             if not marker.exists():
                 require_approved_social_review(job, self.config['slack']['user_id'], self.config.get('repo'))
-            state, existed = self._state(marker, revision, proposal, binding)
+            call_identity = None
+            if callable(getattr(self.client, 'set_call_context', None)):
+                approval = (job.get('social') or {}).get('approval') or {}
+                call_identity = {'jobId': job.get('id'),
+                                 'approvalRequestId': approval.get('request_id')}
+            state, existed = self._state(marker, revision, proposal, binding, call_identity)
             if job['stage'] == 'social_scheduled':
                 _require(state.get('phase') in ('scheduled', 'unverified', 'verified')
                          and isinstance(state.get('postId'), str) and state['postId']
@@ -624,7 +629,14 @@ class BufferPublisher:
         _require(self.root.is_dir() and self.root.stat().st_mode & 0o777 == 0o700,
                  'social_root_not_private')
 
-    def _state(self, marker, revision, proposal, binding):
+    def _state(self, marker, revision, proposal, binding, call_identity=None):
+        if call_identity is not None:
+            _require(isinstance(call_identity, dict)
+                     and re.fullmatch(r'(?:article|revision)-[a-f0-9]{24}',
+                                      call_identity.get('jobId', '')) is not None
+                     and re.fullmatch(r'camp-[a-f0-9]{24}',
+                                      call_identity.get('approvalRequestId', '')) is not None,
+                     'buffer_call_context_invalid')
         if marker.exists():
             _require(not marker.is_symlink() and marker.stat().st_mode & 0o777 == 0o600,
                      'buffer_journal_invalid')
@@ -632,12 +644,21 @@ class BufferPublisher:
             _require(state.get('revision') == revision and state.get('proposalFingerprint') == fingerprint(proposal)
                      and state.get('binding') == binding,
                      'buffer_journal_mismatch')
+            if call_identity is not None:
+                present = {key: state.get(key) for key in ('jobId', 'approvalRequestId')
+                           if key in state}
+                _require(not present or present == call_identity, 'buffer_call_context_mismatch')
+                if not present:
+                    state.update(call_identity)
+                    _atomic(marker, state)
             return state, True
         state = {'revision': revision, 'proposalFingerprint': fingerprint(proposal), 'binding': binding,
                  'dueAt': None, 'imageBindings': [
                      {key: image.get(key) for key in ('url', 'finalUrl', 'contentType', 'size', 'sha256')}
                      for image in proposal['images']], 'phase': 'dedup', 'pending': None,
                  'polls': 0, 'lastPollAt': None}
+        if call_identity is not None:
+            state.update(call_identity)
         state['preflightAt'] = None
         state['nextCheckAt'] = None
         state['bufferRequests'] = 0
@@ -661,6 +682,22 @@ class BufferPublisher:
         state['bufferRequests'] = state.get('bufferRequests', 0) + 1
         _atomic(marker, state)
         try:
+            set_context = getattr(self.client, 'set_call_context', None)
+            if callable(set_context):
+                context = {key: state.get(key) for key in
+                           ('jobId', 'revision', 'approvalRequestId', 'phase')}
+                context['ordinal'] = state['bufferRequests']
+                _require(re.fullmatch(r'(?:article|revision)-[a-f0-9]{24}',
+                                      context.get('jobId', '')) is not None
+                         and re.fullmatch(r'[a-f0-9]{64}', context.get('revision', '')) is not None
+                         and re.fullmatch(r'camp-[a-f0-9]{24}',
+                                          context.get('approvalRequestId', '')) is not None
+                         and re.fullmatch(r'[A-Za-z0-9_-]{1,96}',
+                                          context.get('phase', '')) is not None
+                         and type(context['ordinal']) is int
+                         and 1 <= context['ordinal'] <= 9007199254740991,
+                         'buffer_call_context_invalid')
+                set_context(copy.deepcopy(context))
             return getattr(self.client, method)(*args)
         except ValueError as error:
             if str(error) == 'buffer_rate_limited':

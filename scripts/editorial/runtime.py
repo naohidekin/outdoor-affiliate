@@ -132,7 +132,7 @@ def safe_publication_diagnostic(value):
 class Runtime:
     def __init__(self, config, models=None, catalog=None, slack=None, renderer=None, publisher=None,
                  analytics=None, reporter=None, social_publisher=None, buffer_publisher=None,
-                 social_cards=None, post_auditor=None, clock=None):
+                 social_cards=None, post_auditor=None, clock=None, buffer_client=None):
         self.clock = clock or (lambda: datetime.now(JST))
         self.execution_policy = execution_policy(config)
         for feature in ('socialGenerationEnabled', 'socialReviewEnabled'):
@@ -174,6 +174,7 @@ class Runtime:
         self.social_cards = social_cards
         self.social_publisher = social_publisher
         self.buffer_publisher = buffer_publisher
+        self.buffer_client = buffer_client
         self.post_auditor = post_auditor
         from analytics import Analytics
         from reporting import Reporter
@@ -3178,14 +3179,7 @@ class Runtime:
             if waiting:
                 return waiting
         if self.buffer_publisher is None:
-            buffer_env = dict(self.env)
-            path = self.config.get('bufferEnvFile')
-            if path:
-                candidate = Path(path)
-                if candidate.is_file() and not candidate.is_symlink():
-                    buffer_env.update(env_file(candidate))
-            from buffer_publisher import BufferPublisher
-            self.buffer_publisher = BufferPublisher(self.config, buffer_env, fetcher=self.catalog, clock=self.clock)
+            self._buffer_social_publisher()
         schedule = social.get('bufferSchedule') or {}
         if (before.get('pending')
                 or before.get('phase') not in (None, 'deferred', 'scheduled', 'verified')
@@ -3263,6 +3257,30 @@ class Runtime:
             self.notify_social_posted(posted)
             return posted
         raise ValueError('buffer_publication_requires_reconciliation')
+
+    def _buffer_social_publisher(self):
+        if self.buffer_publisher is None:
+            settings = self.config.get('buffer') or {}
+            transport = settings.get('transport')
+            if transport not in (None, '', 'owner_oauth_v1'):
+                raise ValueError('unsupported buffer transport')
+            if self.buffer_client is not None and transport != 'owner_oauth_v1':
+                raise ValueError('buffer client requires owner_oauth_v1 transport')
+            if transport == 'owner_oauth_v1' and self.buffer_client is None:
+                from buffer_owner_oauth_client import BufferOwnerOAuthClient
+                self.buffer_client = BufferOwnerOAuthClient()
+            buffer_env = dict(self.env)
+            if self.buffer_client is None:
+                path = self.config.get('bufferEnvFile')
+                if path:
+                    candidate = Path(path)
+                    if candidate.is_file() and not candidate.is_symlink():
+                        buffer_env.update(env_file(candidate))
+            from buffer_publisher import BufferPublisher
+            self.buffer_publisher = BufferPublisher(
+                self.config, buffer_env, client=self.buffer_client,
+                fetcher=self.catalog, clock=self.clock)
+        return self.buffer_publisher
 
     def _buffer_request_snapshot(self, revision):
         marker = self.root / 'buffer-publications' / (revision + '.json')

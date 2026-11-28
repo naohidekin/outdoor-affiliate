@@ -99,6 +99,87 @@ class SlackFake:
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_provided_buffer_client_skips_buffer_env_and_keeps_x_readback_dependencies(self):
+        client = object()
+        clock = lambda: datetime(2026, 11, 22, 10, tzinfo=JST)
+        self.config['buffer'] = {'transport': 'owner_oauth_v1'}
+        runtime = Runtime(self.config, models=self.models, catalog=CatalogFake(), slack=self.slack,
+                          renderer=self.runtime.renderer, publisher=self.runtime.publisher,
+                          clock=clock, buffer_client=client)
+        x_env = {'X_API_KEY': 'x-key', 'X_API_SECRET': 'x-secret',
+                 'X_ACCESS_TOKEN': 'x-token', 'X_ACCESS_SECRET': 'x-access-secret'}
+        runtime.env.update(x_env)
+        runtime.config['bufferEnvFile'] = str(Path(self.tmp.name) / 'must-not-be-read')
+        publisher = object()
+        with patch('runtime.env_file', side_effect=AssertionError('buffer env read')), \
+             patch('buffer_publisher.BufferPublisher', return_value=publisher) as factory:
+            self.assertIs(publisher, runtime._buffer_social_publisher())
+        args, kwargs = factory.call_args
+        self.assertIs(runtime.config, args[0])
+        self.assertEqual(x_env, {key: args[1][key] for key in x_env})
+        self.assertIs(client, kwargs['client'])
+        self.assertIs(runtime.catalog, kwargs['fetcher'])
+        self.assertIs(clock, kwargs['clock'])
+
+    def test_provided_buffer_client_requires_explicit_owner_transport(self):
+        self.runtime.buffer_client = object()
+        self.runtime.config['bufferEnvFile'] = str(Path(self.tmp.name) / 'must-not-be-read')
+        for transport, message in ((None, 'buffer client requires owner_oauth_v1 transport'),
+                                   ('', 'buffer client requires owner_oauth_v1 transport'),
+                                   ('legacy_fallback', 'unsupported buffer transport')):
+            self.runtime.config['buffer'] = {} if transport is None else {'transport': transport}
+            with self.subTest(transport=transport), \
+                 patch('runtime.env_file', side_effect=AssertionError('buffer env read')), \
+                 patch('buffer_publisher.BufferPublisher') as publisher_factory:
+                with self.assertRaisesRegex(ValueError, message):
+                    self.runtime._buffer_social_publisher()
+            publisher_factory.assert_not_called()
+
+    def test_legacy_buffer_client_path_still_merges_buffer_env(self):
+        self.runtime.config['bufferEnvFile'] = str(Path(self.tmp.name) / 'legacy-buffer.env')
+        Path(self.runtime.config['bufferEnvFile']).write_text('BUFFER_API_KEY=fixture\n')
+        publisher = object()
+        with patch('runtime.env_file', return_value={
+                'BUFFER_API_KEY': 'legacy-buffer-key', 'X_ACCESS_TOKEN': 'legacy-x-token'}) as reader, \
+             patch('buffer_publisher.BufferPublisher', return_value=publisher) as factory:
+            self.assertIs(publisher, self.runtime._buffer_social_publisher())
+        reader.assert_called_once_with(Path(self.runtime.config['bufferEnvFile']))
+        args, kwargs = factory.call_args
+        self.assertEqual('camp78-22', args[1]['AMAZON_PARTNER_TAG'])
+        self.assertEqual('legacy-buffer-key', args[1]['BUFFER_API_KEY'])
+        self.assertEqual('legacy-x-token', args[1]['X_ACCESS_TOKEN'])
+        self.assertIsNone(kwargs['client'])
+        self.assertIs(self.runtime.catalog, kwargs['fetcher'])
+        self.assertIs(self.runtime.clock, kwargs['clock'])
+
+    def test_owner_oauth_transport_lazily_builds_client_without_buffer_env(self):
+        self.runtime.config['buffer'] = {'transport': 'owner_oauth_v1'}
+        self.runtime.config['bufferEnvFile'] = str(Path(self.tmp.name) / 'must-not-be-read')
+        self.runtime.env.update({'X_API_KEY': 'x-key', 'X_ACCESS_TOKEN': 'x-token'})
+        client, publisher = object(), object()
+        with patch('runtime.env_file', side_effect=AssertionError('buffer env read')), \
+             patch('buffer_owner_oauth_client.BufferOwnerOAuthClient', return_value=client) as client_factory, \
+             patch('buffer_publisher.BufferPublisher', return_value=publisher) as publisher_factory:
+            self.assertIs(publisher, self.runtime._buffer_social_publisher())
+            self.assertIs(publisher, self.runtime._buffer_social_publisher())
+        client_factory.assert_called_once_with()
+        publisher_factory.assert_called_once()
+        args, kwargs = publisher_factory.call_args
+        self.assertEqual('x-key', args[1]['X_API_KEY'])
+        self.assertEqual('x-token', args[1]['X_ACCESS_TOKEN'])
+        self.assertIs(client, kwargs['client'])
+        self.assertIs(self.runtime.catalog, kwargs['fetcher'])
+        self.assertIs(self.runtime.clock, kwargs['clock'])
+
+    def test_unknown_nonempty_buffer_transport_fails_closed(self):
+        self.runtime.config['buffer'] = {'transport': 'legacy_fallback'}
+        self.runtime.config['bufferEnvFile'] = str(Path(self.tmp.name) / 'must-not-be-read')
+        with patch('runtime.env_file', side_effect=AssertionError('buffer env read')), \
+             patch('buffer_publisher.BufferPublisher') as publisher_factory:
+            with self.assertRaisesRegex(ValueError, 'unsupported buffer transport'):
+                self.runtime._buffer_social_publisher()
+        publisher_factory.assert_not_called()
+
     def test_final_review_contract_is_bound_to_bundle_and_stage_input(self):
         from ledger import valid_review
         from review_scoring import VERSION
