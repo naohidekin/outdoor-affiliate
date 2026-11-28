@@ -6,6 +6,7 @@ Nonces are private random capabilities; transport signature verification belongs
 All validation failures raise ValueError. JSON hashes use sorted UTF-8, compact JSON.
 """
 from contextlib import contextmanager
+import copy
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -1225,6 +1226,173 @@ class Ledger:
         now = timestamp(now)
         with self._tx() as db:
             return self._request_revision_locked(db, specification, now)
+
+    def amend_unstarted_revision_catalog(self, id, expected_job_hash,
+                                         expected_spec_hash, raw_context, claim):
+        """CAS an exact product-route amendment into one untouched revision.
+
+        This does not start production, clear the prior error, grant approval,
+        or alter any model-budget history. The caller must separately invoke
+        the ordinary article pipeline after this transaction commits.
+        """
+        from revisions import validated_context, validate_context
+        context = validated_context(raw_context)
+        sha = r'[a-f0-9]{64}'
+        fields = {
+            'kind', 'jobId', 'oldJobHash', 'oldSpecHash', 'newSpecHash',
+            'sourceSha256', 'sourceRecoveryAttemptSha256',
+            'sourceRecoveryResultSha256', 'ownerGrantSha256',
+            'budgetArticleId', 'existingImportedBudgetReceipts',
+            'productChanges',
+        }
+        require(isinstance(claim, dict) and set(claim) == fields
+                and claim.get('kind') == 'revision_catalog_amendment_v1'
+                and claim.get('jobId') == id
+                and all(isinstance(claim.get(key), str)
+                        and re.fullmatch(sha, claim[key]) for key in (
+                            'oldJobHash', 'oldSpecHash', 'newSpecHash',
+                            'sourceSha256', 'sourceRecoveryAttemptSha256',
+                            'sourceRecoveryResultSha256', 'ownerGrantSha256')),
+                'revision catalog amendment claim invalid')
+        require(expected_job_hash == claim['oldJobHash']
+                and expected_spec_hash == claim['oldSpecHash']
+                and fingerprint(context) == claim['newSpecHash'],
+                'revision catalog amendment hashes changed')
+        changes = claim.get('productChanges')
+        require(isinstance(changes, list) and changes
+                and all(isinstance(item, dict)
+                        and set(item) == {'productId', 'previous', 'fields'}
+                        and isinstance(item['productId'], str)
+                        and isinstance(item['previous'], dict)
+                        and isinstance(item['fields'], dict)
+                        and set(item['previous']) == set(item['fields'])
+                        and item['fields'] for item in changes),
+                'revision catalog amendment product changes invalid')
+        require(len({item['productId'] for item in changes}) == len(changes),
+                'revision catalog amendment products duplicated')
+        imported = claim.get('existingImportedBudgetReceipts')
+        require(isinstance(claim.get('budgetArticleId'), str)
+                and claim['budgetArticleId'].startswith('article:')
+                and isinstance(imported, list) and len(imported) == 3
+                and all(isinstance(item, dict)
+                        and set(item) == {'reservationId', 'dataHash'}
+                        and isinstance(item['reservationId'], str)
+                        and re.fullmatch(sha, str(item['dataHash']))
+                        for item in imported),
+                'revision catalog amendment budget binding invalid')
+        with self._tx() as db:
+            job = self._get(db, id)
+            require(fingerprint(job) == expected_job_hash
+                    and job.get('kind') == 'article_revision'
+                    and job.get('stage') == 'error'
+                    and (job.get('error') or {}).get('reason')
+                        == 'purchase evidence required'
+                    and (job.get('error') or {}).get('sourceHoldRecovery') == 'blocked'
+                    and all(job.get(key) is None for key in (
+                        'bundle', 'revision', 'review', 'astraReview', 'approval',
+                        'publication', 'social')),
+                    'revision catalog amendment job changed')
+            old = validate_context(job.get('revisionContext'))
+            require(fingerprint(old) == expected_spec_hash,
+                    'revision catalog amendment spec changed')
+            mutable = {
+                'candidateProducts', 'productPatches', 'changeSummary',
+                'editorialCorrectionInstructions',
+            }
+            require(set(old) == set(context)
+                    and all(canonical(old[key]) == canonical(context[key])
+                            for key in set(old) - mutable),
+                    'revision catalog amendment protected context changed')
+            require(old.get('changeSummary') != context.get('changeSummary')
+                    and old.get('editorialCorrectionInstructions')
+                        != context.get('editorialCorrectionInstructions'),
+                    'revision catalog amendment explanation unchanged')
+            before = {product['id']: product
+                      for product in old['candidateProducts']}
+            after = {product['id']: product
+                     for product in context['candidateProducts']}
+            require(list(before) == list(after),
+                    'revision catalog amendment product order changed')
+            observed = []
+            for product_id in before:
+                delta = {key: copy.deepcopy(after[product_id][key])
+                         for key in after[product_id]
+                         if canonical(after[product_id][key])
+                            != canonical(before[product_id][key])}
+                if delta:
+                    previous = {key: copy.deepcopy(before[product_id][key])
+                                for key in delta}
+                    observed.append({'productId': product_id,
+                                     'previous': previous, 'fields': delta})
+            require(canonical(observed) == canonical(changes),
+                    'revision catalog amendment exact diff changed')
+            require(len(changes) == 2, 'revision catalog amendment scope changed')
+            expected_routes = {
+                'burner-s-001': {
+                    'amazonUrl': 'https://www.amazon.co.jp/dp/B007VLFI6W/?tag=camp78-22',
+                    'updatedAt': '2026-11-28T23:11:38.780591+09:00',
+                },
+                'burner-s-006': {
+                    'affiliateUrl': ('https://hb.afl.rakuten.co.jp/ichiba/'
+                        '52ca7731.3a4caf9e.52ca7732.67f9ad23/'
+                        '?pc=https%3A%2F%2Fitem.rakuten.co.jp%2F'
+                        'tsuribitokan-masuda%2F1000003108849%2F&link_type=text'),
+                    'updatedAt': '2026-11-28T23:14:26.685353+09:00',
+                },
+            }
+            require({item['productId'] for item in changes} == set(expected_routes),
+                    'revision catalog amendment product scope changed')
+            route_fields = []
+            for item in changes:
+                fields, previous = item['fields'], item['previous']
+                route = next((key for key in ('amazonUrl', 'affiliateUrl')
+                              if key in fields), None)
+                require(route is not None
+                        and set(fields) == {route, 'updatedAt'}
+                        and set(previous) == {route, 'updatedAt'}
+                        and previous[route] in ('', None)
+                        and isinstance(fields[route], str) and fields[route]
+                        and isinstance(fields['updatedAt'], str)
+                        and fields['updatedAt'] != previous['updatedAt']
+                        and fields == expected_routes[item['productId']],
+                        'revision catalog amendment route scope changed')
+                route_fields.append(route)
+            require(set(route_fields) == {'amazonUrl', 'affiliateUrl'},
+                    'revision catalog amendment route scope changed')
+            require(not db.execute('SELECT 1 FROM requests WHERE job_id=?',
+                                   (id,)).fetchone()
+                    and not db.execute('SELECT 1 FROM effects WHERE job_id=?',
+                                       (id,)).fetchone(),
+                    'revision catalog amendment side effects exist')
+            journal_rows = db.execute(
+                "SELECT value FROM meta WHERE key LIKE 'stage_journal:v1:%'").fetchall()
+            try:
+                journal_values = [json.loads(raw) for (raw,) in journal_rows]
+            except (TypeError, ValueError, json.JSONDecodeError):
+                require(False, 'revision catalog amendment model stage invalid')
+            require(not any(isinstance(value, dict) and value.get('jobId') == id
+                            for value in journal_values),
+                    'revision catalog amendment model stage exists')
+            require(not db.execute(
+                'SELECT 1 FROM model_budget_reservations WHERE article_id=?',
+                (id,)).fetchone(),
+                'revision catalog amendment current job model usage exists')
+            cursor = db.execute(
+                'SELECT * FROM model_budget_reservations WHERE article_id=? '
+                'ORDER BY reservation_id', (claim['budgetArticleId'],))
+            columns = [item[0] for item in cursor.description]
+            rows = [dict(zip(columns, values)) for values in cursor.fetchall()]
+            actual = [{'reservationId': row['reservation_id'],
+                       'dataHash': fingerprint(row)} for row in rows]
+            require(actual == imported
+                    and {row['stage'] for row in rows}
+                        == {'draft', 'polish', 'final_review'}
+                    and all(row['status'] == 'imported' for row in rows),
+                    'revision catalog amendment budget aliases changed')
+            self._event(db, id, 'revision_catalog_amendment_claimed', claim)
+            amended = copy.deepcopy(job)
+            amended['revisionContext'] = json.loads(canonical(context))
+            return self._put(db, amended, 'revision_catalog_amended')
 
     def list_jobs(self):
         with self._tx() as db:

@@ -1420,6 +1420,20 @@ class Runtime:
         return prepare(self, id, expected_spec_hash, owner_grant,
                        expected_current_period=expected_current_period, now=now)
 
+    def prepare_revision_catalog_amendment(self, id, owner_grant, *,
+                                           expected_current_period, now=None):
+        """Read-only preflight for the one authorized burner catalog amendment."""
+        from revision_catalog_amendment import prepare
+        return prepare(self, id, owner_grant,
+                       expected_current_period=expected_current_period, now=now)
+
+    def resume_revision_after_catalog_amendment(self, id, owner_grant, *,
+                                                expected_current_period, now=None):
+        """Apply the exact amendment and enter the ordinary revision pipeline once."""
+        from revision_catalog_amendment import execute
+        return execute(self, id, owner_grant,
+                       expected_current_period=expected_current_period, now=now)
+
     def retry_stage(self, id, stage, input_key):
         """Explicitly execute the one remaining attempt for an exact failed input."""
         self._require_running()
