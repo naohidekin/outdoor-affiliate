@@ -299,7 +299,7 @@ def prepare_preflight_resume(runtime, manifest, owner_grant, now=None):
             and prior.get('attemptsUsed') == prior.get('maxAttempts') == 1
             and prior.get('status') == 'held'
             and prior.get('result') == {'status': 'held',
-                'reason': 'safe_signal_missing',
+                'reason': 'research_pool_completion_safe_signal_missing',
                 'period': PERIOD, 'retryable': False},
             'research_pool_completion_resume_exact_hold_required')
     require(resumed is None, 'research_pool_completion_resume_already_claimed')
@@ -697,10 +697,9 @@ def execute(runtime, manifest, *, owner_grant, now=None, preflight_resume=None):
                     'reason': 'research_pool_completion_requires_reconciliation',
                     'at': now.isoformat()})
             code = str(error)
-            reason = ('safe_signal_missing' if code ==
-                      'research_pool_completion_safe_signal_missing' else code)
+            reason = code
             _terminal(runtime, receipt, 'held', reason if re.fullmatch(
-                r'(?:research_pool_completion_)?[a-z0-9_]{1,140}', reason)
+                r'research_pool_completion_[a-z0-9_]{1,140}', reason)
                 else type(error).__name__)
             raise
         finally:
