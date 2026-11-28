@@ -104,6 +104,14 @@ class ResearchPoolCompletionTests(unittest.TestCase):
                       for item in self.feed['sources'])
         return values
 
+    def test_pinned_brand_comparison_reference_survives_compact_filter(self):
+        signal = demand_signal('demand:pinned-brands',
+            classify_topic('モンベル パタゴニア 比較'), query_count=2, clicks=4, impressions=159)
+        pinned = dict(self.pinned, sourceIds=[signal['id']])
+        selected = self.completion._safe_signals([signal], [], pinned)
+        self.assertEqual([signal], selected)
+        self.assertEqual([], self.completion._safe_signals([signal], [], dict(pinned, sourceIds=[])))
+
     def make_proposals(self):
         common = dict(categoryId='wear', proposedAction='new', overlapArticleIds=[],
             overlapRationale='既存154記事とは読者判断と対象が異なる',
@@ -207,20 +215,41 @@ class ResearchPoolCompletionTests(unittest.TestCase):
         return {'baseProducts': base, 'candidateProducts': candidate,
                 'changeSummary': 'Light AlpineのAmazon候補を検証済みXLへ変更'}
 
-    def execute(self, manifest):
+    def execute(self, manifest, *, preflight_resume=None, signals=None):
+        signals = self.signals if signals is None else signals
+        def collect(*_args, **kwargs):
+            atomic(kwargs['output_path'], self.feed)
+            return copy.deepcopy(self.feed)
         with patch('research_pool_completion.require_fresh_daily_metrics'), \
-                patch('research_pool_completion.collect_primary_sources', return_value=self.feed), \
+                patch('research_pool_completion.collect_primary_sources', side_effect=collect), \
                 patch.object(self.runtime, '_context', return_value={
                     'products': copy.deepcopy(self.catalog['products']),
                     'catalog': copy.deepcopy(self.catalog['products']),
                     'categories': copy.deepcopy(self.catalog['categories']),
                     'existingArticles': copy.deepcopy(self.catalog['articles']),
-                    'queuedThemes': [], 'editorialSignals': copy.deepcopy(self.signals)}), \
+                    'queuedThemes': [], 'editorialSignals': copy.deepcopy(signals)}), \
                 patch.object(self.runtime, '_research_context', side_effect=lambda base, **_: {
-                    **copy.deepcopy(base), 'editorialSignals': copy.deepcopy(self.signals),
+                    **copy.deepcopy(base), 'editorialSignals': copy.deepcopy(signals),
                     'categories': copy.deepcopy(self.catalog['categories'])}):
             return self.completion.execute(self.runtime, manifest,
-                owner_grant=self.completion.owner_grant(manifest), now=NOW)
+                owner_grant=self.completion.owner_grant(manifest), now=NOW,
+                preflight_resume=preflight_resume)
+
+    def preflight_hold(self):
+        manifest = self.prepare()
+        signals = [item for item in self.signals if item['id'] != 'demand:fleece']
+        with self.assertRaisesRegex(ValueError, 'safe_signal_missing'):
+            self.execute(manifest, signals=signals)
+        self.assertEqual([], self.request.calls)
+        with self.runtime.ledger._tx() as db:
+            self.assertEqual(2, db.execute(
+                'SELECT count(*) FROM model_budget_reservations').fetchone()[0])
+        return manifest, self.completion.owner_grant(manifest)
+
+    def prepare_resume(self, manifest, grant):
+        with patch('research_pool_completion.require_fresh_daily_metrics'):
+            return self.completion.prepare_preflight_resume(
+                self.runtime, manifest, grant, now=NOW)
 
     def snapshot(self):
         return {path: path.read_bytes() for path in self.runtime.root.rglob('*') if path.is_file()}
@@ -466,6 +495,85 @@ class ResearchPoolCompletionTests(unittest.TestCase):
         grant['authorization'] = 'not-owner-granted'
         with self.assertRaisesRegex(ValueError, 'owner_grant_required'):
             self.completion.execute(self.runtime, manifest, owner_grant=grant, now=NOW)
+        self.assertEqual([], self.request.calls)
+
+    def test_preflight_resume_uses_original_grant_once_and_preserves_lineage(self):
+        manifest, grant = self.preflight_hold()
+        original = (self.runtime.root / 'research-pool-completion' / PERIOD /
+                    'receipt.json').read_bytes()
+        plan = self.prepare_resume(manifest, grant)
+        self.assertEqual(manifest['protocol'], plan['oldProtocol'])
+        self.assertEqual(self.completion._protocol(), plan['newProtocol'])
+        result = self.execute(manifest, preflight_resume=plan)
+        self.assertEqual('ready_for_normal_producer', result['status'])
+        self.assertEqual(1, len(self.request.calls))
+        archive = self.runtime.root / 'research-pool-completion' / PERIOD
+        self.assertEqual(original,
+            (archive / 'preflight-resume-original-receipt.json').read_bytes())
+        self.assertEqual(plan, json.loads((archive / 'preflight-resume-plan.json').read_text()))
+        self.assertEqual(plan['priorPublicSourcesSha256'], sha(
+            archive / 'preflight-resume-prior-public-sources.json'))
+        receipt = json.loads((archive / 'receipt.json').read_text())
+        self.assertEqual((1, 1), (receipt['attemptsUsed'], receipt['maxAttempts']))
+        self.assertEqual(self.completion.RESUME_KEY, receipt['preflightResume']['key'])
+        with self.runtime.ledger._tx() as db:
+            self.assertEqual(3, db.execute(
+                'SELECT count(*) FROM model_budget_reservations').fetchone()[0])
+
+    def test_preflight_resume_rejects_third_reservation_changed_receipt_and_wrong_reason(self):
+        manifest, grant = self.preflight_hold()
+        plan = self.prepare_resume(manifest, grant)
+        archive_receipt = self.runtime.root / 'research-pool-completion' / PERIOD / 'receipt.json'
+        original = json.loads(archive_receipt.read_text())
+        atomic(archive_receipt, dict(original, status='changed'))
+        with self.assertRaisesRegex(ValueError, 'resume_exact_hold|required|receipt_changed'):
+            self.execute(manifest, preflight_resume=plan)
+        atomic(archive_receipt, original)
+        with self.runtime.ledger._tx() as db:
+            current = json.loads(db.execute('SELECT value FROM meta WHERE key=?',
+                (self.completion.KEY,)).fetchone()[0])
+            current['result']['reason'] = 'different_hold'
+            db.execute('UPDATE meta SET value=? WHERE key=?',
+                       (canonical(current), self.completion.KEY))
+        atomic(archive_receipt, current)
+        with self.assertRaisesRegex(ValueError, 'resume_exact_hold'):
+            self.prepare_resume(manifest, grant)
+        with self.runtime.ledger._tx() as db:
+            db.execute('UPDATE meta SET value=? WHERE key=?',
+                       (canonical(original), self.completion.KEY))
+        atomic(archive_receipt, original)
+        with self.runtime.model_budget.scope('research:' + PERIOD, 'research', now=NOW):
+            reservation = self.runtime.model_budget.reserve(
+                {'model': 'claude-sonnet-4-6', 'max_tokens': 8, 'messages': []})
+            self.runtime.model_budget.settle(reservation,
+                usage={'input_tokens': 1, 'output_tokens': 1}, response_id='unexpected-third')
+        with self.assertRaisesRegex(ValueError, 'settled_research_history'):
+            self.prepare_resume(manifest, grant)
+        self.assertEqual([], self.request.calls)
+
+    def test_failed_resume_is_terminal_and_cannot_claim_twice(self):
+        manifest, grant = self.preflight_hold()
+        plan = self.prepare_resume(manifest, grant)
+        missing = [item for item in self.signals if item['id'] != 'demand:fleece']
+        with self.assertRaisesRegex(ValueError, 'safe_signal_missing'):
+            self.execute(manifest, preflight_resume=plan, signals=missing)
+        with self.assertRaisesRegex(ValueError, 'resume_already_claimed|resume_exact_hold'):
+            self.prepare_resume(manifest, grant)
+        with self.assertRaises(ValueError):
+            self.execute(manifest, preflight_resume=plan)
+        self.assertEqual([], self.request.calls)
+
+    def test_preflight_resume_owner_and_plan_bindings_cannot_be_forged(self):
+        manifest, grant = self.preflight_hold()
+        wrong = copy.deepcopy(grant)
+        wrong['authorization'] = 'forged'
+        with self.assertRaisesRegex(ValueError, 'owner_grant_required'):
+            self.prepare_resume(manifest, wrong)
+        plan = self.prepare_resume(manifest, grant)
+        forged = copy.deepcopy(plan)
+        forged['priorReceiptSha256'] = '0' * 64
+        with self.assertRaisesRegex(ValueError, 'resume_binding_changed'):
+            self.execute(manifest, preflight_resume=forged)
         self.assertEqual([], self.request.calls)
 
 

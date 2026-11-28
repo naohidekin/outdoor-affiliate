@@ -28,6 +28,7 @@ from topic_selection import (bind_nonproduct_theme, collect_primary_sources,
 PERIOD = '2026-11-27'
 VERSION = 1
 KEY = 'research_pool_completion:v1:' + PERIOD
+RESUME_KEY = KEY + ':preflight-resume:v1'
 AUTHORIZATION = 'owner-20261128-finite-research-pool-completion'
 SOURCE_FOLDER = '2026-11-27-owner-20261128'
 FLEECE = ['apparel-montbell-1114881', 'apparel-montbell-1106832']
@@ -150,7 +151,8 @@ def _source_readiness(runtime, products, correction, now):
     return {'path': str(folder), 'requiredProductIds': list(PRODUCT_IDS), 'proofSha256': proofs}
 
 
-def _state(runtime, hashes, owner_instruction, now, catalog_correction=None):
+def _state(runtime, hashes, owner_instruction, now, catalog_correction=None,
+           expected_prior=None):
     runtime._require_running()
     require(now.tzinfo is not None and now.utcoffset() is not None,
             'research_pool_completion_aware_time_required')
@@ -231,7 +233,8 @@ def _state(runtime, hashes, owner_instruction, now, catalog_correction=None):
                 and db.execute('SELECT 1 FROM meta WHERE key=?',
                                ('regular_selection:v1:' + PERIOD,)).fetchone() is None,
                 'research_pool_completion_pending_or_selection_cap')
-        require(_db_value(db, KEY) is None, 'research_pool_completion_already_claimed')
+        require(_db_value(db, KEY) == expected_prior,
+                'research_pool_completion_claim_cas_changed')
     return {'schemaVersion': VERSION, 'period': PERIOD, 'stateRoot': str(runtime.root),
             'runtimeConfigSha256': fingerprint(runtime.config), 'protocol': _protocol(),
             'inputSha256': copy.deepcopy(hashes), 'pinnedProposal': pinned,
@@ -271,6 +274,55 @@ def owner_grant(manifest):
             'manifestSha256': fingerprint(manifest)}
 
 
+def _current_manifest(manifest):
+    value = copy.deepcopy(manifest)
+    value['protocol'] = _protocol()
+    return value
+
+
+def prepare_preflight_resume(runtime, manifest, owner_grant, now=None):
+    """Read-only grant for the single known pre-API safe-signal hold."""
+    now = now or datetime.now(JST)
+    require(owner_grant == globals()['owner_grant'](manifest),
+            'research_pool_completion_owner_grant_required')
+    archive = _archive(runtime.root)
+    saved_manifest, _, archive_manifest_sha = _read(archive / 'manifest.json',
+                                  'research_pool_completion_resume_manifest_required')
+    saved_receipt, _, receipt_sha = _read(archive / 'receipt.json',
+                                  'research_pool_completion_resume_receipt_required')
+    with runtime.ledger._tx() as db:
+        prior = _db_value(db, KEY)
+        resumed = _db_value(db, RESUME_KEY)
+    require(saved_manifest == manifest and prior == saved_receipt
+            and prior.get('manifestSha256') == fingerprint(manifest)
+            and prior.get('ownerGrant') == owner_grant
+            and prior.get('attemptsUsed') == prior.get('maxAttempts') == 1
+            and prior.get('status') == 'held'
+            and prior.get('result') == {'status': 'held',
+                'reason': 'safe_signal_missing',
+                'period': PERIOD, 'retryable': False},
+            'research_pool_completion_resume_exact_hold_required')
+    require(resumed is None, 'research_pool_completion_resume_already_claimed')
+    prior_sources = archive / 'fresh-public-sources.json'
+    prior_sources_sha = (_read(prior_sources,
+        'research_pool_completion_resume_public_sources_required')[2]
+        if prior_sources.exists() else None)
+    current = _state(runtime, manifest['inputSha256'], manifest['ownerInstruction'], now,
+                     manifest.get('catalogCorrectionContext'), expected_prior=prior)
+    require(current == _current_manifest(manifest)
+            and current['oldResearchUsage']['sha256'] == manifest['oldResearchUsage']['sha256'],
+            'research_pool_completion_resume_state_changed')
+    return {'schemaVersion': 1, 'period': PERIOD,
+            'manifestSha256': fingerprint(manifest),
+            'archiveManifestSha256': archive_manifest_sha,
+            'originalOwnerGrant': copy.deepcopy(owner_grant),
+            'priorReceiptSha256': receipt_sha,
+            'oldResearchUsageSha256': manifest['oldResearchUsage']['sha256'],
+            'priorPublicSourcesSha256': prior_sources_sha,
+            'oldProtocol': copy.deepcopy(manifest['protocol']),
+            'newProtocol': _protocol()}
+
+
 def _compact_existing(index):
     from search_demand import classify_topic
     result = []
@@ -307,7 +359,9 @@ def _safe_signals(signals, index, pinned):
                 ('title', 'query', 'excerpt')) + ' ' + ' '.join(article.get('headings', []))) if article else {}
             relevant = bool(article and article.get('categoryId') == 'wear'
                             and (facets.get('garments') or 'apparel' in facets.get('gearTypes', [])))
-        if relevant and kind in ('public_reference', 'own_site_query_demand', 'gsc', 'ga4',
+        # Preserve all observed references of the immutable, already-qualified
+        # pinned proposal, including a brand-comparison group without a garment facet.
+        if (relevant or signal['id'] in keep) and kind in ('public_reference', 'own_site_query_demand', 'gsc', 'ga4',
                                  'own_site_gsc_period_comparison'):
             selected.append(copy.deepcopy(signal))
     ids = [item['id'] for item in selected]
@@ -457,7 +511,7 @@ def _strict_two(proposals, signal_ids):
     return proposals
 
 
-def execute(runtime, manifest, *, owner_grant, now=None):
+def execute(runtime, manifest, *, owner_grant, now=None, preflight_resume=None):
     """Claim once, make one bounded planning call, then commit a normal pool."""
     now = now or datetime.now(JST)
     require(owner_grant == globals()['owner_grant'](manifest),
@@ -484,21 +538,70 @@ def execute(runtime, manifest, *, owner_grant, now=None):
                 require(json.loads(path.read_text()) == marker,
                         'research_pool_completion_completed_marker_drift')
                 return copy.deepcopy(prior['result'])
-            raise ValueError('research_pool_completion_requires_reconciliation')
-        current = _state(runtime, manifest['inputSha256'], manifest['ownerInstruction'], now,
-                         manifest.get('catalogCorrectionContext'))
-        require(current == manifest and fingerprint(runtime.config) == manifest['runtimeConfigSha256'],
-                'research_pool_completion_manifest_changed')
-        require(owner_grant == globals()['owner_grant'](current),
-                'research_pool_completion_owner_grant_required')
-        archive = _archive_inputs(runtime.root, manifest)
-        receipt = {'schemaVersion': VERSION, 'status': 'claimed', 'period': PERIOD,
-                   'manifestSha256': fingerprint(manifest), 'ownerGrant': owner_grant,
-                   'attemptsUsed': 1, 'maxAttempts': 1,
-                   'ownerArticleApproval': False, 'ownerSNSApproval': False,
-                   'publication': 'prohibited'}
-        _set_receipt(runtime, receipt)
-        atomic(archive / 'receipt.json', receipt)
+            require(preflight_resume is not None,
+                    'research_pool_completion_requires_reconciliation')
+            expected_resume = prepare_preflight_resume(runtime, manifest, owner_grant, now)
+            require(preflight_resume == expected_resume,
+                    'research_pool_completion_resume_binding_changed')
+            archive = _archive(runtime.root)
+            saved, receipt_raw, receipt_sha = _read(archive / 'receipt.json',
+                                      'research_pool_completion_resume_receipt_required')
+            require(saved == prior and receipt_sha == preflight_resume.get('priorReceiptSha256'),
+                    'research_pool_completion_resume_receipt_changed')
+            claim = {'status': 'claimed', 'period': PERIOD,
+                     'planSha256': fingerprint(preflight_resume),
+                     'priorReceiptSha256': receipt_sha}
+            with runtime.ledger._tx() as db:
+                require(_db_value(db, KEY) == prior and _db_value(db, RESUME_KEY) is None,
+                        'research_pool_completion_resume_claim_cas_changed')
+                db.execute('INSERT INTO meta VALUES (?,?)', (RESUME_KEY, canonical(claim)))
+            try:
+                with (archive / 'preflight-resume-original-receipt.json').open('xb') as output:
+                    output.write(receipt_raw)
+                with (archive / 'preflight-resume-plan.json').open('xb') as output:
+                    output.write(canonical(preflight_resume).encode())
+                prior_sources_sha = preflight_resume.get('priorPublicSourcesSha256')
+                if prior_sources_sha is not None:
+                    raw = (archive / 'fresh-public-sources.json').read_bytes()
+                    require(_sha(raw) == prior_sources_sha,
+                            'research_pool_completion_resume_public_sources_changed')
+                    with (archive / 'preflight-resume-prior-public-sources.json').open('xb') as output:
+                        output.write(raw)
+                current = _state(runtime, manifest['inputSha256'], manifest['ownerInstruction'], now,
+                    manifest.get('catalogCorrectionContext'), expected_prior=prior)
+                require(current == _current_manifest(manifest),
+                        'research_pool_completion_resume_state_changed')
+            except Exception as error:
+                code = str(error)
+                _terminal(runtime, prior, 'held', code if re.fullmatch(
+                    r'research_pool_completion_[a-z0-9_]{1,140}', code) else type(error).__name__)
+                raise
+            receipt = copy.deepcopy(prior)
+            receipt.update(status='claimed', preflightResume={
+                'key': RESUME_KEY, 'planSha256': fingerprint(preflight_resume),
+                'priorReceiptSha256': receipt_sha,
+                'priorPublicSourcesSha256': preflight_resume.get('priorPublicSourcesSha256'),
+                'oldProtocolSha256': fingerprint(manifest['protocol']),
+                'newProtocolSha256': fingerprint(_protocol())})
+            _set_receipt(runtime, receipt)
+            atomic(archive / 'receipt.json', receipt)
+        else:
+            require(preflight_resume is None,
+                    'research_pool_completion_resume_without_prior')
+            current = _state(runtime, manifest['inputSha256'], manifest['ownerInstruction'], now,
+                             manifest.get('catalogCorrectionContext'))
+            require(current == manifest and fingerprint(runtime.config) == manifest['runtimeConfigSha256'],
+                    'research_pool_completion_manifest_changed')
+            require(owner_grant == globals()['owner_grant'](current),
+                    'research_pool_completion_owner_grant_required')
+            archive = _archive_inputs(runtime.root, manifest)
+            receipt = {'schemaVersion': VERSION, 'status': 'claimed', 'period': PERIOD,
+                       'manifestSha256': fingerprint(manifest), 'ownerGrant': owner_grant,
+                       'attemptsUsed': 1, 'maxAttempts': 1,
+                       'ownerArticleApproval': False, 'ownerSNSApproval': False,
+                       'publication': 'prohibited'}
+            _set_receipt(runtime, receipt)
+            atomic(archive / 'receipt.json', receipt)
         created = []
         try:
             require_fresh_daily_metrics(runtime.config, now=now)
@@ -594,8 +697,11 @@ def execute(runtime, manifest, *, owner_grant, now=None):
                     'reason': 'research_pool_completion_requires_reconciliation',
                     'at': now.isoformat()})
             code = str(error)
-            _terminal(runtime, receipt, 'held', code if re.fullmatch(
-                r'research_pool_completion_[a-z0-9_]{1,140}', code) else type(error).__name__)
+            reason = ('safe_signal_missing' if code ==
+                      'research_pool_completion_safe_signal_missing' else code)
+            _terminal(runtime, receipt, 'held', reason if re.fullmatch(
+                r'(?:research_pool_completion_)?[a-z0-9_]{1,140}', reason)
+                else type(error).__name__)
             raise
         finally:
             runtime._save_usage()
