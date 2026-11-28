@@ -249,7 +249,8 @@ class CatalogCorrectionRuntimeTests(unittest.TestCase):
             'dependencyHash': publication_dependency_hash(correction, jobs),
             'checkedAt': now.isoformat(),
             'result': {'ready': False,
-                       'reason': 'affected_article_correction_required'},
+                       'reason': 'affected_article_correction_required',
+                       'scopeHash': '1d4' + '0' * 61},
         }))
 
         plan = DeterministicDispatcher(self.runtime).plan(now)
@@ -260,6 +261,29 @@ class CatalogCorrectionRuntimeTests(unittest.TestCase):
             now + timedelta(minutes=31))
         self.assertEqual([{'kind': 'publish', 'jobId': correction['id']}],
                          expired['actions'])
+
+    def test_nonboolean_negative_readiness_does_not_suppress_publish_probe(self):
+        from catalog_corrections import publication_dependency_hash
+        from dispatcher import _correction_publish_probe_allowed
+        correction = self.produce()
+        self.approve(correction)
+        self.config['catalogCorrectionsPublicationEnabled'] = True
+        now = datetime(2026, 11, 28, 21, tzinfo=test_runtime.JST)
+        jobs = self.runtime.ledger.list_jobs()
+        cache = self.runtime.root / 'catalog-correction-readiness' / (
+            correction['revision'] + '.json')
+        cache.parent.mkdir(mode=0o700)
+        cache.write_text(json.dumps({
+            'revision': correction['revision'],
+            'dependencyHash': publication_dependency_hash(correction, jobs),
+            'checkedAt': now.isoformat(),
+            'result': {'ready': 0,
+                       'reason': 'affected_article_correction_required',
+                       'scopeHash': '1d4' + '0' * 61},
+        }))
+
+        self.assertTrue(_correction_publish_probe_allowed(
+            self.runtime, correction, jobs, now))
 
     def test_disabled_correction_publication_does_not_starve_revision_candidate(self):
         from dispatcher import DeterministicDispatcher

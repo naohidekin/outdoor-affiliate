@@ -21,11 +21,13 @@ def _correction_publish_probe_allowed(runtime, job, jobs, now):
         return False
     path = runtime.root / 'catalog-correction-readiness' / (job['revision'] + '.json')
     prior = read_snapshot(path)
+    result = prior.get('result') if isinstance(prior, dict) else None
     if (not prior or prior.get('revision') != job.get('revision')
             or prior.get('dependencyHash') != publication_dependency_hash(job, jobs)
-            or prior.get('result') not in (
-                {'ready': False, 'reason': 'affected_article_correction_required'},
-                {'ready': False, 'reason': 'correction_readiness_unavailable'})):
+            or not isinstance(result, dict) or result.get('ready') is not False
+            or result.get('reason') not in (
+                'affected_article_correction_required',
+                'correction_readiness_unavailable')):
         return True
     try:
         age = timestamp(now) - timestamp(prior.get('checkedAt'))
