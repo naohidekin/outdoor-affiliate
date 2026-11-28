@@ -19,6 +19,14 @@ description: Camp Gear Lab編集台帳の状態確認、次工程の確認、停
 同一状態の再起動でAI・source調査を繰り返さず、holdを勝手に解除しない。未接続の検索意図・SERPを診断済みにしない。
 本文・商品・画像・購入先・上位QAと本人対象版承認を維持し、記事承認をSNS承認へ転用しない。
 
+11/28本人が不足2案の追加調査・制作を指示した11/27期だけは、`research_pool_completion.prepare/owner_grant/execute`を使う。
+既知の適格フリース1案を固定し、検証済み商品ペアと公式504/507に支えられたシェルの役割2案を有限追加する。
+旧hold・raw応答・入力・利用量・使い切ったrepair権を保存し、別の本人指示をhashへ結ぶ。
+追加Claude企画は1回・同じ制作期128calls内。固有検索需要と関連ページの代理指標を区別する。
+私的な購入先訂正は通常の`catalogCorrectionContext`へ束縛し、Astra QA・本人対象版承認前に共有商品を更新しない。
+未公開3上限により後続枠が待つ場合も、選定pool内で訂正contextを保持し、枠が空いた時だけ既存producerが作る。
+旧Stormの結果不明を消したり、別候補として枠を作り直したりしない。この有限権限を別期へ流用しない。
+
 ## 状態・次工程を確認する
 
 運用CLIの読取専用 status/plan/records を使う。Runtimeのtickやproduceを確認目的で実行しない。

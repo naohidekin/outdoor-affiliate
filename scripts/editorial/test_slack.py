@@ -12,6 +12,28 @@ from presentation import article_body
 
 
 class SlackTests(unittest.TestCase):
+    def test_new_article_catalog_candidate_discloses_variant_and_shared_product_effect(self):
+        with tempfile.TemporaryDirectory() as root:
+            bundle, _, _, _ = self.alias_fixture(root)
+            bundle['images'] = []
+            bundle['article']['slug'] = 'down-pair'
+            context = {'changeSummary': 'AmazonはダークグレーXL固定。旧Lは未確認。',
+                       'candidateProducts': [{'id': 'p1', 'name': '商品'}],
+                       'productPatches': [{'id': 'p1', 'fields': {'specs': {'amazonSize': 'XL'},
+                                                                'amazonUrl': 'https://www.amazon.co.jp/dp/B0G46MCKSQ'}}]}
+            posts = []
+            def call(method, data):
+                if method == 'chat.postMessage': posts.append(copy.deepcopy(data))
+                return self.call(method, data)
+            client = Slack(dict(self.config, stateRoot=root), call=call)
+            request = dict(request_id='r', article_id='a', manifest_hash='h', nonce='private')
+            with patch('slack.time.sleep'):
+                client.deliver({'bundle': bundle, 'catalogCorrectionContext': context}, request)
+            text = json.dumps(posts, ensure_ascii=False)
+            self.assertIn(context['changeSummary'], text)
+            self.assertIn('Amazonのサイズ：XL', text)
+            self.assertIn('他の記事にも反映', text)
+
     def test_long_notice_verifies_each_bounded_part_without_changing_text(self):
         client = Slack(self.config, call=self.call)
         text = '日次の確認結果です。\n' * 500

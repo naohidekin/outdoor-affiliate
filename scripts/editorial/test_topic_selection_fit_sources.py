@@ -85,7 +85,7 @@ class FitSourceTests(unittest.TestCase):
 
     def test_collection_and_reverify_capsule_ignore_price_but_not_codes_or_canonical(self):
         feed = fixture_feed()
-        self.assertEqual(8, len(feed['sources']))
+        self.assertEqual(9, len(feed['sources']))
         request = request_from_feed(feed)
         for url, item in t.FIT_EXAMPLES.items():
             ref = next(r for r in feed['sources'] if r['url'] == url)

@@ -60,7 +60,7 @@ def load_selection(root, period):
         raise ValueError(RECONCILE) from None
 
 
-def backfill(ledger, period, themes, now):
+def backfill(ledger, period, themes, now, *, catalog_corrections=None):
     """Pin the pool and create/consume slots in one authoritative transaction."""
     themes = copy.deepcopy(_themes(themes))
     if ledger.production_schedule.period_key(now) != period:
@@ -72,6 +72,30 @@ def backfill(ledger, period, themes, now):
         row = db.execute('SELECT value FROM meta WHERE key=?', (key,)).fetchone()
         pool = (json.loads(row[0]) if row else
                 {'period': period, 'themes': themes, 'selectionSha256': selection_sha, 'slots': {}})
+        from catalog_corrections import validate_context
+        if catalog_corrections is not None:
+            if (not isinstance(catalog_corrections, dict)
+                    or set(catalog_corrections) - {theme['slug'] for theme in themes}):
+                raise ValueError(RECONCILE)
+            for slug, context in catalog_corrections.items():
+                validate_context(context)
+                theme = next(item for item in themes if item['slug'] == slug)
+                if theme.get('productIds') != [p['id'] for p in context['candidateProducts']]:
+                    raise ValueError(RECONCILE)
+            if row and pool.get('catalogCorrections', {}) != catalog_corrections:
+                raise ValueError(RECONCILE)
+            pool['catalogCorrections'] = copy.deepcopy(catalog_corrections)
+            pool['catalogCorrectionsSha256'] = fingerprint(catalog_corrections)
+        corrections = pool.get('catalogCorrections', {})
+        if not isinstance(corrections, dict) or set(corrections) - {theme['slug'] for theme in themes}:
+            raise ValueError(RECONCILE)
+        if 'catalogCorrections' in pool and pool.get('catalogCorrectionsSha256') != fingerprint(corrections):
+            raise ValueError(RECONCILE)
+        for slug, context in corrections.items():
+            validate_context(context)
+            theme = next(item for item in themes if item['slug'] == slug)
+            if theme.get('productIds') != [p['id'] for p in context['candidateProducts']]:
+                raise ValueError(RECONCILE)
         if (pool.get('period') != period or pool.get('themes') != themes
                 or pool.get('selectionSha256') != selection_sha or not isinstance(pool.get('slots'), dict)):
             raise ValueError(RECONCILE)
@@ -101,6 +125,10 @@ def backfill(ledger, period, themes, now):
                        regularSelection={'period': period, 'slot': index, 'selectionSha256': selection_sha},
                        bundle=None, revision=None, review=None, approval=None, publication=None,
                        social=None, error=None, created_at=now.isoformat())
+            if theme['slug'] in corrections:
+                # Private source candidates travel with a deferred slot too.
+                # Existing independent QA and owner approval remain mandatory.
+                job['catalogCorrectionContext'] = copy.deepcopy(corrections[theme['slug']])
             ledger._put(db, job, 'candidate')
             pool['slots'][theme['slug']] = job['id']
             jobs.append(job)

@@ -218,8 +218,12 @@ def article_body(bundle):
                     continue
                 if key == 'specs' and isinstance(old[key], dict) and isinstance(value, dict):
                     for spec in dict.fromkeys([*old[key], *value]):
+                        if spec in ('amazonVariant', 'rakutenVariant'):
+                            continue  # The exact variant remains bound in the clickable purchase URL.
                         if old[key].get(spec) != value.get(spec):
-                            body += '\n仕様・' + escape(SPEC_LABELS.get(spec, spec)) + '：' + value_text(spec, old[key].get(spec)) + ' → ' + value_text(spec, value.get(spec))
+                            label = {'amazonSize': 'Amazonのサイズ', 'amazonColor': 'Amazonの色'}.get(spec,
+                                        SPEC_LABELS.get(spec, spec))
+                            body += '\n仕様・' + escape(label) + '：' + value_text(spec, old[key].get(spec)) + ' → ' + value_text(spec, value.get(spec))
                 else:
                     body += '\n' + labels.get(key, '商品情報') + '：' + value_text(key, old[key]) + ' → ' + value_text(key, value)
     return body

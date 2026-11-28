@@ -256,8 +256,9 @@ class Slack:
             title = ('告知案' if social else '記事本文') + '：' + article['title']
             text = title if len(pieces) == 1 else title + '（{} / {}）'.format(i + 1, len(pieces))
             parts.append(self.post(text, [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': part, 'verbatim': True}}]))
-        if job.get('kind') == 'article_revision' and job['revisionContext'].get('productPatches'):
-            binding = job['revisionContext']
+        product_binding = job.get('revisionContext') or job.get('catalogCorrectionContext') or {}
+        if not social and product_binding.get('productPatches'):
+            binding = product_binding
             names = {p['id']: p['name'] for p in binding['candidateProducts']}
             labels = {'name': '商品名', 'brand': 'ブランド', 'specs': '仕様', 'imageUrl': '商品画像',
                       'affiliateUrl': '楽天の購入先', 'amazonUrl': 'Amazonの購入先', 'price': '参考価格',
@@ -287,7 +288,15 @@ class Slack:
                         elif field == 'rating' and value == 0:
                             lines.append('  評価表示：非表示（確認済みの評価なし）')
                         elif field == 'specs' and isinstance(value, dict):
-                            lines.extend('  ' + str(key) + '：' + proposed(item) for key, item in value.items())
+                            shown = value
+                            if job.get('catalogCorrectionContext'):
+                                previous = next((p.get('specs') or {} for p in binding['baseProducts']
+                                                 if p['id'] == change['id']), {}) if binding.get('baseProducts') else {}
+                                shown = {k: v for k, v in value.items()
+                                         if previous.get(k) != v and k != 'amazonVariant'}
+                            spec_labels = {'amazonSize': 'Amazonのサイズ', 'amazonColor': 'Amazonの色'}
+                            lines.extend('  ' + spec_labels.get(key, str(key)) + '：' + proposed(item)
+                                         for key, item in shown.items())
                             if not value:
                                 lines.append('  仕様：記載なし')
                         elif field in labels:
@@ -331,7 +340,9 @@ class Slack:
                            + 'https://camp-gear-lab.com/articles/' + article['slug'] + '\n変更内容: ' + binding['changeSummary'])
             if self.execution_suspended:
                 explanation += '\n自動処理は停止中です。公開は、この版の承認と再開の指示後に進めます。'
-        if revision and job['revisionContext'].get('productPatches'):
+        if not social and job.get('catalogCorrectionContext'):
+            explanation += '\n購入先の修正案：' + job['catalogCorrectionContext']['changeSummary']
+        if not social and product_binding.get('productPatches'):
             explanation += '\n商品カードの修正は、この商品を掲載する他の記事にも反映されます'
         text = article['title'] + '\n' + explanation
         blocks = [{'type': 'section', 'text': {'type': 'plain_text', 'text': text}},

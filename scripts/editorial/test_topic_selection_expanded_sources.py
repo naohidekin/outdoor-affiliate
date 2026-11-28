@@ -1,4 +1,4 @@
-"""Synthetic bounded HTML contracts for the six fixed official sources; no IO/network."""
+"""Synthetic bounded HTML contracts for the nine fixed official sources; no IO/network."""
 import copy
 import json
 from pathlib import Path
@@ -12,6 +12,7 @@ WASH = 'https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag'
 PARTS = 'https://www.thermos.jp/goods/pdpts'
 PRODUCT = 'https://www.thermos.jp/goods/ptpds'
 SNOW = 'https://www.snowpeak.co.jp/contents/campstarterbook/'
+SOFT = 'https://www.montbell.jp/generalpage/disp.php?id=504'
 
 
 class ExpandedPrimarySourceTests(unittest.TestCase):
@@ -20,6 +21,10 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
             'https://www.coleman.co.jp/customersupport/faq/': ['テントの汚れを落として十分に乾燥してから保管します。'],
             SNOW: ['撤収後の道具は十分に乾燥させてから保管することを確認します。'],
             'https://www.montbell.jp/generalpage/disp.php?id=507': ['レイヤリングは肌着、中間着、上着を重ねる考え方です。'],
+            SOFT: [
+                'ソフトシェルは、防風性と保温性を備え、ストレッチ性にも優れる高性能ウエア。アウターレイヤーとして、ミドルレイヤーとして、1枚でマルチに活躍します。はっ水性に優れ、風・雨・雪を適度に防ぎます。通気性も高いので行動中でも蒸れにくく、樹林帯での行動開始から、稜線歩きまで、幅広いシーンで快適に着用できます。',
+                'ソフトシェルは高いはっ水性を持ちますが「防水性」はありません。荒天に備え、完全防水のハードシェル（レインウエアやアルパインウエア）も併せて携行する必要があります。',
+                'パウダーシェッドパーカ、クリマバリアパーカに通気性はありません。'],
             WASH: ['ウォッシャブルアイコン付きは洗濯機で丸洗いできます。素材は全て化繊で、その他の多くは手洗いですが縫付ラベルに従ってください。'],
             PARTS: ['製品の品番・色名・JANコードの一部で検索が可能です。',
                     '製品に適合する交換用部品を探す場合は製品の品番を確認してください。',
@@ -47,11 +52,11 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
             return topics.collect_primary_sources(request or self.request, period='2026-11-20',
                 output_path=Path(directory) / 'sources.json', now=NOW)
 
-    def test_eight_exact_urls_have_unique_explicit_ids_and_unchanged_old_six_scopes(self):
+    def test_nine_exact_urls_have_unique_explicit_ids_and_unchanged_old_scopes(self):
         feed = self.collect()
         self.assertEqual('verified', feed['status'])
         self.assertEqual(set(topics.PUBLIC_SOURCE_ALLOWLIST), set(self.calls))
-        self.assertEqual(8, len(set(s['id'] for s in feed['sources'])))
+        self.assertEqual(9, len(set(s['id'] for s in feed['sources'])))
         by_url = {s['url']: s for s in feed['sources']}
         self.assertEqual('public:coleman-care', by_url['https://www.coleman.co.jp/customersupport/faq/']['id'])
         self.assertEqual('public:coleman-synthetic-wash', by_url[WASH]['id'])
@@ -59,6 +64,8 @@ class ExpandedPrimarySourceTests(unittest.TestCase):
         self.assertEqual('public:thermos-parts-product', by_url[PRODUCT]['id'])
         self.assertEqual(['tent-care', 'camp-care', 'layering-concept-only'],
                          [s['scope'] for s in feed['sources'][:3]])
+        self.assertEqual('softshell-roles-only', by_url[SOFT]['scope'])
+        self.assertEqual('layering', topics._scope_family(by_url[SOFT]['scope']))
         self.assertEqual('wash', topics._scope_family(by_url[WASH]['scope']))
         self.assertEqual('parts', topics._scope_family(by_url[PARTS]['scope']))
 

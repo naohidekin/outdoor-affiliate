@@ -19,10 +19,13 @@ MIXED_TOPIC_START = date(2026, 11, 20)
 TOPIC_TYPES = {"product", "seasonal_problem", "knowhow"}
 INTENTS = {"informational", "commercial_investigation", "transactional"}
 MAX_PROPOSALS = 9
+MONTBELL_LAYERING_URL = "https://www.montbell.jp/generalpage/disp.php?id=507"
+MONTBELL_SOFTSHELL_URL = "https://www.montbell.jp/generalpage/disp.php?id=504"
 PUBLIC_SOURCE_ALLOWLIST = {
     "https://www.coleman.co.jp/customersupport/faq/": "tent-care",
     "https://www.snowpeak.co.jp/contents/campstarterbook/": "camp-care",
-    "https://www.montbell.jp/generalpage/disp.php?id=507": "layering-concept-only",
+    MONTBELL_LAYERING_URL: "layering-concept-only",
+    MONTBELL_SOFTSHELL_URL: "softshell-roles-only",
     "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash-decision",
     "https://www.thermos.jp/goods/pdpts": "thermos-parts-lookup",
     "https://www.thermos.jp/goods/ptpds": "thermos-parts-lookup",
@@ -32,7 +35,8 @@ PUBLIC_SOURCE_ALLOWLIST = {
 SOURCE_IDS = {
     "https://www.coleman.co.jp/customersupport/faq/": "coleman-care",
     "https://www.snowpeak.co.jp/contents/campstarterbook/": "snowpeak-care",
-    "https://www.montbell.jp/generalpage/disp.php?id=507": "montbell-layering",
+    MONTBELL_LAYERING_URL: "montbell-layering",
+    MONTBELL_SOFTSHELL_URL: "montbell-softshell-roles",
     "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": "coleman-synthetic-wash",
     "https://www.thermos.jp/goods/pdpts": "thermos-product-parts",
     "https://www.thermos.jp/goods/ptpds": "thermos-parts-product",
@@ -187,10 +191,41 @@ def _lookup_blocks(url, html):
             if len(matches) == 1 and matches[0] not in blocks:
                 blocks.append(matches[0])
     return blocks
+
+
+def softshell_roles_excerpt(html):
+    """Bind the three visible Montbell statements that define this narrow scope."""
+    tree = _FitHTML()
+    try:
+        tree.feed(html)
+        tree.close()
+    except (ValueError, TypeError):
+        return None
+    if tree.malformed or len(tree.stack) != 1:
+        return None
+    norm = lambda value: " ".join(value.split())
+    blocks = [norm(tree.text(node)) for node in tree.nodes(tree.root)
+              if node["tag"] in ("p", "li", "dd", "dt")]
+    blocks = [block for block in blocks if 20 <= len(block) <= 500]
+    requirements = (
+        ("ソフトシェル", "防風性", "保温性", "ストレッチ性", "アウターレイヤー", "ミドルレイヤー"),
+        ("ソフトシェル", "防水性", "完全防水", "ハードシェル", "携行"),
+        ("パウダーシェッドパーカ", "クリマバリアパーカ", "通気性はありません"),
+    )
+    selected = []
+    for required in requirements:
+        matches = [block for block in blocks if all(term in block for term in required)]
+        if len(matches) != 1:
+            return None
+        if matches[0] not in selected:
+            selected.append(matches[0])
+    excerpt = "\n\n".join(selected)
+    return excerpt if len(excerpt) <= 500 else None
 SOURCE_KEYWORDS = {
     "https://www.coleman.co.jp/customersupport/faq/": ("乾燥",),
     "https://www.snowpeak.co.jp/contents/campstarterbook/": ("乾燥", "保管"),
-    "https://www.montbell.jp/generalpage/disp.php?id=507": ("レイヤリング",),
+    MONTBELL_LAYERING_URL: ("レイヤリング",),
+    MONTBELL_SOFTSHELL_URL: ("ソフトシェル", "防水性", "通気性"),
     "https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag": ("ウォッシャブル", "化繊", "ラベル"),
     "https://www.thermos.jp/goods/pdpts": ("品番", "色名", "JAN"),
     "https://www.thermos.jp/goods/ptpds": ("交換用部品名", "JAN"),
@@ -204,7 +239,9 @@ UNVERIFIED_FIRSTHAND = re.compile(
 CLAIM_SCOPE_PATTERNS = {
     "tent-care": re.compile(r"テント|幕|乾燥|保管|汚れ|撤収"),
     "camp-care": re.compile(r"テント|幕|寝袋|シュラフ|乾燥|保管|汚れ|撤収"),
-    "layering-concept-only": re.compile(r"レイヤリング|重ね着|肌着|中間着|上着|ウェア"),
+    "layering-concept-only": re.compile(
+        r"レイヤリング|重ね着|肌着|中間着|上着|ウェア|(?=.*ソフトシェル)(?=.*(?:ハードシェル|役割))"),
+    "softshell-roles-only": re.compile(r"(?=.*ソフトシェル)(?=.*(?:ハードシェル|役割))"),
     "coleman-synthetic-wash-decision": re.compile(
         r"(?=.*(?:コールマン|coleman))(?=.*(?:化繊|ウォッシャブル))"
         r"(?=.*(?:寝袋|シュラフ))(?=.*(?:洗濯|洗える|洗う|手洗い|ラベル|ウォッシャブル))", re.I),
@@ -214,6 +251,13 @@ CLAIM_SCOPE_PATTERNS = {
 
 # These pages support a decision/lookup, not physical care/repair instructions.
 NARROW_SCOPE_EXCLUSIONS = {
+    "softshell-roles-only": re.compile(
+        r"安全|危険|遭難|低体温|凍傷|滑落|救命|医療|対応温度|適温|気温別|温度帯|何度|℃|"
+        r"耐水圧|透湿度|ランキング|最強|個別モデル|"
+        r"手入れ|メンテナンス|洗濯|洗う|はっ水剤|撥水剤|"
+        r"(?:商品|製品|モデル).{0,12}(?:おすすめ|推奨|選び|比較)|"
+        r"(?:おすすめ|推奨).{0,12}(?:商品|製品|モデル)|"
+        r"実測|実証|検証済み|実体験|愛用|使って|使った|使用歴|tested|hands.on", re.I),
     "coleman-synthetic-wash-decision": re.compile(
         r"ダウン|羽毛|水温|洗剤|乾燥機|乾かし方|乾燥手順|洗い方|(?:手洗い|洗濯)(?:の|する)?(?:実践|手順|方法|やり方)|耐寒|保温性能"),
     "thermos-parts-lookup": re.compile(
@@ -341,6 +385,8 @@ def collect_primary_sources(request, *, period, output_path, now=None):
             continue
         if url in FIT_EXAMPLES:
             excerpt = fit_example_excerpt(url, body)
+        elif url == MONTBELL_SOFTSHELL_URL:
+            excerpt = softshell_roles_excerpt(body)
         else:
             excerpt = _primary_excerpt(url, _lookup_blocks(url, body))
         if not excerpt or len(excerpt) > 500:
@@ -406,6 +452,9 @@ def reverify_bound_public_sources(request, references, *, now=None):
         raw_excerpt = str(reference.get("excerpt", ""))
         if url in FIT_EXAMPLES:
             if fit_example_excerpt(url, html) != raw_excerpt:
+                raise NonproductSourceHold("nonproduct_source_recheck_changed")
+        elif url == MONTBELL_SOFTSHELL_URL:
+            if softshell_roles_excerpt(html) != raw_excerpt:
                 raise NonproductSourceHold("nonproduct_source_recheck_changed")
         else:
             try:
@@ -677,12 +726,23 @@ def allowed_claim_scopes(proposal):
                 any(source in {"public:" + SOURCE_IDS[url] for url in FIT_EXAMPLES}
                     for source in proposal.get("sourceIds", []))):
             return narrow + ["thermos-parts-fit-example"]
+        if narrow == ["softshell-roles-only"]:
+            return ["layering-concept-only", "softshell-roles-only"]
         return narrow
     return sorted(scope for scope, pattern in CLAIM_SCOPE_PATTERNS.items() if pattern.search(text))
 
 
+def _required_public_source_ids(proposal, scopes=None):
+    scopes = scopes if scopes is not None else allowed_claim_scopes(proposal)
+    if "softshell-roles-only" in scopes:
+        return {"public:" + SOURCE_IDS[MONTBELL_LAYERING_URL],
+                "public:" + SOURCE_IDS[MONTBELL_SOFTSHELL_URL]}
+    return set()
+
+
 def _scope_family(scope):
-    return {"layering-concept-only": "layering", "coleman-synthetic-wash-decision": "wash",
+    return {"layering-concept-only": "layering", "softshell-roles-only": "layering",
+            "coleman-synthetic-wash-decision": "wash",
             "thermos-parts-lookup": "parts", "thermos-parts-fit-example": "parts"}.get(scope, "care")
 
 
@@ -1007,6 +1067,7 @@ def select_proposals(proposals, *, signals, existing, queued, feed, limit=3,
         unknown = [source for source in proposal["sourceIds"] if source not in signal_map]
         referenced_public = [source for source in proposal["sourceIds"] if source in public_ids]
         scopes = set(allowed_claim_scopes(proposal))
+        required_public = _required_public_source_ids(proposal, scopes)
         source_families = {_scope_family(public_scopes[source]) for source in referenced_public}
         overlap = _rich_overlap(proposal, seen, classify_topic)
         structured_existing = next((item for item in existing
@@ -1028,6 +1089,7 @@ def select_proposals(proposals, *, signals, existing, queued, feed, limit=3,
                                               or not referenced_public):
             record["reason"] = "verified_nonproduct_source_route_required"
         elif not proposal["productIds"] and (not scopes or
+                                              not required_public.issubset(referenced_public) or
                                               any(public_scopes[source] not in scopes
                                                   for source in referenced_public)):
             record["reason"] = "nonproduct_claim_scope_mismatch"
@@ -1099,8 +1161,10 @@ def bind_nonproduct_theme(theme, feed):
     wanted = set(theme.get("sourceIds", []))
     references = [item for item in feed.get("sources", []) if item["id"] in wanted]
     scopes = allowed_claim_scopes(theme)
+    required_public = _required_public_source_ids(theme, scopes)
     source_families = {_scope_family(item.get("scope")) for item in references}
     if (not references or not scopes
+            or not required_public.issubset({item.get("id") for item in references})
             or any(item.get("scope") not in scopes for item in references)
             or not _outline_scope_families(theme).issubset(source_families)):
         raise TopicSelectionError("nonproduct_claim_scope_mismatch")
@@ -1153,10 +1217,12 @@ def validate_nonproduct_contract(theme):
     for item in refs:
         validate_public_reference(item)
     ids = [item["id"] for item in refs]
+    required_public = _required_public_source_ids(theme, contract["allowedClaimScopes"])
     source_ids = theme.get("sourceIds")
     if (not isinstance(source_ids, list) or any(not isinstance(i, str) for i in source_ids) or
             len(set(source_ids)) != len(source_ids) or len(set(ids)) != len(ids) or
             set(ids) != {i for i in source_ids if i.startswith("public:")} or
+            not required_public.issubset(ids) or
             any(item["scope"] not in contract["allowedClaimScopes"] for item in refs) or
             contract["sourceReceiptSha256"] != _sha(_canonical([r["receiptSha256"] for r in refs])) or
             not _outline_scope_families(theme).issubset({_scope_family(r["scope"]) for r in refs})):
@@ -1173,8 +1239,10 @@ def gather_nonproduct(theme, catalog):
             or contract.get("allowedClaimScopes") != allowed_claim_scopes(theme)):
         raise TopicSelectionError("nonproduct_contract_required")
     references, images = contract.get("references"), contract.get("images")
+    required_public = _required_public_source_ids(theme, contract.get("allowedClaimScopes", []))
     if (not references or contract.get("sourceReceiptSha256") !=
             _sha(_canonical([item.get("receiptSha256") for item in references]))
+            or not required_public.issubset({item.get("id") for item in references})
             or any(item.get("scope") not in contract["allowedClaimScopes"] for item in references)
             or not _outline_scope_families(theme).issubset(
                 {_scope_family(item.get("scope")) for item in references})):
