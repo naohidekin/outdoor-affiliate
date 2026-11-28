@@ -35,6 +35,7 @@ const sha = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const nonempty = v => typeof v === 'string' && v.trim().length > 0;
 const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const timestamp = () => new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T') + '+09:00';
+const MONTBELL_SOFTSHELL_ROLES_EXCERPT = 'ソフトシェルは、防風性と保温性を備え、ストレッチ性にも優れる高性能ウエア。アウターレイヤーとして、ミドルレイヤーとして、1枚でマルチに活躍します。はっ水性に優れ、風・雨・雪を適度に防ぎます。通気性も高いので行動中でも蒸れにくく、樹林帯での行動開始から、稜線歩きまで、幅広いシーンで快適に着用できます。\n\nソフトシェルは高いはっ水性を持ちますが「防水性」はありません。荒天に備え、完全防水のハードシェル（レインウエアやアルパインウエア）も併せて携行する必要があります。\n\nパウダーシェッドパーカ、クリマバリアパーカに通気性はありません。';
 const PUBLIC_REFERENCE_CONTRACTS = new Map([
   ['https://www.coleman.co.jp/customersupport/faq/',
     { id: 'public:coleman-care', scope: 'tent-care' }],
@@ -42,6 +43,10 @@ const PUBLIC_REFERENCE_CONTRACTS = new Map([
     { id: 'public:snowpeak-care', scope: 'camp-care' }],
   ['https://www.montbell.jp/generalpage/disp.php?id=507',
     { id: 'public:montbell-layering', scope: 'layering-concept-only' }],
+  ['https://www.montbell.jp/generalpage/disp.php?id=504',
+    { id: 'public:montbell-softshell-roles', scope: 'softshell-roles-only',
+      excerptVariants: [MONTBELL_SOFTSHELL_ROLES_EXCERPT,
+        MONTBELL_SOFTSHELL_ROLES_EXCERPT.replaceAll('\n\n', ' ')] }],
   ['https://www.coleman.co.jp/customersupport/faq/?category=sleeping-bag',
     { id: 'public:coleman-synthetic-wash', scope: 'coleman-synthetic-wash-decision' }],
   ['https://www.thermos.jp/goods/pdpts',
@@ -107,7 +112,8 @@ export function validateNonproductBundle(bundle) {
       reference.httpStatus === 200 && nonempty(reference.title) && nonempty(reference.excerpt) && reference.excerpt.length <= 500 &&
       awareTimestamp(reference.checkedAt) && /^[a-f0-9]{64}$/.test(reference.receiptSha256 || '') &&
       reference.excerptSha256 === sha(reference.excerpt) &&
-      (!contract.excerpt || reference.excerpt === contract.excerpt), 'nonproduct reference binding invalid');
+      (contract.excerptVariants ? contract.excerptVariants.includes(reference.excerpt) :
+        (!contract.excerpt || reference.excerpt === contract.excerpt)), 'nonproduct reference binding invalid');
     requireValue(nonempty(rawId) && reference.receiptSha256 === canonicalHash(receipt), 'nonproduct reference receipt invalid');
   }
   requireValue(context.sourceReceiptSha256 === canonicalHash(bundle.references.map(item => item.receiptSha256)),

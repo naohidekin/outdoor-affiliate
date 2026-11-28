@@ -176,6 +176,35 @@ test('expanded official references require exact URL, public ID and claim scope'
   }
 });
 
+test('Montbell softshell roles reference requires the exact rehashed public contract', () => {
+  const contract = {
+    id: 'public:montbell-softshell-roles',
+    url: 'https://www.montbell.jp/generalpage/disp.php?id=504',
+    scope: 'softshell-roles-only',
+    excerpt: 'ソフトシェルは、防風性と保温性を備え、ストレッチ性にも優れる高性能ウエア。アウターレイヤーとして、ミドルレイヤーとして、1枚でマルチに活躍します。はっ水性に優れ、風・雨・雪を適度に防ぎます。通気性も高いので行動中でも蒸れにくく、樹林帯での行動開始から、稜線歩きまで、幅広いシーンで快適に着用できます。\n\nソフトシェルは高いはっ水性を持ちますが「防水性」はありません。荒天に備え、完全防水のハードシェル（レインウエアやアルパインウエア）も併せて携行する必要があります。\n\nパウダーシェッドパーカ、クリマバリアパーカに通気性はありません。',
+  };
+  const good = bindNonproductReference(nonproductBundle(), contract);
+  good.article.content += `\n\n[公式資料](${contract.url})`;
+  assert.doesNotThrow(() => validateBundle(good));
+  const collected = structuredClone(good);
+  collected.references[0].excerpt = contract.excerpt.replaceAll('\n\n', ' ');
+  rebindReferences(collected);
+  assert.equal(collected.references[0].excerpt.length, 265);
+  assert.doesNotThrow(() => validateBundle(collected));
+
+  for (const mutate of [
+    reference => { reference.id = 'public:montbell-layering'; },
+    reference => { reference.scope = reference.claimScope = 'layering-concept-only'; },
+    reference => { reference.excerpt += '変更'; },
+    reference => { reference.url = reference.canonicalUrl = 'https://www.montbell.jp/generalpage/disp.php?id=505'; },
+  ]) {
+    const forged = structuredClone(collected);
+    mutate(forged.references[0]);
+    rebindReferences(forged);
+    assert.throws(() => validateBundle(forged), /reference binding/);
+  }
+});
+
 function rebindReferences(b) {
   for (const ref of b.references) {
     ref.excerptSha256 = createHash('sha256').update(ref.excerpt).digest('hex');
