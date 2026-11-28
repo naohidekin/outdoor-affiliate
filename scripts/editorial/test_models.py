@@ -396,6 +396,32 @@ class ModelTests(unittest.TestCase):
                 self.assertIn('do not repeat protected literals', instruction)
                 self.assertEqual(2, len(fake.calls))
 
+    def test_draft_and_length_repair_keep_product_specific_measurement_scope_in_faq_and_brief(self):
+        good = bundle(); short = copy.deepcopy(good)
+        short['article']['content'] = good['article']['content'][:2106]
+        fake = Fake(writer_response(short), writer_response(good))
+        Models(ENV, fake).draft({'productIds': ['tent-a']}, context())
+        self.assertEqual(2, len(fake.calls))
+        required = (
+            'every product-specific numeric claim bound to the same product',
+            '約, 本体のみ, 除く, ケース収納時',
+            'measurement temperature, water volume, altitude, wind or calculation time',
+            'a bare 56 g does not mean 本体のみ',
+            'footnotes such as ※ into nearby public prose',
+            'discontinued or successor notices in purchase guidance without guessing inventory',
+            'For named-product claims, do not state OD/CB classification, distribution, low-temperature tendency, intended use or stability',
+            'product-specific supplied source explicitly supports it',
+            'Ground general guidance in the corresponding supplied non-product source',
+            'never extrapolate it to an individual product',
+            'structured FAQs and every brief field, including facts, numbers and conclusion',
+        )
+        for call in fake.calls:
+            instruction = call[2]['messages'][0]['content']
+            for phrase in required:
+                self.assertIn(phrase, instruction)
+        repair_payload = prompt_data(fake.calls[1][2]['messages'][0]['content'])
+        self.assertEqual(short['brief'], repair_payload['previousCandidate']['brief'])
+
     def test_draft_repairs_length_once_with_pinned_model_context_and_preserved_artifacts(self):
         good = bundle()
         short = copy.deepcopy(good)
