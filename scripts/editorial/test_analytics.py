@@ -161,11 +161,21 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(build_report(data, now=NOW)['opportunities'][0]['url'], URL)
 
     def test_weekly_label_coverage_and_missing_revenue(self):
-        report = build_report(snapshot(), jobs=[dict(stage='awaiting_approval'), dict(stage='social_review')], now=NOW)
+        article = dict(stage='review', revision='article-revision', approval=None,
+                       publication=None, astraReview={
+                           'passed': True, 'issues': [], 'reviewedBy': 'Astra',
+                           'evidence': {'independentReview': True},
+                           'fingerprint': 'article-revision'})
+        social = dict(stage='social_review', social={
+            'revision': 'social-revision', 'proposal': {'platform': 'x'},
+            'approval': None, 'review': {'passed': True,
+                                         'fingerprint': 'social-revision'}})
+        report = build_report(snapshot(), jobs=[article, social], now=NOW)
         self.assertIn('直近28日', report['title'])
         self.assertIn('取得した記事入口の合計: 0', report['text'])
         self.assertIn('未接続', report['text'])
-        self.assertIn('承認待ち: 記事1件・SNS1件', report['text'])
+        self.assertIn('品質確認済み・本人承認前: 記事1件・SNS1件', report['text'])
+        self.assertIn('Slack確認カード到達件数は別管理', report['text'])
         self.assertNotIn('サイト全体セッション', report['text'])
         self.assertNotIn('/Users/', report['text'])
         self.assertIn('平均掲載順位:', report['text'])
@@ -314,6 +324,28 @@ class AnalyticsTests(unittest.TestCase):
         text = build_report(snapshot(), jobs=[dict(status='pending')], now=NOW)['text']
         self.assertIn('状態未確認', text)
         self.assertIn('未承認の公開なし', text)
+
+    def test_negative_independent_review_is_not_owner_approval_waiting(self):
+        failed = dict(stage='review', revision='failed-revision', approval=None,
+                      publication=None, astraReview=None)
+        ready = dict(stage='review', revision='ready-revision', approval=None,
+                     publication=None, astraReview={
+                         'passed': True, 'issues': [], 'reviewedBy': 'Astra',
+                         'evidence': {'independentReview': True},
+                         'fingerprint': 'ready-revision'})
+
+        text = build_report(snapshot(), jobs=[failed, ready], now=NOW)['text']
+
+        self.assertIn('品質確認済み・本人承認前: 記事1件・SNS0件', text)
+        self.assertNotIn('記事2件', text)
+
+    def test_truncated_jobs_do_not_report_false_zero_approval_count(self):
+        jobs = [dict(stage='draft') for _ in range(1001)]
+
+        text = build_report(snapshot(), jobs=jobs, now=NOW)['text']
+
+        self.assertIn('本人承認前件数: 状態未確認', text)
+        self.assertNotIn('品質確認済み・本人承認前: 記事0件', text)
 
     def test_ai_referrals_are_sanitized_not_citations(self):
         data = snapshot()

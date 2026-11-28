@@ -63,6 +63,30 @@ def atomic(path, value):
         os.close(fd)
 
 
+def normalize_revision_social_card(bundle):
+    """Drop only a prior generated card before rebuilding revision presentation."""
+    result = copy.deepcopy(bundle)
+    metadata = result['article'].get('generationMeta')
+    if metadata is not None and not isinstance(metadata, dict):
+        raise ValueError('social_card_previous_evidence_invalid')
+    manifest = (metadata or {}).get('socialCard') if isinstance(metadata, dict) else None
+    cards = [image for image in result.get('images', [])
+             if isinstance(image, dict) and image.get('role') == 'social-card']
+    if manifest is None:
+        if cards:
+            raise ValueError('social_card_previous_evidence_invalid')
+        return result
+    result['article']['generationMeta'] = dict(metadata)
+    fields = ('url', 'sha256', 'size', 'contentType')
+    if (not isinstance(manifest, dict) or any(not manifest.get(field) for field in fields)
+            or len(cards) != 1 or cards[0].get('verified') is not True
+            or any(cards[0].get(field) != manifest[field] for field in fields)):
+        raise ValueError('social_card_previous_evidence_invalid')
+    result['article']['generationMeta'].pop('socialCard', None)
+    result['images'].remove(cards[0])
+    return result
+
+
 def env_file(path):
     result = {}
     for line in Path(path).read_text().splitlines():
@@ -237,7 +261,7 @@ class Runtime:
         prior = read_snapshot(path)
         if not prior or prior.get('semanticSha256') != projection['semanticSha256']:
             atomic(path, projection)
-        report = build_report(metrics_snapshot, kind='weekly', now=now)
+        report = build_report(metrics_snapshot, kind='weekly', jobs=jobs, now=now)
         current = {'schemaVersion': 1, 'collectedAt': context.get('collectedAt'),
                    'title': report['title'], 'text': report['text'],
                    'feedback': projection['summary'],
@@ -1140,6 +1164,10 @@ class Runtime:
             validate_bundle(job, bundle)
         if gathered.get('images'):
             bundle['images'] = gathered['images']
+            if revision:
+                bundle['article'].setdefault('generationMeta', {})
+                bundle['article']['generationMeta'] = dict(bundle['article'].get('generationMeta') or {})
+                bundle['article']['generationMeta'].pop('socialCard', None)
         if not nonproduct:
             bundle['affiliateConfig'] = {'amazonPartnerTag': self.env.get('AMAZON_PARTNER_TAG', '')}
         if bundle.get('purchaseEvidence'):
@@ -1199,9 +1227,7 @@ class Runtime:
                 from social_cards import SocialCards
                 self.social_cards = SocialCards(self.config, self.env, self.catalog)
             if revision:
-                bundle['article'].setdefault('generationMeta', {})
-                bundle['article']['generationMeta'] = dict(bundle['article'].get('generationMeta') or {})
-                bundle['article']['generationMeta'].pop('socialCard', None)
+                bundle = normalize_revision_social_card(bundle)
             bundle = self.social_cards.build(bundle)
             manifest = bundle.get('article', {}).get('generationMeta', {}).get('socialCard') or {}
             cards = [i for i in bundle.get('images', []) if i.get('role') == 'social-card']

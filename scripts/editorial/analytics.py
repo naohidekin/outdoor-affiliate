@@ -350,6 +350,28 @@ def _comparison(current, previous):
             and all(current.get(k) == previous.get(k) for k in ('dateBasis', 'siteUrl', 'country', 'searchType')))
 
 
+def _owner_review_ready(job, kind):
+    """Count quality-cleared artifacts, not delivery or owner approval effects."""
+    if kind == 'article':
+        if (job.get('stage') != 'review' or job.get('approval')
+                or job.get('publication') or not isinstance(job.get('revision'), str)):
+            return False
+        try:
+            from ledger import valid_astra_review
+            valid_astra_review(job.get('astraReview'), job['revision'])
+        except (TypeError, ValueError):
+            return False
+        return True
+    social = job.get('social')
+    if (job.get('stage') != 'social_review' or not isinstance(social, dict)
+            or social.get('approval') or not isinstance(social.get('revision'), str)
+            or not isinstance(social.get('proposal'), dict)):
+        return False
+    review = social.get('review')
+    return (isinstance(review, dict) and review.get('passed') is True
+            and review.get('fingerprint') == social['revision'])
+
+
 def build_report(metrics, previous_ga4=None, kind='weekly', jobs=None, now=None):
     """Accept a raw collector snapshot (previousGa4 supported); return Slack-ready data.
 
@@ -420,13 +442,17 @@ def build_report(metrics, previous_ga4=None, kind='weekly', jobs=None, now=None)
         lines.append(f"改善候補{i}: {option['url']} / {'検索語別サンプル表示' if option['gsc']['metricScope'] == 'query_page_sample' else 'ページ表示'}{_value(option['gsc']['impressions'])}・平均順位{_value(option['gsc']['position'])} / 既存記事改善、競合記事との重複確認が必要")
     if not options:
         lines.append('改善候補: 判断に足る指標待ち')
-    bounded_jobs = [job for job in (jobs or [])[:MAX_ROWS] if isinstance(job, dict)]
-    if bounded_jobs and not all(isinstance(job.get('stage'), str) for job in bounded_jobs):
-        lines.append('承認待ち件数: 状態未確認 / 未承認の公開なし')
+    job_rows = jobs or []
+    jobs_truncated = len(job_rows) > MAX_ROWS
+    bounded_jobs = [job for job in job_rows[:MAX_ROWS] if isinstance(job, dict)]
+    if jobs is None or jobs_truncated or (bounded_jobs and not all(
+            isinstance(job.get('stage'), str) for job in bounded_jobs)):
+        lines.append('本人承認前件数: 状態未確認 / 未承認の公開なし')
     else:
-        article_pending = sum(job.get('stage') in ('review', 'awaiting_approval') for job in bounded_jobs)
-        social_pending = sum(job.get('stage') in ('social_review', 'social_awaiting_approval') for job in bounded_jobs)
-        lines.append(f'承認待ち: 記事{article_pending}件・SNS{social_pending}件 / 未承認の公開なし')
+        article_pending = sum(_owner_review_ready(job, 'article') for job in bounded_jobs)
+        social_pending = sum(_owner_review_ready(job, 'social') for job in bounded_jobs)
+        lines.append(f'品質確認済み・本人承認前: 記事{article_pending}件・SNS{social_pending}件 '
+                     '/ Slack確認カード到達件数は別管理 / 未承認の公開なし')
     lines.append('注意: ' + ' / '.join(dict.fromkeys(warnings)))
     evidence['uncertainty'] = list(dict.fromkeys(warnings))
     evidence['provenance'] = dict(context['provenance'], collectedAt=context['collectedAt'])

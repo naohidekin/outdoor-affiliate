@@ -52,6 +52,22 @@ class SeoFeedbackRuntimeTests(unittest.TestCase):
         self.assertEqual(context['evidence'], handed['evidence'])
         self.assertEqual([], self.runtime.ledger.list_jobs())
 
+    def test_owner_report_uses_current_jobs_without_counting_failed_quality(self):
+        context = self.prepare()
+        ready = dict(id='ready', stage='review', revision='ready-revision',
+                     approval=None, publication=None, astraReview={
+                         'passed': True, 'issues': [], 'reviewedBy': 'Astra',
+                         'evidence': {'independentReview': True},
+                         'fingerprint': 'ready-revision'})
+        failed = dict(id='failed', stage='review', revision='failed-revision',
+                      approval=None, publication=None, astraReview=None)
+
+        self.runtime._refresh_seo_feedback([ready, failed], context, NOW)
+        report = json.loads((self.runtime.root / 'analytics/seo/latest.json').read_text())
+
+        self.assertIn('品質確認済み・本人承認前: 記事1件・SNS0件', report['text'])
+        self.assertNotIn('記事2件', report['text'])
+
     def test_large_analysis_export_keeps_selected_evidence_without_losing_canonical_context(self):
         context = self.prepare()
         context['evidence']['current']['searchDemand'] = {
