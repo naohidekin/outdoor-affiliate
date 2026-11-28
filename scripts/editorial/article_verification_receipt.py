@@ -350,8 +350,8 @@ def projection(receipt, job_id, revision):
         }
     public_checks = {
         "facts": copy.deepcopy(checks["facts"]),
-        "images": copy.deepcopy(checks["images"]),
-        "affiliate": copy.deepcopy(checks["affiliate"]),
+        "images": compact_images_projection(checks["images"]),
+        "affiliate": compact_affiliate_projection(checks["affiliate"]),
         "medical": copy.deepcopy(checks["medical"]),
         "render": {"passed": True, "previewSha256": checks["render"]["previewSha256"],
                    "viewports": render_views},
@@ -365,6 +365,79 @@ def projection(receipt, job_id, revision):
             "receiptSha256": fingerprint(value)}
     require(len(canonical(result).encode()) <= MAX_PROJECTION_BYTES, "projection_too_large")
     return result
+
+
+def compact_affiliate_projection(affiliate):
+    columns = ["productId", "channel", "placement"]
+    rows, lookup, viewports = [], {}, {}
+    for name in ("desktop", "mobile"):
+        source = affiliate["viewports"][name]
+        indices = []
+        for binding in source["bindings"]:
+            row = tuple(binding[column] for column in columns)
+            if row not in lookup:
+                lookup[row] = len(rows); rows.append(list(row))
+            indices.append(lookup[row])
+        viewports[name] = {"count": source["count"], "bindingIndices": indices,
+            "destinationObservationsSha256": source["destinationObservationsSha256"]}
+    dictionaries = {column: [] for column in columns}
+    dictionary_indices = {column: {} for column in columns}
+    encoded_rows = []
+    for row in rows:
+        encoded = []
+        for column, value in zip(columns, row):
+            if value not in dictionary_indices[column]:
+                dictionary_indices[column][value] = len(dictionaries[column])
+                dictionaries[column].append(value)
+            encoded.append(dictionary_indices[column][value])
+        encoded_rows.append(encoded)
+    return {"passed": True, "encoding": "column-dictionary-indices-v1",
+            "bindingColumns": columns, "bindingDictionaries": dictionaries,
+            "bindingRows": encoded_rows, "viewports": viewports}
+
+
+def compact_images_projection(images):
+    columns = ["productId", "urlSha256", "sha256", "size"]
+    return {"passed": True, "readbackColumns": columns,
+            "readbackRows": [[item[column] for column in columns]
+                             for item in images["readback"]],
+            "socialCard": copy.deepcopy(images["socialCard"])}
+
+
+def expand_affiliate_projection(projected):
+    columns = projected.get("bindingColumns"); rows = projected.get("bindingRows")
+    dictionaries = projected.get("bindingDictionaries")
+    require(projected.get("encoding") == "column-dictionary-indices-v1"
+            and columns == ["productId", "channel", "placement"]
+            and isinstance(dictionaries, dict) and set(dictionaries) == set(columns)
+            and all(isinstance(dictionaries[column], list)
+                    and all(isinstance(value, str) and value for value in dictionaries[column])
+                    and len(dictionaries[column]) == len(set(dictionaries[column]))
+                    for column in columns)
+            and isinstance(rows, list) and all(isinstance(row, list) and len(row) == len(columns)
+                    and all(type(index) is int and 0 <= index < len(dictionaries[column])
+                            for column, index in zip(columns, row)) for row in rows),
+            "affiliate_projection_encoding")
+    decoded = [[dictionaries[column][index] for column, index in zip(columns, row)]
+               for row in rows]
+    viewports = projected.get("viewports")
+    require(isinstance(viewports, dict) and set(viewports) == {"desktop", "mobile"}
+            and all(isinstance(value.get("bindingIndices"), list)
+                    and all(type(index) is int and 0 <= index < len(decoded)
+                            for index in value["bindingIndices"])
+                    for value in viewports.values()), "affiliate_projection_encoding")
+    return {"passed": projected["passed"], "viewports": {name: {
+        "count": value["count"],
+        "bindings": [dict(zip(columns, decoded[index])) for index in value["bindingIndices"]],
+        "destinationObservationsSha256": value["destinationObservationsSha256"]}
+        for name, value in viewports.items()}}
+
+
+def expand_images_projection(projected):
+    columns = projected["readbackColumns"]
+    return {"passed": projected["passed"],
+            "readback": [dict(zip(columns, row)) for row in projected["readbackRows"]],
+            "socialCard": copy.deepcopy(projected["socialCard"])}
 
 
 def write_once(path, receipt):

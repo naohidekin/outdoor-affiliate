@@ -7,6 +7,7 @@ import unittest
 
 from ledger import fingerprint
 import article_verification_receipt as proof
+import independent_article_review as review_adapter
 
 
 def bundle():
@@ -81,9 +82,46 @@ class ReceiptTests(unittest.TestCase):
             self.assertNotIn(forbidden, raw.decode())
         projected = proof.projection(receipt, "job", revision)
         self.assertEqual(fingerprint(receipt), projected["receiptSha256"])
+        self.assertEqual(receipt["checks"]["affiliate"],
+                         proof.expand_affiliate_projection(projected["checks"]["affiliate"]))
+        self.assertEqual("column-dictionary-indices-v1",
+                         projected["checks"]["affiliate"]["encoding"])
+        self.assertEqual(receipt["checks"]["images"],
+                         proof.expand_images_projection(projected["checks"]["images"]))
         self.assertNotIn("productPresentation", json.dumps(projected, ensure_ascii=False))
         self.assertIn("presentationSha256",
                       projected["checks"]["render"]["viewports"]["desktop"])
+
+    def test_affiliate_projection_dictionary_encoding_rejects_corrupt_indices_and_values(self):
+        projected = proof.projection(self.make(), "job", fingerprint(bundle()))
+        affiliate = projected["checks"]["affiliate"]
+        for mutation in ("row_index", "viewport_index", "duplicate_dictionary"):
+            changed = copy.deepcopy(affiliate)
+            if mutation == "row_index": changed["bindingRows"][0][0] = 999
+            if mutation == "viewport_index": changed["viewports"]["desktop"]["bindingIndices"][0] = 999
+            if mutation == "duplicate_dictionary":
+                changed["bindingDictionaries"]["channel"].append(
+                    changed["bindingDictionaries"]["channel"][0])
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(
+                    ValueError, "affiliate_projection_encoding"):
+                proof.expand_affiliate_projection(changed)
+        self.assertIn("bindingRows value indexes", review_adapter.PROMPT)
+        self.assertIn("viewport bindingIndices restores every row", review_adapter.PROMPT)
+        self.assertIn("readbackRows correspond positionally to readbackColumns",
+                      review_adapter.PROMPT)
+
+    def test_affiliate_projection_empty_bindings_roundtrip_and_unhashable_values_fail_cleanly(self):
+        empty = {"passed": True, "viewports": {name: {
+            "count": 0, "bindings": [], "destinationObservationsSha256": "a" * 64}
+            for name in ("desktop", "mobile")}}
+        compact = proof.compact_affiliate_projection(empty)
+        self.assertEqual({"productId": [], "channel": [], "placement": []},
+                         compact["bindingDictionaries"])
+        self.assertEqual(empty, proof.expand_affiliate_projection(compact))
+        broken = copy.deepcopy(compact)
+        broken["bindingDictionaries"]["channel"] = [[]]
+        with self.assertRaisesRegex(ValueError, "affiliate_projection_encoding"):
+            proof.expand_affiliate_projection(broken)
 
     def test_redirect_unpublished_or_revision_drift_fail_closed(self):
         value = bundle(); job = {"id": "job"}
@@ -246,16 +284,21 @@ class ReceiptTests(unittest.TestCase):
                        "price": 0, "rating": 0, "availability": "unknown",
                        "amazonUrl": "https://www.amazon.co.jp/dp/" + pid,
                        "affiliateUrl": "https://item.rakuten.co.jp/shop/" + pid}
+            if index < 3:
+                product["yahooUrl"] = "https://store.shopping.yahoo.co.jp/shop/" + pid + ".html"
             value["article"]["productIds"].append(pid); value["products"].append(product)
             value["images"].insert(index, {"productId": pid, "url": image_url,
                 "sha256": image_sha, "size": 100 + index, "verified": True})
             readback.append({"url": image_url, "sha256": image_sha,
                              "size": 100 + index, "verified": True})
             for name in observed:
-                observed[name].extend([{"productId": pid, "store": "amazon",
-                    "href": product["amazonUrl"], "placement": "comparison_table"},
-                    {"productId": pid, "store": "rakuten", "href": product["affiliateUrl"],
-                     "placement": "comparison_table"}])
+                channels = [("amazon", product["amazonUrl"]),
+                            ("rakuten", product["affiliateUrl"])]
+                if product.get("yahooUrl"): channels.append(("yahoo", product["yahooUrl"]))
+                observed[name].extend({"productId": pid, "store": channel,
+                    "href": href, "placement": placement}
+                    for channel, href in channels
+                    for placement in ("product_card", "comparison_table"))
                 presentations[name].append({"productId": pid, "componentCount": 1,
                     "priceInput": 0, "ratingInput": 0, "availabilityInput": "unknown",
                     "merchantCheckDisplayed": True, "zeroPriceDisplayed": False,
@@ -284,8 +327,18 @@ class ReceiptTests(unittest.TestCase):
         projected_size = len(json.dumps(projected, ensure_ascii=False, sort_keys=True,
                                          separators=(",", ":")).encode())
         self.assertEqual(3, len(projected["internalTargets"]))
+        self.assertEqual(50, len(receipt["checks"]["affiliate"]["viewports"]["desktop"]["bindings"]))
+        self.assertEqual(receipt["checks"]["affiliate"],
+                         proof.expand_affiliate_projection(projected["checks"]["affiliate"]))
+        self.assertEqual(receipt["checks"]["images"],
+                         proof.expand_images_projection(projected["checks"]["images"]))
         self.assertNotIn("productPresentation", json.dumps(projected, ensure_ascii=False))
         self.assertLessEqual(projected_size, proof.MAX_PROJECTION_BYTES)
+        with_contract = copy.deepcopy(projected)
+        with_contract["contract"] = review_adapter.proof_contract()
+        self.assertLessEqual(len(json.dumps(with_contract, ensure_ascii=False, sort_keys=True,
+                                            separators=(",", ":")).encode()),
+                             proof.MAX_PROJECTION_BYTES)
 
 
 if __name__ == "__main__": unittest.main()

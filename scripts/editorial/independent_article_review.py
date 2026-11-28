@@ -245,6 +245,10 @@ receipt is authoritative only for its exact revision-bound deterministic checks:
 DOM presence, click payload/navigation, image byte/hash readback, social-card renderer
 metadata, and the medical program gate. Do not demand screenshots, live DOM, or a second
 visual audit for those passed checks, and never claim that you visually inspected anything.
+In its compact encoding, bindingColumns name fields, each bindingRows value indexes that
+column's bindingDictionaries list, and each viewport bindingIndices restores every row;
+image readbackRows correspond positionally to readbackColumns. Treat the decoded bindings
+as complete evidence, not a summary with omitted entries.
 A missing, invalid, failed, or mismatched binding is not a pass. All five program checks
 remain mandatory and cannot be replaced or weakened. This review can never grant, imply,
 request, or record owner approval, publication approval, or permission to publish. Return
