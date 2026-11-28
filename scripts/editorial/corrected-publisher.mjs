@@ -18,6 +18,7 @@ const EDIT = new Set(['name','brand','specs','imageUrl','affiliateUrl','amazonUr
 const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const sameKeys = (v, keys) => record(v) && equal(Object.keys(v).sort(), [...keys].sort());
 const contextHash = (input,deps,...keys) => bundleHash(input.bundle,{rawRequest:deps.rawRequest,fieldPath:['bundle','catalogCorrectionContext',...keys]});
+class AffectedArticleCorrectionRequired extends Error {}
 
 function binding(input,deps) {
   check(input?.action==='publish-corrected','publish-corrected required');
@@ -52,6 +53,52 @@ function version(row) {
   const value=String(row?.xmin??'');
   check(/^[0-9]{1,10}$/.test(value) && BigInt(value)<=4294967295n,'fresh product xmin required');
 }
+
+function amazonAsin(value) {
+  if(typeof value!=='string' || !value)return null;
+  try {
+    const url=new URL(value);
+    if(url.protocol!=='https:' || !/(^|\.)amazon\.co\.jp$/.test(url.hostname))return null;
+    return url.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?:\/|$)/i)?.[1].toUpperCase() || null;
+  } catch { return null; }
+}
+const escaped=value=>String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function variantLiteral(text,color,size) {
+  const token=value=>`(?:^|[^A-Za-z0-9])${escaped(value)}(?=$|[^A-Za-z0-9])`;
+  if(typeof color==='string' && color.trim()) {
+    const pair=`(?:^|[^A-Za-z0-9])${escaped(color.trim())}\\s*[/／]\\s*${escaped(size)}(?=$|[^A-Za-z0-9])`;
+    if(new RegExp(pair,'iu').test(text))return true;
+  }
+  const sized=`${token(size)}(?:サイズ)?`;
+  return new RegExp(`Amazon[\\s\\S]{0,40}${sized}|${sized}[\\s\\S]{0,40}Amazon`,'iu').test(text);
+}
+function checkAffectedProductReferences(rows,before,after,patches) {
+  const impacts=[];
+  for(const patch of patches) {
+    const old=before.find(p=>p.id===patch.id),next=after.find(p=>p.id===patch.id);
+    const oldAsin=amazonAsin(old?.amazonUrl),nextAsin=amazonAsin(next?.amazonUrl);
+    const oldSize=old?.specs?.amazonSize,nextSize=next?.specs?.amazonSize;
+    if(old?.amazonUrl!==next?.amazonUrl || oldSize!==nextSize)
+      impacts.push({id:patch.id,oldUrl:old?.amazonUrl,oldAsin,nextAsin,oldSize,nextSize,color:old?.specs?.amazonColor});
+  }
+  if(!impacts.length)return;
+  for(const article of rows) {
+    if(article.status!=='published')continue;
+    check(Array.isArray(article.product_ids) && typeof article.content==='string' && Array.isArray(article.faqs),
+      'affected published article reference scope invalid');
+    const text=article.content+'\n'+JSON.stringify(article.faqs);
+    for(const impact of impacts) {
+      if(!article.product_ids.includes(impact.id))continue;
+      const oldUrlChanged=typeof impact.oldUrl==='string' && impact.oldUrl && impact.oldUrl!==after.find(p=>p.id===impact.id)?.amazonUrl;
+      const staleUrl=oldUrlChanged && text.includes(impact.oldUrl);
+      const staleAsin=impact.oldAsin && impact.oldAsin!==impact.nextAsin && text.toUpperCase().includes(impact.oldAsin);
+      const staleSize=typeof impact.oldSize==='string' && impact.oldSize && impact.oldSize!==impact.nextSize
+        && variantLiteral(text,impact.color,impact.oldSize);
+      if(staleUrl || staleAsin || staleSize)
+        throw new AffectedArticleCorrectionRequired('affected published article retains obsolete product reference');
+    }
+  }
+}
 async function productsEqual(db, expected) {
   const rows=await db.getProducts(expected.map(p=>p.id));
   check(Array.isArray(rows) && rows.length===expected.length && new Set(rows.map(p=>p.id)).size===rows.length,'product baseline missing');
@@ -60,6 +107,29 @@ async function productsEqual(db, expected) {
     check(equal(selectedRow(found,productFields),productRow(p)),'full product baseline changed');
   }
   return rows;
+}
+
+export async function checkCorrected(input,deps) {
+  input=structuredClone(input);
+  let scopeHash;
+  try {
+    const bound={...input,action:'publish-corrected'},c=binding(bound,deps);
+    check(deps.db && typeof deps.db.findProductArticles==='function','correction readiness dependencies required');
+    await productsBaseOrCandidate(deps.db,c.baseProducts,c.candidateProducts);
+    const affected=c.productPatches.length?await deps.db.findProductArticles(c.productPatches.map(p=>p.id)):[];
+    check(Array.isArray(affected) && affected.length<=500,'affected published URL scope exceeds bound');
+    const scope=affected.map(article=>({id:article.id,slug:article.slug,status:article.status,category_id:article.category_id,
+      product_ids:article.product_ids,content:article.content,faqs:article.faqs}))
+      .sort((a,b)=>String(a.id).localeCompare(String(b.id)) || String(a.slug).localeCompare(String(b.slug)));
+    scopeHash=bundleHash({affected:scope,baseProducts:c.baseProducts,candidateProducts:c.candidateProducts,
+      productPatches:c.productPatches});
+    checkAffectedProductReferences(affected,c.baseProducts,c.candidateProducts,c.productPatches);
+    return {ready:true,scopeHash};
+  } catch(error) {
+    return error instanceof AffectedArticleCorrectionRequired
+      ? {ready:false,reason:'affected_article_correction_required',scopeHash}
+      : {ready:false,reason:'correction_readiness_unavailable'};
+  }
 }
 
 /** Private durable evidence, independent of the global public in-flight fence.
@@ -122,6 +192,7 @@ export async function executeCorrected(input,deps) {
     await verifyApprovedImages(input.bundle,deps.imageDigest);
     const affected=c.productPatches.length?await deps.db.findProductArticles(c.productPatches.map(p=>p.id)):[];
     check(Array.isArray(affected) && affected.length<=500,'affected published URL scope exceeds bound');
+    checkAffectedProductReferences(affected,c.baseProducts,c.candidateProducts,c.productPatches);
     const pages=new Map();
     for(const p of affected) {
       check(record(p) && typeof p.status==='string','affected article invalid');

@@ -14,6 +14,7 @@ ADDITIONS = [
     ('camp-kerosene-stove-8xzl2p', 'camp-kerosene-stove-comparison'),
     ('article-010', 'rainwear-ranking'),
     ('article-043', 'autumn-camp-clothing-layering-guide'),
+    ('article-42e59288744a55545f896d2d', 'montbell-light-alpine-down-parka-1101606-guide'),
 ]
 
 

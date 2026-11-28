@@ -92,6 +92,13 @@ class DeterministicDispatcher:
             for job_id, status in db.execute(
                     "SELECT job_id,status FROM effects WHERE status IN ('in_flight','unknown')"):
                 effects.setdefault(job_id, []).append(status)
+            for job_id, raw in db.execute("SELECT job_id,data FROM effects WHERE status='failed'"):
+                try:
+                    prewrite = json.loads(raw).get('reason') == 'publication_prewrite_failed'
+                except (TypeError, ValueError):
+                    prewrite = True
+                if prewrite:
+                    effects.setdefault(job_id, []).append('prewrite_failed')
             for key, raw in db.execute(
                     "SELECT key,value FROM meta WHERE key LIKE 'editorial_manager:%'"):
                 try:
@@ -168,7 +175,14 @@ class DeterministicDispatcher:
                 try:
                     valid_review(job.get('review'), job.get('revision'), job.get('bundle'))
                     if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
-                        valid_astra_review(job.get('astraReview'), job.get('revision'))
+                        try:
+                            valid_astra_review(job.get('astraReview'), job.get('revision'))
+                        except ValueError:
+                            if self.runtime.config.get('independentReviewEnabled') is True:
+                                base['actions'].append({'kind': 'deliver', 'jobId': job['id'],
+                                                        'deliveryKind': 'article'})
+                            article_waiting = True
+                            continue
                 except ValueError:
                     article_waiting = True
                     continue
@@ -181,6 +195,15 @@ class DeterministicDispatcher:
                 else:
                     article_waiting = True
             elif stage == 'approved' and self.runtime.config.get('publicationEnabled') is True:
+                if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
+                    try:
+                        valid_astra_review(job.get('astraReview'), job.get('revision'))
+                    except ValueError:
+                        base['blocked'].append({
+                            'jobId': job['id'],
+                            'reason': 'independent_article_review_required',
+                        })
+                        continue
                 base['actions'].append({'kind': 'publish', 'jobId': job['id']})
             elif stage == 'approved':
                 article_waiting = True

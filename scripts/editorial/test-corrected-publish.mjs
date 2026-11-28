@@ -38,6 +38,20 @@ function harness(t,{count=2}={}) {
  return {input,state,deps,root};
 }
 
+function downCorrection(h) {
+ const id='apparel-montbell-1101606',c=h.input.bundle.catalogCorrectionContext;
+ const old={...c.baseProducts[0],id,name:'ライトアルパインダウン パーカ 1101606',
+  specs:{model:'1101606',amazonColor:'STBL',amazonSize:'L'},amazonUrl:'https://www.amazon.co.jp/dp/B0G46HRY75'};
+ const next={...old,specs:{...old.specs,amazonSize:'XL'},amazonUrl:'https://www.amazon.co.jp/dp/B0G46MCKSQ',updatedAt:'2026-11-08T12:00:00+09:00'};
+ c.baseProducts=[old];c.candidateProducts=[next];c.changeSummary='AmazonのSTBL/XL候補へ訂正';
+ c.productPatches=[{id,baseHash:bundleHash(old),candidateHash:bundleHash(next),
+  fields:{specs:next.specs,amazonUrl:next.amazonUrl,updatedAt:next.updatedAt}}];
+ h.input.bundle.article.productIds=[id];h.input.bundle.products=[next];h.input.bundle.images[0].productId=id;
+ h.state.products=[{...productRow(old),xmin:'10'}];
+ h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
+ return {id,old,next};
+}
+
 test('approved corrections precede new draft, retain full fingerprint, invalidate every affected page',async t=>{
  const h=harness(t);const result=await execute(h.input,h.deps);
  assert.equal(result.verified,true);assert.equal(result.readback.fingerprint,h.input.revision);
@@ -73,6 +87,59 @@ test('stale baselines, missing xmin, existing article identity and affected over
  if(mode==='overflow')h.deps.db.findProductArticles=async()=>Array.from({length:501},()=>({slug:'old',category_id:'tent',status:'published'}));
  if(mode==='image')h.deps.imageDigest=async()=>({sha256:'0'.repeat(64),size:5,contentType:'image/png'});
  await assert.rejects(execute(h.input,h.deps));assert.deepEqual(h.state.writes,[]);}
+});
+
+test('changed Amazon variant refuses old ASIN, URL or contextual size in affected prose and FAQ before writes',async t=>{
+ for(const mode of ['asin','url-in-faq','color-size']) {
+  const h=harness(t,{count:1}),{id,old}=downCorrection(h);
+  const article={id:'article-42e59288744a55545f896d2d',slug:'montbell-light-alpine-down-parka-1101606-guide',
+   status:'published',category_id:'down',product_ids:[id],content:'現行ガイド本文',faqs:[]};
+  if(mode==='asin')article.content+=' '+old.amazonUrl.split('/').at(-1);
+  if(mode==='url-in-faq')article.faqs=[{question:'購入先は？',answer:old.amazonUrl}];
+  if(mode==='color-size')article.content+=' Amazon候補はSTBL/Lです。';
+  h.deps.db.findProductArticles=async()=>[article];
+  await assert.rejects(execute(h.input,h.deps),/obsolete product reference/);
+  assert.deepEqual(h.state.writes,[]);
+  assert.equal(fs.existsSync(path.join(h.root,'journal')),false);
+ }
+});
+
+test('corrected affected guide and already-candidate product allow approved new article without rejecting another product ASIN',async t=>{
+ const h=harness(t,{count:1}),{id,next}=downCorrection(h);
+ h.state.products=[{...productRow(next),xmin:'20'}];
+ h.deps.db.findProductArticles=async()=>[{id:'article-42e59288744a55545f896d2d',
+  slug:'montbell-light-alpine-down-parka-1101606-guide',status:'published',category_id:'down',
+  product_ids:[id,'other-product'],content:'Amazon候補はSTBL/XL。https://www.amazon.co.jp/dp/B0G46MCKSQ。別商品B012345678も掲載。',
+  faqs:[{question:'サイズは？',answer:'1101606のAmazon候補はXLです。'}]}];
+ h.deps.publicGet=async()=>`<h1>${h.input.bundle.article.title}</h1><div data-review-content-sha256="${sha(h.input.bundle.article.content)}">`+
+  `<img src="${next.imageUrl}"><a href="${next.affiliateUrl}">楽天</a><a href="${next.amazonUrl}">Amazon</a></div>`;
+ assert.equal((await execute(h.input,h.deps)).verified,true);
+ assert.deepEqual(h.state.writes,['draft','publish']);
+});
+
+test('read-only corrected readiness separates affected-guide waiting from unavailable and never writes or journals',async t=>{
+ const stale=harness(t,{count:1}),{id,old}=downCorrection(stale);
+ stale.deps.db.findProductArticles=async()=>[{id:'article-42e59288744a55545f896d2d',
+  slug:'montbell-light-alpine-down-parka-1101606-guide',status:'published',category_id:'down',product_ids:[id],
+  content:`旧Amazon ${old.amazonUrl}`,faqs:[]}];
+ const held=await execute({...stale.input,action:'check-corrected'},stale.deps);
+ assert.equal(held.ready,false);assert.equal(held.reason,'affected_article_correction_required');
+ assert.match(held.scopeHash,/^[a-f0-9]{64}$/);
+ assert.deepEqual(stale.state.writes,[]);assert.equal(fs.existsSync(path.join(stale.root,'journal')),false);
+
+ const ready=harness(t,{count:1}),bound=downCorrection(ready);
+ ready.state.products=[{...productRow(bound.next),xmin:'20'}];
+ ready.deps.db.findProductArticles=async()=>[{id:'article-42e59288744a55545f896d2d',
+  slug:'montbell-light-alpine-down-parka-1101606-guide',status:'published',category_id:'down',product_ids:[bound.id],
+  content:'AmazonはSTBL/XL、ASINはB0G46MCKSQ。',faqs:[]}];
+ const passed=await execute({...ready.input,action:'check-corrected'},ready.deps);
+ assert.equal(passed.ready,true);assert.match(passed.scopeHash,/^[a-f0-9]{64}$/);
+ assert.deepEqual(ready.state.writes,[]);assert.equal(fs.existsSync(path.join(ready.root,'journal')),false);
+
+ const unknown=harness(t,{count:1});downCorrection(unknown);unknown.deps.db.findProductArticles=async()=>{throw Error('db');};
+ assert.deepEqual(await execute({...unknown.input,action:'check-corrected'},unknown.deps),
+  {ready:false,reason:'correction_readiness_unavailable'});
+ assert.deepEqual(unknown.state.writes,[]);
 });
 
 test('tampered patches, category, hash, snapshot or selected products cannot write even with new fingerprint',async t=>{

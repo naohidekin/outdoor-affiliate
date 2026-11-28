@@ -19,6 +19,7 @@ class ExistingImprovementRuntimeTests(unittest.TestCase):
 
     def _enable(self):
         self.runtime.config['existingImprovementsEnabled'] = True
+        self.runtime.clock = Mock(return_value=NOW)
 
     def test_disabled_hook_does_not_read_metrics_or_full_catalog(self):
         self.runtime.analytics.load_context = Mock(
@@ -44,6 +45,24 @@ class ExistingImprovementRuntimeTests(unittest.TestCase):
         self.runtime.analytics.load_context.assert_called_once()
         self.runtime.catalog.catalog.assert_called_once()
         self.assertEqual([], self.runtime.ledger.list_jobs())
+
+    def test_normal_hook_never_activates_recovery_after_analytics_changes(self):
+        self._enable()
+        empty = analytics()
+        empty['opportunities'] = []
+        self.runtime.analytics.load_context = Mock(
+            side_effect=[empty, analytics()])
+        self.runtime.catalog.catalog = Mock(return_value=self.live)
+        with patch('runtime.daily_metrics_due', return_value=True), \
+                patch('daily_metrics.require_fresh_daily_metrics'):
+            original = self.runtime._prepare_existing_improvement(NOW)
+            unchanged = self.runtime._prepare_existing_improvement(NOW)
+
+        self.assertEqual(original, unchanged)
+        self.assertEqual('hold', unchanged['status'])
+        self.assertEqual(1, self.runtime.analytics.load_context.call_count)
+        self.assertIsNone(self.runtime.ledger.existing_improvement_recovery_receipt(
+            self.runtime.ledger.production_schedule.period_key(NOW)))
 
     def test_unfresh_daily_snapshot_never_loads_analytics_or_catalog(self):
         self._enable()

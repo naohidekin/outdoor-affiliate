@@ -62,6 +62,20 @@ function routineHarness() {
  return h;
 }
 
+function observedIntent(c) {
+ const value={schemaVersion:1,status:'observed_sample',targetUrl:c.analysisBinding.targetUrl,
+  period:structuredClone(c.analysisBinding.metricsReceipt.currentPeriod),signals:[{
+   id:'page-intent:'+'f'.repeat(64),
+   facets:{garments:[],brands:[],problems:[],seasons:[],intents:['selection'],gearTypes:[]},
+   observedRowCount:2}],coverage:{observedRowCount:2,classifiedRowCount:2,signalsTruncated:false,inputTruncated:false},
+  rawQueriesExposed:false,diagnosis:false,marketDemand:false,dominantQuery:false,causalGuarantee:false,
+  serpEvidence:{status:'unconnected',reason:'serp_collection_not_implemented'}};
+ // The signal id binds the controlled facets, not raw query text.
+ value.signals[0].id='page-intent:'+bundleHash(value.signals[0].facets);
+ value.projectionHash=bundleHash(value);
+ return value;
+}
+
 test('routine analysis target can stage privately and still requires exact owner approval',async()=>{
  const h=routineHarness();
  assert.equal((await execute({...h.input,action:'stage-revision',approval:null},h.deps)).status,'private_revision');
@@ -69,6 +83,22 @@ test('routine analysis target can stage privately and still requires exact owner
  assert.deepEqual(h.state.writes,[]);
  assert.equal((await execute(h.input,h.deps)).verified,true);
  assert.deepEqual(h.state.writes,['article']);
+});
+
+test('routine observed page intent is accepted only with exact target period and projection',async()=>{
+ const good=routineHarness(),c=good.input.bundle.revisionContext;
+ c.analysisBinding.metricsReceipt.intentEvidence=observedIntent(c);
+ good.input.revision=bundleHash(good.input.bundle);good.input.approval.revision=good.input.revision;
+ assert.equal((await execute({...good.input,action:'stage-revision',approval:null},good.deps)).status,'private_revision');
+ for(const mutate of [v=>v.targetUrl+='-other',v=>v.period.endDate='2026-11-23',
+  v=>v.projectionHash='0'.repeat(64),v=>v.marketDemand=true]) {
+  const h=routineHarness(),context=h.input.bundle.revisionContext;
+  context.analysisBinding.metricsReceipt.intentEvidence=observedIntent(context);
+  mutate(context.analysisBinding.metricsReceipt.intentEvidence);
+  h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
+  await assert.rejects(execute({...h.input,action:'stage-revision',approval:null},h.deps));
+  assert.deepEqual(h.state.writes,[]);
+ }
 });
 
 test('routine analysis cannot bypass source, baseline, winner, intent or immutable-product guards',async()=>{
@@ -177,9 +207,12 @@ test('revision production reads require fresh xmin and never compare it as artic
  t.mock.method(globalThis,'fetch',async(url)=>{calls.push(new URL(url));return Response.json([{id:'p0',xmin:'42'}]);});
  const deps=revisionDependencies({SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'test-only'});
  await deps.db.getProducts(['p0']);await deps.db.findArticles('article-024','firepit-beginner-guide');
- assert.ok(calls.every(u=>u.searchParams.get('select').split(',').includes('xmin')));
+ await deps.db.findProductArticles(['p0']);
+ assert.ok(calls.slice(0,2).every(u=>u.searchParams.get('select').split(',').includes('xmin')));
+ for(const field of ['id','slug','status','category_id','product_ids','content','faqs'])
+  assert.ok(calls[2].searchParams.get('select').split(',').includes(field));
  await assert.rejects(deps.db.patchProductCAS({id:'p0',updated_at:'same',category_id:'tent'},{}),/version/);
- assert.equal(calls.length,2);
+ assert.equal(calls.length,3);
 });
 
 test('same-timestamp concurrent product or article edit increments xmin and cannot be overwritten',async t=>{

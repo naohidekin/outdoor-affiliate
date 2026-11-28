@@ -16,6 +16,7 @@ import math
 import re
 
 from search_demand import project_search_demand
+from page_intent import MAX_ROWS as MAX_PAGE_INTENT_ROWS, project_page_intent
 
 JST = timezone(timedelta(hours=9))
 MAX_BYTES = 4 * 1024 * 1024
@@ -147,12 +148,32 @@ def _gsc(raw, now, warnings, label):
                 candidates.append(dict(url=url, **clean, metricScope='query_page_sample'))
                 break
     ordered = sorted(pages.values(), key=lambda p: (-(p['impressions'] or 0), p['url']))
-    return dict(**period, status='ok', siteUrl=site,
-                country=raw.get('country') if raw.get('country') in ('jpn', 'JPN') else 'unverified',
-                searchType=raw.get('searchType') if raw.get('searchType') in ('web', 'image', 'video', 'news') else 'unverified',
-                settledThrough=raw['settledThrough'], summary=_stats(raw.get('summary') or {}),
-                pages=ordered[:MAX_EVIDENCE], candidates=candidates[:MAX_EVIDENCE],
-                searchDemand=project_search_demand(raw.get('queries'), period))
+    result = dict(**period, status='ok', siteUrl=site,
+                  country=raw.get('country') if raw.get('country') in ('jpn', 'JPN') else 'unverified',
+                  searchType=raw.get('searchType') if raw.get('searchType') in ('web', 'image', 'video', 'news') else 'unverified',
+                  settledThrough=raw['settledThrough'], summary=_stats(raw.get('summary') or {}),
+                  pages=ordered[:MAX_EVIDENCE], candidates=candidates[:MAX_EVIDENCE],
+                  searchDemand=project_search_demand(raw.get('queries'), period))
+    target_urls = [item['url'] for item in _opportunities(result, None)]
+    raw_page_rows = raw.get('queryPages')
+    raw_page_rows = raw_page_rows if isinstance(raw_page_rows, list) else []
+    page_rows = []
+    target_set = set(target_urls)
+    for row in raw_page_rows[:MAX_PAGE_INTENT_ROWS]:
+        if not isinstance(row, dict):
+            continue
+        url = _url(row.get('url'))
+        if (url in target_set and site
+                and urlsplit(url).netloc == urlsplit(site).netloc):
+            page_rows.append({'url': url, 'query': row.get('query'),
+                              'device': row.get('device')})
+    page_intent = project_page_intent(
+        page_rows, period, target_urls,
+        input_truncated=len(raw_page_rows) > MAX_PAGE_INTENT_ROWS)
+    for row in result['pages'] + result['candidates']:
+        if row['url'] in page_intent:
+            row['intentEvidence'] = page_intent[row['url']]
+    return result
 
 
 def _ai_referrals(raw):
@@ -173,7 +194,7 @@ def _ai_referrals(raw):
     return sorted(rows, key=lambda row: (-(row['sessions'] or 0), row['source'], row['path']))[:MAX_EVIDENCE]
 
 
-def _ga4(raw, now, warnings, label='GA4'):
+def _ga4(raw, now, warnings, label='GA4', preferred_paths=()):
     period = _period(raw, now, False, warnings, label)
     if not period:
         return None
@@ -205,7 +226,11 @@ def _ga4(raw, now, warnings, label='GA4'):
     verified = (isinstance(coverage, dict) and coverage.get('verified') is True
                 and coverage.get('scope') == 'site' and coverage.get('complete') is True
                 and valid and len(source_rows) < MAX_ROWS)
-    return dict(**period, status='ok', landingPages=sorted(pages.values(), key=lambda p: p['path'])[:MAX_EVIDENCE],
+    priority = {path: index for index, path in enumerate(preferred_paths)
+                if isinstance(path, str) and path.startswith('/articles/')}
+    ordered = sorted(pages.values(), key=lambda page: (
+        priority.get(page['path'], len(priority)), page['path']))
+    return dict(**period, status='ok', landingPages=ordered[:MAX_EVIDENCE],
                 sessions=(_number(sum(p['sessions'] for p in pages.values()))
                           if pages and all(p['sessions'] is not None for p in pages.values()) else None),
                 coverageVerified=verified, aiReferrals=_ai_referrals(raw), revenue='未接続')
@@ -237,7 +262,8 @@ def _opportunities(current, ga4):
         seen.add(page['url'])
         options.append(dict(action='improve_existing', url=page['url'],
                             reason='表示実績と平均掲載順位を根拠に既存記事の見出し・内容を確認',
-                            gsc=dict(_stats(page), metricScope=page.get('metricScope', 'page')), ga4=(dict(landing[urlsplit(page['url']).path],
+                            gsc=dict(_stats(page), metricScope=page.get('metricScope', 'page')),
+                            intentEvidence=page.get('intentEvidence'), ga4=(dict(landing[urlsplit(page['url']).path],
                                       sourcePeriod={k: ga4[k] for k in ('startDate', 'endDate', 'dateBasis')})
                                  if urlsplit(page['url']).path in landing else None),
                             cannibalizationCheck='required', publication='manual_review'))
@@ -264,7 +290,10 @@ def _context(metrics, now):
         warnings.append('GSC: 対象期間が古いため保留')
         current = None
     previous = _gsc(metrics.get('previous'), now, warnings, '比較GSC')
-    ga4 = _ga4(metrics.get('ga4'), now, warnings)
+    preferred_paths = [urlsplit(item['url']).path
+                       for item in _opportunities(current, None)]
+    ga4 = _ga4(metrics.get('ga4'), now, warnings,
+               preferred_paths=preferred_paths)
     if ga4 and (now.date() - _day(ga4['endDate'])).days > 35:
         warnings.append('GA4: 対象期間が古いため保留')
         ga4 = None

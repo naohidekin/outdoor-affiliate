@@ -1,6 +1,7 @@
 """Offline routine existing-improvement preparation contracts."""
 import copy
 from datetime import datetime, timedelta, timezone
+import hashlib
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -8,9 +9,12 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock
 
-from existing_update_preparation import prepare_existing_update, public_revision_reference
+from existing_update_preparation import (prepare_existing_update,
+                                         prepare_existing_update_recovery,
+                                         public_revision_reference)
 from ledger import Ledger, canonical, fingerprint
 from model_budget import ModelBudget
+from page_intent import project_page_intent
 from revisions import validated_context
 
 JST = timezone(timedelta(hours=9))
@@ -132,6 +136,27 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
                 'productRemovalReasons': {}, 'baseProducts': products,
                 'candidateProducts': copy.deepcopy(products)}
 
+    def owner_grant(self, instruction='Recover the eligible immutable SEO hold once.'):
+        receipt = {'schemaVersion': 1, 'ownerId': 'owner',
+                   'source': 'codex_task_message', 'instruction': instruction,
+                   'instructionSha256': hashlib.sha256(
+                       instruction.encode('utf-8')).hexdigest(),
+                   'evidence': {
+                       'source': 'codex', 'kind': 'task_message',
+                       'threadId': '01a19beb-c298-7b23-926f-bbae16a35acd',
+                       'turnId': '01a2221b-29ff-7d91-923b-8ce12144715a',
+                       'userMessageId': '01a2221b-2ba4-7ff2-9914-a7a627100a67'}}
+        task_hash = fingerprint(receipt)
+        folder = self.root / 'owner-instructions'
+        folder.mkdir(mode=0o700)
+        path = folder / (task_hash + '.json')
+        raw = (canonical(receipt) + '\n').encode('utf-8')
+        path.write_bytes(raw)
+        path.chmod(0o600)
+        return {'ownerId': 'owner', 'taskRef': 'owner-task:' + task_hash,
+                'instructionSha256': receipt['instructionSha256'],
+                'instructionReceiptSha256': hashlib.sha256(raw).hexdigest()}
+
     def test_queues_one_generic_revision_and_preserves_manual_gates(self):
         result = self.prepare()
         self.assertEqual('queued', result['status'])
@@ -154,6 +179,26 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
         self.assertFalse(binding['constraints']['causalGuarantee'])
         self.assertEqual(job['revisionContext']['baseProducts'],
                          job['revisionContext']['candidateProducts'])
+
+    def test_page_bound_controlled_intent_is_bound_without_claiming_diagnosis(self):
+        metrics = analytics()
+        target = metrics['opportunities'][0]['url']
+        period = {key: metrics['evidence']['current'][key]
+                  for key in ('startDate', 'endDate', 'dateBasis')}
+        metrics['opportunities'][0]['intentEvidence'] = project_page_intent([
+            {'url': target, 'query': '焚き火台 選び方'}], period, [target])[target]
+
+        result = self.prepare(metrics)
+        intent = self.ledger.get_job(
+            result['revisionJobId'])['revisionContext']['analysisBinding'][
+                'metricsReceipt']['intentEvidence']
+
+        self.assertEqual('observed_sample', intent['status'])
+        self.assertFalse(intent['diagnosis'])
+        self.assertFalse(intent['marketDemand'])
+        self.assertFalse(intent['dominantQuery'])
+        self.assertFalse(intent['causalGuarantee'])
+        self.assertEqual('unconnected', intent['serpEvidence']['status'])
 
     def test_once_per_period_and_same_input_never_repeats_source_call(self):
         first = self.prepare()
@@ -229,6 +274,30 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
         self.assertEqual(1, self.catalog.gather_revision.call_count)
         self.assertNotIn('private source detail', canonical(first))
 
+    def test_source_checked_during_gather_uses_finish_clock(self):
+        self.catalog.now = NOW + timedelta(minutes=1)
+        self.runtime.clock = Mock(return_value=NOW + timedelta(minutes=2))
+
+        result = self.prepare()
+
+        self.assertEqual('queued', result['status'])
+        self.assertEqual((NOW + timedelta(minutes=1)).isoformat(),
+                         result['priorProof']['sourceCheckedAt'])
+
+    def test_source_checked_after_finish_clock_holds(self):
+        self.catalog.now = NOW + timedelta(minutes=3)
+        self.runtime.clock = Mock(return_value=NOW + timedelta(minutes=2))
+        result = self.prepare()
+        self.assertEqual('hold', result['status'])
+        self.assertEqual(['source_verification_failed'], result['sourceHoldReasons'])
+
+    def test_source_checked_over_six_hours_before_finish_holds(self):
+        self.catalog.now = NOW - timedelta(hours=6, seconds=1)
+        self.runtime.clock = Mock(return_value=NOW)
+        result = self.prepare()
+        self.assertEqual('hold', result['status'])
+        self.assertEqual(['source_verification_failed'], result['sourceHoldReasons'])
+
     def test_unpublished_target_holds_before_source_or_job(self):
         live = {'articles': [article('draft')], 'products': [product()]}
         result = self.prepare(live=live)
@@ -279,6 +348,117 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
             with self.assertRaises(sqlite3.IntegrityError):
                 db.execute("UPDATE existing_improvement_results SET data='{}' WHERE period=?",
                            (result['period'],))
+
+    def test_explicit_recovery_queues_once_and_preserves_original_hold(self):
+        empty = analytics()
+        empty['opportunities'] = []
+        original = self.prepare(empty)
+        original_hash = fingerprint(original)
+        grant = self.owner_grant()
+        with sqlite3.connect(self.ledger.db_path) as db:
+            old_row = db.execute(
+                'SELECT input_hash,data FROM existing_improvement_results WHERE period=?',
+                (original['period'],)).fetchone()
+
+        recovered = prepare_existing_update_recovery(
+            self.runtime, analytics(), self.live, owner_grant=grant,
+            expected_original_result_hash=original_hash, now=NOW)
+        repeated = prepare_existing_update_recovery(
+            self.runtime, analytics(), self.live, owner_grant=grant,
+            expected_original_result_hash=original_hash, now=NOW)
+
+        self.assertEqual('queued', recovered['status'])
+        self.assertEqual(recovered, repeated)
+        self.assertEqual(original_hash, recovered['recovery']['originalResultHash'])
+        self.assertEqual(grant, recovered['recovery']['ownerGrant'])
+        self.assertEqual(recovered,
+                         self.ledger.existing_improvement_receipt(original['period']))
+        self.assertEqual(original,
+                         self.ledger.original_existing_improvement_receipt(original['period']))
+        self.assertEqual(1, self.catalog.gather_revision.call_count)
+        self.assertEqual(1, len(self.ledger.list_jobs()))
+        with sqlite3.connect(self.ledger.db_path) as db:
+            self.assertEqual(old_row, db.execute(
+                'SELECT input_hash,data FROM existing_improvement_results WHERE period=?',
+                (original['period'],)).fetchone())
+            self.assertEqual(1, db.execute(
+                'SELECT COUNT(*) FROM existing_improvement_recovery_attempts').fetchone()[0])
+            self.assertEqual(1, db.execute(
+                'SELECT COUNT(*) FROM existing_improvement_recovery_results').fetchone()[0])
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("UPDATE existing_improvement_recovery_results SET data='{}' "
+                           "WHERE period=?", (original['period'],))
+
+    def test_explicit_recovery_source_uses_finish_clock(self):
+        empty = analytics()
+        empty['opportunities'] = []
+        original = self.prepare(empty)
+        grant = self.owner_grant()
+        self.catalog.now = NOW + timedelta(minutes=1)
+        self.runtime.clock = Mock(return_value=NOW + timedelta(minutes=2))
+
+        recovered = prepare_existing_update_recovery(
+            self.runtime, analytics(), self.live, owner_grant=grant,
+            expected_original_result_hash=fingerprint(original), now=NOW)
+
+        self.assertEqual('queued', recovered['status'])
+        self.assertEqual((NOW + timedelta(minutes=1)).isoformat(),
+                         recovered['priorProof']['sourceCheckedAt'])
+
+    def test_recovery_rejects_nonselection_hold_outside_allowlist(self):
+        self.catalog.failure = ValueError('offline source failure')
+        original = self.prepare()
+        self.catalog.failure = None
+        grant = self.owner_grant()
+        with self.assertRaisesRegex(ValueError, 'recovery original hold ineligible'):
+            prepare_existing_update_recovery(
+                self.runtime, analytics(), self.live, owner_grant=grant,
+                expected_original_result_hash=fingerprint(original), now=NOW)
+        self.assertEqual([], self.ledger.list_jobs())
+        with sqlite3.connect(self.ledger.db_path) as db:
+            self.assertEqual(0, db.execute(
+                'SELECT COUNT(*) FROM existing_improvement_recovery_attempts').fetchone()[0])
+
+    def test_recovery_rejects_current_pending_revision_before_claim(self):
+        empty = analytics()
+        empty['opportunities'] = []
+        original = self.prepare(empty)
+        self.ledger.request_revision(self.manual_spec(), now=NOW)
+        grant = self.owner_grant()
+
+        with self.assertRaisesRegex(ValueError, 'recovery current state ineligible'):
+            prepare_existing_update_recovery(
+                self.runtime, analytics(), self.live, owner_grant=grant,
+                expected_original_result_hash=fingerprint(original), now=NOW)
+
+        self.catalog.gather_revision.assert_not_called()
+        with sqlite3.connect(self.ledger.db_path) as db:
+            self.assertEqual(0, db.execute(
+                'SELECT COUNT(*) FROM existing_improvement_recovery_attempts').fetchone()[0])
+
+    def test_recovery_rejects_changed_original_fingerprint(self):
+        empty = analytics()
+        empty['opportunities'] = []
+        self.prepare(empty)
+        grant = self.owner_grant()
+        with self.assertRaisesRegex(ValueError, 'recovery original result changed'):
+            prepare_existing_update_recovery(
+                self.runtime, analytics(), self.live, owner_grant=grant,
+                expected_original_result_hash='0' * 64, now=NOW)
+        self.catalog.gather_revision.assert_not_called()
+
+    def test_recovery_rejects_caller_invented_owner_grant_before_claim(self):
+        empty = analytics()
+        empty['opportunities'] = []
+        original = self.prepare(empty)
+        fake = {'ownerId': 'owner', 'taskRef': 'owner-task:' + 'a' * 64,
+                'instructionSha256': 'b' * 64,
+                'instructionReceiptSha256': 'c' * 64}
+        with self.assertRaisesRegex(ValueError, 'owner instruction receipt'):
+            prepare_existing_update_recovery(
+                self.runtime, analytics(), self.live, owner_grant=fake,
+                expected_original_result_hash=fingerprint(original), now=NOW)
+        self.catalog.gather_revision.assert_not_called()
 
 
 if __name__ == '__main__':

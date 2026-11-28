@@ -318,6 +318,17 @@ class Reporter:
                 text = editorial_report(jobs, now=now, rolling=kind == 'weekly', kind=kind) + '\n\n' + text
                 text += '\n\n' + seo_status(self.config.get('seoStateRoot'), self.root, kind=kind, now=now)
             from usage_cost_report import usage_cost_summary
+            feedback = read_snapshot(self.root / 'seo-feedback' / 'latest.json')
+            summary = feedback.get('summary') if isinstance(feedback, dict) else None
+            keys = ('reanalysisObserved', 'measurementWaiting',
+                    'postchangePerformanceMeasured', 'requiresReconciliation')
+            if isinstance(summary, dict) and all(type(summary.get(k)) is int
+                                               and 0 <= summary[k] <= 10 for k in keys):
+                text += ('\n\nSEO改善循環：再分析確認' + str(summary['reanalysisObserved'])
+                         + '件／公開後の計測待ち' + str(summary['measurementWaiting'])
+                         + '件／前後比較の実測' + str(summary['postchangePerformanceMeasured'])
+                         + '件／照合が必要' + str(summary['requiresReconciliation'])
+                         + '件。前後の数値変化は、改稿による因果効果の証明ではありません。')
             text += '\n\n' + usage_cost_summary(
                 self.root, self.config, kind='monthly' if kind == 'monthly' else 'weekly', now=now)
             if not isinstance(text, str) or not text.strip() or len(text) > 12000:

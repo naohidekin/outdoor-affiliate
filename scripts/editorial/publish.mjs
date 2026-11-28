@@ -416,6 +416,10 @@ async function verifyNewArticlePublicReadback(bundle, revision, publishedRow, de
 
 /** Dependencies are injected in tests. The production lock always uses seoRoot(). */
 export async function execute(input, deps = {}) {
+  if (record(input) && input.action === 'check-corrected') {
+    const { checkCorrected } = await import('./corrected-publisher.mjs');
+    return checkCorrected(input, deps);
+  }
   if (record(input) && input.action === 'publish-corrected') {
     const { executeCorrected } = await import('./corrected-publisher.mjs');
     return executeCorrected(input, deps);
@@ -525,7 +529,7 @@ export async function executeNewArticle(input, deps = {}) {
 export function parseArguments(argv) {
   const result = {};
   for (let i = 0; i < argv.length; i++) {
-    if (['stage', 'publish', 'stage-revision', 'publish-revision', 'publish-corrected'].includes(argv[i]) && !result.action) result.action = argv[i];
+    if (['stage', 'publish', 'stage-revision', 'publish-revision', 'publish-corrected', 'check-corrected'].includes(argv[i]) && !result.action) result.action = argv[i];
     else if (argv[i] === '--env-file' && !result.envFile && nonempty(argv[i + 1])) result.envFile = path.resolve(argv[++i]);
     else throw new Error('invalid publisher arguments');
   }
@@ -603,8 +607,46 @@ export function productionDependencies(env) {
     },
   };
 }
+
+const MUTATING_DATABASE_METHODS = new Set(['insertDraft', 'publishCAS', 'patchProductCAS', 'patchPublishedCAS']);
+
+/** Track the actual remote mutation boundary without interpreting exception text. */
+export function trackDatabaseMutationBoundary(deps) {
+  const state = {
+    mutationAttempted: false,
+    failureCode() {
+      return this.mutationAttempted ? 'publication_result_unknown' : 'publisher_prewrite_failed';
+    },
+  };
+  if (!record(deps?.db)) return state;
+  const original = deps.db;
+  const wrapped = new Map();
+  deps.db = new Proxy(original, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (!MUTATING_DATABASE_METHODS.has(property) || typeof value !== 'function') return value;
+      if (!wrapped.has(property)) wrapped.set(property, async (...args) => {
+        state.mutationAttempted = true;
+        return value.apply(target, args);
+      });
+      return wrapped.get(property);
+    },
+  });
+  return state;
+}
+
+export function publisherFailureResult(executionStarted, mutationBoundary, phase, error) {
+  return {
+    error: executionStarted ? mutationBoundary.failureCode() : 'publisher_input_or_environment_invalid',
+    verified: false,
+    mutationAttempted: mutationBoundary?.mutationAttempted ?? null,
+    diagnostic: safeDiagnostic({ phase, ...error?.diagnostic }),
+  };
+}
+
 async function main() {
-  let mutationPossible = false;
+  let executionStarted = false;
+  let mutationBoundary = null;
   let phase = 'input_environment';
   try {
     const args = parseArguments(process.argv.slice(2));
@@ -620,18 +662,19 @@ async function main() {
     if (['publish', 'publish-revision', 'publish-corrected'].includes(input.action)) requireValue(nonempty(env.REVALIDATE_SECRET), 'cache secret required');
     requireWiseBinding(input.bundle, input.review, input.revision);
     phase = 'dependency_setup';
-    const deps = input.action === 'publish-corrected'
+    const deps = ['publish-corrected', 'check-corrected'].includes(input.action)
       ? (await import('./corrected-publisher.mjs')).correctedDependencies(env)
       : ['stage-revision', 'publish-revision'].includes(input.action)
       ? (await import('./revision-publisher.mjs')).revisionDependencies(env) : productionDependencies(env);
     deps.rawRequest = raw;
-    mutationPossible = true;
+    mutationBoundary = trackDatabaseMutationBoundary(deps);
+    executionStarted = true;
     phase = 'execution';
     const result = await execute(input, deps);
     process.stdout.write(JSON.stringify(result) + '\n');
   } catch (error) {
     // Never print raw exception, HTTP body, URL query, env values or stack.
-    process.stdout.write(JSON.stringify({ error: mutationPossible ? 'publication_result_unknown' : 'publisher_input_or_environment_invalid', verified: false, diagnostic: safeDiagnostic({phase,...error?.diagnostic}) }) + '\n');
+    process.stdout.write(JSON.stringify(publisherFailureResult(executionStarted, mutationBoundary, phase, error)) + '\n');
     process.exitCode = 1;
   }
 }

@@ -164,6 +164,19 @@ class Runtime:
     def _analytics_context(self):
         self._require_running()
         context = self.analytics.load_context()
+        # Deterministic feedback is evidence for the next planning call, never an
+        # approval or a reason to launch another manager on unchanged metrics.
+        from reporting import read_snapshot
+        feedback = read_snapshot(self.root / 'seo-feedback' / 'latest.json')
+        if isinstance(feedback, dict) and isinstance(feedback.get('rows'), list):
+            context['priorPublicationFeedback'] = {
+                'summary': feedback.get('summary'),
+                'rows': [{key: row.get(key) for key in
+                          ('jobId', 'revision', 'targetUrl', 'status', 'reason',
+                           'workflow', 'measurement', 'sourceEvidence')}
+                         for row in feedback['rows'][:3]],
+                'causalAttribution': False,
+            }
         if self.config.get('seoStateRoot'):
             # Export a separate, bounded input for Astra. Never replace the SEO
             # backlog, experiment queue or canonical metrics snapshot.
@@ -173,6 +186,28 @@ class Runtime:
                      'opportunities': options, 'uncertainty': context.get('uncertainty', [])[:12],
                      'instructions': 'Improve these existing pages; do not create duplicate articles. '
                          'Seasonality and cannibalization need independent review; clicks are not purchases.'}
+            if len(canonical(queue).encode()) > 65536:
+                # The improvement export needs the selected URLs, not two full
+                # copies of every topic facet and query/page candidate. Keep the
+                # canonical metrics/context untouched and disclose the projection.
+                evidence = copy.deepcopy(context.get('evidence') or {})
+                urls = {p.get('url') for p in options}
+                paths_selected = {urlsplit(url).path for url in urls if isinstance(url, str)}
+                for label in ('current', 'previous'):
+                    value = evidence.get(label)
+                    if not isinstance(value, dict):
+                        continue
+                    for field in ('pages', 'candidates'):
+                        value[field] = [row for row in value.get(field, []) if row.get('url') in urls]
+                    demand = value.get('searchDemand')
+                    if isinstance(demand, dict):
+                        demand['groups'] = []
+                        demand['groupProjection'] = 'omitted_from_existing_improvement_export'
+                if isinstance(evidence.get('ga4'), dict):
+                    evidence['ga4']['landingPages'] = [row for row in evidence['ga4'].get('landingPages', [])
+                                                       if row.get('path') in paths_selected]
+                queue.update(evidence=evidence, evidenceProjection='selected_improvement_urls_only',
+                             canonicalEvidenceSha256=fingerprint(context.get('evidence')))
             if len(canonical(queue).encode()) > 65536:
                 queue = {'schemaVersion': 1, 'status': 'unavailable', 'collectedAt': None,
                          'opportunities': [], 'uncertainty': ['Bounded improvement input exceeded size limit']}
@@ -187,6 +222,30 @@ class Runtime:
                 if not same:
                     atomic(path, queue)
         return context
+
+    def _refresh_seo_feedback(self, jobs, context, now):
+        """Persist owner-readable analysis and version evidence without AI calls."""
+        from seo_feedback import build_feedback
+        from analytics import build_report
+        from reporting import read_snapshot
+        projection = build_feedback(jobs, self.root, context, now,
+                                    owner_id=self.config['slack']['user_id'])
+        path = self.root / 'seo-feedback' / 'latest.json'
+        prior = read_snapshot(path)
+        if not prior or prior.get('semanticSha256') != projection['semanticSha256']:
+            atomic(path, projection)
+        source = Path(self.config['seoStateRoot']) / 'metrics' / 'latest.json'
+        report = build_report(read_snapshot(source), kind='weekly', now=now)
+        current = {'schemaVersion': 1, 'collectedAt': context.get('collectedAt'),
+                   'title': report['title'], 'text': report['text'],
+                   'feedback': projection['summary'],
+                   'feedbackSemanticSha256': projection['semanticSha256']}
+        report_path = self.root / 'analytics' / 'seo' / 'latest.json'
+        if read_snapshot(report_path) != current:
+            atomic(report_path, current)
+        return {'status': 'updated', 'summary': projection['summary'],
+                'semanticSha256': projection['semanticSha256'],
+                'analysisCollectedAt': context.get('collectedAt')}
 
     def _render(self, bundle, job):
         self._require_running()
@@ -226,7 +285,7 @@ class Runtime:
         child_env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'TZ', 'TMPDIR')}
         child_env.update(self.env)
         child_env['SEO_GUARD_CONFIG'] = self.config['seoGuardConfig']
-        if action == 'publish-corrected':
+        if action in ('publish-corrected', 'check-corrected'):
             child_env['CAMP_EDITORIAL_STATE_ROOT'] = str(self.root)
             child_env['CAMP_EDITORIAL_OWNER_ID'] = self.config['slack']['user_id']
         command = [self.config.get('node', 'node'), str(Path(__file__).with_name('publish.mjs'))]
@@ -239,7 +298,8 @@ class Runtime:
                    'review': {key: job['review'].get(key) for key in
                               ('passed', 'wisePolicy', 'wiseScores', 'fingerprint')}}
         def failure(diagnostic):
-            error = ValueError('publication_result_unknown')
+            error = ValueError('catalog_correction_readiness_unavailable'
+                               if action == 'check-corrected' else 'publication_result_unknown')
             error.diagnostic = safe_publication_diagnostic(diagnostic)
             return error
         try:
@@ -254,9 +314,66 @@ class Runtime:
         except (ValueError, IndexError):
             raise failure({'phase': 'subprocess', 'exitCode': result.returncode}) from None
         if result.returncode or value.get('error'):
-            raise failure({**safe_publication_diagnostic(value.get('diagnostic')),
-                           'exitCode': result.returncode})
+            error = failure({**safe_publication_diagnostic(value.get('diagnostic')),
+                             'exitCode': result.returncode})
+            if value.get('error') == 'publisher_prewrite_failed' and value.get('mutationAttempted') is False:
+                error = ValueError('publication_prewrite_failed')
+                error.publication_prewrite = True
+                error.diagnostic = safe_publication_diagnostic(value.get('diagnostic'))
+            raise error
         return value
+
+    def _catalog_correction_readiness(self, job):
+        from reporting import read_snapshot
+        from ledger import timestamp
+        now = self.clock()
+        ids = {p['id'] for p in job['catalogCorrectionContext']['productPatches']}
+        related = []
+        for item in self.ledger.list_jobs():
+            base = (item.get('revisionContext') or {}).get('baseArticle') or {}
+            article = (item.get('bundle') or {}).get('article') or base
+            if item.get('publication') and ids.intersection(article.get('productIds') or []):
+                related.append([item['id'], item.get('revision'), item['publication']])
+        dependency = fingerprint(sorted(related, key=lambda row: row[0]))
+        path = self.root / 'catalog-correction-readiness' / (job['revision'] + '.json')
+        prior = read_snapshot(path)
+        if (prior and prior.get('revision') == job['revision']
+                and prior.get('dependencyHash') == dependency
+                and prior.get('result', {}).get('ready') is False):
+            try:
+                age = now - timestamp(prior.get('checkedAt'))
+                if timedelta(0) <= age < timedelta(minutes=30):
+                    return prior['result']
+            except (TypeError, ValueError):
+                pass
+        result = self.publisher('check-corrected', job)
+        if (not isinstance(result, dict) or type(result.get('ready')) is not bool
+                or result.get('ready') is False and result.get('reason') not in
+                ('affected_article_correction_required', 'correction_readiness_unavailable')):
+            result = {'ready': False, 'reason': 'correction_readiness_unavailable'}
+        atomic(path, {'revision': job['revision'], 'dependencyHash': dependency,
+                      'checkedAt': now.isoformat(), 'result': result})
+        return result
+
+    def _notify_independent_hold(self, job, status):
+        if status not in ('blocked', 'failed', 'unknown', 'budget_hold', 'stale'):
+            return
+        path = self.root / 'independent-review-notices' / (job['revision'] + '.json')
+        if path.exists():
+            return
+        atomic(path, {'status': 'claimed', 'jobId': job['id'],
+                      'revision': job['revision'], 'qualityStatus': status, 'at': stamp()})
+        try:
+            result = self.slack.notice(
+                '【記事の品質確認で保留】' + job['theme'].get('title', job['id'])
+                + '\n状態：' + status
+                + '\n独立品質確認が完了していません。原因の詳細は実行記録との照合が必要です。'
+                + '\n品質基準・予算上限は変更せず、公開前で保留します。記事とSNSの承認は別々です。')
+            atomic(path, {'status': 'completed', 'jobId': job['id'],
+                          'revision': job['revision'], 'qualityStatus': status, 'result': result})
+        except Exception:
+            # The durable claim prevents blind resend after uncertain delivery.
+            pass
 
     def _wise_context(self, context):
         context = copy.deepcopy(context)
@@ -926,6 +1043,9 @@ class Runtime:
                 if self._medical(base).get('passed') is not True:
                     raise ValueError('routine_public_reference_requires_upper_editor')
                 gathered['publicRevisionReference'] = reference
+                intent = binding['analysisBinding']['metricsReceipt']['intentEvidence']
+                if intent.get('status') == 'observed_sample':
+                    gathered['analysisIntentObservation'] = copy.deepcopy(intent)
         elif nonproduct:
             gathered = gather_nonproduct(job['theme'], context)
             source_recheck = reverify_bound_public_sources(
@@ -1167,6 +1287,9 @@ class Runtime:
             review.update(medicalScope='candidate_article_only', inheritedClinicalReverified=False,
                           inheritedAdviceDomSha256=bundle['inheritedPresentationContext']['domSha256'])
         self.ledger.record_review(job['id'], job['revision'], review)
+        if (revision or corrected) and self.config.get('independentReviewEnabled') is True:
+            from independent_article_review import ensure_review
+            ensure_review(self, self.ledger.get_job(job['id']))
         # Persist an invisible draft, never publish while waiting for a person.
         if not revision and not corrected:
             self.publisher('stage', self.ledger.get_job(job['id']))
@@ -1809,12 +1932,20 @@ class Runtime:
         require_current_review(target.get('bundle') if kind == 'article' else target.get('proposal'),
                                target.get('review'), self.config.get('repo'))
         if kind == 'article' and (job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job):
+            quality_result = None
+            if self.config.get('independentReviewEnabled') is True:
+                from independent_article_review import ensure_review
+                quality_result = ensure_review(self, job)
+                self._notify_independent_hold(job, quality_result.get('status'))
+                job = self.ledger.get_job(id)
             try:
                 self.ledger._current(job)
                 valid_review(job.get('review'), job['revision'], job.get('bundle'))
                 valid_astra_review(job.get('astraReview'), job['revision'])
             except ValueError:
-                return {'status': 'awaiting_astra_review', 'deferred': True}
+                return {'status': 'awaiting_astra_review', 'deferred': True,
+                        **({'qualityStatus': quality_result.get('status')}
+                           if isinstance(quality_result, dict) else {})}
         with sqlite3.connect(self.ledger.db_path) as db:
             rows = db.execute('SELECT data FROM requests WHERE job_id=? AND kind=? ORDER BY rowid DESC', (id, kind)).fetchall()
         active = next((json.loads(row[0]) for row in rows if json.loads(row[0])['status'] in ('created', 'delivered')), None)
@@ -2293,11 +2424,23 @@ class Runtime:
                 if job['stage'] == 'approved' and self.config.get('publicationEnabled'):
                     if dispatch is not None and ('publish', job['id'], None) not in actions:
                         continue
+                    if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
+                        valid_astra_review(job.get('astraReview'), job['revision'])
                     if ('catalogCorrectionContext' in job
                             and self.config.get('catalogCorrectionsPublicationEnabled') is not True):
                         results.append({'id': job['id'], 'status': 'waiting_auth',
                                         'reason': 'catalog_corrections_publication_disabled'})
                         continue
+                    if 'catalogCorrectionContext' in job:
+                        readiness = self._catalog_correction_readiness(job)
+                        if not isinstance(readiness, dict) or readiness.get('ready') is not True:
+                            unavailable = (not isinstance(readiness, dict) or
+                                           readiness.get('reason') != 'affected_article_correction_required')
+                            results.append({'id': job['id'],
+                                            'status': 'attention' if unavailable else 'waiting_dependency',
+                                            'reason': 'correction_readiness_unavailable' if unavailable
+                                            else 'affected_article_correction_required'})
+                            continue
                     require_current_review(job.get('bundle'), job.get('review'), self.config['repo'])
                     if not self.ledger.claim_effect(job['id'], 'publish'):
                         continue
@@ -2308,14 +2451,20 @@ class Runtime:
                         self.ledger.finish_effect(job['id'], 'publish', {'status': 'success', **result})
                     except Exception as error:
                         diagnostic = safe_publication_diagnostic(getattr(error, 'diagnostic', None))
-                        self.ledger.finish_effect(job['id'], 'publish', {'status': 'unknown', 'reason': 'publication_requires_reconciliation',
+                        prewrite = getattr(error, 'publication_prewrite', False) is True
+                        self.ledger.finish_effect(job['id'], 'publish', {'status': 'failed' if prewrite else 'unknown',
+                            'reason': 'publication_prewrite_failed' if prewrite else 'publication_requires_reconciliation',
                             **({'diagnostic': diagnostic} if diagnostic else {})})
                         raise
                     self.slack.notice('【公開確認済み】' + job['bundle']['article']['title'] + '\n' + result['url'])
                 elif job['stage'] == 'review':
                     if dispatch is not None and ('deliver', job['id'], 'article') not in actions:
                         continue
-                    self.deliver(job['id'])
+                    delivered = self.deliver(job['id'])
+                    if isinstance(delivered, dict) and delivered.get('qualityStatus') in (
+                            'blocked', 'failed', 'unknown', 'budget_hold', 'stale'):
+                        results.append({'id': job['id'], 'status': 'attention',
+                                        'reason': 'independent_quality_review_' + delivered['qualityStatus']})
                 elif job.get('kind') != 'article_revision' and job['stage'] == 'published' and not job.get('social'):
                     if dispatch is not None and ('make_social', job['id'], None) not in actions:
                         continue
@@ -2406,11 +2555,15 @@ class Runtime:
                 results.append({'status': 'attention', 'reason': reason(error),
                                 'production': {'status': 'blocked', 'reason': reason(error)}})
         jobs = self.ledger.list_jobs()
+        seo_feedback = {'status': 'unconfigured'}
         if self.config.get('seoStateRoot'):
             try:
-                self._analytics_context()
+                context = self._analytics_context()
+                seo_feedback = self._refresh_seo_feedback(jobs, context, now)
             except Exception:
-                results.append({'analytics': {'status': 'unavailable'}})
+                results.append({'analytics': {'status': 'unavailable'}, 'status': 'attention',
+                                'reason': 'seo_feedback_unavailable'})
+                seo_feedback = {'status': 'unavailable'}
         reports = []
         if self.config.get('reportsEnabled') is True:
             try:
@@ -2429,6 +2582,7 @@ class Runtime:
                   'at': stamp(), 'decisions': decisions, 'results': results,
                   'dailyMetrics': daily_metrics,
                   'existingImprovement': existing_improvement,
+                  'seoFeedback': seo_feedback,
                   'articles': [dict({k: j[k] for k in ('id', 'theme', 'stage', 'revision', 'error')},
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
                       approval={'action': 'approved' if j.get('approval') else None},

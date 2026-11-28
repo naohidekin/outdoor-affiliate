@@ -13,11 +13,19 @@ from urllib.parse import urlsplit
 from ledger import fingerprint, require, timestamp
 from revisions import ANALYSIS_KIND, validated_context
 from analytics import protected_winner_urls
+from page_intent import validate_page_intent
 
 JST = timezone(timedelta(hours=9))
 MAX_CANDIDATES = 3
 SOURCE_MAX_AGE = timedelta(hours=6)
 CANONICAL_ORIGIN = 'https://camp-gear-lab.com'
+RECOVERY_KIND = 'routine_existing_improvement_recovery_v1'
+RECOVERY_IMPLEMENTATION = {
+    'schemaVersion': 1,
+    'analyticsSelectionPolicy': 'winner_excluded_before_top3_v1',
+    'ga4ProjectionPolicy': 'selected_gsc_paths_first_v1',
+    'preparationPolicy': 'routine_existing_improvement_v1',
+}
 
 
 def public_revision_reference(base):
@@ -82,6 +90,13 @@ def _metric_receipt(context, opportunity, candidates, winners):
                          'provenance': context.get('provenance'),
                          'current': current, 'ga4': ga4}
     ga4_values = opportunity['ga4']
+    intent = opportunity.get('intentEvidence')
+    if intent is None or (isinstance(intent, dict)
+                          and intent.get('status') == 'unavailable'):
+        intent = _intent_evidence()
+    else:
+        intent = validate_page_intent(
+            intent, target_url=opportunity.get('url'), period=_period(current))
     return {
         'sourceId': 'analytics:' + fingerprint(source_projection),
         'collectedAt': context['collectedAt'],
@@ -93,7 +108,7 @@ def _metric_receipt(context, opportunity, candidates, winners):
                 ('clicks', 'impressions', 'ctr', 'position', 'metricScope')},
         'ga4': {key: ga4_values.get(key) for key in
                 ('sessions', 'engagedSessions', 'keyEvents')},
-        'intentEvidence': _intent_evidence(),
+        'intentEvidence': intent,
     }
 
 
@@ -105,10 +120,17 @@ def _analysis_binding(period, rank, url, base, products, metrics, source_proof):
 
 
 def _specification(base, products, analysis):
+    observed_intent = (analysis['metricsReceipt']['intentEvidence'].get('status')
+                       == 'observed_sample')
+    intent_summary = (
+        '同一ページに結びつく実測検索行のbounded controlled sampleは利用できるが、'
+        '検索意図の診断、dominant query、市場需要、SERP、CTR因果を示すものではない。'
+        if observed_intent else
+        '検索意図・SERP・CTR因果は未接続であり、改善効果を保証しない。')
     return {
         'baseArticle': copy.deepcopy(base),
         'changeSummary': ('検証済みの自サイトGSC・GA4実績を優先度の根拠として、既存記事の見出しと内容を確認する。'
-                          '検索意図・SERP・CTR因果は未接続であり、改善効果を保証しない。'),
+                          + intent_summary),
         'editorialCorrectionInstructions': (
             '公開済み本文を基準に、読者の判断に必要な見出し・説明の明瞭さだけを点検する。'
             '検索意図を診断済みと表現せず、タイトル不一致、dominant query、CTRの原因を推定しない。'
@@ -151,6 +173,13 @@ def _source_proof(gathered, products, now):
     return {'sourceId': 'catalog-gather:' + receipt_hash,
             'receiptHash': receipt_hash, 'checkedAt': min(observed).isoformat(),
             'productIds': copy.deepcopy(product_ids), 'checks': copy.deepcopy(checks)}
+
+
+def _source_finish_time(runtime, started_at):
+    clock = getattr(runtime, 'clock', None)
+    finished_at = timestamp(clock()) if callable(clock) else started_at
+    require(finished_at >= started_at, 'source verification finish precedes attempt')
+    return finished_at
 
 
 def _selection(context, live_catalog, now):
@@ -266,7 +295,8 @@ def prepare_existing_update(runtime, analytics_context, live_catalog, *, now=Non
         'baseProductsHash': fingerprint(products) if base else None,
         'publicationStatus': base.get('status') if base else None,
         'protectedWinnerUrls': winners,
-        'intentEvidence': _intent_evidence(),
+        'intentEvidence': (copy.deepcopy(metrics['intentEvidence'])
+                           if metrics else _intent_evidence()),
     }
     planned = {'schemaVersion': 1, 'kind': ANALYSIS_KIND, 'status': 'planned',
                'period': period, 'attemptedAt': now.isoformat(), 'inputHash': input_hash,
@@ -298,7 +328,8 @@ def prepare_existing_update(runtime, analytics_context, live_catalog, *, now=Non
              'categoryId': base['categoryId'], 'productIds': copy.deepcopy(base['productIds'])}
     try:
         gathered = runtime.catalog.gather_revision(theme, live_catalog, provisional)
-        proof = _source_proof(gathered, products, now)
+        proof = _source_proof(gathered, products,
+                              _source_finish_time(runtime, now))
     except Exception:
         hold = dict(planned, status='hold',
                     sourceHoldReasons=['source_verification_failed'])
@@ -314,3 +345,112 @@ def prepare_existing_update(runtime, analytics_context, live_catalog, *, now=Non
                                   sourceCheckedAt=proof['checkedAt']))
     return runtime.ledger.complete_existing_improvement_attempt(
         period, input_hash, queued, specification=specification, now=now)
+
+
+def prepare_existing_update_recovery(
+        runtime, analytics_context, live_catalog, *, owner_grant,
+        expected_original_result_hash, now=None):
+    """Explicitly recover one eligible no-selection hold; never called by tick."""
+    now = timestamp(now if now is not None else datetime.now(JST))
+    period = runtime.ledger.production_schedule.period_key(now)
+    require(isinstance(period, str), 'existing improvement recovery period unavailable')
+    require(isinstance(expected_original_result_hash, str)
+            and re.fullmatch(r'[a-f0-9]{64}', expected_original_result_hash),
+            'existing improvement recovery original hash required')
+    owner_grant = runtime.ledger.validate_existing_improvement_owner_grant(
+        owner_grant)
+    prior_recovery = runtime.ledger.existing_improvement_recovery_receipt(period)
+    if prior_recovery is not None:
+        recovery = prior_recovery.get('recovery') or {}
+        require(recovery.get('ownerGrant') == owner_grant
+                and recovery.get('originalResultHash') == expected_original_result_hash,
+                'existing improvement recovery authority changed')
+        return prior_recovery
+    original = runtime.ledger.original_existing_improvement_receipt(period)
+    require(original is not None
+            and fingerprint(original) == expected_original_result_hash,
+            'recovery original result changed')
+    selected, _, candidates, winners = _selection(
+        analytics_context, live_catalog, now)
+    require(selected is not None, 'recovery current selection unavailable')
+    base, products = selected['base'], selected['products']
+    metrics = _metric_receipt(
+        analytics_context, selected['opportunity'], candidates, winners)
+    target_id = base['id']
+    budget_id = 'article:' + fingerprint({'slug': base['slug']})
+    implementation = copy.deepcopy(RECOVERY_IMPLEMENTATION)
+    implementation['receiptHash'] = fingerprint(implementation)
+    current_snapshot = {
+        'analyticsContextHash': fingerprint(analytics_context),
+        'candidateUrls': [item.get('url') for item in candidates],
+        'selectedArticleHash': fingerprint(base),
+        'selectedProductsHash': fingerprint(products),
+    }
+    recovery = {
+        'kind': RECOVERY_KIND,
+        'ownerGrant': copy.deepcopy(owner_grant),
+        'originalResultHash': expected_original_result_hash,
+        'originalInputHash': original.get('inputHash'),
+        'currentSnapshotHash': fingerprint(current_snapshot),
+        'implementationReceipt': implementation,
+    }
+    input_projection = {'period': period, 'recovery': recovery,
+                        'currentSnapshot': current_snapshot}
+    input_hash = fingerprint(input_projection)
+    prior_proof = {
+        'metricsSourceId': metrics['sourceId'],
+        'metricReceiptHash': fingerprint(metrics),
+        'baseArticleHash': fingerprint(base),
+        'baseProductsHash': fingerprint(products),
+        'publicationStatus': base.get('status'),
+        'protectedWinnerUrls': winners,
+        'intentEvidence': copy.deepcopy(metrics['intentEvidence']),
+    }
+    planned = {
+        'schemaVersion': 1, 'kind': ANALYSIS_KIND, 'status': 'planned',
+        'period': period, 'attemptedAt': now.isoformat(), 'inputHash': input_hash,
+        'selectedId': target_id, 'selectedUrl': selected['url'],
+        'revisionJobId': None, 'budgetArticleId': budget_id,
+        'priorProof': prior_proof, 'sourceHoldReasons': [],
+        'analysisBinding': None, 'recovery': recovery,
+    }
+    claim = runtime.ledger.claim_existing_improvement_recovery_attempt(
+        period, input_hash, expected_original_result_hash, planned,
+        target_id=target_id, budget_article_id=budget_id, now=now)
+    if not claim['claimed']:
+        return claim['receipt']
+    provisional_hash = fingerprint({'inputHash': input_hash, 'baseArticle': base,
+                                    'baseProducts': products})
+    provisional_source = {
+        'sourceId': 'catalog-gather:' + provisional_hash,
+        'receiptHash': provisional_hash, 'checkedAt': now.isoformat(),
+        'productIds': copy.deepcopy(base['productIds']),
+        'checks': {'facts': True, 'images': True, 'affiliate': True}}
+    provisional_analysis = _analysis_binding(
+        period, selected['rank'], selected['url'], base, products, metrics,
+        provisional_source)
+    provisional = validated_context(
+        _specification(base, products, provisional_analysis))
+    theme = {'slug': base['slug'], 'title': base['title'],
+             'categoryId': base['categoryId'],
+             'productIds': copy.deepcopy(base['productIds'])}
+    try:
+        gathered = runtime.catalog.gather_revision(theme, live_catalog, provisional)
+        proof = _source_proof(gathered, products,
+                              _source_finish_time(runtime, now))
+    except Exception:
+        hold = dict(planned, status='hold',
+                    sourceHoldReasons=['source_verification_failed'])
+        return runtime.ledger.complete_existing_improvement_recovery_attempt(
+            period, input_hash, expected_original_result_hash, hold, now=now)
+    analysis = _analysis_binding(period, selected['rank'], selected['url'], base,
+                                 products, metrics, proof)
+    specification = _specification(base, products, analysis)
+    validated_context(specification)
+    queued = dict(planned, status='queued', analysisBinding=analysis,
+                  priorProof=dict(prior_proof, sourceId=proof['sourceId'],
+                                  sourceReceiptHash=proof['receiptHash'],
+                                  sourceCheckedAt=proof['checkedAt']))
+    return runtime.ledger.complete_existing_improvement_recovery_attempt(
+        period, input_hash, expected_original_result_hash, queued,
+        specification=specification, now=now)

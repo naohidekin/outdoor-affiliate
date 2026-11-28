@@ -2,6 +2,7 @@
 import copy
 import json
 import unittest
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from ledger import fingerprint
@@ -11,7 +12,9 @@ import test_runtime
 
 
 class CatalogCorrectionRuntimeTests(unittest.TestCase):
-    setUp = test_runtime.RuntimeTests.setUp
+    def setUp(self):
+        test_runtime.RuntimeTests.setUp(self)
+        self.runtime._catalog_correction_readiness = Mock(return_value={'ready': True})
     tearDown = test_runtime.RuntimeTests.tearDown
 
     def raw(self):
@@ -50,6 +53,12 @@ class CatalogCorrectionRuntimeTests(unittest.TestCase):
     def qa(self, job):
         return dict(passed=True, issues=[], reviewedBy='Astra', evidence={'independent': True},
                     fingerprint=job['revision'])
+
+    def store_astra_review(self, job, review):
+        with self.runtime.ledger._tx() as db:
+            current = self.runtime.ledger._get(db, job['id'])
+            current['astraReview'] = copy.deepcopy(review)
+            return self.runtime.ledger._put(db, current, 'test_astra_review_state')
 
     def approve(self, job):
         self.runtime.ledger.record_astra_review(job['id'], job['revision'], self.qa(job))
@@ -180,6 +189,109 @@ class CatalogCorrectionRuntimeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.runtime.ledger.record_astra_review(job['id'], job['revision'], self.qa(job))
 
+    def test_missing_or_stale_astra_blocks_before_readiness_claim_and_publication(self):
+        self.config['catalogCorrectionsPublicationEnabled'] = True
+        job = self.produce()
+        self.approve(job)
+        self.config['generationEnabled'] = False
+        self.runtime._post_publication_audits = Mock(return_value=[])
+        for review in (None, dict(self.qa(job), fingerprint='0' * 64)):
+            with self.subTest(review=review):
+                self.store_astra_review(job, review)
+                self.runtime._catalog_correction_readiness.reset_mock()
+                result = self.runtime.tick()
+                self.assertIn(dict(id=job['id'], status='attention',
+                                   reason='matching Astra quality review required'),
+                              result['results'])
+                self.runtime._catalog_correction_readiness.assert_not_called()
+                self.assertEqual([], self.writes)
+                with self.runtime.ledger._tx() as db:
+                    self.assertIsNone(db.execute(
+                        'SELECT status FROM effects WHERE job_id=?',
+                        (job['id'],)).fetchone())
+        self.store_astra_review(job, self.qa(job))
+        self.runtime.tick()
+        self.assertEqual(['publish-corrected'], [action for action, _ in self.writes])
+
+    def test_dispatcher_blocks_approved_correction_without_current_astra(self):
+        from dispatcher import DeterministicDispatcher
+        job = self.produce()
+        self.approve(job)
+        self.store_astra_review(job, dict(self.qa(job), fingerprint='0' * 64))
+        self.config['executionPolicy'] = {
+            'mode': 'deterministic', 'suspended': False,
+            'exceptions': {'autoAI': False},
+        }
+        plan = DeterministicDispatcher(self.runtime).plan(
+            datetime(2026, 11, 28, 21, tzinfo=test_runtime.JST))
+        self.assertNotIn('publish', {action['kind'] for action in plan['actions']})
+        self.assertIn({'jobId': job['id'],
+                       'reason': 'independent_article_review_required'},
+                      plan['blocked'])
+
+    def test_codex_approval_and_effect_claim_require_current_astra(self):
+        job = self.produce()
+        evidence = dict(source='codex', thread_id='thread', message_id='message',
+                        text=f"記事 {job['id']} 版 {job['revision']} を公開してください")
+        with self.assertRaisesRegex(ValueError, 'Astra'):
+            self.runtime.ledger.approve_from_codex(
+                job['id'], job['revision'], 'U', evidence)
+        self.runtime.ledger.record_astra_review(
+            job['id'], job['revision'], self.qa(job))
+        approved = self.runtime.ledger.approve_from_codex(
+            job['id'], job['revision'], 'U', evidence)
+        self.store_astra_review(approved, None)
+        with self.assertRaisesRegex(ValueError, 'Astra'):
+            self.runtime.ledger.claim_effect(job['id'], 'publish')
+        with self.runtime.ledger._tx() as db:
+            self.assertIsNone(db.execute(
+                'SELECT status FROM effects WHERE job_id=?',
+                (job['id'],)).fetchone())
+        self.store_astra_review(approved, self.qa(job))
+        self.assertTrue(self.runtime.ledger.claim_effect(job['id'], 'publish'))
+
+    def test_prewrite_failure_is_failed_and_never_reclaimed_by_legacy_tick(self):
+        self.config['catalogCorrectionsPublicationEnabled'] = True
+        job = self.produce()
+        self.approve(job)
+        self.config['generationEnabled'] = False
+        self.runtime._post_publication_audits = Mock(return_value=[])
+        error = ValueError('publication_prewrite_failed')
+        error.publication_prewrite = True
+        self.runtime.publisher = Mock(side_effect=error)
+
+        first = self.runtime.tick()
+        self.assertIn(dict(id=job['id'], status='attention',
+                           reason='publication_prewrite_failed'), first['results'])
+        self.assertEqual(1, self.runtime.publisher.call_count)
+        with self.runtime.ledger._tx() as db:
+            status, raw = db.execute(
+                'SELECT status,data FROM effects WHERE job_id=? AND kind=?',
+                (job['id'], 'publish')).fetchone()
+            claim_events = db.execute(
+                "SELECT count(*) FROM events WHERE job_id=? AND kind='effect_claim'",
+                (job['id'],)).fetchone()[0]
+            result_events = db.execute(
+                "SELECT count(*) FROM events WHERE job_id=? AND kind='effect_result'",
+                (job['id'],)).fetchone()[0]
+        self.assertEqual('failed', status)
+        self.assertEqual('publication_prewrite_failed', json.loads(raw)['reason'])
+        self.assertEqual((1, 1), (claim_events, result_events))
+
+        second = self.runtime.tick()
+        self.assertEqual(1, self.runtime.publisher.call_count)
+        with self.runtime.ledger._tx() as db:
+            self.assertEqual((status, raw), db.execute(
+                'SELECT status,data FROM effects WHERE job_id=? AND kind=?',
+                (job['id'], 'publish')).fetchone())
+            self.assertEqual((claim_events, result_events), (
+                db.execute("SELECT count(*) FROM events WHERE job_id=? AND kind='effect_claim'",
+                           (job['id'],)).fetchone()[0],
+                db.execute("SELECT count(*) FROM events WHERE job_id=? AND kind='effect_result'",
+                           (job['id'],)).fetchone()[0]))
+        self.assertNotIn({'id': job['id'], 'status': 'attention',
+                          'reason': 'publication_result_unknown'}, second['results'])
+
     def test_corrected_publication_disabled_by_default_waits_without_claiming_effect(self):
         job = self.produce()
         self.approve(job)
@@ -201,6 +313,53 @@ class CatalogCorrectionRuntimeTests(unittest.TestCase):
         self.config['catalogCorrectionsPublicationEnabled'] = True
         self.runtime.tick()
         self.assertEqual(['publish-corrected'], [action for action, _ in self.writes])
+
+    def test_affected_article_hold_does_not_claim_publish_or_become_unknown(self):
+        self.config['catalogCorrectionsPublicationEnabled'] = True
+        job = self.produce()
+        self.approve(job)
+        self.config['generationEnabled'] = False
+        self.runtime._post_publication_audits = Mock(return_value=[])
+        self.runtime._catalog_correction_readiness.return_value = {
+            'ready': False, 'reason': 'affected_article_correction_required'}
+        for _ in range(2):
+            result = self.runtime.tick()
+            self.assertIn(dict(id=job['id'], status='waiting_dependency',
+                               reason='affected_article_correction_required'), result['results'])
+        self.assertEqual('approved', self.runtime.ledger.get_job(job['id'])['stage'])
+        self.assertEqual([], self.writes)
+        with self.runtime.ledger._tx() as db:
+            self.assertIsNone(db.execute('SELECT status FROM effects WHERE job_id=?',
+                                        (job['id'],)).fetchone())
+        self.runtime._catalog_correction_readiness.return_value = {'ready': True}
+        self.runtime.tick()
+        self.assertEqual(['publish-corrected'], [action for action, _ in self.writes])
+
+    def test_negative_readiness_is_cached_until_publication_dependency_or_deadline_changes(self):
+        from runtime import Runtime, JST
+        job = self.produce()
+        self.runtime.clock = Mock(return_value=datetime(2026, 11, 28, 21, tzinfo=JST))
+        self.runtime.publisher = Mock(return_value={
+            'ready': False, 'reason': 'affected_article_correction_required'})
+        self.runtime.ledger.list_jobs = Mock(return_value=[])
+        check = lambda: Runtime._catalog_correction_readiness(self.runtime, job)
+        check()
+        check()
+        self.assertEqual(1, self.runtime.publisher.call_count)
+        self.runtime.ledger.list_jobs.return_value = [{
+            'id': 'guide-revision', 'revision': 'changed',
+            'bundle': {'article': {'productIds': ['tent-a']}},
+            'publication': {'verified': True}}]
+        check()
+        self.assertEqual(2, self.runtime.publisher.call_count)
+        self.runtime.clock.return_value += timedelta(minutes=31)
+        check()
+        self.assertEqual(3, self.runtime.publisher.call_count)
+        self.runtime.publisher.return_value = {'ready': True}
+        self.runtime.clock.return_value += timedelta(minutes=31)
+        check()
+        check()
+        self.assertEqual(5, self.runtime.publisher.call_count)
 
     def test_cli_attachment_reads_raw_json_only_and_does_not_produce(self):
         from runtime import main

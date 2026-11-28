@@ -214,6 +214,41 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(len(first['opportunities']), 3)
         self.assertLessEqual(len(first['evidence']['current']['pages']), 30)
 
+    def test_ga4_projection_prioritizes_selected_gsc_candidate_paths(self):
+        data = snapshot()
+        data['current']['pages'] = [dict(
+            url=URL + str(i), clicks=100-i if i < 3 else 1,
+            impressions=1000-i, ctr=.01, position=8) for i in range(6)]
+        data['ga4']['landingPages'] = [dict(
+            dimensionValues=[dict(value=f'/articles/a{i:02d}')],
+            metricValues=[dict(value='1'), dict(value='1'), dict(value='0')])
+            for i in range(35)]
+        data['ga4']['landingPages'] += [dict(
+            dimensionValues=[dict(value=f'/articles/stove{i}')],
+            metricValues=[dict(value=str(100+i)), dict(value='2'), dict(value='0')])
+            for i in range(3, 6)]
+
+        context = load(data)
+
+        self.assertEqual([103, 104, 105],
+                         [item['ga4']['sessions'] for item in context['opportunities']])
+        self.assertEqual(30, len(context['evidence']['ga4']['landingPages']))
+
+    def test_prioritized_ga4_candidate_keeps_missing_metric_unknown(self):
+        data = snapshot()
+        data['ga4']['landingPages'] = [dict(
+            dimensionValues=[dict(value=f'/articles/a{i:02d}')],
+            metricValues=[dict(value='1'), dict(value='1'), dict(value='0')])
+            for i in range(35)]
+        data['ga4']['landingPages'].append(dict(
+            dimensionValues=[dict(value='/articles/stove')],
+            metricValues=[dict(value='not-a-number'), dict(value='2'), dict(value='0')]))
+
+        context = load(data)
+
+        self.assertIsNone(context['opportunities'][0]['ga4']['sessions'])
+        self.assertEqual(30, len(context['evidence']['ga4']['landingPages']))
+
     def test_candidate_sample_without_page_does_not_become_site_total(self):
         data = snapshot()
         data['current']['pages'] = []
@@ -223,6 +258,34 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(option['gsc']['impressions'], 40)
         self.assertEqual(option['gsc']['metricScope'], 'query_page_sample')
         self.assertNotIn('secret person', json.dumps(option))
+
+    def test_selected_page_gets_private_page_bound_controlled_intent_only(self):
+        data = snapshot()
+        data['current']['pages'] = [dict(
+            url=URL + str(i), clicks=100-i if i < 3 else 1,
+            impressions=1000-i, ctr=.01, position=8) for i in range(6)]
+        private = 'モンベル ソフトシェル ハードシェル 違い private-person@example.invalid'
+        data['current']['queryPages'] = [
+            dict(query=private, url=URL + '3', device='DESKTOP',
+                 clicks=1, impressions=40, ctr=.025, position=8),
+            dict(query='unrelated secret query', url=URL + '0', device='MOBILE',
+                 clicks=1, impressions=40, ctr=.025, position=8),
+        ]
+        data['current']['queries'] = [dict(
+            query='パタゴニア ダウン 比較 global-only', clicks=2,
+            impressions=90, ctr=.02, position=9)]
+
+        context = load(data)
+        evidence = context['opportunities'][0]['intentEvidence']
+
+        self.assertEqual('observed_sample', evidence['status'])
+        self.assertEqual(URL + '3', evidence['targetUrl'])
+        self.assertEqual('unconnected', evidence['serpEvidence']['status'])
+        self.assertLessEqual(len(evidence['signals']), 5)
+        serialized = json.dumps(context, ensure_ascii=False)
+        self.assertNotIn(private, serialized)
+        self.assertNotIn('private-person', serialized)
+        self.assertNotIn('global-only', serialized)
 
     def test_verified_monthly_ga4_comparison_and_explicit_argument(self):
         data = snapshot(end='2026-10-31')

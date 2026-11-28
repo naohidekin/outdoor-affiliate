@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 import secrets
 import sqlite3
+import stat
 from urllib.parse import urlsplit
 from x_readback import exact_x_text
 from production_schedule import ProductionSchedule
@@ -355,12 +356,18 @@ class Ledger:
                 'CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, at TEXT NOT NULL, job_id TEXT, kind TEXT NOT NULL, data TEXT NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS existing_improvement_attempts (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, data TEXT NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS existing_improvement_results (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, data TEXT NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS existing_improvement_recovery_attempts (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, original_result_hash TEXT NOT NULL, data TEXT NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS existing_improvement_recovery_results (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, original_result_hash TEXT NOT NULL, data TEXT NOT NULL)',
                 "CREATE TRIGGER IF NOT EXISTS events_no_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'immutable events'); END",
                 "CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'immutable events'); END",
                 "CREATE TRIGGER IF NOT EXISTS existing_improvement_attempts_no_update BEFORE UPDATE ON existing_improvement_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement attempts'); END",
                 "CREATE TRIGGER IF NOT EXISTS existing_improvement_attempts_no_delete BEFORE DELETE ON existing_improvement_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement attempts'); END",
                 "CREATE TRIGGER IF NOT EXISTS existing_improvement_results_no_update BEFORE UPDATE ON existing_improvement_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement results'); END",
                 "CREATE TRIGGER IF NOT EXISTS existing_improvement_results_no_delete BEFORE DELETE ON existing_improvement_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement results'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_recovery_attempts_no_update BEFORE UPDATE ON existing_improvement_recovery_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement recovery attempts'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_recovery_attempts_no_delete BEFORE DELETE ON existing_improvement_recovery_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement recovery attempts'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_recovery_results_no_update BEFORE UPDATE ON existing_improvement_recovery_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement recovery results'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_recovery_results_no_delete BEFORE DELETE ON existing_improvement_recovery_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement recovery results'); END",
             ):
                 db.execute(sql)
             db.execute('INSERT OR IGNORE INTO meta VALUES (?,?)', ('owner_id', owner_id))
@@ -812,7 +819,7 @@ class Ledger:
             reasons.append('related_budget_event_requires_reconciliation')
         return list(dict.fromkeys(reasons))
 
-    def existing_improvement_receipt(self, period):
+    def original_existing_improvement_receipt(self, period):
         require(isinstance(period, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', period),
                 'existing improvement period required')
         with self._tx() as db:
@@ -821,6 +828,221 @@ class Ledger:
                 if row is not None:
                     return json.loads(row[0])
         return None
+
+    def existing_improvement_recovery_receipt(self, period):
+        require(isinstance(period, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', period),
+                'existing improvement period required')
+        with self._tx() as db:
+            for table in ('existing_improvement_recovery_results',
+                          'existing_improvement_recovery_attempts'):
+                row = db.execute('SELECT data FROM ' + table + ' WHERE period=?',
+                                 (period,)).fetchone()
+                if row is not None:
+                    return json.loads(row[0])
+        return None
+
+    def existing_improvement_receipt(self, period):
+        require(isinstance(period, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', period),
+                'existing improvement period required')
+        with self._tx() as db:
+            for table in ('existing_improvement_recovery_results',
+                          'existing_improvement_recovery_attempts',
+                          'existing_improvement_results', 'existing_improvement_attempts'):
+                row = db.execute('SELECT data FROM ' + table + ' WHERE period=?',
+                                 (period,)).fetchone()
+                if row is not None:
+                    return json.loads(row[0])
+        return None
+
+    def _validate_existing_improvement_owner_grant(self, owner_grant):
+        require(isinstance(owner_grant, dict) and set(owner_grant) == {
+                    'ownerId', 'taskRef', 'instructionSha256',
+                    'instructionReceiptSha256'},
+                'existing improvement owner instruction receipt invalid')
+        require(owner_grant['ownerId'] == self.owner_id
+                and isinstance(owner_grant['taskRef'], str)
+                and re.fullmatch(r'owner-task:[a-f0-9]{64}', owner_grant['taskRef'])
+                and all(isinstance(owner_grant[key], str)
+                        and re.fullmatch(r'[a-f0-9]{64}', owner_grant[key])
+                        for key in ('instructionSha256',
+                                    'instructionReceiptSha256')),
+                'existing improvement owner instruction receipt invalid')
+        task_hash = owner_grant['taskRef'].split(':', 1)[1]
+        folder = self.root / 'owner-instructions'
+        try:
+            folder_stat = folder.lstat()
+        except OSError as error:
+            raise ValueError('existing improvement owner instruction receipt missing') from error
+        require(stat.S_ISDIR(folder_stat.st_mode) and not folder.is_symlink()
+                and folder_stat.st_mode & 0o777 == 0o700,
+                'existing improvement owner instruction directory invalid')
+        path = folder / (task_hash + '.json')
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        except OSError as error:
+            raise ValueError('existing improvement owner instruction receipt missing') from error
+        try:
+            info = os.fstat(fd)
+            require(stat.S_ISREG(info.st_mode) and info.st_mode & 0o777 == 0o600
+                    and 0 < info.st_size <= 65536,
+                    'existing improvement owner instruction receipt invalid')
+            raw = b''
+            while len(raw) <= info.st_size:
+                chunk = os.read(fd, min(65536, info.st_size + 1 - len(raw)))
+                if not chunk:
+                    break
+                raw += chunk
+        finally:
+            os.close(fd)
+        require(len(raw) == info.st_size
+                and hashlib.sha256(raw).hexdigest()
+                    == owner_grant['instructionReceiptSha256'],
+                'existing improvement owner instruction receipt changed')
+        try:
+            receipt = json.loads(raw.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError) as error:
+            raise ValueError('existing improvement owner instruction receipt invalid') from error
+        require(isinstance(receipt, dict) and set(receipt) == {
+                    'schemaVersion', 'ownerId', 'source', 'instruction',
+                    'instructionSha256', 'evidence'}
+                and receipt['schemaVersion'] == 1
+                and receipt['ownerId'] == self.owner_id
+                and receipt['source'] == 'codex_task_message'
+                and isinstance(receipt['instruction'], str)
+                and receipt['instruction'].strip()
+                and len(receipt['instruction'].encode('utf-8')) <= 32768
+                and isinstance(receipt['evidence'], dict)
+                and set(receipt['evidence']) == {
+                    'source', 'kind', 'threadId', 'turnId', 'userMessageId'}
+                and receipt['evidence']['source'] == 'codex'
+                and receipt['evidence']['kind'] == 'task_message'
+                and all(isinstance(receipt['evidence'][key], str)
+                        and re.fullmatch(r'01[a-z0-9-]{20,80}',
+                                         receipt['evidence'][key])
+                        for key in ('threadId', 'turnId', 'userMessageId'))
+                and receipt['instructionSha256']
+                    == hashlib.sha256(receipt['instruction'].encode('utf-8')).hexdigest()
+                and receipt['instructionSha256']
+                    == owner_grant['instructionSha256']
+                and fingerprint(receipt) == task_hash,
+                'existing improvement owner instruction receipt invalid')
+        return json.loads(canonical(owner_grant))
+
+    def validate_existing_improvement_owner_grant(self, owner_grant):
+        return self._validate_existing_improvement_owner_grant(owner_grant)
+
+    def claim_existing_improvement_recovery_attempt(
+            self, period, input_hash, original_result_hash, receipt, *,
+            target_id, budget_article_id, now=None):
+        now = timestamp(now)
+        require(self.production_schedule.period_key(now) == period,
+                'existing improvement recovery period changed')
+        require(isinstance(input_hash, str) and re.fullmatch(r'[a-f0-9]{64}', input_hash)
+                and isinstance(original_result_hash, str)
+                and re.fullmatch(r'[a-f0-9]{64}', original_result_hash),
+                'existing improvement recovery hashes required')
+        recovery = receipt.get('recovery') if isinstance(receipt, dict) else None
+        require(receipt.get('status') == 'planned' and receipt.get('period') == period
+                and receipt.get('inputHash') == input_hash
+                and isinstance(recovery, dict)
+                and recovery.get('originalResultHash') == original_result_hash,
+                'existing improvement recovery planned receipt invalid')
+        allowed = {'winner_protected', 'no_eligible_growth_candidate',
+                   'same_period_ga4_target_missing'}
+        with self._tx() as db:
+            verified_owner_grant = self._validate_existing_improvement_owner_grant(
+                recovery.get('ownerGrant'))
+            require(recovery.get('ownerGrant') == verified_owner_grant,
+                    'existing improvement recovery owner grant changed')
+            original_row = db.execute(
+                'SELECT data FROM existing_improvement_results WHERE period=?',
+                (period,)).fetchone()
+            require(original_row is not None, 'recovery original result missing')
+            original = json.loads(original_row[0])
+            require(fingerprint(original) == original_result_hash,
+                    'recovery original result changed')
+            reasons = original.get('sourceHoldReasons')
+            require(original.get('status') == 'hold'
+                    and original.get('selectedId') is None
+                    and original.get('revisionJobId') is None
+                    and original.get('analysisBinding') is None
+                    and isinstance(reasons, list) and bool(reasons)
+                    and all(isinstance(reason, str) for reason in reasons)
+                    and set(reasons) <= allowed,
+                    'recovery original hold ineligible')
+            for table in ('existing_improvement_recovery_results',
+                          'existing_improvement_recovery_attempts'):
+                row = db.execute('SELECT input_hash,original_result_hash,data FROM '
+                                 + table + ' WHERE period=?', (period,)).fetchone()
+                if row is not None:
+                    require(row[0] == input_hash and row[1] == original_result_hash,
+                            'existing improvement recovery claim changed')
+                    return {'claimed': False, 'receipt': json.loads(row[2])}
+            reasons = self._existing_improvement_blocks(
+                db, period, target_id, budget_article_id)
+            require(not reasons, 'existing improvement recovery current state ineligible')
+            planned = json.loads(canonical(receipt))
+            db.execute('INSERT INTO existing_improvement_recovery_attempts VALUES (?,?,?,?)',
+                       (period, input_hash, original_result_hash, canonical(planned)))
+            self._event(db, target_id, 'existing_improvement_recovery_attempt', planned, now)
+            return {'claimed': True, 'receipt': planned}
+
+    def complete_existing_improvement_recovery_attempt(
+            self, period, input_hash, original_result_hash, receipt,
+            specification=None, now=None):
+        now = timestamp(now)
+        require(isinstance(receipt, dict) and receipt.get('period') == period
+                and receipt.get('inputHash') == input_hash
+                and receipt.get('status') in ('queued', 'hold'),
+                'existing improvement recovery result invalid')
+        with self._tx() as db:
+            prior = db.execute(
+                'SELECT input_hash,original_result_hash,data '
+                'FROM existing_improvement_recovery_attempts WHERE period=?',
+                (period,)).fetchone()
+            require(prior is not None and prior[0] == input_hash
+                    and prior[1] == original_result_hash,
+                    'existing improvement recovery attempt missing')
+            saved = db.execute(
+                'SELECT input_hash,original_result_hash,data '
+                'FROM existing_improvement_recovery_results WHERE period=?',
+                (period,)).fetchone()
+            if saved is not None:
+                require(saved[0] == input_hash and saved[1] == original_result_hash,
+                        'existing improvement recovery result changed')
+                return json.loads(saved[2])
+            original_row = db.execute(
+                'SELECT data FROM existing_improvement_results WHERE period=?',
+                (period,)).fetchone()
+            require(original_row is not None
+                    and fingerprint(json.loads(original_row[0])) == original_result_hash,
+                    'recovery original result changed')
+            result = json.loads(canonical(receipt))
+            target_id = result.get('selectedId')
+            budget_id = result.get('budgetArticleId')
+            reasons = self._existing_improvement_blocks(
+                db, period, target_id, budget_id) if target_id and budget_id else []
+            if reasons:
+                result.update(status='hold', revisionJobId=None,
+                              sourceHoldReasons=list(dict.fromkeys(
+                                  result.get('sourceHoldReasons', []) + reasons)))
+                specification = None
+            if specification is not None:
+                require(result['status'] == 'queued',
+                        'queued recovery result required for revision')
+                job = self._request_revision_locked(
+                    db, specification, now,
+                    improvement_claim=('recovery', period, input_hash,
+                                       original_result_hash))
+                result['revisionJobId'] = job['id']
+            else:
+                require(result['status'] == 'hold',
+                        'hold recovery result required without revision')
+                result['revisionJobId'] = None
+            db.execute('INSERT INTO existing_improvement_recovery_results VALUES (?,?,?,?)',
+                       (period, input_hash, original_result_hash, canonical(result)))
+            self._event(db, target_id, 'existing_improvement_recovery_result', result, now)
+            return result
 
     def claim_existing_improvement_attempt(self, period, input_hash, receipt, *,
                                            target_id, budget_article_id, now=None):
@@ -899,23 +1121,52 @@ class Ledger:
         base = context['baseArticle']
         analysis = context.get('analysisBinding')
         if analysis is not None:
-            require(isinstance(improvement_claim, tuple) and len(improvement_claim) == 2
-                    and improvement_claim[0] == analysis['period'],
-                    'routine revision requires claimed improvement attempt')
-            attempt = db.execute('SELECT input_hash,data FROM existing_improvement_attempts WHERE period=?',
-                                 (analysis['period'],)).fetchone()
-            require(attempt is not None and attempt[0] == improvement_claim[1],
-                    'routine revision improvement claim changed')
-            proof = json.loads(attempt[1])
+            recovery_claim = (isinstance(improvement_claim, tuple)
+                              and len(improvement_claim) == 4
+                              and improvement_claim[0] == 'recovery')
+            if recovery_claim:
+                _, claim_period, claim_hash, original_result_hash = improvement_claim
+                require(claim_period == analysis['period'],
+                        'routine recovery period changed')
+                attempt = db.execute(
+                    'SELECT input_hash,original_result_hash,data '
+                    'FROM existing_improvement_recovery_attempts WHERE period=?',
+                    (analysis['period'],)).fetchone()
+                require(attempt is not None and attempt[0] == claim_hash
+                        and attempt[1] == original_result_hash,
+                        'routine revision recovery claim changed')
+                original = db.execute(
+                    'SELECT data FROM existing_improvement_results WHERE period=?',
+                    (analysis['period'],)).fetchone()
+                require(original is not None
+                        and fingerprint(json.loads(original[0])) == original_result_hash,
+                        'routine revision recovery original changed')
+                proof = json.loads(attempt[2])
+                require(db.execute(
+                    'SELECT 1 FROM existing_improvement_recovery_results WHERE period=?',
+                    (analysis['period'],)).fetchone() is None,
+                    'routine revision recovery already completed')
+            else:
+                require(isinstance(improvement_claim, tuple)
+                        and len(improvement_claim) == 2
+                        and improvement_claim[0] == analysis['period'],
+                        'routine revision requires claimed improvement attempt')
+                attempt = db.execute(
+                    'SELECT input_hash,data FROM existing_improvement_attempts WHERE period=?',
+                    (analysis['period'],)).fetchone()
+                require(attempt is not None and attempt[0] == improvement_claim[1],
+                        'routine revision improvement claim changed')
+                proof = json.loads(attempt[1])
             require(proof.get('selectedId') == base['id']
                     and proof.get('priorProof', {}).get('baseArticleHash') == context['baseHash']
                     and proof.get('priorProof', {}).get('baseProductsHash') == fingerprint(context['baseProducts'])
                     and proof.get('priorProof', {}).get('metricReceiptHash') == fingerprint(analysis['metricsReceipt'])
                     and self.production_schedule.period_key(now) == analysis['period'],
                     'routine revision improvement evidence changed')
-            require(db.execute('SELECT 1 FROM existing_improvement_results WHERE period=?',
-                               (analysis['period'],)).fetchone() is None,
-                    'routine revision improvement already completed')
+            if not recovery_claim:
+                require(db.execute('SELECT 1 FROM existing_improvement_results WHERE period=?',
+                                   (analysis['period'],)).fetchone() is None,
+                        'routine revision improvement already completed')
             for row in db.execute('SELECT data FROM jobs'):
                 old = json.loads(row[0])
                 require(((old.get('revisionContext') or {}).get('analysisBinding') or {}).get('period')
@@ -1287,6 +1538,8 @@ class Ledger:
             self._current(job)
             require(revision == job['revision'], 'revision mismatch')
             valid_review(job['review'], revision, job.get('bundle'))
+            if job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
+                valid_astra_review(job.get('astraReview'), revision)
             require(not job['publication'] and not job['approval'], 'already published or approved')
             require(job['stage'] not in ('approved', 'published', 'publishing', 'scheduled',
                                          'schedule_pending', 'publication_pending'), 'publication/schedule pending')
@@ -1391,10 +1644,22 @@ class Ledger:
             if kind == 'social':
                 require(job['publication'] and job['publication'].get('verified') is True and target
                         and fingerprint(target['proposal']) == target['revision'], 'current social publication/proposal required')
+            elif job.get('kind') == 'article_revision' or 'catalogCorrectionContext' in job:
+                valid_astra_review(job.get('astraReview'), job['revision'])
             require(target and target.get('approval') and target['approval']['revision'] == target['revision'], 'current approval required')
-            row = db.execute('SELECT status FROM effects WHERE job_id=? AND kind=?', (id, kind)).fetchone()
-            if row and row[0] != 'failed':
-                return False
+            row = db.execute('SELECT status,data FROM effects WHERE job_id=? AND kind=?',
+                             (id, kind)).fetchone()
+            if row:
+                if row[0] != 'failed':
+                    return False
+                try:
+                    failed = json.loads(row[1])
+                except (TypeError, ValueError):
+                    failed = None
+                if (isinstance(failed, dict)
+                        and failed.get('status') == 'failed'
+                        and failed.get('reason') == 'publication_prewrite_failed'):
+                    return False
             db.execute('INSERT OR REPLACE INTO effects VALUES (?,?,?,?)', (id, kind, 'in_flight', '{}'))
             self._event(db, id, 'effect_claim', {'kind': kind, 'revision': target['revision']})
             return True

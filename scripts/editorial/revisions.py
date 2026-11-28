@@ -3,6 +3,7 @@ import copy
 import re
 from urllib.parse import urlsplit
 from ledger import fingerprint, require, timestamp
+from page_intent import validate_page_intent
 
 TARGETS = {'article-024': 'firepit-beginner-guide', 'article-005': 'single-burner-ranking',
            'article-002': 'landlock-vs-landnest-shelter',
@@ -10,7 +11,8 @@ TARGETS = {'article-024': 'firepit-beginner-guide', 'article-005': 'single-burne
            'winter-camp-heating-comparison-p1': 'winter-camp-heating-comparison',
            'camp-kerosene-stove-8xzl2p': 'camp-kerosene-stove-comparison',
            'article-010': 'rainwear-ranking',
-           'article-043': 'autumn-camp-clothing-layering-guide'}
+           'article-043': 'autumn-camp-clothing-layering-guide',
+           'article-42e59288744a55545f896d2d': 'montbell-light-alpine-down-parka-1101606-guide'}
 PRODUCT_PATCH_FIELDS = {'name', 'brand', 'specs', 'imageUrl', 'affiliateUrl', 'amazonUrl', 'price',
                         'description', 'rating', 'availability', 'updatedAt', 'yahooUrl'}
 EDIT_FIELDS = ('title', 'content', 'excerpt', 'metaDescription', 'faqs', 'tags')
@@ -65,11 +67,14 @@ def _analysis_binding(value, base, products):
         and isinstance(ga4, dict) and set(ga4) == {
             'sessions', 'engagedSessions', 'keyEvents'},
             'routine metric values invalid')
-    require(metrics['intentEvidence'] == {
+    legacy_intent = {
         'status': 'unconnected',
         'reason': 'page_bound_private_query_classification_not_implemented',
-        'rawQueriesExposed': False, 'serpEvidence': 'unconnected'},
-        'routine intent evidence must remain unconnected')
+        'rawQueriesExposed': False, 'serpEvidence': 'unconnected'}
+    if metrics['intentEvidence'] != legacy_intent:
+        validate_page_intent(metrics['intentEvidence'],
+                             target_url=value['targetUrl'],
+                             period=metrics['currentPeriod'])
     require(isinstance(gsc['impressions'], (int, float)) and not isinstance(gsc['impressions'], bool)
             and gsc['impressions'] >= 30
             and isinstance(gsc['position'], (int, float)) and not isinstance(gsc['position'], bool)

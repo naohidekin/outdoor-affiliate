@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, validateBundle, parseArguments, loadEnv, productionDependencies } from './publish.mjs';
+import { bundleHash, articleRow, productRow, execute, verifyPublicHTML, validateBundle, parseArguments, loadEnv, productionDependencies, trackDatabaseMutationBoundary } from './publish.mjs';
 import { withPublicationLock } from '../seo/article-guard.mjs';
 
 function bundle() {
@@ -525,6 +525,7 @@ test('Python canonical JSON-only UTF8 revision; raw preserves floats and never r
 
 test('explicit dotenv file only parsed in memory and argument errors disclose no values', () => {
   assert.deepEqual(parseArguments(['stage', '--env-file', '/tmp/existing.env']), { action: 'stage', envFile: '/tmp/existing.env' });
+  assert.deepEqual(parseArguments(['check-corrected']), { action: 'check-corrected' });
   assert.throws(() => parseArguments(['--unsafe-override']));
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'editorial-env-test-'));
   try {
@@ -532,6 +533,25 @@ test('explicit dotenv file only parsed in memory and argument errors disclose no
     const env = loadEnv(file, {}); assert.equal(env.SUPABASE_SERVICE_ROLE_KEY, 'test-only'); assert.equal(env.BRAVE_API_KEY, 'abc');
     assert.deepEqual(Object.keys(env).sort(), ['BRAVE_API_KEY', 'SUPABASE_SERVICE_ROLE_KEY']);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('database mutation boundary marks all four writes before invocation and never marks reads', async () => {
+  for (const method of ['insertDraft', 'publishCAS', 'patchProductCAS', 'patchPublishedCAS']) {
+    let boundary;
+    const deps = { db: {
+      async findArticles() { return []; },
+      async [method]() {
+        assert.equal(boundary.mutationAttempted, true);
+        throw new Error('unknown remote result');
+      },
+    } };
+    boundary = trackDatabaseMutationBoundary(deps);
+    assert.equal(boundary.failureCode(), 'publisher_prewrite_failed');
+    await deps.db.findArticles();
+    assert.equal(boundary.mutationAttempted, false);
+    await assert.rejects(deps.db[method](), /unknown remote result/);
+    assert.equal(boundary.failureCode(), 'publication_result_unknown');
+  }
 });
 
 test('ledger-generated article identity is accepted for a new marked draft', async () => {

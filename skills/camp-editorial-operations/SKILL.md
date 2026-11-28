@@ -10,6 +10,10 @@ description: Camp Gear Lab編集台帳の状態確認、次工程の確認、停
 台帳は既存SQLite、実行主体は既存runner一つ。スキル自体は定期実行を作らない。
 
 分析から通常制作・既存記事改善への接続は[SEO循環](../../docs/seo-feedback-loop.md)を参照する。
+版別の循環状況は`seo-feedback/latest.json`、最新の数値本文は`analytics/seo/latest.json`を読む。
+同じ証拠でAIを反復起動せず、再分析の実行と公開後の効果計測を区別する。
+共有商品の訂正は`check-corrected`で影響記事の本文・FAQを先に確認し、訂正待ちを未知の公開effectへ変換しない。
+独立Astra確認の既存receiptがあれば再利用し、新規確認は対象版・共有予算に束縛した1試行に限る。本人承認にはしない。
 `researchResponseRecoveryEnabled`は受信・利用量確定・全案形式違反だけを同じ制作期予算で追加1回扱う。
 既存停止分の復旧は`research_response_recovery.prepare/owner_grant/arm`へ現marker・応答・context・configのSHAと
 本人の実際の指示参照を束縛する。旧11/20専用回復を別期へ流用しない。

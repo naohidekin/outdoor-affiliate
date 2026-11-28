@@ -13,9 +13,18 @@ const TARGETS = { 'article-024':'firepit-beginner-guide', 'article-005':'single-
   'winter-camp-heating-comparison-p1':'winter-camp-heating-comparison',
   'camp-kerosene-stove-8xzl2p':'camp-kerosene-stove-comparison',
   'article-010':'rainwear-ranking',
-  'article-043':'autumn-camp-clothing-layering-guide' };
+  'article-043':'autumn-camp-clothing-layering-guide',
+  'article-42e59288744a55545f896d2d':'montbell-light-alpine-down-parka-1101606-guide' };
 const EDIT = new Set(['title','content','excerpt','metaDescription','faqs','tags','productIds','author','generationMeta']);
 const PRODUCT_EDIT = new Set(['name','brand','specs','imageUrl','affiliateUrl','amazonUrl','price','description','rating','availability','updatedAt','yahooUrl']);
+const INTENT_FACETS = {
+  garments:new Set(['down','fleece','active_insulation','base_layer','hard_shell','soft_shell','jacket']),
+  brands:new Set(['montbell','the_north_face','patagonia','arcteryx','mammut','marmot','millet','finetrack','icebreaker','smartwool','workman','uniqlo','columbia','nanga','taion','montane','rab','karrimor','snow_peak','coleman','thermos','soto','iwatani','msr','nemo','dod','ogawa','logos','helinox']),
+  problems:new Set(['cold','layering','moisture','sweat_cold','breathability','quick_dry','condensation','rain','wind','washing','care','fit','compatibility','packing']),
+  seasons:new Set(['winter','autumn','spring','summer']),
+  intents:new Set(['comparison','selection','care','parts_lookup']),
+  gearTypes:new Set(['apparel','tent','sleeping_bag','sleeping_pad','stove','cookware','bottle','tumbler','chair','table','lantern','backpack']),
+};
 const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const row = article => normalizeTimestamps(Object.fromEntries(Object.entries(articleFields).map(([k,v])=>[v,article[k] ?? null])));
 const atHash = (input,deps,...keys)=>bundleHash(input.bundle,{rawRequest:deps.rawRequest,fieldPath:['bundle','revisionContext',...keys]});
@@ -41,8 +50,43 @@ function routineBinding(input,deps,c) {
   check(keys(m.gsc,['clicks','impressions','ctr','position','metricScope'])&&keys(m.ga4,['sessions','engagedSessions','keyEvents'])
     &&typeof m.gsc.impressions==='number'&&m.gsc.impressions>=30&&typeof m.gsc.position==='number'
     &&m.gsc.position>3&&m.gsc.position<=20, 'routine metric threshold invalid');
-  check(equal(m.intentEvidence,{status:'unconnected',reason:'page_bound_private_query_classification_not_implemented',
-    rawQueriesExposed:false,serpEvidence:'unconnected'}),'routine intent evidence invalid');
+  const legacyIntent={status:'unconnected',reason:'page_bound_private_query_classification_not_implemented',
+    rawQueriesExposed:false,serpEvidence:'unconnected'};
+  if(!equal(m.intentEvidence,legacyIntent)) {
+    const e=m.intentEvidence, facetKeys=Object.keys(INTENT_FACETS);
+    check(keys(e,['schemaVersion','status','targetUrl','period','signals','coverage','rawQueriesExposed','diagnosis',
+      'marketDemand','dominantQuery','causalGuarantee','serpEvidence','projectionHash'])
+      &&e.schemaVersion===1&&e.status==='observed_sample'&&e.targetUrl===v.targetUrl
+      &&equal(e.period,m.currentPeriod)&&hex(e.projectionHash)&&Array.isArray(e.signals)
+      &&e.signals.length>=1&&e.signals.length<=5,'routine page intent binding invalid');
+    let signalRows=0;const signalIds=[];
+    for(const signal of e.signals) {
+      check(keys(signal,['id','facets','observedRowCount'])&&keys(signal.facets,facetKeys)
+        &&Number.isInteger(signal.observedRowCount)&&signal.observedRowCount>0,'routine page intent signal invalid');
+      for(const key of facetKeys) {
+        const values=signal.facets[key];
+        check(Array.isArray(values)&&equal(values,[...new Set(values)].sort())
+          &&values.every(value=>typeof value==='string'&&INTENT_FACETS[key].has(value)),
+          'routine page intent controlled facet invalid');
+      }
+      check(signal.id==='page-intent:'+bundleHash(signal.facets),'routine page intent signal proof invalid');
+      signalRows+=signal.observedRowCount;signalIds.push(signal.id);
+    }
+    const coverage=e.coverage;
+    check(new Set(signalIds).size===signalIds.length
+      &&keys(coverage,['observedRowCount','classifiedRowCount','signalsTruncated','inputTruncated'])
+      &&Number.isInteger(coverage.observedRowCount)&&Number.isInteger(coverage.classifiedRowCount)
+      &&coverage.observedRowCount>=0&&coverage.observedRowCount<=10000
+      &&coverage.classifiedRowCount>=0&&coverage.classifiedRowCount<=coverage.observedRowCount
+      &&signalRows<=coverage.classifiedRowCount&&typeof coverage.signalsTruncated==='boolean'
+      &&typeof coverage.inputTruncated==='boolean','routine page intent coverage invalid');
+    check(e.rawQueriesExposed===false&&e.diagnosis===false&&e.marketDemand===false
+      &&e.dominantQuery===false&&e.causalGuarantee===false
+      &&equal(e.serpEvidence,{status:'unconnected',reason:'serp_collection_not_implemented'}),
+      'routine page intent interpretation boundary changed');
+    const projection=structuredClone(e);delete projection.projectionHash;
+    check(e.projectionHash===bundleHash(projection),'routine page intent projection changed');
+  }
   check(keys(p,['sourceId','receiptHash','checkedAt','productIds','checks'])&&/^catalog-gather:[a-f0-9]{64}$/.test(p.sourceId)
     &&hex(p.receiptHash)&&p.sourceId==='catalog-gather:'+p.receiptHash&&aware(p.checkedAt)
     &&equal(p.productIds,base.productIds)&&equal(p.checks,{facts:true,images:true,affiliate:true}), 'routine source proof invalid');
@@ -260,7 +304,7 @@ export function revisionDependencies(env) {
   base.db.patchPublishedCAS=(before,patch)=>patchVersioned('articles',before,{id:'eq.'+before.id,slug:'eq.'+before.slug,status:'eq.published',
     updated_at:'eq.'+before.updated_at,created_at:'eq.'+before.created_at,published_at:'eq.'+before.published_at,
     select:Object.values(articleFields).join(',')},patch);
-  base.db.findProductArticles=ids=>request('articles',{select:'id,slug,status,category_id',
+  base.db.findProductArticles=ids=>request('articles',{select:'id,slug,status,category_id,product_ids,content,faqs',
     or:'('+ids.map(id=>'product_ids.cs.'+JSON.stringify([id])).join(',')+')',limit:501});
   base.publicReadbackDelays=[0,1000,3000];
   base.lock=(action,options)=>withPublicationLock(seoRoot(),action,options);
