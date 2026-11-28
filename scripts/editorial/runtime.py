@@ -3210,6 +3210,8 @@ class Runtime:
         if hold is not None:
             if actual == 0:
                 self.ledger.cancel_buffer_request_reservation(hold, now=now)
+            elif self._owner_not_sent_zero_graphql(before, after, caught, current):
+                self.ledger.cancel_buffer_request_reservation(hold, now=now)
             else:
                 windows = after.get('rateLimits')
                 if not isinstance(windows, list) or {item.get('window') for item in windows} != {
@@ -3286,7 +3288,9 @@ class Runtime:
         marker = self.root / 'buffer-publications' / (revision + '.json')
         if not marker.exists():
             return {'requestCount': 0, 'rateLimits': [], 'retryAfter': None,
-                    'phase': None, 'pending': None}
+                    'phase': None, 'pending': None, 'jobId': None,
+                    'approvalRequestId': None, 'postId': None, 'scheduleOperation': None,
+                    'ownerTransportReceipts': []}
         if marker.is_symlink() or marker.stat().st_mode & 0o777 != 0o600:
             raise ValueError('buffer_request_budget_requires_reconciliation')
         try:
@@ -3299,7 +3303,67 @@ class Runtime:
                 'rateLimits': copy.deepcopy(state.get('sharedRateLimits', [])),
                 'retryAfter': state.get('retryAfter'), 'phase': state.get('phase'),
                 'pending': copy.deepcopy(state.get('pending')),
+                'jobId': state.get('jobId'),
+                'approvalRequestId': state.get('approvalRequestId'),
+                'postId': state.get('postId'),
+                'scheduleOperation': state.get('scheduleOperation'),
+                'ownerTransportReceipts': copy.deepcopy(state.get('ownerTransportReceipts', [])),
                 'revision': revision, 'result': copy.deepcopy(state.get('result'))}
+
+    def _owner_not_sent_zero_graphql(self, before, after, caught, current):
+        from buffer_owner_oauth_client import (BufferOwnerOAuthClient, BufferOwnerOAuthError,
+                                               _OWNER_ERRORS)
+        settings = self.config.get('buffer') or {}
+        client = getattr(self.buffer_publisher, 'client', None)
+        if (settings.get('transport') != 'owner_oauth_v1'
+                or type(client) is not BufferOwnerOAuthClient
+                or type(caught) is not BufferOwnerOAuthError
+                or caught.outcome != 'not_sent'
+                or _OWNER_ERRORS.get(caught.code) != 'not_sent'
+                or client.last_outcome != caught.outcome
+                or client.last_error_code != caught.code
+                or client.last_receipt != caught.receipt):
+            return False
+        social = current.get('social') or {}
+        approval = social.get('approval') or {}
+        identity = {'jobId': current.get('id'), 'revision': social.get('revision'),
+                    'approvalRequestId': approval.get('request_id')}
+        if (any(after.get(key) != value for key, value in identity.items())
+                or before.get('requestCount', 0) and
+                any(before.get(key) != value for key, value in identity.items())
+                or any(snapshot.get(key) is not None for snapshot in (before, after)
+                       for key in ('pending', 'postId', 'scheduleOperation'))
+                or before.get('phase') not in (None, after.get('phase'))):
+            return False
+        prior = before.get('ownerTransportReceipts')
+        rows = after.get('ownerTransportReceipts')
+        if (not isinstance(prior, list) or not isinstance(rows, list)
+                or rows[:len(prior)] != prior):
+            return False
+        new_rows = rows[len(prior):]
+        start, end = before.get('requestCount', 0) + 1, after.get('requestCount', 0)
+        if (len(new_rows) != end - start + 1
+                or [row.get('ordinal') for row in new_rows] != list(range(start, end + 1))):
+            return False
+        if new_rows[-1].get('receipt') != caught.receipt:
+            return False
+        for row in new_rows:
+            if (not isinstance(row, dict) or row.get('outcome') != 'not_sent'
+                    or row.get('errorCode') != caught.code
+                    or row.get('method') not in ('preflight', 'posts', 'pending_posts', 'post')
+                    or not isinstance(row.get('phase'), str)):
+                return False
+            context = {**identity, 'ordinal': row['ordinal'], 'phase': row['phase']}
+            operation = ('camp-buffer:v1:' + fingerprint([
+                identity['jobId'], identity['revision'], identity['approvalRequestId']]) + ':'
+                + str(row['ordinal']) + ':' + row['phase'] + ':' + row['method'])
+            try:
+                receipt = client._validate_receipt(row.get('receipt'), operation, required=False)
+            except (TypeError, ValueError):
+                return False
+            if receipt is not None and receipt['physicalCalls']['graphql'] != 0:
+                return False
+        return bool(new_rows)
 
     def _notify_buffer_scheduled(self, job):
         social = job.get('social') or {}

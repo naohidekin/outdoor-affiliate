@@ -199,7 +199,7 @@ class BufferOwnerOAuthClient:
         limits = self._validate_rate_limits(response["rate_limits"])
         retry = response["retry_after"]
         _require(retry is None or type(retry) is int and 0 <= retry <= SAFE_INTEGER, "retry_after")
-        receipt = self._validate_receipt(response["receipt"], operation_id, required=success)
+        receipt = self._validate_receipt(response["receipt"], operation_id, required=success, successful=success)
         self.rate_limits = limits
         self.retry_after = retry
         self.last_receipt = copy.deepcopy(receipt)
@@ -212,8 +212,6 @@ class BufferOwnerOAuthClient:
             self.last_outcome = error["outcome"]
             self.last_error_code = error["code"]
             raise BufferOwnerOAuthError(error["outcome"], code=error["code"], receipt=receipt)
-        _require(receipt["observedAt"] is not None
-                 and receipt["physicalCalls"]["graphql"] == 1, "success_receipt")
         return self._validate_value(method, response["value"], args)
 
     @staticmethod
@@ -233,9 +231,9 @@ class BufferOwnerOAuthClient:
         return copy.deepcopy(value)
 
     @staticmethod
-    def _validate_receipt(value, operation_id, *, required):
+    def _validate_receipt(value, operation_id, *, required, successful=False):
         if value is None:
-            _require(not required, "receipt")
+            _require(not required and not successful, "receipt")
             return None
         required_keys = {"receiptId", "operationId", "querySha256", "observedAt", "physicalCalls"}
         _require(isinstance(value, dict) and set(value) == required_keys
@@ -257,6 +255,8 @@ class BufferOwnerOAuthClient:
             _require(total is None, "receipt")
         else:
             _require(total == graph + refresh, "receipt")
+        if successful:
+            _require(observed is not None and graph == 1, "success_receipt")
         return copy.deepcopy(value)
 
     @staticmethod

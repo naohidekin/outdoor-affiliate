@@ -1,6 +1,6 @@
 """Offline contracts for the Buffer-bound social workflow."""
 import copy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 from io import BytesIO
 import json
@@ -66,6 +66,66 @@ class BufferSocialCoreTests(unittest.TestCase):
             db.execute('UPDATE jobs SET data=? WHERE id=?',
                        (json.dumps(job, ensure_ascii=False, sort_keys=True,
                                    separators=(',', ':')), job['id']))
+
+    def _owner_not_sent_fixture(self, *, code='buffer_priority_work', outcome='not_sent',
+                                calls=None, method='preflight', include_row=True, mixed=False):
+        from buffer_owner_oauth_client import BufferOwnerOAuthClient, BufferOwnerOAuthError
+        job = self._published_for_period()
+        self.runtime.make_social(job)
+        job = self.runtime.ledger.get_job(job['id'])
+        self.approve(job)
+        self.runtime.consume()
+        job = self.runtime.ledger.get_job(job['id'])
+        self.config['buffer'].update(transport='owner_oauth_v1', maxBufferRequestsPerPost=18)
+        self.config['bufferPostingEnabled'] = True
+        self.config['socialPostingEnabled'] = False
+        client = BufferOwnerOAuthClient()
+        publisher = BufferPublisher(self.config, {}, client=client,
+                                    fetcher=Fetcher(), x_client=XFake())
+        social = job['social']
+        identity = [job['id'], social['revision'], social['approval']['request_id']]
+        ordinal = 2 if mixed else 1
+        operation = ('camp-buffer:v1:' + fingerprint(identity) + ':' + str(ordinal)
+                     + ':dedup:' + method)
+        receipt = None if calls is None else {
+            'receiptId': 'fixture-owner-receipt', 'operationId': operation,
+            'querySha256': 'a' * 64,
+            'observedAt': NOW.astimezone(timezone.utc).isoformat(),
+            'physicalCalls': calls,
+        }
+        row = {'ordinal': ordinal, 'phase': 'dedup', 'method': method,
+               'outcome': outcome, 'errorCode': code, 'receipt': receipt}
+        rows = []
+        if mixed:
+            rows.append({'ordinal': 1, 'phase': 'dedup', 'method': 'preflight',
+                         'outcome': 'success', 'errorCode': None, 'receipt': {
+                             'receiptId': 'fixture-owner-success',
+                             'operationId': ('camp-buffer:v1:' + fingerprint(identity)
+                                             + ':1:dedup:preflight'),
+                             'querySha256': 'b' * 64,
+                             'observedAt': NOW.astimezone(timezone.utc).isoformat(),
+                             'physicalCalls': {'graphql': 1, 'oauthRefresh': 0, 'total': 1}}})
+        if include_row:
+            rows.append(row)
+
+        def attempt(current, now=None):
+            client.last_outcome = outcome
+            client.last_error_code = code
+            client.last_receipt = copy.deepcopy(receipt)
+            atomic(self.runtime.root / 'buffer-publications' /
+                   (current['social']['revision'] + '.json'), {
+                'revision': current['social']['revision'], 'phase': 'dedup', 'pending': None,
+                'jobId': current['id'],
+                'approvalRequestId': current['social']['approval']['request_id'],
+                'bufferRequests': ordinal, 'sharedRateLimits': [], 'retryAfter': None,
+                'ownerTransportReceipts': rows,
+            })
+            raise BufferOwnerOAuthError(outcome, code=code, receipt=receipt)
+
+        publisher.schedule_or_check = attempt
+        self.runtime.buffer_publisher = publisher
+        period = self.runtime.ledger.production_schedule.period_key(NOW)
+        return job, period
 
     def _published_for_period(self, period='2026-11-20', *, audit=True):
         job = self.published_job()
@@ -575,6 +635,69 @@ class BufferSocialCoreTests(unittest.TestCase):
         self.assertEqual(429, state['lastObservation']['statusCode'])
         self.assertEqual(900, state['lastObservation']['retryAfterSeconds'])
         self.assertEqual('buffer_rate_limit_429', state['holdReason'])
+
+    def test_owner_not_sent_graphql_zero_closes_native_graphql_reservation(self):
+        from buffer_owner_oauth_client import BufferOwnerOAuthError
+        job, period = self._owner_not_sent_fixture(
+            calls={'graphql': 0, 'oauthRefresh': 1, 'total': 1})
+        with self.assertRaises(BufferOwnerOAuthError) as caught:
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual('buffer_priority_work', caught.exception.code)
+        budget = self.runtime.ledger.inspect_buffer_requests(period)
+        self.assertEqual((0, {}), (budget['used'], budget['reservations']))
+        marker = self.runtime._buffer_request_snapshot(job['social']['revision'])
+        self.assertEqual((1, None, 'dedup'),
+                         (marker['requestCount'], marker['retryAfter'], marker['phase']))
+
+    def test_owner_not_sent_preclaim_null_receipt_closes_native_graphql_reservation(self):
+        from buffer_owner_oauth_client import BufferOwnerOAuthError
+        job, period = self._owner_not_sent_fixture(code='buffer_quota_unavailable')
+        with self.assertRaises(BufferOwnerOAuthError) as caught:
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual('not_sent', caught.exception.outcome)
+        self.assertEqual((0, {}), tuple(
+            self.runtime.ledger.inspect_buffer_requests(period)[key]
+            for key in ('used', 'reservations')))
+
+    def test_owner_not_sent_graphql_one_keeps_reconciliation_hold(self):
+        job, period = self._owner_not_sent_fixture(
+            calls={'graphql': 1, 'oauthRefresh': 0, 'total': 1})
+        with self.assertRaisesRegex(ValueError, 'buffer_request_budget_requires_reconciliation'):
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual([18], list(
+            self.runtime.ledger.inspect_buffer_requests(period)['reservations'].values()))
+
+    def test_owner_unknown_never_uses_zero_graphql_exception(self):
+        job, period = self._owner_not_sent_fixture(
+            code='buffer_transport_unknown', outcome='unknown',
+            calls={'graphql': 0, 'oauthRefresh': 0, 'total': 0})
+        with self.assertRaisesRegex(ValueError, 'buffer_request_budget_requires_reconciliation'):
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual([18], list(
+            self.runtime.ledger.inspect_buffer_requests(period)['reservations'].values()))
+
+    def test_owner_write_method_never_uses_zero_graphql_exception(self):
+        job, period = self._owner_not_sent_fixture(
+            method='create_post', calls={'graphql': 0, 'oauthRefresh': 0, 'total': 0})
+        with self.assertRaisesRegex(ValueError, 'buffer_request_budget_requires_reconciliation'):
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual([18], list(
+            self.runtime.ledger.inspect_buffer_requests(period)['reservations'].values()))
+
+    def test_owner_not_sent_missing_new_ordinal_row_keeps_reconciliation_hold(self):
+        job, period = self._owner_not_sent_fixture(include_row=False)
+        with self.assertRaisesRegex(ValueError, 'buffer_request_budget_requires_reconciliation'):
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual([18], list(
+            self.runtime.ledger.inspect_buffer_requests(period)['reservations'].values()))
+
+    def test_owner_not_sent_mixed_new_rows_keeps_reconciliation_hold(self):
+        job, period = self._owner_not_sent_fixture(
+            mixed=True, calls={'graphql': 0, 'oauthRefresh': 0, 'total': 0})
+        with self.assertRaisesRegex(ValueError, 'buffer_request_budget_requires_reconciliation'):
+            self.runtime.publish_buffer_social(job, now=NOW)
+        self.assertEqual([18], list(
+            self.runtime.ledger.inspect_buffer_requests(period)['reservations'].values()))
 
     def test_deferred_capacity_wait_preserves_stage_budget_and_dispatches_no_error(self):
         job = self._published_for_period()

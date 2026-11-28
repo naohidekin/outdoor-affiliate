@@ -673,20 +673,79 @@ class BufferPublisher:
         return (isinstance(limits, list) and {item.get('window') for item in limits} ==
                 {900, 86400, 2592000} and all(item.get('remaining', 0) > floor for item in limits))
 
+    def _validate_owner_transport_receipt(self, value, context, method, *, required):
+        case_sha = fingerprint([context['jobId'], context['revision'], context['approvalRequestId']])
+        expected = ('camp-buffer:v1:' + case_sha + ':'
+                    + str(context['ordinal']) + ':' + context['phase'] + ':' + method)
+        try:
+            return self.client._validate_receipt(value, expected, required=required, successful=required)
+        except (TypeError, ValueError):
+            raise ValueError('buffer_owner_receipt_invalid') from None
+
+    def _is_owner_transport(self):
+        from buffer_owner_oauth_client import BufferOwnerOAuthClient
+        return isinstance(self.client, BufferOwnerOAuthClient)
+
+    def _owner_transport_receipt(self, context, method):
+        if not self._is_owner_transport():
+            return False, None
+        value = getattr(self.client, 'last_receipt', None)
+        return True, self._validate_owner_transport_receipt(
+            value, context, method, required=False)
+
+    def _save_owner_transport_receipt(self, state, entry=None):
+        rows = state.setdefault('ownerTransportReceipts', [])
+        fields = {'ordinal', 'phase', 'method', 'outcome', 'errorCode', 'receipt'}
+        methods = {'preflight', 'posts', 'pending_posts', 'post', 'create_post', 'edit_post'}
+        outcomes = {'success', 'not_sent', 'refused', 'unknown', 'already_attempted'}
+        def valid_row(row):
+            receipt = row.get('receipt') if isinstance(row, dict) else None
+            return (isinstance(row, dict) and set(row) == fields
+                    and type(row.get('ordinal')) is int and 1 <= row['ordinal'] <= 18
+                    and isinstance(row.get('phase'), str)
+                    and re.fullmatch(r'[A-Za-z0-9_-]{1,96}', row['phase']) is not None
+                    and row.get('method') in methods and row.get('outcome') in outcomes
+                    and (row.get('errorCode') is None
+                         or isinstance(row.get('errorCode'), str)
+                         and re.fullmatch(r'[A-Za-z0-9_]{1,96}', row['errorCode']) is not None)
+                    and (receipt is None or isinstance(receipt, dict)
+                         and set(receipt) == {'receiptId', 'operationId', 'querySha256',
+                                              'observedAt', 'physicalCalls'}))
+        _require(isinstance(rows, list) and len(rows) <= 18
+                 and all(valid_row(row) for row in rows)
+                 and (entry is None or valid_row(entry))
+                 and len({row['ordinal'] for row in rows}) == len(rows),
+                 'buffer_owner_receipt_journal_invalid')
+        for row in rows:
+            context = {key: state.get(key) for key in ('jobId', 'revision', 'approvalRequestId')}
+            context.update(ordinal=row['ordinal'], phase=row['phase'])
+            self._validate_owner_transport_receipt(
+                row['receipt'], context, row['method'], required=row['outcome'] == 'success')
+        if entry is None:
+            return
+        prior = [row for row in rows if row['ordinal'] == entry['ordinal']]
+        _require(not prior or prior == [entry], 'buffer_owner_receipt_journal_mismatch')
+        if not prior:
+            _require(len(rows) < 18, 'buffer_owner_receipt_journal_exhausted')
+            rows.append(entry)
+
     def _buffer_call(self, marker, state, method, *args, mutation=False):
+        if self._is_owner_transport():
+            self._save_owner_transport_receipt(state)
         maximum = self.settings.get('maxBufferRequestsPerPost', 18)
         _require(isinstance(maximum, int) and 1 <= maximum <= 18, 'buffer_request_budget_invalid')
         _require(state.get('bufferRequests', 0) < maximum, 'buffer_request_budget_exhausted')
         if mutation:
             _require(self._mutation_quota_ready(), 'buffer_mutation_quota_hold')
         state['bufferRequests'] = state.get('bufferRequests', 0) + 1
+        context = {key: state.get(key) for key in
+                   ('jobId', 'revision', 'approvalRequestId', 'phase')}
+        context['ordinal'] = state['bufferRequests']
+        owner_outcome, owner_error = 'unknown', None
         _atomic(marker, state)
         try:
             set_context = getattr(self.client, 'set_call_context', None)
             if callable(set_context):
-                context = {key: state.get(key) for key in
-                           ('jobId', 'revision', 'approvalRequestId', 'phase')}
-                context['ordinal'] = state['bufferRequests']
                 _require(re.fullmatch(r'(?:article|revision)-[a-f0-9]{24}',
                                       context.get('jobId', '')) is not None
                          and re.fullmatch(r'[a-f0-9]{64}', context.get('revision', '')) is not None
@@ -698,8 +757,16 @@ class BufferPublisher:
                          and 1 <= context['ordinal'] <= 9007199254740991,
                          'buffer_call_context_invalid')
                 set_context(copy.deepcopy(context))
-            return getattr(self.client, method)(*args)
+            result = getattr(self.client, method)(*args)
+            owner_outcome = 'success'
+            return result
         except ValueError as error:
+            outcome = getattr(error, 'outcome', None)
+            code = getattr(error, 'code', None)
+            if outcome in {'not_sent', 'refused', 'unknown', 'already_attempted'}:
+                owner_outcome = outcome
+            if isinstance(code, str) and re.fullmatch(r'[A-Za-z0-9_]{1,96}', code):
+                owner_error = code
             if str(error) == 'buffer_rate_limited':
                 result = self._unverified(state, 'buffer_rate_limited')
                 state.update(phase='unverified', pending=None, result=result)
@@ -710,7 +777,17 @@ class BufferPublisher:
                 state['sharedRateLimits'] = copy.deepcopy(limits)
             retry = getattr(self.client, 'retry_after', None)
             state['retryAfter'] = retry if isinstance(retry, int) else None
+            is_owner, receipt = self._owner_transport_receipt(context, method)
+            missing_success_receipt = is_owner and owner_outcome == 'success' and receipt is None
+            if missing_success_receipt:
+                owner_outcome = 'unknown'
+                owner_error = 'buffer_owner_receipt_missing'
+            if is_owner:
+                self._save_owner_transport_receipt(state, {
+                    'ordinal': context['ordinal'], 'phase': context['phase'], 'method': method,
+                    'outcome': owner_outcome, 'errorCode': owner_error, 'receipt': receipt})
             _atomic(marker, state)
+            _require(not missing_success_receipt, 'buffer_owner_receipt_missing')
 
     @staticmethod
     def _preflight_due(state, now):

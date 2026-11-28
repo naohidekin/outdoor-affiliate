@@ -183,6 +183,117 @@ class BufferPublisherTests(unittest.TestCase):
                                         fetcher=self.fetcher, x_client=XFake())
         self.assertIs(client, publisher.client)
 
+    def _owner_receipt_call(self, failure=None):
+        from buffer_owner_oauth_client import BufferOwnerOAuthClient
+        from social_publisher import _atomic
+        client = BufferOwnerOAuthClient()
+        publisher = BufferPublisher(self.config, {}, client=client,
+                                    fetcher=self.fetcher, x_client=XFake())
+        state = {'jobId': 'article-' + 'a' * 24, 'revision': 'b' * 64,
+                 'approvalRequestId': 'camp-' + 'c' * 24, 'phase': 'dedup',
+                 'bufferRequests': 0, 'sharedRateLimits': []}
+        marker = self.root / 'owner-receipt.json'
+        _atomic(marker, state)
+
+        def call(*_args):
+            if failure is not None:
+                client.last_receipt = None
+                raise failure
+            case = json.dumps([state['jobId'], state['revision'], state['approvalRequestId']],
+                              separators=(',', ':')).encode()
+            operation = ('camp-buffer:v1:' + hashlib.sha256(case).hexdigest()
+                         + ':1:dedup:preflight')
+            client.last_receipt = {
+                'receiptId': 'owner-receipt-1', 'operationId': operation,
+                'querySha256': 'd' * 64, 'observedAt': '2026-11-29T02:50:00Z',
+                'physicalCalls': {'graphql': 1, 'oauthRefresh': 0, 'total': 1}}
+            return {'verified': True}
+
+        client.preflight = call
+        return publisher, marker, state
+
+    def test_owner_transport_redacted_receipt_is_durably_bound_to_ordinal(self):
+        publisher, marker, state = self._owner_receipt_call()
+        self.assertEqual({'verified': True},
+                         publisher._buffer_call(marker, state, 'preflight', ORG, CHANNEL))
+        saved = json.loads(marker.read_text())
+        rows = saved['ownerTransportReceipts']
+        self.assertEqual(1, len(rows))
+        self.assertEqual({'ordinal': 1, 'phase': 'dedup', 'method': 'preflight',
+                          'outcome': 'success', 'errorCode': None},
+                         {key: rows[0][key] for key in
+                          ('ordinal', 'phase', 'method', 'outcome', 'errorCode')})
+        self.assertEqual('owner-receipt-1', rows[0]['receipt']['receiptId'])
+        publisher._save_owner_transport_receipt(saved, copy.deepcopy(rows[0]))
+        self.assertEqual(1, len(saved['ownerTransportReceipts']))
+        saved['ownerTransportReceipts'].append(copy.deepcopy(rows[0]))
+        with self.assertRaisesRegex(ValueError, 'buffer_owner_receipt_journal_invalid'):
+            publisher._save_owner_transport_receipt(saved, copy.deepcopy(rows[0]))
+
+    def test_owner_transport_success_without_receipt_is_unknown_and_holds(self):
+        publisher, marker, state = self._owner_receipt_call()
+        publisher.client.preflight = lambda *_args: {'verified': True}
+        with self.assertRaisesRegex(ValueError, 'buffer_owner_receipt_missing'):
+            publisher._buffer_call(marker, state, 'preflight', ORG, CHANNEL)
+        row = json.loads(marker.read_text())['ownerTransportReceipts'][0]
+        self.assertEqual('unknown', row['outcome'])
+        self.assertEqual('buffer_owner_receipt_missing', row['errorCode'])
+        self.assertIsNone(row['receipt'])
+
+    def test_owner_transport_revalidates_every_saved_receipt_before_append(self):
+        publisher, marker, state = self._owner_receipt_call()
+        publisher._buffer_call(marker, state, 'preflight', ORG, CHANNEL)
+        saved = json.loads(marker.read_text())
+        mutations = {
+            'operation': lambda row: row['receipt'].__setitem__('operationId', 'wrong'),
+            'hash': lambda row: row['receipt'].__setitem__('querySha256', 'not-a-hash'),
+            'physical_calls': lambda row: row['receipt']['physicalCalls'].__setitem__('graphql', True),
+            'missing_success_receipt': lambda row: row.__setitem__('receipt', None),
+        }
+        for name, mutate in mutations.items():
+            candidate = copy.deepcopy(saved)
+            mutate(candidate['ownerTransportReceipts'][0])
+            with self.subTest(name=name), self.assertRaisesRegex(
+                    ValueError, 'buffer_owner_receipt_invalid'):
+                publisher._save_owner_transport_receipt(
+                    candidate, copy.deepcopy(saved['ownerTransportReceipts'][0]))
+
+    def test_corrupt_saved_owner_receipt_blocks_before_counter_or_rpc(self):
+        from social_publisher import _atomic
+        mutations = {
+            'operation': lambda row: row['receipt'].__setitem__('operationId', 'wrong'),
+            'hash': lambda row: row['receipt'].__setitem__('querySha256', 'not-a-hash'),
+            'physical_calls': lambda row: row['receipt']['physicalCalls'].__setitem__('graphql', True),
+            'success_no_observation': lambda row: row['receipt'].__setitem__('observedAt', None),
+            'success_zero_calls': lambda row: row['receipt'].__setitem__(
+                'physicalCalls', {'graphql': 0, 'oauthRefresh': 0, 'total': 0}),
+        }
+        for name, mutate in mutations.items():
+            publisher, marker, state = self._owner_receipt_call()
+            publisher._buffer_call(marker, state, 'preflight', ORG, CHANNEL)
+            corrupt = json.loads(marker.read_text())
+            mutate(corrupt['ownerTransportReceipts'][0])
+            _atomic(marker, corrupt)
+            calls = []
+            publisher.client.preflight = lambda *_args: calls.append(True)
+            with self.subTest(name=name), self.assertRaisesRegex(
+                    ValueError, 'buffer_owner_receipt_invalid'):
+                publisher._buffer_call(marker, corrupt, 'preflight', ORG, CHANNEL)
+            self.assertEqual([], calls)
+            self.assertEqual(1, json.loads(marker.read_text())['bufferRequests'])
+
+    def test_owner_transport_timeout_persists_unknown_without_raw_error(self):
+        raw = 'raw stderr must not persist'
+        publisher, marker, state = self._owner_receipt_call(TimeoutError(raw))
+        with self.assertRaises(TimeoutError):
+            publisher._buffer_call(marker, state, 'preflight', ORG, CHANNEL)
+        text = marker.read_text()
+        self.assertNotIn(raw, text)
+        row = json.loads(text)['ownerTransportReceipts'][0]
+        self.assertEqual('unknown', row['outcome'])
+        self.assertIsNone(row['errorCode'])
+        self.assertIsNone(row['receipt'])
+
     def marker(self):
         return self.root / 'buffer-publications' / (self.job['social']['revision'] + '.json')
 
@@ -227,6 +338,7 @@ class BufferPublisherTests(unittest.TestCase):
         state = json.loads(self.marker().read_text())
         self.assertNotIn('jobId', state)
         self.assertNotIn('approvalRequestId', state)
+        self.assertNotIn('ownerTransportReceipts', state)
 
     def test_legacy_scheduled_intent_allows_get_without_new_create_or_edit(self):
         self.legacy_policy()
