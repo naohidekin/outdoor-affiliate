@@ -33,11 +33,11 @@ from dispatcher import (DeterministicDispatcher, buffer_social_eligible,
                         execution_policy, social_feature_enabled)
 from stage_journal import StageBlocked, StageJournal, StageUnknown
 from model_budget import BudgetHold, ModelBudget
-from daily_metrics import collect_daily_metrics, require_fresh_daily_metrics
+from daily_metrics import collect_daily_metrics, daily_metrics_due, require_fresh_daily_metrics
 from topic_selection import (bind_nonproduct_theme, collect_primary_sources, editorial_context,
                              editorial_signals, gather_nonproduct, mixed_period,
                              nonproduct_affiliate_review, reverify_bound_public_sources,
-                             select_proposals, NonproductSourceHold, TOPIC_TYPES)
+                             select_proposals, NonproductSourceHold, ResearchProposalsRejected, TOPIC_TYPES)
 
 JST = timezone(timedelta(hours=9))
 
@@ -270,8 +270,13 @@ class Runtime:
         self._require_running()
         data = self.catalog.catalog()
         repo = Path(self.config['repo'])
-        from revisions import TARGETS
-        data['revisionArticles'] = [copy.deepcopy(a) for a in data.get('articles', []) if a.get('id') in TARGETS]
+        from revisions import TARGETS, validate_context
+        revision_ids = set(TARGETS)
+        for job in self.ledger.list_jobs():
+            if (job.get('kind') == 'article_revision' and job.get('stage') == 'candidate'
+                    and (job.get('revisionContext') or {}).get('analysisBinding')):
+                revision_ids.add(validate_context(job['revisionContext'])['baseArticle']['id'])
+        data['revisionArticles'] = [copy.deepcopy(a) for a in data.get('articles', []) if a.get('id') in revision_ids]
         data['articles'] = [{k: a.get(k) for k in ('id', 'slug', 'title', 'categoryId', 'productIds', 'status')}
                             for a in data.get('articles', [])]
         data['existingArticles'] = data['articles']
@@ -458,6 +463,12 @@ class Runtime:
         if current and saved_themes is None and not candidates:
             return {'status': 'idle', 'articles': []}
         new_research = not current and saved_themes is None and len(pending) < 3
+        if new_research and self.config.get('dailyMetricsEnabled') is True and not daily_metrics_due(now):
+            # Before the collector's normal start, wait for fresh research inputs.
+            # Candidates selected previously can still proceed.
+            if not candidates:
+                return {'status': 'waiting', 'reason': 'daily_metrics_not_due', 'articles': []}
+            new_research = False
         if new_research:
             try:
                 require_fresh_daily_metrics(self.config, now)
@@ -469,6 +480,7 @@ class Runtime:
         if new_research:
             research_attempt = self.root / 'production-attempts' / (week + '.json')
             research_repair = None
+            research_repair_kind = None
             if research_attempt.exists():
                 try:
                     prior_attempt = json.loads(research_attempt.read_text())
@@ -477,6 +489,9 @@ class Runtime:
                 if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'budget_hold':
                     return {'status': 'blocked', 'reason': 'model_budget_hold', 'articles': [],
                             'retryable': prior_attempt.get('retryable') is True}
+                if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'research_contract_rejected':
+                    return {'status': 'blocked', 'reason': 'research_contract_rejected',
+                            'articles': [], 'retryable': False}
                 if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'selection_hold':
                     return {'status': 'blocked', 'reason': prior_attempt.get('holdReason'),
                             'articles': [], 'eligibleCount': prior_attempt.get('eligibleCount'),
@@ -486,8 +501,14 @@ class Runtime:
                     return {'status': 'blocked', 'reason': 'weekly_research_requires_reconciliation',
                             'articles': [], 'retryable': False}
                 if isinstance(prior_attempt, dict) and prior_attempt.get('status') == 'retry_ready':
-                    from research_contract_recovery import consume
-                    research_repair = consume(self, week, prior_attempt)
+                    if prior_attempt.get('researchResponseRecoveryKey'):
+                        from research_response_recovery import consume
+                        research_repair = consume(self, week, prior_attempt)
+                        research_repair_kind = 'response'
+                    else:
+                        from research_contract_recovery import consume
+                        research_repair = consume(self, week, prior_attempt)
+                        research_repair_kind = 'legacy_contract'
                 else:
                     raise ValueError('weekly_research_requires_reconciliation')
             atomic(research_attempt, {'status': 'in_flight', 'at': stamp()})
@@ -513,7 +534,10 @@ class Runtime:
                     atomic(snapshot, research_context)
                     research_result = self._measured_model_call(
                         'research:' + week, 'research', 'claude-sonnet-4-6',
-                        lambda: self.models.research_mixed(research_context))
+                        (lambda: self.models.research_mixed(research_context,
+                            repair_feedback=research_repair['feedback']))
+                        if research_repair_kind == 'response'
+                        else (lambda: self.models.research_mixed(research_context)))
                     proposals = research_result['proposals']
                     research_metadata = {key: copy.deepcopy(research_result[key]) for key in
                         ('contractRejections', 'rawProposalCount', 'responseId') if key in research_result}
@@ -602,6 +626,28 @@ class Runtime:
                                    else 'model_budget_hold'),
                         'articles': [], 'retryable': not requested}
             except Exception as error:
+                if isinstance(error, ResearchProposalsRejected) and not research_repair:
+                    rejected_marker = {'status': 'research_contract_rejected', 'period': week,
+                        'at': stamp(), 'reason': str(error), 'retryable': False,
+                        'requestOccurred': True, 'responseId': error.response_id,
+                        'rawProposalCount': error.count, 'contractRejections': error.rejections,
+                        'researchContextSha256': fingerprint(research_context)}
+                    atomic(research_attempt, rejected_marker)
+                    if self.config.get('researchResponseRecoveryEnabled') is True:
+                        from research_response_recovery import arm_runtime
+                        arm_runtime(self, week, rejected_marker, now=now)
+                        return {'status': 'blocked', 'reason': 'research_contract_repair_ready',
+                                'articles': [], 'retryable': True}
+                    return {'status': 'blocked', 'reason': 'research_contract_rejected',
+                            'articles': [], 'retryable': False}
+                if isinstance(error, ResearchProposalsRejected) and research_repair_kind == 'response':
+                    atomic(research_attempt, {'status': 'repair_held', 'period': week,
+                        'failureType': type(error).__name__, 'reason': 'proposal_contract',
+                        'retryable': False, 'requestOccurred': True,
+                        'responseId': error.response_id, 'rawProposalCount': error.count,
+                        'contractRejections': error.rejections})
+                    return {'status': 'blocked', 'reason': 'research_contract_repair_exhausted',
+                            'articles': [], 'retryable': False}
                 if research_repair:
                     atomic(research_attempt, {'status': 'repair_held', 'period': week,
                         'failureType': type(error).__name__,
@@ -613,8 +659,12 @@ class Runtime:
                     self._save_usage()
                 finally:
                     if research_repair:
-                        from research_contract_recovery import finish
-                        finish(self, json.loads(research_attempt.read_text()))
+                        if research_repair_kind == 'response':
+                            from research_response_recovery import finish
+                            finish(self, json.loads(research_attempt.read_text()), week)
+                        else:
+                            from research_contract_recovery import finish
+                            finish(self, json.loads(research_attempt.read_text()))
             if mixed_period(week) and selection['status'] == 'hold':
                 return {'status': 'blocked', 'reason': selection['holdReason'], 'articles': [],
                         'eligibleCount': selection['eligibleCount'], 'unfilled': selection['unfilled']}
@@ -868,6 +918,14 @@ class Runtime:
             gathered.update(existingArticle=public_source,
                             editorialCorrectionInstructions=binding['editorialCorrectionInstructions'],
                             verifiedAuthorFacts=copy.deepcopy(binding['verifiedAuthorFacts']))
+            if binding.get('analysisBinding') is not None:
+                from existing_update_preparation import public_revision_reference
+                reference = public_revision_reference(base)
+                checker = self.models if isinstance(self.models, Models) else Models(self.env)
+                checker._safe_public(reference)
+                if self._medical(base).get('passed') is not True:
+                    raise ValueError('routine_public_reference_requires_upper_editor')
+                gathered['publicRevisionReference'] = reference
         elif nonproduct:
             gathered = gather_nonproduct(job['theme'], context)
             source_recheck = reverify_bound_public_sources(
@@ -2170,6 +2228,30 @@ class Runtime:
             ('action', 'jobId', 'targetUrl', 'revision', 'stateFingerprint', 'status')} for item in pending[:20]]
         return projection
 
+    def _prepare_existing_improvement(self, now):
+        """One deterministic preparation per period, never an extra AI manager."""
+        if self.config.get('existingImprovementsEnabled') is not True:
+            return {'status': 'disabled'}
+        if self.config.get('generationEnabled') is not True:
+            return {'status': 'waiting_generation'}
+        if not self.ledger.production_schedule.is_due(now):
+            return {'status': 'not_due'}
+        # A cached receipt avoids repeated catalog/source reads on unchanged ticks.
+        period = self.ledger.production_schedule.period_key(now)
+        prior = self.ledger.existing_improvement_receipt(period)
+        if prior is not None:
+            return prior
+        if not daily_metrics_due(now):
+            return {'status': 'waiting_daily_metrics'}
+        try:
+            from daily_metrics import require_fresh_daily_metrics
+            require_fresh_daily_metrics(self.config, now=now)
+        except ValueError:
+            return {'status': 'waiting_daily_metrics'}
+        from existing_update_preparation import prepare_existing_update
+        return prepare_existing_update(self, self.analytics.load_context(now=now),
+                                       self.catalog.catalog(), now=now)
+
     def tick(self):
         self.execution_policy = execution_policy(self.config)
         if self.execution_policy is not None and self.execution_policy.suspended:
@@ -2180,6 +2262,11 @@ class Runtime:
             daily_metrics = collect_daily_metrics(self.config, self.env, now=now)
         except Exception:
             daily_metrics = {'status': 'failed', 'reason': 'daily_metrics_collection_failed'}
+        try:
+            existing_improvement = self._prepare_existing_improvement(now)
+        except Exception:
+            existing_improvement = {'status': 'requires_reconciliation',
+                                    'reason': 'existing_improvement_preparation_unavailable'}
         dispatch = (DeterministicDispatcher(self).plan(now)
                     if self.execution_policy is not None else None)
         actions = {(action['kind'], action.get('jobId'), action.get('deliveryKind'))
@@ -2190,6 +2277,10 @@ class Runtime:
         except Exception as error:
             audits = [self._post_audit_fault(error)]
         results = []
+        if (existing_improvement.get('status') == 'requires_reconciliation'
+                or 'source_verification_failed' in existing_improvement.get('sourceHoldReasons', [])):
+            results.append({'id': 'existing-improvement', 'status': 'attention',
+                            'reason': 'existing_improvement_preparation_requires_attention'})
         if daily_metrics.get('status') in ('failed','already_failed','requires_reconciliation'):
             results.append({'id':'daily-metrics','status':'attention',
                             'reason':'daily_metrics_collection_failed'})
@@ -2337,6 +2428,7 @@ class Runtime:
         result = {'status': 'attention' if audit_attention or report_attention or any(r.get('status') == 'attention' for r in results) else 'completed',
                   'at': stamp(), 'decisions': decisions, 'results': results,
                   'dailyMetrics': daily_metrics,
+                  'existingImprovement': existing_improvement,
                   'articles': [dict({k: j[k] for k in ('id', 'theme', 'stage', 'revision', 'error')},
                       review={k: (j.get('review') or {}).get(k) for k in ('model', 'score', 'passed')},
                       approval={'action': 'approved' if j.get('approval') else None},

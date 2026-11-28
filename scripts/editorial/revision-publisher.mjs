@@ -20,11 +20,46 @@ const record = v => v && typeof v === 'object' && !Array.isArray(v);
 const row = article => normalizeTimestamps(Object.fromEntries(Object.entries(articleFields).map(([k,v])=>[v,article[k] ?? null])));
 const atHash = (input,deps,...keys)=>bundleHash(input.bundle,{rawRequest:deps.rawRequest,fieldPath:['bundle','revisionContext',...keys]});
 
+// A routine target is accepted only with the same typed analysis binding as the
+// private revision request. This is provenance, never owner approval.
+function routineBinding(input,deps,c) {
+  const v=c.analysisBinding, base=c.baseArticle;
+  const keys=(value,expected)=>record(value)&&equal(Object.keys(value).sort(),expected.sort());
+  const hex=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+  const aware=value=>typeof value==='string'&&/(?:Z|[+-]\d{2}:\d{2})$/.test(value)&&Number.isFinite(Date.parse(value));
+  check(keys(v,['kind','period','targetUrl','rank','metricsReceipt','sourceProof','baseArticleHash','baseProductsHash','constraints']), 'routine analysis binding required');
+  check(v.kind==='routine_existing_improvement_v1'&&/^\d{4}-\d{2}-\d{2}$/.test(v.period)
+    &&Number.isInteger(v.rank)&&v.rank>=1&&v.rank<=3&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(base.slug)
+    &&v.targetUrl==='https://camp-gear-lab.com/articles/'+base.slug,'routine target binding invalid');
+  check(v.baseArticleHash===atHash(input,deps,'baseArticle')&&v.baseProductsHash===atHash(input,deps,'baseProducts'), 'routine baseline proof changed');
+  const m=v.metricsReceipt,p=v.sourceProof;
+  check(keys(m,['sourceId','collectedAt','currentPeriod','ga4Period','opportunityHash','candidateSetHash','protectedWinnerUrlsHash','gsc','ga4','intentEvidence'])
+    &&/^analytics:[a-f0-9]{64}$/.test(m.sourceId)&&aware(m.collectedAt)
+    &&['opportunityHash','candidateSetHash','protectedWinnerUrlsHash'].every(k=>hex(m[k])), 'routine metrics proof invalid');
+  for(const period of [m.currentPeriod,m.ga4Period])check(keys(period,['startDate','endDate','dateBasis'])
+    &&Object.values(period).every(s=>typeof s==='string'&&s),'routine metric period invalid');
+  check(keys(m.gsc,['clicks','impressions','ctr','position','metricScope'])&&keys(m.ga4,['sessions','engagedSessions','keyEvents'])
+    &&typeof m.gsc.impressions==='number'&&m.gsc.impressions>=30&&typeof m.gsc.position==='number'
+    &&m.gsc.position>3&&m.gsc.position<=20, 'routine metric threshold invalid');
+  check(equal(m.intentEvidence,{status:'unconnected',reason:'page_bound_private_query_classification_not_implemented',
+    rawQueriesExposed:false,serpEvidence:'unconnected'}),'routine intent evidence invalid');
+  check(keys(p,['sourceId','receiptHash','checkedAt','productIds','checks'])&&/^catalog-gather:[a-f0-9]{64}$/.test(p.sourceId)
+    &&hex(p.receiptHash)&&p.sourceId==='catalog-gather:'+p.receiptHash&&aware(p.checkedAt)
+    &&equal(p.productIds,base.productIds)&&equal(p.checks,{facts:true,images:true,affiliate:true}), 'routine source proof invalid');
+  check(equal(v.constraints,{allOriginalProductsKept:true,productChangesAllowed:false,newFactsAllowed:false,ownerExperienceAllowed:false,
+    ctrIntentCheckRequired:true,causalGuarantee:false,winnerProtection:{topPosition:3,topClicks:3},maxGrowthCandidates:3,
+    manualOwnerApprovalRequired:true,independentAstraReviewRequired:true}), 'routine constraints changed');
+  check(equal(c.targetProductIds,base.productIds)&&equal(c.productRemovalReasons,{})&&equal(c.baseProducts,c.candidateProducts)
+    &&equal(c.productPatches,[])&&equal(c.verifiedAuthorFacts,[]),'routine products or author facts changed');
+}
+
 function binding(input,deps) {
   const {bundle:b,revision} = input; const c=b?.revisionContext, base=c?.baseArticle, a=b?.article;
   check(record(c) && c.kind==='article_revision' && record(base) && record(a), 'revision binding required');
   validatePresentation(b.inheritedPresentationContext,a.slug);
-  check(TARGETS[base.id]===base.slug && a.id===base.id && a.slug===base.slug && base.status==='published', 'fixed revision target required');
+  if(c.analysisBinding!==undefined)routineBinding(input,deps,c);
+  else check(TARGETS[base.id]===base.slug,'fixed revision target required');
+  check(typeof base.id==='string'&&base.id&&a.id===base.id&&a.slug===base.slug&&base.status==='published','revision target required');
   check(revision===bundleHash(b,{rawRequest:deps.rawRequest}) && /^[a-f0-9]{64}$/.test(revision||''), 'revision fingerprint changed');
   check(c.baseHash===atHash(input,deps,'baseArticle'), 'revision baseline hash changed');
   check(typeof c.changeSummary==='string' && c.changeSummary.trim() && typeof c.editorialCorrectionInstructions==='string'

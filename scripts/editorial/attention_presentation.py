@@ -7,7 +7,39 @@ INTERNAL_REASONS = {
     'Article length outside existing SKILL limits',
 }
 
+SOCIAL_RECONCILIATION_REASONS = {
+    'buffer_publication_requires_reconciliation',
+    'social_publication_requires_reconciliation',
+    'social_publication_unverified',
+    'buffer_schedule_notice_requires_reconciliation',
+    'social_posted_notice_requires_reconciliation',
+}
+
 REASONS = {
+    'buffer_publication_requires_reconciliation': (
+        '記事は公開済みです。X投稿の結果をまだ確認できていません。',
+        '本人の操作は不要です。二重投稿を避けるため、再投稿せずに記録を確認します。'),
+    'social_publication_requires_reconciliation': (
+        '記事は公開済みです。X投稿の結果をまだ確認できていません。',
+        '本人の操作は不要です。二重投稿を避けるため、再投稿せずに記録を確認します。'),
+    'social_publication_unverified': (
+        '記事は公開済みです。X上の公開をまだ確認できていません。',
+        '本人の操作は不要です。再投稿せずに記録を確認します。'),
+    'buffer_schedule_notice_requires_reconciliation': (
+        '記事は公開済みです。Xの予約通知が届いたか確認できていません。',
+        '本人の操作は不要です。通知の記録を確認します。'),
+    'social_posted_notice_requires_reconciliation': (
+        '記事は公開済みです。X投稿の完了通知が届いたか確認できていません。',
+        '本人の操作は不要です。通知の記録を確認します。'),
+    'daily_metrics_not_fresh': (
+        '当日分の集計を確認できず、新しい企画の調査に進んでいません。',
+        '本人の操作は不要です。集計の実行記録を確認します。'),
+    'daily_metrics_collection_failed': (
+        '当日分のアクセス集計を保存できませんでした。',
+        '本人の操作は不要です。失敗した集計処理を確認します。'),
+    'weekly_research_requires_reconciliation': (
+        '週次企画の処理が終了したか確認できていません。',
+        '本人の操作は不要です。処理をやり直さず、保存済みの結果を確認します。'),
     'Two to three distinct internal article links required': (
         '本文の関連記事リンクが規定の2〜3本になっていません。',
         '本人の操作は不要です。関連記事リンクの修正対象として内部で保持します。'),
@@ -35,8 +67,15 @@ def thread_url(scope):
 
 def attention_text(items, scope, details=None):
     details = details or {}
-    lines = ['【記事制作が止まっています】', '公開の承認依頼ではありません。以下の確認が必要です。']
+    items = sorted(items, key=lambda item: (item.get('error') or {}).get('reason') in SOCIAL_RECONCILIATION_REASONS)
+    only_social = bool(items) and all((item.get('error') or {}).get('reason') in SOCIAL_RECONCILIATION_REASONS for item in items)
+    heading = '【X投稿の確認】' if only_social else '【記事制作が止まっています】'
+    lines = [heading, '公開の承認依頼ではありません。以下の確認が必要です。']
+    social_section = only_social
     for index, item in enumerate(items, 1):
+        if not social_section and (item.get('error') or {}).get('reason') in SOCIAL_RECONCILIATION_REASONS:
+            lines += ['', '', '【X投稿の確認】']
+            social_section = True
         title = str(item.get('title') or '')
         if title == item.get('id') or title in ('editorial-manager', 'runtime'):
             title = '記事制作の処理'

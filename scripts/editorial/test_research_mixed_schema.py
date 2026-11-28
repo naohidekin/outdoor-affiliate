@@ -3,7 +3,7 @@ import copy
 import json
 import unittest
 
-from models import Models, MIXED_RESEARCH_SCHEMA
+from models import Models, MIXED_RESEARCH_SCHEMA, mixed_research_schema
 import test_models as transport_fixture
 from test_topic_selection import proposal
 from topic_selection import INTENTS, TOPIC_TYPES, TopicSelectionError, select_proposals
@@ -25,7 +25,7 @@ class MixedResearchSchemaTests(unittest.TestCase):
         before = copy.deepcopy(source)
         result = Models(transport_fixture.ENV, transport).research_mixed(source)
         payload = transport.calls[0][2]
-        self.assertEqual({'format': {'type': 'json_schema', 'schema': MIXED_RESEARCH_SCHEMA}}, payload['output_config'])
+        self.assertEqual({'format': {'type': 'json_schema', 'schema': mixed_research_schema(source)}}, payload['output_config'])
         self.assertEqual({'proposals': [candidate]}, result)
         self.assertEqual(before, source)
         self.assertEqual(1, len(transport.calls))
@@ -34,6 +34,27 @@ class MixedResearchSchemaTests(unittest.TestCase):
         for value in INTENTS:
             self.assertIn(value, prompt)
         self.assertIn('not free-text', prompt)
+
+    def test_wire_schema_binds_all_identity_fields_without_fake_empty_sentinels(self):
+        schema = mixed_research_schema(context())
+        fields = schema['properties']['proposals']['items']['properties']
+        self.assertEqual(['camp-howto'], fields['categoryId']['enum'])
+        self.assertEqual(['verified-product'], fields['productIds']['items']['enum'])
+        self.assertEqual(['known-article'], fields['overlapArticleIds']['items']['enum'])
+
+        empty = mixed_research_schema({'catalog': [], 'categories': [{'id': 'camp-howto'}],
+                                       'existingArticles': []})
+        empty_fields = empty['properties']['proposals']['items']['properties']
+        self.assertEqual({'type': 'array', 'items': {'type': 'string'},
+                          'description': 'No supplied IDs exist: return an empty array.'},
+                         empty_fields['productIds'])
+        self.assertEqual({'type': 'array', 'items': {'type': 'string'},
+                          'description': 'No supplied IDs exist: return an empty array.'},
+                         empty_fields['overlapArticleIds'])
+        self.assertNotIn('none', json.dumps(empty))
+        self.assertNotIn('unknown', json.dumps(empty))
+        with self.assertRaisesRegex(ValueError, 'categories required'):
+            mixed_research_schema({'catalog': [], 'categories': [], 'existingArticles': []})
 
     def test_wire_types_enums_and_exact_fields_match_the_local_proposal_contract(self):
         schema = MIXED_RESEARCH_SCHEMA

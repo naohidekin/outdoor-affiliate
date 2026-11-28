@@ -353,8 +353,14 @@ class Ledger:
                 'CREATE TABLE IF NOT EXISTS decisions (id TEXT PRIMARY KEY, data TEXT NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS effects (job_id TEXT, kind TEXT, status TEXT, data TEXT, PRIMARY KEY(job_id,kind))',
                 'CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, at TEXT NOT NULL, job_id TEXT, kind TEXT NOT NULL, data TEXT NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS existing_improvement_attempts (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, data TEXT NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS existing_improvement_results (period TEXT PRIMARY KEY, input_hash TEXT NOT NULL, data TEXT NOT NULL)',
                 "CREATE TRIGGER IF NOT EXISTS events_no_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'immutable events'); END",
                 "CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'immutable events'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_attempts_no_update BEFORE UPDATE ON existing_improvement_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement attempts'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_attempts_no_delete BEFORE DELETE ON existing_improvement_attempts BEGIN SELECT RAISE(ABORT,'immutable existing improvement attempts'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_results_no_update BEFORE UPDATE ON existing_improvement_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement results'); END",
+                "CREATE TRIGGER IF NOT EXISTS existing_improvement_results_no_delete BEFORE DELETE ON existing_improvement_results BEGIN SELECT RAISE(ABORT,'immutable existing improvement results'); END",
             ):
                 db.execute(sql)
             db.execute('INSERT OR IGNORE INTO meta VALUES (?,?)', ('owner_id', owner_id))
@@ -776,54 +782,198 @@ class Ledger:
             job.update(sourceBinding=new_binding, sourceBindingHistory=[history])
             return self._put(db, job, 'name_source_correction')
 
-    def request_revision(self, specification, now=None):
+    def _existing_improvement_blocks(self, db, period, target_id, budget_article_id):
+        jobs = [json.loads(row[0]) for row in db.execute('SELECT data FROM jobs')]
+        related = [job for job in jobs
+                   if ((job.get('revisionContext') or {}).get('baseArticle') or {}).get('id') == target_id]
+        reasons = []
+        if any(job.get('stage') != 'published' for job in related):
+            reasons.append('pending_revision')
+        if any(((job.get('revisionContext') or {}).get('analysisBinding') or {}).get('period') == period
+               for job in jobs):
+            reasons.append('routine_period_limit_reached')
+        related_ids = [job['id'] for job in related]
+        if related_ids:
+            placeholders = ','.join('?' for _ in related_ids)
+            if db.execute("SELECT 1 FROM effects WHERE job_id IN (" + placeholders
+                          + ") AND status IN ('in_flight','unknown') LIMIT 1", related_ids).fetchone():
+                reasons.append('related_effect_requires_reconciliation')
+        tables = {row[0] for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")}
+        if 'model_budget_reservations' in tables and db.execute(
+                "SELECT 1 FROM model_budget_reservations WHERE period_key=? AND article_id=? "
+                "AND status IN ('reserved','unknown') LIMIT 1",
+                (period, budget_article_id)).fetchone():
+            reasons.append('related_budget_requires_reconciliation')
+        if 'model_budget_events' in tables and db.execute(
+                "SELECT 1 FROM model_budget_events WHERE period_key=? AND status IN ('pending','in_flight') "
+                "AND (article_id=? OR budget_scope='period') LIMIT 1",
+                (period, budget_article_id)).fetchone():
+            reasons.append('related_budget_event_requires_reconciliation')
+        return list(dict.fromkeys(reasons))
+
+    def existing_improvement_receipt(self, period):
+        require(isinstance(period, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', period),
+                'existing improvement period required')
+        with self._tx() as db:
+            for table in ('existing_improvement_results', 'existing_improvement_attempts'):
+                row = db.execute('SELECT data FROM ' + table + ' WHERE period=?', (period,)).fetchone()
+                if row is not None:
+                    return json.loads(row[0])
+        return None
+
+    def claim_existing_improvement_attempt(self, period, input_hash, receipt, *,
+                                           target_id, budget_article_id, now=None):
+        now = timestamp(now)
+        require(self.production_schedule.period_key(now) == period,
+                'existing improvement production period changed')
+        require(isinstance(input_hash, str) and re.fullmatch(r'[a-f0-9]{64}', input_hash),
+                'existing improvement input hash required')
+        require(isinstance(receipt, dict) and receipt.get('status') == 'planned'
+                and receipt.get('period') == period and receipt.get('inputHash') == input_hash,
+                'existing improvement planned receipt invalid')
+        with self._tx() as db:
+            for table in ('existing_improvement_results', 'existing_improvement_attempts'):
+                row = db.execute('SELECT input_hash,data FROM ' + table + ' WHERE period=?',
+                                 (period,)).fetchone()
+                if row is not None:
+                    return {'claimed': False, 'receipt': json.loads(row[1])}
+            reasons = self._existing_improvement_blocks(
+                db, period, target_id, budget_article_id) if target_id else []
+            planned = json.loads(canonical(receipt))
+            db.execute('INSERT INTO existing_improvement_attempts VALUES (?,?,?)',
+                       (period, input_hash, canonical(planned)))
+            self._event(db, target_id, 'existing_improvement_attempt', planned, now)
+            if reasons:
+                result = dict(planned, status='hold', revisionJobId=None,
+                              sourceHoldReasons=list(dict.fromkeys(
+                                  planned.get('sourceHoldReasons', []) + reasons)))
+                db.execute('INSERT INTO existing_improvement_results VALUES (?,?,?)',
+                           (period, input_hash, canonical(result)))
+                self._event(db, target_id, 'existing_improvement_result', result, now)
+                return {'claimed': False, 'receipt': result}
+            return {'claimed': True, 'receipt': planned}
+
+    def complete_existing_improvement_attempt(self, period, input_hash, receipt,
+                                              specification=None, now=None):
+        now = timestamp(now)
+        require(isinstance(receipt, dict) and receipt.get('period') == period
+                and receipt.get('inputHash') == input_hash
+                and receipt.get('status') in ('queued', 'hold'),
+                'existing improvement result invalid')
+        with self._tx() as db:
+            prior = db.execute('SELECT input_hash,data FROM existing_improvement_attempts WHERE period=?',
+                               (period,)).fetchone()
+            require(prior is not None and prior[0] == input_hash,
+                    'existing improvement attempt missing')
+            saved = db.execute('SELECT input_hash,data FROM existing_improvement_results WHERE period=?',
+                               (period,)).fetchone()
+            if saved is not None:
+                return json.loads(saved[1])
+            result = json.loads(canonical(receipt))
+            target_id = result.get('selectedId')
+            budget_id = result.get('budgetArticleId')
+            reasons = (self._existing_improvement_blocks(db, period, target_id, budget_id)
+                       if target_id and budget_id else [])
+            if reasons:
+                result.update(status='hold', revisionJobId=None,
+                              sourceHoldReasons=list(dict.fromkeys(
+                                  result.get('sourceHoldReasons', []) + reasons)))
+                specification = None
+            if specification is not None:
+                require(result['status'] == 'queued', 'queued result required for revision')
+                job = self._request_revision_locked(db, specification, now,
+                    improvement_claim=(period, input_hash))
+                result['revisionJobId'] = job['id']
+            else:
+                require(result['status'] == 'hold', 'hold result required without revision')
+                result['revisionJobId'] = None
+            db.execute('INSERT INTO existing_improvement_results VALUES (?,?,?)',
+                       (period, input_hash, canonical(result)))
+            self._event(db, target_id, 'existing_improvement_result', result, now)
+            return result
+
+    def _request_revision_locked(self, db, specification, now, *, improvement_claim=None):
         from revisions import validated_context, TARGETS, _aware
         context = validated_context(specification)
         base = context['baseArticle']
-        now = timestamp(now)
-        with self._tx() as db:
-            previous = []
+        analysis = context.get('analysisBinding')
+        if analysis is not None:
+            require(isinstance(improvement_claim, tuple) and len(improvement_claim) == 2
+                    and improvement_claim[0] == analysis['period'],
+                    'routine revision requires claimed improvement attempt')
+            attempt = db.execute('SELECT input_hash,data FROM existing_improvement_attempts WHERE period=?',
+                                 (analysis['period'],)).fetchone()
+            require(attempt is not None and attempt[0] == improvement_claim[1],
+                    'routine revision improvement claim changed')
+            proof = json.loads(attempt[1])
+            require(proof.get('selectedId') == base['id']
+                    and proof.get('priorProof', {}).get('baseArticleHash') == context['baseHash']
+                    and proof.get('priorProof', {}).get('baseProductsHash') == fingerprint(context['baseProducts'])
+                    and proof.get('priorProof', {}).get('metricReceiptHash') == fingerprint(analysis['metricsReceipt'])
+                    and self.production_schedule.period_key(now) == analysis['period'],
+                    'routine revision improvement evidence changed')
+            require(db.execute('SELECT 1 FROM existing_improvement_results WHERE period=?',
+                               (analysis['period'],)).fetchone() is None,
+                    'routine revision improvement already completed')
             for row in db.execute('SELECT data FROM jobs'):
                 old = json.loads(row[0])
-                if old.get('kind') == 'article_revision' and old['revisionContext']['baseArticle']['id'] == base['id']:
-                    if old['revisionContext'] == context:
-                        return old
-                    approval, publication = old.get('approval') or {}, old.get('publication') or {}
-                    readback = publication.get('readback') or {}
-                    evidence = approval.get('evidence')
-                    codex_approved = (approval.get('source') == 'codex' and approval.get('action') in (None, 'approved')
-                        and isinstance(evidence, dict) and evidence.get('source') == 'codex'
-                        and all(isinstance(evidence.get(k), str) and evidence[k].strip()
-                                for k in ('thread_id', 'message_id', 'text'))
-                        and approval.get('request_id') == 'codex-' + fingerprint(dict(
-                            article_id=old['id'], revision=old.get('revision'), actor=self.owner_id, evidence=evidence)))
-                    require(old['stage'] == 'published' and old.get('revision')
-                            and (codex_approved if approval.get('source') == 'codex'
-                                 else approval.get('action') == 'approved')
-                            and approval.get('user_id') == self.owner_id
-                            and approval.get('revision') == old['revision'] == publication.get('revision')
-                            and publication.get('verified') is True and readback.get('verified') is True
-                            and readback.get('fingerprint') == old['revision'],
-                            'revision already requested; reconcile existing job')
-                    require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
-                                           (old['id'],)).fetchone(), 'revision publication requires reconciliation')
-                    previous.append(old)
-            if previous:
-                stamps = [_aware(j['publication'].get('remoteUpdatedAt')) for j in previous]
-                latest_at = max(stamps)
-                require(stamps.count(latest_at) == 1, 'revision publication order ambiguous')
-                latest = previous[stamps.index(latest_at)]
-                require(latest_at == _aware(base.get('updatedAt'))
-                        and latest['publication'].get('url') == 'https://camp-gear-lab.com/articles/' + base['slug'],
-                        'revision next baseline must match verified publication')
-            job = dict(id='revision-' + secrets.token_hex(12), kind='article_revision',
-                       revisionContext=context, priority=list(TARGETS).index(base['id']),
-                       theme=dict(slug=base['slug'], title=base['title'], categoryId=base['categoryId'],
-                                  productIds=context['targetProductIds']),
-                       week=(now.date() - timedelta(days=now.weekday())).isoformat(), stage='candidate',
-                       bundle=None, revision=None, review=None, approval=None, publication=None, social=None,
-                       error=None, created_at=now.isoformat())
-            return self._put(db, job, 'revision_requested')
+                require(((old.get('revisionContext') or {}).get('analysisBinding') or {}).get('period')
+                        != analysis['period'], 'routine revision period limit reached')
+        previous = []
+        for row in db.execute('SELECT data FROM jobs'):
+            old = json.loads(row[0])
+            if old.get('kind') == 'article_revision' and old['revisionContext']['baseArticle']['id'] == base['id']:
+                if old['revisionContext'] == context:
+                    return old
+                approval, publication = old.get('approval') or {}, old.get('publication') or {}
+                readback = publication.get('readback') or {}
+                evidence = approval.get('evidence')
+                codex_approved = (approval.get('source') == 'codex' and approval.get('action') in (None, 'approved')
+                    and isinstance(evidence, dict) and evidence.get('source') == 'codex'
+                    and all(isinstance(evidence.get(k), str) and evidence[k].strip()
+                            for k in ('thread_id', 'message_id', 'text'))
+                    and approval.get('request_id') == 'codex-' + fingerprint(dict(
+                        article_id=old['id'], revision=old.get('revision'), actor=self.owner_id, evidence=evidence)))
+                require(old['stage'] == 'published' and old.get('revision')
+                        and (codex_approved if approval.get('source') == 'codex'
+                             else approval.get('action') == 'approved')
+                        and approval.get('user_id') == self.owner_id
+                        and approval.get('revision') == old['revision'] == publication.get('revision')
+                        and publication.get('verified') is True and readback.get('verified') is True
+                        and readback.get('fingerprint') == old['revision'],
+                        'revision already requested; reconcile existing job')
+                require(not db.execute("SELECT 1 FROM effects WHERE job_id=? AND status IN ('in_flight','unknown')",
+                                       (old['id'],)).fetchone(), 'revision publication requires reconciliation')
+                previous.append(old)
+        if previous:
+            stamps = [_aware(j['publication'].get('remoteUpdatedAt')) for j in previous]
+            latest_at = max(stamps)
+            require(stamps.count(latest_at) == 1, 'revision publication order ambiguous')
+            latest = previous[stamps.index(latest_at)]
+            require(latest_at == _aware(base.get('updatedAt'))
+                    and latest['publication'].get('url') == 'https://camp-gear-lab.com/articles/' + base['slug'],
+                    'revision next baseline must match verified publication')
+        analysis = context.get('analysisBinding')
+        priority = (len(TARGETS) + analysis['rank'] - 1 if analysis is not None
+                    else list(TARGETS).index(base['id']))
+        week = analysis['period'] if analysis is not None else (
+            now.date() - timedelta(days=now.weekday())).isoformat()
+        job = dict(id='revision-' + secrets.token_hex(12), kind='article_revision',
+                   revisionContext=context, priority=priority,
+                   theme=dict(slug=base['slug'], title=base['title'], categoryId=base['categoryId'],
+                              productIds=context['targetProductIds']),
+                   week=week, stage='candidate', bundle=None, revision=None, review=None,
+                   approval=None, publication=None, social=None, error=None,
+                   created_at=now.isoformat())
+        if analysis is not None:
+            job['budgetArticleId'] = 'article:' + fingerprint({'slug': base['slug']})
+        return self._put(db, job, 'revision_requested')
+
+    def request_revision(self, specification, now=None):
+        now = timestamp(now)
+        with self._tx() as db:
+            return self._request_revision_locked(db, specification, now)
 
     def list_jobs(self):
         with self._tx() as db:

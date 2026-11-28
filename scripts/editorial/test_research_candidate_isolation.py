@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from ledger import fingerprint
-from models import Models, ModelError
+from models import Models, ModelError, ModelOutcomeUnknown
 from test_models import ENV, Fake, response
 from test_topic_selection import proposal
 from topic_selection import TopicSelectionError
@@ -128,15 +128,37 @@ class CandidateIsolationRuntimeTests(unittest.TestCase):
         self.assertEqual(1, len(self.f.request.calls))
 
     def test_all_invalid_stops_after_one_call_with_snapshot_and_no_auto_retry(self):
-        self.set_response([dict(self.f.proposals[0], intent='free text')])
-        with self.assertRaisesRegex(TopicSelectionError, 'proposal_contract'):
-            self.f.produce()
+        p = self.f.proposals[0]
+        self.set_response([
+            dict(p, proposedAction='new', overlapArticleIds=['unsupplied-article']),
+            dict(p, selectionReason='あ' * 601),
+            dict(p, selectionReason='い' * 565)])
+        result = self.f.produce()
+        self.assertEqual({'status':'blocked', 'reason':'research_contract_rejected',
+                          'articles':[], 'retryable':False}, result)
+        marker = json.loads(self.f.marker.read_text())
+        self.assertEqual('research_contract_rejected', marker['status'])
+        self.assertIs(True, marker['requestOccurred'])
+        self.assertEqual('new-partial-response', marker['responseId'])
+        self.assertEqual(3, marker['rawProposalCount'])
+        self.assertEqual([['overlap_id_not_in_supplied_articles', 'new_has_overlap'],
+                          ['selectionReason_over_500'], ['selectionReason_over_500']],
+                         [item['details'] for item in marker['contractRejections']])
+        self.assertEqual(fingerprint(self.f.context), marker['researchContextSha256'])
         self.assertTrue((self.f.root / 'research-contexts' / (fixtures.recovery.PERIOD + '.json')).exists())
         self.assertFalse((self.f.root / 'period-receipts' / (fixtures.recovery.PERIOD + '.json')).exists())
-        with self.assertRaisesRegex(ValueError, 'reconciliation'):
-            self.f.produce()
+        self.assertEqual(result, self.f.produce())
         self.assertEqual(1, len(self.f.request.calls))
         self.assertEqual([], self.f.rt.ledger.list_jobs())
+
+    def test_transport_failure_keeps_original_unknown_and_is_not_retried(self):
+        with patch.object(self.f.rt.models, 'request', side_effect=TimeoutError('unknown')) as transport:
+            with self.assertRaisesRegex(ModelOutcomeUnknown, 'unknown'):
+                self.f.produce()
+            self.assertEqual('in_flight', json.loads(self.f.marker.read_text())['status'])
+            with self.assertRaisesRegex(ValueError, 'reconciliation'):
+                self.f.produce()
+        self.assertEqual(1, transport.call_count)
 
     def test_partial_research_does_not_bypass_normal_article_quality_failure(self):
         good = copy.deepcopy(self.f.proposals)

@@ -91,12 +91,17 @@ def _marker(config, now):
     return Path(config['stateRoot']) / 'daily-metrics' / (now.date().isoformat() + '.json')
 
 
+def daily_metrics_due(now=None):
+    """The collector and research gate share the same JST boundary."""
+    return _now(now).hour >= 8
+
+
 def collect_daily_metrics(config, env, *, now=None, runner=subprocess.run):
     """Attempt collection at most once for one JST day; preserve prior latest on failure."""
     if config.get('dailyMetricsEnabled') is not True:
         return {'status': 'disabled'}
     now = _now(now)
-    if now.hour < 8:
+    if not daily_metrics_due(now):
         return {'status': 'not_due', 'day': now.date().isoformat()}
     marker = _marker(config, now)
     marker.parent.mkdir(parents=True, mode=0o700, exist_ok=True)

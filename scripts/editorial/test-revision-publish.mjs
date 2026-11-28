@@ -39,6 +39,51 @@ function harness({ patched = true, count = 1 } = {}) {
   return {input,state,deps};
 }
 
+function routineHarness() {
+ const h=harness({patched:false}),b=h.input.bundle,c=b.revisionContext;
+ c.baseArticle.id=b.article.id=h.state.article.id='article-other-published';
+ c.baseHash=bundleHash(c.baseArticle);
+ c.verifiedAuthorFacts=[];
+ c.analysisBinding={kind:'routine_existing_improvement_v1',period:'2026-11-27',rank:1,
+  targetUrl:'https://camp-gear-lab.com/articles/'+c.baseArticle.slug,
+  baseArticleHash:bundleHash(c.baseArticle),baseProductsHash:bundleHash(c.baseProducts),
+  metricsReceipt:{sourceId:'analytics:'+'a'.repeat(64),collectedAt:'2026-11-28T08:00:00+09:00',
+   currentPeriod:{startDate:'2026-10-28',endDate:'2026-11-24',dateBasis:'America/Los_Angeles'},
+   ga4Period:{startDate:'2026-10-28',endDate:'2026-11-24',dateBasis:'Asia/Tokyo'},
+   opportunityHash:'b'.repeat(64),candidateSetHash:'c'.repeat(64),protectedWinnerUrlsHash:'d'.repeat(64),
+   gsc:{clicks:10,impressions:100,ctr:.1,position:8,metricScope:'page'},ga4:{sessions:10,engagedSessions:5,keyEvents:0},
+   intentEvidence:{status:'unconnected',reason:'page_bound_private_query_classification_not_implemented',rawQueriesExposed:false,serpEvidence:'unconnected'}},
+  sourceProof:{sourceId:'catalog-gather:'+'e'.repeat(64),receiptHash:'e'.repeat(64),checkedAt:'2026-11-28T08:10:00+09:00',
+   productIds:[...c.baseArticle.productIds],checks:{facts:true,images:true,affiliate:true}},
+  constraints:{allOriginalProductsKept:true,productChangesAllowed:false,newFactsAllowed:false,ownerExperienceAllowed:false,
+   ctrIntentCheckRequired:true,causalGuarantee:false,winnerProtection:{topPosition:3,topClicks:3},maxGrowthCandidates:3,
+   manualOwnerApprovalRequired:true,independentAstraReviewRequired:true}};
+ h.input.revision=bundleHash(b);h.input.approval.revision=h.input.revision;
+ return h;
+}
+
+test('routine analysis target can stage privately and still requires exact owner approval',async()=>{
+ const h=routineHarness();
+ assert.equal((await execute({...h.input,action:'stage-revision',approval:null},h.deps)).status,'private_revision');
+ await assert.rejects(execute({...h.input,approval:null},h.deps),/owner approval/);
+ assert.deepEqual(h.state.writes,[]);
+ assert.equal((await execute(h.input,h.deps)).verified,true);
+ assert.deepEqual(h.state.writes,['article']);
+});
+
+test('routine analysis cannot bypass source, baseline, winner, intent or immutable-product guards',async()=>{
+ for(const mutate of [c=>delete c.analysisBinding,c=>c.analysisBinding.targetUrl+='?other',
+  c=>c.analysisBinding.baseArticleHash='0'.repeat(64),c=>c.analysisBinding.baseProductsHash='0'.repeat(64),
+  c=>c.analysisBinding.sourceProof.checks.affiliate=false,c=>c.analysisBinding.sourceProof.receiptHash='f'.repeat(64),
+  c=>c.analysisBinding.metricsReceipt.gsc.position=2,c=>c.analysisBinding.metricsReceipt.intentEvidence.status='diagnosed',
+  c=>c.analysisBinding.constraints.manualOwnerApprovalRequired=false,c=>c.analysisBinding.extra='unbound',
+  c=>c.verifiedAuthorFacts=['invented'],c=>c.productPatches=[{}],c=>c.candidateProducts[0].name='other']) {
+  const h=routineHarness();mutate(h.input.bundle.revisionContext);
+  h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
+  await assert.rejects(execute(h.input,h.deps));assert.deepEqual(h.state.writes,[]);
+ }
+});
+
 test('revision private staging reads baselines but never mutates public rows',async()=>{
  const h=harness();const result=await execute({...h.input,action:'stage-revision',approval:null},h.deps);
  assert.equal(result.status,'private_revision');assert.deepEqual(h.state.writes,[]);

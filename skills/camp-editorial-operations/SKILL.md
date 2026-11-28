@@ -9,6 +9,16 @@ description: Camp Gear Lab編集台帳の状態確認、次工程の確認、停
 [通常進行・工程復旧](../../docs/editorial-deterministic.md) の必要な節だけを読む。
 台帳は既存SQLite、実行主体は既存runner一つ。スキル自体は定期実行を作らない。
 
+分析から通常制作・既存記事改善への接続は[SEO循環](../../docs/seo-feedback-loop.md)を参照する。
+`researchResponseRecoveryEnabled`は受信・利用量確定・全案形式違反だけを同じ制作期予算で追加1回扱う。
+既存停止分の復旧は`research_response_recovery.prepare/owner_grant/arm`へ現marker・応答・context・configのSHAと
+本人の実際の指示参照を束縛する。旧11/20専用回復を別期へ流用しない。
+結果不明、部分採用、既存選定済み、予算到達は対象外。旧marker・応答・履歴を削除・初期化しない。
+`existingImprovementsEnabled`は制作期ごと最大1件の確認済み既存記事を通常改訂へ渡す。
+受領情報は`existing_improvement_attempts/results`、状況はhealthの`existingImprovement`で読む。
+同一状態の再起動でAI・source調査を繰り返さず、holdを勝手に解除しない。未接続の検索意図・SERPを診断済みにしない。
+本文・商品・画像・購入先・上位QAと本人対象版承認を維持し、記事承認をSNS承認へ転用しない。
+
 ## 状態・次工程を確認する
 
 運用CLIの読取専用 status/plan/records を使う。Runtimeのtickやproduceを確認目的で実行しない。

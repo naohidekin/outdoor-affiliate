@@ -487,6 +487,36 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.tick()
         self.assertEqual(['metrics','produce'],events)
 
+    def test_before_metrics_start_tick_waits_without_slack_warning(self):
+        self.config.update(dailyMetricsEnabled=True, seoStateRoot=str(Path(self.tmp.name)/'seo'),
+                           seoRepo=str(Path(self.tmp.name)/'repo'))
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics') as fresh, \
+                patch.object(self.runtime, '_context') as context:
+            clock.now.return_value = datetime(2026, 11, 21, 0, 3, tzinfo=JST)
+            result = self.runtime.tick()
+        self.assertEqual('not_due', result['dailyMetrics']['status'])
+        self.assertIn({'production': {'status': 'waiting', 'reason': 'daily_metrics_not_due',
+                                      'articles': []}}, result['results'])
+        self.assertFalse(self.slack.notices)
+        self.assertFalse((self.runtime.root/'production-attempts'/'2026-11-20.json').exists())
+        fresh.assert_not_called()
+        context.assert_not_called()
+
+    def test_before_metrics_start_continues_existing_candidate_without_research(self):
+        candidate = self.runtime.ledger.create_candidate({'slug':'already-selected'},
+                                                         '2026-11-19T09:00:00+09:00')
+        self.config.update(dailyMetricsEnabled=True)
+        self.configure_production_schedule()
+        with patch('runtime.datetime') as clock, \
+                patch('runtime.require_fresh_daily_metrics') as freshness:
+            clock.now.return_value = datetime(2026, 11, 21, 7, 59, tzinfo=JST)
+            result = self.runtime.produce(limit=1)
+        self.assertEqual(candidate['id'], result['articles'][0]['id'])
+        self.assertFalse((self.runtime.root/'production-attempts'/'2026-11-20.json').exists())
+        freshness.assert_not_called()
+
     def test_new_research_freshness_gate_precedes_context_and_weekly_attempt(self):
         self.config.update(dailyMetricsEnabled=True,seoStateRoot=str(Path(self.tmp.name)/'seo'),
                            seoRepo=str(Path(self.tmp.name)/'repo'))
@@ -1056,7 +1086,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual([], self.slack.deliveries)
 
     def test_research_counts_only_recent_aware_clicks_and_labels_metric(self):
-        now = datetime.now(JST)
+        now = LegacyFixtureDateTime.now(JST)
         context = {'products': [], 'articles': [], 'queuedThemes': [], 'instructions': '', 'clicks': [
             {'clickedAt': (now - timedelta(days=days)).isoformat(), 'pagePath': '/a', 'store': 'rakuten'}
             for days in (1, 60, -1)] + [{'clickedAt': '2026-11-03T12:00:00', 'pagePath': '/a', 'store': 'rakuten'}]}

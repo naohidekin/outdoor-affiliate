@@ -1,6 +1,7 @@
 """Targeted private revision bindings. No network, models, or public writes."""
 import copy
 import re
+from urllib.parse import urlsplit
 from ledger import fingerprint, require, timestamp
 
 TARGETS = {'article-024': 'firepit-beginner-guide', 'article-005': 'single-burner-ranking',
@@ -13,6 +14,88 @@ TARGETS = {'article-024': 'firepit-beginner-guide', 'article-005': 'single-burne
 PRODUCT_PATCH_FIELDS = {'name', 'brand', 'specs', 'imageUrl', 'affiliateUrl', 'amazonUrl', 'price',
                         'description', 'rating', 'availability', 'updatedAt', 'yahooUrl'}
 EDIT_FIELDS = ('title', 'content', 'excerpt', 'metaDescription', 'faqs', 'tags')
+ANALYSIS_KIND = 'routine_existing_improvement_v1'
+
+
+def _analysis_binding(value, base, products):
+    require(isinstance(value, dict) and set(value) == {
+        'kind', 'period', 'targetUrl', 'rank', 'metricsReceipt', 'sourceProof',
+        'baseArticleHash', 'baseProductsHash', 'constraints'},
+        'routine analysis binding invalid')
+    require(value['kind'] == ANALYSIS_KIND
+            and isinstance(value['period'], str)
+            and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value['period'])
+            and type(value['rank']) is int and 1 <= value['rank'] <= 3,
+            'routine analysis period or rank invalid')
+    try:
+        target = urlsplit(value['targetUrl'])
+    except (TypeError, ValueError):
+        target = None
+    require(target is not None and target.scheme == 'https'
+            and target.hostname == 'camp-gear-lab.com' and target.port is None
+            and target.username is None and target.password is None
+            and not target.query and not target.fragment
+            and target.path == '/articles/' + base.get('slug', '')
+            and value['targetUrl'] == 'https://camp-gear-lab.com' + target.path,
+            'routine target URL invalid')
+    require(value['baseArticleHash'] == fingerprint(base)
+            and value['baseProductsHash'] == fingerprint(products),
+            'routine baseline hash invalid')
+    metrics = value['metricsReceipt']
+    require(isinstance(metrics, dict) and set(metrics) == {
+        'sourceId', 'collectedAt', 'currentPeriod', 'ga4Period', 'opportunityHash',
+        'candidateSetHash', 'protectedWinnerUrlsHash', 'gsc', 'ga4', 'intentEvidence'},
+        'routine metrics receipt invalid')
+    require(isinstance(metrics['sourceId'], str)
+            and re.fullmatch(r'analytics:[a-f0-9]{64}', metrics['sourceId'])
+            and all(isinstance(metrics[key], str) and re.fullmatch(r'[a-f0-9]{64}', metrics[key])
+                    for key in ('opportunityHash', 'candidateSetHash', 'protectedWinnerUrlsHash')),
+            'routine metrics source proof invalid')
+    _aware(metrics['collectedAt'])
+    for key in ('currentPeriod', 'ga4Period'):
+        period = metrics[key]
+        require(isinstance(period, dict) and set(period) == {
+            'startDate', 'endDate', 'dateBasis'}
+            and all(isinstance(period.get(field), str) and period[field]
+                    for field in ('startDate', 'endDate', 'dateBasis')),
+            'routine metric period invalid')
+    gsc, ga4 = metrics['gsc'], metrics['ga4']
+    require(isinstance(gsc, dict) and set(gsc) == {
+        'clicks', 'impressions', 'ctr', 'position', 'metricScope'}
+        and isinstance(ga4, dict) and set(ga4) == {
+            'sessions', 'engagedSessions', 'keyEvents'},
+            'routine metric values invalid')
+    require(metrics['intentEvidence'] == {
+        'status': 'unconnected',
+        'reason': 'page_bound_private_query_classification_not_implemented',
+        'rawQueriesExposed': False, 'serpEvidence': 'unconnected'},
+        'routine intent evidence must remain unconnected')
+    require(isinstance(gsc['impressions'], (int, float)) and not isinstance(gsc['impressions'], bool)
+            and gsc['impressions'] >= 30
+            and isinstance(gsc['position'], (int, float)) and not isinstance(gsc['position'], bool)
+            and 3 < gsc['position'] <= 20,
+            'routine metric threshold invalid')
+    proof = value['sourceProof']
+    require(isinstance(proof, dict) and set(proof) == {
+        'sourceId', 'receiptHash', 'checkedAt', 'productIds', 'checks'}
+        and isinstance(proof['sourceId'], str)
+        and re.fullmatch(r'catalog-gather:[a-f0-9]{64}', proof['sourceId'])
+        and isinstance(proof['receiptHash'], str)
+        and re.fullmatch(r'[a-f0-9]{64}', proof['receiptHash'])
+        and proof['sourceId'] == 'catalog-gather:' + proof['receiptHash']
+        and proof['productIds'] == base.get('productIds')
+        and proof['checks'] == {'facts': True, 'images': True, 'affiliate': True},
+        'routine source proof invalid')
+    _aware(proof['checkedAt'])
+    require(value['constraints'] == {
+        'allOriginalProductsKept': True, 'productChangesAllowed': False,
+        'newFactsAllowed': False, 'ownerExperienceAllowed': False,
+        'ctrIntentCheckRequired': True, 'causalGuarantee': False,
+        'winnerProtection': {'topPosition': 3, 'topClicks': 3},
+        'maxGrowthCandidates': 3, 'manualOwnerApprovalRequired': True,
+        'independentAstraReviewRequired': True},
+        'routine constraints changed')
+    return copy.deepcopy(value)
 
 
 def _aware(value):
@@ -23,12 +106,21 @@ def _aware(value):
 
 
 def validated_context(value):
-    require(isinstance(value, dict) and set(value) == {
+    require(isinstance(value, dict) and set(value) in ({
         'baseArticle', 'changeSummary', 'editorialCorrectionInstructions', 'verifiedAuthorFacts',
-        'targetProductIds', 'productRemovalReasons', 'baseProducts', 'candidateProducts'}, 'revision request fields invalid; use bound baseProducts/candidateProducts')
+        'targetProductIds', 'productRemovalReasons', 'baseProducts', 'candidateProducts'}, {
+        'baseArticle', 'changeSummary', 'editorialCorrectionInstructions', 'verifiedAuthorFacts',
+        'targetProductIds', 'productRemovalReasons', 'baseProducts', 'candidateProducts',
+        'analysisBinding'}), 'revision request fields invalid; use bound baseProducts/candidateProducts')
     base = value['baseArticle']
-    require(isinstance(base, dict) and base.get('id') in TARGETS
-            and base.get('slug') == TARGETS[base['id']] and base.get('status') == 'published', 'revision target invalid')
+    analysis = value.get('analysisBinding')
+    if analysis is None:
+        require(isinstance(base, dict) and base.get('id') in TARGETS
+                and base.get('slug') == TARGETS[base['id']] and base.get('status') == 'published', 'revision target invalid')
+    else:
+        require(isinstance(base, dict) and isinstance(base.get('id'), str) and base['id']
+                and isinstance(base.get('slug'), str) and re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', base['slug'])
+                and base.get('status') == 'published', 'routine revision target invalid')
     for field in ('createdAt', 'updatedAt', 'publishedAt'):
         _aware(base.get(field))
     require(isinstance(base.get('content'), str) and bool(base['content'].strip()), 'revision source required')
@@ -63,12 +155,20 @@ def validated_context(value):
         if changes:
             require(old['updatedAt'] != new['updatedAt'], 'patched product needs a new bound timestamp')
             patches.append(dict(id=old['id'], baseHash=fingerprint(old), candidateHash=fingerprint(new), fields=changes))
+    if analysis is not None:
+        require(selected == original and removed == {} and before == after
+                and [p.get('id') for p in before] == original
+                and value['verifiedAuthorFacts'] == [] and not patches,
+                'routine revision must preserve products and author facts')
+        analysis = _analysis_binding(analysis, base, before)
     result = copy.deepcopy(value)
     yahoo_notice = '商品同一性未確認のYahoo検索リンクを非表示'
     if any('yahooUrl' in p['fields'] for p in patches) and yahoo_notice not in result['changeSummary']:
         result['changeSummary'] += '。' + yahoo_notice
         require(len(result['changeSummary']) <= 12000, 'revision change summary too long')
     result.update(kind='article_revision', baseHash=fingerprint(base), productPatches=patches)
+    if analysis is not None:
+        result['analysisBinding'] = analysis
     return result
 
 
