@@ -21,6 +21,8 @@ def analytics():
         return {"status": "ok", "siteUrl": "https://camp-gear-lab.com/", "country": "jpn",
                 "searchType": "web", "dateBasis": "America/Los_Angeles",
                 "startDate": start, "endDate": end, "settledThrough": end,
+                "summary": {"clicks": clicks, "impressions": impressions,
+                            "ctr": clicks / impressions, "position": 7.0},
                 "pages": [{"url": URL, "clicks": clicks, "impressions": impressions,
                            "ctr": clicks / impressions, "position": 7.0}]}
     return {"schemaVersion": 1, "status": "ok", "collectedAt": NOW.isoformat(),
@@ -180,12 +182,33 @@ class SeoFeedbackTests(unittest.TestCase):
             self.assertEqual("waiting", result["status"])
             self.assertNotEqual("measured", result["measurement"]["status"])
 
+    def test_adjacent_rolling_period_uses_older_bound_analysis_baseline(self):
+        def bind_baseline(value):
+            metrics = value["revisionContext"]["analysisBinding"]["metricsReceipt"]
+            metrics["currentPeriod"] = {"startDate": "2026-08-05", "endDate": "2026-09-01",
+                                        "dateBasis": "America/Los_Angeles"}
+            metrics["gsc"] = {"clicks": 2, "impressions": 100, "ctr": .02,
+                              "position": 9.0, "metricScope": "page"}
+            metrics["observationScope"] = {"siteUrl": "https://camp-gear-lab.com/",
+                                           "country": "jpn", "searchType": "web"}
+        def adjacent_periods(value):
+            value["evidence"]["previous"].update(
+                startDate="2026-09-02", endDate="2026-09-29", settledThrough="2026-09-29")
+            value["evidence"]["current"].update(
+                startDate="2026-09-30", endDate="2026-10-27", settledThrough="2026-10-27")
+        result = self.run_assessment(mutate_job=bind_baseline, mutate_analytics=adjacent_periods)
+        self.assertEqual("postchange_performance_measured", result["status"])
+        self.assertEqual("analysis_binding", result["measurement"]["before"]["source"])
+        self.assertEqual(2.0, result["measurement"]["before"]["metrics"]["clicks"])
+        self.assertEqual(3.0, result["measurement"]["observedChange"]["clicks"])
+        self.assertEqual("2026-09-30", result["measurement"]["after"]["period"]["startDate"])
+
     def test_non_analysis_job_is_not_applicable(self):
         result = assess({"id": "article-one", "kind": "article"}, Path("/unused"),
                         analytics(), OWNER, NOW)
         self.assertEqual("not_applicable", result["status"])
 
-    def test_new_content_has_bound_theme_evidence_but_no_before_baseline(self):
+    def test_new_content_measures_only_absolute_future_performance_without_baseline(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             value = job()
@@ -194,14 +217,103 @@ class SeoFeedbackTests(unittest.TestCase):
             value["theme"]["sourceIds"] = ["demand:winter-shell"]
             value["theme"]["searchDemandEvidence"] = {"query": "private-person@example.invalid"}
             receipts(root, value)
-            result = assess(value, root, analytics(), OWNER, NOW)
-        self.assertEqual("waiting", result["status"])
-        self.assertEqual("new_content_baseline_unavailable", result["reason"])
+            metrics = analytics()
+            metrics["evidence"].pop("previous")
+            result = assess(value, root, metrics, OWNER, NOW)
+        self.assertEqual("postchange_performance_measured", result["status"])
+        self.assertEqual("complete_postpublication_page_period", result["reason"])
+        self.assertEqual("measured_new_content_performance", result["measurement"]["status"])
+        self.assertIsNone(result["measurement"]["before"])
+        self.assertIs(result["measurement"]["baselineUnavailable"], True)
+        self.assertEqual(5.0, result["measurement"]["after"]["metrics"]["clicks"])
+        self.assertNotIn("observedChange", result["measurement"])
+        self.assertEqual("not_causally_attributed", result["measurement"]["effect"])
         self.assertEqual("reanalysis_observed", result["workflow"]["status"])
         self.assertTrue(result["sourceEvidence"]["sourceEvidenceAvailable"])
         self.assertRegex(result["sourceEvidence"]["themeEvidenceSha256"], r"^[a-f0-9]{64}$")
         self.assertNotIn("analysisMetricsSourceId", result["sourceEvidence"])
         self.assertNotIn("private-person", json.dumps(result))
+
+    def test_new_content_mixed_period_or_missing_page_stays_waiting(self):
+        def new_content(value):
+            value.pop("revisionContext")
+            value.pop("kind")
+            value["theme"]["sourceIds"] = ["demand:winter-shell"]
+        for change, reason in (
+                (lambda metrics: metrics["evidence"]["current"].update(startDate="2026-09-29"),
+                 "after_period_includes_prepublication"),
+                (lambda metrics: metrics["evidence"]["current"].update(pages=[]),
+                 "page_measurement_missing")):
+            with self.subTest(reason=reason):
+                result = self.run_assessment(mutate_job=new_content, mutate_analytics=change)
+                self.assertEqual("waiting", result["status"])
+                self.assertEqual(reason, result["reason"])
+                self.assertNotIn("observedChange", result["measurement"])
+
+    def test_raw_snapshot_recovers_target_below_top_thirty_for_measurement_only(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            value = job()
+            value.pop("revisionContext")
+            value.pop("kind")
+            value["theme"]["sourceIds"] = ["demand:winter-shell"]
+            receipts(root, value)
+            projected = analytics()
+            projected["evidence"]["current"]["pages"] = [
+                {"url": f"https://camp-gear-lab.com/articles/leader-{index}",
+                 "clicks": 10, "impressions": 1000 - index, "ctr": .01, "position": 3.0}
+                for index in range(30)]
+            raw = {"schemaVersion": 1, "collectedAt": projected["collectedAt"],
+                   "current": copy.deepcopy(projected["evidence"]["current"]),
+                   "previous": copy.deepcopy(projected["evidence"]["previous"])}
+            raw["current"]["pages"].append(
+                {"url": URL, "clicks": 1, "impressions": 2, "ctr": .5, "position": 8.0})
+            raw["current"]["queries"] = [{"query": "private-query"}]
+            raw["current"]["queryPages"] = [{"url": URL, "query": "private-query"}]
+            result = build_feedback([value], root, projected, NOW, owner_id=OWNER,
+                                    metrics_snapshot=raw)
+        row = result["rows"][0]
+        self.assertEqual("measured_new_content_performance", row["measurement"]["status"])
+        self.assertIsNone(row["measurement"]["before"])
+        self.assertEqual(1.0, row["measurement"]["after"]["metrics"]["clicks"])
+        self.assertEqual(1, result["summary"]["postchangePerformanceMeasured"])
+        self.assertEqual(1, result["summary"]["newContentObserved"])
+        self.assertIn("no pre-publication baseline; not evidence of improvement causation",
+                      render_markdown(result))
+        self.assertNotIn("private-query", json.dumps(result))
+
+    def test_raw_snapshot_mismatch_or_mixed_period_never_false_passes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            value = job()
+            value.pop("revisionContext")
+            value.pop("kind")
+            value["theme"]["sourceIds"] = ["demand:winter-shell"]
+            receipts(root, value)
+            projected = analytics()
+            projected["evidence"]["current"]["pages"] = []
+            base = {"schemaVersion": 1, "collectedAt": projected["collectedAt"],
+                    "current": copy.deepcopy(analytics()["evidence"]["current"]),
+                    "previous": copy.deepcopy(analytics()["evidence"]["previous"])}
+            cases = []
+            mismatched = copy.deepcopy(base)
+            mismatched["collectedAt"] = (NOW - timedelta(hours=1)).isoformat()
+            cases.append(mismatched)
+            mixed = copy.deepcopy(base)
+            mixed["current"]["startDate"] = "2026-09-29"
+            cases.append(mixed)
+            stale = copy.deepcopy(base)
+            stale["current"].update(startDate="2026-10-02", endDate="2026-10-23",
+                                    settledThrough="2026-10-23")
+            cases.append(stale)
+            for snapshot in cases:
+                with self.subTest(snapshot=snapshot["current"]["startDate"]):
+                    result = build_feedback([value], root, projected, NOW, owner_id=OWNER,
+                                            metrics_snapshot=snapshot)
+                    self.assertEqual("waiting", result["rows"][0]["status"])
+                    self.assertNotIn("observedChange", result["rows"][0]["measurement"])
+                    if snapshot is mixed:
+                        self.assertEqual("page_measurement_missing", result["rows"][0]["reason"])
 
     def test_analytics_collected_before_publication_is_not_reanalysis(self):
         def recent_publication(value):
@@ -228,6 +340,7 @@ class SeoFeedbackTests(unittest.TestCase):
             self.assertEqual(first["semanticSha256"], later["semanticSha256"])
             self.assertNotEqual(first["generatedAt"], later["generatedAt"])
             self.assertEqual(10, first["summary"]["postchangePerformanceMeasured"])
+            self.assertEqual(0, first["summary"]["newContentObserved"])
             text = render_markdown(first)
             self.assertIn("Post-change performance measured: 10", text)
             self.assertNotIn("queries", text)

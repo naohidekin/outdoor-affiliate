@@ -4,7 +4,9 @@ from datetime import date, datetime, timedelta, timezone
 import json
 import sqlite3
 
-from ledger import valid_astra_review, valid_review
+from ledger import timestamp, valid_astra_review, valid_review
+from catalog_corrections import publication_dependency_hash
+from reporting import read_snapshot
 
 
 @dataclass(frozen=True)
@@ -12,6 +14,24 @@ class ExecutionPolicy:
     mode: str
     suspended: bool
     auto_ai_exceptions: bool = False
+
+
+def _correction_publish_probe_allowed(runtime, job, jobs, now):
+    if runtime.config.get('catalogCorrectionsPublicationEnabled') is not True:
+        return False
+    path = runtime.root / 'catalog-correction-readiness' / (job['revision'] + '.json')
+    prior = read_snapshot(path)
+    if (not prior or prior.get('revision') != job.get('revision')
+            or prior.get('dependencyHash') != publication_dependency_hash(job, jobs)
+            or prior.get('result') not in (
+                {'ready': False, 'reason': 'affected_article_correction_required'},
+                {'ready': False, 'reason': 'correction_readiness_unavailable'})):
+        return True
+    try:
+        age = timestamp(now) - timestamp(prior.get('checkedAt'))
+    except (TypeError, ValueError):
+        return True
+    return not timedelta(0) <= age < timedelta(minutes=30)
 
 
 def social_feature_enabled(config, feature):
@@ -204,6 +224,10 @@ class DeterministicDispatcher:
                             'reason': 'independent_article_review_required',
                         })
                         continue
+                if ('catalogCorrectionContext' in job
+                        and not _correction_publish_probe_allowed(
+                            self.runtime, job, jobs, now)):
+                    continue
                 base['actions'].append({'kind': 'publish', 'jobId': job['id']})
             elif stage == 'approved':
                 article_waiting = True

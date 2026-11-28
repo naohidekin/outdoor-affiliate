@@ -326,7 +326,7 @@ class Reporter:
                                                and 0 <= summary[k] <= 10 for k in keys):
                 text += ('\n\nSEO改善循環：再分析確認' + str(summary['reanalysisObserved'])
                          + '件／公開後の計測待ち' + str(summary['measurementWaiting'])
-                         + '件／前後比較の実測' + str(summary['postchangePerformanceMeasured'])
+                         + '件／公開後の実測' + str(summary['postchangePerformanceMeasured'])
                          + '件／照合が必要' + str(summary['requiresReconciliation'])
                          + '件。前後の数値変化は、改稿による因果効果の証明ではありません。')
             text += '\n\n' + usage_cost_summary(

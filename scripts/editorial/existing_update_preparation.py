@@ -73,6 +73,16 @@ def _intent_evidence():
             'rawQueriesExposed': False, 'serpEvidence': 'unconnected'}
 
 
+def _observation_scope(current):
+    require(isinstance(current, dict)
+            and current.get('siteUrl') == 'https://camp-gear-lab.com/'
+            and current.get('country') in ('jpn', 'JPN')
+            and current.get('searchType') == 'web',
+            'unsupported observation scope')
+    return {'siteUrl': 'https://camp-gear-lab.com/',
+            'country': 'jpn', 'searchType': 'web'}
+
+
 def _constraints():
     return {'allOriginalProductsKept': True, 'productChangesAllowed': False,
             'newFactsAllowed': False, 'ownerExperienceAllowed': False,
@@ -101,6 +111,7 @@ def _metric_receipt(context, opportunity, candidates, winners):
         'sourceId': 'analytics:' + fingerprint(source_projection),
         'collectedAt': context['collectedAt'],
         'currentPeriod': _period(current), 'ga4Period': _period(ga4),
+        'observationScope': _observation_scope(current),
         'opportunityHash': fingerprint(opportunity),
         'candidateSetHash': fingerprint(candidates),
         'protectedWinnerUrlsHash': fingerprint(winners),
@@ -198,6 +209,10 @@ def _selection(context, live_catalog, now):
                 'fresh metrics required')
     except (KeyError, TypeError, ValueError):
         return None, ['stale_or_mismatched_metrics'], [], []
+    try:
+        _observation_scope(current)
+    except ValueError:
+        return None, ['unsupported_observation_scope'], [], []
     opportunities = context.get('opportunities')
     if not isinstance(opportunities, list):
         return None, ['analytics_opportunities_invalid'], [], []

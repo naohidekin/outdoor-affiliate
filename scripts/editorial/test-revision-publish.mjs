@@ -85,6 +85,22 @@ test('routine analysis target can stage privately and still requires exact owner
  assert.deepEqual(h.state.writes,['article']);
 });
 
+test('routine observation scope is strict while legacy receipts remain accepted',async()=>{
+ const good=routineHarness();
+ good.input.bundle.revisionContext.analysisBinding.metricsReceipt.observationScope={
+  siteUrl:'https://camp-gear-lab.com/',country:'jpn',searchType:'web'};
+ good.input.revision=bundleHash(good.input.bundle);good.input.approval.revision=good.input.revision;
+ assert.equal((await execute({...good.input,action:'stage-revision',approval:null},good.deps)).status,'private_revision');
+ for(const mutate of [s=>s.siteUrl='https://other.example/',s=>s.country='JPN',s=>s.searchType='image']) {
+  const h=routineHarness(),metrics=h.input.bundle.revisionContext.analysisBinding.metricsReceipt;
+  metrics.observationScope={siteUrl:'https://camp-gear-lab.com/',country:'jpn',searchType:'web'};
+  mutate(metrics.observationScope);
+  h.input.revision=bundleHash(h.input.bundle);h.input.approval.revision=h.input.revision;
+  await assert.rejects(execute({...h.input,action:'stage-revision',approval:null},h.deps),/observation scope/);
+  assert.deepEqual(h.state.writes,[]);
+ }
+});
+
 test('routine observed page intent is accepted only with exact target period and projection',async()=>{
  const good=routineHarness(),c=good.input.bundle.revisionContext;
  c.analysisBinding.metricsReceipt.intentEvidence=observedIntent(c);

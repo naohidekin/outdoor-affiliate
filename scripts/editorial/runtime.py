@@ -228,14 +228,16 @@ class Runtime:
         from seo_feedback import build_feedback
         from analytics import build_report
         from reporting import read_snapshot
+        source = Path(self.config['seoStateRoot']) / 'metrics' / 'latest.json'
+        metrics_snapshot = read_snapshot(source)
         projection = build_feedback(jobs, self.root, context, now,
-                                    owner_id=self.config['slack']['user_id'])
+                                    owner_id=self.config['slack']['user_id'],
+                                    metrics_snapshot=metrics_snapshot)
         path = self.root / 'seo-feedback' / 'latest.json'
         prior = read_snapshot(path)
         if not prior or prior.get('semanticSha256') != projection['semanticSha256']:
             atomic(path, projection)
-        source = Path(self.config['seoStateRoot']) / 'metrics' / 'latest.json'
-        report = build_report(read_snapshot(source), kind='weekly', now=now)
+        report = build_report(metrics_snapshot, kind='weekly', now=now)
         current = {'schemaVersion': 1, 'collectedAt': context.get('collectedAt'),
                    'title': report['title'], 'text': report['text'],
                    'feedback': projection['summary'],
@@ -324,17 +326,11 @@ class Runtime:
         return value
 
     def _catalog_correction_readiness(self, job):
+        from catalog_corrections import publication_dependency_hash
         from reporting import read_snapshot
         from ledger import timestamp
         now = self.clock()
-        ids = {p['id'] for p in job['catalogCorrectionContext']['productPatches']}
-        related = []
-        for item in self.ledger.list_jobs():
-            base = (item.get('revisionContext') or {}).get('baseArticle') or {}
-            article = (item.get('bundle') or {}).get('article') or base
-            if item.get('publication') and ids.intersection(article.get('productIds') or []):
-                related.append([item['id'], item.get('revision'), item['publication']])
-        dependency = fingerprint(sorted(related, key=lambda row: row[0]))
+        dependency = publication_dependency_hash(job, self.ledger.list_jobs())
         path = self.root / 'catalog-correction-readiness' / (job['revision'] + '.json')
         prior = read_snapshot(path)
         if (prior and prior.get('revision') == job['revision']
@@ -351,8 +347,9 @@ class Runtime:
                 or result.get('ready') is False and result.get('reason') not in
                 ('affected_article_correction_required', 'correction_readiness_unavailable')):
             result = {'ready': False, 'reason': 'correction_readiness_unavailable'}
-        atomic(path, {'revision': job['revision'], 'dependencyHash': dependency,
-                      'checkedAt': now.isoformat(), 'result': result})
+        if result['ready'] is False:
+            atomic(path, {'revision': job['revision'], 'dependencyHash': dependency,
+                          'checkedAt': now.isoformat(), 'result': result})
         return result
 
     def _notify_independent_hold(self, job, status):

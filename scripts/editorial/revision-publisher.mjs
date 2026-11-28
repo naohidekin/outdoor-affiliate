@@ -42,11 +42,15 @@ function routineBinding(input,deps,c) {
     &&v.targetUrl==='https://camp-gear-lab.com/articles/'+base.slug,'routine target binding invalid');
   check(v.baseArticleHash===atHash(input,deps,'baseArticle')&&v.baseProductsHash===atHash(input,deps,'baseProducts'), 'routine baseline proof changed');
   const m=v.metricsReceipt,p=v.sourceProof;
-  check(keys(m,['sourceId','collectedAt','currentPeriod','ga4Period','opportunityHash','candidateSetHash','protectedWinnerUrlsHash','gsc','ga4','intentEvidence'])
+  const metricFields=['sourceId','collectedAt','currentPeriod','ga4Period','opportunityHash','candidateSetHash','protectedWinnerUrlsHash','gsc','ga4','intentEvidence'];
+  check((keys(m,metricFields)||keys(m,[...metricFields,'observationScope']))
     &&/^analytics:[a-f0-9]{64}$/.test(m.sourceId)&&aware(m.collectedAt)
     &&['opportunityHash','candidateSetHash','protectedWinnerUrlsHash'].every(k=>hex(m[k])), 'routine metrics proof invalid');
   for(const period of [m.currentPeriod,m.ga4Period])check(keys(period,['startDate','endDate','dateBasis'])
     &&Object.values(period).every(s=>typeof s==='string'&&s),'routine metric period invalid');
+  if(m.observationScope!==undefined)check(equal(m.observationScope,
+    {siteUrl:'https://camp-gear-lab.com/',country:'jpn',searchType:'web'}),
+    'routine observation scope invalid');
   check(keys(m.gsc,['clicks','impressions','ctr','position','metricScope'])&&keys(m.ga4,['sessions','engagedSessions','keyEvents'])
     &&typeof m.gsc.impressions==='number'&&m.gsc.impressions>=30&&typeof m.gsc.position==='number'
     &&m.gsc.position>3&&m.gsc.position<=20, 'routine metric threshold invalid');

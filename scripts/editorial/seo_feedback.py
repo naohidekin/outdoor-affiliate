@@ -254,6 +254,33 @@ def _page(source, url):
     return values
 
 
+def _bound_baseline(lineage, current, current_period, publication_day):
+    metrics = lineage["analysis"]["metricsReceipt"]
+    scope = metrics.get("observationScope")
+    if scope is None:
+        return None, None
+    expected_scope = {key: current.get(key) for key in ("siteUrl", "country", "searchType")}
+    if (not isinstance(scope, dict) or scope != expected_scope
+            or metrics.get("gsc", {}).get("metricScope") != "page"):
+        return None, "analysis_baseline_scope_invalid"
+    period, row = metrics.get("currentPeriod"), metrics.get("gsc")
+    start = _day(period.get("startDate")) if isinstance(period, dict) else None
+    end = _day(period.get("endDate")) if isinstance(period, dict) else None
+    cs, ce, zone = current_period
+    values = {key: _number(row.get(key)) for key in ("clicks", "impressions", "ctr", "position")} \
+        if isinstance(row, dict) else {}
+    if (not start or not end or start > end or end >= publication_day
+            or period.get("dateBasis") != zone.key or end - start != ce - cs
+            or ce - cs != timedelta(days=27)
+            or any(values.get(key) is None for key in ("clicks", "impressions", "ctr"))
+            or values["clicks"] < 0 or values["impressions"] < 0
+            or not 0 <= values["ctr"] <= 1
+            or values["position"] is not None and values["position"] < 0):
+        return None, "analysis_baseline_invalid"
+    return {"period": {key: period[key] for key in ("startDate", "endDate", "dateBasis")},
+            "metrics": values, "source": "analysis_binding"}, None
+
+
 def _measurement(analytics, lineage, now):
     if not isinstance(analytics, dict) or analytics.get("status") != "ok":
         return None, "analytics_missing"
@@ -262,44 +289,79 @@ def _measurement(analytics, lineage, now):
         return None, "analytics_stale"
     if collected <= lineage["publicationAt"]:
         return None, "analytics_not_postpublication"
-    if lineage["kind"] == "new_content":
-        return None, "new_content_baseline_unavailable"
     evidence = analytics.get("evidence")
     current = evidence.get("current") if isinstance(evidence, dict) else None
     previous = evidence.get("previous") if isinstance(evidence, dict) else None
-    current_period, previous_period = _period(current), _period(previous)
-    if current_period is None or previous_period is None:
+    current_period = _period(current)
+    if lineage["kind"] == "new_content":
+        if current_period is None:
+            return None, "complete_gsc_periods_pending"
+        cs, ce, zone = current_period
+        if (current.get("siteUrl") != "https://camp-gear-lab.com/"
+                or current.get("country") not in ("jpn", "JPN")
+                or current.get("searchType") != "web"):
+            return None, "complete_gsc_periods_pending"
+        publication_day = lineage["publicationAt"].astimezone(zone).date()
+        if cs <= publication_day:
+            return None, "after_period_includes_prepublication"
+        if (now.astimezone(zone).date() - ce).days > 35:
+            return None, "analytics_stale"
+        after = _page(current, lineage["url"])
+        if after is None:
+            return None, "page_measurement_missing"
+        period_fields = ("startDate", "endDate", "dateBasis", "settledThrough")
+        return ({"status": "measured_new_content_performance", "metricScope": "page",
+                 "before": None, "baselineUnavailable": True,
+                 "after": {"period": {key: current[key] for key in period_fields},
+                           "metrics": after},
+                 "effect": "not_causally_attributed"}, None)
+    if current_period is None:
         return None, "complete_gsc_periods_pending"
     cs, ce, zone = current_period
-    ps, pe, previous_zone = previous_period
     if (current.get("siteUrl") != "https://camp-gear-lab.com/"
-            or current.get("country") not in ("jpn", "JPN") or current.get("searchType") != "web"
-            or zone.key != previous_zone.key
-            or any(current.get(key) != previous.get(key) for key in
-                   ("siteUrl", "country", "searchType"))
-            or pe >= cs or ce - cs != pe - ps):
+            or current.get("country") not in ("jpn", "JPN") or current.get("searchType") != "web"):
         return None, "periods_not_comparable"
     publication_day = lineage["publicationAt"].astimezone(zone).date()
-    if pe >= publication_day:
-        return None, "before_period_not_prepublication"
     if cs <= publication_day:
         return None, "after_period_includes_prepublication"
     if (now.astimezone(zone).date() - ce).days > 35:
         return None, "analytics_stale"
-    baseline = lineage["analysis"]["metricsReceipt"]["currentPeriod"]
-    baseline_end = _day(baseline.get("endDate")) if isinstance(baseline, dict) else None
-    if (baseline_end is None or baseline_end >= publication_day
-            or baseline.get("dateBasis") != current.get("dateBasis")):
-        return None, "analysis_baseline_not_prepublication"
-    before, after = _page(previous, lineage["url"]), _page(current, lineage["url"])
-    if before is None or after is None:
+    after = _page(current, lineage["url"])
+    if after is None:
         return None, "page_measurement_missing"
+    before, baseline_error = _bound_baseline(
+        lineage, current, current_period, publication_day)
+    if baseline_error:
+        return None, baseline_error
+    if before is None:
+        previous_period = _period(previous)
+        if previous_period is None:
+            return None, "complete_gsc_periods_pending"
+        ps, pe, previous_zone = previous_period
+        if (zone.key != previous_zone.key
+                or any(current.get(key) != previous.get(key) for key in
+                       ("siteUrl", "country", "searchType"))
+                or pe >= cs or ce - cs != pe - ps):
+            return None, "periods_not_comparable"
+        if pe >= publication_day:
+            return None, "before_period_not_prepublication"
+        baseline = lineage["analysis"]["metricsReceipt"]["currentPeriod"]
+        baseline_end = _day(baseline.get("endDate")) if isinstance(baseline, dict) else None
+        if (baseline_end is None or baseline_end >= publication_day
+                or baseline.get("dateBasis") != current.get("dateBasis")):
+            return None, "analysis_baseline_not_prepublication"
+        values = _page(previous, lineage["url"])
+        if values is None:
+            return None, "page_measurement_missing"
+        period_fields = ("startDate", "endDate", "dateBasis", "settledThrough")
+        before = {"period": {key: previous[key] for key in period_fields}, "metrics": values}
     period_fields = ("startDate", "endDate", "dateBasis", "settledThrough")
     return ({"status": "measured_postchange_performance", "metricScope": "page",
-             "before": {"period": {key: previous[key] for key in period_fields}, "metrics": before},
+             "before": before,
              "after": {"period": {key: current[key] for key in period_fields}, "metrics": after},
-             "observedChange": {key: after[key] - before[key] if before[key] is not None
-                                and after[key] is not None else None for key in before},
+             "observedChange": {key: after[key] - before["metrics"][key]
+                                if before["metrics"][key] is not None and after[key] is not None
+                                else None for key in before["metrics"]},
              "effect": "not_causally_attributed"}, None)
 
 
@@ -354,17 +416,88 @@ def assess(job, root, analytics, owner_id, now=None):
                          targetUrl=lineage["url"],
                          publicationAt=lineage["publicationAt"].isoformat())
         return result
-    return _result("postchange_performance_measured", "complete_nonoverlapping_page_periods", job_id, revision,
+    complete_reason = ("complete_postpublication_page_period"
+                       if measurement["status"] == "measured_new_content_performance"
+                       else "complete_nonoverlapping_page_periods")
+    return _result("postchange_performance_measured", complete_reason, job_id, revision,
                    workflow=workflow, measurement=measurement, sourceEvidence=source_evidence,
                    targetUrl=lineage["url"], publicationAt=lineage["publicationAt"].isoformat())
 
 
-def build_feedback(jobs, root, analytics, now=None, *, owner_id):
+def _measurement_analytics(jobs, metrics_snapshot, analytics, owner_id, now):
+    """Re-sanitize only published target rows before Analytics' top-30 projection."""
+    if (not isinstance(metrics_snapshot, dict) or not isinstance(analytics, dict)
+            or _instant(metrics_snapshot.get("collectedAt"))
+            != _instant(analytics.get("collectedAt"))):
+        return analytics
+    urls = []
+    for job in jobs if isinstance(jobs, list) else []:
+        lineage, error = _lineage(job, owner_id)
+        if error is None and lineage["url"] not in urls:
+            urls.append(lineage["url"])
+        if len(urls) == 10:
+            break
+    if not urls:
+        return analytics
+    from analytics import _context as analytics_context, _url
+    from urllib.parse import urlsplit
+    target_urls, target_paths = set(urls), {urlsplit(url).path for url in urls}
+    period_keys = ("status", "siteUrl", "country", "searchType", "dateBasis",
+                   "startDate", "endDate", "settledThrough", "summary")
+    raw = {"schemaVersion": metrics_snapshot.get("schemaVersion"),
+           "collectedAt": metrics_snapshot.get("collectedAt")}
+    for label in ("current", "previous"):
+        source = metrics_snapshot.get(label)
+        if not isinstance(source, dict):
+            raw[label] = None
+            continue
+        projected = {key: source.get(key) for key in period_keys if key in source}
+        rows = source.get("pages")
+        projected["pages"] = [row for row in (rows if isinstance(rows, list) else [])
+                              if isinstance(row, dict) and _url(row.get("url")) in target_urls][:1000]
+        raw[label] = projected
+    ga4 = metrics_snapshot.get("ga4")
+    if isinstance(ga4, dict):
+        projected = {key: ga4.get(key) for key in
+                     ("status", "dateBasis", "startDate", "endDate", "coverage") if key in ga4}
+        rows = ga4.get("landingPages")
+        landing = []
+        for row in rows if isinstance(rows, list) else []:
+            dimensions = row.get("dimensionValues") if isinstance(row, dict) else None
+            first = dimensions[0] if isinstance(dimensions, list) and dimensions else None
+            if isinstance(first, dict) and _url(first.get("value"), relative=True) in target_paths:
+                landing.append(row)
+            if len(landing) == 1000:
+                break
+        projected["landingPages"] = landing
+        raw["ga4"] = projected
+    projected = analytics_context(raw, now)
+    if (_instant(projected.get("collectedAt"))
+            != _instant(analytics.get("collectedAt"))):
+        return analytics
+    metadata_keys = ("status", "siteUrl", "country", "searchType", "dateBasis",
+                     "startDate", "endDate", "settledThrough", "summary")
+    expected_evidence = analytics.get("evidence")
+    projected_evidence = projected.get("evidence")
+    for label in ("current", "previous"):
+        expected = expected_evidence.get(label) if isinstance(expected_evidence, dict) else None
+        candidate = projected_evidence.get(label) if isinstance(projected_evidence, dict) else None
+        if expected is None and candidate is None:
+            continue
+        if (not isinstance(expected, dict) or not isinstance(candidate, dict)
+                or any(expected.get(key) != candidate.get(key) for key in metadata_keys)):
+            return analytics
+    return projected
+
+
+def build_feedback(jobs, root, analytics, now=None, *, owner_id, metrics_snapshot=None):
     """Build at most ten safe rows for Runtime persistence and planning context."""
     now = now or datetime.now(JST)
+    measurement_analytics = _measurement_analytics(
+        jobs, metrics_snapshot, analytics, owner_id, now) if metrics_snapshot is not None else analytics
     rows = []
     for job in (jobs if isinstance(jobs, list) else [])[:1000]:
-        row = assess(job, root, analytics, owner_id, now)
+        row = assess(job, root, measurement_analytics, owner_id, now)
         if row["status"] != "not_applicable":
             rows.append(row)
     priority = {"requires_reconciliation": 0, "waiting": 1,
@@ -376,7 +509,11 @@ def build_feedback(jobs, root, analytics, now=None, *, owner_id):
         "reanalysisObserved": sum(row["workflow"]["status"] == "reanalysis_observed" for row in rows),
         "measurementWaiting": sum(row["measurement"]["status"] == "waiting" for row in rows),
         "postchangePerformanceMeasured": sum(
-            row["measurement"]["status"] == "measured_postchange_performance" for row in rows),
+            row["measurement"]["status"] in (
+                "measured_postchange_performance", "measured_new_content_performance")
+            for row in rows),
+        "newContentObserved": sum(
+            row["measurement"]["status"] == "measured_new_content_performance" for row in rows),
         "requiresReconciliation": sum(row["status"] == "requires_reconciliation" for row in rows),
     }
     semantic = {"schemaVersion": 1, "summary": summary, "rows": rows}
@@ -394,6 +531,9 @@ def render_markdown(projection):
              "- Measurement waiting: " + str(summary.get("measurementWaiting", 0)),
              "- Post-change performance measured: " + str(
                  summary.get("postchangePerformanceMeasured", 0)),
+             "- New-content absolute performance observed: " + str(
+                 summary.get("newContentObserved", 0))
+             + " (no pre-publication baseline; not evidence of improvement causation)",
              "- Requires reconciliation: " + str(summary.get("requiresReconciliation", 0)), ""]
     for row in projection["rows"][:10]:
         lines.append("- " + str(row.get("jobId") or "unknown") + ": "

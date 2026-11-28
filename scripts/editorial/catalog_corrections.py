@@ -64,3 +64,16 @@ def validate_live_context(ctx, liveproducts):
         found = [p for p in liveproducts if p.get('id') == expected['id']]
         require(len(found) == 1 and canonical(found[0]) == canonical(expected), 'catalog baseline changed')
     return ctx
+
+
+def publication_dependency_hash(job, jobs):
+    """Hash only published related article state used by correction readiness."""
+    ctx = validate_context(job.get('catalogCorrectionContext'))
+    ids = {patch['id'] for patch in ctx['productPatches']}
+    related = []
+    for item in jobs:
+        base = (item.get('revisionContext') or {}).get('baseArticle') or {}
+        article = (item.get('bundle') or {}).get('article') or base
+        if item.get('publication') and ids.intersection(article.get('productIds') or []):
+            related.append([item['id'], item.get('revision'), item['publication']])
+    return fingerprint(sorted(related, key=lambda row: row[0]))

@@ -44,9 +44,11 @@ def _analysis_binding(value, base, products):
             and value['baseProductsHash'] == fingerprint(products),
             'routine baseline hash invalid')
     metrics = value['metricsReceipt']
-    require(isinstance(metrics, dict) and set(metrics) == {
+    metric_fields = {
         'sourceId', 'collectedAt', 'currentPeriod', 'ga4Period', 'opportunityHash',
-        'candidateSetHash', 'protectedWinnerUrlsHash', 'gsc', 'ga4', 'intentEvidence'},
+        'candidateSetHash', 'protectedWinnerUrlsHash', 'gsc', 'ga4', 'intentEvidence'}
+    require(isinstance(metrics, dict)
+            and set(metrics) in (metric_fields, metric_fields | {'observationScope'}),
         'routine metrics receipt invalid')
     require(isinstance(metrics['sourceId'], str)
             and re.fullmatch(r'analytics:[a-f0-9]{64}', metrics['sourceId'])
@@ -61,6 +63,11 @@ def _analysis_binding(value, base, products):
             and all(isinstance(period.get(field), str) and period[field]
                     for field in ('startDate', 'endDate', 'dateBasis')),
             'routine metric period invalid')
+    if 'observationScope' in metrics:
+        require(metrics['observationScope'] == {
+            'siteUrl': 'https://camp-gear-lab.com/',
+            'country': 'jpn', 'searchType': 'web'},
+            'routine observation scope invalid')
     gsc, ga4 = metrics['gsc'], metrics['ga4']
     require(isinstance(gsc, dict) and set(gsc) == {
         'clicks', 'impressions', 'ctr', 'position', 'metricScope'}

@@ -67,6 +67,7 @@ def analytics(target=None):
             'evidence': {
                 'current': {**dates, 'dateBasis': 'America/Los_Angeles',
                             'status': 'ok', 'siteUrl': 'https://camp-gear-lab.com/',
+                            'country': 'jpn', 'searchType': 'web',
                             'pages': pages, 'candidates': []},
                 'previous': None,
                 'ga4': {**dates, 'dateBasis': 'Asia/Tokyo',
@@ -176,6 +177,9 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
         self.assertEqual('Asia/Tokyo',
                          binding['metricsReceipt']['ga4Period']['dateBasis'])
         self.assertEqual('unconnected', binding['metricsReceipt']['intentEvidence']['status'])
+        self.assertEqual({'siteUrl': 'https://camp-gear-lab.com/',
+                          'country': 'jpn', 'searchType': 'web'},
+                         binding['metricsReceipt']['observationScope'])
         self.assertFalse(binding['constraints']['causalGuarantee'])
         self.assertEqual(job['revisionContext']['baseProducts'],
                          job['revisionContext']['candidateProducts'])
@@ -312,6 +316,25 @@ class ExistingUpdatePreparationTests(unittest.TestCase):
         self.assertEqual('hold', result['status'])
         self.assertIn('unsafe_target_url', result['sourceHoldReasons'])
         self.catalog.gather_revision.assert_not_called()
+
+    def test_unsupported_observation_scope_holds_before_source(self):
+        metrics = analytics()
+        metrics['evidence']['current']['searchType'] = 'image'
+        result = self.prepare(metrics)
+        self.assertEqual('hold', result['status'])
+        self.assertIn('unsupported_observation_scope',
+                      result['sourceHoldReasons'])
+        self.catalog.gather_revision.assert_not_called()
+
+    def test_jpn_observation_scope_is_normalized_in_new_receipt(self):
+        metrics = analytics()
+        metrics['evidence']['current']['country'] = 'JPN'
+        result = self.prepare(metrics)
+        receipt = self.ledger.get_job(result['revisionJobId'])[\
+            'revisionContext']['analysisBinding']['metricsReceipt']
+        self.assertEqual({'siteUrl': 'https://camp-gear-lab.com/',
+                          'country': 'jpn', 'searchType': 'web'},
+                         receipt['observationScope'])
 
     def test_existing_article_and_period_budget_are_not_reset(self):
         budget = ModelBudget(self.root, self.ledger.production_schedule)
